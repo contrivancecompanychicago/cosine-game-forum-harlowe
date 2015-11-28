@@ -50,39 +50,47 @@ describe("the (move:) macro", function() {
 	});
 	describe("doesn't pollute past turns", function() {
 		it("when replacing array properties", function() {
-			runPassage("(set: $a to (a:3,1))(set: $b to 2)","one");
-			runPassage("(move: $b into $a's last)","two");
+			runPassage("(set: $a to (a:0,1))(set: $b to 2)","one");
+			runPassage("(move: $b into $a's last)(set: $b to 3)","two");
+			runPassage("(move: $b into $a's last)(set: $b to 4)","three");
 			Engine.goBack();
-			expect("$b").markupToPrint("2");
-			expect("(print:$a)").markupToPrint("3,1");
+			expect("$b").markupToPrint("3");
+			expect("(print:$a)").markupToPrint("0,2");
 		});
 		it("when removing array properties", function() {
-			runPassage("(set: $a to (a:3,2))","one");
+			runPassage("(set: $a to (a:0,1,2))","one");
 			runPassage("(move: $a's last into $b)","two");
+			runPassage("(move: $a's last into $b)","three");
 			Engine.goBack();
-			expect("$b").markupToPrint("0");
-			expect("(print:$a's last)").markupToPrint("2");
+			expect("$b").markupToPrint("2");
+			expect("(print:$a)").markupToPrint("0,1");
 		});
 		it("when inserting datamap properties", function() {
 			runPassage("(set: $d to (datamap:))(set: $b to 3)","one");
-			runPassage("(move: $b into $d's A)","two");
+			runPassage("(move: $b into $d's A)(set: $b to 2)","two");
+			runPassage("(move: $b into $d's B)(set: $b to 1)","three");
 			Engine.goBack();
-			expect("$b").markupToPrint("3");
-			expect("(print:$d's A)").markupToError();
+			expect("$b").markupToPrint("2");
+			expect("(print:$d's A)").markupToPrint("3");
+			expect("(print:$d's B)").markupToError();
 		});
 		it("when replacing datamap properties", function() {
-			runPassage("(set: $d to (datamap:'B',2))(set: $b to 3)","one");
-			runPassage("(move: $b into $d's B)","two");
+			runPassage("(set: $d to (datamap:'A',3))(set: $b to 2)","one");
+			runPassage("(move: $b into $d's B)(set: $b to 1)","two");
+			runPassage("(move: $b into $d's C)","three");
 			Engine.goBack();
-			expect("$b").markupToPrint("3");
+			expect("$b").markupToPrint("1");
 			expect("(print:$d's B)").markupToPrint("2");
+			expect("(print:$d's C)").markupToError();
 		});
 		it("when removing datamap properties", function() {
 			runPassage("(set: $d to (datamap:'A',2,'B',3))","one");
 			runPassage("(move: $d's A into $b)","two");
+			runPassage("(move: $d's B into $b)","three");
 			Engine.goBack();
-			expect("$b").markupToPrint("0");
-			expect("(print:$d's A)").markupToPrint("2");
+			expect("$b").markupToPrint("2");
+			expect("(print:$d's A)").markupToError();
+			expect("(print:$d's B)").markupToPrint("3");
 		});
 	});
 });

@@ -612,6 +612,13 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 					return error;
 				}
 				/*
+					Only attempt to clone the object if it's not the final iteration.
+					(Remember that reverseRight reverses the progression of the i parameter.)
+				*/
+				if (i > 0) {
+					object = clone(object);
+				}
+				/*
 					If this is the first iteration, then delete the property.
 				*/
 				if (value === null) {
@@ -639,13 +646,6 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 				*/
 				else {
 					objectOrMapSet(object, property, value);
-				}
-				/*
-					Only attempt to clone the object if it's not the final iteration.
-					(Remember that reverseRight reverses the progression of the i parameter.)
-				*/
-				if (i > 0) {
-					object = clone(object);
 				}
 				return object;
 			}, null);
