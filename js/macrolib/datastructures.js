@@ -437,7 +437,7 @@ define([
 		[Any, rest(Any)])
 		
 		/*d:
-			(sorted: String, String, [...String]) -> Array
+			(sorted: String, ...String) -> Array
 			
 			Similar to (a:), except that it requires string elements, and orders the
 			strings in English alphanumeric sort order, rather than the order in which they were provided.
@@ -625,7 +625,8 @@ define([
 		("datanames", (_, map) =>  Array.from(map.keys()).sort(NaturalSort("en")),
 		[Map])
 		/*d:
-			(datavalues:)
+			(datavalues: Datamap) -> Array
+			
 			This takes a datamap, and returns an array of its values, sorted
 			alphabetically by their name.
 			

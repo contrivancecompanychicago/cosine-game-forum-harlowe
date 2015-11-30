@@ -31,7 +31,7 @@ const
 				text = processTextTerms(
 					input.trim().replace(title, "\n<h2 class='def_title markup_title' id=markup_" + slugName + ">" + title + "</h2>\n"),
 					name,
-					{markupNames:true}
+					{markupNames:true, macroNames:true}
 				),
 				category = (categoryTag.exec(text) || {})[1];
 

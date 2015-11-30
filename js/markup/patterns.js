@@ -199,6 +199,51 @@
 		*/
 		align = ws + "(==+>|<=+|=+><=+|<==+>)" + ws + eol,
 		
+		/*d:
+			Link markup
+
+			Hyperlinks are the player's means of moving between passages and affecting the story. They consist of
+			*link text*, which the player clicks on, and a *passage expression* that equals the name of the passage
+			to send the player to.
+
+			Inside matching non-nesting pairs of `[[` and `]]`, place the link text and the passage expression,
+			separated by either `->` or `<-`, with the arrow pointing to the passage expression.
+
+			You can also write a shorthand form, where there is no `<-` or `->` separator.
+			The entire content is treated as a passage name, and its evaluation is treated as the link text.
+
+			```
+			[[Up to the attic]]
+			[["Draw your" + $weapon]]
+			```
+
+			Example usage:
+			```
+			[[Go to the cellar->Cellar]] is a link that goes to a passage named "Cellar".
+			[[Parachuting<-Jump]] is a link that goes to a passage named "Parachuting".
+			[[Down the hatch]] is a link that goes to a passage named "Down the hatch".
+			```
+
+			Details:
+
+			The interior of a link (the text between `[[` and `]]`) may contain any character except `]`. If additional
+			`->`s or `<-`s appear, the rightmost right arrow or leftmost left arrow is regarded as the canonical separator.
+
+			```
+			[[A->B->C->D->E]] has a link text of
+			A->B->C->D
+			and a passage name of
+			E
+
+			[[A<-B<-C<-D<-E]] has a link text of
+			B<-C<-D<-E
+			and a passage name of
+			A
+			```
+
+			This syntax is not the only way to create links – there are many link macros, such as (link:), which can
+			be used to make more versatile hyperlinks in your story.
+		*/
 		passageLink = {
 			opener:            "\\[\\[(?!\\[)",
 			text:              "(" + notChars("]") + ")",
