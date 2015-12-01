@@ -30,8 +30,12 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 			Also, notice that you can only add strings together. You can't subtract them, much less multiply or divide them.
 			
 			Strings are similar to arrays, in that their individual characters can be accessed: `"ABC"'s 1st` evaluates to "A",
-			and `"Exeunt"'s last` evaluates to "t". They, too, have a "length": `"Marathon"'s length` is 8. Also, you can use
-			the `contains` and `is in` operators to see if a certain string is contained within another.
+			`"Gosh"'s 2ndlast` evaluates to "s", and `"Exeunt"'s last` evaluates to "t". They, too, have a "length":
+			`"Marathon"'s length` is 8. If you don't know the exact position of a character, you can use an expression,
+			in brackers, after it: `$string's ($pos - 3)`.
+
+			Also, you can use the `contains` and `is in` operators to see if a certain string is contained within another: `"mother"
+			contains "moth"` is true, as is `"a" is in "a"`.
 
 			To summarise, here are the operations you can perform on strings.
 
@@ -573,11 +577,81 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 			Wrappers for Window
 		*/
 
-		// Keep "undefined" from being the default text.
+		/*d:
+			(alert: String) -> Undefined
+
+			When this macro is evaluated, a browser pop-up dialog box is shown with the given string displayed,
+			and an "OK" button to dismiss it.
+
+			Example usage:
+			`(alert:"Beyond this point, things get serious. Grab a snack and buckle up.")`
+
+			Details:
+			This is essentially identical to the Javascript `alert()` function in purpose and ability. You
+			can use it to display a special message above the game itself. But, be aware that as the box uses
+			the player's operating system and browser's styling, it may clash visually with the design
+			of your story.
+
+			When the dialog is on-screen, the entire game is essentially "paused" - no further computations are
+			performed until it is dismissed.
+
+			See also:
+			(prompt:), (confirm:)
+
+			#popup
+		*/
 		alert: [(text) => window.alert(text),
 			String],
+		/*d:
+			(prompt: String, String) -> String
+
+			When this macro is evaluated, a browser pop-up dialog box is shown with the first string displayed,
+			a text entry box containing the second string (as a default value), and an "OK" button to submit.
+			When it is submitted, it evaluates to the string in the text entry box.
+
+			Example usage:
+			`(set: $name to (prompt: "Your name, please:", "Frances Spayne"))`
+
+			Details:
+			This is essentially identical to the Javascript `prompt()` function in purpose and ability. You can
+			use it to obtain a string value from the player directly, such as a name for the main character.
+			But, be aware that as the box uses the player's operating system and browser's styling, it
+			may clash visually with the design of your story.
+
+			When the dialog is on-screen, the entire game is essentially "paused" - no further computations are
+			performed until it is dismissed.
+
+			See also:
+			(alert:), (confirm:)
+
+			#popup
+		*/
 		prompt: [(text, value) => window.prompt(text, value) || "",
 			String, String],
+		/*d:
+			(confirm: String) -> Boolean
+
+			When this macro is evaluated, a browser pop-up dialog box is shown with the given string displayed,
+			as well as "OK" and "Cancel" button to confirm or cancel whatever action or fact the string tells the player.
+			When it is submitted, it evaluates to the Boolean true if "OK" had been pressed, and false if "Cancel" had.
+
+			Example usage:
+			`(set: $makeCake to (confirm: "Transform your best friend into a cake?"))`
+
+			Details:
+			This is essentially identical to the Javascript `confirm()` function in purpose and ability. You can
+			use it to ask the player a question directly, and act on the result immediately.
+			But, be aware that as the box uses the player's operating system and browser's styling, it
+			may clash visually with the design of your story.
+
+			When the dialog is on-screen, the entire game is essentially "paused" - no further computations are
+			performed until it is dismissed.
+
+			See also:
+			(alert:), (prompt:)
+
+			#popup
+		*/
 		confirm: [(text) => window.confirm(text),
 			String],
 		openURL: [(text) => window.open(text, ""), String],

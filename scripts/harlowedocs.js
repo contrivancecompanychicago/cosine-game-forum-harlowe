@@ -29,7 +29,8 @@ const
 			const
 				slugName =  name.replace(/\s/g,'-').toLowerCase(),
 				text = processTextTerms(
-					input.trim().replace(title, "\n<h2 class='def_title markup_title' id=markup_" + slugName + ">" + title + "</h2>\n"),
+					input.trim().replace(title, "\n<h2 class='def_title markup_title' id=markup_" + slugName + ">"
+						+ "<a class='heading_link' href=#markup_" + slugName + "></a>" + title + "</h2>\n"),
 					name,
 					{markupNames:true, macroNames:true}
 				),
@@ -46,7 +47,8 @@ const
 			const
 				slugName =  name.replace(/\s/g,'-').toLowerCase(),
 				text = processTextTerms(
-					input.trim().replace(title, "\n<h2 class='def_title type_title' id=type_" + slugName + ">" + title + "</h2>\n"),
+					input.trim().replace(title, "\n<h2 class='def_title type_title' id=type_" + slugName + ">"
+						+ "<a class='heading_link' href=#type_" + slugName + "></a>" + title + "</h2>\n"),
 					name,
 					{typeNames: true, macroNames:true}
 				);
@@ -64,7 +66,7 @@ const
 		*/
 		title: (name) =>
 			"\n<h2 class='def_title macro_title' id=macro_" + name.toLowerCase() + ">" +
-				"The (" + name + ": ) macro</h2>\n",
+				"<a class='heading_link' href=#macro_" + name.toLowerCase() + "></a>The (" + name + ": ) macro</h2>\n",
 		/*
 			Write out a parameter signature, highlighting the pertinent parts:
 			* Type names
@@ -333,6 +335,9 @@ code { background:#FFF; border:1px solid #888; color:#000; display:block; paddin
 /* Inline code */
 pre { display:inline; }
 :not(pre) > code { background:hsla(0,0%,100%,0.75); border:1px dotted #888; display:inline; padding:1px; white-space:nowrap; }
+/* Heading links */
+.heading_link::before { content: "§"; display:inline-block; margin-left:-25px; padding-right:10px; color:black; font-weight:100; visibility:hidden; text-decoration:none; }
+:hover > .heading_link::before { visibility:visible; }
 </style>` + navElement + "</ul></nav>" + outputFile;
 /*
 	Done

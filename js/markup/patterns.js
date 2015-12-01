@@ -263,11 +263,26 @@
 			+ anyLetter.replace("\\-", "").replace("\\w","a-zA-Z")
 			+ anyLetter.replace("\\-", "") + "*",
 		
-		/*
-			Variables, and properties of variables:
-			$red
-			$bag's bonnet
-			$a's 1st's 2nd
+		/*d:
+			Variable markup
+			
+			As described in the documentation for the (set:) macro, variables are used to remember data values
+			in your game, keep track of the player's status, and so forth. You can print variables, arrays' items,
+			using the (print:) macro.
+
+			Or, if you only want to print a single variable, you can just enter the variable's name directly in
+			your passage's prose.
+
+			```
+			Your beloved plushie, $plushieName, awaits you after a long work day.
+			```
+
+			Furthermore, if the variable contains a changer command, such as that created by (text-style:) and such,
+			then the variable can be attached to a hook to apply the changer to the hook:
+
+			```
+			$robotText[Good golly! Your flesh... it's so soft!]
+			```
 		*/
 		variable          = "\\$(" + validPropertyName + ")",
 		

@@ -87,8 +87,8 @@ define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercomm
 				the end of each target, rather than replacing it entirely.
 
 				Example usage:
-				`(append: "Emily")[, my maid] ` adds ", my maid " to the end of every occurrence of "Emily".
-				`(append: ?dress)[ from happier days]` adds " from happier days" to the end of the `|dress>` hook.
+				* `(append: "Emily")[, my maid] ` adds ", my maid " to the end of every occurrence of "Emily".
+				* `(append: ?dress)[ from happier days]` adds " from happier days" to the end of the `|dress>` hook.
 
 				Rationale:
 				As this is a variation of (replace:), the rationale for this macro can be found in
@@ -109,8 +109,8 @@ define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercomm
 
 				Example usage:
 
-				`(prepend: "Emily")[Miss ] ` adds "Miss " to the start of every occurrence of "Emily".
-				`(prepend: ?dress)[my wedding ]` adds "my wedding " to the start of the `|dress>` hook.
+				* `(prepend: "Emily")[Miss ] ` adds "Miss " to the start of every occurrence of "Emily".
+				* `(prepend: ?dress)[my wedding ]` adds "my wedding " to the start of the `|dress>` hook.
 
 				Rationale:
 				As this is a variation of (replace:), the rationale for this macro can be found in
@@ -348,9 +348,9 @@ define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercomm
 			it visually resembles a link, and that clicking it causes the attached hook to be revealed.
 
 			Example usage:
-			`There is a small dish of water. (click: "dish")[Your finger gets wet.]` causes "dish" to become a link that,
+			* `There is a small dish of water. (click: "dish")[Your finger gets wet.]` causes "dish" to become a link that,
 			when clicked, reveals "Your finger gets wet." at the specified location.
-			`[Fie and fuggaboo!]<shout| (click: ?shout)[Blast and damnation!]` does something similar to every hook named `<shout|`.
+			* `[Fie and fuggaboo!]<shout| (click: ?shout)[Blast and damnation!]` does something similar to every hook named `<shout|`.
 
 			Rationale:
 

@@ -25,7 +25,7 @@ define([
 			make (set:) and (put:) more readable.
 		*/
 		/*d:
-			(set: VariableToValue, [...VariableToValue]) -> String
+			(set: VariableToValue, [...VariableToValue]) -> Command
 			
 			Stores data values in variables.
 			
@@ -55,13 +55,11 @@ define([
 			expressions, it's a shorthand for what's on the left side: `(set: $vases to it + 1)`
 			is a shorthand for `(set: $vases to $vases + 1)`.
 			
-			If the variable you're setting cannot be changed - for instance, if it's the $Design
-			variable - then an error will be printed.
-			
-			If you use (set:) as an expression, it just evaluates to an empty string.
+			If the destination isn't something that can be changed - for instance, if you're trying to set a
+			bare value to another value, like `(set: true to 2)` - then an error will be printed.
 			
 			See also:
-			(push:)
+			(push:), (move:)
 
 			#basics
 		*/
@@ -108,7 +106,7 @@ define([
 		[rest(AssignmentRequest)])
 		
 		/*d:
-			(put: VariableToValue, [...VariableToValue]) -> String
+			(put: VariableToValue, [...VariableToValue]) -> Command
 			
 			A left-to-right version of (set:) that requires the word `into` rather than `to`.
 			
@@ -130,8 +128,9 @@ define([
 			
 			`it` can also be used with (put:), but, interestingly, it's used on the right-hand side of
 			the expression: `(put: $eggs + 2 into it)`.
-			
-			Once again, this evaluates to an empty string.
+
+			See also:
+			(set:), (move:)
 
 			#basics
 		*/
@@ -172,15 +171,28 @@ define([
 		[rest(AssignmentRequest)])
 		
 		/*d:
-			(move: [VariableToValue]) -> String
+			(move: [VariableToValue]) -> Command
 			
 			A variant of (put:) that deletes the source value after copying it - in effect
 			moving the value from the source to the destination.
 			
+			Example usage:
+			`(move: $array's 1st into $var)`
+
 			Rationale:
 			You'll often use data structures such as arrays or datamaps as storage for values
 			that you'll only use once, such as a list of names to print out. When it comes time
 			to use them, you can remove it from the structure and retrieve it in one go.
+
+			Details:
+			You must use the `into` keyword, like (put:), with this macro. This is because, like (put:),
+			the destination of the value is on the right, whereas the source is on the left.
+
+			If the value you're accessing cannot be removed - for instance, if it's an array's `length` -
+			then an error will be produced.
+
+			See also:
+			(push:), (set:)
 
 			#basics
 		*/
@@ -242,7 +254,8 @@ define([
 			Array data is referenced much like string characters are. You can refer to data positions using `1st`,
 			`2nd`, `3rd`, and so forth: `$array's 1st` refers to the value in the first position. Additionally, you can
 			use `last` to refer to the last position, `2ndlast` to refer to the second-last, and so forth. Arrays also
-			have a `length` number: `$array's length` tells you how many values are in it.
+			have a `length` number: `$array's length` tells you how many values are in it. If you don't know the exact
+			position to remove an item from, you can use an expression, in brackers, after it: `$array's ($pos - 3)`.
 			
 			Arrays may be joined by adding them together: `(a: 1, 2) + (a: 3, 4)` is the same as `(a: 1, 2, 3, 4)`.
 			You can only join arrays to other arrays. To add a bare value to the front or back of an array, you must
@@ -272,6 +285,8 @@ define([
 			| `+` | Joins arrays. | `(a:1,2) + (a:1,2)` (is `(a:1,2,1,2)`)
 			| `-` | Subtracts arrays. | `(a:1,1,2,3,4,5) - (a:1,2)` (is `(a:3,4,5)`)
 			| `...` | When used in a macro call, it separates each value in the right side. | `(a: 0, ...(a:1,2,3,4), 5)` (is `(a:0,1,2,3,4,5)`)
+			| `'s` | Obtains the item at the right numeric position. | `(a:"Y","Z")'s 1st` (is "Y")<br>`(a:4,5)'s (2)` (is 5)
+			| `of` | Obtains the item at the left numeric position. | `1st of "YO"` (is "Y")<br>`(2) of "PS"` (is "S")
 		*/
 		/*d:
 			(a: [...Any]) -> Array
@@ -792,7 +807,7 @@ define([
 			and whose *order* and *position* do not matter. If you need to preserve the order of the values, then an array
 			may be better suited.
 			
-			Datamaps consist of several string *name**s, each of which maps to a specific **value**. `$animals's frog` and `frog of $animals`
+			Datamaps consist of several string *name*s, each of which maps to a specific *value*. `$animals's frog` and `frog of $animals`
 			refers to the value associated with the name 'frog'. You can add new names or change existing values by using (set:) -
 			`(set: $animals's wolf to "howl")`.
 
