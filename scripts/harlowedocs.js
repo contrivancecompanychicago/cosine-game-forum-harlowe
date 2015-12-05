@@ -7,6 +7,7 @@ const fs = require('fs');
 */
 const
 	macroEmpty = /\(([\w\-\d]+):\)(?!`)/g,
+	macroAliases = /Also known as: [^\n]+/,
 	macroWithTypeSignature = /\(([\w\-\d]+):([\s\w\.\,\[\]]*)\) -> ([\w]+)/,
 	categoryTag = /\s+#([a-z\d ]+)/g,
 
@@ -19,47 +20,100 @@ const
 
 	markupDefinition = /([\w ]+) markup\n/,
 	
-	// Error definitions
-	errorDefs = {},
+	Defs = function(props) {
+		return Object.assign({
+			defs: {},
 
-	Markup = {
-		defs: {},
+			navLink(def) {
+				return `<li><a href="#${def.anchor}">${def.name}</a></li>`;
+			},
+			output() {
+				let outputElement = '', navElement = '';
+				let currentCategory;
+
+				Object.keys(this.defs).sort((left, right) => {
+					if (this.defs[left].category !== this.defs[right].category) {
+						return (this.defs[left].category || "").localeCompare(this.defs[right].category || "")
+					}
+					return left.localeCompare(right);
+				}).forEach((e) => {
+					const def = this.defs[e];
+					/*
+						Add the category heading to the <nav> if we're in a new category.
+					*/
+					if (def.category !== currentCategory) {
+						/*
+							Add the terminating </ul> if a category has just ended.
+						*/
+						if (currentCategory) {
+							navElement += "</ul>";
+						}
+						currentCategory = def.category;
+						navElement += `<h6>${def.category}</h6><ul>`;
+					}
+					/*
+						Output the definition to both the file and the <nav>
+					*/
+					outputElement += def.text;
+					navElement += this.navLink(def);
+				});
+
+				return [outputElement, navElement];
+			}
+		}, props);
+
+	},
+	Markup = new Defs({
+		defName: "Passage markup",
+		defCode: "markup",
 
 		definition({input, 0:title, 1:name}) {
-			const
-				slugName =  name.replace(/\s/g,'-').toLowerCase(),
-				text = processTextTerms(
-					input.trim().replace(title, "\n<h2 class='def_title markup_title' id=markup_" + slugName + ">"
-						+ "<a class='heading_link' href=#markup_" + slugName + "></a>" + title + "</h2>\n"),
-					name,
-					{markupNames:true, macroNames:true}
-				),
-				category = (categoryTag.exec(text) || {})[1];
+			const slugName =  name.replace(/\s/g,'-').toLowerCase();
+			let text = input.trim().replace(title, "\n<h2 class='def_title markup_title' id=markup_" + slugName + ">"
+				+ "<a class='heading_link' href=#markup_" + slugName + "></a>" + title + "</h2>\n");
+			const category = (categoryTag.exec(text) || {})[1];
+
+			text = processTextTerms(
+				text,
+				name,
+				{markupNames:true, macroNames:true}
+			);
 
 			Markup.defs[title] = { text, anchor: "markup_" + slugName, name, category };
 		},
-	},
+	}),
 
-	Type = {
-		defs: {},
+	Type = new Defs({
+		defName: "Types of data",
+		defCode: "type",
 
 		definition({input, 0:title, 1:name}) {
-			const
-				slugName =  name.replace(/\s/g,'-').toLowerCase(),
-				text = processTextTerms(
-					input.trim().replace(title, "\n<h2 class='def_title type_title' id=type_" + slugName + ">"
-						+ "<a class='heading_link' href=#type_" + slugName + "></a>" + title + "</h2>\n"),
-					name,
-					{typeNames: true, macroNames:true}
-				);
-			Type.defs[title] = { text, anchor: "type_" + slugName, name };
+			const slugName =  name.replace(/\s/g,'-').toLowerCase();
+			let text = input.trim().replace(title, "\n<h2 class='def_title type_title' id=type_" + slugName + ">"
+				+ "<a class='heading_link' href=#type_" + slugName + "></a>" + title + "</h2>\n");
+			const category = (categoryTag.exec(text) || {})[1];
+
+			text = processTextTerms(
+				text,
+				name,
+				{typeNames: true, macroNames:true}
+			);
+
+			Type.defs[title] = { text, anchor: "type_" + slugName, name, category };
 		},
-	},
+	}),
 
-	Macro = {
-		// Macro definitions
-		defs: {},
+	Macro = new Defs({
+		defName: "List of macros",
+		defCode: "macro",
 
+		navLink(def) {
+			return `<li><a href="#${def.anchor}">(${def.name}:)</a>
+				<span class='nav_macro_return_type'>${def.returnType}</span>${
+					def.aka.length ? `<div class='nav_macro_aka'>${def.aka.map(e => `(${e}:)`).join(', ')}</div>`
+					: ''
+				}</li>`;
+		},
 		/*
 			Write out a macro title, which is simply "The (name:) macro",
 			but with an id that allows the element to be used as an anchor target.
@@ -104,14 +158,16 @@ const
 
 			const category = (categoryTag.exec(text) || {})[1];
 
+			const [,...aka] = macroEmpty.exec((macroAliases.exec(text) || [''])[0]) || [];
+
 			text = processTextTerms(text, name, {typeNames: true, macroNames:true});
 			
 			/*
 				Now, do it! Output the text!
 			*/
-			Macro.defs[title] = { text, anchor: "macro_" + name.toLowerCase(), name, category };
+			Macro.defs[title] = { text, anchor: "macro_" + name.toLowerCase(), name, category, sig, returnType, aka };
 		}
-	};
+	});
 
 /*
 	Convert various structures or terms in the passed-in body text
@@ -137,7 +193,7 @@ function processTextTerms(text, name, allow) {
 		/*
 			Convert specific markup names into hyperlinks.
 		*/
-		.replace(/\b(whitespace)\b/ig, function(text, $1, $2){
+		.replace(/([^\-\w])(whitespace)\b/ig, function(text, $1, $2){
 			if (!allow.markupNames) {
 				return text;
 			}
@@ -145,12 +201,12 @@ function processTextTerms(text, name, allow) {
 				...but don't hyperlink references to this own markup.
 				(This targets mixed-case singular and plural.)
 			*/
-			if ($1.toLowerCase() === name.toLowerCase()) {
+			if ($2.toLowerCase() === name.toLowerCase()) {
 				return text;
 			}
-			if (markupNamesLinked.indexOf($1) === -1) {
-				markupNamesLinked.push($1);
-				return "[" + $1 + "](#markup_" + $1.toLowerCase() + ")";
+			if (markupNamesLinked.indexOf($2) === -1) {
+				markupNamesLinked.push($2);
+				return $1 + "[" + $2 + "](#markup_" + $2.toLowerCase() + ")";
 			}
 			return text;
 		})
@@ -235,64 +291,20 @@ require('fs-readdir-recursive')('js/').forEach(function(path) {
 	Now, output the file.
 */
 let outputFile = "";
-let navElement = "<nav>";
-
+let navElement = "<nav><img src='http://twinery.org/2/storyformats/Harlowe/icon.svg' width=96 height=96></img>";
 /*
-	Markup definitions
+	Obtain the version
 */
-outputFile += "\n<h1 id=section_markup>Passage markup</h1>\n";
-navElement += "<h5>Markup</h5><ul>";
-
-Object.keys(Markup.defs).sort().forEach((e) => {
-	const def = Markup.defs[e];
-	outputFile += def.text;
-	navElement += `<li><a href="#${def.anchor}">${def.name}</a></li>`;
-});
-
-/*
-	Macro definitions
-*/
-outputFile += "\n<h1 id=section_macros>List of macros</h1>\n";
-navElement += "</ul><h5>Macros</h5>";
-
+navElement += `<div class=nav_version>Harlowe version ${JSON.parse(fs.readFileSync('package.json')).version}</div>`
 let currentCategory;
 
-Object.keys(Macro.defs).sort((left, right) => {
-	if (Macro.defs[left].category !== Macro.defs[right].category) {
-		return (Macro.defs[left].category || "").localeCompare(Macro.defs[right].category || "")
-	}
-	return left.localeCompare(right);
-}).forEach((e) => {
-	const macroDef = Macro.defs[e];
-	/*
-		Add the category heading to the <nav> if we're in a new category.
-	*/
-	if (macroDef.category !== currentCategory) {
-		/*
-			Add the terminating </ul> if a category has just ended.
-		*/
-		if (currentCategory) {
-			navElement += "</ul>";
-		}
-		currentCategory = macroDef.category;
-		navElement += `<h6>${macroDef.category}</h6><ul>`;
-	}
-	/*
-		Output the definition to both the file and the <nav>
-	*/
-	outputFile += macroDef.text;
-	navElement += `<li><a href="#${macroDef.anchor}">(${macroDef.name}:)</a></li>`;
-});
-/*
-	Type definitions
-*/
-outputFile += "\n<h1 id=section_types>Types of data</h1>\n";
-navElement += "<h5>Data types</h5><ul>";
+[Markup,Macro,Type].forEach(e=>{
+	outputFile += `\n<h1 id=section_${e.defCode}>${e.defName}</h1>\n`;
+	navElement += `<h5>${e.defName}</h5><ul class=list_${e.defCode}>`;
 
-Object.keys(Type.defs).sort().forEach((e) => {
-	const typeDef = Type.defs[e];
-	outputFile += typeDef.text;
-	navElement += `<li><a href="#${typeDef.anchor}">${typeDef.name}</a></li>`;
+	const [out, nav] = e.output();
+	outputFile += out;
+	navElement += nav + "</ul>"
 });
 
 /*
@@ -307,7 +319,7 @@ outputFile = `<!doctype html><meta charset=utf8><style>
 html { font-size:110%; font-weight:lighter; }
 body { font-family:Georgia, "Times New Roman", Times, serif; line-height:1.5; margin:0 auto; width:50%; }
 p { margin-top:1em; }
-strong { font-weight: bold; }
+strong,b { font-weight: bold; }
 a { color:#3B8BBA; }
 a:hover, a:focus, a:active { color:#22516d; }
 table { background:#fafafa; border-bottom:1px solid #ccc; border-collapse:collapse; border-right:1px solid #ccc; border-spacing:0; font-size:1em; width:100%; }
@@ -325,11 +337,16 @@ h5 { font-size:1em; }
 h6 { font-size:.9em; }
 h1,h2 { padding-top:2rem; padding-bottom:5px; }
 /* Nav bar */
-nav { position:fixed; top:5vh;left:5vh; bottom:5vh; overflow-y:scroll; border:1px solid #888; padding:1rem; font-size:90% }
+nav { position:fixed; min-width:calc(20% - 5vh); top:5vh;left:5vh; bottom:5vh; overflow-y:scroll; border:1px solid #888; padding:1rem; font-size:90% }
 nav ul { list-style-type: none; margin: 0em; padding: 0em; }
+nav img { display:block; margin: 0 auto;}
+.nav_version { text-align:center }
 /* Main styles */
 .def_title { background:linear-gradient(180deg,white,white 70%,silver); border-bottom:1px solid silver; padding-bottom:5px; }
 .macro_signature { opacity:0.75 }
+.nav_macro_return_type { opacity:0.33; float:right; }
+.nav_macro_aka { opacity: 0.75; font-size:90%; color:#3B8BBA; margin-left: 0.5em; font-style: italic; }
+.nav_macro_aka::before { content: "also known as "; opacity: 0.75; }
 /* Code blocks */
 code { background:#FFF; border:1px solid #888; color:#000; display:block; padding:12px; }
 /* Inline code */

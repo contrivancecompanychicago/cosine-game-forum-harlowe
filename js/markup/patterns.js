@@ -56,9 +56,11 @@
 			such as the spacebar space, and the tab character. They are considered interchangeable in type and quantity -
 			using two spaces usually has the same effect as using one space, one tab, and so forth.
 
-			Harlowe tries to also recognise most forms of Unicode-defined whitespace,
+			Harlowe tries to also recognise most forms of [Unicode-defined whitespace](https://en.wikipedia.org/wiki/Whitespace_character#Unicode),
 			including the quads, the per-em and per-en spaces, but not the zero-width space characters (as they may
 			cause confusion and syntax errors if unnoticed in your code).
+
+			#whitespace
 		*/
 		// This includes all forms of Unicode 6 whitespace except \n, \r, and Ogham space mark.
 		ws                   = "[ \\f\\t\\v\u00a0\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]*",
@@ -103,6 +105,8 @@
 			    *    Bulleted item 2
 			  ** Indented bulleted item
 			```
+
+			#list
 		*/
 		
 		bullet      = "\\*",
@@ -129,6 +133,8 @@
 			   0. Numbered item 2
 			 0.0. Indented numbered item
 			```
+
+			#list
 		*/
 		numberPoint = "(?:0\\.)",
 		
@@ -147,6 +153,8 @@
 			     -----
 			```
 			Again, opening whitespace is permitted prior to the first `-` and after the final `-`.
+
+			#section
 		*/
 		hr          = ws + "-{3,}" + ws + eol,
 		
@@ -155,7 +163,7 @@
 
 			Heading markup is used to create large headings, such as in structured prose or title splash passages.
 			It is almost the same as the Markdown heading syntax: it starts on a fresh line,
-			has one to six consecutive #s, and ends at the line break.
+			has one to six consecutive `f#`s, and ends at the line break.
 
 			Example usage:
 			```
@@ -165,6 +173,8 @@
 			```
 
 			As you can see, unlike in Markdown, opening whitespace is permitted before the first #.
+
+			#section
 		*/
 		heading = ws + "(#{1,6})" + ws + noUnescapedLineBreak + eol,
 		
@@ -196,6 +206,8 @@
 			=><=====
 			This has margins 1/6 left, 5/6 right.
 			```
+
+			#section
 		*/
 		align = ws + "(==+>|<=+|=+><=+|<==+>)" + ws + eol,
 		
@@ -203,19 +215,13 @@
 			Link markup
 
 			Hyperlinks are the player's means of moving between passages and affecting the story. They consist of
-			*link text*, which the player clicks on, and a *passage expression* that equals the name of the passage
-			to send the player to.
+			*link text*, which the player clicks on, and a *passage name* to send the player to.
 
-			Inside matching non-nesting pairs of `[[` and `]]`, place the link text and the passage expression,
-			separated by either `->` or `<-`, with the arrow pointing to the passage expression.
+			Inside matching non-nesting pairs of `[[` and `]]`, place the link text and the passage name,
+			separated by either `->` or `<-`, with the arrow pointing to the passage name.
 
 			You can also write a shorthand form, where there is no `<-` or `->` separator.
 			The entire content is treated as a passage name, and its evaluation is treated as the link text.
-
-			```
-			[[Up to the attic]]
-			[["Draw your" + $weapon]]
-			```
 
 			Example usage:
 			```
@@ -243,6 +249,8 @@
 
 			This syntax is not the only way to create links – there are many link macros, such as (link:), which can
 			be used to make more versatile hyperlinks in your story.
+
+			#basics
 		*/
 		passageLink = {
 			opener:            "\\[\\[(?!\\[)",
@@ -283,6 +291,8 @@
 			```
 			$robotText[Good golly! Your flesh... it's so soft!]
 			```
+
+			#coding
 		*/
 		variable          = "\\$(" + validPropertyName + ")",
 		
@@ -331,7 +341,7 @@
 			name:              "[a-zA-Z][\\w\\-]*",
 			attrs:             "(?:\"[^\"]*\"|'[^']*'|[^'\">])*?",
 		},
-		
+
 		hookTagFront =  "\\|(" + anyLetter.replace("]", "_]") + "*)>",
 		hookTagBack  =  "<("   + anyLetter.replace("]", "_]") + "*)\\|",
 		
@@ -387,6 +397,29 @@
 		
 		whitespace:  mws,
 		
+		/*d:
+			Escaped line break markup
+			
+			Sometimes, you may want to write an especially long line, potentially containing many macros.
+			This may not be particularly readable in the passage editor, though. One piece of markup that
+			may help you is the `\` mark - placing it just before a line break, or just after it, will cause the line break
+			to be removed from the passage, thus "joining together" the lines.
+
+			Example usage:
+			```
+			This line\
+			and this line
+			\and this line, are actually just one line.
+			```
+
+			Details:
+			There must not be any whitespace between the `\` and the line break. Otherwise, it won't work.
+
+			Like most passage text markup, this cannot be used inside a macro call (for instance, `(print: \`<br>
+			`3)`) - but since line breaks between values in macro calls are ignored, this doesn't matter.
+
+			#whitespace
+		*/
 		escapedLine,
 		
 		br,
@@ -423,6 +456,11 @@
 
 			You can also include a `<style>` tag containing CSS code. The CSS should affect the entire page
 			until the element is removed from the DOM.
+
+			Finally, you can also include HTML comments `<!-- Comment -->` in your code, if you wish to leave
+			reminder messages or explanations about the passage's code to yourself.
+
+			#extra
 		*/
 		tag:         "<\\/?" + tag.name + tag.attrs + ">",
 		tagPeek:                                      "<",
@@ -442,8 +480,37 @@
 		bulleted,
 		numbered,
 		
-		/*
-			The text style syntaxes.
+		/*d:
+			Style markup
+
+			Often, you'd like to apply styles to your text – to italicize a book title,
+			for example. You can do this with simple formatting codes that
+			are similar to the double brackets of a link. Here is what's available to you:
+			
+			| Styling | Markup code | Result | HTML produced
+			|---
+			| Italics | `//text//` | <i>text</i> |`<i>text</i>`
+			| Boldface | `''text''` | <b>text</b> |`<b>text</b>`
+			| Deleted/spoiler text | `~~text~~` | <del>text</del> | `<del>text</del>`
+			| Emphasis | `*text*` | *text* |`<em>text</em>`
+			| Strong emphasis | `**text**` | **text** |`<strong>text</strong>`
+			| Superscript | `meters/second^^2^^` | meters/second<sup>2</sup> | `meters/second<sup>2</sup>`
+
+			Example usage:
+			```
+			You //can't// be serious! I have to go through the ''whole game''
+			again? ^^Jeez, louise!^^
+			```
+
+			Details:
+			You can nest these codes - `''//text//''` will produce ***bold italics*** - but they must nest
+			symmetrically. `''//text''//` will not work.
+
+			A larger variety of text styles can be produced by using the (text-style:) macro, attaching it to
+			a text hook you'd like to style. And, furthermore, you can use HTML tags like `<mark>` as an additional
+			styling option.
+
+			#basics
 		*/
 		delOpener:        escape("~~"),
 		italicOpener:     escape("//"),
@@ -469,9 +536,12 @@
 			of `` ` `` marks used to enclose them.
 
 			Example usage:
-			```I want to include `[[double square brackets]]` in my story, so I use tilde ` marks.```
+			* ```I want to include `[[double square brackets]]` in my story, so I use tilde ` marks.```
+			* ```I want to include ``single tildes ` in my story``, so I place them between two tilde marks.```
+			
+			There's no hard limit to the amount of tildes you can use to enclose the text.
 
-			```I want to include ``single tildes ` in my story``, so I place them between two tilde marks.```
+			#extra
 		*/
 		/*
 			The verbatim syntax does not "nest", but terminals can be
@@ -479,18 +549,131 @@
 		*/
 		verbatimOpener:    "`+",
 		
+		/*d:
+			Collapsing whitespace markup
+
+			When working with macros, HTML tags and such, it's convenient for readability purposes to space and indent
+			the text. However, this whitespace will also appear in the compiled passage text. You can get around this by
+			placing the text between `{` and `}` marks. Inside, all runs of consecutive whitespace (line breaks, spaces)
+			will be reduced to just one space.
+
+			Example usage:
+			```
+			{
+			    This sentence
+			    will be
+			    (set: $event to true)
+			    written on one line
+			    with only single spaces.
+			}
+			```
+
+			Details:
+
+			You can nest this markup within itself - `{Good  { gumballs!}}` - but the inner pair won't behave any
+			differently as a result of being nested.
+
+			Text inside macro calls (in particular, text inside strings provided to macro) will not be collapsed.
+			Neither will text *outputted* by macro calls, either - `{(print:"   ")}` will still print all 3 spaces,
+			and `{(display:"Attic")}` will still display all of the whitespace in the "Attic" passage.
+
+			Also, text inside the verbatim syntax, such as `` Thunder`   `hound ``, will not be collapsed either.
+
+			If the markup contains a (replace:) command attached to a hook, the hook will still have its whitespace
+			collapsed, even if it is commanded to replace text outside of the markup.
+
+			If you only want to remove specific line breaks, consider the escaped line break markup.
+
+			#whitespace
+		*/
 		collapsedFront:    "{",
 		collapsedBack:     "}",
 		
-		/*
-			Hook tags can be either prepended, pointing to the right,
-				|tag>[The hook's text]
-			or appended, pointing to the left.
-				[The hook's text]<tag|
+		/*d:
+			Named hook markup
+
+			For a general introduction to hooks, see their respective markup description. Named hooks are a less common type of
+			hook that offer unique benefits. To produce one, instead of attachimg a macro, attach a "nametag" to the front or back:
+
+			```
+			[This hook is named 'opener']<opener|
+
+			|s2>[This hook is named 's2']
+			```
+
+			(Hook nametags are supposed to resemble triangular gift box nametags.)
+
+			A macro can refer to and alter the text content of a named hook by referring to the hook as if it were a variable.
+			To do this, write the hook's name as if it were a variable, but use the `?` symbol in place of the `$` symbol:
+
+			```
+			[Fie and fuggaboo!]<shout|
+
+			(click: ?shout)[ (replace: ?shout)["Blast and damnation!"] ]
+			```
+
+			The above (click:) and (replace:) macros can remotely refer to and alter the hook using its name. This lets you,
+			for instance, write a section of text full of tiny hooks, and then attach behaviour to them further in the passage:
+
+			```
+			Your [ballroom gown]<c1| is [bright red]<c2| with [silver streaks]<c3|,
+			and covered in [moonstones]<c4|.
+
+			(click: ?c1)[A hand-me-down from your great aunt.]
+			(click: ?c2)[A garish shade, to your reckoning.]
+			(click: ?c3)[Only their faint shine keeps them from being seen as grey.]
+			(click: ?c4)[Dreadfully heavy, they weigh you down and make dancing arduous.]
+			```
+
+			As you can see, the top sentence remains mostly readable despite the fact that several words have (click:) behaviours
+			assigned to them.
+
+			#coding
 		*/
 		hookAppendedFront:  "\\[",
 		hookPrependedFront:
 			hookTagFront + "\\[",
+
+
+		/*d:
+			Hook markup
+
+			A hook is a means of indicating that a specific span of passage prose is special in some way. It
+			essentially consists of text between single `[` and `]` marks. Prose inside a hook can be modified, styled,
+			controlled and analysed in a variety of ways using macros.
+
+			Anonymous (or simple) hooks are hooks which have a macro or a variable attached to their front. This
+			attached value is used to change the hook in some way, such as hiding it based on the game state, altering
+			the styling of its text, moving its text to elsewhere in the passage.
+
+			```
+			(font: "Courier New")[This is an anonymous hook.
+
+			As you can see, this has a macro instance in front of it.]
+			This text is outside the hook.
+			```
+
+			The (font:) macro is one of several macros which produces a special styling command, instead of a basic
+			data type like a number or a string. In this case, the command changes the attached hook's font to Courier New,
+			without modifying the other text.
+
+			You can save this command to a variable, and then use it repeatedly, like so:
+			```
+			(set: $x to (font: "Skia"))
+			$x[This text is in Skia.]
+			$x[As is this text.]
+			```
+
+			The basic (if:) macro is used by attaching it to a hook, too:
+
+			```
+			(if: $x is 2)[This text is only displayed if $x is 2.]
+			```
+
+			For more information about command macros, consult the descriptions for each of them in turn.
+
+			#coding
+		*/
 		/*
 			The anonymous hook is a contextual production: it may only occur
 			after macros and variables. Similarly, the hookAppendedFront
@@ -530,6 +713,34 @@
 			passageLink.opener + passageLink.legacyText + passageLink.closer,
 		simpleLinkPeek:    "[[",
 		
+		/*d:
+			Macro markup
+
+			A macro is a piece of code that is inserted into passage text. Macros are used to accomplish many effects,
+			such as altering the game's state, displaying different text depending on the game's state, and altering
+			the manner in which text is displayed.
+
+			There are many built-in macros in Harlowe. To use one, you must *call* upon it in your passage by writing
+			the name, a colon, and some data values to provide it, all in parentheses. For instance, you call the (print:)
+			macro like so: `(print: 54)`. In this example, `print` is the macro's name, and `54` is the value.
+
+			You can provide any type of data values to a macro call - numbers, strings, booleans, and so forth. These
+			can be in any form, as well - `"Red" + "belly"` is an expression that produces a single string, "Redbelly",
+			and can be used anywhere that the joined string can be used. Variables, too, can be used with macros, if
+			their contents matches what the macro expects. So, if `$var` contains the string "Redbelly", then `(print: $var)`,
+			`(print: "Redbelly")` and `(print: "Red" + "belly")` are exactly the same.
+
+			Furthermore, each macro call produces a value itself - (num:), for instance, produces a number, (a:) an array - so
+			they too can be nested inside other macro calls. `(if: (num:"5") > 2)` nests the (num:) macro inside the (if:) macro.
+
+			If a macro can or should be given multiple values, separate them with commas. You can give the `(a:)` macro
+			three numbers like so: `(a: 2, 3, 4)`. The final value may have a comma after it, or it may not - `(a: 2, 3, 4,)`
+			is equally valid. Also, if you have a data value that's an array, string or dataset, you can "spread out" all
+			of its values into the macro call by using the `...` operator: `(either: ...$array)` will act as if every value in
+			$array was placed in the (either:) macro call separately
+
+			#coding
+		*/
 		macroFront: macro.opener + before(macro.name),
 		macroFrontPeek: "(",
 		macroName: macro.name,
