@@ -177,6 +177,46 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 			so that they're visible to the author when they're in debug mode, and can clearly
 			see the effect they have on the passage.
 		*/
+		/*d:
+			header tag
+
+			It is often very useful to want to reuse a certain set of macro calls in every passage,
+			or to reuse an opening block of text. You can do this by giving the passage the special
+			tag `header`, or `footer`. All passages with these tags will have their source text included at the top
+			(or, for `footer`, the bottom) of every passage in the story, as if by an invisible (display:) macro call.
+
+			If many passages have the `header` tag, they will all be displayed, ordered alphabetically by their passage
+			name.
+		*/
+		/*d:
+			debug-header tag
+			
+			This special tag is similar to the `header` tag, but only causes the passage
+			to be included if you're running the story in debug mode.
+
+			This has a variety of uses: you can put special debug display code in this
+			passage, which can show the status of certain variables or provide links
+			to change the game state as you see fit, and have that code
+			be present in every passage in the story, but only during testing.
+
+			All passages tagged with `debug-header` will run, in alphabetical order
+			by their passage name, before the passages tagged `header` will run.
+		*/
+		/*d:
+			footer tag
+
+			This special tag is identical to the `header` tag, except that it places the passage
+			at the bottom of all visited passages, instead of the top.
+		*/
+		/*d:
+			debug-footer tag
+			
+			This special tag is identical to the `debug-header` tag, except that it places the passage
+			at the bottom of all visited passages, instead of the top.
+
+			All passages tagged with `debug-footer` will run, in alphabetical order
+			by their passage name, after the passages tagged `footer` have been run.
+		*/
 		source =
 			(options.debug
 				? Passages.getTagged('debug-header')
@@ -201,6 +241,33 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 			We only add the startup and debug-startup passages if this is the very first passage.
 			Note that the way in which source is modified means that startup code
 			runs before header code.
+		*/
+		/*d:
+			startup tag
+
+			This special tag is similar to `header`, but it will only cause the passage
+			to be included in the very first passage in the game.
+
+			This is intended to simplify the story testing process: if you have setup
+			code which creates variables used throughout the entire story, you should put it in
+			a passage with this tag, instead of the starting passage. This allows you to test your
+			story from any passage, and, furthermore, easily change the starting passage if you wish.
+
+			All passages tagged with `startup` will run, in alphabetical order
+			by their passage name, before the passages tagged `header` will run.
+		*/
+		/*d:
+			debug-startup tag
+			
+			This special tag is similar to the `startup` tag, but only causes the passage
+			to be included if you're running the story in debug mode.
+
+			This has a variety of uses: you can put special debugging code into this
+			passage, or set up a late game state to test, and have that code run
+			whenever you use debug mode, no matter which passage you choose to test.
+
+			All passages tagged with `debug-startup` will run, in alphabetical order
+			by their passage name, before the passages tagged `startup` will run.
 		*/
 		if (State.pastLength <= 0) {
 			if (options.debug) {

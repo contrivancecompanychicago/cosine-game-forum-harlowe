@@ -52,7 +52,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 	
 	[
 		/*d:
-			(link: String) -> Command
+			(link: String) -> Changer
 			Also known as: (link-replace:)
 			
 			Makes a command to create a special link that can be used to show a hook.
@@ -81,7 +81,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		*/
 		["link", "link-replace"],
 		/*d:
-			(link-reveal: String) -> Command
+			(link-reveal: String) -> Changer
 			
 			Makes a command to create a special link that shows a hook, keeping the link's
 			text visible after clicking.
@@ -110,7 +110,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		*/
 		["link-reveal"],
 		/*d:
-			(link-repeat: String) -> Command
+			(link-repeat: String) -> Changer
 			
 			Makes a command to create a special link that shows a hook, and, when clicked again,
 			re-runs the hook, replacing its contents with a newer version.
@@ -172,7 +172,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		It is also what the standard link syntax desugars to.
 	*/
 	/*d:
-		(link-goto: String, [String]) -> Command
+		(link-goto: String, [String]) -> Changer
 		
 		Takes a string of link text, and an optional destination passage name, and makes a command to create
 		a link that takes the player to another passage. The link functions identically to a standard link.

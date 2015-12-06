@@ -17,6 +17,30 @@ define([
 		@class Operations
 	*/
 	let Operations,
+		/*d:
+			it keyword
+
+			This keyword is a shorthand for the closest leftmost value in an expression. It lets you write
+			`(if: $candles < 2 and it > 5)` instead of `(if: $candles < 2 and $candles > 5)`, or `(set: $candles to it + 3)`
+			instead of `(set: $candles to $candles + 3)`. (You can't, however, use it in a (put:) or (move:) macro:
+			`(put:$red + $blue into it)` is invalid.)
+
+			Since `it` uses the closest leftmost value, `(print: $red > 2 and it < 4 and $blue > 2 and it < 4)` is the same as
+			`(print: $red > 2 and $red < 4 and $blue > 2 and $blue < 4)`.
+
+			`it` is case-insensitive: `IT`, `iT` and `It` are all acceptable as well.
+
+			In some situations, the `it` keyword will be *inserted automatically* by Harlowe when the story runs. If you write an
+			incomplete comparison expression where the left-hand side is missing, like `(print: $red > 2 and < 4)`,
+			then, when running, the `it` keyword will automatically be inserted into the absent spot - producing, in this case,
+			`(print: $red > 2 and it < 4)`. Note that in situations where the `it` keyword would not have an obvious value, such as
+			`(print: < 4)`, an error will result nonetheless.
+
+			If the `it` keyword equals a datamap, string, array, or other "collection" data type, then you can access data values
+			using the `its` variant - `(print: $red is 'egg' and its length is 3)` or `(set:$red to its 1st)`. Much like the `'s`
+			operator, you can use computed values with `its` - `(if: $red's length is 3 and its $position is $value)` will work as
+			expected.
+		*/
 		/*
 			The "it" keyword is bound to whatever the last left-hand-side value
 			in a comparison operation was. Since its scope is so ephemeral,
@@ -156,6 +180,21 @@ define([
 					return It;
 				},
 				
+				/*d:
+					time keyword
+
+					This keyword evaluates to the number of milliseconds passed since the passage
+					was displayed. Its main purpose is to be used alongside changers
+					such as (live:) or (link:). `(link:"Click")[(if: time > 5s)[...]]`, for instance,
+					can be used to determine if 5 seconds have passed since this passage was displayed,
+					and thus whether the player waited 5 seconds before clicking the link.
+
+					When the passage is initially being rendered, `time` will be 0.
+
+					`time` used in (display:) macros will still produce the time of the host passage, not the
+					contained passage. So, you can't use it to determine how long the (display:)ed passage
+					has been present in the host passage.
+				*/
 				/*
 					The "time" keyword binds to the number of milliseconds since the passage
 					was rendered.
@@ -165,7 +204,6 @@ define([
 					hook's. I believe that the passage is what's called for here.
 				*/
 				get time() {
-					// This is, as far as I know, the only "this" usage in the class.
 					return (Date.now() - section.timestamp);
 				}
 				/*

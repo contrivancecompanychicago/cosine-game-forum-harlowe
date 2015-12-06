@@ -11,10 +11,6 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 		
 		Macros that produce commands include (display:), (print:), (go-to:), (save-game:), (load-game:),
 		(link-goto:), and more.
-		
-		Many commands only have an effect when they're attached to hooks, and modify the
-		hook in a certain manner. Macros that work like this include (text-style:), (font:), (transition:),
-		(rotate:), (position-x:), (position-y:), (hook:), (click:), (link:), and more.
 	*/
 	const
 		{Any, optional} = Macros.TypeSignature;
@@ -251,7 +247,7 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 		[String, String])
 		
 		/*d:
-			(live: [Number]) -> Command
+			(live: [Number]) -> Changer
 			When you attach this macro to a hook, the hook becomes "live", which means that it's repeatedly re-run
 			every certain number of milliseconds, replacing the source inside of the hook with a newly computed version.
 			

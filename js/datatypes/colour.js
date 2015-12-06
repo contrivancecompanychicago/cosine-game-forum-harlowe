@@ -1,7 +1,36 @@
 define(['utils', 'jquery'], ({assert}, $) => {
-	/*
-		Colours are first-class objects in TwineScript.
-		You can't do much with them, though - just add them.
+	/*d:
+		Colour data
+
+		Colours are special built-in data values which can be provided to certain styling macros, such as (background:)
+		or (text-colour:). They consist of the following values:
+
+		| Value | HTML colour equivalent
+		|---
+		| `red` | <span style='background:#e61919;color:black'>#e61919</span>
+		| `orange` | <span style='background:#e68019;color:black'>#e68019</span>
+		| `yellow` | <span style='background:#e5e619;color:black'>#e5e619</span>
+		| `lime` | <span style='background:#80e619;color:black'>#80e619</span>
+		| `green` | <span style='background:#19e619;color:black'>#19e619</span>
+		| `aqua` or `cyan` | <span style='background:#19e5e6;color:black'>#19e5e6</span>
+		| `blue` | <span style='background:#197fe6;color:white'>#197fe6</span>
+		| `navy` | <span style='background:#1919e6;color:white'>#1919e6</span>
+		| `purple` | <span style='background:#7f19e6;color:white'>#7f19e6</span>
+		| `magenta` or `fuchsia` | <span style='background:#e619e5;color:white'>#e619e5</span>
+		| `white` | <span style='background:#fff;color:black'>#fff</span>
+		| `black` | <span style='background:#000;color:white'>#000</span>
+		| `grey` or `gray` | <span style='background:#888;color:white'>#888</span>
+
+		(These colours were chosen to be visually pleasing when used as both background colours and text colours, without
+		the glaring intensity that certain HTML colours, like pure #f00 red, are known to exhibit.)
+
+		Additionally, you can also use HTML hex #xxxxxx and #xxx notation to specify your own colours, such as
+		`#691212` or `#a4e`. (Note that these are *not* strings, but bare values - `(background: #a4e)` is valid,
+		as is `(background:navy)`.)
+
+		Of course, HTML hex notation is notoriously hard to read and write. It's recommended that you create other
+		colours by combining the built-in keyword values using the `+` operator: `red + orange + white`
+		produces a blend of red and orange, tinted white. `#a4e + black` is a dim purple.
 	*/
 	"use strict";
 	const

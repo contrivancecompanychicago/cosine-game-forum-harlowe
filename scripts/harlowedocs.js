@@ -8,17 +8,12 @@ const fs = require('fs');
 const
 	macroEmpty = /\(([\w\-\d]+):\)(?!`)/g,
 	macroAliases = /Also known as: [^\n]+/,
-	macroWithTypeSignature = /\(([\w\-\d]+):([\s\w\.\,\[\]]*)\) -> ([\w]+)/,
-	categoryTag = /\s+#([a-z\d ]+)/g,
-
+	categoryTag = /\n\s+#([a-z\d ]+)/g,
 	/*
 		This matches a mixed-case type name, optionally plural, but not whenever
 		it seems to be part of a macro name.
 	*/
-	typeName = /\b(hook|colour|variabletovalue|any|command|string|number|boolean|array|data(?:map|set))(s?)(?!\:\))\b/ig,
-	typeDefinition = /([\w]+) data\n/,
-
-	markupDefinition = /([\w ]+) markup\n/,
+	typeName = /([^\-])\b(hookname|colour|variabletovalue|any|changer|command|string|number|boolean|array|data(?:map|set))(s?)(?!\:\))\b/ig,
 	
 	Defs = function(props) {
 		return Object.assign({
@@ -61,11 +56,12 @@ const
 				return [outputElement, navElement];
 			}
 		}, props);
-
 	},
+
 	Markup = new Defs({
 		defName: "Passage markup",
 		defCode: "markup",
+		regExp: /([\w ]+) markup\n/,
 
 		definition({input, 0:title, 1:name}) {
 			const slugName =  name.replace(/\s/g,'-').toLowerCase();
@@ -79,13 +75,14 @@ const
 				{markupNames:true, macroNames:true}
 			);
 
-			Markup.defs[title] = { text, anchor: "markup_" + slugName, name, category };
+			this.defs[title] = { text, anchor: "markup_" + slugName, name, category };
 		},
 	}),
 
 	Type = new Defs({
 		defName: "Types of data",
 		defCode: "type",
+		regExp: /([\w]+) data\n/,
 
 		definition({input, 0:title, 1:name}) {
 			const slugName =  name.replace(/\s/g,'-').toLowerCase();
@@ -99,13 +96,54 @@ const
 				{typeNames: true, macroNames:true}
 			);
 
-			Type.defs[title] = { text, anchor: "type_" + slugName, name, category };
+			this.defs[title] = { text, anchor: "type_" + slugName, name, category };
+		},
+	}),
+
+	Keyword = new Defs({
+		defName: "Special keywords",
+		defCode: "keyword",
+		regExp: /([\w]+) keyword\n/,
+
+		definition({input, 0:title, 1:name}) {
+			const slugName =  name.replace(/\s/g,'-').toLowerCase();
+			let text = input.trim().replace(title, "\n<h2 class='def_title keyword_title' id=keyword_" + slugName + ">"
+				+ "<a class='heading_link' href=#keyword_" + slugName + "></a>" + title + "</h2>\n");
+
+			text = processTextTerms(
+				text,
+				name,
+				{typeNames: true, macroNames:true}
+			);
+
+			this.defs[title] = { text, anchor: "keyword_" + slugName, name };
+		},
+	}),
+
+	PassageTag = new Defs({
+		defName: "Special passage tags",
+		defCode: "passagetag",
+		regExp: /([\w\-]+) tag\n/,
+
+		definition({input, 0:title, 1:name}) {
+			const slugName =  name.replace(/\s/g,'-').toLowerCase();
+			let text = input.trim().replace(title, "\n<h2 class='def_title passagetag_title' id=passagetag_" + slugName + ">"
+				+ "<a class='heading_link' href=#passagetag_" + slugName + "></a>" + title + "</h2>\n");
+
+			text = processTextTerms(
+				text,
+				name,
+				{typeNames: true, macroNames:true}
+			);
+
+			this.defs[title] = { text, anchor: "passagetag_" + slugName, name };
 		},
 	}),
 
 	Macro = new Defs({
 		defName: "List of macros",
 		defCode: "macro",
+		regExp: /\(([\w\-\d]+):([\s\w\.\,\[\]]*)\) -> ([\w]+)/,
 
 		navLink(def) {
 			return `<li><a href="#${def.anchor}">(${def.name}:)</a>
@@ -162,10 +200,7 @@ const
 
 			text = processTextTerms(text, name, {typeNames: true, macroNames:true});
 			
-			/*
-				Now, do it! Output the text!
-			*/
-			Macro.defs[title] = { text, anchor: "macro_" + name.toLowerCase(), name, category, sig, returnType, aka };
+			this.defs[title] = { text, anchor: "macro_" + name.toLowerCase(), name, category, sig, returnType, aka };
 		}
 	});
 
@@ -182,9 +217,15 @@ function processTextTerms(text, name, allow) {
 	*/
 	const
 		typeNamesLinked = [],
-		markupNamesLinked = [];
-	
-	text = text
+		markupNamesLinked = [],
+		headingMatch = /<h2[^]+?<\/h2>/g.exec(text);
+
+	text =
+		/*
+			Exclude the heading from the forthcoming replacements by concatenating it
+			separately.
+		*/
+		text.replace(headingMatch[0], '\ufeff')
 		/*
 			Remove the category tag
 		*/
@@ -213,20 +254,26 @@ function processTextTerms(text, name, allow) {
 		/*
 			Convert type names into hyperlinks.
 		*/
-		.replace(typeName, function(text, $1, $2){
+		.replace(typeName, function(text, preceding, matchName, plural){
 			if (!allow.typeNames) {
 				return text;
 			}
 			/*
-				...but don't hyperlink references to this own type.
-				(This targets mixed-case singular and plural.)
+				Don't match if the preceding character is '-' or "(" (such as in (text-colour:) or (dataset:))
 			*/
-			if ($1.toLowerCase() === name.toLowerCase()) {
+			if (["-","("].indexOf(preceding) >-1) {
 				return text;
 			}
-			if (typeNamesLinked.indexOf($1) === -1) {
-				typeNamesLinked.push($1);
-				return "[" + $1 + $2 + "](#type_" + $1.toLowerCase() + ")";
+			/*
+				Don't hyperlink references to this own type.
+				(This targets mixed-case singular and plural.)
+			*/
+			if (matchName.toLowerCase() === name.toLowerCase()) {
+				return text;
+			}
+			if (typeNamesLinked.indexOf(matchName) === -1) {
+				typeNamesLinked.push(matchName);
+				return preceding + "[" + matchName + plural + "](#type_" + matchName.toLowerCase() + ")";
 			}
 			return text;
 		})
@@ -249,7 +296,11 @@ function processTextTerms(text, name, allow) {
 		/*
 			Convert the minor headings into <h4> elements.
 		*/
-		.replace(/\n([A-Z][\w\s\d]+:)\n/g,"\n####$1\n");
+		.replace(/\n([A-Z][\w\s\d]+:)\n/g,"\n####$1\n")
+		/*
+			Reinsert the heading
+		*/
+		.replace('\ufeff', headingMatch[0])
 
 	return text;
 }
@@ -267,24 +318,11 @@ require('fs-readdir-recursive')('js/').forEach(function(path) {
 		e.replace(/\t/g,'').slice(4,-2).trim()
 	).forEach((defText) => {
 		let match;
-		/*
-			Is it a markup definition?
-		*/
-		if ((match = defText.match(markupDefinition))) {
-			Markup.definition(match);
-		}
-		/*
-			Is it a macro definition?
-		*/
-		if ((match = defText.match(macroWithTypeSignature))) {
-			Macro.definition(match);
-		}
-		/*
-			Is it a type definition?
-		*/
-		if ((match = defText.match(typeDefinition))) {
-			Type.definition(match);
-		}
+		[Markup,Macro,Type,Keyword,PassageTag].forEach(e=> {
+			if ((match = defText.match(e.regExp))) {
+				e.definition(match);
+			}
+		})
 	});
 });
 /*
@@ -298,7 +336,7 @@ let navElement = "<nav><img src='http://twinery.org/2/storyformats/Harlowe/icon.
 navElement += `<div class=nav_version>Harlowe version ${JSON.parse(fs.readFileSync('package.json')).version}</div>`
 let currentCategory;
 
-[Markup,Macro,Type].forEach(e=>{
+[Markup,Macro,Type,Keyword,PassageTag].forEach(e=>{
 	outputFile += `\n<h1 id=section_${e.defCode}>${e.defName}</h1>\n`;
 	navElement += `<h5>${e.defName}</h5><ul class=list_${e.defCode}>`;
 
@@ -314,10 +352,10 @@ outputFile = require('marked')(outputFile);
 /*
 	Append CSS and HTML header tags
 */
-outputFile = `<!doctype html><meta charset=utf8><style>
+outputFile = `<!doctype html><title>Harlowe manual</title><meta charset=utf8><style>
 /* Normalisation CSS */
 html { font-size:110%; font-weight:lighter; }
-body { font-family:Georgia, "Times New Roman", Times, serif; line-height:1.5; margin:0 auto; width:50%; }
+body { font-family:Georgia, "Times New Roman", Times, serif; line-height:1.5; margin:0 25vw;}
 p { margin-top:1em; }
 strong,b { font-weight: bold; }
 a { color:#3B8BBA; }
@@ -337,14 +375,17 @@ h5 { font-size:1em; }
 h6 { font-size:.9em; }
 h1,h2 { padding-top:2rem; padding-bottom:5px; }
 /* Nav bar */
-nav { position:fixed; min-width:calc(20% - 5vh); top:5vh;left:5vh; bottom:5vh; overflow-y:scroll; border:1px solid #888; padding:1rem; font-size:90% }
+nav { position:fixed; width:15vw; max-width: 20vw; top:5vh;left:5vh; bottom:5vh; overflow-y:scroll; border:1px solid #888; padding:1rem; margin-bottom:2em; font-size:90% }
 nav ul { list-style-type: none; margin: 0em; padding: 0em; }
 nav img { display:block; margin: 0 auto;}
 .nav_version { text-align:center }
+@media screen and (max-width: 800px) { nav { position:relative; } }
 /* Main styles */
 .def_title { background:linear-gradient(180deg,white,white 70%,silver); border-bottom:1px solid silver; padding-bottom:5px; }
 .macro_signature { opacity:0.75 }
 .nav_macro_return_type { opacity:0.33; float:right; }
+@media screen and (max-width: 1400px) { .nav_macro_return_type { display:none; } }
+@media screen and (max-width: 1600px) { .nav_macro_return_type { font-size:80% } }
 .nav_macro_aka { opacity: 0.75; font-size:90%; color:#3B8BBA; margin-left: 0.5em; font-style: italic; }
 .nav_macro_aka::before { content: "also known as "; opacity: 0.75; }
 /* Code blocks */

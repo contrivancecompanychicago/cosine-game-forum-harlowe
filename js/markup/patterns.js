@@ -593,7 +593,7 @@
 			Named hook markup
 
 			For a general introduction to hooks, see their respective markup description. Named hooks are a less common type of
-			hook that offer unique benefits. To produce one, instead of attachimg a macro, attach a "nametag" to the front or back:
+			hook that offer unique benefits. To produce one, instead of attaching a macro, attach a "nametag" to the front or back:
 
 			```
 			[This hook is named 'opener']<opener|
@@ -723,6 +723,11 @@
 			There are many built-in macros in Harlowe. To use one, you must *call* upon it in your passage by writing
 			the name, a colon, and some data values to provide it, all in parentheses. For instance, you call the (print:)
 			macro like so: `(print: 54)`. In this example, `print` is the macro's name, and `54` is the value.
+
+			The name of the macro is case-insensitive, dash-insensitive and underscore-insensitive. This means that
+			any combination of case, dashes and underscores in the name will be ignored. You can, for instance, write
+			`(go-to:)` as `(goto:)`, `(Goto:)`, `(GOTO:)`, `(GoTo:)`, `(Go_To:)`, `(Got--o:)`, `(-_-_g-o-t-o:)`, or 
+			any other combination or variation.
 
 			You can provide any type of data values to a macro call - numbers, strings, booleans, and so forth. These
 			can be in any form, as well - `"Red" + "belly"` is an expression that produces a single string, "Redbelly",

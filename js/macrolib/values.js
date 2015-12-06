@@ -243,44 +243,7 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 		};
 	}
 	
-	/*d:
-		(either: ...Any) -> Any
-		
-		Give this macro several values, separated by commas, and it will pick and return
-		one of them randomly.
-		
-		Example usage:
-		`A (either: "slimy", "goopy", "slippery") puddle` will randomly be "A slimy puddle", "A goopy puddle"
-		or "A slippery puddle".
-		
-		Rationale:
-		There are plenty of occasions where you might want random elements in your story: a few random adjectives
-		or flavour text lines to give repeated play-throughs variety, for instance, or a few random links for a "maze"
-		area. For these cases, you'll probably want to simply select from a few possibilities. The (either:)
-		macro provides this functionality.
-
-		Details:
-		As with many macros, you can use the spread `...` operator to place all of the values in an array or dataset
-		into (either:), and pick them randomly. `(either: ...$array)`, for instance, will choose one possibility from
-		all of the array contents.
-
-		If you want to pick two or more values randomly, you may want to use the (shuffled:) macro, and extract a subarray
-		from its result.
-		
-		See also:
-		(random:), (shuffled:)
-
-		#basics
-	*/
-	function either(...args) {
-		return args[~~(Math.random() * args.length)];
-	}
-	
 	({
-		/*
-			Wrappers for Date
-		*/
-
 		/*d:
 			(weekday:) -> String
 
@@ -303,7 +266,7 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 			This should be between 1 (on the 1st of the month) and 31, inclusive.
 
 			Example usage:
-			`Today is (weekday:) (monthday:).`
+			`Today is day (monthday:).`
 			
 			#date and time
 		*/
@@ -344,10 +307,6 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 			return new Date().toDateString();
 		},
 		null],
-
-		/*
-			Wrappers for basic Math
-		*/
 
 		/*d:
 			(min: ...Number) -> Number
@@ -532,10 +491,6 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 			#maths
 		*/
 		log2:   [mathFilter(Math.log2), Number],
-		
-		/*
-			Basic randomness
-		*/
 
 		/*d:
 			(random: Number, [Number]) -> Number
@@ -571,11 +526,36 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 			return ~~((Math.random() * (to - from))) + from;
 		}, [Number, Macros.TypeSignature.optional(Number)]],
 		
-		either: [either, rest(Any)],
+		/*d:
+			(either: ...Any) -> Any
+			
+			Give this macro several values, separated by commas, and it will pick and return
+			one of them randomly.
+			
+			Example usage:
+			`A (either: "slimy", "goopy", "slippery") puddle` will randomly be "A slimy puddle", "A goopy puddle"
+			or "A slippery puddle".
+			
+			Rationale:
+			There are plenty of occasions where you might want random elements in your story: a few random adjectives
+			or flavour text lines to give repeated play-throughs variety, for instance, or a few random links for a "maze"
+			area. For these cases, you'll probably want to simply select from a few possibilities. The (either:)
+			macro provides this functionality.
 
-		/*
-			Wrappers for Window
+			Details:
+			As with many macros, you can use the spread `...` operator to place all of the values in an array or dataset
+			into (either:), and pick them randomly. `(either: ...$array)`, for instance, will choose one possibility from
+			all of the array contents.
+
+			If you want to pick two or more values randomly, you may want to use the (shuffled:) macro, and extract a subarray
+			from its result.
+			
+			See also:
+			(random:), (shuffled:)
+
+			#basics
 		*/
+		either: [(...args) => args[~~(Math.random() * args.length)], rest(Any)],
 
 		/*d:
 			(alert: String) -> Undefined
@@ -654,9 +634,86 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 		*/
 		confirm: [(text) => window.confirm(text),
 			String],
+		/*d:
+			(open-url: String) -> Undefined
+
+			When this macro is evaluated, the player's browser attempts to open a new tab with the given
+			URL. This will usually require confirmation from the player, as most browsers block
+			Javascript programs such as Harlowe from opening tabs by default.
+
+			Example usage:
+			`(open-url: "http://www.example.org/")`
+
+			Details:
+			If the given URL is invalid, no error will be reported - the browser will simply attempt to
+			open it anyway.
+
+			Much like the `<a>` HTML element, the URL is treated as a relative URL if it doesn't start
+			with "http://", "https://", or another such protocol. This means that if your story file is
+			hosted at "http://www.example.org/story.html", then `(open-url: "page2.html")` will actually open
+			the URL "http://www.example.org/page2.html".
+
+			See also:
+			(goto-url:)
+
+			#url
+		*/
 		openURL: [(text) => window.open(text, ""), String],
+		/*d:
+			(reload:) -> Undefined
+
+			When this macro is evaluated, the player's browser will immediately attempt to reload
+			the page, in effect restarting the entire story.
+
+			Example usage:
+			`(click:"Restart")[(reload:)]`
+
+			Details:
+			If the first passage in the story contains this macro, the story will be caught in a "reload
+			loop", and won't be able to proceed. No error will be reported in this case.
+
+			#url
+		*/
 		reload: [window.location.reload.bind(window.location), null],
+		/*d:
+			(goto-url: String) -> Undefined
+
+			When this macro is evaluated, the player's browser will immediately attempt to leave
+			the story's page, and navigate to the given URL in the same tab. If this succeeds, then
+			the story session will "end".
+
+			Example usage:
+			`(goto-url: "http://www.example.org/")`
+
+			Details:
+			If the given URL is invalid, no error will be reported - the browser will simply attempt to
+			open it anyway.
+			
+			Much like the `<a>` HTML element, the URL is treated as a relative URL if it doesn't start
+			with "http://", "https://", or another such protocol. This means that if your story file is
+			hosted at "http://www.example.org/story.html", then `(open-url: "page2.html")` will actually open
+			the URL "http://www.example.org/page2.html".
+
+			See also:
+			(open-url:)
+
+			#url
+		*/
 		gotoURL: [window.location.assign.bind(window.location), String],
+		/*d:
+			(page-url:) -> String
+
+			This macro produces the full URL of the story's HTML page, as it is in the player's browser.
+
+			Example usage:
+			`(if: (page-url:) contains "#cellar")` will be true if the URL contains the `#cellar` hash.
+
+			Details:
+			This **may** be changed in a future version of Harlowe to return a datamap containing more
+			descriptive values about the URL, instead of a single string.
+
+			#url
+		*/
 		pageURL: [() => window.location.href, null],
 		
 		/*

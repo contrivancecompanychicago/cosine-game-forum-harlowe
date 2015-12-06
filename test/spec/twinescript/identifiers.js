@@ -3,6 +3,7 @@ describe("identifiers", function () {
 	describe("the 'it' identifier", function () {
 		it("refers to the left side of a recent comparison", function (){
 			expect("(set:$red to 3)(print: $red > 2 and it < 4)").markupToPrint("true");
+			expect("(set:$red to 3)(set:$blue to 6)(print: $red > 2 and $blue > 2 and it > 4)").markupToPrint("true");
 			expect("(set:$red to 'egg')(print: $red contains 'g' and it contains 'e')").markupToPrint("true");
 			expect("(set:$red to 'egg')(set:$blue to 'g')(print: $blue is in $red and it is in 'go')").markupToPrint("true");
 		});
@@ -55,4 +56,5 @@ describe("identifiers", function () {
 			expect("(set:$red to (a:'Bee'))(set:$red to its (1)'s (1))$red").markupToPrint("B");
 		});
 	});
+	//TODO: time
 });

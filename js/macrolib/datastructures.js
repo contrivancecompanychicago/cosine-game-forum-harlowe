@@ -177,7 +177,7 @@ define([
 			moving the value from the source to the destination.
 			
 			Example usage:
-			`(move: $array's 1st into $var)`
+			`(move: $arr's 1st into $var)`
 
 			Rationale:
 			You'll often use data structures such as arrays or datamaps as storage for values
@@ -240,7 +240,7 @@ define([
 		/*d:
 			Array data
 			
-			There are occasions when you may need to work with a sequence of values of unknown length.
+			There are occasions when you may need to work with a whole sequence of values at once.
 			For example, a sequence of adjectives (describing the player) that should be printed depending
 			on what a numeric variable (such as a health point variable) currently is.
 			You could create many, many variables to hold each value, but it is preferable to
@@ -337,7 +337,7 @@ define([
 			the first and last numbers.
 			
 			Details:
-			Certain kinds of macros, like (either:), accept sequences of values. You can
+			Certain kinds of macros, like (either:) or (dataset:), accept sequences of values. You can
 			use (range:) with these in conjunction with the `...` spreading operator:
 			`(dataset: ...(range:2,6))` is equivalent to `(dataset: 2,4,5,6,7)`, and
 			`(either: ...(range:1,5))` is equivalent to `(random: 1,5)`.

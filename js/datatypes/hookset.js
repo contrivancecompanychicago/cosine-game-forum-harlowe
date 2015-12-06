@@ -13,23 +13,23 @@ define(['jquery', 'utils/hookutils'], ($, {hookToSelector}) => {
 		@static
 	*/
 	/*d:
-		Hook data
+		HookName data
 		
-		Named hooks can be referenced by certain specific macros by supplying their name, preceded with the `?` character.
-		This is a "hook reference", and signifies that *all* hooks with the given name should be affected by the macro.
-		For instance, `(click:?red)` will cause *all* hooks with a `<red|` or `|red>` nametag to be subject to the (click:)
+		A hook name is like a variable name, but with `?` replacing the `$` sigil. When given to a macro that accepts it,
+		it signifies that *all* hooks with the given name should be affected by the macro.
+		For instance, `(click: ?red)` will cause *all* hooks with a `<red|` or `|red>` nametag to be subject to the (click:)
 		macro's behaviour.
 
-		Other macros can currently interact with named hooks as well: a hook reference can be used in the (set:), (put:) and (move:)
+		Other macros can currently interact with named hooks as well: a hook name can be used in the (set:), (put:) and (move:)
 		macros to change the source markup contained in them. `(set: ?red to "//Golly//")` will put the text "*Golly*" in *all*
-		hooks with a `<red|` or `|red>` nametag, in a manner similar to using (replace:). Furthermore, you can (print:) hook references, which joins the text of all
+		hooks with a `<red|` or `|red>` nametag, in a manner similar to using (replace:). Furthermore, you can (print:) a hook name, which joins the text of all
 		hooks with the same name together into a single string. All of the features in this paragraph, however, are **not** recommended, and
 		**may** be removed in a future version of Harlowe.
 
-		Note: if a hook reference does not apply to a single hook in the given passage (for instance, if you type `?rde` instead of
+		Note: if a hook name does not apply to a single hook in the given passage (for instance, if you type `?rde` instead of
 		`?red`) then no error will be produced. This is to allow macros such as (click:) to be placed in the `header` or `footer`
 		passages, and thus easily affect hooks in every passage, even if individual passages lack the given hook name. Of course, it
-		means that you'll have to be extra careful while typing hook references, as misspellings will not be easily identified
+		means that you'll have to be extra careful while typing the hook name, as misspellings will not be easily identified
 		by Harlowe itself.
 	*/
 	

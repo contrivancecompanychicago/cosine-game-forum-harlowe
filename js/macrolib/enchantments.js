@@ -34,7 +34,7 @@ define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercomm
 	*/
 	const revisionTypes = [
 			/*d:
-				(replace: [Hook or String]) -> Command
+				(replace: [HookName or String]) -> Changer
 				
 				Creates a command which you can attach to a hook, and replace a target
 				destination with the hook's contents. The target is either a text string within
@@ -81,7 +81,7 @@ define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercomm
 			*/
 			"replace",
 			/*d:
-				(append: [Hook or String]) -> Command
+				(append: [HookName or String]) -> Changer
 
 				A variation of (replace:) which adds the attached hook's contents to
 				the end of each target, rather than replacing it entirely.
@@ -102,7 +102,7 @@ define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercomm
 			*/
 			"append",
 			/*d:
-				(prepend: [Hook or String]) -> Command
+				(prepend: [HookName or String]) -> Changer
 
 				A variation of (replace:) which adds the attached hook's contents to
 				the beginning of each target, rather than replacing it entirely.
@@ -342,7 +342,7 @@ define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercomm
 	*/
 	const interactionTypes = [
 		/*d:
-			(click: [Hook or String]) -> Command
+			(click: [HookName or String]) -> Changer
 
 			Produces a command which, when attached to a hook, hides it and enchants the specified target, such that
 			it visually resembles a link, and that clicking it causes the attached hook to be revealed.
@@ -386,7 +386,7 @@ define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercomm
 			}
 		},
 		/*d:
-			(mouseover: [Hook or String]) -> Command
+			(mouseover: [HookName or String]) -> Changer
 
 			A variation of (click:) that, instead of showing the hook when the target is clicked, shows it
 			when the mouse merely hovers over it. The target is also styled differently, to denote this
@@ -422,7 +422,7 @@ define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercomm
 			}
 		},
 		/*d:
-			(mouseout: [Hook or String]) -> Command
+			(mouseout: [HookName or String]) -> Changer
 
 			A variation of (click:) that, instead of showing the hook when the target is clicked, shows it
 			when the mouse moves over it, and then leaves. The target is also styled differently, to denote this
@@ -466,6 +466,108 @@ define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercomm
 	/*
 		Combos are shorthands for interaction and revision macros that target the same hook:
 		for instance, (click: ?1)[(replace:?1)[...]] can be written as (click-replace: ?1)[...]
+	*/
+	/*d:
+		(click-replace: [HookName or String]) -> Changer
+
+		A special shorthand combination of the (click:) and (replace:) macros, this allows you to make a hook
+		replace its own text with that of the attached hook whenever it's clicked. `(click: ?1)[(replace:?1)[...]]`
+		can be rewritten as `(click-replace: ?1)[...]`.
+
+		Example usage:
+		```
+		My deepest secret.
+		(click-replace: "secret")[longing for you].
+		```
+
+		See also:
+		(click-prepend:), (click-append:)
+
+		#links
+	*/
+	/*d:
+		(click-append: [HookName or String]) -> Changer
+
+		A special shorthand combination of the (click:) and (append:) macros, this allows you to append
+		text to a hook or string when it's clicked. `(click: ?1)[(append:?1)[...]]`
+		can be rewritten as `(click-append: ?1)[...]`.
+
+		Example usage:
+		```
+		I have nothing to fear.
+		(click-append: "fear")[ but my own hand].
+		```
+
+		See also:
+		(click-replace:), (click-prepend:)
+
+		#links
+	*/
+	/*d:
+		(click-prepend: [HookName or String]) -> Changer
+
+		A special shorthand combination of the (click:) and (prepend:) macros, this allows you to prepend
+		text to a hook or string when it's clicked. `(click: ?1)[(prepend:?1)[...]]`
+		can be rewritten as `(click-prepend: ?1)[...]`.
+
+		Example usage:
+		```
+		Who stands with me?
+		(click-prepend: "?")[ but my shadow].
+		```
+
+		See also:
+		(click-replace:), (click-append:)
+
+		#links
+	*/
+	/*d:
+		(mouseover-replace: [HookName or String]) -> Changer
+
+		This is similar to (click-replace:), but uses the (mouseover:) macro's behaviour instead of
+		(click:)'s. For more information, consult the description of (click-replace:).
+
+		#links
+	*/
+	/*d:
+		(mouseover-append: [HookName or String]) -> Changer
+
+		This is similar to (click-append:), but uses the (mouseover:) macro's behaviour instead of
+		(click:)'s. For more information, consult the description of (click-append:).
+
+		#links
+	*/
+	/*d:
+		(mouseover-prepend: [HookName or String]) -> Changer
+
+		This is similar to (click-prepend:), but uses the (mouseover:) macro's behaviour instead of
+		(click:)'s. For more information, consult the description of (click-prepend:).
+
+		#links
+	*/
+	/*d:
+		(mouseout-replace: [HookName or String]) -> Changer
+
+		This is similar to (click-replace:), but uses the (mouseout:) macro's behaviour instead of
+		(click:)'s. For more information, consult the description of (click-replace:).
+
+		#links
+	*/
+	/*d:
+		(mouseout-append: [HookName or String]) -> Changer
+
+		This is similar to (click-append:), but uses the (mouseout:) macro's behaviour instead of
+		(click:)'s. For more information, consult the description of (click-append:).
+
+		#links
+	*/
+	/*d:
+		(mouseout-prepend: [HookName or String]) -> Changer
+
+		This is similar to (click-prepend:), but uses the (mouseout:) macro's behaviour instead of
+		(click:)'s. For more information, consult the description of (click-prepend:).
+		
+		#links
 	*/
 	revisionTypes.forEach((revisionType) => {
 		interactionTypes.forEach((interactionType) => {
