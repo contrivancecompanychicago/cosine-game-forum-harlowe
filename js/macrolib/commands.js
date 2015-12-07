@@ -67,7 +67,7 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			useful in that state, but you can use that variable in place of that command,
 			such as writing `$var` in place of `(display: "Yggdrasil")`.
 
-			#basics
+			#basics 5
 		*/
 		("display",
 			/*
@@ -126,7 +126,7 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			See also:
 			(text:), (display:)
 
-			#basics
+			#basics 4
 		*/
 		("print", (_, expr) => {
 			

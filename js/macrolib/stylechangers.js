@@ -55,14 +55,14 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			Otherwise, it is not run.
 			
 			Rationale:
-			In any story with multiple paths or threads, where certain events could occur or not occur,
+			In a story with multiple paths or threads, where certain events could occur or not occur,
 			it's common to want to run a slightly modified version of a passage reflecting the current
 			state of the world. The (if:), (unless:), (else-if:) and (else:) macros let these modifications be
 			switched on or off depending on variables, comparisons or calculations of your choosing.
 			
 			Alternatives:
 			The (if:) macro is not the only attachment that can hide or show hooks! In fact,
-			any variable that contains a boolean can be used in its place. For example:
+			a variable that contains a boolean can be used in its place. For example:
 			
 			```
 			(set: $isAWizard to $foundWand and $foundHat and $foundBeard)
@@ -77,7 +77,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(unless:), (else-if:), (else:)
 
-			#basics
+			#basics 6
 		*/
 		("if",
 			(_, expr) => ChangerCommand.create("if", [expr]),
@@ -92,7 +92,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			
 			For more information, see the documentation of (if:).
 
-			#basics
+			#basics 7
 		*/
 		("unless",
 			(_, expr) => ChangerCommand.create("unless", [!expr]),
@@ -142,7 +142,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(if:), (unless:), (else:)
 
-			#basics
+			#basics 8
 		*/
 		("elseif", (section, expr) => {
 			/*
@@ -183,7 +183,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			This usage can result in a somewhat puzzling passage source structure, where each (else:) hook
 			alternates between visible and hidden depending on the first such hook. So, it is best avoided.
 
-			#basics
+			#basics 9
 		*/
 		("else", (section) => {
 			if (!("lastHookShown" in section.stack[0])) {
@@ -205,7 +205,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			You may notice that it isn't possible to attach a nametag to hooks with commands
 			already attached - in the case of `(font:"Museo Slab")[The Vault]<title|`, the nametag results
 			in an error. This command can be added with other commands to allow the hook to be named:
-			`(font:"Museo Slab")+(hook: "title")[The Vault]`.
+			`(font:"Museo Slab")+(hook: "title")`.
 			
 			Furthermore, unlike the nametag syntax, (hook:) can be given any string expression:
 			`(hook: "eyes" + (string:$eyeCount))` is valid, and will, as you'd expect, give the hook

@@ -187,6 +187,8 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 
 			If many passages have the `header` tag, they will all be displayed, ordered by their passage
 			name, sorted alphabetically, and by case (capitalised names appearing before lowercase names).
+
+			#transclusion 1
 		*/
 		/*d:
 			debug-header tag
@@ -202,12 +204,16 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 			All passages tagged with `debug-header` will run before the passages tagged `header` will run,
 			ordered by their passage name, sorted alphabetically, and by case (capitalised names appearing
 			before lowercase names).
+
+			#transclusion 4
 		*/
 		/*d:
 			footer tag
 
 			This special tag is identical to the `header` tag, except that it places the passage
 			at the bottom of all visited passages, instead of the top.
+
+			#transclusion 2
 		*/
 		/*d:
 			debug-footer tag
@@ -217,6 +223,8 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 
 			All passages tagged with `debug-footer` will run, in alphabetical order
 			by their passage name, after the passages tagged `footer` have been run.
+
+			#transclusion 5
 		*/
 		source =
 			(options.debug
@@ -256,6 +264,8 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 
 			All passages tagged with `startup` will run, in alphabetical order
 			by their passage name, before the passages tagged `header` will run.
+
+			#transclusion 3
 		*/
 		/*d:
 			debug-startup tag
@@ -269,6 +279,8 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 
 			All passages tagged with `debug-startup` will run, in alphabetical order
 			by their passage name, after the passages tagged `startup` will run.
+
+			#transclusion 6
 		*/
 		if (State.pastLength <= 0) {
 			if (options.debug) {

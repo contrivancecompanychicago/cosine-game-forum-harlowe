@@ -8,7 +8,7 @@ const fs = require('fs');
 const
 	macroEmpty = /\(([\w\-\d]+):\)(?!`)/g,
 	macroAliases = /Also known as: [^\n]+/,
-	categoryTag = /\n\s+#([a-z\d ]+)/g,
+	categoryTag = /\n\s+#([a-z][a-z ]*[a-z])(?: (\d+))?/g,
 	/*
 		This matches a mixed-case type name, optionally plural, but not whenever
 		it seems to be part of a macro name.
@@ -27,8 +27,20 @@ const
 				let currentCategory;
 
 				Object.keys(this.defs).sort((left, right) => {
-					if (this.defs[left].category !== this.defs[right].category) {
-						return (this.defs[left].category || "").localeCompare(this.defs[right].category || "")
+					const {category:leftCategory, categoryOrder:leftCategoryOrder} = this.defs[left];
+					const {category:rightCategory, categoryOrder:rightCategoryOrder} = this.defs[right];
+
+					if (leftCategory !== rightCategory) {
+						return (leftCategory || "").localeCompare(rightCategory || "")
+					}
+					if (leftCategoryOrder !== rightCategoryOrder) {
+						if (isNaN(+leftCategoryOrder)) {
+							return 1;
+						}
+						if (isNaN(+rightCategoryOrder)) {
+							return -1;
+						}
+						return Math.sign(leftCategoryOrder - rightCategoryOrder);
 					}
 					return left.localeCompare(right);
 				}).forEach((e) => {
@@ -67,7 +79,7 @@ const
 			const slugName =  name.replace(/\s/g,'-').toLowerCase();
 			let text = input.trim().replace(title, "\n<h2 class='def_title markup_title' id=markup_" + slugName + ">"
 				+ "<a class='heading_link' href=#markup_" + slugName + "></a>" + title + "</h2>\n");
-			const category = (categoryTag.exec(text) || {})[1];
+			const {1:category, 2:categoryOrder} = (categoryTag.exec(text) || {});
 
 			text = processTextTerms(
 				text,
@@ -75,7 +87,7 @@ const
 				{markupNames:true, macroNames:true}
 			);
 
-			this.defs[title] = { text, anchor: "markup_" + slugName, name, category };
+			this.defs[title] = { text, anchor: "markup_" + slugName, name, category, categoryOrder };
 		},
 	}),
 
@@ -88,7 +100,7 @@ const
 			const slugName =  name.replace(/\s/g,'-').toLowerCase();
 			let text = input.trim().replace(title, "\n<h2 class='def_title type_title' id=type_" + slugName + ">"
 				+ "<a class='heading_link' href=#type_" + slugName + "></a>" + title + "</h2>\n");
-			const category = (categoryTag.exec(text) || {})[1];
+			const {1:category, 2:categoryOrder} = (categoryTag.exec(text) || {});
 
 			text = processTextTerms(
 				text,
@@ -96,7 +108,7 @@ const
 				{typeNames: true, macroNames:true}
 			);
 
-			this.defs[title] = { text, anchor: "type_" + slugName, name, category };
+			this.defs[title] = { text, anchor: "type_" + slugName, name, category, categoryOrder };
 		},
 	}),
 
@@ -129,6 +141,7 @@ const
 			const slugName =  name.replace(/\s/g,'-').toLowerCase();
 			let text = input.trim().replace(title, "\n<h2 class='def_title passagetag_title' id=passagetag_" + slugName + ">"
 				+ "<a class='heading_link' href=#passagetag_" + slugName + "></a>" + title + "</h2>\n");
+			const categoryOrder = (categoryTag.exec(text) || {})[2];
 
 			text = processTextTerms(
 				text,
@@ -136,7 +149,7 @@ const
 				{typeNames: true, macroNames:true}
 			);
 
-			this.defs[title] = { text, anchor: "passagetag_" + slugName, name };
+			this.defs[title] = { text, anchor: "passagetag_" + slugName, name, categoryOrder };
 		},
 	}),
 
@@ -194,13 +207,13 @@ const
 				*/
 				.replace(title, Macro.title(name) + Macro.signature(name, sig, returnType));
 
-			const category = (categoryTag.exec(text) || {})[1];
+			const {1:category, 2:categoryOrder} = (categoryTag.exec(text) || {});
 
 			const [,...aka] = macroEmpty.exec((macroAliases.exec(text) || [''])[0]) || [];
 
 			text = processTextTerms(text, name, {typeNames: true, macroNames:true});
 			
-			this.defs[title] = { text, anchor: "macro_" + name.toLowerCase(), name, category, sig, returnType, aka };
+			this.defs[title] = { text, anchor: "macro_" + name.toLowerCase(), name, category, categoryOrder, sig, returnType, aka };
 		}
 	});
 

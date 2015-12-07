@@ -61,7 +61,7 @@ define([
 			See also:
 			(push:), (move:)
 
-			#basics
+			#basics 1
 		*/
 		("set", (_, ...assignmentRequests) => {
 			let debugMessage = "";
@@ -132,7 +132,7 @@ define([
 			See also:
 			(set:), (move:)
 
-			#basics
+			#basics 2
 		*/
 		("put", (_, ...assignmentRequests) => {
 			let debugMessage = "";
@@ -194,7 +194,7 @@ define([
 			See also:
 			(push:), (set:)
 
-			#basics
+			#basics 3
 		*/
 		("move", (_, ar) => {
 			if (ar.operator !== "into") {
@@ -317,7 +317,7 @@ define([
 			See also:
 			(datamap:), (dataset:)
 			
-			#data structure
+			#data structure 1
 		*/
 		(["a", "array"], (_, ...args) => args, zeroOrMore(Any))
 		
@@ -886,7 +886,7 @@ define([
 			See also:
 			(a:), (dataset:)
 
-			#data structure
+			#data structure 2
 		*/
 		("datamap", (_, ...args) => {
 			let key;
@@ -1007,7 +1007,7 @@ define([
 			See also:
 			(datamap:), (a:)
 			
-			#data structure
+			#data structure 3
 		*/
 		("dataset", (_, ...args) => new Set(args), zeroOrMore(Any))
 		

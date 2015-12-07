@@ -77,7 +77,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			See also:
 			(link-reveal:), (link-repeat:), (link-goto:), (click:)
 
-			#links
+			#links 1
 		*/
 		["link", "link-replace"],
 		/*d:
@@ -106,7 +106,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			See also:
 			(link:), (link-repeat:), (link-goto:), (click:)
 
-			#links
+			#links 2
 		*/
 		["link-reveal"],
 		/*d:
@@ -134,7 +134,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			See also:
 			(link-reveal:), (link:), (link-goto:), (click:)
 			
-			#links
+			#links 3
 		*/
 		["link-repeat"]
 	].forEach(arr =>
@@ -179,8 +179,8 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		This command should not be attached to a hook.
 		
 		Example usage:
-		`(link-goto: "Enter the cellar", "Cellar")` is approximately the same as `[[Enter the cellar->Cellar]]`.
-		`(link-goto: "Cellar")` is the same as `[[Cellar]]`.
+		* `(link-goto: "Enter the cellar", "Cellar")` is approximately the same as `[[Enter the cellar->Cellar]]`.
+		* `(link-goto: "Cellar")` is the same as `[[Cellar]]`.
 
 		Rationale:
 		This macro serves as an alternative to the standard link syntax (`[[Link text->Destination]]`), but has a couple of
@@ -202,7 +202,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		See also:
 		(link:), (link-reveal:), (link-repeat:), (goto:)
 
-		#links
+		#links 4
 	*/
 	Macros.add
 		(["link-goto"],

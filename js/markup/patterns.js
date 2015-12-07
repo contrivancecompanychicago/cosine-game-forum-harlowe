@@ -60,7 +60,7 @@
 			including the quads, the per-em and per-en spaces, but not the zero-width space characters (as they may
 			cause confusion and syntax errors if unnoticed in your code).
 
-			#whitespace
+			#whitespace 1
 		*/
 		// This includes all forms of Unicode 6 whitespace except \n, \r, and Ogham space mark.
 		ws                   = "[ \\f\\t\\v\u00a0\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]*",
@@ -292,7 +292,7 @@
 			$robotText[Good golly! Your flesh... it's so soft!]
 			```
 
-			#coding
+			#coding 2
 		*/
 		variable          = "\\$(" + validPropertyName + ")",
 		
@@ -744,7 +744,7 @@
 			of its values into the macro call by using the `...` operator: `(either: ...$array)` will act as if every value in
 			$array was placed in the (either:) macro call separately
 
-			#coding
+			#coding 1
 		*/
 		macroFront: macro.opener + before(macro.name),
 		macroFrontPeek: "(",
