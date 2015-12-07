@@ -185,8 +185,8 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 			tag `header`, or `footer`. All passages with these tags will have their source text included at the top
 			(or, for `footer`, the bottom) of every passage in the story, as if by an invisible (display:) macro call.
 
-			If many passages have the `header` tag, they will all be displayed, ordered alphabetically by their passage
-			name.
+			If many passages have the `header` tag, they will all be displayed, ordered by their passage
+			name, sorted alphabetically, and by case (capitalised names appearing before lowercase names).
 		*/
 		/*d:
 			debug-header tag
@@ -199,8 +199,9 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 			to change the game state as you see fit, and have that code
 			be present in every passage in the story, but only during testing.
 
-			All passages tagged with `debug-header` will run, in alphabetical order
-			by their passage name, before the passages tagged `header` will run.
+			All passages tagged with `debug-header` will run before the passages tagged `header` will run,
+			ordered by their passage name, sorted alphabetically, and by case (capitalised names appearing
+			before lowercase names).
 		*/
 		/*d:
 			footer tag
@@ -267,7 +268,7 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 			whenever you use debug mode, no matter which passage you choose to test.
 
 			All passages tagged with `debug-startup` will run, in alphabetical order
-			by their passage name, before the passages tagged `startup` will run.
+			by their passage name, after the passages tagged `startup` will run.
 		*/
 		if (State.pastLength <= 0) {
 			if (options.debug) {

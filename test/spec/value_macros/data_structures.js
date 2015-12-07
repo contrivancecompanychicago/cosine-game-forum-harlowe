@@ -131,7 +131,7 @@ describe("data structure macros", function () {
 			}
 		});
 		it("returns an array of the items, sorted in natural-sort order", function() {
-			expect("(sorted:'D1','E','É','D11','D2','F')").markupToPrint("D1,D2,D11,E,É,F");
+			expect("(sorted:'D1','E','e','É','D11','D2','F')").markupToPrint("D1,D2,D11,e,E,É,F");
 		});
 	});
 	describe("the (datanames:) macro", function() {
@@ -146,8 +146,8 @@ describe("data structure macros", function () {
 			expect("(print: (datanames:(datamap:)))").markupToPrint("");
 		});
 		it("returns the names in natural-sort order", function() {
-			runPassage("(set: $a to (datamap:'D1',1,'E',2,'É',3,'D11',4,'D2',5,'F',6))");
-			expect("(print: (datanames:$a))").markupToPrint("D1,D2,D11,E,É,F");
+			runPassage("(set: $a to (datamap:'D1',1,'E',2,'e',3,'É',4,'D11',5,'D2',6,'F',7))");
+			expect("(print: (datanames:$a))").markupToPrint("D1,D2,D11,e,E,É,F");
 		});
 	});
 	describe("the (datavalues:) macro", function() {
@@ -162,8 +162,8 @@ describe("data structure macros", function () {
 			expect("(print: (datavalues:(datamap:)))").markupToPrint("");
 		});
 		it("returns the values in their names's natural-sort order", function() {
-			runPassage("(set: $a to (datamap:'D1',1,'E',2,'É',3,'D11',4,'D2',5,'F',6))");
-			expect("(print: (datavalues:$a))").markupToPrint("1,5,4,2,3,6");
+			runPassage("(set: $a to (datamap:'D1',1,'E',2,'e',3,'É',4,'D11',5,'D2',6,'F',7))");
+			expect("(print: (datavalues:$a))").markupToPrint("1,6,5,3,2,4,7");
 		});
 	});
 	describe("the (datamap:) macro", function() {

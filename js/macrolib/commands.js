@@ -446,7 +446,7 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			save, and going to the passage where that save was made.
 			
 			This macro assumes that the save slot exists and contains a game, which you can check by seeing if
-			`$Saves contains` the slot name before running (load-game:).
+			`(saved-games:) contains` the slot name before running (load-game:).
 			
 			See also:
 			(save-game:), (saved-games:)

@@ -20,7 +20,7 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 			When making a story, you'll mostly work with strings that you intend to insert into
 			the passage source. If a string contains markup, then the markup will be processed when it's
 			inserted. For instance, `"The ''biiiiig'' bellyblob"` will print as "The <b>biiiiig</b> bellyblob".
-			Even macro calls inside strings will be processed: printing `"The (print:2+3) bears"` will print "The 6 bears".
+			Even macro calls inside strings will be processed: printing `"The (print:2*3) bears"` will print "The 6 bears".
 			If you wish to avoid this, simply include the verbatim markup inside the string:``"`It's (exactly: as planned)`"`` will
 			print "It's (exactly: as planned)".
 			
@@ -109,7 +109,7 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 			of the string - `-2` will specify the `2ndlast` character, just as 2 will specify
 			the `2nd` character.
 			
-			If the last number given is larger than the first (for instance, in `(substring: "hewed", 4, 2)`)
+			If the last number given is smaller than the first (for instance, in `(substring: "hewed", 4, 2)`)
 			then the macro will still work - in that case returning "ewe" as if the numbers were in
 			the correct order.
 			
@@ -197,7 +197,7 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 			Computers can perform more than just mathematical tasks - they are also virtuosos in classical logic. Much as how
 			arithmetic involves manipulating numbers with addition, multiplication and such, logic involves manipulating the
 			values `true` and `false` using its own operators. Those are not text strings - they are values as fundamental as
-			the natural numbers. In computer science, they are both called **Booleans**, after the 19th century mathematician
+			the natural numbers. In computer science, they are both called *Booleans*, after the 19th century mathematician
 			George Boole.
 			
 			`is` is a logical operator. Just as + adds the two numbers on each side of it, `is` compares two values on each

@@ -673,7 +673,7 @@ define([
 			(history:) -> Array
 
 			This returns an array containing the string names of all of the passages
-			the player has visited up to now.
+			the player has visited up to now, in the order that the player visited them.
 
 			Example usage:
 			`(history:) contains "Cellar"` is true if the player has visited a passage called
@@ -683,6 +683,12 @@ define([
 			Often, you may find yourself using "flag" variables to keep track of whether
 			the player has visited a certain passage in the past. You can use (history:), along with
 			data structure operators such as the `contains` operator, to obviate this necessity.
+
+			Details:
+			This includes duplicate names if the player has visited a passage more than once, or visited
+			the same passage two or more turns in a row.
+
+			This does *not* include the name of the current passage the player is visiting.
 
 			See also:
 			(passage:), (savedgames:)
