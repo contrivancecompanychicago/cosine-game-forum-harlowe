@@ -77,8 +77,8 @@ describe("control flow macros", function() {
 	});
 	describe("the (else:) macro", function() {
 		it("accepts exactly 0 arguments", function() {
-			expect("(else:true)[]").markupToError();
-			expect("(else:'1')[]").markupToError();
+			expect("(if:false)[](else:true)[]").markupToError();
+			expect("(if:false)[](else:'1')[]").markupToError();
 		});
 		it("must occur after a conditionally displayed hook", function() {
 			expect("(else:)[]").markupToError();

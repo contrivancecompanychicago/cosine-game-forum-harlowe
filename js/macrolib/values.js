@@ -558,10 +558,10 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 		either: [(...args) => args[~~(Math.random() * args.length)], rest(Any)],
 
 		/*d:
-			(alert: String) -> Undefined
+			(alert: String) -> Command
 
-			When this macro is evaluated, a browser pop-up dialog box is shown with the given string displayed,
-			and an "OK" button to dismiss it.
+			This macro produces a command that, when evaluated, shows a browser pop-up dialog box with the given
+			string displayed, and an "OK" button to dismiss it.
 
 			Example usage:
 			`(alert:"Beyond this point, things get serious. Grab a snack and buckle up.")`
@@ -580,7 +580,14 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 
 			#popup
 		*/
-		alert: [(text) => window.alert(text),
+		alert: [(text) => ({
+				TwineScript_ObjectName: "an (alert:) command",
+				TwineScript_TypeName:   "an (alert:) command",
+				TwineScript_Print() {
+					window.alert(text);
+					return "";
+				},
+			}),
 			String],
 		/*d:
 			(prompt: String, String) -> String
@@ -658,11 +665,19 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 
 			#url
 		*/
-		openURL: [(text) => window.open(text, ""), String],
+		openURL: [(text) => ({
+				TwineScript_ObjectName: "an (open-url:) command",
+				TwineScript_TypeName:   "an (open-url:) command",
+				TwineScript_Print() {
+					window.open(text, '');
+					return "";
+				},
+			}),
+			String],
 		/*d:
-			(reload:) -> Undefined
+			(reload:) -> Command
 
-			When this macro is evaluated, the player's browser will immediately attempt to reload
+			When this command is used, the player's browser will immediately attempt to reload
 			the page, in effect restarting the entire story.
 
 			Example usage:
@@ -674,11 +689,23 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 
 			#url
 		*/
-		reload: [window.location.reload.bind(window.location), null],
+		reload: [()=>({
+			TwineScript_ObjectName: "a (reload:) command",
+			TwineScript_TypeName:   "a (reload:) command",
+			TwineScript_Print() {
+				window.location.reload();
+				/*
+					This technically doesn't need to be an "early exit" command
+					like (goto:), because reload() halts all execution by itself.
+					But, when proper error-checking is added, this will be necessary.
+				*/
+				return { earlyExit: 1 };
+			},
+		}), null],
 		/*d:
-			(goto-url: String) -> Undefined
+			(goto-url: String) -> Command
 
-			When this macro is evaluated, the player's browser will immediately attempt to leave
+			When this command is used, the player's browser will immediately attempt to leave
 			the story's page, and navigate to the given URL in the same tab. If this succeeds, then
 			the story session will "end".
 
@@ -699,7 +726,18 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 
 			#url
 		*/
-		gotoURL: [window.location.assign.bind(window.location), String],
+		gotoURL: [(url)=>({
+			TwineScript_ObjectName: "a (goto-url:) command",
+			TwineScript_TypeName:   "a (goto-url:) command",
+			TwineScript_Print() {
+				window.location.assign(url);
+				/*
+					As with (reload:), this early exit signal will be useful once
+					proper editing is added.
+				*/
+				return { earlyExit: 1 };
+			},
+		}), String],
 		/*d:
 			(page-url:) -> String
 

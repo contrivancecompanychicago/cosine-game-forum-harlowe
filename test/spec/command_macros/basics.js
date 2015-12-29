@@ -144,4 +144,79 @@ describe("basic command macros", function() {
 			});
 		});
 	});
+	describe("the (alert:) macro", function() {
+		it("requires exactly 1 string argument", function() {
+			expect("(alert:)").markupToError();
+			expect("(alert:1)").markupToError();
+			expect("(alert:'e','f')").markupToError();
+		});
+		it("produces a command which calls window.alert", function() {
+			spyOn(window,'alert');
+			runPassage("(alert:'Gooball')");
+			expect(window.alert).toHaveBeenCalledWith('Gooball');
+		});
+		it("evaluates to a command object that can't be +'d", function() {
+			expect("(print: (alert:'a') + (alert:'b'))").markupToError();
+		});
+		it("can be (set:) into a variable", function() {
+			spyOn(window,'alert');
+			runPassage("(set: $x to (alert:'Gooball'))");
+			expect(window.alert).not.toHaveBeenCalled();
+			runPassage("$x");
+			expect(window.alert).toHaveBeenCalledWith('Gooball');
+		});
+	});
+
+	describe("the (open-url:) macro", function() {
+		it("requires exactly 1 string argument", function() {
+			expect("(open-url:)").markupToError();
+			expect("(open-url:1)").markupToError();
+			expect("(open-url:'e','f')").markupToError();
+		});
+		it("produces a command which calls window.open", function() {
+			spyOn(window,'open');
+			runPassage("(open-url:'http://example.org')");
+			expect(window.open).toHaveBeenCalledWith('http://example.org','');
+		});
+		it("evaluates to a command object that can't be +'d", function() {
+			expect("(print: (alert:'a') + (alert:'b'))").markupToError();
+		});
+		it("can be (set:) into a variable", function() {
+			spyOn(window,'open');
+			runPassage("(set: $x to (open-url:'http://example.org'))");
+			expect(window.open).not.toHaveBeenCalled();
+			runPassage("$x");
+			expect(window.open).toHaveBeenCalledWith('http://example.org','');
+		});
+	});
+
+	describe("the (reload:) macro", function() {
+		// window.location.reload cannot be spied on, as it and window.location are non-configurable
+		it("takes no arguments", function() {
+			expect("(set: $x to (reload:1))").markupToError();
+			expect("(set: $x to (reload:'e'))").markupToError();
+		});
+		it("evaluates to a command object that can't be +'d", function() {
+			expect("(print: (reload:) + (reload:))").markupToError();
+		});
+		it("can be (set:) into a variable", function() {
+			expect("(set: $x to (reload:))").not.markupToError();
+		});
+	});
+
+	describe("the (goto-url:) macro", function() {
+		// window.location.assign cannot be spied on, as it and window.location are non-configurable
+		it("requires exactly 1 string argument", function() {
+			expect("(set: $x to (goto-url:))").markupToError();
+			expect("(set: $x to (goto-url:1))").markupToError();
+			expect("(set: $x to (goto-url:'http://example.org','http://example.org'))").markupToError();
+			expect("(set: $x to (goto-url:false))").markupToError();
+		});
+		it("evaluates to a command object that can't be +'d", function() {
+			expect("(print: (goto-url:'http://example.org') + (goto-url:'http://example.org'))").markupToError();
+		});
+		it("can be (set:) into a variable", function() {
+			expect("(set: $x to (goto-url:'http://example.org'))").not.markupToError();
+		});
+	});
 });

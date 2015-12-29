@@ -80,16 +80,11 @@ define(['jquery', 'utils', 'utils/operationutils', 'datatypes/lambda', 'internal
 	*/
 	function typeSignatureCheck(name, fn, typeSignature) {
 		/*
-			Return early if no signature was present for this macro.
-		*/
-		if (!typeSignature) {
-			return fn;
-		}
-		/*
 			The typeSignature *should* be an Array, but if it's just one item,
 			we can normalise it to Array form.
+			If the item is null or undefined, then that means it should be a 0-length type signature.
 		*/
-		typeSignature = [].concat(typeSignature);
+		typeSignature = [].concat(typeSignature || []);
 		
 		/*
 			The name is used solely for error message generation. It can be a String or
