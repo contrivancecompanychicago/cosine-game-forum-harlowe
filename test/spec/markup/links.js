@@ -4,15 +4,18 @@ describe("link syntax", function() {
 		it("consists of [[, text, then ]], and desugars to a (link-goto:) macro", function() {
 			var expression = runPassage("[[flea]]").find('tw-expression');
 		
-			expect(expression.tag()).toBe("tw-expression");
 			expect(expression.attr("type")).toBe("macro");
 			expect(expression.attr("name")).toBe("link-goto");
+			expect(expression.text()).toBe("flea");
+		});
+		it("can be used in macro expression position", function() {
+			var expression = runPassage("(set: $x to [[flea]])$x").find('tw-expression');
+			
 			expect(expression.text()).toBe("flea");
 		});
 		it("may have non-sequential ]s in the text", function() {
 			var expression = runPassage("[[fl]e]a]]").find('tw-expression');
 		
-			expect(expression.tag()).toBe("tw-expression");
 			expect(expression.attr("type")).toBe("macro");
 			expect(expression.attr("name")).toBe("link-goto");
 			expect(expression.text()).toBe("fl]e]a");
@@ -21,7 +24,6 @@ describe("link syntax", function() {
 			createPassage("","mire");
 			var link = runPassage("[[mi''r''e]]").find('tw-link');
 		
-			expect(link.tag()).toBe("tw-link");
 			expect(link.html()).toBe("mi<b>r</b>e");
 			expect(link.attr("passage-name")).toBe("mire");
 		});
@@ -29,7 +31,6 @@ describe("link syntax", function() {
 			createPassage("","mire");
 			var link = runPassage("[[\nmire\n]]").find('tw-link');
 		
-			expect(link.tag()).toBe("tw-link");
 			expect(link.html()).toBe("<br>mire<br>");
 			expect(link.attr("passage-name")).toBe("mire");
 		});
@@ -46,14 +47,12 @@ describe("link syntax", function() {
 		it("works correctly with double-quotes", function() {
 			createPassage("",'"do it"');
 			var link = runPassage('[["do it"]]').find('tw-link');
-			expect(link.tag()).toBe("tw-link");
 			expect(link.html()).toBe('"do it"');
 			expect(link.attr("passage-name")).toBe('"do it"');
 		});
 		it("works correctly with single-quotes", function() {
 			createPassage("","'do it'");
 			var link = runPassage("[['do it']]").find('tw-link');
-			expect(link.tag()).toBe("tw-link");
 			expect(link.html()).toBe("'do it'");
 			expect(link.attr("passage-name")).toBe("'do it'");
 		});
@@ -62,7 +61,6 @@ describe("link syntax", function() {
 		it("consists of a simple link with <- or ->", function() {
 			var expression = runPassage("[[in->out]]").find('tw-expression');
 		
-			expect(expression.tag()).toBe("tw-expression");
 			expect(expression.attr("type")).toBe("macro");
 			expect(expression.attr("name")).toBe("link-goto");
 		});

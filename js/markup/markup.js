@@ -289,28 +289,6 @@
 			tag:            { fn:        emptyFn },
 			url:            { fn:        emptyFn },
 			
-			passageLink: {
-				fn(match) {
-					const
-						p1 = match[1],
-						p2 = match[2],
-						p3 = match[3];
-					return {
-						type: "twineLink",
-						innerText: p2 ? p3 : p1,
-						passage:   p1 ? p3 : p2,
-					};
-				},
-			},
-			
-			simpleLink: {
-				fn: (match) => ({
-					type: "twineLink",
-					innerText: match[1],
-					passage:   match[1],
-				}),
-			},
-			
 			hookPrependedFront: {
 				fn: (match) => ({
 					name: match[1],
@@ -421,6 +399,32 @@
 				}),
 			},
 			
+			/*
+				Passage links desugar to (link-goto:) calls, so they can
+				be used in expression position.
+			*/
+			passageLink: {
+				fn(match) {
+					const
+						p1 = match[1],
+						p2 = match[2],
+						p3 = match[3];
+					return {
+						type: "twineLink",
+						innerText: p2 ? p3 : p1,
+						passage:   p1 ? p3 : p2,
+					};
+				},
+			},
+			
+			simpleLink: {
+				fn: (match) => ({
+					type: "twineLink",
+					innerText: match[1],
+					passage:   match[1],
+				}),
+			},
+
 			hookRef:  { fn: textTokenFn("name") },
 			
 			variable:   { fn: textTokenFn("name") },
@@ -656,8 +660,10 @@
 			the arrays must now be modified in-place, using [].push.apply().
 		*/
 		markupMode.push(            ...Object.keys(blockRules),
-									...Object.keys(inlineRules),
-									...Object.keys(expressionRules));
+									// expressionRules must come before inlineRules because
+									// passageLink conflicts with hookAnonymousFront.
+									...Object.keys(expressionRules),
+									...Object.keys(inlineRules));
 		
 		/*
 			Warning: the property pattern "'s" conflicts with the string literal

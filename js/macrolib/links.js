@@ -172,7 +172,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		It is also what the standard link syntax desugars to.
 	*/
 	/*d:
-		(link-goto: String, [String]) -> Changer
+		(link-goto: String, [String]) -> Command
 		
 		Takes a string of link text, and an optional destination passage name, and makes a command to create
 		a link that takes the player to another passage. The link functions identically to a standard link.

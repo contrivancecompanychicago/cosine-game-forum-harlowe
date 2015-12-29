@@ -414,6 +414,16 @@ define(['utils'], ({toJSLiteral, assert}) => {
 			}
 			possessive = "possessive";
 		}
+		else if ((i = indexOfType(tokens, "twineLink")) >-1) {
+			/*
+				This crudely desugars the twineLink token into a
+				(link-goto:) token, in a manner similar to that in Renderer.
+			*/
+			midString = 'Macros.run("link-goto", [section,'
+				+ toJSLiteral(tokens[i].innerText) + ","
+				+ toJSLiteral(tokens[i].passage) + "])";
+			needsLeft = needsRight = false;
+		}
 		else if ((i = indexOfType(tokens, "macro")) >-1) {
 			/*
 				The first child token in a macro is always the method name.
