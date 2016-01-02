@@ -25,7 +25,14 @@ define([
 			make (set:) and (put:) more readable.
 		*/
 		/*d:
-			(set: VariableToValue, [...VariableToValue]) -> Command
+			Instant data
+
+			A few special macros in Harlowe perform actions immediately, as soon as they're evaluated.
+			These can be used in passages, but cannot have their values saved using (set:) or (put:),
+			or stored in data structures.
+		*/
+		/*d:
+			(set: VariableToValue, [...VariableToValue]) -> Instant
 			
 			Stores data values in variables.
 			
@@ -106,7 +113,7 @@ define([
 		[rest(AssignmentRequest)])
 		
 		/*d:
-			(put: VariableToValue, [...VariableToValue]) -> Command
+			(put: VariableToValue, [...VariableToValue]) -> Instant
 			
 			A left-to-right version of (set:) that requires the word `into` rather than `to`.
 			
@@ -171,7 +178,7 @@ define([
 		[rest(AssignmentRequest)])
 		
 		/*d:
-			(move: [VariableToValue]) -> Command
+			(move: [VariableToValue]) -> Instant
 			
 			A variant of (put:) that deletes the source value after copying it - in effect
 			moving the value from the source to the destination.

@@ -129,18 +129,20 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			#basics 4
 		*/
 		("print", (_, expr) => {
-			
-			expr = printBuiltinValue(expr);
-			
 			return {
 				TwineScript_ObjectName:
-					"a (print: " + toJSLiteral(expr) + ") command",
+					"a (print:) command",
 
 				TwineScript_TypeName:
 					"a (print:) command",
 				
 				TwineScript_Print() {
-					return expr;
+					/*
+						The printBuiltinValue() call can call commands' TwineScript_Print() method,
+						so it must be withheld until here, so that wordings like (set: $x to (print:(goto:'X')))
+						do not execute the command prematurely.
+					*/
+					return printBuiltinValue(expr);
 				},
 			};
 		},

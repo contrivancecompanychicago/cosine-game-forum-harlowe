@@ -500,17 +500,17 @@ define(['utils', 'internaltypes/twineerror'], ({assert, impossible, toJSLiteral}
 				Sets are close enough to arrays that we might as well
 				just pretty-print them identically.
 			*/
-			return Array.from(value.values());
+			return Array.from(value.values()).map(printBuiltinValue) + "";
 		}
 		else if (Array.isArray(value)) {
 			return value.map(printBuiltinValue) + "";
 		}
 		/*
-			If it's an object we don't know how to print, emit a JS error
+			If it's an object we don't know how to print, emit an error
 			instead of [object Object].
 		*/
 		else if (isObject(value)) {
-			throw new TypeError("I don't know how to print this value yet.");
+			return TwineError.create("unimplemented", "I don't know how to print this value yet.");
 		}
 		/*
 			At this point, primitives have safely fallen through.

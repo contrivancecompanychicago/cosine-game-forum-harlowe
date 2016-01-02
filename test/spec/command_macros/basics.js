@@ -22,10 +22,25 @@ describe("basic command macros", function() {
 			expect("(print: true)").markupToPrint("true");
 		});
 		it("prints the text equivalent of arrays", function() {
-			expect("(print: (a: 2))").markupToPrint("2");
+			expect("(print: (a: 2,4))").markupToPrint("2,4");
+			expect("(print: (a: (a:2,4)))").markupToPrint("2,4");
+		});
+		it("prints the text equivalent of datasets", function() {
+			expect("(print: (dataset: 2,4))").markupToPrint("2,4");
+			expect("(print: (dataset: (dataset:2,4)))").markupToPrint("2,4");
+		});
+		it("can be run with (print:)", function() {
+			expect("(print:(print:'Golly molly'))").markupToPrint("Golly molly");
 		});
 		it("evaluates to a command object that can't be +'d", function() {
 			expect("(print: (print:1) + (print:1))").markupToError();
+		});
+		it("commands inside (print:) aren't executed until it is executed", function() {
+			spyOn(window,'open');
+			runPassage("(set: $x to (print:(open-url:'http://example.org')))");
+			expect(window.open).not.toHaveBeenCalled();
+			runPassage("$x");
+			expect(window.open).toHaveBeenCalledWith('http://example.org','');
 		});
 		it("can be (set:) into a variable", function() {
 			var expr = runPassage("(set: $x to (print:'//grault//'))$x").find('tw-expression:last-child');
@@ -62,6 +77,10 @@ describe("basic command macros", function() {
 			var expr = runPassage("Big(display: 'grault')");
 
 			expect(expr.text()).toBe("Small");
+		});
+		it("can be run with (print:)", function() {
+			createPassage("Red", "grault");
+			expect("(print:(display:'grault'))").markupToPrint("Red");
 		});
 		it("evaluates to a command object that can't be +'d", function() {
 			expect("(print: (display:'grault') + (display:'grault'))").markupToError();
@@ -119,6 +138,14 @@ describe("basic command macros", function() {
 			runPassage("(set:$a to 1)(go-to:'flunk')(set:$a to 2)");
 			expect("$a").markupToPrint("1");
 			waitForGoto(done);
+		});
+		it("can be run with (print:)", function(done) {
+			createPassage("''Red''", "croak");
+			runPassage("(print:(go-to: 'croak'))");
+			waitForGoto(function() {
+				expect($('tw-passage:last-child').find('b').text()).toBe("Red");
+				done();
+			});
 		});
 		it("evaluates to a command object that can't be +'d", function() {
 			expect("(print: (go-to:'crepax') + (go-to:'crepax'))").markupToError();
