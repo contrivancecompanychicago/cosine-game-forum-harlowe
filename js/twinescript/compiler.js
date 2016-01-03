@@ -318,6 +318,14 @@ define(['utils'], ({toJSLiteral, assert}) => {
 		else if ((i = indexOfType(tokens, "inequality")) >-1) {
 			implicitLeftIt = true;
 			operation = tokens[i].operator;
+			if (tokens[i].negate) {
+				operation = {
+					'>' :'<=',
+					'<' :'>=',
+					'>=':'<',
+					'<=':'>'
+				}[operation];
+			}
 		}
 		else if ((i = indexOfType(tokens, "addition", "subtraction")) >-1) {
 			operation = tokens[i].text;

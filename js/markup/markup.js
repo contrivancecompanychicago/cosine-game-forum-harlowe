@@ -627,7 +627,8 @@
 				},
 				inequality: {
 					fn: (match) => ({
-						operator: match[0],
+						operator: match[2],
+						negate: match[1].indexOf('not') >-1,
 					}),
 				},
 				augmentedAssign: {

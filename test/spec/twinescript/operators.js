@@ -42,18 +42,20 @@ describe("twinescript operators", function () {
 		it("multiplies numbers", function (){
 			expect("(print: 3 * 5)").markupToPrint("15");
 		});
-		it("can't be used on strings or arrays", function () {
+		it("can't be used on other types", function () {
 			expect("(print: '15' * '2')").markupToError();
-			expect("(print: 2 * (a:2))").markupToError();
+			expect("(print: (a:2) * (a:2))").markupToError();
+			expect("(print: true * true)").markupToError();
 		});
 	});
 	describe("the / operator", function () {
 		it("divides numbers", function (){
 			expect("(print: 15 / 5)").markupToPrint("3");
 		});
-		it("can't be used on strings or arrays", function () {
+		it("can't be used on other types", function () {
 			expect("(print: '15' / '2')").markupToError();
-			expect("(print: 2 / (a:2))").markupToError();
+			expect("(print: (a:2) / (a:2))").markupToError();
+			expect("(print: true / true)").markupToError();
 		});
 		it("can't divide by zero", function () {
 			expect("(print: 15 / 0)").markupToError();
@@ -63,11 +65,113 @@ describe("twinescript operators", function () {
 		it("remainders numbers", function (){
 			expect("(print: 31 % 10)").markupToPrint("1");
 		});
-		it("can't be used on strings", function () {
+		it("can't be used on other types", function () {
 			expect("(print: '15' * '2')").markupToError();
+			expect("(print: true * true)").markupToError();
+			expect("(print: (a:2) * (a:2))").markupToError();
 		});
 		it("can't divide by zero", function (){
 			expect("(print: 15 % 0)").markupToError();
+		});
+	});
+	describe("the < operator", function () {
+		it("performs 'less than' on two numbers", function (){
+			expect("(print: 31 < 10)").markupToPrint("false");
+			expect("(print: 1 < 10)").markupToPrint("true");
+			expect("(print: -10 < 1)").markupToPrint("true");
+			expect("(print: 1 < 1)").markupToPrint("false");
+		});
+		it("can't be used on other types", function () {
+			expect("(print: '15' < '2')").markupToError();
+			expect("(print: true < true)").markupToError();
+			expect("(print: (a:2) < (a:2))").markupToError();
+		});
+		it("can also be written as 'is <'", function (){
+			expect("(print: 31 is < 10)").markupToPrint("false");
+			expect("(print: 1 is < 10)").markupToPrint("true");
+			expect("(print: -10 is < 1)").markupToPrint("true");
+			expect("(print: 1 is < 1)").markupToPrint("false");
+		});
+		it("can also be written as 'is not >='", function (){
+			expect("(print: 31 is not >= 10)").markupToPrint("false");
+			expect("(print: 1 is not >= 10)").markupToPrint("true");
+			expect("(print: -10 is not >= 1)").markupToPrint("true");
+			expect("(print: 1 is not >= 1)").markupToPrint("false");
+		});
+	});
+	describe("the > operator", function () {
+		it("performs 'less than' on two numbers", function (){
+			expect("(print: 31 > 10)").markupToPrint("true");
+			expect("(print: 1 > 10)").markupToPrint("false");
+			expect("(print: -10 > 1)").markupToPrint("false");
+			expect("(print: 1 > 1)").markupToPrint("false");
+		});
+		it("can't be used on other types", function () {
+			expect("(print: '15' > '2')").markupToError();
+			expect("(print: true > true)").markupToError();
+			expect("(print: (a:2) > (a:2))").markupToError();
+		});
+		it("can also be written as 'is >'", function (){
+			expect("(print: 31 is > 10)").markupToPrint("true");
+			expect("(print: 1 is > 10)").markupToPrint("false");
+			expect("(print: -10 is > 1)").markupToPrint("false");
+			expect("(print: 1 is > 1)").markupToPrint("false");
+		});
+		it("can also be written as 'is not <='", function (){
+			expect("(print: 31 is not <= 10)").markupToPrint("true");
+			expect("(print: 1 is not <= 10)").markupToPrint("false");
+			expect("(print: -10 is not <= 1)").markupToPrint("false");
+			expect("(print: 1 is not <= 1)").markupToPrint("false");
+		});
+	});
+	describe("the <= operator", function () {
+		it("performs 'less than' on two numbers", function (){
+			expect("(print: 31 <= 10)").markupToPrint("false");
+			expect("(print: 1 <= 10)").markupToPrint("true");
+			expect("(print: -10 <= 1)").markupToPrint("true");
+			expect("(print: 1 <= 1)").markupToPrint("true");
+		});
+		it("can't be used on other types", function () {
+			expect("(print: '15' <= '2')").markupToError();
+			expect("(print: true <= true)").markupToError();
+			expect("(print: (a:2) <= (a:2))").markupToError();
+		});
+		it("can also be written as 'is <'", function (){
+			expect("(print: 31 is <= 10)").markupToPrint("false");
+			expect("(print: 1 is <= 10)").markupToPrint("true");
+			expect("(print: -10 is <= 1)").markupToPrint("true");
+			expect("(print: 1 is <= 1)").markupToPrint("true");
+		});
+		it("can also be written as 'is not >'", function (){
+			expect("(print: 31 is not > 10)").markupToPrint("false");
+			expect("(print: 1 is not > 10)").markupToPrint("true");
+			expect("(print: -10 is not > 1)").markupToPrint("true");
+			expect("(print: 1 is not > 1)").markupToPrint("true");
+		});
+	});
+	describe("the >= operator", function () {
+		it("performs 'less than' on two numbers", function (){
+			expect("(print: 31 >= 10)").markupToPrint("true");
+			expect("(print: 1 >= 10)").markupToPrint("false");
+			expect("(print: -10 >= 1)").markupToPrint("false");
+			expect("(print: 1 >= 1)").markupToPrint("true");
+		});
+		it("can't be used on other types", function () {
+			expect("(print: '15' > '2')").markupToError();
+			expect("(print: true > true)").markupToError();
+			expect("(print: (a:2) > (a:2))").markupToError();
+		});
+		it("can also be written as 'is >='", function (){
+			expect("(print: 31 is >= 10)").markupToPrint("true");
+			expect("(print: 1 is >= 10)").markupToPrint("false");
+			expect("(print: -10 is >= 1)").markupToPrint("false");
+			expect("(print: 1 is >= 1)").markupToPrint("true");
+		});
+		it("can also be written as 'is not <'", function (){
+			expect("(print: 31 is not < 10)").markupToPrint("true");
+			expect("(print: 1 is not < 10)").markupToPrint("false");
+			expect("(print: -10 is not < 1)").markupToPrint("false");
+			expect("(print: 1 is not < 1)").markupToPrint("true");
 		});
 	});
 	describe("the 'and' operator", function () {

@@ -837,16 +837,16 @@
 			Macro operators
 		*/
 		
-		is:        "is" + notBefore(" not", " in") + wb,
-		isNot:     "is not" + wb,
+		is:        "is" + notBefore(mws + "not", mws + "in", mws + "<", mws + ">") + wb,
+		isNot:     "is" + mws + "not" + wb,
 		
 		and:       "and" + wb,
 		or:        "or"  + wb,
 		not:       "not" + wb,
 		
-		inequality: either("<(?!=)", "<=", ">(?!=)", ">="),
+		inequality: "((?:is(?:" + mws + "not)?" + ws + ")*)(" + either("<(?!=)", "<=", ">(?!=)", ">=") + ")",
 		
-		isIn:       "is in" + wb,
+		isIn:       "is" + mws + "in" + wb,
 		contains:   "contains" + wb,
 		
 		addition:          escape("+")      + notBefore("="),
