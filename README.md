@@ -4,8 +4,16 @@ Rough documentation is at http://twine2.neocities.org/
 
 ###2.0.0 changes (unreleased, still unstable):
 
+####Bugfixes
+
+ * Now, a `(print:)` command that contains a command will only execute the contained command if itself is actually displayed in the passage - the code `(set: $x to (print:(goto:'X')))` would formerly perform the (goto:) immediately, even though the (print:) was never displayed.
+ * Now, datasets contained in other datasets should be printed correctly, listing their contents.
+
 ####Alterations
 
+ * Hook-attached macros may now have whitespace and line breaks between them and their hooks. This means that `(if: $x)  [text]`, `(if: $x) 
+[text]`, and such are now syntactically acceptable - the whitespace is removed, and the macro is treated as if directly attached. (This means that, if after a macro call you have plain passage text that resembles a hook, you'll have to use the verbatim markup to keep it from being interpreted as such.)
+ * Now, you can optionally put 'is' at the start of inequality operators - you can write `$a is < 3` as a more readable alternative to `$a < 3`. Also, `$a is not > 3` can be written as well, which negates the operator (making it behave like `$a is <= 3`).
  * Fixed a bug where the "Story stylesheet" `<style>` element was attached between `<head>` and `<body>`. This should have had no obvious effects in any browser, but was untidy anyway.
  * Altered the CSS of `<tw-story>` to use vertical padding instead of vertical margins, and increased the line-height slightly.
  * Altered the CSS of `<h1>`, `<h2>`, `<h3>`, `<h4>`, `<h5>` and `<h6>` elements to have a slightly lower margin-top.
@@ -13,10 +21,10 @@ Rough documentation is at http://twine2.neocities.org/
 
 ####Additions
 
- * Added temporary variables, a special kind of variable that only exists inside the passage or hook in which they're `(set:)`. Outside of the passage, they disappear. Simply use `_` instead of `$` as the sigil for variables - write `(set: _a to 2)`, `(if: _a > 1)`, etc. Their main purpose is to allow you to make "reusable" Twine code - code which can be pasted into any story, without accidentally overwriting any variables that the story has used. (For instance, suppose you had some code which uses the variable `$a` for some quick computation, but you pasted it into a story that already used `$a` for something else in another passage. If you use a temporary variable `_a` instead, this problem won't occur.)
+ * Added temporary variables, a special kind of variable that only exists inside the passage or hook in which they're `(set:)`. Outside of the passage or hook, they disappear. Simply use `_` instead of `$` as the sigil for variables - write `(set: _a to 2)`, `(if: _a > 1)`, etc. Their main purpose is to allow you to make "reusable" Twine code - code which can be pasted into any story, without accidentally overwriting any variables that the story has used. (For instance, suppose you had some code which uses the variable `$a` for some quick computation, but you pasted it into a story that already used `$a` for something else in another passage. If you use a temporary variable `_a` instead, this problem won't occur.)
    * Also note that temp variables that are `(set:)` inside hooks won't affect same-named temp variables outside them: `(set: _a to 1) |hook>[(set: _a to 2)]` will make `_a` be 2 inside the hook, but remain as 1 outside of it.
- * Lambdas (tentative name) are a new data type - they are, essentially, user-created functions. You can just think of them as "data converters" - reusable instructions to convert one or more values into different values. An example of their current (also tentative) syntax is `(_a, _b ==> _a *_b *2)` - this creates a lambda that takes two values, puts them in the temporary variables `_a` and `_b`, and produces the result of multiplying them with each other and 2. This can potentially be saved and reused multiple times, keeping you from needing to write that specific expression over and over.
- * The only macro which uses lambdas, currently, is `(converted:)`. This takes a lambda as its first value, and any number of other values, and uses the lambda to convert the values, placing the results in an array. For instance, `(converted: (_material ==> _material + " Sword"), "Iron", "Wood", "Bronze", "Plastic")` will create an array of all those strings with " Sword" added to the end of each. (This macro is similar to Javascript's `map()` array method.)
+ * Lambdas (tentative name) are a new data type - they are, essentially, user-created functions. You can just think of them as "data converters" - reusable instructions to convert one or more values into different values. An example of their current (also tentative) syntax is `each _a, _b to _a *_b *2` - this creates a lambda that takes two values, puts them in the temporary variables `_a` and `_b`, and produces the result of multiplying them with each other and 2. This can potentially be saved and reused multiple times, keeping you from needing to write that specific expression over and over.
+ * The only macro which uses lambdas, currently, is `(converted:)`. This takes a lambda as its first value, and any number of other values, and uses the lambda to convert the values, placing the results in an array. For instance, `(converted: each _material to _material + " Sword"), "Iron", "Wood", "Bronze", "Plastic")` will create an array of all those strings with " Sword" added to the end of each. (This macro is similar to Javascript's `map()` array method.)
 
 ###1.2.2 changes (unreleased):
 

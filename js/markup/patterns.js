@@ -677,10 +677,9 @@
 		/*
 			The anonymous hook is a contextual production: it may only occur
 			after macros and variables. Similarly, the hookAppendedFront
-			may NOT occur after macros and variables. The reason these rules are
-			not united is because their names are used to identify them in Lexer.
+			may NOT occur after macros and variables.
 		*/
-		hookAnonymousFront: "\\[",
+		hookAnonymousFront: ws.replace('[','[\\n') + "\\[",
 		hookBack:  "\\]" + notBefore(hookTagBack),
 		
 		hookAppendedBack:

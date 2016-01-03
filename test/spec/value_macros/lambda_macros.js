@@ -2,7 +2,7 @@ describe("lambdas", function() {
 	'use strict';
 	it("consist of 'each', params, 'to' or 'where', and a deferred computation", function() {
 		expect("(print: each _a to 2)").not.markupToError();
-		expect("(print: each _a to 2)").not.markupToError();
+		expect("(print: each _a where 2)").not.markupToError();
 	});
 	it("can have many params separated by commas", function() {
 		expect("(print: each _a,_b,_c,_d,_e,_f,_g,_h,_i,_j,_k to _a+_b+_c+_d+_e+_f+_g+_h+_i+_j+_k)").not.markupToError();
@@ -11,7 +11,7 @@ describe("lambdas", function() {
 		expect("(print: each _a,_b, to _a+_b)").not.markupToError();
 	});
 	it("can be nested", function() {
-		expect("(print: each _a to (_b to _a+_b))").not.markupToError();
+		expect("(print: each _a to (each _b to _a+_b))").not.markupToError();
 	});
 	it("cannot have duplicate params", function() {
 		expect("(print: each _a,_a, to _a+_b)").markupToError();

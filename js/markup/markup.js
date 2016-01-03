@@ -230,12 +230,6 @@
 			},
 			
 			/*
-				Like GitHub-Flavoured Markdown, Twine preserves line breaks
-				within paragraphs.
-			*/
-			br:            { fn: emptyFn, },
-			
-			/*
 				The order of these four is strictly important. As the back and front versions
 				use identical tokens, back tokens should appear first. And, the order of em and strong
 				should be swapped for the front tokens.
@@ -329,7 +323,7 @@
 					},
 				}),
 			},
-			
+
 			hookAppendedBack: {
 				fn: (match) => ({
 					name: match[1],
@@ -376,6 +370,11 @@
 					passage: match[2]
 				}),
 			},
+			/*
+				Like GitHub-Flavoured Markdown, Twine preserves line breaks
+				within paragraphs.
+			*/
+			br:            { fn: emptyFn, },
 		});
 		
 		/*
@@ -430,16 +429,6 @@
 			variable:   { fn: textTokenFn("name") },
 			
 			tempVariable: { fn: textTokenFn("name") },
-			
-			whitespace: {
-				fn: emptyFn,
-				/*
-					To save creating tokens for every textual space,
-					this restriction is in place. It should have no effect
-					on syntactic whitespace.
-				*/
-				cannotFollow: "text",
-			},
 		});
 		
 		/*
@@ -638,6 +627,16 @@
 					}),
 				},
 				identifier:          { fn: textTokenFn("name") },
+
+				whitespace: {
+					fn: emptyFn,
+					/*
+						To save creating tokens for every textual space,
+						this restriction is in place. It should have no effect
+						on syntactic whitespace.
+					*/
+					cannotFollow: "text",
+				},
 			},
 			["boolean", "is", "to", "into", "and", "or", "not",
 			"isNot", "contains", "isIn"].reduce(function(a, e) {

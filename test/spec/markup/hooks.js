@@ -29,11 +29,25 @@ describe("hooks", function () {
 		it("consist of a macro, then a hook", function (){
 			expect("(if:true)[foo]").markupToPrint("foo");
 		});
+		it("may have any amount of whitespace between the macro and the hook", function (){
+			expect("(if:true) [foo]").markupToPrint("foo");
+			expect("(if:true)\n[foo]").markupToPrint("foo");
+			expect("(if:true) \n \n [foo]").markupToPrint("foo");
+		});
 		it("may not have a mirrored nametag on the other side", function (){
 			expect("(if:true)[foo]<hook|", 2).markupToError();
 		});
 		it("will error if the hook has no closing bracket", function (){
 			expect("(if:true)[(if:true)[Good golly]", 2).markupToError();
+		});
+		xit("will error if the macro doesn't produce a changer command", function (){
+			expect("(either:true)[Hey]").markupToError();
+			expect("(either:'A')[Hey]").markupToError();
+			expect("(either:1)[Hey]").markupToError();
+			expect("(a:)[Hey]").markupToError();
+			expect("(datamap:)[Hey]").markupToError();
+			expect("(dataset:)[Hey]").markupToError();
+			expect("(set:$x to 1)[Hey]").markupToError();
 		});
 	});
 });

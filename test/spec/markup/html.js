@@ -62,8 +62,8 @@ describe("HTML in twinemarkup", function() {
 		});
 	});
 
-	xdescribe("<table> tags", function() {
-		it("won't allow line breaks to become erroneous <br> elements inside them", function() {
+	describe("<table> tags", function() {
+		xit("won't allow line breaks to become erroneous <br> elements inside them", function() {
 			expect(runPassage("<table>\n<tr>\n<td>X</td>\n</tr>\n</table>").find('br').length).toBe(0);
 		});
 	});
