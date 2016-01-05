@@ -848,6 +848,7 @@ define([
 		*/
 		/*d:
 			(datamap: [...Any]) -> Datamap
+			Also known as: (dm:)
 
 			Creates a datamap, which is a data structure that pairs string names with data values.
 			You should provide a string name, followed by the value paired with it, and then another
@@ -895,7 +896,7 @@ define([
 
 			#data structure 2
 		*/
-		("datamap", (_, ...args) => {
+		(["datamap","dm"], (_, ...args) => {
 			let key;
 			const map = new Map();
 			/*
@@ -996,7 +997,8 @@ define([
 		*/
 		/*d:
 			(dataset: [...Any]) -> Dataset
-			
+			Also known as: (ds:)
+
 			Creates a dataset, which is an unordered collection of unique values.
 			
 			Example usage:
@@ -1016,7 +1018,7 @@ define([
 			
 			#data structure 3
 		*/
-		("dataset", (_, ...args) => new Set(args), zeroOrMore(Any))
+		(["dataset","ds"], (_, ...args) => new Set(args), zeroOrMore(Any))
 		
 		/*
 			COLLECTION OPERATIONS

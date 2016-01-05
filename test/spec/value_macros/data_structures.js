@@ -18,11 +18,7 @@ describe("data structure macros", function () {
 			);
 		});
 		it("is aliased as (a:)", function() {
-			["1", "'X'", "true"].forEach(function(e) {
-				for(var i = 0; i < 10; i += 1) {
-					expect("(a:" + (e + ",").repeat(i) + ")").markupToPrint(Array(i).fill(eval(e))+'');
-				}
-			});
+			expect("(print:(a:5) is (array:5))").markupToPrint('true');
 		});
 	});
 	describe("the (range:) macro", function() {
@@ -187,6 +183,9 @@ describe("data structure macros", function () {
 			expect("(datamap:1,(a:),1,(a:))").markupToError();
 			expect("(datamap:'A',(a:),'A',(a:))").markupToError();
 		});
+		it("is aliased as (dm:)", function() {
+			expect("(print:(dm:'X',5) is (datamap:'X',5))").markupToPrint('true');
+		});
 	});
 	describe("the (dataset:) macro", function() {
 		it("accepts 0 or more arguments of any primitive type", function() {
@@ -195,6 +194,9 @@ describe("data structure macros", function () {
 					expect("(dataset:" + (e + ",").repeat(i) + ")").not.markupToError();
 				}
 			});
+		});
+		it("is aliased as (ds:)", function() {
+			expect("(print:(ds:5) is (dataset:5))").markupToPrint('true');
 		});
 	});
 	describe("the (count:) macro", function() {
