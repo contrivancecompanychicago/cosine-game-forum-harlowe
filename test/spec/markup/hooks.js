@@ -40,8 +40,7 @@ describe("hooks", function () {
 		it("will error if the hook has no closing bracket", function (){
 			expect("(if:true)[(if:true)[Good golly]", 2).markupToError();
 		});
-		xit("will error if the macro doesn't produce a changer command", function (){
-			expect("(either:true)[Hey]").markupToError();
+		it("will error if the macro doesn't produce a changer command or boolean", function (){
 			expect("(either:'A')[Hey]").markupToError();
 			expect("(either:1)[Hey]").markupToError();
 			expect("(a:)[Hey]").markupToError();

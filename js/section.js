@@ -14,7 +14,7 @@ define([
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier',
 ],
-($, Utils, Selectors, Renderer, Environ, State, {selectorType}, {printBuiltinValue}, HookSet, PseudoHookSet, ChangeDescriptor, VarScope, TwineError, TwineNotifier) => {
+($, Utils, Selectors, Renderer, Environ, State, {selectorType}, {printBuiltinValue,objectName}, HookSet, PseudoHookSet, ChangeDescriptor, VarScope, TwineError, TwineNotifier) => {
 	"use strict";
 
 	let Section;
@@ -48,21 +48,17 @@ define([
 		@private
 		@param {jQuery} expr The <tw-expression> element.
 		@param {Any} result The result of running the expression.
+		@param {jQuery} nextHook The next <tw-hook> element, passed in solely to save re-computing it.
 	*/
-	function applyExpressionToHook(expr, result) {
-		/*
-			To be considered connected, the next hook must be the very next element.
-		*/
-		const nextHook = expr.next(Selectors.hook);
-		
+	function applyExpressionToHook(expr, result, nextHook) {
 		/*
 			If result is a ChangerCommand, please run it.
 		*/
-		if (result && result.changer) {
+		if (result && typeof result === "object" && result.changer) {
 			if (!nextHook.length) {
 				expr.replaceWith(TwineError.create("changer",
 					"The (" + result.macroName + ":) command should be assigned to a variable or attached to a hook.",
-					"Macros like this should usually be touching the left side of a hook: " + expr.attr('title') + "[Some text]"
+					"Macros like this should appear to the left of a hook: " + expr.attr('title') + "[Some text]"
 				).render(expr.attr('title')));
 			}
 			else {
@@ -101,17 +97,15 @@ define([
 		/*
 			Else, if it's a live macro, please run that.
 		*/
-		else if (result && result.live) {
+		else if (result && typeof result === "object" && result.live) {
 			runLiveHook.call(this, nextHook, result.delay, result.event);
 		}
 		/*
-			And finally, the falsy primitive case.
+			And finally, the false case.
 			This is special: as it prevents hooks from being run, an (else:)
-			that follows this will return true.
+			that follows this will pass.
 		*/
-		else if   (result === false
-				|| result === null
-				|| result === undefined) {
+		else if (result === false) {
 			nextHook.removeAttr('source');
 			expr.addClass("false");
 			
@@ -119,6 +113,16 @@ define([
 				this.stack[0].lastHookShown = false;
 				return;
 			}
+		}
+		/*
+			Any other values that aren't primitive true should result in runtime errors
+			when attached to hooks.
+		*/
+		else if (result !== true && nextHook.length) {
+			expr.replaceWith(TwineError.create("datatype",
+					objectName(result) + " cannot be attached to this hook.",
+					"Only booleans, changer commands, and the (live:) macro can be attached to hooks."
+				).render(expr.attr('title')));
 		}
 		/*
 			The (else:) and (elseif:) macros require a little bit of state to be
@@ -140,6 +144,10 @@ define([
 		@param {jQuery} expr The <tw-expression> to run.
 	*/
 	function runExpression(expr) {
+		/*
+			To be considered connected, the next hook must be the very next element.
+		*/
+		const nextHook = expr.next(Selectors.hook);
 		/*
 			Execute the expression, and obtain its result value.
 		*/
@@ -166,12 +174,13 @@ define([
 		/*
 			Print the expression if it's a string, number, or has a TwineScript_Print method.
 		*/
-		else if (typeof result === "string"
+		else if (!nextHook.length &&
+				(typeof result === "string"
 				|| typeof result === "number"
 				|| result instanceof Map
 				|| result instanceof Set
 				|| Array.isArray(result)
-				|| (result && result.TwineScript_Print && !result.changer)) {
+				|| (result && result.TwineScript_Print && !result.changer))) {
 			/*
 				TwineScript_Print(), when called by printBuiltinValue(), typically emits
 				side-effects. These will occur... now.
@@ -212,7 +221,7 @@ define([
 			}
 		}
 		else {
-			applyExpressionToHook.call(this, expr, result);
+			applyExpressionToHook.call(this, expr, result, nextHook);
 		}
 	}
 	
