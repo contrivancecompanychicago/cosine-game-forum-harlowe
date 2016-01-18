@@ -11,7 +11,7 @@ jshint_flags = --reporter scripts/jshintreporter.js
 # This function accepts two comma-separated JS string expressions,
 # and replaces every instance of the former in the stream with the latter.
 
-node_replace = node -e '\
+node_replace = node --harmony_destructuring -e '\
 	function read(e) { return require("fs").readFileSync(e,"utf8"); }\
 	with(process)\
 		stdin.pipe(require("replacestream")($(1))).pipe(stdout)'
@@ -57,10 +57,13 @@ build/harlowe-min.js: js/*.js js/*/*.js js/*/*/*.js
 
 # Crudely edit out the final define() call that's added for codemirror/mode.
 unwrap = /(?:,|\n)define\([^\;]+\;/g, ""
+# Inject the definitions of valid macros, containing only the name/sig/returntype/aka
+validmacros = "\"MACROS\"", JSON.stringify(require("./scripts/metadata").Macro.shortDefs())
 
 build/twinemarkup-min.js: js/markup/*.js js/markup/*/*.js
 	@node_modules/.bin/r.js -o $(requirejs_twinemarkup_flags) \
 	| $(call node_replace, $(unwrap)) \
+	| $(call node_replace, $(validmacros)) \
 	| babel --presets es2015 \
 	| uglifyjs - \
 	> build/twinemarkup-min.js

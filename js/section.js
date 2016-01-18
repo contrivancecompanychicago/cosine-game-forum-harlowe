@@ -145,9 +145,9 @@ define([
 	*/
 	function runExpression(expr) {
 		/*
-			To be considered connected, the next hook must be the very next element.
+			To be considered connected, the next anonymous hook must be the next non-whitespace element.
 		*/
-		const nextHook = expr.next(Selectors.hook);
+		const nextHook = expr.next(Selectors.hook + ":not([name])");
 		/*
 			Execute the expression, and obtain its result value.
 		*/

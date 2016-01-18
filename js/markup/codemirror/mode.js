@@ -8,26 +8,22 @@
 	const insensitiveName = (e) => (e + "").toLowerCase().replace(/-|_/g, "");
 	
 	/*
-		This is a manually generated list of existent macros in Harlowe.
+		This MACROS token is actually replaced with an object literal listing
+		of the currently defined Harlowe macros at compile-time, from the metadata script.
 	*/
-	const validMacros = (
-		"text,string,substring,num,number,if,unless,elseif,else,nonzero,first-nonzero,passage," +
-		"nonempty,first-nonempty,weekday,monthday,currenttime,currentdate,min,max,abs,sign,sin,cos,tan,floor," +
-		"round,ceil,pow,exp,sqrt,log,log10,log2,random,either,alert,prompt,confirm,openURL,reload,gotoURL," +
-		"pageURL,hook,transition,t8n,font,align,text-colour,text-color,color,colour," +
-		"text-rotate,background,text-style,css,replace,append,prepend,click,mouseover,mouseout,click-replace," +
-		"mouseover-replace,mouseout-replace,click-append,mouseover-append,mouseout-append,click-prepend," +
-		"mouseover-prepend,mouseout-prepend,set,put,move,a,array,range,subarray,shuffled,sorted,rotated," +
-		"datanames,datavalues,history,datamap,dataset,count,display,print,goto,live,stop,savegame,savedgames,loadgame,link,link-goto," +
-		"link-replace,link-repeat,link-reveal"
-	).split(',').map(insensitiveName);
-	
+	const macros = "MACROS";
+
+	/*
+		Produce an array of the macro names, using both their names and their aliases.
+	*/
+	const validMacros = Object.keys(macros).reduce((a,e)=>a.concat(macros[e].name, ...macros[e].aka),[]).map(insensitiveName);
+
 	/*
 		Import the TwineMarkup lexer function, and store it locally.
 	*/
 	let lex;
 	if(typeof define === 'function' && define.amd) {
-		define('markup', [], function (markup) {
+		define('markup', [], (markup) => {
 			lex = markup.lex;
 		});
 	}
