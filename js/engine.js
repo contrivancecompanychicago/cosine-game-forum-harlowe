@@ -306,7 +306,7 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 				as well as this basic, default ChangeDescriptor-like object
 				supplying the transition.
 			*/
-			[{ transition: transitionInName || "dissolve" }]
+			{ transition: transitionInName || "dissolve" }
 		);
 		
 		parent.append(story.parent().length ? story.parent() : story);

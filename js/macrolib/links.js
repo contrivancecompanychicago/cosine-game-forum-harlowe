@@ -16,7 +16,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		Sadly, since there's no permitted way to attach a jQuery handler
 		directly to the triggering element, the "actual" handler
 		is "attached" via a jQuery .data() key, and must be called
-		from this <html> handler.
+		from this <tw-story> handler.
 	*/
 	$(() => $(Utils.storyElement).on(
 		/*
@@ -27,9 +27,9 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		function clickLinkEvent() {
 			const link = $(this),
 				/*
-					This could be a (link:) link. Such links' events
+					This could be a (link:) command. Such links' events
 					are, due to limitations in the ChangeDescriptor format,
-					attached to the <tw-expression> enclosing it.
+					attached to the <tw-expression> next to it.
 				*/
 				event = link.parent().data('clickEvent');
 			
@@ -39,7 +39,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			}
 			/*
 				If no event was registered, then this must be
-				a passage link.
+				a passage link (a non-command).
 			*/
 			const next = link.attr('passage-name');
 			
@@ -141,7 +141,13 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		Macros.addChanger(arr,
 			(_, expr) => ChangerCommand.create(arr[0], [expr]),
 			(desc, text) => {
-				const innerSource = desc.source;
+				/*
+					This check ensures that multiple concatenations of (link:) do not overwrite
+					the original source with their successive '<tw-link>' substitutions.
+				*/
+				if (!desc.innerSource) {
+					desc.innerSource = desc.source;
+				}
 				desc.source = '<tw-link tabindex=0>' + text + '</tw-link>';
 				/*
 					Only (link-replace:) removes the link on click (by using the "replace"
@@ -150,8 +156,8 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 				desc.append = arr[0] === "link" ? "replace" : "append";
 				desc.data = {
 					clickEvent(link) {
-						desc.source = innerSource;
-						desc.section.renderInto(innerSource + "", null, desc);
+						desc.source = desc.innerSource;
+						desc.section.renderInto(desc.innerSource + "", null, desc);
 						/*
 							Only (link-reveal:) turns the link into plain text:
 							the others either remove it (via the above) or leave it be.

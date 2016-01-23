@@ -30,6 +30,12 @@ describe("link macros", function() {
 			expect(p.text()).toBe("B");
 			expect("$c").markupToPrint("12");
 		});
+		it("can be concatenated", function() {
+			var p = runPassage("(set: $x to (link:'a')+(link:'b'))$x[Hello]");
+			expect(p.text()).toBe("b");
+			p.find('tw-link').click();
+			expect(p.text()).toBe("Hello");
+		});
 	});
 	describe("(link-reveal:)", function() {
 		it("accepts exactly 1 string", function() {

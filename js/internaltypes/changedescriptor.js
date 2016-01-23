@@ -1,4 +1,4 @@
-define(['jquery', 'utils', 'renderer'], ($, {assertOnlyHas, impossible, transitionIn}, {exec}) => {
+define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas, impossible, transitionIn}, {exec}) => {
 	"use strict";
 	/**
 		When a new Section (generally a hook or expression) is about to be rendered,
@@ -19,6 +19,10 @@ define(['jquery', 'utils', 'renderer'], ($, {assertOnlyHas, impossible, transiti
 		
 		// {String} source            The hook's source, which can be finagled before it is run.
 		source:            "",
+
+		// {String} innerSource       Used by (link:), this stores the original source if some kind
+		//                            of "trigger element" needs to be rendered in its place initially.
+		innerSource:       "",
 		
 		// {Boolean} enabled          Whether or not this code is enabled.
 		//                            (Disabled code won't be used until something enables it).
@@ -26,6 +30,9 @@ define(['jquery', 'utils', 'renderer'], ($, {assertOnlyHas, impossible, transiti
 		
 		// {jQuery} target            Where to render the source, if not the hookElement.
 		target:           null,
+
+		// {Array} newTargets         Alternative targets to use instead of the original.
+		newTargets:       null,
 		
 		// {String} append            Which jQuery method name to append the source to the dest with.
 		append:           "append",
@@ -123,17 +130,62 @@ define(['jquery', 'utils', 'renderer'], ($, {assertOnlyHas, impossible, transiti
 		*/
 		render() {
 			const
-				{target, source, transition, transitionTime, enabled} = this;
+				{source, transition, transitionTime, enabled, section, newTargets} = this;
 			let
-				{append} = this;
+				{target, append} = this;
 			
 			assertOnlyHas(this, changeDescriptorShape);
+
+			/*
+				newTargets are targets (such as ?foo in (replace:?foo)) which should be used instead of
+				the original. This substitution will be caught by the next two if-statements.
+			*/
+			if (Array.isArray(newTargets) && newTargets.length) {
+				target = newTargets;
+			}
+			/*
+				As you know, in TwineScript a pseudo-hook selector is just a
+				raw string. Such strings are passed directly to macros, and,
+				at that point of execution inside TwineScript.eval, they don't
+				have access to a particular section to call selectHook() from.
+				
+				So, we currently defer creating a PseudoHookSet from the selector string
+				until just here.
+			*/
+			if (typeof target === "string") {
+				target = section.selectHook(target);
+			}
+			/*
+				When the target is a HookSet or PseudoHookSet, each word or hook
+				within that set must be rendered separately. This simplifies the
+				implementation of render() considerably.
+			*/
+			if (typeof target.forEach === "function") {
+				let dom = $();
+				target.forEach((e) => {
+					/*
+						Generate a new descriptor which has the same properties
+						(rather, delegates to the old one via the prototype chain)
+						but has just this hook/word as its target.
+						Then, render using that descriptor.
+					*/
+					dom = dom.add(this.create({ target: e, newTargets:null }).render());
+				});
+				return dom;
+			}
 			
 			/*
-				First, a quick check to see if this is enabled and with a target.
-				If not, assume nothing needs to be done, and return.
+				If there's no target, something incorrect has transpired.
 			*/
-			if (!target || !enabled) {
+			if (!target) {
+				impossible("ChangeDescriptor.render",
+					"ChangeDescriptor has source but not a target!");
+				return $();
+			}
+			/*
+				If this isn't enabled, conversely, everything is fine and nothing needs to be done.
+			*/
+			if (!enabled) {
 				return $();
 			}
 			/*
@@ -156,8 +208,8 @@ define(['jquery', 'utils', 'renderer'], ($, {assertOnlyHas, impossible, transiti
 					hook, then I'd change append to "replaceWith".
 				*/
 				else {
-					impossible("Section.render", "The target jQuery doesn't have a '" + append + "' method.");
-					return;
+					impossible("Section.render", "The target doesn't have a '" + append + "' method.");
+					return $();
 				}
 			}
 			/*

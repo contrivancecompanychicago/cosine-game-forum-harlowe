@@ -34,8 +34,14 @@ describe("hooks", function () {
 			expect("(if:true)\n[foo]").markupToPrint("foo");
 			expect("(if:true) \n \n [foo]").markupToPrint("foo");
 		});
-		it("may not have a mirrored nametag on the other side", function (){
+		it("may not have a nametag on the left side", function (){
+			expect("(if:true)|hook>[foo]", 2).markupToError();
+			expect("(set:$a to 1)|hook>[foo]").not.markupToError();
+		});
+		it("may not have a mirrored nametag on the right side", function (){
 			expect("(if:true)[foo]<hook|", 2).markupToError();
+			// Because this syntax is ambiguous, it is also an error despite (set:) not attaching.
+			expect("(set:$a to 1)[foo]<hook|").markupToError();
 		});
 		it("will error if the hook has no closing bracket", function (){
 			expect("(if:true)[(if:true)[Good golly]", 2).markupToError();

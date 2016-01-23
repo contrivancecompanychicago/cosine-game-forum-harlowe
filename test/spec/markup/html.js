@@ -52,6 +52,13 @@ describe("HTML in twinemarkup", function() {
 			expect(runPassage("Hey!<script>window.foo = 1;</script>").find('script').length).toBe(1);
 			expect(window.foo).toBe(1);
 		});
+		it("can have src attributes", function(done) {
+			runPassage('<script src="data:text/javascript;plain,window.foo=1//"></script>');
+			setTimeout(function() {
+				expect(window.foo).toBe(1);
+				done();
+			},1000);
+		});
 		afterEach(function() {
 			delete window.foo;
 		});

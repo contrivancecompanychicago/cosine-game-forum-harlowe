@@ -623,25 +623,18 @@ define([
 			@return {Boolean} Whether the ChangeDescriptors enabled the rendering
 				(i.e. no (if:false) macros or such were present).
 		*/
-		renderInto(source, target, changers) {
+		renderInto(source, target, ...changers) {
 			/*
 				This is the ChangeDescriptor that defines this rendering.
 			*/
-			const desc = ChangeDescriptor.create({ target, source, });
-				
-			/*
-				Define an additional desc property linking it back to this section.
-				This is used by enchantment macros to determine where to register
-				their enchantments to.
-			*/
-			desc.section = this;
+			const desc = ChangeDescriptor.create({ target, source, section: this});
 			
 			/*
 				Run all the changer functions.
 				[].concat() wraps a non-array in an array, while
 				leaving arrays intact.
 			*/
-			changers && [].concat(changers).forEach((changer) => {
+			changers.forEach((changer) => {
 				/*
 					If a non-changer object was passed in (such as from
 					specificEnchantmentEvent()), assign its values,
@@ -649,35 +642,13 @@ define([
 					Honestly, having non-changer descriptor-altering objects
 					is a bit displeasingly rough-n-ready, but it's convenient...
 				*/
-				if (!changer || !changer.changer) {
+				if (!changer.changer) {
 					Object.assign(desc, changer);
 				}
 				else {
 					changer.run(desc);
 				}
 			});
-			
-			/*
-				As you know, in TwineScript a pseudo-hook selector is just a
-				raw string. Such strings are passed directly to macros, and,
-				at that point of execution inside TwineScript.eval, they don't
-				have access to a particular section to call selectHook() from.
-				
-				So, we currently defer creating an array from the selector string
-				until just here.
-			*/
-			if (typeof desc.target === "string") {
-				desc.target = this.selectHook(desc.target);
-			}
-			
-			/*
-				If there's no target, something incorrect has transpired.
-			*/
-			if (!desc.target) {
-				Utils.impossible("Section.renderInto",
-					"ChangeDescriptor has source but not a target!");
-				return false;
-			}
 			
 			/*
 				This stores the returned DOM created by rendering the changeDescriptor.
@@ -692,25 +663,6 @@ define([
 			if (this.stack.length >= 50) {
 				dom = TwineError.create("infinite", "Printing this expression may have trapped me in an infinite loop.")
 					.render(target.attr('title')).replaceAll(target);
-			}
-			/*
-				Otherwise, render the source into the target.
-				
-				When a non-jQuery is the target in the descriptor, it is bound to be
-				a HookSet or PseudoHookSet, and each word or hook within that set
-				must be rendered separately. This simplifies the implementation
-				of render() considerably.
-			*/
-			else if (!(desc.target instanceof $)) {
-				desc.target.forEach((e) => {
-					/*
-						Generate a new descriptor which has the same properties
-						(rather, delegates to the old one via the prototype chain)
-						but has just this hook/word as its target.
-						Then, render using that descriptor.
-					*/
-					dom = dom.add(desc.create({ target: e }).render());
-				});
 			}
 			else {
 				/*

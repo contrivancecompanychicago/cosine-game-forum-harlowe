@@ -295,7 +295,7 @@
 				fn: () => ({
 					isFront: true,
 					demote() {
-						this.error("This tagged hook doesn't have a matching ].");
+						this.error("This attached hook should end with a ] without a <nametag|.");
 					},
 				}),
 				canFollow: ["macro", "variable", "tempVariable"],
@@ -310,7 +310,7 @@
 					rules are identical, the canFollow of one must match
 					the cannotFollow of the other.
 				*/
-				cannotFollow: ["macro", "variable"],
+				cannotFollow: ["macro", "variable", "tempVariable"],
 			},
 			
 			hookBack: {

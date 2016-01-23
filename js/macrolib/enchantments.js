@@ -145,7 +145,7 @@ define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercomm
 				/*
 					Having done that, we may now alter the desc's target.
 				*/
-				desc.target = scope;
+				desc.newTargets = (desc.newTargets || []).concat(scope);
 				desc.append = e;
 				return desc;
 			},
@@ -195,7 +195,7 @@ define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercomm
 			Sadly, since there's no permitted way to attach a jQuery handler
 			directly to the triggering element, the "actual" handler
 			is "attached" via a jQuery .data() key, and must be called
-			from this <html> handler.
+			from this <tw-story> handler.
 		*/
 		$(() => {
 			Utils.storyElement.on(
@@ -269,7 +269,7 @@ define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercomm
 					(Yes, the name "rerender" is #awkward.)
 				*/
 				if (enchantDesc.rerender) {
-					desc.target = selector;
+					desc.newTargets = (desc.newTargets || []).concat(selector);
 					desc.append = enchantDesc.rerender;
 				}
 				
