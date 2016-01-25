@@ -51,7 +51,7 @@ define(['jquery', 'utils/hookutils'], ($, {wrapTextNodes}) => {
 			e.each(function(i){ fn($(this), i); });
 			/*
 				Having done that, we now remove the <tw-pseudo-hook> elements and normalize
-				the text nodes that were split up as a result of the 
+				the text nodes that were split up as a result of the selection.
 			*/
 			e.contents().unwrap().parent().each(function() {
 				this.normalize();

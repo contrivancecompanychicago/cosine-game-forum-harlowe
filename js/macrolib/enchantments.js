@@ -2,7 +2,7 @@ define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercomm
 ($, Utils, Macros, HookSet, ChangerCommand, Enchantment) => {
 	"use strict";
 
-	const {either} = Macros.TypeSignature;
+	const {either,rest} = Macros.TypeSignature;
 	/*
 		Built-in Revision, Interaction and Enchantment macros.
 		This module modifies the Macros module only, and exports nothing.
@@ -34,11 +34,11 @@ define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercomm
 	*/
 	const revisionTypes = [
 			/*d:
-				(replace: HookName or String) -> Changer
+				(replace: ...HookName or String) -> Changer
 				
-				Creates a command which you can attach to a hook, and replace a target
-				destination with the hook's contents. The target is either a text string within
-				the current passage, or a hook reference.
+				Creates a command which you can attach to a hook, and replace target
+				destinations with the hook's contents. The targets are either text strings within
+				the current passage, or hook references.
 
 				Example usage:
 
@@ -48,10 +48,10 @@ define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercomm
 				(replace: "cat")[**dog**]
 				```
 
-				This example changes the `|face>` hook to read "smile":
+				This example changes the `|face>` and `|heart>` hooks to read "smile":
 				```
-				A song in your heart, a |face>[song] on your face.
-				(replace: ?face)[smile]
+				A |heart>[song] in your heart, a |face>[song] on your face.
+				(replace: ?face, ?heart)[smile]
 				```
 
 				Rationale:
@@ -81,13 +81,13 @@ define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercomm
 			*/
 			"replace",
 			/*d:
-				(append: HookName or String) -> Changer
+				(append: ...HookName or String) -> Changer
 
 				A variation of (replace:) which adds the attached hook's contents to
 				the end of each target, rather than replacing it entirely.
 
 				Example usage:
-				* `(append: "Emily")[, my maid] ` adds ", my maid " to the end of every occurrence of "Emily".
+				* `(append: "Emily", "Em")[, my maid] ` adds ", my maid " to the end of every occurrence of "Emily" or "Em".
 				* `(append: ?dress)[ from happier days]` adds " from happier days" to the end of the `|dress>` hook.
 
 				Rationale:
@@ -102,14 +102,14 @@ define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercomm
 			*/
 			"append",
 			/*d:
-				(prepend: HookName or String) -> Changer
+				(prepend: ...HookName or String) -> Changer
 
 				A variation of (replace:) which adds the attached hook's contents to
 				the beginning of each target, rather than replacing it entirely.
 
 				Example usage:
 
-				* `(prepend: "Emily")[Miss ] ` adds "Miss " to the start of every occurrence of "Emily".
+				* `(prepend: "Emily", "Em")[Miss ] ` adds "Miss " to the start of every occurrence of "Emily" or "Em".
 				* `(prepend: ?dress)[my wedding ]` adds "my wedding " to the start of the `|dress>` hook.
 
 				Rationale:
@@ -127,8 +127,8 @@ define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercomm
 	
 	revisionTypes.forEach((e) => {
 		Macros.addChanger(e,
-			(_, scope) => ChangerCommand.create(e, [scope]),
-			(desc, scope) => {
+			(_, ...scopes) => ChangerCommand.create(e, scopes),
+			(desc, ...scopes) => {
 				/*
 					Now, if the source hook was outside the collapsing syntax,
 					and its dest is inside it, then it should NOT be collapsed, reflecting
@@ -145,11 +145,11 @@ define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercomm
 				/*
 					Having done that, we may now alter the desc's target.
 				*/
-				desc.newTargets = (desc.newTargets || []).concat(scope);
+				desc.newTargets = (desc.newTargets || []).concat(scopes);
 				desc.append = e;
 				return desc;
 			},
-			either(HookSet,String)
+			rest(either(HookSet,String))
 		);
 	});
 	
