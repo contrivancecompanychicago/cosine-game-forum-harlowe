@@ -186,6 +186,10 @@ describe("data structure macros", function () {
 		it("is aliased as (dm:)", function() {
 			expect("(print:(dm:'X',5) is (datamap:'X',5))").markupToPrint('true');
 		});
+		it("can be printed with (print:)", function() {
+			var td = Array.from(runPassage("(print:(datamap:'A',1,'B',2))").find('table td')).map(function(e) { return $(e).text(); });
+			expect(td.join(',')).toBe('A,1,B,2');
+		});
 	});
 	describe("the (dataset:) macro", function() {
 		it("accepts 0 or more arguments of any primitive type", function() {
@@ -195,6 +199,19 @@ describe("data structure macros", function () {
 				}
 			});
 		});
+		it("produces a dataset containing all of the unique items", function() {
+			runPassage("(set: $set to (dataset:'s',true,(a:),1,(a:)))");
+			expect("(print: $set contains true)").markupToPrint("true");
+			expect("(print: $set contains (a:))").markupToPrint("true");
+			expect("(print: $set contains 1)").markupToPrint("true");
+			expect("(print: $set contains 's')").markupToPrint("true");
+			expect("(print: $set contains '1')").markupToPrint("false");
+		});
+		it("when spread, returns the values in their natural-sort order", function() {
+			runPassage("(set: $set to (dataset:'D1','E','É','D11','D2','F','E'))");
+			expect("(print: (a:...$set))").markupToPrint("D1,D2,D11,E,É,F");
+		});
+
 		it("is aliased as (ds:)", function() {
 			expect("(print:(ds:5) is (dataset:5))").markupToPrint('true');
 		});

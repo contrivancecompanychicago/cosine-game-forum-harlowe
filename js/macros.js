@@ -1,5 +1,5 @@
-define(['jquery', 'utils', 'utils/operationutils', 'datatypes/lambda', 'internaltypes/twineerror'],
-($, {insensitiveName, nth, plural, assert, lockProperty}, {objectName, typeName, singleTypeCheck}, Lambda, TwineError) => {
+define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/lambda', 'internaltypes/twineerror'],
+($, NaturalSort, {insensitiveName, nth, plural, assert, lockProperty}, {objectName, typeName, singleTypeCheck}, Lambda, TwineError) => {
 	"use strict";
 	/**
 		This contains a registry of macro definitions, and methods to add to that registry.
@@ -41,7 +41,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'datatypes/lambda', 'internal
 						}
 					}
 					else if (el.value instanceof Set) {
-						el.value.forEach((item) => newArgs.push(item));
+						newArgs.push(Array.from(el.value).sort(NaturalSort("en")));
 					}
 					else {
 						newArgs.push(

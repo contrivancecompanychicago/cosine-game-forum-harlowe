@@ -132,6 +132,7 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 								Base case.
 							*/
 							if (align === "left") {
+								i -= 1;
 								break;
 							}
 							/*

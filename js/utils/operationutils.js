@@ -484,14 +484,14 @@ define(['utils', 'internaltypes/twineerror'], ({assert, impossible, toJSLiteral}
 			}
 			return value.reduce((html, [pair1, pair2]) =>
 				/*
-					Print each value, displaying the objectName() of
+					Print each value, calling printBuiltinValue() on
 					each of them,. Notice that the above conversion means
 					that none of these pairs contain error.
 				*/
 				html + "<tr><td>`" +
-					pair1 +
+					printBuiltinValue(pair1) +
 					"`</td><td>`" +
-					objectName(pair2) +
+					printBuiltinValue(pair2) +
 					"`</td></tr>",
 				"<table class=datamap>") + "</table>";
 		}

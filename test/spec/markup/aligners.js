@@ -2,9 +2,11 @@ describe("aligner syntax", function() {
 	'use strict';
 	
 	it("right-aligns text with ==> on a single line, and ends right-alignment with <== on a single line", function() {
-		var align = runPassage("==>\ngarply\n<==").find('tw-align');
+		var passage = runPassage("==>\ngarply\n<==\ngrault");
+		var align = passage.find('tw-align');
 		expect(align.css('text-align')).toBe('right');
 		expect(align.text()).toBe('garply');
+		expect(passage.text()).toBe('garply\ngrault');
 		expect(align.css('margin-left')).toMatch(/^(?:0px)?$/);
 	});
 	it("ignores preceding and trailing whitespace", function() {

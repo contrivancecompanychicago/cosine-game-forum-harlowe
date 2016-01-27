@@ -403,9 +403,22 @@
 						tokenData's matches, or -1.
 					*/
 					for(; ft < frontTokenStack.length; ft += 1) {
-						if (frontTokenStack[ft].type in tokenData.matches) {
+						const {type} = frontTokenStack[ft];
+						if (type in tokenData.matches) {
 							isMatchingBack = true;
 							break;
+						}
+						/*
+							If there is a front token which this back token "cannot cross" -
+							that is, cannot pair with a front token behind it - then
+							abandon this rule. An example is (print: ")") - the
+							parenthesis cannot cross the stringOpener to match the
+							macroFront.
+						*/
+						if (tokenData.cannotCross && tokenData.cannotCross.indexOf(type) >-1) {
+							// This unconventional way to break the loop is used to simplify the
+							// "was the loop fruitless" check below.
+							ft = frontTokenStack.length-1;
 						}
 					}
 					/*

@@ -3,7 +3,7 @@
   "version": "1.2.2",
   "author": "Leon Arnott",
   "description": "The default runtime for Twine 2 stories",
-  "license": "GPL v3",
+  "license": "Zlib",
   "repository": {
     "type": "hg",
     "url": "https://bitbucket.org/_L_/harlowe"

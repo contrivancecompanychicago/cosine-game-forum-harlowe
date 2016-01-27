@@ -6,16 +6,29 @@
 <script src="../node_modules/es6-shim/es6-shim.min.js"></script>
 <script src="../node_modules/requirejs/require.js"></script>
 <script>
-/*
-	Firefox (my primary test environment) supports most native ES6, so it can test the uncompiled ES6 source.
-	Other browsers test the compiled ES5 source.
-*/
-if(0..toSource) {
-	require.config({baseUrl: "../js/", scriptType: "application/javascript;version=1.8"});
-	require(["markup/lexer","markup/patterns","markup/markup","harlowe"]);
+// Testing the format.js file, with its compiled CSS and minified ES5
+if(location.search.indexOf("&code=formatjs") > -1) {
+	window.storyFormat = function(e) {
+		var root = document.createElement('html');
+		root.innerHTML = e.source.replace(/.+\n/,'');
+		// document.documentElement.appendChild() doesn't work, sadly.
+		document.write(root.querySelector('style').outerHTML);
+		document.write(root.querySelector('script').outerHTML);
+	};
+	document.write("<script src='../dist/format.js'><\/script>");
 }
 else {
-	document.write("<script src='../build/harlowe-min.js'><\/script>");
+	document.write('<link rel="stylesheet" href="../build/harlowe-css.css"\/>');
+
+	// Testing the compiled ES5
+	if(location.search.indexOf("&code=es5") > -1) {
+		document.write("<script src='../build/harlowe-min.js'><\/script>");
+	}
+	// Testing the raw ES6 source
+	else {
+		require.config({baseUrl: "../js/", scriptType: "application/javascript;version=1.8"});
+		require(["markup/lexer","markup/patterns","markup/markup","harlowe"]);
+	}
 }
 </script>
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.4.1/jasmine.js"></script>
@@ -187,7 +200,11 @@ afterAll(function() {
 });
 </script>
 <body>
-<tw-story style='visibility:hidden'></tw-story>
+<nav style="font-family:Monaco;background:#eee;padding:0.5em">
+<a style='color:black' href="#" onclick="location=String(location).replace(/(&amp;.+)?$/,'&amp;code=es6')">Raw ES6</a> |
+<a style='color:black' href="#" onclick="location=String(location).replace(/(&amp;.+)?$/,'&amp;code=es5')">Compiled harlowe-min.js</a> |
+<a style='color:black' href="#" onclick="location=String(location).replace(/(&amp;.+)?$/,'&amp;code=formatjs')">Compiled format.js</a>
+</nav>
 
 <!-- include spec files here... -->
 <script src="spec/markup/text_styles.js"></script>
@@ -229,5 +246,6 @@ afterAll(function() {
 <script src="spec/command_macros/basics.js"></script>
 <script src="spec/command_macros/saving.js"></script>
 
+<tw-story style='visibility:hidden'></tw-story>
 <tw-storydata options="debug" ifid="107370AE-1D5A-4A33-A52C-D1180BA69750" startnode="1">
 <tw-passagedata pid="1" name="1">

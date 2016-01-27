@@ -133,5 +133,8 @@ describe("twinescript literals", function() {
 				expectColourToBe(colour.toUpperCase(), "#" + mapping[colour]);
 			});
 		});
+		it("can contain close-brackets", function() {
+			expect('(print: ")")').markupToPrint(")");
+		});
 	});
 });
