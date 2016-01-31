@@ -1,7 +1,7 @@
 describe("enchantment macros", function () {
 	'use strict';
 	describe("(enchant:)", function() {
-		it("accepts a changer command, followed by either a string or a hook", function() {
+		it("accepts a changer command, followed by either a string or a hook reference", function() {
 			expect("(print:(enchant:(font:'Skia'),?foo))").not.markupToError();
 			expect("(print:(enchant:(font:'Skia'),'baz'))").not.markupToError();
 

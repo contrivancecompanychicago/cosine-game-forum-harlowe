@@ -90,33 +90,55 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 			to the target HTML element.
 		*/
 		update() {
-			const {target} = this;
-			/*
-				Apply the style attributes to the target element.
-			*/
-			if (Array.isArray(this.styles)) {
+			const {section, newTargets} = this;
+			let {target} = this;
+			
+			const forEachTarget = (target) => {
 				/*
-					Some styles depend on the pre-existing CSS to calculate their values
-					(for instance, "blurrier" converts the dominant text colour into a
-					text shadow colour, changing the text itself to transparent.)
-					If the user has complicated story CSS, it's not possible
-					to determine what colour should be used for such a hook
-					until it's connected to the DOM. So, now this .css call is deferred
-					for 1 frame, which should (._.) be enough time for it to become attached.
+					Apply the style attributes to the target element.
 				*/
-				setTimeout(() => target.css(Object.assign(...[{}].concat(this.styles))));
-			}
+				if (Array.isArray(this.styles) && this.styles.length > 0) {
+					/*
+						Some styles depend on the pre-existing CSS to calculate their values
+						(for instance, "blurrier" converts the dominant text colour into a
+						text shadow colour, changing the text itself to transparent.)
+						If the user has complicated story CSS, it's not possible
+						to determine what colour should be used for such a hook
+						until it's connected to the DOM. So, now this .css call is deferred
+						for 1 frame, which should (._.) be enough time for it to become attached.
+					*/
+					setTimeout(() => target.css(Object.assign(...[{}].concat(this.styles))));
+				}
+				/*
+					If HTML attributes were included in the changerDescriptor, apply them now.
+				*/
+				if (this.attr) {
+					this.attr.forEach(e => target.attr(e));
+				}
+				/*
+					Same with jQuery data (such as functions to call in event of, say, clicking).
+				*/
+				if (this.data) {
+					target.data(this.data);
+				}
+			};
+
 			/*
-				If HTML attributes were included in the changerDescriptor, apply them now.
+				These three if-statements are explained in render(), from which they have
+				been plucked. In short, forEachTarget should be run on every target element,
+				be there a set or a single one.
 			*/
-			if (this.attr) {
-				this.attr.forEach(e => target.attr(e));
+			if (Array.isArray(newTargets) && newTargets.length) {
+				target = newTargets;
 			}
-			/*
-				Same with jQuery data (such as functions to call in event of, say, clicking).
-			*/
-			if (this.data) {
-				target.data(this.data);
+			if (typeof target === "string") {
+				target = section.selectHook(target);
+			}
+			if (typeof target.forEach === "function") {
+				target.forEach(forEachTarget);
+			}
+			else {
+				forEachTarget(target);
 			}
 		},
 		
@@ -135,6 +157,13 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 				{target, append} = this;
 			
 			assertOnlyHas(this, changeDescriptorShape);
+
+			/*
+				First: if this isn't enabled, everything is fine and nothing needs to be done.
+			*/
+			if (!enabled) {
+				return $();
+			}
 
 			/*
 				newTargets are targets (such as ?foo in (replace:?foo)) which should be used instead of
@@ -156,10 +185,13 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 				target = section.selectHook(target);
 			}
 			/*
-				When the target is a HookSet or PseudoHookSet, each word or hook
-				within that set must be rendered separately. This simplifies the
-				implementation of render() considerably.
+				Each individual element of the HookSet, jQuery, Array, etc. must be rendered separately.
+				This simplifies the implementation of render() considerably, and moreover allows the multiple
+				DOMs created at each target to be united into a single jQuery collection to return.
 			*/
+			if (target.jquery && target.length > 1) {
+				target = Array.from(target).map($);
+			}
 			if (typeof target.forEach === "function") {
 				let dom = $();
 				target.forEach((e) => {
@@ -173,19 +205,12 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 				});
 				return dom;
 			}
-			
 			/*
 				If there's no target, something incorrect has transpired.
 			*/
 			if (!target) {
 				impossible("ChangeDescriptor.render",
 					"ChangeDescriptor has source but not a target!");
-				return $();
-			}
-			/*
-				If this isn't enabled, conversely, everything is fine and nothing needs to be done.
-			*/
-			if (!enabled) {
 				return $();
 			}
 			/*

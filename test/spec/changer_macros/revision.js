@@ -113,6 +113,28 @@ describe("revision macros", function() {
 					expect(p.text()).toBe(append?'102030':'010203');
 				});
 			});
+			describe("given a <html> element string", function() {
+				it(name+"s to every found element in the passage", function() {
+					var p = runPassage("//good// <i>bad</i>("+name+":'<i>')[lands]");
+					expect(p.text()).toBe(append?'goodlands badlands':'landsgood landsbad');
+				});
+				it("recomputes the source within each target, in document position order", function() {
+					var p = runPassage("(set:$a to 0)//A//<i>B</i>//C//("+name+":'<i>')[(set:$a to it + 1)z$a]");
+					expect(p.text()).toBe(append?'Az1Bz2Cz3':'z1Az2Bz3C');
+				});
+				xit("can be composed with other ("+name+":)s", function() {
+					runPassage("(set:$s to ("+name+":'<i>') + ("+name+":'<b>'))");
+					var p = runPassage("//1//''2''//3//$s[0]");
+					expect(p.text()).toBe(append?'102030':'010203');
+				});
+			});
+			describe("given a <tw-story> element string", function() {
+				it(name+"s to the <tw-story> element", function() {
+					runPassage("("+name+":'<tw-story>')[//hands//]");
+					var i = $('tw-story > i');
+					expect(i.text()).toBe('hands');
+				});
+			});
 		});
 	});
 	describe("(replace:)", function() {
