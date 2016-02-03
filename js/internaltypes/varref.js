@@ -49,11 +49,19 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 				the number 1 is treated the same as the string "1st", and so forth.
 			*/
 			if (typeof prop === "number") {
+				if (prop === 0) {
+					return TwineError.create("property", "You can't access elements at position 0 of "
+					+ objectName(obj)
+					+ ".",
+					"Only positive and negative position values exist.");
+				}
 				/*
 					Since JS arrays are 0-indexed, we need only subtract 1 from prop
 					to convert it to a JS property index.
 				*/
-				prop -= 1;
+				else if (prop > 0) {
+					prop -= 1;
+				}
 			}
 			/*
 				Given that prop is a string, convert "1st", "2ndlast", etc. into a number.

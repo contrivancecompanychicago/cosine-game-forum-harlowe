@@ -235,6 +235,7 @@ describe("property indexing", function() {
 		describe("for datamaps", function() {
 			it("access the keyed properties", function() {
 				expect('(print: (datamap:"A",1)\'s ("A"))').markupToPrint('1');
+				expect('(print: (datamap:-1,1)\'s (-1))').markupToPrint('1');
 			});
 			it("prints an error if the key is not present", function() {
 				expect('(print: (datamap:"A",1)\'s ("B"))').markupToError();
@@ -262,9 +263,17 @@ describe("property indexing", function() {
 				expect("(set: $a to (a:1,2))(set: $a\'s (1) to 2)$a").markupToPrint("2,2");
 				expect("(set: $a to (a:(a:1)))(set: $a\'s 1st\'s 1st to 2)$a").markupToPrint("2");
 			});
-			it("must have numbers on the right side", function (){
+			it("must have numbers in range on the right side, or 'length'", function (){
 				expect("(print: (a:'Red','Blue')\'s '1')").markupToError();
 				expect("(print: (a:'Red')\'s ('13'\'s 1st))").markupToError();
+				expect("(print: (a:'Red','Blue')'s 'length')").markupToPrint("2");
+				expect("(print: (a:'Red','Blue')\'s 0)").markupToError();
+				expect("(print: (a:'Red','Blue')\'s 9)").markupToError();
+				expect("(print: (a:)\'s 1)").markupToError();
+			});
+			it("takes negative numeric expressions to obtain last, 2ndlast, etc", function() {
+				expect('(print: (a:7)\'s (-1))').markupToPrint('7');
+				expect('(print: (a:6,5,4)\'s (-2))').markupToPrint('5');
 			});
 			describe("with an array key", function() {
 				it("evaluates to an array of positional properties", function() {
@@ -283,11 +292,18 @@ describe("property indexing", function() {
 			});
 		});
 		describe("for strings", function() {
-			it("must have numbers on the right side, or 'length'", function (){
+			it("must have numbers in range on the right side, or 'length'", function (){
 				expect("(print: \"𐌎ed\"'s (1))").markupToPrint("𐌎");
 				expect("(print: \"𐌎ed\"'s 'length')").markupToPrint("3");
 				expect("(print: '𐌎ed''s '1')").markupToError();
 				expect("(print: '𐌎lue''s ('13''s 1st))").markupToError();
+				expect("(print: \"𐌎ed\"'s 0)").markupToError();
+				expect("(print: \"𐌎ed\"'s 9)").markupToError();
+				expect("(print: \"\"'s 1)").markupToError();
+			});
+			it("takes negative numeric expressions to obtain last, 2ndlast, etc", function() {
+				expect('(print: "A𐌎B"\'s (-1))').markupToPrint('B');
+				expect('(print: "A𐌎B"\'s (-2))').markupToPrint('𐌎');
 			});
 			it("can be used with single-quoted strings", function (){
 				expect("(print: '𐌎ed''s (1))").markupToPrint("𐌎");
@@ -347,6 +363,7 @@ describe("property indexing", function() {
 		describe("for datamaps", function() {
 			it("accesses the keyed properties", function() {
 				expect('(print: "A" of (datamap:"A",1))').markupToPrint('1');
+				expect('(print: (-1) of (datamap:-1,1))').markupToPrint('1');
 			});
 			it("prints an error if the key is not present", function() {
 				expect('(print: "B" of (datamap:"A",1))').markupToError();
@@ -363,16 +380,22 @@ describe("property indexing", function() {
 				expect("(set: $a to (a:1,2))(set: (1) of $a\ to 2)$a").markupToPrint("2,2");
 				expect("(set: $a to (a:(a:1)))(set: (1) of (1) of $a\ to 2)$a").markupToPrint("2");
 			});
-			it("must have numbers on the left side", function (){
+			it("must have in-range numbers on the left side, or 'length'", function (){
+				expect("(print: 1 of (a:'Red','Blue'))").markupToPrint("Red");
 				expect("(print: '1' of (a:'Red','Blue'))").markupToError();
 				expect("(print: ('13'\'s 1st) of (a:'Red'))").markupToError();
+				expect("(print: 'length' of (a:'Red'))").markupToPrint("1");
+				expect("(print: 0 of (a:'Red'))").markupToError();
+				expect("(print: 3 of (a:'Red'))").markupToError();
 			});
 		});
 		describe("for strings", function() {
-			it("must have numbers on the left side, or 'length'", function (){
+			it("must have in-range numbers on the left side, or 'length'", function (){
 				expect("(print: (1) of '𐌎ed')").markupToPrint("𐌎");
 				expect("(print: 'length' of \"𐌎ed\")").markupToPrint("3");
 				expect("(print: '1' of '𐌎ed')").markupToError();
+				expect("(print: 0 of '𐌎ed')").markupToError();
+				expect("(print: 9 of '𐌎ed')").markupToError();
 				expect("(print: (1st of '13') of '𐌎lue')").markupToError();
 			});
 		});
