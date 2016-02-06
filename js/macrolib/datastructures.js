@@ -13,7 +13,7 @@ define([
 ($, NaturalSort, Macros, {objectName, subset, collectionType, isValidDatamapName, is}, State, Engine, Passages, Lambda, AssignmentRequest, TwineError, TwineNotifier) => {
 	"use strict";
 	
-	const {optional, rest, zeroOrMore, Any}   = Macros.TypeSignature;
+	const {optional, rest, either, zeroOrMore, Any}   = Macros.TypeSignature;
 	
 	Macros.add
 		/*d:
@@ -459,27 +459,27 @@ define([
 		[Any, rest(Any)])
 		
 		/*d:
-			(sorted: String, ...String) -> Array
+			(sorted: Number or String, ...Number or String) -> Array
 			
-			Similar to (a:), except that it requires string elements, and orders the
-			strings in English alphanumeric sort order, rather than the order in which they were provided.
+			Similar to (a:), except that it requires only numbers or strings, and orders
+			them in English alphanumeric sort order, rather than the order in which they were provided.
 			
 			Example usage:
 			```
-			(set: $a to (a: 'A','C','E','G'))
+			(set: $a to (a: 'A','C','E','G', 2, 1))
 			(print: (sorted: ...$a))
 			```
 			
 			Rationale:
-			Often, you'll be using arrays as 'decks' that will provide string values to other parts of
-			your story in a specific order. If you want, for instance, these strings to appear in
+			Often, you'll be using arrays as 'decks' that will provide values to other parts of
+			your story in a specific order. If you want, for instance, several strings to appear in
 			alphabetical order, this macro can be used to create a sorted array, or (by using the
 			spread `...` syntax) convert an existing array into a sorted one.
 			
 			Details:
-			Unlike other programming languages, this does not strictly use ASCII sort order, but alphanumeric sorting:
+			Unlike other programming languages, strings aren't sorted using ASCII sort order, but alphanumeric sorting:
 			the string "A2" will be sorted after "A1" and before "A11". Moreover, if the player's web browser
-			supports internationalisation (that is, every current browser except Safari and IE 10), then
+			supports internationalisation (that is, every current browser except Safari 6-8 and IE 10), then
 			the strings will be sorted using English language rules (for instance, "é" comes after "e" and before
 			"f", and regardless of the player's computer's language settings. Otherwise, it will sort
 			using ASCII comparison (whereby "é" comes after "z").
@@ -496,7 +496,7 @@ define([
 			#data structure
 		*/
 		("sorted", (_, ...args) => args.sort(NaturalSort("en")),
-		[String, rest(String)])
+		[either(Number,String), rest(either(Number,String))])
 		
 		/*d:
 			(rotated: Number, [...Any]) -> Array

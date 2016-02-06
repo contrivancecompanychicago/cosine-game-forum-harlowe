@@ -119,15 +119,21 @@ describe("data structure macros", function () {
 		});
 	});
 	describe("the (sorted:) macro", function() {
-		it("accepts 2 or more string arguments", function() {
+		it("accepts 2 or more number or string arguments", function() {
 			expect("(sorted:)").markupToError();
 			expect("(sorted: 'A')").markupToError();
+			expect("(sorted: 3)").markupToError();
 			for(var i = 2; i < 10; i += 1) {
 				expect("(sorted:" + ("'X',").repeat(i) + ")").not.markupToError();
+				expect("(sorted:" + ("61,").repeat(i) + ")").not.markupToError();
 			}
 		});
-		it("returns an array of the items, sorted in natural-sort order", function() {
-			expect("(sorted:'D1','E','e','É','D11','D2','F')").markupToPrint("D1,D2,D11,e,E,É,F");
+		it("returns an array of the items, sorted in natural-sort iorder", function() {
+			expect("(sorted:'D1','E','e','É','D11','D2','F',1,' 1',2)").markupToPrint("1, 1,2,D1,D2,D11,e,E,É,F");
+		});
+		it("doesn't coerce the types", function() {
+			expect("(print: (sorted:2,11,1)'s 2nd + 3)").markupToPrint("5");
+			expect("(print: (sorted:'A','D','B','C')'s 2nd + 'OO')").markupToPrint("BOO");
 		});
 	});
 	describe("the (datanames:) macro", function() {
