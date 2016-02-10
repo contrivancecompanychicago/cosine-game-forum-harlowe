@@ -128,7 +128,9 @@ describe("property indexing", function() {
 			it("access the keyed properties", function() {
 				expect('(print: (datamap:"A",1)\'s A)').markupToPrint('1');
 			});
-			// TODO: Case-insensitive?
+			it("can contain astral characters", function() {
+				expect('(print: (datamap:"𐌎ed",1)\'s 𐌎ed)').markupToPrint("1");
+			});
 			it("prints an error if the key is not present", function() {
 				expect('(print: (datamap:"A",1)\'s B)').markupToError();
 			});
@@ -189,7 +191,7 @@ describe("property indexing", function() {
 			expect('(print: 1st of 1st of (a:(a:"R")))').markupToPrint("R");
 		});
 		it("can be used with datamaps", function() {
-			expect('(print: A of (datamap:"A",7))').markupToPrint("7");
+			expect('(print: 𐌎ed of (datamap:"𐌎ed",7))').markupToPrint("7");
 		});
 		it("can be used with 'it'", function() {
 			expect('(set:$a to (a:7,8))(set: $a to 1st of it)$a').markupToPrint('7');

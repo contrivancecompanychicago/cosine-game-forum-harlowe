@@ -10,6 +10,16 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 		{rest, zeroOrMore,
 		/* Any is a value, not a method. */
 		Any} = Macros.TypeSignature;
+
+	const
+		/*
+			These two strings are modified copies of regex components from markup/patterns.js.
+		*/
+		// This includes all forms of Unicode 6 whitespace (including \n and \r) except Ogham space mark.
+		whitespace   = "[ \\n\\r\\f\\t\\v\u00a0\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]",
+
+		// This handles alphanumeric ranges not covered by \w. Doesn't include hyphens or underscores.
+		anyLetter    = "[\\dA-Za-z\u00c0-\u00de\u00df-\u00ff\u0150\u0170\u0151\u0171\uD800-\uDFFF]";
 	
 	Macros.add
 		/*d:
@@ -120,7 +130,140 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 		*/
 		("substring", (_, string, a, b) => subset(string, a, b),
 		[String, Number, Number])
+
+		/*d:
+			(lowercase: String) -> String
+			
+			This macro produces a lowercase version of the given string.
+			
+			Example usage:
+			`(lowercase: "GrImAcE")` is the same as `"grimace"`
+			
+			Details:
+			The results of this macro for non-ASCII characters currently depends on the player's browser's Unicode
+			support. For instance, 'İ' in lowercase should be 'i̇', but some browsers don't support this.
+			
+			See also:
+			(uppercase:), (startcase:)
+
+			#string
+		*/
+		("lowercase", (_, string) => string.toLowerCase(),
+		[String])
 		
+		/*d:
+			(uppercase: String) -> String
+			
+			This macro produces an uppercase version of the given string.
+			
+			Example usage:
+			`(uppercase: "GrImAcE")` is the same as `"GRIMACE"`
+			
+			Details:
+			The results of this macro for non-ASCII characters currently depends on the player's browser's Unicode
+			support. For instance, 'ß' in uppercase should be 'SS', but some browsers don't support this.
+			
+			See also:
+			(uppercase:), (upperfirst:), (lowerfirst:), (startcase:),
+
+			#string
+		*/
+		("uppercase", (_, string) => string.toUpperCase(),
+		[String])
+		
+		/*d:
+			(lowerfirst: String) -> String
+			
+			This macro produces a version of the given string, where the first alphanumeric character is lowercase, and
+			other characters are left as-is.
+			
+			Example usage:
+			`(lowerfirst: "  College B")` is the same as `"  college B"`
+			
+			Details:
+			If the first alphanumeric character cannot change case (for instance, if it's a number) then nothing
+			will change in the string. So, "8DX" won't become "8dX".
+
+			The results of this macro for non-ASCII characters currently depends on the player's browser's Unicode
+			support. For instance, 'İ' in lowercase should be 'i̇', but some browsers don't support this.
+			
+			See also:
+			(uppercase:), (lowercase:), (upperfirst:), (startcase:)
+
+			#string
+		*/
+		("lowerfirst", (_, string) =>
+			// This has to be an entire word, to handle surrogate pairs and single characters alike.
+			string.replace(new RegExp(anyLetter + "+"), word => {
+				// Split the word into code points first.
+				word = Array.from(word);
+				return word[0].toLowerCase() + (word.slice(1).join('')).toLowerCase();
+			}
+		),
+		[String])
+		
+		/*d:
+			(upperfirst: String) -> String
+			
+			This macro produces a version of the given string, where the first alphanumeric character is uppercase, and
+			other characters are left as-is.
+			
+			Example usage:
+			`(upperfirst: "  college B")` is the same as `"  College B"`
+			
+			Details:
+			If the first alphanumeric character cannot change case (for instance, if it's a number) then nothing
+			will change in the string. So, "4ever" won't become "4Ever".
+
+			The results of this macro for non-ASCII characters currently depends on the player's browser's Unicode
+			support. For instance, 'ß' in uppercase should be 'SS', but some browsers don't support this.
+			
+			See also:
+			(uppercase:), (startcase:)
+
+			#string
+		*/
+		("upperfirst", (_, string) =>
+			// This has to be an entire word, to handle surrogate pairs and single characters alike.
+			string.replace(new RegExp(anyLetter + "+"), word => {
+				// Split the word into code points first.
+				word = Array.from(word);
+				return word[0].toUpperCase() + (word.slice(1).join('')).toLowerCase();
+			}
+		),
+		[String])
+
+		/*d:
+			(words: String) -> Array
+			
+			This macro takes a string and creates an array of each word ("word" meaning a sequence of non-whitespace
+			characters) in the string.
+			
+			Example usage:
+			`(words: "god-king Torment's peril")` is the same as `(a: "god-king", "Torment's", "peril")`
+			
+			Rationale:
+			It can be useful to explicitly distinguish individual words within a string, in a manner not possible
+			with just the `contains` operator - for instance, seeing if a string contains the bare word "to" - not "torn"
+			or any other larger word. This macro allows a string's words to be split up and examined individually -
+			you can safely check if `(words: $a) contains "to"`, or check on a particular word in the sequence by
+			asking if, say, `(words: $a)'s 2nd is 'goose'`.
+
+			Details:
+			If the string was empty or contained only whitespace, then this will create an empty array. Moreover,
+			if the string contained no whitespace, then the array will contain just the entire original string.
+
+			The whitespace characters recognised by this macro include line breaks, non-breaking spaces, and other uncommon
+			space characters.
+			
+			See also:
+			(startcase:)
+
+			#string
+		*/
+		("words", (_, string) => string.split(new RegExp(whitespace + "+")).filter(Boolean),
+		[String])
+
 		/*d:
 			Number data
 			

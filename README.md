@@ -30,6 +30,8 @@ Rough documentation is at http://twine2.neocities.org/
  * Lambdas (tentative name) are a new data type - they are, essentially, user-created functions. You can just think of them as "data converters" - reusable instructions to convert one or more values into different values. An example of their current (also tentative) syntax is `each _a, _b to _a *_b *2` - this creates a lambda that takes two values, puts them in the temporary variables `_a` and `_b`, and produces the result of multiplying them with each other and 2. This can potentially be saved and reused multiple times, keeping you from needing to write that specific expression over and over.
  * The only macro which uses lambdas, currently, is `(converted:)`. This takes a lambda as its first value, and any number of other values, and uses the lambda to convert the values, placing the results in an array. For instance, `(converted: each _material to _material + " Sword"), "Iron", "Wood", "Bronze", "Plastic")` will create an array of all those strings with " Sword" added to the end of each. (This macro is similar to Javascript's `map()` array method.)
  * Added the aliases `(dm:)` and `(ds:)` for `(datamap:)` and `(dataset:)`, respectively.
+ * Added `(lowercase:)` and `(uppercase:)`, which take a string and convert it to all-lowercase or all-uppercase, as well as `(lowerfirst:)` and `(upperfirst:)`, which only convert the first non-whitespace character in the string and leave the rest untouched.
+ * Added `(words:)`, which takes a string and produces an array of the words (that is, the sequences of non-whitespace characters) in it. For instance, `(words: "2 big one's")` produces `(a: "2", "big", "one's")`.
 
 ###1.2.2 changes (unreleased):
 

@@ -84,4 +84,49 @@ describe("primitive value macros", function() {
 			expect("(substring: 'garply', 2, NaN)").markupToError();
 		});
 	});
+	['lower','upper'].forEach(function(level, i) {
+		describe("the (" + level + "case:) macro", function() {
+			it("accepts 1 string argument", function() {
+				expect("(" + level + "case:)").markupToError();
+				expect("(" + level + "case: 1)").markupToError();
+				expect("(" + level + "case: 'a')").not.markupToError();
+				expect("(" + level + "case: 'red', 'blue')").markupToError();
+			});
+			it("returns the " + level + "case version of the string", function() {
+				expect("(" + level + "case: '𐌎mêlÉE')").markupToPrint(i === 0 ? "𐌎mêlée" : "𐌎MÊLÉE");
+			});
+		});
+		describe("the (" + level + "first:) macro", function() {
+			it("accepts 1 string argument", function() {
+				expect("(" + level + "first:)").markupToError();
+				expect("(" + level + "first: 1)").markupToError();
+				expect("(" + level + "first: 'a')").not.markupToError();
+				expect("(" + level + "first: 'red', 'blue')").markupToError();
+			});
+			it("returns the string with the first alphanumeric character in " + level + "case", function() {
+				expect("(" + level + "first: ' mell')").markupToPrint(i === 0 ? " mell" : " Mell");
+				expect("(" + level + "first: ' Mell')").markupToPrint(i === 0 ? " mell" : " Mell");
+			});
+			it("doesn't affect strings beginning with non-cased characters", function() {
+				expect("(" + level + "first: '2d')(" + level + "first: '𐌎d')").markupToPrint("2d𐌎d");
+			});
+		});
+	});
+	describe("the (words:) macro", function() {
+		it("accepts 1 string argument", function() {
+			expect("(words:)").markupToError();
+			expect("(words: 1)").markupToError();
+			expect("(words: 'a')").not.markupToError();
+			expect("(words: 'red', 'blue')").markupToError();
+		});
+		it("returns an array of words in the string, split by whitespace", function() {
+			expect("(words: ' good  -gre𐌎t\n\texcellent: ')").markupToPrint("good,-gre𐌎t,excellent:");
+		});
+		it("returns a blank array if the string contains only whitespace", function() {
+			expect("(print: (words: ' \n\t')'s length)").markupToPrint("0");
+		});
+		it("returns an array containing the original string, if the string contains no whitespace", function() {
+			expect("(print: (words: 'Golly')'s 1st is 'Golly')").markupToPrint('true');
+		});
+	});
 });

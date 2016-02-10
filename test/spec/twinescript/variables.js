@@ -15,6 +15,9 @@ describe("twinescript variables", function() {
 		it("when given a variable assignment request, sets the variable to a value", function() {
 			expect("(set: $a to 1)(print: $a)").markupToPrint("1");
 		});
+		it("can name a variable using astral characters", function() {
+			expect("(set: $A𐌎B to 1)(print: $A𐌎B)").markupToPrint("1");
+		});
 		it("runs on evaluation, but can't be assigned or used as a value", function() {
 			expect("(print: (set: $a to 1))").markupToError();
 			expect("(print: (a:(set: $b to 2)))").markupToError();

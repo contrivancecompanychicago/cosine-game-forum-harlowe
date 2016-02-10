@@ -176,7 +176,7 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
 			@return {String}
 		*/
 		nth(num) {
-			const lastDigit = (num + '').slice(-1);
+			const lastDigit = (+num + '').slice(-1);
 			return num + (
 				lastDigit === "1" ? "st" :
 				lastDigit === "2" ? "nd" :
