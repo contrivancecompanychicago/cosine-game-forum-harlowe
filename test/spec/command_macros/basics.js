@@ -229,6 +229,9 @@ describe("basic command macros", function() {
 		it("can be (set:) into a variable", function() {
 			expect("(set: $x to (reload:))").not.markupToError();
 		});
+		it("can't be used in the first passage", function() {
+			expect("(reload:)").markupToError();
+		});
 	});
 
 	describe("the (goto-url:) macro", function() {

@@ -479,5 +479,219 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 				};
 			},
 			[String]
-		);
+		)
+		/*d:
+			(alert: String) -> Command
+
+			This macro produces a command that, when evaluated, shows a browser pop-up dialog box with the given
+			string displayed, and an "OK" button to dismiss it.
+
+			Example usage:
+			`(alert:"Beyond this point, things get serious. Grab a snack and buckle up.")`
+
+			Details:
+			This is essentially identical to the Javascript `alert()` function in purpose and ability. You
+			can use it to display a special message above the game itself. But, be aware that as the box uses
+			the player's operating system and browser's styling, it may clash visually with the design
+			of your story.
+
+			When the dialog is on-screen, the entire game is essentially "paused" - no further computations are
+			performed until it is dismissed.
+
+			See also:
+			(prompt:), (confirm:)
+
+			#popup
+		*/
+		("alert",
+			(_, text) => ({
+				TwineScript_ObjectName: "an (alert:) command",
+				TwineScript_TypeName:   "an (alert:) command",
+				TwineScript_Print() {
+					window.alert(text);
+					return "";
+				},
+			}),
+			[String]
+		)
+		/*d:
+			(prompt: String, String) -> String
+
+			When this macro is evaluated, a browser pop-up dialog box is shown with the first string displayed,
+			a text entry box containing the second string (as a default value), and an "OK" button to submit.
+			When it is submitted, it evaluates to the string in the text entry box.
+
+			Example usage:
+			`(set: $name to (prompt: "Your name, please:", "Frances Spayne"))`
+
+			Details:
+			This is essentially identical to the Javascript `prompt()` function in purpose and ability. You can
+			use it to obtain a string value from the player directly, such as a name for the main character.
+			But, be aware that as the box uses the player's operating system and browser's styling, it
+			may clash visually with the design of your story.
+
+			When the dialog is on-screen, the entire game is essentially "paused" - no further computations are
+			performed until it is dismissed.
+
+			See also:
+			(alert:), (confirm:)
+
+			#popup
+		*/
+		("prompt",
+			(_, text, value) => window.prompt(text, value) || "",
+			[String, String]
+		)
+		/*d:
+			(confirm: String) -> Boolean
+
+			When this macro is evaluated, a browser pop-up dialog box is shown with the given string displayed,
+			as well as "OK" and "Cancel" button to confirm or cancel whatever action or fact the string tells the player.
+			When it is submitted, it evaluates to the Boolean true if "OK" had been pressed, and false if "Cancel" had.
+
+			Example usage:
+			`(set: $makeCake to (confirm: "Transform your best friend into a cake?"))`
+
+			Details:
+			This is essentially identical to the Javascript `confirm()` function in purpose and ability. You can
+			use it to ask the player a question directly, and act on the result immediately.
+			But, be aware that as the box uses the player's operating system and browser's styling, it
+			may clash visually with the design of your story.
+
+			When the dialog is on-screen, the entire game is essentially "paused" - no further computations are
+			performed until it is dismissed.
+
+			See also:
+			(alert:), (prompt:)
+
+			#popup
+		*/
+		("confirm",
+			(_, text) => window.confirm(text),
+			[String]
+		)
+		/*d:
+			(open-url: String) -> Command
+
+			When this macro is evaluated, the player's browser attempts to open a new tab with the given
+			URL. This will usually require confirmation from the player, as most browsers block
+			Javascript programs such as Harlowe from opening tabs by default.
+
+			Example usage:
+			`(open-url: "http://www.example.org/")`
+
+			Details:
+			If the given URL is invalid, no error will be reported - the browser will simply attempt to
+			open it anyway.
+
+			Much like the `<a>` HTML element, the URL is treated as a relative URL if it doesn't start
+			with "http://", "https://", or another such protocol. This means that if your story file is
+			hosted at "http://www.example.org/story.html", then `(open-url: "page2.html")` will actually open
+			the URL "http://www.example.org/page2.html".
+
+			See also:
+			(goto-url:)
+
+			#url
+		*/
+		("openURL",
+			(_, text) => ({
+				TwineScript_ObjectName: "an (open-url:) command",
+				TwineScript_TypeName:   "an (open-url:) command",
+				TwineScript_Print() {
+					window.open(text, '');
+					return "";
+				},
+			}),
+			[String]
+		)
+		/*d:
+			(reload:) -> Command
+
+			When this command is used, the player's browser will immediately attempt to reload
+			the page, in effect restarting the entire story.
+
+			Example usage:
+			`(click:"Restart")[(reload:)]`
+
+			Details:
+			If the first passage in the story contains this macro, the story will be caught in a "reload
+			loop", and won't be able to proceed. No error will be reported in this case.
+
+			#url
+		*/
+		("reload",
+			()=>({
+				TwineScript_ObjectName: "a (reload:) command",
+				TwineScript_TypeName:   "a (reload:) command",
+				TwineScript_Print() {
+					if (State.pastLength < 1) {
+						return TwineError.create("infinite", "I mustn't (reload:) the page in the starting passage.");
+					}
+					window.location.reload();
+					/*
+						This technically doesn't need to be an "early exit" command
+						like (goto:), because reload() halts all execution by itself.
+						But, when proper error-checking is added, this will be necessary.
+					*/
+					return { earlyExit: 1 };
+				},
+			}),
+			[]
+		)
+		/*d:
+			(goto-url: String) -> Command
+
+			When this command is used, the player's browser will immediately attempt to leave
+			the story's page, and navigate to the given URL in the same tab. If this succeeds, then
+			the story session will "end".
+
+			Example usage:
+			`(goto-url: "http://www.example.org/")`
+
+			Details:
+			If the given URL is invalid, no error will be reported - the browser will simply attempt to
+			open it anyway.
+			
+			Much like the `<a>` HTML element, the URL is treated as a relative URL if it doesn't start
+			with "http://", "https://", or another such protocol. This means that if your story file is
+			hosted at "http://www.example.org/story.html", then `(open-url: "page2.html")` will actually open
+			the URL "http://www.example.org/page2.html".
+
+			See also:
+			(open-url:)
+
+			#url
+		*/
+		("gotoURL",
+			(_, url)=>({
+				TwineScript_ObjectName: "a (goto-url:) command",
+				TwineScript_TypeName:   "a (goto-url:) command",
+				TwineScript_Print() {
+					window.location.assign(url);
+					/*
+						As with (reload:), this early exit signal will be useful once
+						proper editing is added.
+					*/
+					return { earlyExit: 1 };
+				},
+			}),
+			[String]
+		)
+		/*d:
+			(page-url:) -> String
+
+			This macro produces the full URL of the story's HTML page, as it is in the player's browser.
+
+			Example usage:
+			`(if: (page-url:) contains "#cellar")` will be true if the URL contains the `#cellar` hash.
+
+			Details:
+			This **may** be changed in a future version of Harlowe to return a datamap containing more
+			descriptive values about the URL, instead of a single string.
+
+			#url
+		*/
+		("pageURL", () => window.location.href, [])
+		;
 });
