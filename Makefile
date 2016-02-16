@@ -12,7 +12,7 @@ jshint_flags = --reporter scripts/jshintreporter.js
 # and replaces every instance of the former in the stream with the latter.
 
 node_replace = node --harmony_destructuring -e '\
-	function read(e) { return require("fs").readFileSync(e,"utf8"); }\
+	var read = e => require("fs").readFileSync(e,"utf8"); \
 	with(process)\
 		stdin.pipe(require("replacestream")($(1))).pipe(stdout)'
 
@@ -46,7 +46,7 @@ jshint:
 
 build/harlowe-css.css: scss/*.scss
 	@cat scss/*.scss \
-	| sass --stdin --style compressed --scss \
+	| node -e 'var s=""; with(require("sass.js")) with(process) stdin.on("data",d=>s+=d).on("end",_=>compile(s, {style:style.compressed}, s => stdout.write(s.text)))' \
 	> build/harlowe-css.css
 
 build/harlowe-min.js: js/*.js js/*/*.js js/*/*/*.js
