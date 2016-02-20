@@ -33,6 +33,7 @@
     "babel-preset-es2015": "latest",
     "chalk": "latest",
     "jshint": "latest",
+    "marked": "latest",
     "requirejs": "latest",
     "sass.js": "0.9.7",
     "uglifyjs": "latest"

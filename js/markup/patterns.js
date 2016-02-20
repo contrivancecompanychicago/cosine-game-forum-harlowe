@@ -192,25 +192,68 @@
 			 * Mixed alignment is 1 or more `=`, then `><`, then 1 or more `=`. The ratio of quantity of left `=`s and right `=`s determines
 			the alignment: for instance, one `=` to the left and three `=`s to the right produces 25% left alignment.
 			
+			Any amount of whitespace is permitted before or after each token, as long as it is on a single line.
+
 			Example usage:
 			```
 			==>
 			This is right-aligned
-			=><=
+			  =><=
 			This is centered
-			<==>
+			 <==>
 			This is justified
 			<==
 			This is left-aligned (undoes the above)
 			===><=
 			This has margins 3/4 left, 1/4 right
-			=><=====
+			  =><=====
 			This has margins 1/6 left, 5/6 right.
 			```
 
 			#section
 		*/
 		align = ws + "(==+>|<=+|=+><=+|<==+>)" + ws + eol,
+
+		/*d:
+			Column markup
+
+			Column markup is, like aligner markup, a special single-line token which indicates that the subsequent text should be laid out in columns. They consist of a number of `|` marks, indicating the size of the column relative to the other columns - the total width of all columns equals the page width, and this is divided among the columns by their `|` marks. They also have a number of `=` marks surrounding it, indicating the size of the column's margins in CSS "em" units (which are about the width of a capital M).
+
+			All text from the token onward, until the next token is encountered, is contained in the specified column. A `|==|` token ends the set of columns and returns the page to normal.
+
+			Columns are currently laid out from left to right, in order of appearance.
+			
+			Any amount of whitespace is permitted before or after each token, as long as it is on a single line.
+
+			Example usage:
+			```
+			|==
+			This is in the leftmost column, which has a right margin of about 2 letters wide.
+			    =|||=
+			This is in the next column, which has margins of 1 letter wide. It is three times as wide as the left column.
+			 =====||
+			This is in the right column, which has a right margin of about 5 letters wide. It is twice as wide as the left column.
+			  |==|
+			This text is not in columns, but takes up the entire width, as usual.
+			```
+
+			You can create nested columns by enclosing the inner set of columns in a named or macro-attached hook, like so:
+			```
+			|==
+			This is the outer left column.
+			==|
+			This is outer right column.
+			[\
+			  |==
+			This is the inner left column, inside the outer right column.
+			  ==|
+			This is the inner right column, inside the outer right column.
+			\]<name|
+			```
+
+			#section
+		*/
+		column = ws + "(=+\\|+|\\|+=+|=+\\|+=+|\\|=+\\|)" + ws + eol,
 		
 		/*d:
 			Link markup
@@ -478,6 +521,7 @@
 		hr,
 		heading,
 		align,
+		column,
 		bulleted,
 		numbered,
 		

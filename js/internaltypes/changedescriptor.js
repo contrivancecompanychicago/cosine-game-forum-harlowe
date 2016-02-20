@@ -1,4 +1,4 @@
-define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas, impossible, transitionIn}, {exec}) => {
+define(['jquery', 'utils', 'renderer'], ($, {assertOnlyHas, impossible, transitionIn}, {exec}) => {
 	"use strict";
 	/**
 		When a new Section (generally a hook or expression) is about to be rendered,

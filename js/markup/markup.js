@@ -200,7 +200,40 @@
 					} else if (arrow.indexOf("<") >-1) {
 						align = "left";
 					}
-					return { align: align };
+					return { align };
+				},
+			},
+			/*
+				Text column syntax
+				
+				==|      : right column, width 1
+				=|=      : center column
+				|==      : left column
+				|==|     : no columns
+				==|||    : right column, width 3
+			*/
+			column: {
+				fn(match) {
+					let column;
+					const
+						arrow = match[1],
+						centerIndex = arrow.indexOf("|");
+						
+					if (centerIndex && centerIndex < arrow.length - 1) {
+						column = "center";
+					} else if (arrow[0] === "|" && arrow.slice(-1) === "|") {
+						column = "none";
+					} else if (centerIndex === arrow.length - 1) {
+						column = "right";
+					} else if (!centerIndex) {
+						column = "left";
+					}
+					return {
+						column,
+						width: /\|+/.exec(arrow)[0].length,
+						marginLeft: /^=*/.exec(arrow)[0].length,
+						marginRight: /=*$/.exec(arrow)[0].length,
+					};
 				},
 			},
 		});

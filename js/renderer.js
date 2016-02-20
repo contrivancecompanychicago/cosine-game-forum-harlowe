@@ -123,9 +123,7 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 					}
 					case "align": {
 						while(token && token.type === "align") {
-							let style = '';
-							let body = '';
-							const align = token.align;
+							const {align} = token;
 							const j = (i += 1);
 							
 							/*
@@ -142,7 +140,8 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 								i += 1;
 							}
 							
-							body += render(tokens.slice(j, i));
+							const body = render(tokens.slice(j, i));
+							let style = '';
 							
 							switch(align) {
 								case "center":
@@ -162,6 +161,59 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 								+ (Renderer.options.debug ? ' title="' + token.text + '"' : "")
 								+ '>' + body + '</tw-align>\n';
 							token = tokens[i];
+						}
+						break;
+					}
+					case "column": {
+						/*
+							We need information about all of the columns before we can produce HTML
+							of them. So, let's collect the information in this array.
+						*/
+						const columns = [];
+						while(token && token.type === "column") {
+							const {column:columnType} = token;
+							const j = (i += 1);
+							
+							/*
+								Base case.
+							*/
+							if (columnType === "none") {
+								i -= 1;
+								break;
+							}
+
+							/*
+								Crankforward until the end tag is found.
+							*/
+							while(i < len && tokens[i] && tokens[i].type !== "column") {
+								i += 1;
+							}
+							/*
+								Store the information about this column.
+							*/
+							columns.push({
+								text: token.text,
+								type: columnType,
+								body: render(tokens.slice(j, i)),
+								width: token.width,
+								marginLeft: token.marginLeft,
+								marginRight: token.marginRight,
+							});
+							token = tokens[i];
+						}
+						if (columns.length) {
+							/*jshint -W083 */
+							const
+								totalWidth = columns.reduce((a,e)=> a + e.width, 0);
+
+							out += "<tw-columns>"
+								+ columns.map(e =>
+									`<tw-column type=${e.type} ${''
+									} style="width:${e.width/totalWidth*100}%; margin-left: ${e.marginLeft}em; margin-right: ${e.marginRight}em;" ${
+										(Renderer.options.debug ? ` title="${e.text}"` : "")
+									}>${e.body}</tw-column>\n`
+								).join('')
+								+ "</tw-columns>";
 						}
 						break;
 					}

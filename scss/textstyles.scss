@@ -58,10 +58,23 @@ blink {
 	-webkit-animation: fade-in-out 1s steps(1,end) infinite alternate;
 }
 
+/* This causes consecutive line breaks to consume less height than they normally would. */
+br + br {
+	display:block;
+	height: 0;
+	margin: 0.25ex 0;
+}
+
 /*** Secondary text styles, for general use by Twine authors ***/
 
 tw-align {
 	display:block;
+}
+
+tw-columns {
+	@include flexbox;
+	@include flex-direction(row);
+	@include justify-content(space-between);
 }
 
 tw-outline {

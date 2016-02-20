@@ -310,6 +310,8 @@
 				"display:block; background-image: linear-gradient(0deg, transparent, transparent 45%, silver 45%, transparent 55%, transparent);",
 			align:
 				"display:block; color: hsl(14, 99%, 27%); background-color: hsla(14, 99%, 87%, 0.2);",
+			column:
+				"display:block; color: hsl(204, 99%, 27%); background-color: hsla(204, 99%, 87%, 0.2);",
 			
 			escapedLine:
 				"font-weight:bold; color: hsl(51, 100%, 30%);",
