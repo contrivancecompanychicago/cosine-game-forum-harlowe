@@ -231,14 +231,14 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 			#transclusion 5
 		*/
 		source =
-			(options.debug
+			Passages.getTagged('header')
+			.map(setupPassageElement.bind(0, "header"))
+			.join('')
+			+ (options.debug
 				? Passages.getTagged('debug-header')
 					.map(setupPassageElement.bind(0, "debug-header"))
 					.join('')
 				: '')
-			+ Passages.getTagged('header')
-			.map(setupPassageElement.bind(0, "header"))
-			.join('')
 			+ source
 			+ Passages.getTagged('footer')
 			.map(setupPassageElement.bind(0, "footer"))
@@ -287,6 +287,7 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 			#transclusion 6
 		*/
 		if (State.pastLength <= 0) {
+			// Note that this places debug-startup passages after startup passages.
 			if (options.debug) {
 				source = Passages.getTagged('debug-startup')
 					.map(setupPassageElement.bind(0, "debug-startup"))

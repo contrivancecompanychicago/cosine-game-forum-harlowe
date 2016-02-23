@@ -44,9 +44,9 @@ describe("setup passages", function() {
 				expect(goToPassage("header").text()).toBe("HeyHey");
 			});
 			if (debug) {
-				it("tagged passages run before ordinary header passages", function() {
-					createPassage("(set: $red to 'A')","setup2",[header]);
-					createPassage("(set: $red to $red + 'B')","setup1",["header"]);
+				it("tagged passages run after ordinary header passages", function() {
+					createPassage("(set: $red to 'A')","setup2",["header"]);
+					createPassage("(set: $red to $red + 'B')","setup1",[header]);
 					expect("$red").markupToPrint("AB");
 				});
 			}
