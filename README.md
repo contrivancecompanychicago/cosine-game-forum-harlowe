@@ -47,6 +47,10 @@ Rough documentation is at http://twine2.neocities.org/
  * Fixed a long-standing bug where spreading `...` datasets did not, in fact, arrange their values in sort order, but instead in parameter order.
  * Fixed a long-standing bug where a string containing an unmatched `)` inside a macro would abruptly terminate the macro.
 
+###Alterations
+
+ * Giving an empty string to a macro that affects or alters all occurrences of the string in the passage text, such as `(replace:)` or `(click:)`, will now result in an error (because it otherwise won't affect any part of the passage).
+
 ###1.2.1 changes:
 
 ####Bugfix

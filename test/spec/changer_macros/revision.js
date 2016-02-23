@@ -3,7 +3,7 @@ describe("revision macros", function() {
 	['append','prepend'].forEach(function(name,index) {
 		var append=!index;
 		describe("("+name+":)", function() {
-			it("accepts multiple hooksets and/or strings", function() {
+			it("accepts multiple hooksets and/or non-empty strings", function() {
 				expect("(print:("+name+":?foo))").not.markupToError();
 				expect("(print:("+name+":'baz'))").not.markupToError();
 				expect("(print:("+name+":?foo, ?bar))").not.markupToError();
@@ -11,6 +11,9 @@ describe("revision macros", function() {
 				expect("(print:("+name+":'baz', 'baz'))").not.markupToError();
 				expect("(print:("+name+":?foo, ?bar, ?baz))").not.markupToError();
 				expect("(print:("+name+":'baz', 'baz', 'baz'))").not.markupToError();
+				expect("(print:("+name+":''))").markupToError();
+				expect("(print:("+name+":'', 'baz', 'baz'))").markupToError();
+				expect("(print:("+name+":'foo', 'baz', ''))").markupToError();
 			});
 			describe("given a single hook", function() {
 				it(name+"s the attached hook's contents with that of the target hook", function() {
@@ -138,7 +141,7 @@ describe("revision macros", function() {
 		});
 	});
 	describe("(replace:)", function() {
-		it("accepts multiple hooksets and/or strings", function() {
+		it("accepts multiple hooksets and/or non-empty strings", function() {
 			expect("(print:(replace:?foo))").not.markupToError();
 			expect("(print:(replace:'baz'))").not.markupToError();
 			expect("(print:(replace:?foo, ?bar))").not.markupToError();
@@ -146,6 +149,9 @@ describe("revision macros", function() {
 			expect("(print:(replace:'baz', 'baz'))").not.markupToError();
 			expect("(print:(replace:?foo, ?bar, ?baz))").not.markupToError();
 			expect("(print:(replace:'baz', 'baz', 'baz'))").not.markupToError();
+			expect("(print:(replace:''))").markupToError();
+			expect("(print:(replace:'', 'baz', 'baz'))").markupToError();
+			expect("(print:(replace:'foo', 'baz', ''))").markupToError();
 		});
 		describe("given a single hook", function() {
 			it("replaces the attached hook's contents with that of the target hook", function() {

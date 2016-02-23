@@ -27,18 +27,21 @@ css = "{{CSS}}", JSON.stringify("<style title=\"Twine CSS\">" + read("build/harl
 
 # Since I can test in Firefox without compiling the ES6 files, default only compiles the CSS.
 
-default: jshint build/harlowe-css.css
+default: dirs jshint css
 
 css: build/harlowe-css.css
 
 docs:
 	@node --harmony_destructuring scripts/harlowedocs.js
 
-all: jshint dist/format.js docs dist/exampleOutput.html
+all: dirs jshint dist/format.js docs dist/exampleOutput.html
 
 clean:
-	-rm -f build/*
-	-rm -f dist/*
+	@rm -f build/*
+	@rm -f dist/*
+
+dirs:
+	@mkdir -p build dist
 
 jshint:
 	@jshint js --config js/.jshintrc $(jshint_flags)
@@ -68,7 +71,7 @@ build/twinemarkup-min.js: js/markup/*.js js/markup/*/*.js
 	| uglifyjs - -c --comments \
 	> build/twinemarkup-min.js
 
-dist/format.js : build/harlowe-min.js build/twinemarkup-min.js build/harlowe-css.css
+dist/format.js : build/harlowe-min.js build/twinemarkup-min.js css
 	@cat format.js \
 	| $(call node_replace, $(source)) \
 	| $(call node_replace, $(setup)) \
@@ -81,7 +84,7 @@ examplename = "{{STORY_NAME}}", "Example Output File"
 engine_raw = "{{HARLOWE}}", "<script title=\"Twine engine code\" data-main=\"harlowe\">" + read("build/harlowe-min.js") + "</script>\n"
 css_raw = "{{CSS}}", "<style title=\"Twine CSS\">" + read("build/harlowe-css.css") + "</style>"
 
-dist/exampleOutput.html: build/harlowe-min.js build/harlowe-css.css
+dist/exampleOutput.html: build/harlowe-min.js css
 	@cat template.html \
 	| $(call node_replace, $(engine_raw)) \
 	| $(call node_replace, $(css_raw)) \
@@ -89,4 +92,5 @@ dist/exampleOutput.html: build/harlowe-min.js build/harlowe-css.css
 	| $(call node_replace, $(examplename)) \
 	> dist/exampleOutput.html
 
-.PHONY : all default jshint clean css docs
+.PHONY : all dirs default jshint clean css docs
+

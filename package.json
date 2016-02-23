@@ -32,9 +32,11 @@
     "babel-cli": "latest",
     "babel-preset-es2015": "latest",
     "chalk": "latest",
+    "fs-readdir-recursive": "latest",
     "jshint": "latest",
-    "marked": "latest",
+    "marked": "0.3.3",
     "requirejs": "latest",
+    "replacestream": "latest",
     "sass.js": "0.9.7",
     "uglifyjs": "latest"
   }

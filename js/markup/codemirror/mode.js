@@ -32,63 +32,153 @@
 	}
 	
 	/*
-		This function, used as an event handler, applies a hack to CodeMirror to force it
-		to rerender the entire text area whenever a change is made, not just the change.
-		This allows 'backtrack' styling, such as unclosed brackets, to be possible
-		under CodeMirror.
-	*/
-	function forceFullChange(changeObj, oldText) {
-		if (!changeObj.update) {
-			return;
-		}
-		/*
-			First, obtain the text area's full text line array, truncated
-			to just the line featuring the change.
-		*/
-		const line = changeObj.from.line;
-		
-		let newText = oldText
-			.split('\n')
-			.slice(0, changeObj.from.line + 1);
-		
-		/*
-			Join it with the change's text.
-		*/
-		newText[line] =
-			newText[line].slice(0, changeObj.from.ch)
-			+ changeObj.text[0];
-		
-		/*
-			If the change is multi-line, the additional lines should be added.
-		*/
-		newText = newText.concat(changeObj.text.slice(1));
-		
-		/*
-			Now, register this change.
-		*/
-		changeObj.update({line:0,ch:0}, changeObj.to, newText);
-		
-		return newText.join('\n');
-	}
-	
-	/*
 		The mode is defined herein.
 	*/
-	let cm;
 	window.CodeMirror && CodeMirror.defineMode('harlowe', () => {
-		let tree;
+		let cm, tree,
+			// These caches are used to implement special highlighting when the cursor
+			// rests on variables or hookRefs, such that all the other variable/hook
+			// tokens are highlighted as well.
+			referenceTokens = {
+				variable: [],
+				hook: [],
+				hookRef: [],
+				populate() {
+					this.variable = [];
+					this.hook = [];
+					this.hookRef = [];
+
+					const recur = (token) => {
+						if (token.type === "variable") {
+							this.variable.push(token);
+						}
+						else if (token.type === "hook") {
+							this.hook.push(token);
+						}
+						else if (token.type === "hookRef") {
+							this.hookRef.push(token);
+						}
+						token.children.forEach(recur);
+					};
+					tree.children.forEach(recur);
+				}
+			};
+		
+		/*
+			This 'beforeChange' event handler applies a hack to CodeMirror to force it
+			to rerender the entire text area whenever a change is made, not just the change.
+			This allows 'backtrack' styling, such as unclosed brackets, to be possible
+			under CodeMirror.
+		*/
+		function forceFullChange(changeObj, oldText) {
+			if (!changeObj.update) {
+				return;
+			}
+			/*
+				First, obtain the text area's full text line array, truncated
+				to just the line featuring the change.
+			*/
+			const line = changeObj.from.line;
+			
+			let newText = oldText
+				.split('\n')
+				.slice(0, changeObj.from.line + 1);
+			
+			/*
+				Join it with the change's text.
+			*/
+			newText[line] =
+				newText[line].slice(0, changeObj.from.ch)
+				+ changeObj.text[0];
+			
+			/*
+				If the change is multi-line, the additional lines should be added.
+			*/
+			newText = newText.concat(changeObj.text.slice(1));
+			
+			/*
+				Now, register this change.
+			*/
+			changeObj.update({line:0, ch:0}, changeObj.to, newText);
+			
+			return newText.join('\n');
+		}
+
+		/*
+			This 'cursorActivity' event handler applies CodeMirror marks based on
+			the token that the cursor is resting on.
+		*/
+		let cursorMarks = [];
+		function cursorMarking(doc) {
+			if (cursorMarks.length) {
+				cursorMarks.forEach(mark => mark.clear());
+				cursorMarks = [];
+			}
+			const token = tree.tokenAt(doc.indexFromPos(doc.getCursor()));
+			// If the cursor is at the end of the passage, or there is no text, then
+			// the returned token will be null.
+			if (!token) {
+				return;
+			}
+			/*
+				First, mark the containing token for the cursor's current position.
+				This illuminates the boundaries between tokens, and provides makeshift
+				bracket/closer matching.
+			*/
+			cursorMarks.push(doc.markText(
+				doc.posFromIndex(token.start),
+				doc.posFromIndex(token.end),
+				{className: 'cm-harlowe-cursor'}
+			));
+			/*
+				If the token is a variable or hookRef, then
+				highlight certain other instances in the text.
+				For variables and hookRefs, highlight all other occurrences of the variable
+				in the passage text.
+			*/
+			if (token.type === "variable" || token.type === "hookRef") {
+				referenceTokens[token.type].forEach(e => {
+					if (e !== token && e.name === token.name) {
+						cursorMarks.push(doc.markText(
+							doc.posFromIndex(e.start),
+							doc.posFromIndex(e.end),
+							{className: 'cm-harlowe-variableOccurrence'}
+						));
+					}
+				});
+			}
+			/*
+				Also for hookRefs, highlight the nametags of the named hook(s)
+				that it refers to.
+			*/
+			if (token.type === "hookRef") {
+				referenceTokens.hook.forEach(e => {
+					if (e.name === token.name) {
+						const tagStart =
+							// This assumes that the end of the hook's text consists of its <tag|,
+							// and nothing else.
+							e.tagPosition === "appended" ? (e.end - e.name.length) - 1
+							// This assumes that the start of the hook's text is its |tag>.
+							: e.start + 1;
+
+						cursorMarks.push(doc.markText(
+							doc.posFromIndex(tagStart),
+							doc.posFromIndex(tagStart + e.name.length),
+							{className: 'cm-harlowe-hookOccurrence'}
+						));
+					}
+				});
+			}
+		}
 		
 		let init = () => {
 			const doc = cm.doc;
 			/*
-				CodeMirror doesn't allow modes to have full access to the text of
-				the document. This hack overcomes this respectable limitation:
-				TwineJS's PassageEditor stashes a reference to the doc in
-				the CodeMirror modes object - and here, we retrieve it,
-				and use it to compute a full parse tree.
+				Use the Harlowe lexer to compute a full parse tree.
 			*/
 			tree = lex(doc.getValue());
-			
+			referenceTokens.populate();
+
 			/*
 				Attach the all-important beforeChanged event, but make sure it's only attached once.
 				Note that this event is removed by TwineJS when it uses swapDoc to dispose of old docs.
@@ -97,12 +187,14 @@
 				const oldText = doc.getValue();
 				forceFullChange(change, oldText);
 			});
-			doc.off('change');
 			doc.on('change', () => {
 				const text = doc.getValue();
 				tree = lex(text);
+				// Populate the referential tokens caches.
+				referenceTokens.populate();
 			});
 			doc.on('swapDoc', init);
+			doc.on('cursorActivity', cursorMarking);
 			init = null;
 		};
 		
@@ -112,10 +204,13 @@
 				inside token().
 			*/
 			startState() {
-				/*
-					We can't reliably obtain the CodeMirror instance reference until now.
-				*/
 				if (!cm) {
+					/*
+						CodeMirror doesn't allow modes to have full access to the text of
+						the document. This hack overcomes this respectable limitation:
+						TwineJS's PassageEditor stashes a reference to the CodeMirror instance in
+						the Harlowe modes object - and here, we retrieve it.
+					*/
 					cm = CodeMirror.modes.harlowe.cm;
 					cm.setOption('placeholder', [
 						"Enter the body text of your passage here.",
@@ -137,10 +232,6 @@
 				state.pos++;
 			},
 			token: function token(stream, state) {
-				var
-					// Some hoisted vars from the for-loop.
-					ret = '';
-				
 				if (init) {
 					init();
 				}
@@ -181,15 +272,16 @@
 					For performance paranoia, this is a plain for-loop.
 				*/
 				let counts = {};
+				let ret = '';
 				for (let i = 0; i < currentBranch.length; i+=1) {
 					const type = currentBranch[i].type;
 					let name = "harlowe-" + type;
+					counts[name] = (counts[name] || 0) + 1;
 					// If this name has been used earlier in the chain, suffix
 					// this name with an additional number.
 					if (counts[name] > 1) {
 						name += "-" + (counts[name]);
 					}
-					counts[name] = (counts[name] || 0) + 1;
 					switch(type) {
 						/*
 							Use the error style if the macro's name doesn't match the list of
@@ -234,17 +326,18 @@
 		const
 			warmHookBG   = nestedBG(40, 100, 50),
 			coolHookBG   = nestedBG(220, 100, 50),
-			macro        = "color: #a84186;",
-			macroName    = macro + "font-style:italic;",
-			twineLink    = "color: #3333cc;",
-			invalid      = "color: firebrick; background-color: hsla(17, 100%, 74%, 0.74);"
-			;
+			macro        = percent => nestedBG(320, 44, 50)(percent) + "color: #a84186;",
+			invalid      = "color: firebrick !important; background-color: hsla(17, 100%, 74%, 0.74) !important;",
+			intangible   = "font-weight:100; color: hsla(0,0,0,0.5)";
 		
 		/*
 			If a property includes commas, then it's a multiple-name selector.
 			It will be converted to "[selector], [selector]" etc.
 		*/
 		return {
+			root: 'box-sizing:border-box;',
+			cursor: "border-bottom: 2px solid darkgray;",
+
 			// "Warm" hooks
 			hook:        warmHookBG(0.05),
 			"hook-2":    warmHookBG(0.1),
@@ -255,25 +348,45 @@
 			"hook-7":    warmHookBG(0.35),
 			"hook-8":    warmHookBG(0.4),
 			
-			// The bottommost element is a hook
-			"^=hook, ^=hook-":    "font-weight:bold;",
+			// This space prevents the selector from matching hookRef as well.
+			"^=hook , ^=hook-":
+				"font-weight:bold;",
 			
 			//TODO: whitespace within collapsed
 			error:
 				invalid,
 			
-			macro,
-			macroName,
-			
+			macro:        macro(0.05),
+			"macro-2":    macro(0.1),
+			"macro-3":    macro(0.15),
+			"macro-4":    macro(0.2),
+			"macro-5":    macro(0.25),
+			"macro-6":    macro(0.3),
+			"macro-7":    macro(0.35),
+			"macro-8":    macro(0.4),
+
+			macroName:
+				"font-style:italic;",
+
 			// The bottommost element is a macro open/close bracket
-			"^=macro ":  "font-weight:bold;",
-			
+			"^=macro ":
+				"font-weight:bold;",
+
 			"bold, strong":
 				"font-weight:bold;",
+
 			"italic, em":
 				"font-style:italic;",
-			verbatim:
-				"background-color: hsla(0,0%,50%,0.1)",
+
+			"sup":
+				"vertical-align: super;font-size:0.8em;",
+
+			"verbatim":
+				"background-color: hsla(0,0%,50%,0.1);",
+
+			"^=bold, ^=strong, ^=italic, ^=em, ^=sup, ^=verbatim":
+				intangible,
+
 			"^=collapsed":
 				"font-weight:bold; color: hsl(201, 100%, 30%);",
 			
@@ -289,7 +402,8 @@
 			"collapsed.hook-7":    coolHookBG(0.35),
 			"collapsed.hook-8":    coolHookBG(0.4),
 			
-			twineLink,
+			"twineLink:not(.text)":
+				"color: #3333cc;",
 			tag:
 				"color: #4d4d9d;",
 			
@@ -303,6 +417,8 @@
 				"color: #005682;",
 			hookRef:
 				"color: #007f54;",
+			"variableOccurrence, hookOccurrence":
+				"background: #7fffd4 !important;",
 			
 			heading:
 				"font-weight:bold;",
@@ -344,6 +460,7 @@
 							if (e.indexOf('.') > -1) {
 								return e.split(/\./g).map(map).join('');
 							}
+							// There's no need for $= because that will always be cm-harlowe-root or cm-harlowe-cursor.
 							if (e.indexOf("^=") === 0) {
 								return "[class^='cm-harlowe-" + e.slice(2) + "']";
 							}
