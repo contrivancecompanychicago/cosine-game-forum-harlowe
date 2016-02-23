@@ -159,7 +159,11 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 			oldPassages.css('position','absolute');
 		}
 		
-		const newPassage = createPassageElement().appendTo(story);
+		const newPassage = createPassageElement().appendTo(story)
+			/*
+				Make the passage's tags visible in the DOM, for user CSS availability.
+			*/
+			.attr('tags', (passageData.get('tags') || []).join(' '));
 		
 		assert(newPassage.length > 0);
 		

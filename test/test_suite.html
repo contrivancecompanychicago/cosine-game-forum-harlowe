@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <title>Jasmine Spec Runner v2.4.1</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.4.1/jasmine.css">
-<style>.jasmine-disabled { display:none; }</style>
+<style>.jasmine-disabled { display:none; } .jasmine-open { z-index:2; }</style>
 <link rel="stylesheet" href="../build/harlowe-css.css"/>
 <script src="../node_modules/es6-shim/es6-shim.min.js"></script>
 <script src="../node_modules/requirejs/require.js"></script>
@@ -47,9 +47,9 @@ window.goToPassage = function(text, name) {
 	Engine.goToPassage(text, name);
 	return $('tw-passage > tw-transition-container, tw-passage > tw-hook');
 };
-window.runPassage = function(text, name) {
+window.runPassage = function(text, name, tags) {
 	name = name || "test";
-	createPassage(text, name);
+	createPassage(text, name, tags);
 	Engine.goToPassage(name);
 	
 	return $('tw-passage:last-of-type > tw-transition-container, tw-passage > tw-hook');

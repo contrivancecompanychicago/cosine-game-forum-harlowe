@@ -1,6 +1,13 @@
 describe("setup passages", function() {
 	'use strict';
-	
+
+	describe("author-defined tags", function() {
+		it("are present as an attribute on the <tw-passage> element", function() {
+			runPassage("", "X", ["garply", "grault", "azure"]);
+			expect($("tw-passage").attr('tags')).toBe("garply grault azure");
+		});
+	});
+
 	[false,true].forEach(function headerFooterTests(debug) {
 		var header = debug ? "debug-header" : "header";
 		var footer = debug ? "debug-footer" : "footer";
