@@ -37,11 +37,11 @@ docs:
 all: dirs jshint dist/format.js docs dist/exampleOutput.html
 
 clean:
-	@rm -f build/*
-	@rm -f dist/*
+	@-rm -f build/*
+	@-rm -f dist/*
 
 dirs:
-	@mkdir -p build dist
+	@-mkdir -p build dist
 
 jshint:
 	@jshint js --config js/.jshintrc $(jshint_flags)

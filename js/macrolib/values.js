@@ -19,7 +19,7 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 		whitespace   = "[ \\n\\r\\f\\t\\v\u00a0\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]",
 
 		// This handles alphanumeric ranges not covered by \w. Doesn't include hyphens or underscores.
-		anyLetter    = "[\\dA-Za-z\u00c0-\u00de\u00df-\u00ff\u0150\u0170\u0151\u0171\uD800-\uDFFF]";
+		anyLetter    = "[\\dA-Za-z\u00c0-\u00de\u00df-\u00ff\u0150\u0170\u0151\u0171\\uD800-\\uDFFF]";
 	
 	Macros.add
 		/*d:

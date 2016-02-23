@@ -79,9 +79,9 @@
 		
 		// Handles Unicode ranges not covered by \w.
 		// This includes every surrogate pair character, but doesn't check their order or pairing.
-		anyLetter            = "[\\w\\-\u00c0-\u00de\u00df-\u00ff\u0150\u0170\u0151\u0171\uD800-\uDFFF]",
+		anyLetter            = "[\\w\\-\u00c0-\u00de\u00df-\u00ff\u0150\u0170\u0151\u0171\\uD800-\\uDFFF]",
 		// Identical to the above, but excludes hyphens.
-		anyLetterStrict      =    "[\\w\u00c0-\u00de\u00df-\u00ff\u0150\u0170\u0151\u0171\uD800-\uDFFF]",
+		anyLetterStrict      =    "[\\w\u00c0-\u00de\u00df-\u00ff\u0150\u0170\u0151\u0171\\uD800-\\uDFFF]",
 		
 		eol                  = either("\\n", "$"),
 		

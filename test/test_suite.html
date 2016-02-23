@@ -8,7 +8,7 @@
 <script src="../node_modules/requirejs/require.js"></script>
 <script>
 // Testing the format.js file, with its compiled CSS and minified ES5
-if(location.search.indexOf("&code=formatjs") > -1) {
+if(location.search.indexOf("?code=formatjs") > -1) {
 	window.storyFormat = function(e) {
 		var root = document.createElement('html');
 		root.innerHTML = e.source.replace(/.+\n/,'');
@@ -22,7 +22,7 @@ else {
 	document.write('<link rel="stylesheet" href="../build/harlowe-css.css"\/>');
 
 	// Testing the compiled ES5
-	if(location.search.indexOf("&code=es5") > -1) {
+	if(location.search.indexOf("?code=es5") > -1) {
 		document.write("<script src='../build/harlowe-min.js'><\/script>");
 	}
 	// Testing the raw ES6 source
@@ -202,9 +202,9 @@ afterAll(function() {
 </script>
 <body>
 <nav style="font-family:Monaco;background:#eee;padding:0.5em">
-<a style='color:black' href="#" onclick="location=String(location).replace(/(&amp;.+)?$/,'&amp;code=es6')">Raw ES6</a> |
-<a style='color:black' href="#" onclick="location=String(location).replace(/(&amp;.+)?$/,'&amp;code=es5')">Compiled harlowe-min.js</a> |
-<a style='color:black' href="#" onclick="location=String(location).replace(/(&amp;.+)?$/,'&amp;code=formatjs')">Compiled format.js</a>
+<a style='color:black' href="#" onclick="location=String(location).replace(/\??(code.+)?$/,'?code=es6')">Raw ES6</a> |
+<a style='color:black' href="#" onclick="location=String(location).replace(/\??(code.+)?$/,'?code=es5')">Compiled harlowe-min.js</a> |
+<a style='color:black' href="#" onclick="location=String(location).replace(/\??(code.+)?$/,'?code=formatjs')">Compiled format.js</a>
 </nav>
 
 <!-- include spec files here... -->
