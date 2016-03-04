@@ -36,7 +36,13 @@ Rough documentation is at http://twine2.neocities.org/
  * Added `(lowercase:)` and `(uppercase:)`, which take a string and convert it to all-lowercase or all-uppercase, as well as `(lowerfirst:)` and `(upperfirst:)`, which only convert the first non-whitespace character in the string and leave the rest untouched.
  * Added `(words:)`, which takes a string and produces an array of the words (that is, the sequences of non-whitespace characters) in it. For instance, `(words: "2 big one's")` produces `(a: "2", "big", "one's")`.
 
-###1.2.2 changes (unreleased):
+###1.3.0 changes (unreleased):
+
+#####Bugfixes
+
+ * Fixed a bug where the "outline" `(textstyle:)` option didn't have the correct text colour when no background colour was present, making it appear solid black.
+
+###1.2.2 changes:
 
 ####Bugfixes
 

@@ -645,7 +645,24 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 							},
 							{
 								color() {
-									return $(this).css('background-color');
+									/*
+										To correctly identify the background colour of this element, iterate
+										upward through all the elements containing it.
+									*/
+									for (let elem = $(this); elem.length && elem[0] !== document; elem = elem.parent()) {
+										const colour = elem.css('background-color');
+										/*
+											Browsers represent the colour "transparent" as either "transparent",
+											hsla(n, n, n, 0) or rgba(n, n, n, 0).
+										*/
+										if (colour !== "transparent" && !colour.match(/^\w+a\(.+?,\s*0\s*\)$/)) {
+											return colour;
+										}
+									}
+									/*
+										If there's no colour anywhere, assume this is a completely unstyled document.
+									*/
+									return "#fff";
 								},
 							}
 						],
