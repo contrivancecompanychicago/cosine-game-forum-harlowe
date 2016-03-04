@@ -132,6 +132,15 @@ window.Engine = Engine;
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
 beforeEach(function() {
+	function hexToRGB(str) {
+		// Trim off the "#".
+		str = str.replace("#", '');
+		return {
+			r: parseInt(str.slice(0,2), 16),
+			g: parseInt(str.slice(2,4), 16),
+			b: parseInt(str.slice(4,6), 16),
+		};
+	}
 	jasmine.addMatchers({
 		markupToBecome: Object.bind(Object,{
 			compare: function(a,e) {
@@ -182,6 +191,71 @@ beforeEach(function() {
 					return { pass: false, message: "Expected markup '" + a + "' to throw a JS error, but it rendered '" + p.html() + "'" };
 				}
 			},
+		}),
+		toHaveColour: Object.bind(Object,{
+			compare: function(a,colour) {
+				var rgb = hexToRGB(colour);
+				var pass;
+				if (colour === "transparent") {
+					pass = (colour === "transparent" || colour.match(/^\w+a\(.+?,\s*0\s*\)$/));
+				}
+				else {
+					pass = a.jquery && (a.attr('style') + '').match(new RegExp(
+						"color:\\s*(?:" + colour.toUpperCase() + "|rgb\\(\\s*"
+						+ rgb.r + ",\\s*"
+						+ rgb.g + ",\\s*"
+						+ rgb.b + "\\s*\\))")
+					);
+				}
+				return {
+					pass: !!pass,
+					message: !pass
+						? "Expected element style '" + a.attr('style')
+							+ "' to contain a colour of " + colour
+						: "Expected element style '" + a.attr('style')
+							+ "' not to contain a colour of " + colour
+				};
+			}
+		}),
+		toHaveBackgroundColour: Object.bind(Object,{
+			compare: function(a,colour) {
+				var rgb = hexToRGB(colour);
+				var pass = a.jquery && (a.attr('style') + '').match(new RegExp(
+						"color:\\s*(?:" + colour.toUpperCase() + "|rgb\\(\\s*"
+						+ rgb.r + ",\\s*"
+						+ rgb.g + ",\\s*"
+						+ rgb.b + "\\s*\\))"));
+				return {
+					pass: !!pass,
+					message: !pass
+						? "Expected element style '" + a.attr('style')
+							+ "' to contain a background-colour of " + colour
+						: "Expected element style '" + a.attr('style')
+							+ "' not to contain a background-colour of " + colour
+				};
+			}
+		}),
+		toHaveTextShadowColour: Object.bind(Object,{
+			compare: function(a,colour) {
+				var rgb = hexToRGB(colour);
+				var pass = a.jquery && (a.attr('style') + '').match(new RegExp(
+						/*
+							Some browsers vary in the order they put the text-shadow property's colour
+							and dimensions.
+						*/
+						"text-shadow:(?:\\s*[\-\.\\w]+)*\\s*(?:" + colour.toUpperCase() + "|rgb\\(\\s*"
+						+ rgb.r + ",\\s*"
+						+ rgb.g + ",\\s*"
+						+ rgb.b + "\\s*\\))"));
+				return {
+					pass: !!pass,
+					message: !pass
+						? "Expected element style '" + a.attr('style')
+							+ "' to contain a text-shadow coloured " + colour
+						: "Expected element style '" + a.attr('style')
+							+ "' not to contain a text-shadow coloured " + colour
+				};
+			}
 		}),
 	});
 });

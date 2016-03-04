@@ -65,25 +65,8 @@ describe("twinescript literals", function() {
 			expect("(print: 'A\\'B')").markupToPrint("A'B");
 		});
 	});
-	function hexToRGB(str) {
-		// Trim off the "#".
-		str = str.replace("#", '');
-		return {
-			r: parseInt(str.slice(0,2), 16),
-			g: parseInt(str.slice(2,4), 16),
-			b: parseInt(str.slice(4,6), 16),
-		};
-	}
 	function expectColourToBe(str, colour) {
-		var rgb = hexToRGB(colour);
-
-		expect(runPassage("(print:" + str + ")").find('tw-colour').attr('style'))
-			.toMatch(new RegExp(
-				"background-color:\\s*(?:" + colour.toUpperCase() + "|rgb\\(\\s*"
-				+ (rgb.r || 0) + ",\\s*"
-				+ (rgb.g || 0) + ",\\s*"
-				+ (rgb.b || 0) + "\\s*\\))"
-			));
+		expect(runPassage("(print:" + str + ")").find('tw-colour')).toHaveBackgroundColour(colour);
 	}
 	describe("RGB colours", function() {
 		it("can consist of three case-insensitive hexadecimal digits preceded by #", function() {

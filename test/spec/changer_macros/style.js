@@ -49,11 +49,97 @@ describe("style changer macros", function() {
 				expect("(print:(textstyle:'" + e + "'))").not.markupToError();
 			});
 		});
+		it("uses case- and dash-insensitive style names", function() {
+			expect("(textstyle:'BOLD')[]").not.markupToError();
+			expect("(textstyle:'--b--o--l--d')[]").not.markupToError();
+			expect("(textstyle:'_bOl_-D')[]").not.markupToError();
+		});
 		it("errors when placed in passage prose while not attached to a hook", function() {
 			expect("(textstyle:'bold')").markupToError();
 			expect("(textstyle:'bold')[]").not.markupToError();
 		});
-		// TODO: Add .css() tests of output.
+		['outline','shadow','blur','blurrier','emboss','smear'].forEach(function(e) {
+			describe("'" + e + "' style", function() {
+				it("uses the shadow colour equal to the dominant text colour", function(done) {
+					var hook = runPassage("(text-style:'" + e + "')[Goobar]")
+						.find('tw-hook');
+					setTimeout(function() {
+						expect(hook).toHaveTextShadowColour('#000000');
+						done();
+					});
+				});
+				it("correctly discerns the dominant text colour of outer hooks", function(done) {
+					var hook = runPassage("(text-colour: #fadaba)[|2>[(text-style:'" + e + "')[Goobar]]]")
+						.find('tw-hook[name=2] > tw-hook');
+					setTimeout(function() {
+						expect(hook).toHaveTextShadowColour('#fadaba');
+						done();
+					});
+				});
+				if (e.slice(0,4)==="blur") {
+					it("has transparent text colour", function(done) {
+						var hook = runPassage("(text-style:'" + e + "')[Goobar]")
+							.find('tw-hook');
+						setTimeout(function() {
+							expect(hook).toHaveColour('transparent');
+							done();
+						});
+					});
+				}
+				if (e === "outline") {
+					it("uses the text colour of the background", function(done) {
+						var hook = runPassage("(text-style:'outline')[Goobar]")
+							.find('tw-hook');
+						setTimeout(function() {
+							expect(hook).toHaveColour('#ffffff');
+							done();
+						});
+					});
+					it("correctly discerns the background colour of outer hooks", function(done) {
+						var hook = runPassage("(background: #fadaba)[|2>[(text-style:'outline')[Goobar]]]")
+							.find('tw-hook[name=2] > tw-hook');
+						setTimeout(function() {
+							expect(hook).toHaveColour('#fadaba');
+							done();
+						});
+					});
+				}
+			});
+		});
+		['mirror','upside-down'].forEach(function(e) {
+			describe("'" + e + "' style", function() {
+				// We can't examine the elements any more than this.
+				it("uses a defined CSS transform ", function(done) {
+					var hook = runPassage("(text-style:'" + e + "')[Goobar]")
+						.find('tw-hook');
+					setTimeout(function() {
+						expect(hook.attr('style')).toMatch(new RegExp("transform:.*?\\s" +
+							((e === "mirror") ? "scaleX\\(\\s*-1\\s*\\)" : "scaleY\\(\\s*-1\\s*\\)")));
+						done();
+					});
+				});
+			});
+		});
+		['rumble','shudder','fade-in-out','blink'].forEach(function(e){
+			describe("'" + e + "' style", function() {
+				// We can't examine the elements any more than this.
+				it("uses a defined CSS animation and easing function", function(done) {
+					var hook = runPassage("(text-style:'" + e + "')[Goobar]")
+						.find('tw-hook');
+					setTimeout(function() {
+						var style = hook.attr('style');
+						expect(style).toMatch(new RegExp("animation(?:\\-name)?:.*?\\s" +
+							((e === "blink") ? "fade-in-out" :
+							e) + "\\b"));
+						expect(style).toMatch(new RegExp("animation(?:\\-timing\\-function)?:.*?\\s" +
+							(e === "blink" ? "steps\\(\\s*1,\\s*end\\s*\\)" :
+							e === "fade-in-out" ? "ease-in-out" :
+							"linear")));
+						done();
+					});
+				});
+			});
+		});
 	});
 	describe("the (transition:) macro", function() {
 		it("requires exactly 1 string argument", function() {
