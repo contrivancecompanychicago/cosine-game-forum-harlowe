@@ -1,27 +1,32 @@
-tw-link, .link, tw-icon {
+$linkcolour: #4169E1;       // A striking blue
+$hovercolour: DeepSkyBlue;  // A deep blue
+$activecolour: #DD4B39;     // A cooked red
+$visitedcolour: #6941e1;    // A run-of-the-mill purple
+$visitedhovercolour: #E3E;  // A fierce magenta
+
+tw-link, .link, tw-icon, .enchantment-clickpage {
 	cursor: pointer;
 }
 
 tw-link, .enchantment-link {
-	color: #4169E1; // A striking blue
+	color: $linkcolour;
 	font-weight: bold;
 	text-decoration: none;
 	
-	// Quickly fade to a deep blue on mouseover
 	transition: color 0.2s ease-in-out;
 	&:hover {
-		color: DeepSkyBlue;
+		color: $hovercolour;
 	}
 	
 	&:active {
-		color: #DD4B39; // A cooked red
+		color: $activecolour;
 	}
 }
 
 .visited {
-	color: #6941e1; // A run-of-the-mill purple
+	color: $visitedcolour;
 	&:hover {
-		color: #E3E; // A fierce magenta
+		color: $visitedhovercolour;
 	}
 }
 
@@ -41,5 +46,22 @@ tw-broken-link {
 		background-color: hsla(200,50%,50%,0.25);
 		border: transparent 1px solid;
 		border-radius: 0.2em;
+	}
+}
+
+.enchantment-clickpage {
+	// If no colour is specified, box-shadow uses 'color'.
+	box-shadow: inset 0 0 0 0.5vw;
+	// This should always house a block element (<tw-story>).
+	display: block;
+	// 'box-shadow-color' doesn't exist, so we must overload 'color'.
+	color: hsla(225, 73%, 57%,0.5); // $linkcolour at 0.5 opacity
+
+	transition: color 0.2s ease-in-out;
+	&:hover {
+		color: hsla(195, 100%, 50%, 0.5); // $hovercolour at 0.5 opacity
+	}
+	&:active {
+		color: hsla(7, 71%, 55%, 0.5); // $activecolour at 0.5 opacity
 	}
 }

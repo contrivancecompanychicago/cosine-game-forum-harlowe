@@ -1,5 +1,5 @@
-define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercommand', 'internaltypes/enchantment', 'internaltypes/twineerror'],
-($, Utils, Macros, HookSet, ChangerCommand, Enchantment, TwineError) => {
+define(['jquery', 'utils', 'utils/selectors', 'macros', 'datatypes/hookset', 'datatypes/changercommand', 'internaltypes/enchantment', 'internaltypes/twineerror'],
+($, Utils, Selectors, Macros, HookSet, ChangerCommand, Enchantment, TwineError) => {
 	"use strict";
 
 	const {either,rest} = Macros.TypeSignature;
@@ -165,6 +165,131 @@ define(['jquery', 'utils', 'macros', 'datatypes/hookset', 'datatypes/changercomm
 			rest(either(HookSet,String))
 		);
 	});
+
+	/*d:
+		(click-page:) -> Changer
+
+		Produces a command which, when attached to a hook, hides it until the mouse is clicked (or
+		the screen is touched) anywhere on the page, whereupon it is revealed.
+
+		Example usage:
+		```
+		I saw something sink through the floor as I entered. (click-page:)[A ghost?]
+		```
+
+		Rationale:
+
+		Sometimes, you may want to advance the text of your story without requiring a specific link be clicked,
+		due to that link being styled and emphasised differently from the rest of the text - and, moreover,
+		being in different places in each passage, requiring a moment from the player to find it. This "moment"
+		may be desirable in some places - but the (click-page:) macro offers a faster-paced alternative, suited
+		for making long sections of text brisker, or fast-paced scenes punchier.
+
+		Details:
+
+		While a (click-page:) command is active, a blue link-coloured border will surround the page, and
+		the mouse cursor (on desktop browsers) will resemble a hand no matter what it's hovering over.
+
+		Clicking a link while a (click-page:) command is active will cause both the link and the (click-page:) to
+		activate at once.
+
+		Using multiple (click-page:) commands in the same hook or passage will require multiple clicks from the
+		player to activate all of them. They activate in the order they appear on the page - top to bottom.
+
+		See also:
+		(click:)
+
+		#links
+	*/
+	/*
+		A separate click event needs to be defined for this.
+	*/
+	$(() => {
+		Utils.storyElement.on(
+			/*
+				Put this event in the "enchantment" jQuery event
+				namespace, alongside the other enchantment events.
+			*/
+			"click.enchantment",
+			/*
+				Sadly, there's no way to narrow this callback to just <tw-story> elements inside
+				<tw-enchantment>s, as the selector argument to .on() precludes targeting the
+				element itself.
+			*/
+			function() {
+				/*
+					Multiple enchantments would create multiple nested <tw-enchantment> elements.
+					We must go through all of them and execute at will.
+				*/
+				Array.from($(this).parents('.enchantment-clickpage'))
+					// compareDocumentPosition mask 8 means "contains".
+					.sort((left, right) => (left.compareDocumentPosition(right)) & 8 ? 1 : -1)
+					.forEach(e => {
+						const event = $(e).data('enchantmentEvent');
+						if (event) {
+							event();
+						}
+					});
+			}
+		);
+	});
+	/*
+		And here's the macro definition.
+	*/
+	Macros.addChanger('click-page',
+		() => {
+			/*
+				Currently, no extra error checks are called for here.
+			*/
+			return ChangerCommand.create('click-page');
+		},
+		(desc) => {
+			/*
+				Like all interaction macros, this cannot run its source straight away.
+			*/
+			desc.enabled = false;
+
+			const enchantData = Enchantment.create({
+				/*
+					The <tw-story> has no special enchantment styling, except for
+					this class, which is used (at present) to alter the cursor.
+				*/
+				attr: {
+					class: "enchantment-clickpage",
+				},
+				data: {
+					enchantmentEvent() {
+						/*
+							Remove this enchantment from the Section's list.
+						*/
+						const index = desc.section.enchantments.indexOf(enchantData);
+						desc.section.enchantments.splice(index,1);
+						/*
+							Of course, the <tw-enchantment> must also be removed.
+						*/
+						enchantData.disenchant();
+						/*
+							Fill the desc's original target with the original source.
+						*/
+						desc.section.renderInto(
+							desc.source,
+							null,
+							Object.assign({}, desc, { enabled: true })
+						);
+					},
+				},
+				scope: Utils.storyElement,
+			});
+			/*
+				Add the above object to the section's enchantments.
+			*/
+			desc.section.enchantments.push(enchantData);
+			/*
+				Enchant the <tw-story>.
+			*/
+			enchantData.enchantScope();
+		},
+		null);
 	
 	/*
 		This large routine generates functions for enchantment macros, to be applied to

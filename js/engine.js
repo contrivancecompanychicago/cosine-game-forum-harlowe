@@ -314,7 +314,11 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 			{ transition: transitionInName || "dissolve" }
 		);
 		
-		parent.append(story.parent().length ? story.parent() : story);
+		/*
+			Reattach the <tw-story> and any <tw-enchantment> elements (or whatnot)
+			that now surround it.
+		*/
+		parent.append(story.parents().length ? story.parents().last() : story);
 		/*
 			In stretchtext, scroll the window to the top of the inserted element,
 			minus an offset of 5% of the viewport's height.

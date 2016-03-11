@@ -35,6 +35,7 @@ Rough documentation is at http://twine2.neocities.org/
  * Added the aliases `(dm:)` and `(ds:)` for `(datamap:)` and `(dataset:)`, respectively.
  * Added `(lowercase:)` and `(uppercase:)`, which take a string and convert it to all-lowercase or all-uppercase, as well as `(lowerfirst:)` and `(upperfirst:)`, which only convert the first non-whitespace character in the string and leave the rest untouched.
  * Added `(words:)`, which takes a string and produces an array of the words (that is, the sequences of non-whitespace characters) in it. For instance, `(words: "2 big one's")` produces `(a: "2", "big", "one's")`.
+ * Added `(click-page:)`, a changer macro which is similar to `(click:)`, but triggers when you click the entire page instead of a specific link. For stories with lots of short, sequential blocks of text, this can provide a brisker interface for the player.
 
 ###1.3.0 changes (unreleased):
 

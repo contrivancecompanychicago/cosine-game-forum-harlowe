@@ -32,8 +32,8 @@ define(['utils', 'macros', 'utils/operationutils'], ({assert}, Macros, {is}) => 
 			@param {Array} params
 			@param {ChangerCommand} next
 		*/
-		create(macroName, params, next) {
-			assert(params === undefined || Array.isArray(params));
+		create(macroName, params = [], next = null) {
+			assert(Array.isArray(params));
 			
 			return Object.assign(Object.create(this), {
 				macroName,
@@ -42,7 +42,7 @@ define(['utils', 'macros', 'utils/operationutils'], ({assert}, Macros, {is}) => 
 					The next property links this changer to one it has been composed
 					with. In this way, composed ChangerCommands are linked lists.
 				*/
-				next:                     next || null,
+				next,
 				TwineScript_ObjectName:   "a ("  + macroName + ":) command",
 			});
 		},

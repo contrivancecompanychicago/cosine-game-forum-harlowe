@@ -136,4 +136,34 @@ describe("interaction macros", function() {
 			});
 		});
 	});
+	describe("(click-page:)", function() {
+		it("accepts no arguments", function() {
+			expect("(click-page:)[]").not.markupToError();
+			expect("(click-page:'baz')[]").markupToError();
+		});
+		it("enchants the <tw-story> element", function() {
+			runPassage("(click-page:)[1]");
+			var e = $('tw-story').parent('tw-enchantment.enchantment-clickpage');
+			expect(e.length).toBe(1);
+		});
+		it("multiple enchantments are triggered in order", function() {
+			var p = runPassage(
+				"(click-page:)[1]"
+				+ "(click-page:)[2]"
+				+ "(click-page:)[3]");
+			$('tw-story').click();
+			expect(p.text()).toBe("1");
+			$('tw-story').click();
+			expect(p.text()).toBe("12");
+			$('tw-story').click();
+			expect(p.text()).toBe("123");
+		});
+		it("enchants the <tw-story> with a box-shadow", function() {
+			runPassage("(click-page:)[1]");
+			var e = $('tw-story').parent();
+			// We can't expect to get more precise than this, unfortunately.
+			expect(e.css('box-shadow')).toMatch("inset");
+			expect(e[0].style.display).toBe('block');
+		});
+	});
 });
