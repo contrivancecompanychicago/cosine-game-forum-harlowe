@@ -10,15 +10,14 @@ define([], () => {
 		internalLink: "tw-link",
 		brokenLink  : "tw-broken-link",
 		hook        : "tw-hook",
+		anonymousHook : "tw-hook:not([name])",
 		pseudoHook  : "tw-pseudo-hook",
 		enchantment : "tw-enchantment",
 		expression  : "tw-expression",
-		enchanter   : "[enchanter]",
 		script      : "[role=script]",
 		stylesheet  : "[role=stylesheet]",
 		storyData   : "tw-storydata",
 		passageData : "tw-passagedata",
-		whitespace  : "tw-char[char=space], tw-char[char=tab], br",
 		collapsed   : "tw-collapsed",
 	});
 });

@@ -4,9 +4,11 @@ define([
 	'utils/selectors',
 	'renderer',
 	'twinescript/environ',
+	'twinescript/operations',
 	'state',
 	'utils/hookutils',
 	'utils/operationutils',
+	'datatypes/changercommand',
 	'datatypes/hookset',
 	'internaltypes/pseudohookset',
 	'internaltypes/changedescriptor',
@@ -14,7 +16,7 @@ define([
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier',
 ],
-($, Utils, Selectors, Renderer, Environ, State, {selectorType}, {printBuiltinValue,objectName}, HookSet, PseudoHookSet, ChangeDescriptor, VarScope, TwineError, TwineNotifier) => {
+($, Utils, Selectors, Renderer, Environ, Operations, State, {selectorType}, {printBuiltinValue,objectName}, ChangerCommand, HookSet, PseudoHookSet, ChangeDescriptor, VarScope, TwineError, TwineNotifier) => {
 	"use strict";
 
 	let Section;
@@ -55,43 +57,35 @@ define([
 			If result is a ChangerCommand, please run it.
 		*/
 		if (result && typeof result === "object" && result.changer) {
-			if (!nextHook.length) {
-				expr.replaceWith(TwineError.create("changer",
-					"The (" + result.macroName + ":) command should be assigned to a variable or attached to a hook.",
-					"Macros like this should appear to the left of a hook: " + expr.attr('title') + "[Some text]"
-				).render(expr.attr('title')));
-			}
-			else {
-				const enabled = this.renderInto(
-					/*
-						The use of popAttr prevents the hook from executing normally
-						if it wasn't actually the eventual target of the changer function.
-					*/
-					nextHook.popAttr('source'),
-					/*
-						Don't forget: nextHook may actually be empty.
-						This is acceptable - the result changer could alter the
-						target appropriately.
-					*/
-					nextHook,
-					result
-				);
+			const enabled = this.renderInto(
+				/*
+					The use of popAttr prevents the hook from executing normally
+					if it wasn't actually the eventual target of the changer function.
+				*/
+				nextHook.popAttr('source'),
+				/*
+					Don't forget: nextHook may actually be empty.
+					This is acceptable - the result changer could alter the
+					target appropriately.
+				*/
+				nextHook,
+				result
+			);
 
-				if (!enabled) {
-					/*
-						The 'false' class is used solely by debug mode to visually denote
-						that a macro such as (if:) suppressed a hook.
-					*/
-					expr.addClass("false");
-					/*
-						Unfortunately, (else-if:) must be special-cased, so that it doesn't affect
-						lastHookShown, instead preserving the value of the original (if:).
-					*/
-					if (Utils.insensitiveName(expr.attr('name')) !== "elseif") {
-						this.stack[0].lastHookShown = false;
-					}
-					return;
+			if (!enabled) {
+				/*
+					The 'false' class is used solely by debug mode to visually denote
+					that a macro such as (if:) suppressed a hook.
+				*/
+				expr.addClass("false");
+				/*
+					Unfortunately, (else-if:) must be special-cased, so that it doesn't affect
+					lastHookShown, instead preserving the value of the original (if:).
+				*/
+				if (Utils.insensitiveName(expr.attr('name')) !== "elseif") {
+					this.stack[0].lastHookShown = false;
 				}
+				return;
 			}
 		}
 		/*
@@ -135,6 +129,22 @@ define([
 		}
 	}
 	
+	/*
+		This function selects the next sibling element which isn't a whitespace text node,
+		nor a <br>. It also returns the intervening whitespace.
+	*/
+	function nextNonWhitespace(e) {
+		const {nextSibling} = (e instanceof $ ? e[0] : e);
+		if (nextSibling &&
+				((nextSibling instanceof Text && !nextSibling.textContent.trim())
+				|| (nextSibling.tagName || '').toLowerCase() === "br")) {
+
+			const { whitespace, nextElem } = nextNonWhitespace(nextSibling);
+			return { whitespace: $(nextSibling).add(whitespace), nextElem };
+		}
+		return { whitespace: $(), nextElem: $(nextSibling) };
+	}
+	
 	/**
 		Run a newly rendered <tw-expression> element's code, obtain the resulting value,
 		and apply it to the next <tw-hook> element, if present.
@@ -145,13 +155,66 @@ define([
 	*/
 	function runExpression(expr) {
 		/*
-			To be considered connected, the next anonymous hook must be the next non-whitespace element.
-		*/
-		const nextHook = expr.next(Selectors.hook + ":not([name])");
-		/*
 			Execute the expression, and obtain its result value.
 		*/
 		let result = this.eval(expr.popAttr('js') || '');
+
+		/*
+			Consecutive changer expressions that connect to a hook will "chain up" into a
+			single command, which is then applied to that hook.
+
+			As long as the result is a changer, it may link up with an expression following it.
+
+			Note: If the result isn't a changer at all, then it might be another kind of value
+			(a boolean, or a (live:) command) which still can be attached, but not chained.
+		*/
+		let nextHook = expr.next(Selectors.anonymousHook);
+		let whitespace, nextElem = expr;
+
+		while(ChangerCommand.isPrototypeOf(result) && !nextHook.length) {
+			/*
+				Check if the next non-whitespace element is an expression or anonymous hook.
+			*/
+			({whitespace, nextElem} = nextNonWhitespace(nextElem));
+			if (nextElem.is(Selectors.expression)) {
+				/*
+					If it's an expression, add them up, and remove the interstitial whitespace.
+				*/
+				const nextValue = this.eval(nextElem.popAttr('js'));
+				const newResult = Operations["+"](result, nextValue);
+				whitespace.remove();
+				/*
+					If this causes result to become an error, create a new error with a more appropriate
+					message.
+				*/
+				if (TwineError.containsError(newResult)) {
+					result = TwineError.create("operation",
+						"I can't combine " + objectName(result) + " with " + objectName(nextValue) + "."
+					);
+				}
+				else {
+					result = newResult;
+				}
+			}
+			else if (nextElem.is(Selectors.anonymousHook)) {
+				/*
+					If it's an anonymous hook, apply the summed changer to it.
+				*/
+				nextHook = nextElem;
+			}
+			else {
+				/*
+					If it's neither hook nor expression, then this evidently isn't connected to
+					a hook at all. Produce an error.
+				*/
+				expr.replaceWith(TwineError.create("changer",
+					"The (" + result.macroName + ":) command should be assigned to a variable or attached to a hook.",
+					"Macros like this should appear to the left of a hook: " + expr.attr('title') + "[Some text]"
+				).render(expr.attr('title')));
+				break;
+			}
+		}
+
 		/*
 			Print any error that resulted.
 			This must of course run after the sensor/changer function was run,
@@ -172,7 +235,8 @@ define([
 			expr.append(result.render());
 		}
 		/*
-			Print the expression if it's a string, number, or has a TwineScript_Print method.
+			Print the expression if it's a string, number, data structure,
+			or has a TwineScript_Print method.
 		*/
 		else if (!nextHook.length &&
 				(typeof result === "string"
@@ -250,7 +314,59 @@ define([
 			return (result = (p.contents().length === 1));
 		};
 	})();
+
+	/*
+		Both of these navigates up the tree to find the nearest text node outside this element,
+		earlier or later in the document.
+		These return an unwrapped Text node, not a jQuery.
+	*/
+	function prevParentTextNode(e) {
+		const elem = e.first()[0],
+			parent = e.parent();
+		/*
+			Quit early if there's no parent.
+		*/
+		if (!parent.length) {
+			return null;
+		}
+		/*
+			Get the parent's text nodes, and obtain only the last one which is
+			earlier (or later, depending on positionBitmask) than this element.
+		*/
+		let textNodes = parent.textNodes().filter((e) => {
+			const pos = e.compareDocumentPosition(elem);
+			return pos & 4 && !(pos & 8);
+		});
+		textNodes = textNodes[textNodes.length-1];
+		/*
+			If no text nodes were found, look higher up the tree, to the grandparent.
+		*/
+		return !textNodes ? prevParentTextNode(parent) : textNodes;
+	}
 	
+	function nextParentTextNode(e) {
+		const elem = e.last()[0],
+			parent = e.parent();
+		/*
+			Quit early if there's no parent.
+		*/
+		if (!parent.length) {
+			return null;
+		}
+		/*
+			Get the parent's text nodes, and obtain only the last one which is
+			earlier (or later, depending on positionBitmask) than this element.
+		*/
+		const textNodes = parent.textNodes().filter((e) => {
+			const pos = e.compareDocumentPosition(elem);
+			return pos & 2 && !(pos & 8);
+		})[0];
+		/*
+			If no text nodes were found, look higher up the tree, to the grandparent.
+		*/
+		return !textNodes ? nextParentTextNode(parent) : textNodes;
+	}
+
 	/**
 		<tw-collapsed> elements should collapse whitespace inside them in a specific manner - only
 		single spaces between non-whitespace should remain.
@@ -286,11 +402,11 @@ define([
 			We need to keep track of what the previous and next exterior text nodes are,
 			but only if they were also inside a <tw-collapsed>.
 		*/
-		let beforeNode = elem.prevTextNode();
+		let beforeNode = prevParentTextNode(elem);
 		if (!$(beforeNode).parents('tw-collapsed').length) {
 			beforeNode = null;
 		}
-		let afterNode = elem.nextTextNode();
+		let afterNode = nextParentTextNode(elem);
 		if (!$(afterNode).parents('tw-collapsed').length) {
 			afterNode = null;
 		}
@@ -702,11 +818,13 @@ define([
 					}
 					case Selectors.expression:
 					{
-						/*
-							If this returns false, then the entire .each() loop
-							will terminate, thus halting expression evaluation.
-						*/
-						return runExpression.call(section, expr);
+						if (expr.attr('js')) {
+							/*
+								If this returns false, then the entire .each() loop
+								will terminate, thus halting expression evaluation.
+							*/
+							return runExpression.call(section, expr);
+						}
 					}
 				}
 			});

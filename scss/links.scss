@@ -51,7 +51,7 @@ tw-broken-link {
 
 .enchantment-clickpage {
 	// If no colour is specified, box-shadow uses 'color'.
-	box-shadow: inset 0 0 0 0.5vw;
+	box-shadow: inset 0 0 0 0.5vmax;
 	// This should always house a block element (<tw-story>).
 	display: block;
 	// 'box-shadow-color' doesn't exist, so we must overload 'color'.

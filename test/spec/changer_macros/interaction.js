@@ -163,7 +163,7 @@ describe("interaction macros", function() {
 			var e = $('tw-story').parent();
 			// We can't expect to get more precise than this, unfortunately.
 			expect(e.css('box-shadow')).toMatch("inset");
-			expect(e[0].style.display).toBe('block');
+			expect(e.css('display')).toBe('block');
 		});
 	});
 });

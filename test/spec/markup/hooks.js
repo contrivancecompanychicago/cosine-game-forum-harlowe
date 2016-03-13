@@ -25,9 +25,18 @@ describe("hooks", function () {
 			expect($('tw-passage').find('tw-hook').attr('name')).toBe('grault');
 		});
 	});
-	describe("macro attached hooks", function () {
+	describe("changer macro attached hooks", function () {
 		it("consist of a macro, then a hook", function (){
 			expect("(if:true)[foo]").markupToPrint("foo");
+		});
+		it("will error if the macro doesn't produce a changer command or boolean", function (){
+			expect("(either:'A')[Hey]").markupToError();
+			expect("(either:1)[Hey]").markupToError();
+			expect("(a:)[Hey]").markupToError();
+			expect("(datamap:)[Hey]").markupToError();
+			expect("(dataset:)[Hey]").markupToError();
+			expect("(set:$x to 1)[Hey]").markupToError();
+			expect("(either:(if:true))[Hey]").not.markupToError();
 		});
 		it("may have any amount of whitespace between the macro and the hook", function (){
 			expect("(if:true) [foo]").markupToPrint("foo");
@@ -46,13 +55,70 @@ describe("hooks", function () {
 		it("will error if the hook has no closing bracket", function (){
 			expect("(if:true)[(if:true)[Good golly]", 2).markupToError();
 		});
-		it("will error if the macro doesn't produce a changer command or boolean", function (){
-			expect("(either:'A')[Hey]").markupToError();
-			expect("(either:1)[Hey]").markupToError();
-			expect("(a:)[Hey]").markupToError();
-			expect("(datamap:)[Hey]").markupToError();
-			expect("(dataset:)[Hey]").markupToError();
-			expect("(set:$x to 1)[Hey]").markupToError();
+		it("can chain changers", function (){
+			expect("(text-color:#639)(text-style:'bold')[foo]").markupToPrint("foo");
+		});
+		it("can chain changers with any amount of whitespace", function (){
+			expect("(text-color:#639)\n(text-style:'bold')    [foo]").markupToPrint("foo");
+		});
+		it("won't initiate chains with non-changer values", function (){
+			expect("(either:7)(text-style:'bold')[foo]").markupToPrint("7foo");
+		});
+		it("will error when chaining with non-changers", function (){
+			expect("(text-style:'bold')(either:7,8)(text-style:'italic')[foo]").markupToError();
+		});
+	});
+	describe("changer variable attached hooks", function () {
+		beforeEach(function(){
+			runPassage('(set: $foo to (if:true))');
+		});
+		it("consist of a variable, then a hook", function (){
+			expect("$foo[foo]").markupToPrint("foo");
+		});
+		it("will error if the variable doesn't contain a changer command or boolean", function (){
+			runPassage('(set: $str to "A")'
+				+ '(set: $num to 2)'
+				+ '(set: $arr to (a:))'
+				+ '(set: $dm to (datamap:))'
+				+ '(set: $ds to (dataset:))');
+			expect("$str[Hey]").markupToError();
+			expect("$num[Hey]").markupToError();
+			expect("$arr[Hey]").markupToError();
+			expect("$dm[Hey]").markupToError();
+			expect("$ds[Hey]").markupToError();
+		});
+		it("may have any amount of whitespace between the macro and the hook", function (){
+			expect("$foo [foo]").markupToPrint("foo");
+			expect("$foo\n[foo]").markupToPrint("foo");
+			expect("$foo \n \n [foo]").markupToPrint("foo");
+		});
+		it("may not have a nametag on the left side", function (){
+			expect("$foo|hook>[foo]", 2).markupToError();
+			expect("$bar|hook>[foo]").not.markupToError();
+		});
+		it("may not have a mirrored nametag on the right side", function (){
+			expect("$foo[foo]<hook|", 2).markupToError();
+			// Because this syntax is ambiguous, it is also an error despite $bar not attaching.
+			expect("$bar[foo]<hook|").markupToError();
+		});
+		it("will error if the hook has no closing bracket", function (){
+			expect("$foo[$foo[Good golly]", 2).markupToError();
+		});
+		it("can chain changers", function (){
+			runPassage("(set: $bar to (text-color:#639))(set: $baz to (text-style:'bold'))");
+			expect("$bar$baz[foo]").markupToPrint("foo");
+		});
+		it("can chain changers with any amount of whitespace", function (){
+			runPassage("(set: $bar to (text-color:#639))(set: $baz to (text-style:'bold'))");
+			expect("$bar  \n  $baz    [foo]").markupToPrint("foo");
+		});
+		it("won't initiate chains with non-changer values", function (){
+			runPassage("(set: $bar to 7)(set: $baz to (text-style:'bold'))");
+			expect("$bar$baz[foo]").markupToPrint("7foo");
+		});
+		it("will error when chaining with non-changers", function (){
+			runPassage("(set: $bar to 7)(set: $baz to (text-style:'bold'))");
+			expect("$bar$baz$bar[foo]").markupToError();
 		});
 	});
 });
