@@ -18,7 +18,7 @@ define(['utils', 'macros', 'utils/operationutils'], ({assert}, Macros, {is}) => 
 			"a changer command",
 		
 		TwineScript_Print() {
-			return "[A '" + this.macroName + "' command]";
+			return "`[A '" + this.macroName + "' command]`";
 		},
 		
 		/*

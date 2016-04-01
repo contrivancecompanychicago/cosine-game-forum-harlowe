@@ -1,5 +1,21 @@
 describe("hooks", function () {
 	'use strict';
+	describe("anonymous hooks", function () {
+		it("consist of text inside single square brackets, which become <tw-hook> elements", function (){
+			runPassage("Hey[foo]Whoa!");
+			expect($('tw-passage').find('tw-hook').text()).toBe("foo");
+		});
+		it("hooks can nest if they don't interfere with the link syntax", function (){
+			runPassage("[foo[bar]]");
+			expect($('tw-passage').find('tw-hook > tw-hook').text()).toBe("bar");
+			runPassage("[[foo]bar]");
+			expect($('tw-passage').find('tw-hook > tw-hook').text()).toBe("foo");
+		});
+		it("<tw-hook> elements have no name attributes", function (){
+			runPassage("[foo]");
+			expect($('tw-passage').find('tw-hook').is('[name]')).toBe(false);
+		});
+	});
 	describe("named hooks", function () {
 		it("consist of a |, a name, and a >, attached to a hook", function (){
 			expect("|hook>[foo]").markupToPrint("foo");
@@ -8,7 +24,7 @@ describe("hooks", function () {
 			expect("[foo]<hook|").markupToPrint("foo");
 		});
 		it("names may not contain whitespace", function (){
-			expect("|hook >[foo]").markupToPrint("|hook >[foo]");
+			expect("|hook >[foo]").markupToPrint("|hook >foo");
 		});
 		it("can be nested", function (){
 			expect("[[Hello!]<b|]<a|").markupToPrint("Hello!");
@@ -29,13 +45,13 @@ describe("hooks", function () {
 		it("consist of a macro, then a hook", function (){
 			expect("(if:true)[foo]").markupToPrint("foo");
 		});
-		it("will error if the macro doesn't produce a changer command or boolean", function (){
+		it("will error if the macro doesn't produce a command or boolean", function (){
 			expect("(either:'A')[Hey]").markupToError();
 			expect("(either:1)[Hey]").markupToError();
 			expect("(a:)[Hey]").markupToError();
 			expect("(datamap:)[Hey]").markupToError();
 			expect("(dataset:)[Hey]").markupToError();
-			expect("(set:$x to 1)[Hey]").markupToError();
+			expect("(set:$x to 1)[Hey]").not.markupToError(); // The (set:) command doesn't attach
 			expect("(either:(if:true))[Hey]").not.markupToError();
 		});
 		it("may have any amount of whitespace between the macro and the hook", function (){
@@ -43,14 +59,12 @@ describe("hooks", function () {
 			expect("(if:true)\n[foo]").markupToPrint("foo");
 			expect("(if:true) \n \n [foo]").markupToPrint("foo");
 		});
-		it("may not have a nametag on the left side", function (){
-			expect("(if:true)|hook>[foo]", 2).markupToError();
-			expect("(set:$a to 1)|hook>[foo]").not.markupToError();
+		it("may have a nametag on the left side", function (){
+			expect("(if:true)|hook>[foo]").not.markupToError();
 		});
-		it("may not have a mirrored nametag on the right side", function (){
-			expect("(if:true)[foo]<hook|", 2).markupToError();
-			// Because this syntax is ambiguous, it is also an error despite (set:) not attaching.
-			expect("(set:$a to 1)[foo]<hook|").markupToError();
+		it("may have a mirrored nametag on the right side", function (){
+			expect("(if:true)[foo]<hook|").not.markupToError();
+			expect("(a:1)[foo]<hook|").markupToError();
 		});
 		it("will error if the hook has no closing bracket", function (){
 			expect("(if:true)[(if:true)[Good golly]", 2).markupToError();
@@ -92,13 +106,12 @@ describe("hooks", function () {
 			expect("$foo\n[foo]").markupToPrint("foo");
 			expect("$foo \n \n [foo]").markupToPrint("foo");
 		});
-		it("may not have a nametag on the left side", function (){
-			expect("$foo|hook>[foo]", 2).markupToError();
-			expect("$bar|hook>[foo]").not.markupToError();
+		it("may have a nametag on the left side", function (){
+			expect("$foo|hook>[foo]").not.markupToError();
+			expect("$bar|hook>[foo]").markupToError();
 		});
-		it("may not have a mirrored nametag on the right side", function (){
-			expect("$foo[foo]<hook|", 2).markupToError();
-			// Because this syntax is ambiguous, it is also an error despite $bar not attaching.
+		it("may have a mirrored nametag on the right side", function (){
+			expect("$foo[foo]<hook|").not.markupToError();
 			expect("$bar[foo]<hook|").markupToError();
 		});
 		it("will error if the hook has no closing bracket", function (){

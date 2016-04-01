@@ -17,6 +17,9 @@ describe("twinescript temporary variables", function() {
 	it("are correctly shadowed when using hooks", function() {
 		expect("(set: _a to 2)|a>[(set: _a to 1)(print:_a)] (print:_a)").markupToPrint("1 2");
 	});
+	it("are correctly shadowed when using anonymous hooks", function() {
+		expect("(set: _a to 2)[(set: _a to 1)(print:_a)] (print:_a)").markupToPrint("1 2");
+	});
 	it("are correctly shadowed when using (display:)", function() {
 		createPassage("(set: _a to 1)(print:_a)", "grault");
 		expect("(set: _a to 2)(display:'grault') (print:_a)").markupToPrint("1 2");

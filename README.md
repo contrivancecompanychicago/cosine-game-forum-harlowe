@@ -12,6 +12,8 @@ Rough documentation is at http://twine2.neocities.org/
 
 ####Alterations
 
+ * Now, you can write `[text]`, and the square brackets will be, by themselves, treated as a hook, albeit with no name (it cannot be referenced like `?this`) and no attached changer commands. This, I believe, simplfies the rules for when square brackets will be displayed literally (now: when they are matched like so) and when they will not. Incidentally, temporary variables (see below) can be `(set:)` inside nameless unattached hooks without leaking out, so they do have some semantic meaning.
+ * Now, you can attach changer macros to nametagged hooks: `(if: true) |moths>[Several moths!]`, for instance, is now valid. However, as with all hooks, trying to attach plain data, such as a number or an array, will cause an error.
  * Now, when working with non-positive numbers as computed indexes (such as `$array's (-1)`), Harlowe no longer uses `0` for `last`, `-1` for `2ndlast`, and so forth - instead, `-1` means `last`, `-2` means `2ndlast`, and using `0` produces an error. (So, `"Red"'s (-1)` produces "d", not "e".)
  * Hook-attached macros may now have whitespace and line breaks between them and their hooks. This means that `(if: $x)  [text]` and such are now syntactically acceptable - the whitespace is removed, and the macro is treated as if directly attached. (This means that, if after a macro call you have plain passage text that resembles a hook, you'll have to use the verbatim markup to keep it from being interpreted as such.)
  * Attaching invalid values to hooks, such as `(either:"String")[text]`, `(a:2,3,4)[text]` or `(set: $x to 1) $x[text]`, will now result in an error instead of printing both the value and the hook's contents.

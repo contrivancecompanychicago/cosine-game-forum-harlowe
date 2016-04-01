@@ -719,12 +719,7 @@
 
 			#coding
 		*/
-		/*
-			The anonymous hook is a contextual production: it may only occur
-			after macros and variables. Similarly, the hookAppendedFront
-			may NOT occur after macros and variables.
-		*/
-		hookAnonymousFront: ws.replace('[','[\\n') + "\\[",
+		hookFront: "\\[",
 		hookBack:  "\\]" + notBefore(hookTagBack),
 		
 		hookAppendedBack:

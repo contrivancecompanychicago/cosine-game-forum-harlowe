@@ -103,16 +103,14 @@ define([
 			nextHook.removeAttr('source');
 			expr.addClass("false");
 			
-			if (nextHook.length) {
-				this.stack[0].lastHookShown = false;
-				return;
-			}
+			this.stack[0].lastHookShown = false;
+			return;
 		}
 		/*
 			Any other values that aren't primitive true should result in runtime errors
 			when attached to hooks.
 		*/
-		else if (result !== true && nextHook.length) {
+		else if (result !== true) {
 			expr.replaceWith(TwineError.create("datatype",
 					objectName(result) + " cannot be attached to this hook.",
 					"Only booleans, changer commands, and the (live:) macro can be attached to hooks."
@@ -124,9 +122,7 @@ define([
 			was shown or hidden by the attached expression.
 			Sadly, we must oblige with this overweening demand.
 		*/
-		if (nextHook.length) {
-			this.stack[0].lastHookShown = true;
-		}
+		this.stack[0].lastHookShown = true;
 	}
 	
 	/*
@@ -168,8 +164,8 @@ define([
 			Note: If the result isn't a changer at all, then it might be another kind of value
 			(a boolean, or a (live:) command) which still can be attached, but not chained.
 		*/
-		let nextHook = expr.next(Selectors.anonymousHook);
-		let whitespace, nextElem = expr;
+		let whitespace, nextElem, nextHook = $();
+		nextElem = expr;
 
 		while(ChangerCommand.isPrototypeOf(result) && !nextHook.length) {
 			/*
@@ -196,10 +192,12 @@ define([
 					result = newResult;
 				}
 			}
-			else if (nextElem.is(Selectors.anonymousHook)) {
+			else if (nextElem.is(Selectors.hook)) {
 				/*
-					If it's an anonymous hook, apply the summed changer to it.
+					If it's an anonymous hook, apply the summed changer to it
+					(and remove the whitespace).
 				*/
+				whitespace.remove();
 				nextHook = nextElem;
 			}
 			else {
@@ -214,6 +212,11 @@ define([
 				break;
 			}
 		}
+		/*
+			IF the above loop wasn't entered at all (i.e. the result wasn't a changer) then an error may
+			be called for. For now, obtain the next hook anyway.
+		*/
+		nextHook = nextHook.length ? nextHook : nextNonWhitespace(expr).nextElem.filter(Selectors.hook);
 
 		/*
 			Print any error that resulted.
@@ -236,15 +239,23 @@ define([
 		}
 		/*
 			Print the expression if it's a string, number, data structure,
-			or has a TwineScript_Print method.
+			or is a command of some kind.
 		*/
-		else if (!nextHook.length &&
+		else if (
+				/*
+					If it's plain data, it shouldn't be attached to a hook.
+					If it was attached, an error should be produced
+					(by applyExpressionToHook) to clue the author into the correct attachable types.
+				*/
+				(!nextHook.length &&
 				(typeof result === "string"
 				|| typeof result === "number"
 				|| result instanceof Map
 				|| result instanceof Set
 				|| Array.isArray(result)
-				|| (result && result.TwineScript_Print && !result.changer))) {
+				|| result.colour))
+				//  However, commands will cleanly "detach" without any error resulting.
+				|| (result && result.TwineScript_Print && !result.changer)) {
 			/*
 				TwineScript_Print(), when called by printBuiltinValue(), typically emits
 				side-effects. These will occur... now.
@@ -284,8 +295,14 @@ define([
 				this.renderInto(result, expr);
 			}
 		}
-		else {
+		else if (nextHook.length) {
 			applyExpressionToHook.call(this, expr, result, nextHook);
+		}
+		/*
+			No other possible values should be here.
+		*/
+		else {
+			Utils.impossible('Section.runExpression', "The expression evaluated to an unknown value: " + result);
 		}
 	}
 	

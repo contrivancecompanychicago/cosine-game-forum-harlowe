@@ -174,10 +174,10 @@ beforeEach(function() {
 			negativeCompare: function(a,e) {
 				var p = runPassage(a);
 				var error = p.find('tw-error'); // Includes tw-error.javascript
-				if (error.length === 0) {
-					return { pass: true,  message: "Expected markup '" + a + "' not to error, but its error was '" + p.text() + "'" };
+				if (error.length > 0) {
+					return { pass: false,  message: "Expected markup '" + a + "' not to error, but its error was '" + p.text() + "'" };
 				} else {
-					return { pass: false, message: "Expected markup '" + a + "' to error, but it rendered '" + p.html() + "'" };
+					return { pass: true, message: "Expected markup '" + a + "' to error, but it rendered '" + p.html() + "'" };
 				}
 			}
 		}),

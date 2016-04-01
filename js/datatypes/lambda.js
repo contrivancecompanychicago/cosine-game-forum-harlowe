@@ -11,7 +11,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 
 		TwineScript_Print() {
 			// TODO: Make this string more detailed.
-			return "[A lambda]";
+			return "`[A lambda]`";
 		},
 
 		TwineScript_is(other) {

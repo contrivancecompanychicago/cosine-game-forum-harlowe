@@ -324,35 +324,18 @@
 				}),
 			},
 			
-			hookAnonymousFront: {
-				fn: () => ({
-					isFront: true,
-					demote() {
-						this.error("This attached hook should end with a ] without a <nametag|.");
-					},
-				}),
-				canFollow: ["macro", "variable", "tempVariable"],
-			},
-			
-			hookAppendedFront: {
+			hookFront: {
 				fn: () => ({
 					isFront: true,
 				}),
-				/*
-					Because hookAnonymousFront's and hookAppendedFront's
-					rules are identical, the canFollow of one must match
-					the cannotFollow of the other.
-				*/
-				cannotFollow: ["macro", "variable", "tempVariable"],
 			},
 			
 			hookBack: {
 				fn: () => ({
-					type: "hookAppendedBack",
 					matches: {
 						// Matching front token : Name of complete token
 						hookPrependedFront: "hook",
-						hookAnonymousFront: "hook",
+						hookFront: "hook",
 					},
 				}),
 			},
@@ -362,7 +345,7 @@
 					name: match[1],
 					tagPosition: "appended",
 					matches: {
-						hookAppendedFront: "hook",
+						hookFront: "hook",
 					},
 				}),
 			},
