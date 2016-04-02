@@ -82,7 +82,9 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 		render: function render(tokens) {
 			// The output string.
 			let out = '';
-			
+			// Stack of tag tokens whose names match HTML table elements.
+			let HTMLTableStack = [];
+
 			if (!tokens) {
 				return out;
 			}
@@ -221,9 +223,21 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 						out += renderTag(token, 'h' + token.depth);
 						break;
 					}
-					case "br":
+					case "br": {
+						/*
+							The HTMLTableStack is a small hack to suppress implicit <br>s inside <table> elements.
+							Normally, browser DOM parsers will move <br>s inside <table>, <tbody>,
+							<thead>, <tfoot> or <tr> elements outside, which is usually quite undesirable
+							when laying out table HTML in passage text.
+							However, <td> and <th> are, of course, fine.
+						*/
+						if (!HTMLTableStack.length || /td|th/.test(HTMLTableStack[0])) {
+							out += '<br>';
+						}
+						break;
+					}
 					case "hr": {
-						out += '<' + token.type + '>';
+						out += '<hr>';
 						break;
 					}
 					case "escapedLine":
@@ -236,6 +250,14 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 					}
 					case "scriptStyleTag":
 					case "tag": {
+						/*
+							Populate the HTMLTableStack, as described above. Note that explicit <br> tags
+							are not filtered out by this: these are left to the discretion of the author.
+						*/
+						const insensitiveText = token.text.toLowerCase();
+						if (/^<\/?(?:table|thead|tbody|tr|tfoot|td|th)\b/.test(insensitiveText)) {
+							HTMLTableStack[token.text.startsWith('</') ? "shift" : "unshift"](insensitiveText);
+						}
 						out += token.text.startsWith('</')
 							? token.text
 							: token.text.replace(/>$/, " data-raw>");
