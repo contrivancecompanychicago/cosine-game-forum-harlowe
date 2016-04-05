@@ -22,11 +22,12 @@ describe("data structure macros", function () {
 		});
 	});
 	describe("the (range:) macro", function() {
-		it("accepts 2 numbers", function() {
+		it("accepts 2 integers", function() {
 			expect("(range:)").markupToError();
 			expect("(range:1)").markupToError();
 			expect("(range:1,3)").not.markupToError();
 			expect("(range:1,3,4)").markupToError();
+			expect("(range:1.1,3)").markupToError();
 		});
 		it("returns an array containing the integers between both numbers, inclusive", function() {
 			expect("(print: (range:1,2))").markupToPrint("1,2");
@@ -48,11 +49,52 @@ describe("data structure macros", function () {
 			expect("(print: (range:-4,-4)'s length)").markupToPrint("1");
 		});
 	});
+	describe("the (repeated:) macro", function() {
+		it("accepts 1 integer and 2 or more arguments of any type", function() {
+			expect("(repeated:)").markupToError();
+			expect("(repeated:1)").markupToError();
+			expect("(repeated:'A')").markupToError();
+			expect("(repeated:'A',2)").markupToError();
+			expect("(repeated:1.1,2)").markupToError();
+			["1", "'X'", "true"].forEach(function(e) {
+				for(var i = 2; i < 10; i += 1) {
+					expect("(repeated: 1, " + (e + ",").repeat(i) + ")").not.markupToError();
+				}
+			});
+		});
+		it("returns an array containing the arguments repeated the given number of times", function() {
+			runPassage("(set: $a to (repeated:4,1,2,3,4))");
+			expect("(print: $a)").markupToPrint("1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4");
+			runPassage("(set: $b to (repeated:8,1))");
+			expect("(print: $b)").markupToPrint("1,1,1,1,1,1,1,1");
+		});
+		it("produces an error if the number is smaller than 1", function() {
+			expect("(repeated:-2,1,2,3,4))").markupToError();
+			expect("(repeated:0,1,2,3,4))").markupToError();
+		});
+	});
+	describe("the (interlaced:) macro", function() {
+		it("accepts 2+ arrays", function() {
+			expect("(interlaced:)").markupToError();
+			expect("(interlaced:1)").markupToError();
+			expect("(interlaced:1,2)").markupToError();
+			expect("(interlaced:(a:1),(a:2)").not.markupToError();
+			expect("(interlaced:(a:1),(a:2),(a:1),(a:2)").not.markupToError();
+		});
+		it("returns an array containing the arrays interleaved", function() {
+			expect("(interlaced:(a:1,2),(a:'A','B'),(a:0,0))").markupToPrint("1,A,0,2,B,0");
+		});
+		it("returns an array sized to the smallest passed array", function() {
+			expect("(interlaced:(a:1,2),(a:'A','B','C','D'))").markupToPrint("1,A,2,B");
+			expect("(interlaced:(a:),(a:'A','B','C','D'))").markupToPrint("");
+		});
+	});
 	describe("the (subarray:) macro", function() {
-		it("accepts 1 array argument, then two number arguments", function() {
+		it("accepts 1 array argument, then two integer arguments", function() {
 			expect("(subarray:)").markupToError();
 			expect("(subarray: (a:'1'))").markupToError();
 			expect("(subarray: (a:6,7), 1, 2)").markupToPrint('6,7');
+			expect("(subarray: (a:'1'), 1.2, 3)").markupToError();
 		});
 		it("returns the subarray specified by the two 1-indexed start and end indices", function() {
 			expect("(subarray: (a:8,7,6,5,4), 2, 4)").markupToPrint("7,6,5");
@@ -68,6 +110,11 @@ describe("data structure macros", function () {
 		it("refuses zero and NaN indices", function() {
 			expect("(subarray: (a:8,7,6,5,4), 0, 2)").markupToError();
 			expect("(subarray: (a:8,7,6,5,4), 2, NaN)").markupToError();
+		});
+		it("doesn't pass contained data by reference", function() {
+			expect("(set:$a to (a:1,2,3))"
+				+"(set:$b to (subarray: (a:$a), 1, 1))"
+				+"(set:$b's 1st's 1st to 4)$a").markupToPrint("1,2,3");
 		});
 	});
 	describe("the (shuffled:) macro", function() {
@@ -95,12 +142,18 @@ describe("data structure macros", function () {
 				expect("(print: (shuffled:(range:1,99)) is not (shuffled:(range:1,99)))").markupToPrint("true");
 			}
 		});
+		it("doesn't pass contained data by reference", function() {
+			expect("(set:$a to (a:1,2,3))"
+				+"(set:$b to (shuffled: $a, $a))"
+				+"(set:$b's 1st's 1st to 4)$a").markupToPrint("1,2,3");
+		});
 	});
 	describe("the (rotated:) macro", function() {
-		it("accepts 1 number and 2 or more arguments of any type", function() {
+		it("accepts 1 integer and 2 or more arguments of any type", function() {
 			expect("(rotated:)").markupToError();
 			expect("(rotated:1)").markupToError();
 			expect("(rotated:1,2)").markupToError();
+			expect("(rotated:1.5,2,3)").markupToError();
 			["1", "'X'", "true"].forEach(function(e) {
 				for(var i = 2; i < 10; i += 1) {
 					expect("(rotated: 1, " + (e + ",").repeat(i) + ")").not.markupToError();
@@ -116,6 +169,11 @@ describe("data structure macros", function () {
 		});
 		it("produces an error if the number is 0", function() {
 			expect("(rotated:0,1,2,3,4))").markupToError();
+		});
+		it("doesn't pass contained data by reference", function() {
+			expect("(set:$a to (a:1,2,3))"
+				+"(set:$b to (rotated: 1, $a, $a))"
+				+"(set:$b's 1st's 1st to 4)$a").markupToPrint("1,2,3");
 		});
 	});
 	describe("the (sorted:) macro", function() {
@@ -167,6 +225,11 @@ describe("data structure macros", function () {
 			runPassage("(set: $a to (datamap:'D1',1,'E',2,'e',3,'É',4,'D11',5,'D2',6,'F',7))");
 			expect("(print: (datavalues:$a))").markupToPrint("1,6,5,3,2,4,7");
 		});
+		it("doesn't pass data by reference", function() {
+			expect("(set:$a to (a:1,2,3))"
+				+"(set:$b to (datavalues: (datamap: 'a', $a)))"
+				+"(set:$b's 1st's 1st to 4)$a").markupToPrint("1,2,3");
+		});
 	});
 	describe("the (datamap:) macro", function() {
 		it("accepts any even number and type of arguments, but requires strings or numbers in the odd positions", function() {
@@ -196,6 +259,11 @@ describe("data structure macros", function () {
 			var td = Array.from(runPassage("(print:(datamap:'A',1,'B',2))").find('table td')).map(function(e) { return $(e).text(); });
 			expect(td.join(',')).toBe('A,1,B,2');
 		});
+		it("doesn't pass data by reference", function() {
+			expect("(set:$a to (a:1,2,3))"
+				+"(set:$b to (datamap: 'a', $a))"
+				+"(set:$b's a's 1st to 4)$a").markupToPrint("1,2,3");
+		});
 	});
 	describe("the (dataset:) macro", function() {
 		it("accepts 0 or more arguments of any primitive type", function() {
@@ -217,9 +285,13 @@ describe("data structure macros", function () {
 			runPassage("(set: $set to (dataset:'D1','E','É','D11','D2','F','E'))");
 			expect("(print: (a:...$set))").markupToPrint("D1,D2,D11,E,É,F");
 		});
-
 		it("is aliased as (ds:)", function() {
 			expect("(print:(ds:5) is (dataset:5))").markupToPrint('true');
+		});
+		it("doesn't pass data by reference", function() {
+			expect("(set:$a to (a:1,2,3))"
+				+"(set:$b to (dataset: $a))"
+				+"(set:$a's 1st to 4)(print: $a is in $b)").markupToPrint("false");
 		});
 	});
 	describe("the (count:) macro", function() {

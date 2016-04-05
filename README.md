@@ -10,6 +10,7 @@ Rough documentation is at http://twine2.neocities.org/
  * Now, datasets contained in other datasets should be printed correctly, listing their contents.
  * `(alert:)`, `(open-url:)`, `(reload:)` and `(goto-url:)` now correctly return command values rather than the non-Harlowe value `undefined`. This means that `(alert:)`'s' time of execution changes relative to `(prompt:)` and `(confirm:)` - `(set: $x to (prompt:"X"))` will display a JS dialog immediately, but `(set: $x to (alert:"X"))` will not - although this is conceptually reasonable given that `(prompt:)` and `(confirm:)` are essentially "input" commands obtaining data from the player, and `(alert:)` is strictly an "output" command.
  * Now, line breaks between raw HTML `<table>`, `<tr>`, `<tbody>`, `<thead>` and `<tfoot>` elements are no longer converted into erroneous `<br>` elements, which are moved to just above the table. Thus, one can write or paste multi-line `<table>` markup with fewer problems arising.
+ * Fixed bugs where various macros (`(subarray:)`, `(shuffled:)`, `(rotated:)`, `(datavalues:)`, `(datamap:)`, `(dataset:)`) would end up passing nested data structures by reference (which shouldn't be allowed in Harlowe code). For instance, if you did `(set:$b to (rotated: 1, 0, $a))`, where $a is an array, then modifying values inside $b's 1st would also modify $a.
 
 ####Alterations
 
@@ -25,6 +26,7 @@ Rough documentation is at http://twine2.neocities.org/
  * Altered the CSS of `<tw-story>` to use vertical padding instead of vertical margins, and increased the line-height slightly.
  * Altered the CSS of `<h1>`, `<h2>`, `<h3>`, `<h4>`, `<h5>` and `<h6>` elements to have a slightly lower margin-top.
  * Using `contains` and `is in` on numbers and booleans (such as `12 contains "a"`) will now produce an error. Formerly, doing so would test whether the number equalled the other value. (The rationale for this was that, since the statement `"a" contains "a"` is the same as `"a" is "a"`, then so should it be for numbers and booleans, which arguably "contain" only themselves. However, this seems to be masking certain kinds of errors when incorrect or uninitialised variables or properties were used).
+ * Now, various macros (`(range:)`, `(subarray:)`, `(substring:)`, `(rotated:)` etc.) which require integers (positive or negative whole numbers) will produce errors if they are given fractional numbers.
  * Now, `<tw-passage>` elements (that is, passages' HTML elements) have a `tags` attribute containing all of the passage's tags in a space-separated list. This allows such elements to be styled using author CSS, or selected using author Javascript, in a manner similar to Twine 1.4 (but using the `[tags~= ]` selector instead of `[data-tags~= ]`).
  * Now, `debug-header` tagged passages are run after `header` tagged passages in debug mode, for consistency with the order of `debug-startup` and `startup`.
 
@@ -40,6 +42,8 @@ Rough documentation is at http://twine2.neocities.org/
  * Added `(lowercase:)` and `(uppercase:)`, which take a string and convert it to all-lowercase or all-uppercase, as well as `(lowerfirst:)` and `(upperfirst:)`, which only convert the first non-whitespace character in the string and leave the rest untouched.
  * Added `(words:)`, which takes a string and produces an array of the words (that is, the sequences of non-whitespace characters) in it. For instance, `(words: "2 big one's")` produces `(a: "2", "big", "one's")`.
  * Added `(click-page:)`, a changer macro which is similar to `(click:)`, but triggers when you click the entire page instead of a specific link. For stories with lots of short, sequential blocks of text, this can provide a brisker interface for the player.
+ * Added `(repeated:)`, which creates an array containing the passed values repeated a given number of times. `(repeated: 3, 1,2,0)` produces `(a: 1,2,0,1,2,0,1,2,0)`.
+ * Added (interlaced:), which interweaves the values of passed-in arrays. `(interlaced: (a: 'A','B','C','D'),(a: 1,2,3))` is the same as `(a: 'A',1,'B',2,'C',3)`. (For functional programmers, this is just a flat zip.) This can be useful alongside the `(datamap:)` macro.
 
 ###1.3.0 changes (unreleased):
 

@@ -60,7 +60,7 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 			| `of` | Obtaining the character at the left numeric position. | `1st of "YO"` (is "Y")<br>`(2) of "PS"` (is "S")
 		*/
 		/*d:
-			(text: [Number or String or Boolean or Array]...) -> String
+			(text: ...[Number or String or Boolean or Array]) -> String
 			Also known as: (string:)
 			
 			(text:) accepts any amount of expressions and tries to convert them all
@@ -69,6 +69,7 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 			Example usages:
 			* `(text: $cash + 200)`
 			* `(if: (text: $cash)'s length > 3)[Phew! Over four digits!]`
+			* `(text: ...$array)`
 			
 			Rationale:
 			Unlike in Twine 1, Twine 2 will only convert numbers into strings, or strings
@@ -84,6 +85,9 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 			If you give an array to (text:), it will attempt to convert every element
 			contained in the array to a String, and then join them up with commas. So,
 			`(text: (a: 2, "Hot", 4, "U"))` will result in the string "2,Hot,4,U".
+			If you'd rather this not occur, you can also pass the array's individual
+			elements using the `...` operator - this will join them with nothing in between.
+			So, `(text: ...(a: 2, "Hot", 4, "U"))` will result in the string "2Hot4U".
 			
 			See also:
 			(num:)
@@ -129,7 +133,7 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 			#string
 		*/
 		("substring", (_, string, a, b) => subset(string, a, b),
-		[String, Number, Number])
+		[String, parseInt, parseInt])
 
 		/*d:
 			(lowercase: String) -> String
@@ -638,7 +642,7 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 		/*d:
 			(random: Number, [Number]) -> Number
 
-			This macro produces a positive whole number randomly selected between the two numbers, inclusive
+			This macro produces a whole number randomly selected between the two whole numbers, inclusive
 			(or, if the second number is absent, then between 0 and the first number, inclusive).
 
 			Example usage:
@@ -650,13 +654,6 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 			#number
 		*/
 		random: [(a, b) => {
-			/*
-				First, throw an error if either of the numbers is not a whole number.
-			*/
-			if (a !== (a|0) || b !== (b|0)) {
-				return TwineError.create("macrocall",
-					"(random:) only accepts whole numbers, not " + objectName(a !== (a|0) ? a : b));
-			}
 			let from, to;
 			if (!b) {
 				from = 0;
@@ -667,7 +664,7 @@ define(['macros', 'utils/operationutils', 'internaltypes/twineerror'],
 			}
 			to += 1;
 			return ~~((Math.random() * (to - from))) + from;
-		}, [Number, Macros.TypeSignature.optional(Number)]],
+		}, [parseInt, Macros.TypeSignature.optional(parseInt)]],
 		
 		/*d:
 			(either: ...Any) -> Any

@@ -10,7 +10,7 @@ define([
 	'internaltypes/assignmentrequest',
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier'],
-($, NaturalSort, Macros, {objectName, subset, collectionType, isValidDatamapName, is}, State, Engine, Passages, Lambda, AssignmentRequest, TwineError, TwineNotifier) => {
+($, NaturalSort, Macros, {objectName, subset, collectionType, isValidDatamapName, is, clone}, State, Engine, Passages, Lambda, AssignmentRequest, TwineError, TwineNotifier) => {
 	"use strict";
 	
 	const {optional, rest, either, zeroOrMore, Any}   = Macros.TypeSignature;
@@ -374,7 +374,7 @@ define([
 			}
 			return ret;
 		},
-		[Number, Number])
+		[parseInt, parseInt])
 		
 		/*d:
 			(subarray: Array, Number, Number) -> Array
@@ -408,7 +408,7 @@ define([
 			#data structure
 		*/
 		("subarray", (_, array, a, b) => subset(array, a, b),
-		[Array, Number, Number])
+		[Array, parseInt, parseInt])
 		
 		/*d:
 			(shuffled: Any, Any, [...Any]) -> Array
@@ -455,7 +455,7 @@ define([
 					a[j] = e;
 				}
 				return a;
-			},[]),
+			},[]).map(clone),
 		[Any, rest(Any)])
 		
 		/*d:
@@ -495,6 +495,7 @@ define([
 			
 			#data structure
 		*/
+		// Note that since this only accepts primitives, clone() is unnecessary.
 		("sorted", (_, ...args) => args.sort(NaturalSort("en")),
 		[either(Number,String), rest(either(Number,String))])
 		
@@ -524,6 +525,9 @@ define([
 			Think of the number as being an addition to each position in the original sequence -
 			if it's 1, then the value in position 1 moves to 2, the value in position 2 moves to 3,
 			and so forth.
+
+			Incidentally... you can also use this macro to rotate a string's characters, by doing
+			something like this: `(string: ...(rotated: 1, ...$str))`
 			
 			Details:
 			To ensure that it's being used correctly, this macro requires three or more items -
@@ -552,9 +556,103 @@ define([
 				return TwineError.create("macrocall",
 					"I can't rotate these " + array.length + " values by " + number + " positions.");
 			}
-			return array.slice(number).concat(array.slice(0, number));
+			return array.slice(number).concat(array.slice(0, number)).map(clone);
 		},
-		[Number, Any, rest(Any)])
+		[parseInt, Any, rest(Any)])
+
+		/*d:
+			(repeated: Number, ...Any) -> Array
+			
+			When given a number and a sequence of values, this macro produces an array containing
+			those values repeated, in order, by the given number of times.
+			
+			Example usage:
+			`(repeated: 5, false)` produces `(a: false, false, false, false, false)`
+			`(repeated: 3, 1,2,3)` produces `(a: 1,2,3,1,2,3,1,2,3)`
+			
+			Rationale:
+			This macro, as well as (range:), are the means by which you can create a large array of
+			similar or regular data, quickly. Just as an example: you want, say, an array of several
+			identical, complex datamaps, each of which are likely to be modified in the game,
+			you can use (repeated:) to make those copies easily. Or, if you want, for instance, a
+			lot of identical strings accompanied by a lone different string, you can use (repeated:)
+			and add a `(a: "string")`to the end.
+
+			When you already have an array variable, this is similar to simply adding that variable
+			to itself several times. However, if the number of times is over 5, this can be much
+			simpler to write.
+			
+			Details:
+			An error will, of course, be produced if the number given is 0 or less, or contains a fraction.
+			
+			See also:
+			(a:), (range:)
+			
+			#data structure
+		*/
+		("repeated", (_, number, ...array) => {
+			if (number <= 0) {
+				return TwineError.create("macrocall",
+					"I can't repeat these values " + number + " times.");
+			}
+			const ret = [];
+			while(number-- > 0) {
+				ret.push(...array);
+			}
+			return ret.map(clone);
+		},
+		[parseInt, rest(Any)])
+
+		/*d:
+			(interlaced: Array, ...Array) -> Array
+			
+			Takes multiple arrays, and pairs up each value in those arrays: it
+			creates an array containing each array's first value, an array containing each
+			array's second value, and so forth. If some values have no matching pair (i.e. one array
+			is longer than the other) then those values are ignored.
+			
+			Example usage:
+			`(interlaced: (a: 'A', 'B', 'C', 'D'), (a: 1, 2, 3))` is the same as `(a: 'A',1,'B',2,'C',3)`
+			
+			Rationale:
+			There are a couple of other macros which accept data in pairs - the most notable being
+			(datamap:), which takes data names and data values paired. This macro can help
+			with using such macros. For instance, you can supply an array of (datanames:) and
+			(datavalues:) to (interlaced:), and supply that to (datamap:), to produce the original
+			datamap again. Or, you can supply just the names, and use a macro like (repeated:) to
+			fill the other values.
+			
+			However, (interlaced:) can also be of use alongside macros which accept a sequence: you
+			can use it to cleanly insert values between each item. For instance, one can pair
+			an array with another array of spaces, and then convert them to a string with (text:).
+			`(text: ...(interlaced: $arr, (repeated: $arr's length, ' '))` will create a string containing
+			each element of $arr, followed by a space.
+			
+			Details:
+			If one of the arrays provided is empty, the resulting array will be empty, as well.
+			
+			See also:
+			(a:), (rotated:), (repeated:)
+			
+			#data structure
+		*/
+		("interlaced", (_, ...arrays) => {
+			/*
+				Determine the length of the longest array.
+			*/
+			let len = Math.min(...arrays.map(arr => arr.length));
+			const ret = [];
+			/*
+				For each array, add its element to the returning array.
+			*/
+			for(let i = 0; i < len; i += 1) {
+				for(let j = 0; j < arrays.length; j+=1) {
+					ret.push(clone(arrays[j][i]));
+				}
+			}
+			return ret;
+		},
+		[Array, rest(Array)])
 		;
 
 	/*
@@ -669,10 +767,14 @@ define([
 			#data structure
 		*/
 		("datavalues", (_, map) =>
+			/*
+				We first need to sort values by their keys (thus necessitating using .entries())
+				then extracting just the values.
+			*/
 			Array.from(map.entries()).sort(
 				(a,b) => ([a[0],b[0]].sort(NaturalSort("en"))[0] === a[0] ? -1 : 1)
 			).map(
-				e => e[1]
+				e => clone(e[1])
 			),
 		[Map])
 		
@@ -933,7 +1035,7 @@ define([
 					);
 				}
 				else {
-					map.set(key, element);
+					map.set(key, clone(element));
 					key = undefined;
 				}
 				return status;
@@ -1018,7 +1120,7 @@ define([
 			
 			#data structure 3
 		*/
-		(["dataset","ds"], (_, ...args) => new Set(args), zeroOrMore(Any))
+		(["dataset","ds"], (_, ...args) => new Set(args.map(clone)), zeroOrMore(Any))
 		
 		/*
 			COLLECTION OPERATIONS

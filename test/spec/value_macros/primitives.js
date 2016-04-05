@@ -66,6 +66,7 @@ describe("primitive value macros", function() {
 		it("accepts 1 string argument, then two number arguments", function() {
 			expect("(substring:)").markupToError();
 			expect("(substring: '1')").markupToError();
+			expect("(substring: 'red', 1.1, 2)").markupToError();
 			expect("(substring: 'red', 1, 2)").markupToPrint('re');
 		});
 		it("returns the substring specified by the two 1-indexed start and end indices", function() {

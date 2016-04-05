@@ -143,8 +143,11 @@ define(['utils', 'internaltypes/twineerror'], ({assert, impossible, toJSLiteral}
 		if (type === Boolean) {
 			return typeof arg === "boolean";
 		}
+		if (type === parseInt) {
+			return typeof arg === "number" && !Number.isNaN(arg) && !(arg + '').includes('.');
+		}
 		if (type === Number) {
-			return typeof arg === "number";
+			return typeof arg === "number" && !Number.isNaN(arg);
 		}
 		if (type === Array) {
 			return Array.isArray(arg);
@@ -191,9 +194,12 @@ define(['utils', 'internaltypes/twineerror'], ({assert, impossible, toJSLiteral}
 			For ES6 collections, we can depend on the constructors.
 		*/
 		if (value instanceof Map) {
+			// Use Object.assign to assign any expando properties on the old map to the new one.
+			// TODO: Remove that?
 			return Object.assign(new Map(value), value);
 		}
 		if (value instanceof Set) {
+			// Same as above.
 			return Object.assign(new Set(value), value);
 		}
 		/*
@@ -299,6 +305,7 @@ define(['utils', 'internaltypes/twineerror'], ({assert, impossible, toJSLiteral}
 			(   obj === String ||
 				obj === Number ||
 				obj === Boolean)  ? "a " + typeof obj()
+			:   obj === parseInt  ? "a non-fractional number"
 			:   obj === Map       ? "a datamap"
 			:   obj === Set       ? "a dataset"
 			:   obj === Array     ? "an array"
@@ -447,7 +454,7 @@ define(['utils', 'internaltypes/twineerror'], ({assert, impossible, toJSLiteral}
 			As the positive indices are 1-indexed, we shall subtract 1 from a if a is positive.
 			But, as they're inclusive, b shall be left as is.
 		*/
-		const ret = sequence.slice(a > 0 ? a - 1 : a, b);
+		const ret = sequence.slice(a > 0 ? a - 1 : a, b).map(clone);
 		/*
 			Now that that's done, convert any string sequence back into one.
 		*/

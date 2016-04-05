@@ -302,7 +302,7 @@ define([
 			No other possible values should be here.
 		*/
 		else {
-			Utils.impossible('Section.runExpression', "The expression evaluated to an unknown value: " + result);
+			Utils.impossible('Section.runExpression', "The expression evaluated to an unknown value: " + JSON.stringify(result));
 		}
 	}
 	

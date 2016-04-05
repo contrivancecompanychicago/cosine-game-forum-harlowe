@@ -74,7 +74,7 @@ describe("HTML in twinemarkup", function() {
 			expect(runPassage("<table>\n<tr> \n<td>X</td>C\nV</tr>\n?</table>").find('br').length).toBe(0);
 		});
 		it("will allow line breaks nested inside some other structure", function() {
-			expect(runPassage("<table>''\n''<tr><td>X</td>''\n''</tr></table>").find('br + br').length).toBe(1);
+			expect(runPassage("<table>''\n''<tr><td>X</td>''\n''</tr></table>").find('br').length).toBe(2);
 		});
 		it("will allow explicit <br> elements inside them to be automatically moved", function() {
 			expect(runPassage("<table><br><tr><td>X</td><br></tr></table>").find('br + br').length).toBe(1);
