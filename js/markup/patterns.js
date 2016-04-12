@@ -388,8 +388,6 @@
 
 		hookTagFront =  "\\|(" + anyLetter.replace("]", "_]") + "*)>",
 		hookTagBack  =  "<("   + anyLetter.replace("]", "_]") + "*)\\|",
-		
-		lambda       = "each" + ws + "(_" + validPropertyName + "(?:" + ws + "," + ws + "_" + validPropertyName + ")*)" + ws + ",?" + ws + "(to|where)" + wb,
 
 		tempVariable = "_(" + validPropertyName + ")" + wb,
 		
@@ -790,11 +788,6 @@
 		macroName: macro.name,
 		
 		/*
-			Lambdas
-		*/
-		lambda,
-		
-		/*
 			This must be differentiated from macroFront
 		*/
 		groupingFront: "\\(" + notBefore(macro.name),
@@ -898,6 +891,10 @@
 		
 		to:         either("to" + wb, "="),
 		into:       "into" + wb,
+		making:     "making" + wb,
+		where:      "where" + wb,
+		via:        "via" + wb,
+		with:       "with" + wb,
 		augmentedAssign: either("\\+", "\\-", "\\*", "\\\/", "%") + "=",
 	};
 	

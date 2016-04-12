@@ -475,13 +475,6 @@
 					},
 				},
 
-				lambda: {
-					fn: (match) => ({
-						params: match[1],
-						conjunction: match[2],
-					}),
-				},
-
 				groupingFront: {
 					fn: () => ({
 						isFront: true,
@@ -664,7 +657,7 @@
 					cannotFollow: "text",
 				},
 			},
-			["boolean", "is", "to", "into", "and", "or", "not",
+			["boolean", "is", "to", "into", "where", "via", "with", "making", "and", "or", "not",
 			"isNot", "contains", "isIn"].reduce(function(a, e) {
 				a[e] = {
 					fn: emptyFn,

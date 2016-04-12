@@ -74,9 +74,6 @@ define(['utils'], ({toJSLiteral, assert}) => {
 			calls the normal indexOfType, then inverts the returned index
 			(converting, say, 3/10 on the reversed array into 7/10 on
 			the original array).
-			
-			For browser optimisation purposes, arguments is copied into an
-			array
 		*/
 		return (array.length - 1) - indexOfType(...[
 			/*
@@ -242,27 +239,9 @@ define(['utils'], ({toJSLiteral, assert}) => {
 		if ((i = indexOfType(tokens, "comma")) >-1) {
 			midString = ",";
 			/*
-				Unlike Javascript, Twinescript allows trailing commas in calls.
+				Unlike Javascript, Harlowe allows trailing commas in calls.
 			*/
 			needsRight = false;
-		}
-		else if ((i = indexOfType(tokens, "lambda")) >-1) {
-			midString = " ";
-			right = 'Lambda.create(['
-				/*
-					Convert all of the params into trimmed JS string literals.
-					This assumes that params are defined as separated by commas in Patterns.
-				*/
-				+ tokens[i].params.split(',').filter(Boolean).map(e => toJSLiteral(
-					/*
-						This .slice() call removes the _ sigil from the params.
-					*/
-					e.slice(1)
-					.trim())).join()
-				+ "],"
-				+ toJSLiteral(tokens[i].conjunction) + ","
-				+ toJSLiteral(compile(tokens.splice(i + 1))) + ")";
-			needsLeft = false;
 		}
 		else if ((i = indexOfType(tokens, "spread")) >-1) {
 			/*
@@ -283,6 +262,28 @@ define(['utils'], ({toJSLiteral, assert}) => {
 			assignment = "into";
 			right = compile(tokens.slice(0,  i), "varRef");
 			left  = "Operations.setIt(" + compile(tokens.slice(i + 1), "varRef") + ")";
+		}
+		else if ((i = rightAssociativeIndexOfType(tokens, "where", "via")) >-1) {
+			operation = "makeLambda";
+			left = compile(tokens.slice (0, i), "varRef");
+			right = toJSLiteral(tokens[i].type) + "," + toJSLiteral(compile(tokens.splice(i + 1)));
+		}
+		else if ((i = rightAssociativeIndexOfType(tokens, "with", "making")) >-1) {
+			/*
+				This token requires that whitespace + a temp variable be to the right of it.
+			*/
+			const rightTokens = tokens.splice(i + 1);
+			if (![2,3].includes(rightTokens.length) || rightTokens[0].type !== "whitespace" || rightTokens[1].type !== "tempVariable"
+					|| (rightTokens[2] && rightTokens[2].type !== "whitespace")) {
+				left = "TwineError.create('operation','I need a temporary variable to the right of \\'";
+				midString = tokens[i].type;
+				right = "\\'.')";
+			}
+			else {
+				operation = "makeLambda";
+				left = compile(tokens.slice (0, i), "varRef");
+				right = toJSLiteral(tokens[i].type) + "," + toJSLiteral(rightTokens[1].name);
+			}
 		}
 		/*
 			I'm also not sure if augmented assignment is strictly necessary given that

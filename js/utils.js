@@ -197,6 +197,14 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
 		},
 
 		/*
+			A quick method for joining a string array with commas and "and".
+		*/
+		andList(array) {
+			return array.length === 0 ? array[0]
+				: array.slice(0,-1).join(', ') + " and " + array[array.length];
+		},
+
+		/*
 			HTML utilities
 		*/
 

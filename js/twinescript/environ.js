@@ -39,14 +39,14 @@ define([
 		*/
 		Operations;
 		
-		section.eval = function(/*variadic*/) {
+		section.eval = function(...args) {
 			try {
 				/*
 					This specifically has to be a "direct eval()" - calling eval() "indirectly"
 					makes it run in global scope.
 				*/
 				return eval(
-					Array.from(arguments).join('')
+					args.join('')
 				);
 			} catch(e) {
 				/*
@@ -55,7 +55,7 @@ define([
 					unhelpful error message.
 				*/
 				Utils.log(e);
-				Utils.log(Array.from(arguments).join(''));
+				Utils.log(args.join(''));
 				return e;
 			}
 		};

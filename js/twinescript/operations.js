@@ -2,10 +2,11 @@ define([
 	'state',
 	'datatypes/colour',
 	'internaltypes/assignmentrequest',
+	'datatypes/lambda',
 	'utils/operationutils',
 	'internaltypes/twineerror',
 ],
-(State, Colour, AssignmentRequest, {isObject, collectionType, coerceToString, is, contains, objectName}, TwineError) => {
+(State, Colour, AssignmentRequest, Lambda, {isObject, collectionType, coerceToString, is, contains, objectName}, TwineError) => {
 	"use strict";
 	/**
 		Operation objects are a table of operations which TwineScript proxies
@@ -326,6 +327,20 @@ define([
 		isIn: comparisonOp((l,r) => contains(r,l)),
 		
 		/*
+			The only user-produced value which is passed into this operation is the bool -
+			the passVal and failVal are internally supplied.
+		*/
+		where(bool, passVal, failVal) {
+			if (typeof bool !== "boolean") {
+				return TwineError.create("operation",
+					"This lambda's 'where' clause must evaluate to true or false, not "
+					+ objectName(bool)
+					+ ".");
+			}
+			return bool ? passVal : failVal;
+		},
+
+		/*
 			This takes a plain value assumed to be an array, and wraps
 			it in a special structure that denotes it to be spreadable.
 			This is created by the spread (...) operator.
@@ -336,7 +351,9 @@ define([
 				spreader: true,
 			};
 		},
-		
+
+		makeLambda: (left, operator, right) => Lambda.create(left, operator, right),
+
 		/*
 			And here is the function for creating AssignmentRequests.
 			Because a lot of error checking must be performed, and

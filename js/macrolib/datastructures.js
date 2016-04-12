@@ -659,7 +659,7 @@ define([
 		This convenience function is used to run reduce() on macro args using a passed-in lambda,
 		which is an operation common to (find:), (all-pass:) and (some-pass:).
 	*/
-	function lambdaBooleanReduce(section, lambda, args) {
+	function lambdaFilter(section, lambda, args) {
 		return args.reduce((result, arg) => {
 			/*
 				If an earlier iteration produced an error, don't run any more
@@ -672,11 +672,8 @@ define([
 			/*
 				Run the lambda, to determine whether to filter out this element.
 			*/
-			const passedFilter = lambda.apply(section, arg);
-			/*
-				As an additional type-check, compare the result of the lambda to boolean.
-			*/
-			if ((error = TwineError.containsError(lambda.checkResult(arg, passedFilter, Boolean)))) {
+			const passedFilter = lambda.apply(section, {loop:arg, pass:true, fail:false});
+			if ((error = TwineError.containsError(passedFilter))) {
 				return error;
 			}
 			return result.concat(passedFilter ? [arg] : []);
@@ -685,39 +682,44 @@ define([
 
 	Macros.add
 		/*
-			(converted: Lambda, Any, [...Any])
+			(altered: Lambda, ...Any)
 		*/
-		("converted", (section, lambda, ...args) => args.map(e => lambda.apply(section, e),[]),
-		[Lambda.TypeSignature(1,'to'), rest(Any)])
+		("altered", (section, lambda, ...args) => args.map(loop => lambda.apply(section, {loop})),
+		[Lambda.TypeSignature('via'), rest(Any)])
 		/*
-			(find: Lambda, Any, [...Any])
+			(find: Lambda, ...Any)
 		*/
-		("find", (section, lambda, ...args) => lambdaBooleanReduce(section, lambda, args),
-		[Lambda.TypeSignature(1,'where'), rest(Any)])
+		("find", (section, lambda, ...args) => lambdaFilter(section, lambda, args),
+		[Lambda.TypeSignature('where'), rest(Any)])
 		/*
-			(all-pass: Lambda, Any, [...Any])
+			(all-pass: Lambda, ...Any)
 		*/
 		("all-pass", (section, lambda, ...args) => {
-			const ret = lambdaBooleanReduce(section, lambda, args);
+			const ret = lambdaFilter(section, lambda, args);
 			return TwineError.containsError(ret) || ret.length === args.length;
 		},
-		[Lambda.TypeSignature(1,'where'), rest(Any)])
+		[Lambda.TypeSignature('where'), rest(Any)])
 		/*
-			(some-pass: Lambda, Any, [...Any])
+			(some-pass: Lambda, ...Any)
 		*/
 		("some-pass", (section, lambda, ...args) => {
-			const ret = lambdaBooleanReduce(section, lambda, args);
+			const ret = lambdaFilter(section, lambda, args);
 			return TwineError.containsError(ret) || ret.length > 0;
 		},
-		[Lambda.TypeSignature(1,'where'), rest(Any)])
+		[Lambda.TypeSignature('where'), rest(Any)])
 		/*
-			(none-pass: Lambda, Any, [...Any])
+			(none-pass: Lambda, ...Any)
 		*/
 		("none-pass", (section, lambda, ...args) => {
-			const ret = lambdaBooleanReduce(section, lambda, args);
+			const ret = lambdaFilter(section, lambda, args);
 			return TwineError.containsError(ret) || ret.length === 0;
 		},
-		[Lambda.TypeSignature(1,'where'), rest(Any)])
+		[Lambda.TypeSignature('where'), rest(Any)])
+		/*
+			(folded: Lambda, ...Any)
+		*/
+		("folded", (section, lambda, ...args) => args.reduce((making,loop) => lambda.apply(section, {making,loop})),
+		[Lambda.TypeSignature('via making'), rest(Any)])
 		;
 		
 	Macros.add

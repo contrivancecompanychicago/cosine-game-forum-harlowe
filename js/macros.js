@@ -1,5 +1,5 @@
 define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/lambda', 'internaltypes/twineerror'],
-($, NaturalSort, {insensitiveName, nth, plural, assert, lockProperty}, {objectName, typeName, singleTypeCheck}, Lambda, TwineError) => {
+($, NaturalSort, {insensitiveName, nth, plural, andList, assert, lockProperty}, {objectName, typeName, singleTypeCheck}, Lambda, TwineError) => {
 	"use strict";
 	/**
 		This contains a registry of macro definitions, and methods to add to that registry.
@@ -192,26 +192,15 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 					*/
 					if (arg && Lambda.isPrototypeOf(arg) && type.pattern === "lambda") {
 						/*
-							If the kind differs, produce an error for that.
+							Print an error comparing the expected clauses with the actual ones.
 						*/
-						if (arg.kind !== type.lambdaKind) {
-							return TwineError.create('typesignature',
-								name + "'s " + nth(ind + 1) + " value (a lambda) should be a '"
-								+ type.lambdaKind
-								+ "', not '"
-								+ arg.kind
-								+ "'.");
-						}
-						/*
-							Otherwise, its arity was wrong.
-						*/
+						/*jshint -W083 */
 						return TwineError.create('typesignature',
 							name + "'s " + nth(ind + 1) + " value (a lambda) should have "
-							+ type.arity
-							+ plural(type.arity, ' parameter')
-							+ ', not '
-							+ arg.params.length
-							+ '.');
+							+ andList(["where","making","via","with"].filter(e => type.clauses.includes(e)).map(e => "a '" + e + "' clause"))
+							+ ", not "
+							+ andList(["where","making","via","with"].filter(e => e in arg).map(e => "a '" + e + "' clause"))
+							+ ".");
 					}
 
 					/*
