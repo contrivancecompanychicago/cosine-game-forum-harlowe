@@ -14,7 +14,7 @@ Rough documentation is at http://twine2.neocities.org/
 
 ####Alterations
 
- * Now, you can write `[text]`, and the square brackets will be, by themselves, treated as a hook, albeit with no name (it cannot be referenced like `?this`) and no attached changer commands. This, I believe, simplfies the rules for when square brackets will be displayed literally (now: when they are matched like so) and when they will not. Incidentally, temporary variables (see below) can be `(set:)` inside nameless unattached hooks without leaking out, so they do have some semantic meaning.
+ * Now, you can write `[text]`, and the square brackets will be, by themselves, treated as a hook, albeit with no name (it cannot be referenced like `?this`) and no attached changer commands. This, I believe, simplfies what square brackets "mean" in passage prose. Incidentally, temporary variables (see below) can be `(set:)` inside nameless unattached hooks without leaking out, so they do have some semantic meaning.
  * Now, you can attach changer macros to nametagged hooks: `(if: true) |moths>[Several moths!]`, for instance, is now valid. However, as with all hooks, trying to attach plain data, such as a number or an array, will cause an error.
  * Now, when working with non-positive numbers as computed indexes (such as `$array's (-1)`), Harlowe no longer uses `0` for `last`, `-1` for `2ndlast`, and so forth - instead, `-1` means `last`, `-2` means `2ndlast`, and using `0` produces an error. (So, `"Red"'s (-1)` produces "d", not "e".)
  * Hook-attached macros may now have whitespace and line breaks between them and their hooks. This means that `(if: $x)  [text]` and such are now syntactically acceptable - the whitespace is removed, and the macro is treated as if directly attached. (This means that, if after a macro call you have plain passage text that resembles a hook, you'll have to use the verbatim markup to keep it from being interpreted as such.)
@@ -32,22 +32,22 @@ Rough documentation is at http://twine2.neocities.org/
 
 ####Additions
 
-###Markup
+#####Markup
 
  * Added column markup, which is, like aligner markup, a special single-line token indicating that the subsequent text should be separated into columns. They consist of a number of `|` marks, indicating the size of the column relative to the other columns, and a number of `=` marks surrounding it, indicating the size of the column's margins in CSS "em" units (which are about the width of a capital M). Separate each column's text with tokens like `|===` and `==||`, and end them with a final `|==|` token to return to normal page layout.
  * Now, it's possible to attach multiple changers to a single hook - `(text-style:'bold')(align:'==>')$robotFont[Text]` will apply `(text-style:'bold')`, `(align:'==>')` and the changer in the variable $robotFont, as if they had been added together with `+` in a single variable. Again, you can put whitespace between them – `(text-style:'bold')  (align:'==>')  $robotFont  [Text]` is equally valid, and causes the whitespace between each changer and the hook itself to be discarded.
 
-###Code
+#####Code
 
  * Added temporary variables, a special kind of variable that only exists inside the passage or hook in which they're `(set:)`. Outside of the passage or hook, they disappear. Simply use `_` instead of `$` as the sigil for variables - write `(set: _a to 2)`, `(if: _a > 1)`, etc. Their main purpose is to allow you to make "reusable" Twine code - code which can be pasted into any story, without accidentally overwriting any variables that the story has used. (For instance, suppose you had some code which uses the variable `$a` for some quick computation, but you pasted it into a story that already used `$a` for something else in another passage. If you use a temporary variable `_a` instead, this problem won't occur.)
    * Also note that temp variables that are `(set:)` inside hooks won't affect same-named temp variables outside them: `(set: _a to 1) |hook>[(set: _a to 2)]` will make `_a` be 2 inside the hook, but remain as 1 outside of it.
- * Lambdas (tentative name) are a new data type - they are, essentially, user-created functions. You can just think of them as "data converters" - reusable instructions that convert values into different values, filter them, or join multiple values together. They use temporary variables to hold values while computing them, and this is shown in their syntax. An example is `_a where _a > 2`, which filters out data that's smaller than 2, or `_name via "a " + _name`, which converts values by adding 1 to them. Various new macros use these to easily apply the same conversion to sequences of data.
+ * Lambdas (tentative name) are a new data type - they are, essentially, user-created functions. You can just think of them as "data converters" - reusable instructions that convert values into different values, filter them, or join multiple values together. They use temporary variables (which only exist inside the lambda) to hold values while computing them, and this is shown in their syntax. An example is `_a where _a > 2`, which filters out data that's smaller than 2, or `_name via "a " + _name`, which converts values by adding 1 to them. Various new macros use these to easily apply the same conversion to sequences of data.
  * `(find:)` uses a lambda to filter a sequence of values, and place the results in an array. For instance, `(find: _item where _item's 1st is "A", "Arrow", "Shield", "Axe", "Wand")` produces the array `(a: "Arrow", "Axe")`. (This macro is similar to Javascript's `filter()` array method.)
  * `(altered:)` takes a lambda as its first value, and any number of other values, and uses the lambda to convert the values, placing the results in an array. For instance, `(altered: _material via _material + " Sword"), "Iron", "Wood", "Bronze", "Plastic")` will create an array `(a:"Iron Sword", "Wood Sword", "Bronze Sword", "Plastic Sword")`. (This macro is similar to Javascript's `map()` array method.)
  * `(all-pass:)`, `(some-pass:)` and `(none-pass:)` check if the given values match the lambda, and return `true` or `false`. `(all-pass: _a where _a > 2, 1, 3, 5)` produces `false`, `(some-pass: _a where _a > 2, 1, 3, 5)` produces `true`, and `(none-pass: _a where _a > 2, 1, 3, 5)` produces `false`.
  * `(folded:)` is used to combine many values into one (a "total"), using a lambda that has a `making` clause. `(folded: _a making _total via _total + "." + _a, "E", "a", "s", "y")` will first set `_total` to "E", then progressively add ".a", ".s", and ".y" to it, thus producing the resulting string, "E.a.s.y".
 
-###Macros
+#####Macros
 
  * Added the aliases `(dm:)` and `(ds:)` for `(datamap:)` and `(dataset:)`, respectively.
  * Added `(lowercase:)` and `(uppercase:)`, which take a string and convert it to all-lowercase or all-uppercase, as well as `(lowerfirst:)` and `(upperfirst:)`, which only convert the first non-whitespace character in the string and leave the rest untouched.
@@ -58,7 +58,7 @@ Rough documentation is at http://twine2.neocities.org/
 
 ###1.3.0 changes (unreleased):
 
-#####Bugfixes
+####Bugfixes
 
  * Fixed a bug where the "outline" `(textstyle:)` option didn't have the correct text colour when no background colour was present, making it appear solid black.
 

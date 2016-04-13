@@ -40,6 +40,13 @@ describe("twinescript variables", function() {
 			Engine.goBack();
 			expect("(print: $a)").markupToPrint("1");
 		});
+		it("doesn't pollute past turns, even when deeply modifying data structures", function() {
+			runPassage("(set: $a to (a:(a:1),1))","one");
+			runPassage("(set: $a's 1st's 1st to 2)","two");
+			runPassage("(set: $a's 1st's 1st to 3)","three");
+			Engine.goBack();
+			expect("(print: $a)").markupToPrint("2,1");
+		});
 	});
 	describe("bare variables in passage text", function() {
 		it("for numbers, prints the number", function() {

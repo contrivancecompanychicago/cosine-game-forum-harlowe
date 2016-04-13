@@ -808,7 +808,9 @@ define([
 				Before executing the expressions, put a fresh object on the
 				expression data stack.
 			*/
-			this.stack.unshift(Object.assign(Object.create(null), {tempVariables: Object.create(VarScope)}));
+			this.stack.unshift(Object.assign(Object.create(null), {
+				tempVariables: Object.create(this.stack.length ?  this.stack[0].tempVariables : VarScope)
+			}));
 			
 			/*
 				This provides (sigh) a reference to this object usable by the

@@ -24,6 +24,13 @@ describe("twinescript temporary variables", function() {
 		createPassage("(set: _a to 1)(print:_a)", "grault");
 		expect("(set: _a to 2)(display:'grault') (print:_a)").markupToPrint("1 2");
 	});
+	it("are correctly shadowed when referencing outer scope temporary variables", function() {
+		expect("(set: _a to 2)|a>[(set: _a to _a + 2)(print:_a)] (print:_a)").markupToPrint("4 2");
+	});
+	it("are correctly shadowed when deeply modifying data structures", function() {
+		expect("(set: _a to (a:2,1))|a>[(set: _a's 1st to _a's 1st + 2)(print:_a)] (print:_a)").markupToPrint("4,1 2,1");
+		expect("(set: _a to (a:(a:2),1))|a>[(set: _a's 1st's 1st to _a's 1st's 1st + 2)(print:_a)] (print:_a)").markupToPrint("4,1 2,1");
+	});
 	it("can be used bare in passage text", function() {
 		expect("(set: _a to 1)_a").markupToPrint("1");
 		expect("(set: _a to 2)|a>[(set: _a to 1)_a] _a").markupToPrint("1 2");

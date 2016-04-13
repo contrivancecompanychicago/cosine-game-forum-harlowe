@@ -520,6 +520,13 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 				}
 
 				/*
+					Only attempt to clone the object if it's not the final iteration.
+				*/
+				if (i > 0) {
+					object = clone(object);
+				}
+
+				/*
 					Certain types of objects require special means of assigning
 					their values than just objectOrMapSet().
 
@@ -590,12 +597,6 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 					else {
 						objectOrMapSet(object, property, value);
 					}
-				}
-				/*
-					Only attempt to clone the object if it's not the final iteration.
-				*/
-				if (i > 0) {
-					object = clone(object);
 				}
 				return object;
 			}, value);
