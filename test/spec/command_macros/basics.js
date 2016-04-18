@@ -139,6 +139,12 @@ describe("basic command macros", function() {
 			expect("$a").markupToPrint("1");
 			waitForGoto(done);
 		});
+		it("prevents macros even outside of its home hook", function(done) {
+			createPassage("", "flunk");
+			runPassage("(set:$a to 1)(if:true)[(go-to:'flunk')](set:$a to 2)");
+			expect("$a").markupToPrint("1");
+			waitForGoto(done);
+		});
 		it("can be run with (print:)", function(done) {
 			createPassage("''Red''", "croak");
 			runPassage("(print:(go-to: 'croak'))");

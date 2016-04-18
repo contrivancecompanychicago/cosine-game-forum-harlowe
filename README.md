@@ -11,6 +11,8 @@ Rough documentation is at http://twine2.neocities.org/
  * `(alert:)`, `(open-url:)`, `(reload:)` and `(goto-url:)` now correctly return command values rather than the non-Harlowe value `undefined`. This means that `(alert:)`'s' time of execution changes relative to `(prompt:)` and `(confirm:)` - `(set: $x to (prompt:"X"))` will display a JS dialog immediately, but `(set: $x to (alert:"X"))` will not - although this is conceptually reasonable given that `(prompt:)` and `(confirm:)` are essentially "input" commands obtaining data from the player, and `(alert:)` is strictly an "output" command.
  * Now, line breaks between raw HTML `<table>`, `<tr>`, `<tbody>`, `<thead>` and `<tfoot>` elements are no longer converted into erroneous `<br>` elements, which are moved to just above the table. Thus, one can write or paste multi-line `<table>` markup with fewer problems arising.
  * Fixed bugs where various macros (`(subarray:)`, `(shuffled:)`, `(rotated:)`, `(datavalues:)`, `(datamap:)`, `(dataset:)`) would end up passing nested data structures by reference (which shouldn't be allowed in Harlowe code). For instance, if you did `(set:$b to (rotated: 1, 0, $a))`, where $a is an array, then modifying values inside $b's 1st would also modify $a.
+ * Fixed the bug where a `(goto:)` command inside a hook would prevent subsequent commands inside the hook from running, but subsequent commands outside it would still continue - for instance, `(if:true)[(go-to:'flunk')](set:$a to 2)` would still cause the `(set:)` command to run.
+ * Fixed the bug where `(current-time:)` wouldn't pad the minutes value with a leading 0 when necessary.
 
 ####Alterations
 
@@ -29,6 +31,7 @@ Rough documentation is at http://twine2.neocities.org/
  * Now, various macros (`(range:)`, `(subarray:)`, `(substring:)`, `(rotated:)` etc.) which require integers (positive or negative whole numbers) will produce errors if they are given fractional numbers.
  * Now, `<tw-passage>` elements (that is, passages' HTML elements) have a `tags` attribute containing all of the passage's tags in a space-separated list. This allows such elements to be styled using author CSS, or selected using author Javascript, in a manner similar to Twine 1.4 (but using the `[tags~= ]` selector instead of `[data-tags~= ]`).
  * Now, `debug-header` tagged passages are run after `header` tagged passages in debug mode, for consistency with the order of `debug-startup` and `startup`.
+ * Removed the CSS directives that reduce the font size based on the player's device width, because this functionality seems to be non-obvious to users, and can interfere with custom CSS in an unpleasant way.
 
 ####Additions
 

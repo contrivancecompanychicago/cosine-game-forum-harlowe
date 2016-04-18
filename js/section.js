@@ -268,7 +268,7 @@ define([
 				immediately.
 			*/
 			if (result.earlyExit) {
-				return false;
+				return "earlyexit";
 			}
 			/*
 				On rare occasions (specifically, when the passage component
@@ -829,9 +829,21 @@ define([
 				switch(expr.tag()) {
 					case Selectors.hook:
 					{
+						/*
+							Note that hook rendering may be triggered early by attached
+							expressions, so a hook lacking a 'source' attr may have
+							already been rendered.
+						*/
 						if (expr.attr('source')) {
 							section.renderInto(expr.attr('source'), expr);
 							expr.removeAttr('source');
+						}
+						/*
+							If the hook's render contained an earlyexit
+							expression (see below), halt here also.
+						*/
+						if (expr.find('[earlyexit]').length) {
+							return false;
 						}
 						break;
 					}
@@ -842,7 +854,11 @@ define([
 								If this returns false, then the entire .each() loop
 								will terminate, thus halting expression evaluation.
 							*/
-							return runExpression.call(section, expr);
+							const result = runExpression.call(section, expr);
+							if (result === "earlyexit") {
+								dom.attr('earlyexit', true);
+							}
+							return result;
 						}
 					}
 				}
