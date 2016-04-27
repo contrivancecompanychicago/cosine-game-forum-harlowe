@@ -20,7 +20,7 @@
   ],
   "engines": {
     "npm": ">=3.0",
-    "node": ">=5.0"
+    "node": ">=6.0"
   },
   "dependencies": {
     "almond": "latest",
@@ -37,7 +37,6 @@
     "marked": "0.3.3",
     "requirejs": "latest",
     "replacestream": "latest",
-    "sass.js": "0.9.7",
     "uglifyjs": "latest"
   }
 }

@@ -11,7 +11,7 @@ jshint_flags = --reporter scripts/jshintreporter.js
 # This function accepts two comma-separated JS string expressions,
 # and replaces every instance of the former in the stream with the latter.
 
-node_replace = node --harmony_destructuring -e '\
+node_replace = node -e '\
 	var read = e => require("fs").readFileSync(e,"utf8"); \
 	with(process)\
 		stdin.pipe(require("replacestream")($(1))).pipe(stdout)'
@@ -32,7 +32,7 @@ default: dirs jshint css
 css: build/harlowe-css.css
 
 docs:
-	@node --harmony_destructuring scripts/harlowedocs.js
+	@node scripts/harlowedocs.js
 
 all: dirs jshint dist/format.js docs dist/exampleOutput.html
 
@@ -48,8 +48,9 @@ jshint:
 	@jshint test/spec --config test/spec/.jshintrc $(jshint_flags)
 
 build/harlowe-css.css: scss/*.scss
+	@-test sass || { echo "Please install Sass via 'gem install sass'"; exit 1 }
 	@cat scss/*.scss \
-	| node -e 'var s=""; with(require("sass.js")) with(process) stdin.on("data",d=>s+=d).on("end",_=>compile(s, {style:style.compressed}, s => stdout.write(s.text)))' \
+	| sass --stdin --style compressed --scss \
 	> build/harlowe-css.css
 
 build/harlowe-min.js: js/*.js js/*/*.js js/*/*/*.js
