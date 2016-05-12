@@ -2,11 +2,10 @@ define([
 	'state',
 	'datatypes/colour',
 	'internaltypes/assignmentrequest',
-	'datatypes/lambda',
 	'utils/operationutils',
 	'internaltypes/twineerror',
 ],
-(State, Colour, AssignmentRequest, Lambda, {isObject, collectionType, coerceToString, is, contains, objectName}, TwineError) => {
+(State, Colour, AssignmentRequest, {isObject, collectionType, coerceToString, is, contains, objectName}, TwineError) => {
 	"use strict";
 	/**
 		Operation objects are a table of operations which TwineScript proxies
@@ -177,6 +176,17 @@ define([
 			*/
 			ret.Identifiers = {
 
+				/*
+					This signifier is used solely by VarRef to determine if Identifiers is being
+					used as an assignment destination.
+				*/
+				TwineScript_Identifiers: true,
+				/*
+					It shouldn't be possible to set arbitrary valus into this object,
+					but just in case...
+				*/
+				TwineScript_Sealed: true,
+
 				get it() {
 					return It;
 				},
@@ -207,9 +217,6 @@ define([
 				get time() {
 					return (Date.now() - section.timestamp);
 				}
-				/*
-					TODO: An author-facing error message for setting time()
-				*/
 			};
 			
 			return ret;
@@ -351,8 +358,6 @@ define([
 				spreader: true,
 			};
 		},
-
-		makeLambda: (left, operator, right) => Lambda.create(left, operator, right),
 
 		/*
 			And here is the function for creating AssignmentRequests.

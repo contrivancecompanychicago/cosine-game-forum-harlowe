@@ -12,11 +12,10 @@ define(['jquery', 'utils'], ($, {impossible, assert, escape}) => {
 	const errorExplanations = {
 		syntax:        "The markup seems to contain a mistake.",
 		saving:        "I tried to save or load the game, but I couldn't do it.",
-		operation:     "I tried to use an operation on some data, but the data's type was incorrect.",
+		operation:     "I tried to perform an operation on some data, but the data's type was incorrect.",
 		macrocall:     "I tried to use a macro, but its call wasn't written correctly.",
 		datatype:      "I tried to use a macro, but was given the wrong type of data to it.",
 		keyword:       "I was given a keyword in a way that I didn't understand.",
-		changer:       "This is a command to change a hook, but it isn't being used correctly.",
 		infinite:      "I almost ended up doing the same thing over and over, forever.",
 		property:      "I tried to access a value in a string/array/datamap, but I couldn't find it.",
 		unimplemented: "I currently don't have this particular feature. I'm sorry.",

@@ -13,7 +13,10 @@ describe("twinescript variables", function() {
 			expect("(set: $a into $b)").markupToError();
 		});
 		it("when given a variable assignment request, sets the variable to a value", function() {
-			expect("(set: $a to 1)(print: $a)").markupToPrint("1");
+			expect("(set: $a to 1)$a").markupToPrint("1");
+		});
+		it("when given multiple requests, performs them in order", function() {
+			expect("(set: $a to 2, $b to 3, $c to 4, $d to $b)$d $c $a").markupToPrint("3 4 2");
 		});
 		it("can name a variable using astral characters", function() {
 			expect("(set: $A𐌎B to 1)(print: $A𐌎B)").markupToPrint("1");

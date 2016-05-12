@@ -1,6 +1,6 @@
 describe("the (move:) macro", function() {
 	'use strict';
-	it("requires an 'into' assignment request", function() {
+	it("requires one or more 'into' assignment requests", function() {
 		expect("(move: 1)").markupToError();
 		expect("(move: 'A')").markupToError();
 		expect("(move: false)").markupToError();
@@ -11,8 +11,11 @@ describe("the (move:) macro", function() {
 		expect("(move: $a to 1)").markupToError();
 		expect("(move: $a to $b)").markupToError();
 	});
-	it("when given a variable assignment request, moves one variable's value into the other", function() {
+	it("when given variable assignment requests, moves one variable's value into the other", function() {
 		expect("(set: $a to 1)(move: $a into $b)$b $a").markupToPrint("1 0");
+	});
+	it("when given multiple requests, performs them in order", function() {
+		expect("(set: $a to 2, $c to 3)(move: $a into $b, $c into $a, $b into $d)$d $a").markupToPrint("2 3");
 	});
 	it("runs on evaluation, but can't be assigned or used as a value", function() {
 		runPassage("(set: $a to 3)");

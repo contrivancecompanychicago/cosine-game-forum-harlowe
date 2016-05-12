@@ -10,6 +10,7 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 		them amounts to a VarRef.set() call made by the (set:) or (put:) macro,
 		and deleting them amounts to a VarRef.delete() call.
 	*/
+	let VarRefProto;
 	/*
 		The default defaultValue, used for all uninitialised properties
 		and variables, is 0.
@@ -125,8 +126,14 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 				prop = prop.value;
 			}
 			/*
+				If prop is another VarRef (such as in "$b's ($a)") then read
+				its value now.
+			*/
+			if (VarRefProto.isPrototypeOf(prop)) {
+				prop = prop.get();
+			}
+			/*
 				Properties can be single values, or arrays.
-				[].concat() converts both to an array.
 			*/
 			if (Array.isArray(prop)) {
 				prop = prop.map(prop => compilePropertyIndex(object, prop));
@@ -262,6 +269,17 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 				);
 			}
 		}
+		/*
+			Identifiers cannot be set.
+		*/
+		if (obj.TwineScript_Identifiers && prop in obj) {
+			return TwineError.create('keyword',
+				"I can't alter the value of the '"
+				+ prop + "' identifier.", "You can only alter data in variables and hooks, not fixed identifiers.");
+		}
+		/*
+			Sealed objects or writeproof properties must be respected.
+		*/
 		if (obj.TwineScript_Sealed && !(prop in obj)) {
 			return TwineError.create("operation", specialCollectionErrorMsg);
 		}
@@ -354,7 +372,8 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 		return {
 			get: self,
 			set: self,
-			delete: self
+			delete: self,
+			varref: true,
 		};
 	}
 
@@ -464,7 +483,7 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 	/*
 		The prototype object for VarRefs.
 	*/
-	const VarRefProto = Object.freeze({
+	VarRefProto = Object.freeze({
 		varref: true,
 		
 		get() {

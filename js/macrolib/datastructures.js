@@ -82,7 +82,23 @@ define([
 				if (ar.operator === "into") {
 					return TwineError.create("macrocall", "Please say 'to' when using the (set:) macro.");
 				}
-				const result = ar.dest.set(ar.src);
+				let result;
+				/*
+					If ar.src is a VarRef, obtain its current value.
+					Note that this could differ from its value at compilation time -
+					in (set: $a to 1, $b to $a), the second $a has a different value to the first.
+				*/
+				if (ar.src && ar.src.varref) {
+					const get = ar.src.get();
+					let error;
+					if ((error = TwineError.containsError(get))) {
+						return error;
+					}
+					result = ar.dest.set(get);
+				}
+				else {
+					result = ar.dest.set(ar.src);
+				}
 				/*
 					If the setting caused an error to occur, abruptly return the error.
 				*/
@@ -178,7 +194,7 @@ define([
 		[rest(AssignmentRequest)])
 		
 		/*d:
-			(move: [VariableToValue]) -> Instant
+			(move: VariableToValue, [...VariableToValue]) -> Instant
 			
 			A variant of (put:) that deletes the source value after copying it - in effect
 			moving the value from the source to the destination.
@@ -195,6 +211,9 @@ define([
 			You must use the `into` keyword, like (put:), with this macro. This is because, like (put:),
 			the destination of the value is on the right, whereas the source is on the left.
 
+			You can also set multiple variables in a single (move:) by separating each VariableToValue
+			with commas: `(move: $a's 1st into $b, $a's 2nd into $c)`, etc.
+
 			If the value you're accessing cannot be removed - for instance, if it's an array's `length` -
 			then an error will be produced.
 
@@ -203,39 +222,54 @@ define([
 
 			#basics 3
 		*/
-		("move", (_, ar) => {
-			if (ar.operator !== "into") {
-				return TwineError.create("macrocall", "Please say 'into' when using the (move:) macro.");
-			}
+		("move", (_, ...assignmentRequests) => {
+			let debugMessage = "";
 			/*
-				If ar.src is a VarRef, then it's a variable, and its value
-				should be deleted when the assignment is completed.
+				This has to be a plain for-loop so that an early return
+				is possible.
 			*/
-			if (ar.src && ar.src.varref) {
-				const get = ar.src.get();
-				let error;
-				if ((error = TwineError.containsError(get))) {
-					return error;
+			for(let i = 0; i < assignmentRequests.length; i+=1) {
+				const ar = assignmentRequests[i];
+				if (ar.operator !== "into") {
+					return TwineError.create("macrocall", "Please say 'into' when using the (move:) macro.");
 				}
-				ar.dest.set(get);
-				ar.src.delete();
-			}
-			else {
 				/*
-					Otherwise, it's either a plain value (such as seen in
-					(move: 2 into $red)) or something which has a TwineScript_DeleteValue
-					method that should be called.
+					If ar.src is a VarRef, then it's a variable, and its value
+					should be deleted when the assignment is completed.
 				*/
-				ar.dest.set(ar.src);
-				if (ar.src.TwineScript_DeleteValue) {
-					ar.src.TwineScript_DeleteValue();
+				if (ar.src && ar.src.varref) {
+					const get = ar.src.get();
+					let error;
+					if ((error = TwineError.containsError(get))) {
+						return error;
+					}
+					ar.dest.set(get);
+					ar.src.delete();
+				}
+				else {
+					/*
+						Otherwise, it's either a plain value (such as seen in
+						(move: 2 into $red)) or something which has a TwineScript_DeleteValue
+						method that should be called.
+					*/
+					ar.dest.set(ar.src);
+					if (ar.src.TwineScript_DeleteValue) {
+						ar.src.TwineScript_DeleteValue();
+					}
+				}
+				if (Engine.options.debug) {
+					// Add a semicolon only if a previous iteration appended a message.
+					debugMessage += (debugMessage ? "; " : "")
+						+ objectName(ar.dest)
+						+ " is now "
+						+ objectName(ar.src);
 				}
 			}
 			return {
 				TwineScript_TypeName:     "a (move:) operation",
 				TwineScript_ObjectName:   "a (move:) operation",
 				TwineScript_Unobservable: true,
-				TwineScript_Print:        "",
+				TwineScript_Print:        () => debugMessage && TwineNotifier.create(debugMessage).render(),
 			};
 		},
 		[rest(AssignmentRequest)])

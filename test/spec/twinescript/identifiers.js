@@ -62,5 +62,43 @@ describe("identifiers", function () {
 			expect("(set:$red to (a:'Bee'))(set:$red to its (1)'s (1))$red").markupToPrint("B");
 		});
 	});
-	//TODO: the 'time' identifier
+	describe("the 'time' identifier", function () {
+		it("refers to the elapsed milliseconds since the passage was rendered", function (){
+			expect("(print:time <= 20)").markupToPrint("true");
+			expect("(set:$red to time)$red").not.markupToError();
+		});
+		it("works inside deferred hooks", function (done){
+			var p = runPassage("(link:'Z')[(print: time >= 200 and time <= 300)]");
+			setTimeout(function() {
+				p.find('tw-link').click();
+				setTimeout(function() {
+					expect(p.text()).toBe('true');
+					done();
+				});
+			}, 200);
+		});
+		it("works inside displayed passages", function (done){
+			createPassage("(print:time >= 200 and time <= 300)", "grault");
+			var p = runPassage("(link:'Z')[(display:'grault')]");
+			setTimeout(function() {
+				p.find('tw-link').click();
+				setTimeout(function() {
+					expect(p.text()).toBe('true');
+					done();
+				});
+			}, 200);
+		});
+		it("is case-insensitive", function (){
+			expect("(print: tIME)(print: timE)(print: tImE)").not.markupToError();
+		});
+		it("can't be used in an 'into' operation", function (){
+			expect("(put:2 into $red)(put:$red into time)").markupToError();
+		});
+		it("can't be used as the subject of a 'to' operation", function (){
+			expect("(set:time to 2)").markupToError();
+		});
+		it("isn't recognised inside text", function (){
+			expect("(set:$red to window.xtime)(set:$red to window.timex)(set:$red to window.xtimex)").not.markupToError();
+		});
+	});
 });

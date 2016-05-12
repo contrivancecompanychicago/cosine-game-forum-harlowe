@@ -115,10 +115,7 @@ define(['utils'], ({toJSLiteral, assert}) => {
 		if (tokens.length === 1) {
 			if (token.type === "identifier") {
 				if (isVarRef) {
-					/*
-						This error message is a bit ugly, I must admit...
-					*/
-					return "TwineError.create('keyword','I can\\'t use \\'" + token.text + "\\' in this position.') ";
+					return "VarRef.create(Operations.Identifiers," + toJSLiteral(token.text) + ")";
 				}
 				return " Operations.Identifiers." + token.text.toLowerCase() + " ";
 			}
@@ -256,6 +253,7 @@ define(['utils'], ({toJSLiteral, assert}) => {
 		}
 		else if ((i = indexOfType(tokens, "to")) >-1) {
 			assignment = "to";
+			right = compile(tokens.slice(i + 1), "varRef");
 			left  = "Operations.setIt(" + compile(tokens.slice(0,  i), "varRef") + ")";
 		}
 		else if ((i = indexOfType(tokens, "into")) >-1) {
@@ -264,9 +262,13 @@ define(['utils'], ({toJSLiteral, assert}) => {
 			left  = "Operations.setIt(" + compile(tokens.slice(i + 1), "varRef") + ")";
 		}
 		else if ((i = rightAssociativeIndexOfType(tokens, "where", "via")) >-1) {
-			operation = "makeLambda";
-			left = compile(tokens.slice (0, i), "varRef");
-			right = toJSLiteral(tokens[i].type) + "," + toJSLiteral(compile(tokens.splice(i + 1)));
+			left = "Lambda.create("
+				+ compile(tokens.slice (0, i), "varRef")
+				+ ",";
+			midString = toJSLiteral(tokens[i].type)
+				+ ",";
+			right = toJSLiteral(compile(tokens.splice(i + 1)))
+				+ ")";
 		}
 		else if ((i = rightAssociativeIndexOfType(tokens, "with", "making")) >-1) {
 			/*
@@ -280,9 +282,13 @@ define(['utils'], ({toJSLiteral, assert}) => {
 				right = "\\'.')";
 			}
 			else {
-				operation = "makeLambda";
-				left = compile(tokens.slice (0, i), "varRef");
-				right = toJSLiteral(tokens[i].type) + "," + toJSLiteral(rightTokens[1].name);
+				left = "Lambda.create("
+					+ compile(tokens.slice (0, i), "varRef")
+					+ ",";
+				midString = toJSLiteral(tokens[i].type)
+					+ ",";
+				right = toJSLiteral(rightTokens[1].name)
+					+ ")";
 			}
 		}
 		/*

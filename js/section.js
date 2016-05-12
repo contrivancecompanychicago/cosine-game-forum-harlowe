@@ -205,7 +205,7 @@ define([
 					If it's neither hook nor expression, then this evidently isn't connected to
 					a hook at all. Produce an error.
 				*/
-				expr.replaceWith(TwineError.create("changer",
+				expr.replaceWith(TwineError.create("syntax",
 					"The (" + result.macroName + ":) command should be assigned to a variable or attached to a hook.",
 					"Macros like this should appear to the left of a hook: " + expr.attr('title') + "[Some text]"
 				).render(expr.attr('title')));
@@ -239,7 +239,7 @@ define([
 		}
 		/*
 			Print the expression if it's a string, number, data structure,
-			or is a command of some kind.
+			or is a non-changer command of some kind.
 		*/
 		else if (
 				/*
@@ -299,10 +299,10 @@ define([
 			applyExpressionToHook.call(this, expr, result, nextHook);
 		}
 		/*
-			No other possible values should be here.
+			The only remaining values should be unattached changers, or booleans.
 		*/
-		else {
-			Utils.impossible('Section.runExpression', "The expression evaluated to an unknown value: " + JSON.stringify(result));
+		else if (!(result.changer || typeof result === "boolean")) {
+			Utils.impossible('Section.runExpression', "The expression evaluated to an unknown value: " + result.toSource());
 		}
 	}
 	
@@ -857,6 +857,7 @@ define([
 							const result = runExpression.call(section, expr);
 							if (result === "earlyexit") {
 								dom.attr('earlyexit', true);
+								return false;
 							}
 							return result;
 						}

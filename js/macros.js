@@ -130,7 +130,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 				*/
 				if (ind >= typeSignature.length && !rest) {
 					return TwineError.create(
-						"typesignature",
+						"datatype",
 						(args.length - typeSignature.length) +
 							" too many values were given to this " + name + " macro.",
 						signatureInfo
@@ -169,7 +169,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 					*/
 					if (arg === undefined) {
 						return TwineError.create(
-							"typesignature",
+							"datatype",
 							"The " + name + " macro needs "
 								+ plural((typeSignature.length - ind), "more value") + ".",
 							signatureInfo
@@ -181,7 +181,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 					*/
 					if (arg && arg.TwineScript_Unobservable && type === Macros.TypeSignature.Any) {
 						return TwineError.create(
-							"typesignature",
+							"datatype",
 							name + "'s " + nth(ind + 1) + " value is not valid data for this macro.",
 							signatureInfo
 						);
@@ -195,7 +195,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 							Print an error comparing the expected clauses with the actual ones.
 						*/
 						/*jshint -W083 */
-						return TwineError.create('typesignature',
+						return TwineError.create('datatype',
 							name + "'s " + nth(ind + 1) + " value (a lambda) should have "
 							+ andList(["where","making","via","with"].filter(e => type.clauses.includes(e)).map(e => "a '" + e + "' clause"))
 							+ ", not "
@@ -207,7 +207,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 						Otherwise, it was the most common case: an invalid data type.
 					*/
 					return TwineError.create(
-						"typesignature",
+						"datatype",
 						name + "'s " +
 							nth(ind + 1) + " value is " + objectName(arg) +
 							", but should be " +
