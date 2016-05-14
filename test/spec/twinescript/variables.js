@@ -50,6 +50,11 @@ describe("twinescript variables", function() {
 			Engine.goBack();
 			expect("(print: $a)").markupToPrint("2,1");
 		});
+		it("can't mutate an unassigned collection", function() {
+			expect("(set: (a:2)'s 1st to 1)").markupToError();
+			expect("(set: \"red\"'s 1st to \"r\")").markupToError();
+			expect("(set: (datamap:)'s 'E' to 1)").markupToError();
+		});
 	});
 	describe("bare variables in passage text", function() {
 		it("for numbers, prints the number", function() {

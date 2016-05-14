@@ -17,6 +17,7 @@ Rough documentation is at http://twine2.neocities.org/
 
 ####Alterations
 
+ * It is now an error to alter data structures that aren't in variables - such as `(set: (a:)'s 1st to 1)` or `(set: (passage:)'s name to "X")` - because doing so accomplishes nothing.
  * Now, you can write `[text]`, and the square brackets will be, by themselves, treated as a hook, albeit with no name (it cannot be referenced like `?this`) and no attached changer commands. This, I believe, simplfies what square brackets "mean" in passage prose. Incidentally, temporary variables (see below) can be `(set:)` inside nameless unattached hooks without leaking out, so they do have some semantic meaning.
  * Now, you can attach changer macros to nametagged hooks: `(if: true) |moths>[Several moths!]`, for instance, is now valid. However, as with all hooks, trying to attach plain data, such as a number or an array, will cause an error.
  * Now, when working with non-positive numbers as computed indexes (such as `$array's (-1)`), Harlowe no longer uses `0` for `last`, `-1` for `2ndlast`, and so forth - instead, `-1` means `last`, `-2` means `2ndlast`, and using `0` produces an error. (So, `"Red"'s (-1)` produces "d", not "e".)

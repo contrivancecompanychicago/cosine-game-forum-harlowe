@@ -17,6 +17,13 @@ define(['utils', 'passages'], ({impossible}, Passages) => {
 			modify this base object.
 		*/
 		TwineScript_ObjectName: "this story's variables",
+
+		/*
+			This is used to distinguish to (set:) that this is a variable store,
+			and assigning to its properties does affect game state.
+		*/
+		TwineScript_VariableStore: true,
+
 		/*
 			This property means that these property names cannot be set to new
 			user values via (set:). Of course, mutating their contents

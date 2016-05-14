@@ -12,5 +12,10 @@ define([], () => {
 			modify this base object.
 		*/
 		TwineScript_ObjectName: "the temporary variables",
+		/*
+			This is used to distinguish to (set:) that this is a variable store,
+			and assigning to its properties does affect game state.
+		*/
+		TwineScript_VariableStore: true,
 	};
 });

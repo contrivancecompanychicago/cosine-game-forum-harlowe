@@ -203,7 +203,10 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 	*/
 	function propertyDebugName(prop) {
 		if (prop.computed) {
-			return "(" + objectName(prop.value) + ")";
+			if (typeof prop.value === "string") {
+				return "('" + prop.value + "')";
+			}
+			return "(" + prop.value + ")";
 		}
 		return "'" + prop + "'";
 	}
@@ -726,7 +729,14 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 				print a $ instead of "[name]'s"
 			*/
 			return (this.object === State.variables ? "$" : (objectName(this.object) + "'s "))
-				+ this.propertyChain.reduce((a, e) => a + "'s " + propertyDebugName(e));
+				/*
+					If the property chain contains a single, potentially computed value, then get the
+					value's debug name. Otherwise, get the full chain's debug names.
+				*/
+				+ (this.propertyChain.length === 1
+					? propertyDebugName(this.propertyChain[0])
+					: this.propertyChain.reduce((a, e) => a + "'s " + propertyDebugName(e))
+				);
 		},
 	});
 	

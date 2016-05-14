@@ -275,7 +275,7 @@ define(['utils'], ({toJSLiteral, assert}) => {
 				This token requires that whitespace + a temp variable be to the right of it.
 			*/
 			const rightTokens = tokens.splice(i + 1);
-			if (![2,3].includes(rightTokens.length) || rightTokens[0].type !== "whitespace" || rightTokens[1].type !== "tempVariable"
+			if ([2,3].indexOf(rightTokens.length) === -1 || rightTokens[0].type !== "whitespace" || rightTokens[1].type !== "tempVariable"
 					|| (rightTokens[2] && rightTokens[2].type !== "whitespace")) {
 				left = "TwineError.create('operation','I need a temporary variable to the right of \\'";
 				midString = tokens[i].type;
@@ -384,6 +384,11 @@ define(['utils'], ({toJSLiteral, assert}) => {
 			if (tokens[i].type.includes("It")) {
 				right = "Operations.Identifiers.it";
 				needsRight = false;
+			}
+			else {
+				// Since, as with belonging properties, the variable is on the right,
+				// we must compile the right side as a varref.
+				right = compile(tokens.slice (i + 1), "varref");
 			}
 			possessive = "belonging";
 		}

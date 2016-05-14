@@ -10,7 +10,7 @@ define([
 	'internaltypes/assignmentrequest',
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier'],
-($, NaturalSort, Macros, {objectName, subset, collectionType, isValidDatamapName, is, clone}, State, Engine, Passages, Lambda, AssignmentRequest, TwineError, TwineNotifier) => {
+($, NaturalSort, Macros, {objectName, typeName, subset, collectionType, isValidDatamapName, is, clone}, State, Engine, Passages, Lambda, AssignmentRequest, TwineError, TwineNotifier) => {
 	"use strict";
 	
 	const {optional, rest, either, zeroOrMore, Any}   = Macros.TypeSignature;
@@ -81,6 +81,21 @@ define([
 				
 				if (ar.operator === "into") {
 					return TwineError.create("macrocall", "Please say 'to' when using the (set:) macro.");
+				}
+				/*
+					Show an error if this request is attempting to assign to a value which isn't
+					stored in the variables or temp. variables, and isn't a hook.
+					e.g. (set: (a:)'s 1st to 1)
+				*/
+				if (ar.dest.object && !(ar.dest.object.TwineScript_VariableStore)
+						&& (ar.dest.propertyChain.indexOf("TwineScript_Assignee") === -1)) {
+					return TwineError.create("macrocall", "I can't (set:) "
+						+ objectName(ar.dest)
+						+ ", if the "
+						+ (objectName(ar.dest.object).match(/ (.+$)/) || ['',"value"])[1]
+						+ " isn't stored in a variable.",
+						"Modifying data structures that aren't in variables won't change the game state at all."
+					);
 				}
 				let result;
 				/*
