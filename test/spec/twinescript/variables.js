@@ -56,6 +56,14 @@ describe("twinescript variables", function() {
 			expect("(set: (datamap:)'s 'E' to 1)").markupToError();
 		});
 	});
+	describe("the (put:) macro", function() {
+		//TODO: Add more of the above tests.
+		it("can't mutate an unassigned collection", function() {
+			expect("(put: 1 into (a:2)'s 1st)").markupToError();
+			expect("(put: \"r\" into \"red\"'s 1st)").markupToError();
+			expect("(put: 1 into (datamap:)'s 'E')").markupToError();
+		});
+	});
 	describe("bare variables in passage text", function() {
 		it("for numbers, prints the number", function() {
 			runPassage("(set:$x to 0.125)");

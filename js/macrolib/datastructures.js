@@ -63,7 +63,8 @@ define([
 			is a shorthand for `(set: $vases to $vases + 1)`.
 			
 			If the destination isn't something that can be changed - for instance, if you're trying to set a
-			bare value to another value, like `(set: true to 2)` - then an error will be printed.
+			bare value to another value, like `(set: true to 2)` - then an error will be printed. This includes
+			modifying arrays - `(set: (a:2,3)'s 1st to 1)` is also an error.
 			
 			See also:
 			(push:), (move:)
@@ -81,21 +82,6 @@ define([
 				
 				if (ar.operator === "into") {
 					return TwineError.create("macrocall", "Please say 'to' when using the (set:) macro.");
-				}
-				/*
-					Show an error if this request is attempting to assign to a value which isn't
-					stored in the variables or temp. variables, and isn't a hook.
-					e.g. (set: (a:)'s 1st to 1)
-				*/
-				if (ar.dest.object && !(ar.dest.object.TwineScript_VariableStore)
-						&& (ar.dest.propertyChain.indexOf("TwineScript_Assignee") === -1)) {
-					return TwineError.create("macrocall", "I can't (set:) "
-						+ objectName(ar.dest)
-						+ ", if the "
-						+ (objectName(ar.dest.object).match(/ (.+$)/) || ['',"value"])[1]
-						+ " isn't stored in a variable.",
-						"Modifying data structures that aren't in variables won't change the game state at all."
-					);
 				}
 				let result;
 				/*
@@ -252,13 +238,16 @@ define([
 					If ar.src is a VarRef, then it's a variable, and its value
 					should be deleted when the assignment is completed.
 				*/
+				let result, error;
 				if (ar.src && ar.src.varref) {
 					const get = ar.src.get();
-					let error;
 					if ((error = TwineError.containsError(get))) {
 						return error;
 					}
-					ar.dest.set(get);
+					result = ar.dest.set(get);
+					if ((error = TwineError.containsError(result))) {
+						return error;
+					}
 					ar.src.delete();
 				}
 				else {
@@ -267,7 +256,10 @@ define([
 						(move: 2 into $red)) or something which has a TwineScript_DeleteValue
 						method that should be called.
 					*/
-					ar.dest.set(ar.src);
+					result = ar.dest.set(ar.src);
+					if ((error = TwineError.containsError(result))) {
+						return error;
+					}
 					if (ar.src.TwineScript_DeleteValue) {
 						ar.src.TwineScript_DeleteValue();
 					}

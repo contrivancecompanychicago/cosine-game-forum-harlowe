@@ -96,4 +96,9 @@ describe("the (move:) macro", function() {
 			expect("(print:$d's B)").markupToPrint("3");
 		});
 	});
+	it("can't mutate an unassigned collection", function() {
+		expect("(move: 1 into (a:2)'s 1st)").markupToError();
+		expect("(move: \"r\" into \"red\"'s 1st)").markupToError();
+		expect("(move: 1 into (datamap:)'s 'E')").markupToError();
+	});
 });

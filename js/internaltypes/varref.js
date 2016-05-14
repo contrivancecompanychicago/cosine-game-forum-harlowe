@@ -514,6 +514,22 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 			}
 
 			/*
+				Show an error if this request is attempting to assign to a value which isn't
+				stored in the variables or temp. variables, and isn't a hook.
+				e.g. (set: (a:)'s 1st to 1)
+			*/
+			if (this.object && !(this.object.TwineScript_VariableStore)
+					&& (this.propertyChain.indexOf("TwineScript_Assignee") === -1)) {
+				return TwineError.create("macrocall", "I can't (set:) "
+					+ objectName(this)
+					+ ", if the "
+					+ (objectName(this.object).match(/ (.+$)/) || ['',"value"])[1]
+					+ " isn't stored in a variable.",
+					"Modifying data structures that aren't in variables won't change the game state at all."
+				);
+			}
+
+			/*
 				For each *object*:
 				- Set the *property* inside the *object* to the *preceding value*
 				- Make the *object* be the *preceding value*
