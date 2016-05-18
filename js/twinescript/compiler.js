@@ -1,12 +1,9 @@
-define(['utils'], ({toJSLiteral, assert}) => {
+define(['utils'], ({toJSLiteral, impossible}) => {
 	"use strict";
 	
-	/**
+	/*
 		A module that handles the JIT compilation of TwineScript syntax tokens
 		(received from TwineMarkup) into Javascript code that calls Operations methods.
-		
-		@class Compiler
-		@static
 	*/
 	
 	/*
@@ -84,13 +81,12 @@ define(['utils'], ({toJSLiteral, assert}) => {
 		]);
 	}
 	
-	/**
+	/*
 		This takes an array from TwineMarkup, rooted at an expression,
 		and returns raw Javascript code for the expression's execution.
 		
-		@method compile
-		@param {Array} tokens The tokens array.
-		@param {Boolean} isVarRef Whether the returned expression should be a VarRef.
+		@param {Array} The tokens array.
+		@param {Boolean} Whether the returned expression should be a VarRef.
 		@return {String} String of Javascript code.
 	*/
 	function compile(tokens, isVarRef) {
@@ -449,7 +445,9 @@ define(['utils'], ({toJSLiteral, assert}) => {
 				The first child token in a macro is always the method name.
 			*/
 			const macroNameToken = tokens[i].children[0];
-			assert(macroNameToken.type === "macroName");
+			if(macroNameToken.type !== "macroName") {
+				impossible('Compiler.compile', 'macro token had no macroName child token');
+			}
 			
 			midString = 'Macros.run('
 				/*

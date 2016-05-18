@@ -1,13 +1,10 @@
 define(['jquery', 'utils/selectors'], ($, Selectors) => {
 	"use strict";
 	
-	/**
+	/*
 		HookUtils contains a number of utility methods which are only of use to
 		Section, but which are generic enough, and related to specifications of
 		what a hook is, to be bundled into this separate class.
-		
-		@class HookUtils
-		@static
 	*/
 
 	/*
@@ -189,9 +186,7 @@ define(['jquery', 'utils/selectors'], ($, Selectors) => {
 	*/
 	const HookUtils = {
 		
-		/**
-			@method wrapTextNodes
-			@static
+		/*
 			@param {String} searchString The passage text to wrap
 			@param {jQuery} dom The DOM in which to search
 			@param {String} htmlTag The HTML tag to wrap around
@@ -206,15 +201,13 @@ define(['jquery', 'utils/selectors'], ($, Selectors) => {
 			return ret;
 		},
 		
-		/**
+		/*
 			Returns the type of a selector string.
 			Currently used simply to differentiate hookRef strings.
 			TODO: Use TwineMarkup.RegExpStrings.
 
-			@method selectorType
-			@static
-			@param val Value to examine
-			@return {String} Description
+			@param {String} Value to examine
+			@return {String} Either "hookRef", "string", "html" or "undefined".
 		*/
 		selectorType(val) {
 			if (val && typeof val === "string") {
@@ -235,11 +228,10 @@ define(['jquery', 'utils/selectors'], ($, Selectors) => {
 			return "undefined";
 		},
 
-		/**
+		/*
 			Convert a hook index string to a CSS selector.
 
-			@method hookToSelector
-			@param {String} list	chain to convert
+			@param {String} chain to convert
 			@return {String} classlist string
 		*/
 		hookToSelector(c) {

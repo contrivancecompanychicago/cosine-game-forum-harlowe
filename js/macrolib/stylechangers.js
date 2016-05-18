@@ -1,5 +1,5 @@
 define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'datatypes/changercommand', 'internaltypes/twineerror'],
-($, Macros, {insensitiveName, assert, childrenProbablyInline}, Selectors, Colour, ChangerCommand, TwineError) => {
+($, Macros, {insensitiveName, assertMustHave, childrenProbablyInline}, Selectors, Colour, ChangerCommand, TwineError) => {
 	"use strict";
 
 	/*
@@ -731,7 +731,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 						return ChangerCommand.create("text-style", [styleName]);
 					},
 					(d, styleName) => {
-						assert(styleName in styleTagNames);
+						assertMustHave(styleTagNames,[styleName]);
 						d.styles = d.styles.concat(styleTagNames[styleName]);
 						return d;
 					}

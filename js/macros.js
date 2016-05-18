@@ -1,11 +1,8 @@
 define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/lambda', 'internaltypes/twineerror'],
-($, NaturalSort, {insensitiveName, nth, plural, andList, assert, lockProperty}, {objectName, typeName, singleTypeCheck}, Lambda, TwineError) => {
+($, NaturalSort, {insensitiveName, nth, plural, andList, lockProperty}, {objectName, typeName, singleTypeCheck}, Lambda, TwineError) => {
 	"use strict";
-	/**
+	/*
 		This contains a registry of macro definitions, and methods to add to that registry.
-		
-		@class Macros
-		@static
 	*/
 	
 	let Macros;
@@ -74,9 +71,9 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		on its inputs before running. It provides macro authors with another layer of
 		error feedback.
 		
-		@param {String|Array}      name            The macro's name(s).
-		@param {Function}          fn              A macro function.
-		@param {Array|Object|null} typeSignature   An array of Twine macro parameter type data.
+		@param {String|Array}      The macro's name(s).
+		@param {Function}          A macro function.
+		@param {Array|Object|null} An array of Twine macro parameter type data.
 	*/
 	function typeSignatureCheck(name, fn, typeSignature) {
 		/*
@@ -226,15 +223,13 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		};
 	}
 	
-	/**
+	/*
 		The bare-metal macro registration function.
 		If an array of names is given, an identical macro is created under each name.
 		
-		@method privateAdd
-		@private
-		@param {String|Array} name  A String, or an Array holding multiple strings.
-		@param {String} type The type (either "sensor", "changer", or, and in absentia, "value")
-		@param {Function} fn  The function.
+		@param {String|Array} A String, or an Array holding multiple strings.
+		@param {String} The type (either "sensor", "changer", or, and in absentia, "value")
+		@param {Function} The function.
 	*/
 	function privateAdd(name, type, fn) {
 		// Add the fn to the macroRegistry, plus aliases (if name is an array of aliases)
@@ -246,39 +241,28 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 	}
 	
 	Macros = {
-		/**
+		/*
 			Checks if a given macro name is registered.
-			@method has
-			@param {String} Name of the macro definition to check for existence
-			@return {Boolean} Whether the name is registered.
 		*/
 		has(e) {
 			e = insensitiveName(e);
 			return macroRegistry.hasOwnProperty(e);
 		},
 		
-		/**
-			Retrieve a registered macro definition by name.
-			
-			@method get
-			@param {String} Name of the macro definition to get
-			@return Macro definition object, or false
+		/*
+			Retrieves a registered macro definition by name, or false if it isn't defined.
 		*/
 		get(e) {
 			e = insensitiveName(e);
 			return (macroRegistry.hasOwnProperty(e) && macroRegistry[e]);
 		},
 		
-		/**
+		/*
 			A high-level wrapper for add() that creates a Value Macro from 3
 			entities: a macro implementation function, a ChangerCommand function, and
 			a parameter type signature array.
 			
 			The passed-in function should return a changer.
-			
-			@method add
-			@param {String} name
-			@param {Function} fn
 		*/
 		add: function add(name, fn, typeSignature) {
 			privateAdd(name,
@@ -289,7 +273,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			return add;
 		},
 	
-		/**
+		/*
 			Takes a function, and registers it as a live Changer macro.
 			
 			Changers return a transformation function (a ChangerCommand) that is used to mutate
@@ -302,14 +286,8 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			For instance, for (font: "Skia"), the changerCommandFn is partially applied with "Skia"
 			as an argument, augmented with some other values, and returned as the ChangerCommand
 			result.
-			
-			@method addChanger
-			@param {String} name
-			@param {Function} fn
-			@param {Function} changerCommand
 		*/
 		addChanger: function addChanger(name, fn, changerCommandFn, typeSignature) {
-			assert(changerCommandFn);
 			
 			privateAdd(name,
 				"changer",
@@ -322,16 +300,12 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			return addChanger;
 		},
 		
-		/**
+		/*
 			This simple getter should only be called by changerCommand, in its run() method, which
 			allows the registered changer function to finally be invoked.
 			
 			TODO: This makes me wonder if this changer registering business shouldn't be in
 			the changerCommand module instead.
-			
-			@method getChangerFn
-			@param {String} name
-			@return {Function} the registered changer function.
 		*/
 		getChangerFn(name) {
 			return commandRegistry[name];
@@ -380,14 +354,14 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			
 		},
 		
-		/**
+		/*
 			Runs a macro.
 			
 			In TwineScript.compile(), the myriad arguments given to a macro invocation are
 			converted to 2 parameters to runMacro:
 			
-			@param {String} name     The macro's name.
-			@param {Array}  args     An array enclosing the passed arguments.
+			@param {String} The macro's name.
+			@param {Array} An array enclosing the passed arguments.
 			@return The result of the macro function.
 		*/
 		run(name, args) {
@@ -402,7 +376,9 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 				return TwineError.create("macrocall",
 					"I can't run the macro '"
 					+ name
-					+ "' because it doesn't exist."
+					+ "' because it doesn't exist.",
+					"Did you mean to run a macro? If you have a word written like (this:), "
+					+ "it is regarded as a macro name."
 				);
 			}
 			return Macros.get(name)(args);

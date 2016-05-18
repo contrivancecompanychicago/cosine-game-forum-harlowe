@@ -1,4 +1,4 @@
-define(['utils', 'macros', 'utils/operationutils'], ({assert}, Macros, {is}) => {
+define(['utils', 'macros', 'utils/operationutils'], ({impossible}, Macros, {is}) => {
 	"use strict";
 	/*
 		A ChangerCommand is a command that is used to alter the way a particular
@@ -33,7 +33,9 @@ define(['utils', 'macros', 'utils/operationutils'], ({assert}, Macros, {is}) => 
 			@param {ChangerCommand} next
 		*/
 		create(macroName, params = [], next = null) {
-			assert(Array.isArray(params));
+			if(!Array.isArray(params)) {
+				impossible('ChangerCommand.create', 'params was not an array');
+			}
 			
 			return Object.assign(Object.create(this), {
 				macroName,

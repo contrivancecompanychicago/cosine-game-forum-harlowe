@@ -208,7 +208,7 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 						So, the change of passage must be deferred until just after
 						the passage has ceased rendering.
 					*/
-					requestAnimationFrame(Engine.goToPassage.bind(Engine,name));
+					requestAnimationFrame(()=> Engine.goToPassage(name));
 					/*
 						But how do you immediately cease rendering the passage?
 						
@@ -239,7 +239,7 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 							+ "' because it doesn't exist."
 						);
 					}
-					requestAnimationFrame(Engine.goToPassage.bind(Engine,passageName, {
+					requestAnimationFrame(() => Engine.goToPassage(passageName, {
 						transitionIn: transitionName,
 						transitionOut: transitionName,
 					}));

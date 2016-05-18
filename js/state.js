@@ -1,11 +1,8 @@
 define(['utils', 'passages'], ({impossible}, Passages) => {
 	"use strict";
-	/**
+	/*
 		State
 		Singleton controlling the running game state.
-		
-		@class State
-		@static
 	*/
 	
 	/*
@@ -32,38 +29,28 @@ define(['utils', 'passages'], ({impossible}, Passages) => {
 		TwineScript_Writeproof: [],
 	};
 
-	/**
+	/*
 		Prototype object for states remembered by the game.
-		
-		@class Moment
-		@for State
 	*/
 	const Moment = {
-		/**
+		/*
 			Current passage name
-			@property {String} passage
-			@for Moment
 		*/
 		passage: "",
 		
-		/**
-			Variables
-			@property {Object} variables
-			@for Moment
+		/*
+			As the prototype object, its variable property is the prototype variables object.
 		*/
 		variables: SystemVariables,
 
-		/**
+		/*
 			Make a new Moment that comes temporally after this.
 			This is usually a fresh Moment, but the State deserialiser
 			must re-create prior sessions' Moments.
 			Thus, pre-set variables may be supplied to this method.
 			
-			@method create
-			@for Moment
-			@param {String} p The name of the passage that the player is at in this moment.
-			@param {Object} [v] Variables to include in this moment.
-			@returns {Moment} created object
+			@param {String} The name of the passage that the player is at in this moment.
+			@param {Object} Variables to include in this moment.
 		*/
 		create(p, v) {
 			const ret = Object.create(Moment);
@@ -117,49 +104,38 @@ define(['utils', 'passages'], ({impossible}, Passages) => {
 			Getters/setters
 		*/
 
-		/**
+		/*
 			Get the current passage name.
 			Used as a common argument to Engine.showPassage()
-			
-			@property {String} passage
-			@for State
 		*/
 		get passage() {
 			return present.passage;
 		},
 		
-		/**
+		/*
 			Get the current variables.
-			
-			@property {Array} variables
 		*/
 		get variables() {
 			return present.variables;
 		},
 
-		/**
+		/*
 			Is there an undo cache?
-			@property {Number} pastLength
 		*/
 		get pastLength() {
 			return recent;
 		},
 
-		/**
+		/*
 			Is there a redo cache?
-			@property {Number} futureLength
 		*/
 		get futureLength() {
 			return (timeline.length - 1) - recent;
 		},
 
-		/**
+		/*
 			Did we ever visit this passage, given its name?
 			Return the number of times visited.
-			
-			@method passageNameVisited
-			@param {String} name Name of the passage.
-			@return {Boolean} Whether it was visited.
 		*/
 		passageNameVisited(name) {
 			let ret = 0;
@@ -174,12 +150,10 @@ define(['utils', 'passages'], ({impossible}, Passages) => {
 			return ret;
 		},
 
-		/**
-			Return how long ago this named passage has been visited.
-			
-			@method passageNameLastVisited
-			@param {String} name Name of the passage.
-			@return {Number} How many turns ago it was visited.
+		/*
+			Return how long ago this named passage has been visited,
+			or infinity if it was never visited.
+			This isn't exposed directly to authors.
 		*/
 		passageNameLastVisited(name) {
 			if (!Passages.get(name)) {
@@ -199,12 +173,9 @@ define(['utils', 'passages'], ({impossible}, Passages) => {
 			return Infinity;
 		},
 
-		/**
+		/*
 			Return an array of names of all previously visited passages, in the order
-			they were visited. This may include doubles.
-			
-			@method previousPassage
-			@return {Array} Array of previously visited passages.
+			they were visited. This may include doubles. This IS exposed directly to authors.
 		*/
 		pastPassageNames() {
 			const ret = [];
@@ -219,19 +190,17 @@ define(['utils', 'passages'], ({impossible}, Passages) => {
 			Movers/shakers
 		*/
 		
-		/**
-			Create a new present after altering the state
-			@method newPresent
-			@param {String} newPassageName The name of the passage the player is now currently at.
+		/*
+			Create a new present after altering the state.
+			@param {String} The name of the passage the player is now currently at.
 		*/
 		newPresent(newPassageName) {
 			present = (timeline[recent] || Moment).create(newPassageName);
 		},
 
-		/**
+		/*
 			Push the present state to the timeline, and create a new state.
-			@method play
-			@param {String} newPassageName The name of the passage the player is now currently at.
+			@param {String} The name of the passage the player is now currently at.
 		*/
 		play(newPassageName) {
 			if (!present) {
@@ -247,11 +216,10 @@ define(['utils', 'passages'], ({impossible}, Passages) => {
 			this.newPresent(newPassageName);
 		},
 
-		/**
+		/*
 			Rewind the state. This will fail if the player is at the first moment.
 			
-			@method rewind
-			@param {String|Number} arg Either a string (passage id) or a number of steps to rewind.
+			@param {String|Number} Either a string (passage id) or a number of steps to rewind.
 			@return {Boolean} Whether the rewind was actually performed.
 		*/
 		rewind(arg) {
@@ -278,12 +246,11 @@ define(['utils', 'passages'], ({impossible}, Passages) => {
 			return moved;
 		},
 
-		/**
+		/*
 			Undo the rewinding of a state. Fails if no moments are in the future to be redone.
 			Currently only accepts numbers.
 			
-			@method  fastForward
-			@param {Number} arg The number of turns to move forward.
+			@param {Number} The number of turns to move forward.
 			@return {Boolean} Whether the fast-forward was actually performed.
 		*/
 		fastForward(arg) {
@@ -303,10 +270,8 @@ define(['utils', 'passages'], ({impossible}, Passages) => {
 			return moved;
 		},
 		
-		/**
+		/*
 			This method is only for debugging purposes. It is called nowhere except for the test specs.
-			
-			@method reset
 		*/
 		reset() {
 			timeline = [];
@@ -375,11 +340,10 @@ define(['utils', 'passages'], ({impossible}, Passages) => {
 			return variable;
 		}
 		
-		/**
+		/*
 			Serialise the game history, from the present backward (ignoring the redo cache)
 			into a JSON string.
 			
-			@method serialise
 			@return {String|Boolean} The serialised state, or false if serialisation failed.
 		*/
 		function serialise() {
@@ -410,7 +374,7 @@ define(['utils', 'passages'], ({impossible}, Passages) => {
 			}
 		}
 		
-		/**
+		/*
 			Deserialise the string and replace the current history.
 			@method deserialise
 		*/

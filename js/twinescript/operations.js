@@ -7,14 +7,12 @@ define([
 ],
 (State, Colour, AssignmentRequest, {isObject, collectionType, coerceToString, is, contains, objectName}, TwineError) => {
 	"use strict";
-	/**
+	/*
 		Operation objects are a table of operations which TwineScript proxies
 		for/sugars over JavaScript. These include basic fixes like the elimination
 		of implicit type coercion and the addition of certain early errors, but also
 		includes support for new TwineScript operators, overloading of old operators,
 		and other things.
-		
-		@class Operations
 	*/
 	let Operations,
 		/*d:

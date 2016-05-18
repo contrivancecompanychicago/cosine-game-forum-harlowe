@@ -13,12 +13,11 @@ define([
 */
 (Macros, State, Utils, Colour, Lambda, VarRef, TwineError, OperationsProto) => {
 	"use strict";
-	/**
+	/*
 		Creates a new script execution environment. This accepts and
 		decorates a Section object (see Engine.showPassage) with the
 		eval method.
 		
-		@module Environ
 		@param {Section} section
 		@return {Object} An environ object with eval methods.
 	*/
@@ -54,8 +53,6 @@ define([
 					to the author, as a last-ditch and probably
 					unhelpful error message.
 				*/
-				Utils.log(e);
-				Utils.log(args.join(''));
 				return e;
 			}
 		};

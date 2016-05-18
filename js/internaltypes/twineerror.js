@@ -1,4 +1,4 @@
-define(['jquery', 'utils'], ($, {impossible, assert, escape}) => {
+define(['jquery', 'utils'], ($, {impossible, escape}) => {
 	"use strict";
 	/*
 		TwineErrors are errors created by the TwineScript runtime. They are supplied with as much
@@ -35,7 +35,9 @@ define(['jquery', 'utils'], ($, {impossible, assert, escape}) => {
 			/*
 				Whatever happens, there absolutely must be a valid explanation from either source.
 			*/
-			assert(explanation || type in errorExplanations);
+			if(!(explanation || type in errorExplanations)) {
+				impossible('TwineError.create','no error explanation given');
+			}
 			
 			return Object.assign(Object.create(this), {
 				/*
@@ -58,7 +60,7 @@ define(['jquery', 'utils'], ($, {impossible, assert, escape}) => {
 			return TwineError.create("javascript", "\u2615 " + error.message);
 		},
 		
-		/**
+		/*
 			In TwineScript, both the runtime (operations.js) and Javascript eval()
 			of compiled code (by compiler.js) can throw errors. They should be treated
 			as equivalent within the engine.
@@ -70,7 +72,6 @@ define(['jquery', 'utils'], ($, {impossible, assert, escape}) => {
 			Maybe in the future, there could be a way to concatenate multiple
 			errors into a single "report"...
 			
-			@method containsError
 			@return {Error|TwineError|Boolean} The first error encountered, or false.
 		*/
 		containsError(...args) {

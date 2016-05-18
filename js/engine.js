@@ -5,17 +5,14 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 		Utils.storyElement is a getter, so we need a reference to Utils as well
 		as all of these methods.
 	*/
-	const {escape, impossible, passageSelector, transitionOut, assert} = Utils;
+	const {escape, impossible, passageSelector, transitionOut} = Utils;
 	
-	/**
-		A singleton class responsible for rendering passages to the DOM.
-
-		@class Engine
-		@static
+	/*
+		Engine is a singleton class responsible for rendering passages to the DOM.
 	*/
 	let Engine;
 	
-	/**
+	/*
 		Story options, loaded at startup and provided to other modules that may use them.
 		
 		Implemented values:
@@ -24,17 +21,13 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 		undo : enable the undo button.
 		redo : enable the redo button.
 		ifid : the UUID of the story. The only non-boolean option.
-		
-		@property {Object} options
 	*/
 	const options = Object.create(null);
 
-	/**
+	/*
 		Creates the HTML structure of the <tw-passage>. Sub-function of showPassage().
 
-		@method createPassageElement
-		@private
-		@return {jQuery} the element
+		@return {jQuery}
 	*/
 	function createPassageElement () {
 		const
@@ -78,13 +71,11 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 			+ "</tw-include>";
 	}
 	
-	/**
+	/*
 		Shows a passage by transitioning the old passage(s) out, and then adds the new passages.
 
-		@method showPassage
-		@private
-		@param {String} name
-		@param {Boolean} stretch Is stretchtext
+		displayOptions allows stretchtext (boolean), transitionIn (string)
+		or transitionOut (string) to be selected.
 	*/
 	function showPassage (name, displayOptions = {}) {
 		// Confirm that the options object only contains
@@ -159,13 +150,18 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 			oldPassages.css('position','absolute');
 		}
 		
+		/*
+			Make the passage's tags visible in the DOM, on both the <tw-passage> and
+			the <tw-story>, for user CSS availability.
+		*/
+		const tags = (passageData.get('tags') || []).join(' ');
 		const newPassage = createPassageElement().appendTo(story)
-			/*
-				Make the passage's tags visible in the DOM, for user CSS availability.
-			*/
-			.attr('tags', (passageData.get('tags') || []).join(' '));
-		
-		assert(newPassage.length > 0);
+			.attr({tags});
+
+		/*
+			Only the most recent passage's tags are present on the <tw-story>.
+		*/
+		story.attr({tags});
 		
 		const section = Section.create(newPassage);
 		
@@ -332,10 +328,8 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 	
 	Engine = {
 		
-		/**
+		/*
 			Moves the game state backward one turn. If there is no previous state, this does nothing.
-
-			@method goBack
 		*/
 		goBack() {
 			//TODO: get the stretch value from state
@@ -345,10 +339,8 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 			}
 		},
 
-		/**
+		/*
 			Moves the game state forward one turn, after a previous goBack().
-
-			@method goForward
 		*/
 		goForward() {
 			//TODO: get the stretch value from state
@@ -358,17 +350,13 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 			}
 		},
 
-		/**
+		/*
 			Displays a new passage, advancing the game state forward.
-
-			@method goToPassage
-			@param {String} id			id of the passage to display
-			@param {Boolean} stretch	display as stretchtext?
 		*/
 		goToPassage(id, stretch) {
 			// Update the state.
 			State.play(id);
-			showPassage(id, stretch);
+			showPassage(id, {stretch});
 		},
 		
 		/*

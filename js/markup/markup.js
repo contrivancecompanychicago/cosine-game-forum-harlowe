@@ -1,8 +1,6 @@
-/**
+/*
 	TwineMarkup, by Leon Arnott.
 	This module, alongside the Patterns module, defines the standard syntax of Harlowe.
-	
-	@module TwineMarkup
 */
 (function () {
 	"use strict";
@@ -742,27 +740,18 @@
 	}
 	
 	function exporter(Lexer) {
-		/**
+		/*
 			Export the TwineMarkup module.
 			
 			Since this is a light freeze, Utils and Patterns are still modifiable.
-			
-			@class TwineMarkup
-			@static
 		*/	
 		const TwineMarkup = Object.freeze({
 			
-			/**
-				@method lex
-				@param {String} src String source to lex.
-				@return {Array} Tree structure of
-			*/
 			lex: rules(Lexer).lex,
 			
-			/**
-				Export the Patterns.
-				
-				@property {Object} Patterns
+			/*
+				The Patterns are exported for use by consumers in understanding
+				the specifics of Harlowe's markup language.
 			*/
 			Patterns,
 		});

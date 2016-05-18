@@ -1,4 +1,4 @@
-define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
+define(['jquery', 'markup', 'utils/selectors'],
 ($, TwineMarkup, Selectors) => {
 	"use strict";
 
@@ -39,41 +39,16 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
 		//A binding for the cached <tw-story> reference (see below).
 		storyElement;
 
-	/**
+	/*
 		A static class with helper methods used throughout Harlowe.
-
-		@class Utils
-		@static
 	*/
-	
 	const Utils = {
-		/**
-			Make object properties immutable and impossible to delete,
-			without preventing the object from being extended.
-
-			Does not do a 'deep' lock - object properties may, in themselves, be modified.
-
-			@method lockProperties
-			@param {Object} obj Object to lock
-			@return The locked object
-		*/
-		lockProperties(obj) {
-			const keys = Object.keys(obj),
-				propDesc = {};
-
-			for (let i = 0; i < keys.length; i++) {
-				propDesc[keys[i]] = lockDesc;
-			}
-
-			return Object.defineProperties(obj, propDesc);
-		},
-		/**
+		/*
 			Locks a particular property of an object.
 
-			@method lockProperty
-			@param {Object} obj		Object
-			@param {String} prop	Property to lock
-			@param {String} value	A value to set the property to
+			@param {Object} Object
+			@param {String} Property to lock
+			@param {String} A value to set the property to
 			@return The affected object
 		*/
 		lockProperty(obj, prop, value) {
@@ -84,22 +59,6 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
 			Object.defineProperty(obj, prop, propDesc);
 			return obj;
 		},
-		
-		/**
-			Retrieve a property descriptor for an object,
-			searching through the prototype chain.
-			
-			@method getInheritedPropertyDescriptor
-			@param {Object} obj The object
-			@param {String} prop The property to investigate.
-			@return The descriptor, or null.
-		*/
-		getInheritedPropertyDescriptor(obj, prop) {
-			while(obj && !obj.hasOwnProperty(prop)) {
-				obj = Object.getPrototypeOf(obj);
-			}
-			return (obj && Object.getOwnPropertyDescriptor(obj, prop)) || null;
-		},
 
 		/*
 			String utilities
@@ -109,18 +68,12 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
 			In some places, it's necessary to print numbers, strings and arrays of primitives
 			as JS literals. This is a semantic shortcut for a certain
 			built-in method that can accomplish this easily.
-
-			@method toJSLiteral
-			@return {String}
 		*/
 		toJSLiteral: JSON.stringify,
 
 		/*
 			Conversely, this rarer function produces a TwineScript string literal using the
 			given string.
-
-			@method toTSStringLiteral
-			@return {String}
 		*/
 		toTSStringLiteral(str) {
 			const consecutiveGraves =
@@ -135,45 +88,25 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
 				+ "`".repeat(consecutiveGraves);
 		},
 
-		/**
+		/*
 			Takes a string argument, expressed as a CSS time,
 			and returns the time in milliseconds that it equals.
-			Or, when given an array, takes all valid strings contained
-			and returns an array of times in milliseconds.
 
 			If the string can't be parsed as a time, then this returns 0.
-
-			@method cssTimeUnit
-			@param s either string, or array of strings
-			@return either single string or array of times
 		*/
 		cssTimeUnit(s) {
-			if (typeof s === "string") {
-				s = s.toLowerCase();
+			s = s.toLowerCase();
 
-				if (s.slice(-2) === "ms")
-					return (+s.slice(0, -2)) || 0;
-				if (s.slice(-1) === "s")
-					return (+s.slice(0, -1)) * 1000 || 0;
-			} else if (Array.isArray(s)) {
-				const ret = [];
-				s.forEach((e) => {
-					const time = Utils.cssTimeUnit(e);
-					(time > 0 && ret.push(time));
-				});
-
-				return ret;
-			}
-
+			if (s.slice(-2) === "ms")
+				return (+s.slice(0, -2)) || 0;
+			if (s.slice(-1) === "s")
+				return (+s.slice(0, -1)) * 1000 || 0;
 			return 0;
 		},
 
-		/**
+		/*
 			A quick method for turning a number into an "nth" string.
-
-			@method nth
-			@param {String|Number} num
-			@return {String}
+			Used exclusively for error messages.
 		*/
 		nth(num) {
 			const lastDigit = (+num + '').slice(-1);
@@ -183,13 +116,13 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
 				lastDigit === "3" ? "rd" : "th");
 		},
 
-		/**
+		/*
 			A quick method for adding an 's' to the end of a string
-			that comes in the form "[num] [noun]".
+			that comes in the form "[num] [noun]". Used exclusively for
+			error messages.
 
-			@method plural
-			@param {Number} num   The quantity
-			@param {String} noun  The noun to possibly pluralise
+			@param {Number} The quantity
+			@param {String} The noun to possibly pluralise
 			@return {String}
 		*/
 		plural(num, noun) {
@@ -208,12 +141,8 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
 			HTML utilities
 		*/
 
-		/**
+		/*
 			Unescape HTML entities.
-
-			@method unescape
-			@param {String} text Text to convert
-			@return {String} converted text
 		*/
 		unescape(text) {
 			return text.replace(/&(?:amp|lt|gt|quot|nbsp|zwnj|#39|#96);/g,
@@ -229,12 +158,8 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
 			);
 		},
 
-		/**
+		/*
 			HTML-escape a string.
-
-			@method escape
-			@param {String} text Text to escape
-			@return {String} converted text
 		*/
 		escape(text) {
 			return text.replace(/[&><"']/g,
@@ -248,63 +173,33 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
 			);
 		},
 
-		/**
-			Some names are case-insensitive, AND dash-insensitive.
+		/*
+			Some names (namely macro names) are case-insensitive, AND dash-insensitive.
 			This method converts such names to all-lowercase and lacking
 			underscores and hyphens.
-
-			@method insensitiveName
-			@param {String} text Text to convert.
-			@return {String} converted text
 		*/
 		insensitiveName(e) {
 			return (e + "").toLowerCase().replace(/-|_/g, "");
-		},
-
-		/**
-
-			@method wrapHTMLTag
-			@param {String} text Text to wrap.
-			@param {String} tagName Name of the HTML tag to wrap in.
-			@return {String} The wrapped text.
-		*/
-		wrapHTMLTag(text, tagName) {
-			return '<' + tagName + '>' + text + '</' + tagName + '>';
 		},
 		
 		/*
 			Element utilities
 		*/
 
-		/**
+		/*
 			Quick utility function that calls .filter(q).add(q).find(q),
 			which is similar to just .find() but includes the top element
 			if it also matches.
 
-			@method findAndFilter
-			@private
-			@param q jQuery to search, or initialising string/element for $()
-			@param {String} selector Query string
-			@return {jQuery} jQuery result
+			@param {jQuery} jQuery to search, or initialising string/element for $()
+			@param {String} Query string
 		*/
 		findAndFilter (q, selector) {
 			q = $(q || Utils.storyElement);
 			return q.filter(selector).add(q.find(selector));
 		},
 
-		/**
-			Find the closest enclosing hook span(s) for the passed jQuery object, if any.
-
-			@method closestHookSpan
-			@param elems    jQuery object
-		*/
-
-		closestHookSpan (elems) {
-			const ret = elems.closest(Selectors.hook + "," + Selectors.pseudoHook);
-			return (ret.length ? ret : elems);
-		},
-
-		/**
+		/*
 			childrenProbablyInline: returns true if the matched elements probably only contain elements that
 			are of the 'inline' or 'none' CSS display type.
 			
@@ -313,9 +208,6 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
 			
 			This is used to crudely determine whether to make a <tw-transition-container> inline or block,
 			given that block children cannot inherit opacity from inline parents in Chrome (as of April 2015).
-			
-			@method childrenProbablyInline
-			@param jq    jQuery object
 		*/
 		childrenProbablyInline(jq) {
 			/*
@@ -359,18 +251,19 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
 			&& unknown.every(elem => /none|inline/.test(elem.style.display));
 		},
 
-		/**
+		/*
 			Replaces oldElem with newElem while transitioning between both.
 
-			@method transitionReplace
-			@param oldElem     a jQuery object currently in the DOM or a DOM structure
-			@param [newElem]   an unattached jQuery object to attach
-			@param transIndex  transition to use
-			@return this
+			@param a jQuery object currently in the DOM or a DOM structure
+			@param an unattached jQuery object to attach
+			@param transition to use
 		*/
 
 		transitionReplace(oldElem, newElem, transIndex) {
-			oldElem = Utils.closestHookSpan(oldElem);
+			const closest = oldElem.closest(Selectors.hook + "," + Selectors.pseudoHook);
+			if (closest.length > 0) {
+				oldElem = closest;
+			}
 
 			// Create a transition-main-container
 			const container1 = $('<tw-transition-container>').css('position', 'relative');
@@ -409,13 +302,11 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
 			}
 		},
 
-		/**
+		/*
 			Transition an element out.
-
-			@method transitionOut
-			@param {jQuery} el            jQuery collection to transition out
-			@param (String) transIndex    transition to use
-			@param (Number) [transitionTime] Replacement animation-duration value.
+			@param {jQuery} jQuery collection to transition out
+			@param (String) transition to use
+			@param (Number) Replacement animation-duration value.
 		*/
 
 		transitionOut(el, transIndex, transitionTime) {
@@ -466,13 +357,12 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
 			!delay ? onComplete() : window.setTimeout(onComplete, delay);
 		},
 
-		/**
+		/*
 			Transition an element in.
 
-			@method transitionIn
-			@param {jQuery} el              jQuery collection to transition out
-			@param (String) transIndex      Transition to use
-			@param (Number) [transitionTime] Replacement animation-duration value.
+			@param {jQuery} jQuery collection to transition out
+			@param (String) Transition to use
+			@param (Number) Replacement animation-duration value.
 		*/
 
 		transitionIn(el, transIndex, transitionTime) {
@@ -532,14 +422,12 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
 			!delay ? onComplete() : window.setTimeout(onComplete, delay);
 		},
 
-		/**
+		/*
 			Caches the CSS time (duration + delay) for a particular transition,
 			to save on costly $css() lookups.
 
-			@method transitionTime
-			@param (String) transIndex   Transition to use
-			@param {String} className    Either "transition-in" or "transition-out"
-			@return this
+			@param (String) Transition to use
+			@param {String} Either "transition-in" or "transition-out"
 		*/
 
 		transitionTime(transIndex, className) {
@@ -552,14 +440,10 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
 			return animClass[transIndex];
 		},
 
-		/**
+		/*
 			Runs a jQuery selector, but:
 			- uses the <tw-story> element as context, unless one was given.
 			- ignores elements that are transitioning out.
-
-			@method $
-			@param str			jQuery selector
-			@param context		jQuery context
 		*/
 
 		$(str, context) {
@@ -570,28 +454,12 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
 			Logging utilities
 		*/
 
-		/**
-			Internal logging function. Currently a wrapper for console.log.
-			This should be used for basic event logging.
-
-			@method log
-			@param data	line to log
-		*/
-
-		log(data) {
-			if (!window.console) {
-				return;
-			}
-			console.log(data);
-		},
-
-		/**
+		/*
 			Internal error logging function. Currently a wrapper for console.error.
 			This should be used for engine errors beyond the story author's control.
 
-			@method impossible
-			@param {String} where Name of the calling method.
-			@param data	Line to log
+			@param {String} Name of the calling method.
+			@param {String} Message to log.
 		*/
 
 		impossible(where, data) {
@@ -601,29 +469,10 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
 			console.error(where + "(): " + data);
 		},
 
-		/**
-			Standard assertion function.
-
-			@method assert
-			@param {Boolean} assertion
-		*/
-		assert(assertion) {
-			if (!window.console) {
-				return;
-			}
-			if (!assertion) {
-				console.error("Assertion failed!");
-			}
-		},
-
-		/**
+		/*
 			Asserts that an object doesn't lack a necessary property.
 			This and the next method provide some shape-checking
 			to important functions.
-
-			@method assertMustHave
-			@param {Object} object
-			@param {Array} props
 		*/
 		assertMustHave(object, props) {
 			if (!window.console) {
@@ -631,18 +480,14 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
 			}
 			for(let i = 0; i < props.length; i += 1) {
 				if(!(props[i] in object)) {
-					console.error("Assertion failed: " + object
+					console.error("Assertion failed: object"
 						+ " lacks property " + props[i]);
 				}
 			}
 		},
 
-		/**
+		/*
 			Asserts that an object has no property extensions.
-
-			@method assertOnlyHas
-			@param {Object} object
-			@param {Array} props
 		*/
 		assertOnlyHas(object, props) {
 			if (!window.console) {
@@ -650,7 +495,7 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
 			}
 			for(let i in object) {
 				if (props.indexOf(i) === -1) {
-					console.error("Assertion failed: " + object
+					console.error("Assertion failed: object"
 						+ " had unexpected property '" + i + "'!");
 				}
 			}
@@ -660,10 +505,8 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/customelements'],
 			Constants
 		*/
 
-		/**
+		/*
 			This is used as a more semantic shortcut to the <tw-story> element.
-			@property storyElement
-			@static
 		*/
 		get storyElement() {
 			return storyElement;

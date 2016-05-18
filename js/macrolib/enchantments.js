@@ -323,9 +323,6 @@ define(['jquery', 'utils', 'utils/selectors', 'macros', 'datatypes/hookset', 'da
 		@return {Function[]}             A pair of functions.
 	*/
 	function newEnchantmentMacroFns(enchantDesc, name) {
-		// enchantDesc is a mandatory argument.
-		Utils.assert(enchantDesc);
-		
 		/*
 			Register the event that this enchantment responds to
 			in a jQuery handler.

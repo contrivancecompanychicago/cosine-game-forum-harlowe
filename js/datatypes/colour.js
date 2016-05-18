@@ -1,4 +1,4 @@
-define(['utils', 'jquery'], ({assert}, $) => {
+define(['jquery'], ($) => {
 	/*d:
 		Colour data
 
@@ -144,7 +144,6 @@ define(['utils', 'jquery'], ({assert}, $) => {
 			(No, this doesn't create a 3-char colour if one was possible. Sorry.)
 		*/
 		toHexString() {
-			assert(this !== Colour);
 			return "#"
 				/*
 					Number.toString() won't have a leading 0 unless

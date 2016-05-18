@@ -1,9 +1,7 @@
-/**
+/*
 	The Patterns are the raw strings used by the lexer to match tokens.
 	These are used primarily by the Markup module, where they are attached to
 	lexer rules.
-	
-	@module Patterns
 */
 (function(){
 	"use strict";

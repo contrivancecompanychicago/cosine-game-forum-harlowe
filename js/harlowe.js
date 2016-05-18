@@ -24,13 +24,10 @@ require.config({
 require(['jquery', 'renderer', 'state', 'engine', 'passages', 'utils/selectors', 'macrolib', 'repl'],
 		($, Renderer, State, Engine, Passages, Selectors) => {
 	"use strict";
-	/**
+	/*
 		Harlowe, the default story format for Twine 2.
 		
 		This module contains only code which initialises the document and the game.
-		
-		@module Harlowe
-		@main Harlowe
 	*/
 	
 	// Used to execute custom scripts outside of main()'s scope.
@@ -55,11 +52,9 @@ require(['jquery', 'renderer', 'state', 'engine', 'passages', 'utils/selectors',
 		});
 	}
 	
-	/**
+	/*
 		Sets up event handlers for specific Twine elements. This should only be called
 		once at setup.
-
-		@method installHandlers
 	*/
 	let installHandlers = () => {
 		const html = $(document.documentElement),

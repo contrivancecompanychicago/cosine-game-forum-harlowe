@@ -1,18 +1,22 @@
 define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
-({wrapHTMLTag, escape, impossible, toJSLiteral}, TwineMarkup, Compiler, TwineError) => {
+({escape, impossible, toJSLiteral}, TwineMarkup, Compiler, TwineError) => {
 	"use strict";
-	/**
+	/*
 		The Renderer takes the syntax tree from TwineMarkup and returns a HTML string.
 		
 		Among other responsibilities, it's the intermediary between TwineMarkup and TwineScript -
 		macros and expressions become <tw-expression> and <tw-macro> elements alongside other
 		markup syntax (with their compiled JS code attached as attributes), and the consumer of
 		the HTML (usually Section) can run that code in the Environ.
-		
-		@class Renderer
-		@static
 	*/
 	let Renderer;
+
+	/*
+		A simple function to wrap text in a given HTML tag, with no attributes.
+	*/
+	function wrapHTMLTag(text, tagName) {
+		return '<' + tagName + '>' + text + '</' + tagName + '>';
+	}
 	/*
 		This makes a basic enclosing HTML tag with no attributes, given the tag name,
 		and renders the contained text.
@@ -34,16 +38,13 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 	*/
 	Renderer = {
 		
-		/**
+		/*
 			Renderer accepts the same story options that Harlowe does.
 			Currently it only makes use of { debug }.
-			
-			@property options
-			@type Object
 		*/
 		options: {},
 		
-		/**
+		/*
 			A composition of TwineMarkup.lex and Renderer.render,
 			but with a (currently rudimentary) memoizer.
 		*/
@@ -71,12 +72,10 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 			};
 		})(),
 		
-		/**
+		/*
 			The recursive rendering method.
 			
-			@method render
-			@static
-			@param {Array} tokens A TwineMarkup token array.
+			@param {Array} A TwineMarkup token array.
 			@return {String} The rendered HTML string.
 		*/
 		render: function render(tokens) {

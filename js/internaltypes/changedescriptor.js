@@ -1,6 +1,6 @@
 define(['jquery', 'utils', 'renderer'], ($, {assertOnlyHas, impossible, transitionIn}, {exec}) => {
 	"use strict";
-	/**
+	/*
 		When a new Section (generally a hook or expression) is about to be rendered,
 		a ChangeDescriptor is created and fed into all of the ChangerCommands which are
 		attached to the Section. They mutate the ChangeDescriptor, and the result describes
@@ -62,7 +62,7 @@ define(['jquery', 'utils', 'renderer'], ($, {assertOnlyHas, impossible, transiti
 		//                            their enchantments to.
 		section:          null,
 		
-		/**
+		/*
 			This creates an inheriting ChangeDescriptor, and is basically
 			another shorthand for the old create-assign pattern.
 			ChangeDescriptors can delegate to earlier descriptors if need be.
@@ -85,7 +85,7 @@ define(['jquery', 'utils', 'renderer'], ($, {assertOnlyHas, impossible, transiti
 			return ret;
 		},
 		
-		/**
+		/*
 			This method applies the style/attribute/data entries of this descriptor
 			to the target HTML element.
 		*/
@@ -142,12 +142,11 @@ define(['jquery', 'utils', 'renderer'], ($, {assertOnlyHas, impossible, transiti
 			}
 		},
 		
-		/**
+		/*
 			This method renders TwineMarkup, executing the TwineScript expressions
 			within. The expressions only have visibility
 			within this passage.
 			
-			@method render
 			@return {jQuery} The rendered passage DOM.
 		*/
 		render() {

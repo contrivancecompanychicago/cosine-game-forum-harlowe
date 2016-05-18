@@ -21,7 +21,7 @@ define([
 
 	let Section;
 
-	/**
+	/*
 		Section objects represent a block of Twine source rendered into the DOM.
 		It contains its own DOM, a reference to any enclosing Section,
 		and methods and properties related to invoking TwineScript code within it.
@@ -36,21 +36,16 @@ define([
 		The following things allow a section object to persist:
 		* Live hook macros (until they deactivate themselves when the section is removed from the DOM)
 		* Saved (enchant:), (link-goto:) and other macros.
-		
-		@class Section
-		@static
 	*/
 	
-	/**
+	/*
 		Apply the result of a <tw-expression>'s evaluation to the next hook.
 		If the result is a changer command, live command or boolean, this will cause the hook
 		to be rendered differently.
-		
-		@method runExpression
-		@private
-		@param {jQuery} expr The <tw-expression> element.
-		@param {Any} result The result of running the expression.
-		@param {jQuery} nextHook The next <tw-hook> element, passed in solely to save re-computing it.
+
+		@param {jQuery} The <tw-expression> element.
+		@param {Any} The result of running the expression.
+		@param {jQuery} The next <tw-hook> element, passed in solely to save re-computing it.
 	*/
 	function applyExpressionToHook(expr, result, nextHook) {
 		/*
@@ -141,13 +136,11 @@ define([
 		return { whitespace: $(), nextElem: $(nextSibling) };
 	}
 	
-	/**
+	/*
 		Run a newly rendered <tw-expression> element's code, obtain the resulting value,
 		and apply it to the next <tw-hook> element, if present.
 		
-		@method runExpression
-		@private
-		@param {jQuery} expr The <tw-expression> to run.
+		@param {jQuery} The <tw-expression> to run.
 	*/
 	function runExpression(expr) {
 		/*
@@ -384,14 +377,12 @@ define([
 		return !textNodes ? nextParentTextNode(parent) : textNodes;
 	}
 
-	/**
+	/*
 		<tw-collapsed> elements should collapse whitespace inside them in a specific manner - only
 		single spaces between non-whitespace should remain.
 		This function performs this transformation by modifying the text nodes of the passed-in element.
-		
-		@method collapse
-		@private
-		@param {jQuery} elem The element whose whitespace must collapse.
+
+		@param {jQuery} The element whose whitespace must collapse.
 	*/
 	function collapse(elem) {
 		/*
@@ -508,17 +499,15 @@ define([
 		elem[0] && supportsNormalize() && elem[0].normalize();
 	}
 	
-	/**
+	/*
 		A live hook is one that has the (live:) macro attached.
 		It repeatedly re-renders, allowing a passage to have "live" behaviour.
 		
 		This is exclusively called by runExpression().
 		
-		@method runLiveHook
-		@private
-		@param {Function} sensor The sensor function.
-		@param {jQuery} target The <tw-hook> that the sensor is connected to.
-		@param {Number} delay The timeout delay.
+		@param {Function} The sensor function.
+		@param {jQuery} The <tw-hook> that the sensor is connected to.
+		@param {Number} The timeout delay.
 	*/
 	function runLiveHook(target, delay) {
 		/*
@@ -575,19 +564,20 @@ define([
 	}
 	
 	Section = {
-		/**
+		/*
 			Creates a new Section which inherits from this one.
 			Note: while all Section use the methods on this Section prototype,
 			there isn't really much call for a Section to delegate to its
 			parent Section.
 			
-			@method create
-			@param {jQuery} newDom The DOM that comprises this section.
+			@param {jQuery} The DOM that comprises this section.
 			@return {Section} Object that inherits from this one.
 		*/
 		create(dom) {
 			// Just some overweening type-checking.
-			Utils.assert(dom instanceof $ && dom.length === 1);
+			if(!(dom instanceof $ && dom.length === 1)) {
+				Utils.impossible('Section.create','called with no DOM element');
+			}
 			
 			/*
 				Install all of the non-circular properties.
@@ -632,36 +622,22 @@ define([
 			return ret;
 		},
 		
-		/**
+		/*
 			A quick check to see if this section's DOM is connected to the
 			story's DOM.
 			Currently only used by recursiveSensor().
-			
-			@method inDOM
 		*/
 		inDOM() {
 			return $(Utils.storyElement).find(this.dom).length > 0;
 		},
-
-		/**
-			This method runs Utils.$ (which is the $ function filtering out transition-out
-			elements) with the dom as the context.
-			
-			@method $
-		*/
-		$(str) {
-			return Utils.$(str, this.dom);
-		},
 		
-		/**
+		/*
 			This function allows an expression of TwineMarkup to be evaluated as data, and
 			determine the text within it.
 			This is currently only used by runLink, to determine the link's passage name.
-		
-			@method evaluateTwineMarkup
-			@private
+
 			@param {String} expr
-			@param {String|jQuery} text, or a <tw-error> element.
+			@return {String|jQuery} text, or a <tw-error> element.
 		*/
 		evaluateTwineMarkup(expr) {
 			/*
@@ -681,6 +657,9 @@ define([
 			
 			/*
 				But first!! Pull out any errors that were generated.
+				We return the plain <tw-error> elements in order to save re-creating
+				them later in the pipeline, even though it makes the type signature of
+				this function somewhat #awkward.
 			*/
 			let errors;
 			if ((errors = p.find('tw-error')).length > 0) {
@@ -689,17 +668,13 @@ define([
 			return p.text();
 		},
 		
-		/**
+		/*
 			This method takes a selector string and selects hooks - usually single <tw-hook>s,
 			but also "pseudo-hooks", consecutive text nodes that match the selector -
 			querying only this section's DOM and all above it.
 			
 			This is most commonly invoked by TwineScript's desugaring of the HookRef
 			syntax (e.g. "?cupboard" becoming "section.selectHook('?cupboard')").
-			
-			@method selectHook
-			@param {String} selectorString
-			@return {HookSet|PseudoHookSet}
 		*/
 		selectHook(selectorString) {
 			/*
@@ -738,7 +713,7 @@ define([
 			return null;
 		},
 		
-		/**
+		/*
 			Renders the given TwineMarkup code into a given element,
 			transitioning it in. Changer functions can be provided to
 			modify the ChangeDescriptor object that controls how the code
@@ -749,10 +724,9 @@ define([
 			render TwineMarkup into <tw-expression>s (by runExpression())
 			and <tw-hook>s (by render() and runLiveHook()).
 			
-			@method renderInto
-			@param {String} code The TwineMarkup code to render into the target.
-			@param target The render destination. Usually a HookSet, PseudoHookSet or jQuery.
-			@param {Function|Array} [changers] The changer function(s) to run.
+			@param {String} The TwineMarkup code to render into the target.
+			@param The render destination. Usually a HookSet, PseudoHookSet or jQuery.
+			@param [changers] The changer function(s) to run.
 			@return {Boolean} Whether the ChangeDescriptors enabled the rendering
 				(i.e. no (if:false) macros or such were present).
 		*/
@@ -907,11 +881,9 @@ define([
 			return desc.enabled;
 		},
 		
-		/**
+		/*
 			Updates all enchantments in the section. Should be called after every
 			DOM manipulation within the section (such as, at the end of .render()).
-
-			@method updateEnchantments
 		*/
 		updateEnchantments() {
 			this.enchantments.forEach((e) => {

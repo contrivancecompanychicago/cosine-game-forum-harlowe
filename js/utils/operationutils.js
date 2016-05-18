@@ -1,4 +1,4 @@
-define(['utils', 'internaltypes/twineerror'], ({assert, impossible, toJSLiteral}, TwineError) => {
+define(['utils', 'internaltypes/twineerror'], ({impossible, toJSLiteral}, TwineError) => {
 	"use strict";
 	
 	/*
@@ -33,7 +33,9 @@ define(['utils', 'internaltypes/twineerror'], ({assert, impossible, toJSLiteral}
 		This requires that the datamap itself be passed in.
 	*/
 	function isValidDatamapName(map, name) {
-		assert(map instanceof Map);
+		if(!(map instanceof Map)) {
+			impossible('isValidDatamapName','called with non-Map');
+		}
 		/*
 			The computed variable property syntax means that basically
 			any value can be used as a property key. Currently, we only allow strings
@@ -113,7 +115,9 @@ define(['utils', 'internaltypes/twineerror'], ({assert, impossible, toJSLiteral}
 				If the type expects a lambda, then check the clauses and kind.
 			*/
 			if (type.pattern === "lambda" && singleTypeCheck(arg, type.innerType)) {
-				assert(typeof type.clauses === 'string');
+				if(typeof type.clauses !== 'string') {
+					impossible('singleTypeCheck','lambda signature had non-string clauses');
+				}
 				return type.clauses.includes("where")  === "where"  in arg
 					&& type.clauses.includes("making") === "making" in arg
 					&& type.clauses.includes("via")    === "via"    in arg
@@ -291,7 +295,9 @@ define(['utils', 'internaltypes/twineerror'], ({assert, impossible, toJSLiteral}
 		*/
 		if (obj.innerType) {
 			if (obj.pattern === "either") {
-				assert(Array.isArray(obj.innerType));
+				if(!Array.isArray(obj.innerType)) {
+					impossible("typeName",'"either" pattern had non-array inner type');
+				}
 				
 				return obj.innerType.map(typeName).join(" or ");
 			}

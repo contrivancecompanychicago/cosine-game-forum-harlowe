@@ -1,10 +1,8 @@
-/**
+/*
 	The Lexer accepts plain strings, and, given a set of rules, transforms
 	them to a tree of tokens.
 	
 	Consumers must augment this object's 'rules' property.
-	
-	@module Lexer
 */
 (function(){
 	"use strict";

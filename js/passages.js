@@ -1,13 +1,10 @@
 define(['jquery', 'utils', 'utils/selectors'], ($, {unescape}, Selectors) => {
 	"use strict";
-	/**
+	/*
 		Passages
 		A userland registry of Passage objects.
 		Passage objects are simple Maps exposing passage data to public scripts.
 		They have their string content (the "source"), their tags in an array, and their name.
-		
-		@class Passages
-		@static
 	*/
 
 	/*

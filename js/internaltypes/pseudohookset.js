@@ -1,7 +1,7 @@
 define(['jquery', 'utils/hookutils'], ($, {wrapTextNodes}) => {
 	"use strict";
 	
-	/**
+	/*
 		A PseudoHookSet represents a "pseudo-hook", which selects
 		section text using a search string, rather than a hook tag reference.
 		A macro instantiation like...
@@ -15,12 +15,9 @@ define(['jquery', 'utils/hookutils'], ($, {wrapTextNodes}) => {
 		But, unlike the former, they cannot be created as literals - only as a by-product
 		of providing a string to certain enchantment macros. Hence, they are unobservable
 		by the author, and have no TwineScript methods.
-		
-		@class PseudoHookSet
-		@static
 	*/
 	const PseudoHookSet = Object.freeze({
-		/**
+		/*
 			An Array forEach-styled iteration function. This wraps all
 			matched words in the section DOM with a temporary element,
 			then calls the passed function for each element.
@@ -28,9 +25,8 @@ define(['jquery', 'utils/hookutils'], ($, {wrapTextNodes}) => {
 			This is currently just used by Section.renderInto to iterate
 			over each word and render it individually.
 			
-			@method forEach
-			@param {Function} fn The callback, which is passed the following:
-			@param {jQuery} The <tw-pseudo-hook> element to manipulate.
+			@param {Function} The callback, which is passed the following:
+				@param {jQuery} The <tw-pseudo-hook> element to manipulate.
 		*/
 		forEach(fn) {
 			/*
@@ -58,13 +54,12 @@ define(['jquery', 'utils/hookutils'], ($, {wrapTextNodes}) => {
 			});
 		},
 		
-		/**
+		/*
 			Creates a new PseudoHookSet. It has a selector and a section
 			which determine what words to select, and from where.
 			
-			@method create
-			@param {Section} section The section to use for DOM lookups.
-			@param {String} pseudoHookSelector The selector string.
+			@param {Section} The section to use for DOM lookups.
+			@param {String} The selector string.
 		*/
 		create(section, pseudoHookSelector) {
 			const ret = Object.create(this);

@@ -1,4 +1,4 @@
-define(['utils'], ({assert}) => {
+define(['utils'], ({assertMustHave}) => {
 	/*
 		AssignmentRequests represent an assignment statement. Different
 		macros may handle this request differently (for instance,
@@ -26,7 +26,7 @@ define(['utils'], ({assert}) => {
 		
 		create(dest, src, operator) {
 			// Assert: dest is a varRef
-			assert("propertyChain" in dest && "object" in dest);
+			assertMustHave(dest, ["propertyChain", "object"]);
 			
 			return Object.assign(Object.create(this), {
 				dest:              dest,
