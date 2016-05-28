@@ -189,6 +189,28 @@ describe("twinescript operators", function () {
 			expect("(print: true and 2)").markupToError();
 			expect("(print: true and '2')").markupToError();
 			expect("(print: true and (a:))").markupToError();
+			expect("(print: true is (3 and 4))").markupToError();
+		});
+		it("can infer elided comparison operators", function () {
+			expect("(print: 3 < 4 and 5)").markupToPrint("true");
+			expect("(print: 3 and 4 < 5)").markupToPrint("true");
+			expect("(print: 3 > 2 and 4)").markupToPrint("false");
+			expect("(print: 3 and 5 < 5)").markupToPrint("false");
+			expect("(print: 'a' is 'a' and 'a')").markupToPrint("true");
+			expect("(print: 'a' is not 'b' and 'c')").markupToPrint("true");
+			expect("(print: 'ab' contains 'b' and 'a')").markupToPrint("true");
+			expect("(print: 'b' is in 'ab' and 'bc')").markupToPrint("true");
+			expect("(print: 'a' is 'a' and 'b')").markupToPrint("false");
+			expect("(print: 'a' is not 'b' and 'a')").markupToPrint("false");
+			expect("(print: 'ab' contains 'c' and 'a')").markupToPrint("false");
+			expect("(print: 'b' is in 'ac' and 'bc')").markupToPrint("false");
+		});
+		it("infers with correct precedence", function () {
+			expect("(print: 2 is 1 + 1 and 2 * 1)").markupToPrint("true");
+			expect("(print: 2 is (3 + 1) / 2 and 3 - 1)").markupToPrint("true");
+		});
+		it("doesn't infer elided comparison operators when a boolean is in the elision branch", function () {
+			expect("(print: 2 < 3 and true)").markupToPrint("true");
 		});
 	});
 	describe("the 'or' operator", function () {
@@ -206,6 +228,28 @@ describe("twinescript operators", function () {
 			expect("(print: true or 2)").markupToError();
 			expect("(print: true or '2')").markupToError();
 			expect("(print: true or (a:))").markupToError();
+			expect("(print: true is (3 or 4))").markupToError();
+		});
+		it("can infer elided comparison operators", function () {
+			expect("(print: 3 < 4 or 2)").markupToPrint("true");
+			expect("(print: 3 or 4 < 4)").markupToPrint("true");
+			expect("(print: 3 > 5 or 4)").markupToPrint("false");
+			expect("(print: 6 or 5 < 5)").markupToPrint("false");
+			expect("(print: 'a' is 'a' or 'b')").markupToPrint("true");
+			expect("(print: 'a' is not 'b' or 'a')").markupToPrint("true");
+			expect("(print: 'ab' contains 'b' or 'c')").markupToPrint("true");
+			expect("(print: 'b' is in 'ac' or 'bc')").markupToPrint("true");
+			expect("(print: 'a' is 'c' or 'b')").markupToPrint("false");
+			expect("(print: 'a' is not 'a' or 'a')").markupToPrint("false");
+			expect("(print: 'ab' contains 'c' or 'd')").markupToPrint("false");
+			expect("(print: 'b' is in 'ad' or 'cd')").markupToPrint("false");
+		});
+		it("infers with correct precedence", function () {
+			expect("(print: 2 is 1 + 1 or 3 * 1)").markupToPrint("true");
+			expect("(print: 2 is (3 + 2) / 2 or 3 - 1)").markupToPrint("true");
+		});
+		it("doesn't infer elided comparison operators when a boolean is in the elision branch", function () {
+			expect("(print: 2 < 3 or false)").markupToPrint("true");
 		});
 	});
 	describe("the 'not' operator", function () {
@@ -250,7 +294,7 @@ describe("twinescript operators", function () {
 		it("compares datamaps by value", function (){
 			expect("(print: (datamap:) is (datamap:))").markupToPrint("true");
 			expect("(print: (datamap:'a',2,'b',4) is (datamap:'b',4,'a',2))").markupToPrint("true");
-			expect("(print: (datamap:) is (datamap:1))").markupToPrint("false");
+			expect("(print: (datamap:) is (datamap:1,2))").markupToPrint("false");
 			expect("(print: (datamap:'a',2,'b',4) is (datamap:'b',4,'a',3))").markupToPrint("false");
 		});
 		it("compares datasets by value", function (){
@@ -289,7 +333,7 @@ describe("twinescript operators", function () {
 		it("compares datamaps by value", function (){
 			expect("(print: (datamap:) is not (datamap:))").markupToPrint("false");
 			expect("(print: (datamap:'a',2,'b',4) is not (datamap:'b',4,'a',2))").markupToPrint("false");
-			expect("(print: (datamap:) is not (datamap:1))").markupToPrint("true");
+			expect("(print: (datamap:) is not (datamap:1,2))").markupToPrint("true");
 			expect("(print: (datamap:'a',2,'b',4) is not (datamap:'b',4,'a',3))").markupToPrint("true");
 		});
 		it("compares datasets by value", function (){

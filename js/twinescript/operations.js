@@ -141,6 +141,10 @@ define([
 	*/
 	function comparisonOp(fn) {
 		return (left, right) => {
+			let error;
+			if ((error = TwineError.containsError(left, right))) {
+				return error;
+			}
 			It = left;
 			return fn(left, right);
 		};
@@ -219,12 +223,25 @@ define([
 			
 			return ret;
 		},
+
+		/*
+			This is used to implement "elided comparisons", such as (if: $A is $B or $C).
+			The right side, "or $C", is converted to "elidedComparisonOperator('or', $C)".
+			If $C is boolean, then the expression is considered to be (if: $A is ($B or $C)),
+			as usual. But, if it's not, then it's (if: ($A is $B) or ($A is $C)).
+		*/
+		elidedComparisonOperator(operator, value) {
+			if (typeof value === "boolean") {
+				return value;
+			}
+			return Operations[operator](It, value);
+		},
 		
-		"and": onlyPrimitives("boolean", doNotCoerce((l, r) => l && r), "use 'and' to join", andOrNotMessage),
+		and: onlyPrimitives("boolean", doNotCoerce((l, r) => l && r), "use 'and' to join", andOrNotMessage),
 		
-		"or": onlyPrimitives("boolean", doNotCoerce((l, r) => l || r), "use 'or' to join", andOrNotMessage),
+		or: onlyPrimitives("boolean", doNotCoerce((l, r) => l || r), "use 'or' to join", andOrNotMessage),
 		
-		"not": onlyPrimitives("boolean", e => !e, "use 'not' to invert", andOrNotMessage),
+		not: onlyPrimitives("boolean", e => !e, "use 'not' to invert", andOrNotMessage),
 		
 		"+":  doNotCoerce((l, r) => {
 			/*

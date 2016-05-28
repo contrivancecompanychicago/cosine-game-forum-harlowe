@@ -8,7 +8,8 @@ define(['utils', 'markup', 'twinescript/compiler', 'twinescript/environ'], funct
 	window.REPL = function(a) {
 	  var r = Compiler(TwineMarkup.lex("(print:" + a + ")"));
 	  console.log(r);
-	  return Environ({}).eval(r);
+	  var result = Environ({}).eval(r);
+	  return result.TwineScript_Print ? result.TwineScript_Print() : result;
 	};
 	window.LEX = function(a) {
 	  var r = TwineMarkup.lex(a);

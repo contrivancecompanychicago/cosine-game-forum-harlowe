@@ -139,7 +139,7 @@ describe("data structure macros", function () {
 		it("shuffles the positions of the elements in the returned array", function() {
 			expect("(print: (range:1,99) is (range:1,99))").markupToPrint("true");
 			for(var i = 0; i < 10; i += 1) {
-				expect("(print: (shuffled:(range:1,99)) is not (shuffled:(range:1,99)))").markupToPrint("true");
+				expect("(print: (shuffled:...(range:1,99)) is not (shuffled:...(range:1,99)))").markupToPrint("true");
 			}
 		});
 		it("doesn't pass contained data by reference", function() {

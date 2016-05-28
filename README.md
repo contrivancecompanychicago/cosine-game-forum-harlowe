@@ -6,6 +6,7 @@ Rough documentation is at http://twine2.neocities.org/
 
 ####Bugfixes
 
+ * Fixed a bug where comparing a value with an error (such as `2 is (3 + 'X')`) would suppress the error.
  * Now, a `(print:)` command that contains a command will only execute the contained command if itself is actually displayed in the passage - the code `(set: $x to (print:(goto:'X')))` would formerly perform the (goto:) immediately, even though the (print:) was never displayed.
  * Now, datasets contained in other datasets should be printed correctly, listing their contents.
  * `(alert:)`, `(open-url:)`, `(reload:)` and `(goto-url:)` now correctly return command values rather than the non-Harlowe value `undefined`. This means that `(alert:)`'s' time of execution changes relative to `(prompt:)` and `(confirm:)` - `(set: $x to (prompt:"X"))` will display a JS dialog immediately, but `(set: $x to (alert:"X"))` will not - although this is conceptually reasonable given that `(prompt:)` and `(confirm:)` are essentially "input" commands obtaining data from the player, and `(alert:)` is strictly an "output" command.
@@ -17,6 +18,7 @@ Rough documentation is at http://twine2.neocities.org/
 
 ####Alterations
 
+ * Now, when given expressions such as `$a < 4 and 5`, where `and` or `or` joins a non-boolean value with a comparison operation (`>`, `<=`, `is`, `contains`, etc.), Harlowe will now infer that you meant to write `$a < 4 and it < 5`, and treat the expression as that, instead of producing an error. This also applies to expressions like `$a and $b < 5`, which is inferred to be `5 > $a and it > $b`. This is a somewhat risky addition, but removes a common pitfall for new authors in writing expressions. (Observe that the above change does not apply when `and` or `or` joins a boolean - expressions like `$a < 4 and $visitedBasement`, where the latter variable contains a boolean, will continue to work as usual.)
  * It is now an error to alter data structures that aren't in variables - such as `(set: (a:)'s 1st to 1)` or `(set: (passage:)'s name to "X")` - because doing so accomplishes nothing.
  * Now, you can write `[text]`, and the square brackets will be, by themselves, treated as a hook, albeit with no name (it cannot be referenced like `?this`) and no attached changer commands. This, I believe, simplfies what square brackets "mean" in passage prose. Incidentally, temporary variables (see below) can be `(set:)` inside nameless unattached hooks without leaking out, so they do have some semantic meaning.
  * Now, you can attach changer macros to nametagged hooks: `(if: true) |moths>[Several moths!]`, for instance, is now valid. However, as with all hooks, trying to attach plain data, such as a number or an array, will cause an error.
