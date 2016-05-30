@@ -17,11 +17,8 @@ define(['jquery', 'utils', 'utils/hookutils'], ($, Utils, {hookToSelector}) => {
 		For instance, `(click: ?red)` will cause *all* hooks with a `<red|` or `|red>` nametag to be subject to the (click:)
 		macro's behaviour.
 
-		Other macros can currently interact with named hooks as well: a hook name can be used in the (set:), (put:) and (move:)
-		macros to change the source markup contained in them. `(set: ?red to "//Golly//")` will put the text "*Golly*" in *all*
-		hooks with a `<red|` or `|red>` nametag, in a manner similar to using (replace:). Furthermore, you can (print:) a hook name, which joins the text of all
-		hooks with the same name together into a single string. All of the features in this paragraph, however, are **not** recommended, and
-		**may** be removed in a future version of Harlowe.
+		In earlier Harlowe versions, it was possible to also use hook names with (set:), (put:) and (move:) to modify the
+		text of the hooks, but macros such as (replace:) should be used to accomplish this instead.
 
 		Note: if a hook name does not apply to a single hook in the given passage (for instance, if you type `?rde` instead of
 		`?red`) then no error will be produced. This is to allow macros such as (click:) to be placed in the `header` or `footer`
@@ -76,91 +73,12 @@ define(['jquery', 'utils', 'utils/hookutils'], ($, Utils, {hookToSelector}) => {
 		},
 		
 		/*
-			Retrieves the text of the first (by which I mean, earliest in the
-			passage) hook within this HookSet. Note that this does not retrieve
-			formatting, macros or whatever in the hook - only visible text.
-			
-			This is currently just used by Section.runExpression, to print a
-			hookRef in passage text.
-		*/
-		text() {
-			return jQueryCall.call(this, "text");
-		},
-		
-		/*
-			TwineScript_ToString is a function that TwineScript uses to
-			determine if an object can be implicitly coerced to string.
-			Since HookSets may appear in TwineScript code (via the HookSet
-			expression), AND it's expected that you can add strings to it,
-			this method is called upon.
-		*/
-		TwineScript_ToString() {
-			return this.text();
-		},
-		
-		/*
-			TwineScript_Print is used to determine how this expression prints when
-			it reaches the top level of a passage.
-			Much like ToString, it prints the first hook in this set.
-		*/
-		TwineScript_Print() {
-			return this.text();
-		},
-		
-		/*
 			TwineScript_ObjectName and _TypeName are used for error messages.
 		*/
 		get TwineScript_ObjectName() {
 			return this.selector + " (a hook reference)";
 		},
 		TwineScript_TypeName: "a hook reference (like ?this)",
-		
-		/*
-			TwineScript_Assignee is used when this object is an lvalue
-			in an AssignmentRequest. It's an accessor because it's
-			accessed by Operations.get().
-		*/
-		set TwineScript_Assignee(value) {
-			this.section.renderInto(value, hooks.call(this), { append: "replace"});
-		},
-		/*
-			Note that the value is also retrieved when a bi-directional assignment
-			occurs. In that instance, it should return itself. This is rather
-			#awkward, though, as it betrays the meaning of "assignee"...
-		*/
-		get TwineScript_Assignee() {
-			return this;
-		},
-		/*
-			TwineScript_AssignValue is used when this object is an rvalue
-			in an AssignmentRequest. Yes, (set: $grault to ?garply) only
-			copies ?garply's present value into $grault, as if ?garply
-			were a variable.
-			Note that as a result, it's not possible to store
-			a HookSet in a variable - which is good, as it carries with it
-			a reference to its origin hook.
-		*/
-		TwineScript_AssignValue() {
-			return jQueryCall.call(this, "text");
-		},
-
-		/*
-			TwineScript_DeleteValue is called by VarRef.delete() whenever
-			a property is deleted. In this case, the act of "deleting"
-			a HookRef is akin to blanking it. Consider (move: ?a to $a),
-			which one would expect to remove the value of ?a and put it in
-			$a without otherwise clearing the ?a hooks from the DOM.
-		*/
-		TwineScript_DeleteValue(prop) {
-			/*
-				The property will be "TwineScript_Assignee" when
-				a (move:) macro has caused this to be deleted.
-				This is rather #awkward.
-			*/
-			if (prop === "TwineScript_Assignee") {
-				jQueryCall.call(this, "text", "");
-			}
-		},
 		
 		/*
 			Creates a new HookSet. It has a selector and a section

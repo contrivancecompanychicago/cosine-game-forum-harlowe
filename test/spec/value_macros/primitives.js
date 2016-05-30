@@ -23,6 +23,7 @@ describe("primitive value macros", function() {
 					expect("(text:" + (e + ",").repeat(i) + ")").not.markupToError();
 				}
 			});
+			expect("|a>[](text: ?a)").markupToError();
 		});
 		it("converts number arguments to a string", function() {
 			expect("(text: 2)").markupToPrint("2");

@@ -23,8 +23,8 @@ describe("the (move:) macro", function() {
 		expect("(print: (a:(move: $b into $c)))").markupToError();
 		expect("(print: $c)").markupToPrint("3");
 	});
-	it("when given a hook assignment request, fills the hook with the contents, as twinemarkup", function() {
-		expect("|a>[Gee] |b>[Wow](move: ?a into ?b)").markupToPrint(" Gee");
+	it("cannot alter a hook", function() {
+		expect("|a>[Gee] |b>[Wow](move: ?a into ?b)").markupToError();
 	});
 	it("can replace array properties", function() {
 		runPassage("(set: $a to (a:3,1))(set: $b to 2)(move: $b into $a's last)");

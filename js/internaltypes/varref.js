@@ -505,21 +505,11 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 		*/
 		set(value) {
 			/*
-				If value has a TwineScript_AssignValue() method
-				(i.e. is a HookSet) then its returned value is used
-				instead of copying over the object itself.
-			*/
-			if (value && value.TwineScript_AssignValue) {
-				value = value.TwineScript_AssignValue();
-			}
-
-			/*
 				Show an error if this request is attempting to assign to a value which isn't
-				stored in the variables or temp. variables, and isn't a hook.
+				stored in the variables or temp. variables.
 				e.g. (set: (a:)'s 1st to 1)
 			*/
-			if (this.object && !(this.object.TwineScript_VariableStore)
-					&& (this.propertyChain.indexOf("TwineScript_Assignee") === -1)) {
+			if (this.object && !(this.object.TwineScript_VariableStore)) {
 				return TwineError.create("macrocall", "I can't (set:) "
 					+ objectName(this)
 					+ ", if the "

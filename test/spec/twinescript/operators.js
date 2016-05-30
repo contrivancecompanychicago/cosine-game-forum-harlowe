@@ -18,6 +18,9 @@ describe("twinescript operators", function () {
 			expect("(print: (a:1) + (a:2))").markupToPrint("1,2");
 			expect("(print: (a:1,3) + (a:2,4))").markupToPrint("1,3,2,4");
 		});
+		it("cannot concatenate hook references and strings", function () {
+			expect("[]<a|(print: ?a + '2')").markupToError();
+		});
 	});
 	describe("the - operator", function () {
 		it("subtracts numbers", function (){

@@ -29,11 +29,6 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			returns a string that's used when the object CAN be implicitly
 			coerced to string. This should be used very sparingly.
 		
-		{Function} set TwineScript_Assignee:
-			a setter function that, if present, proxies the act of setting a value to
-			this object, if it's usable as an lvalue. Currently hardcoded to only
-			work for hookRefs!!
-		
 		{Function} toString:
 			if this is present and !== Object.prototype.toString, then this is
 			used by Section to convert this datatype to renderable TwineMarkup code.
@@ -237,12 +232,10 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				*/
 				if (isVarRef) {
 					/*
-						Assignments to hookRefs assign text to all of their matching hooks.
-						
-						TwineScript_Assignee is a setter accessor used as a TwineScript
-						assignment interface.
+						Assignments to hookRefs, and copying their data, is currently not allowed.
 					*/
-					return "VarRef.create(section.selectHook('?" + token.name + "'), 'TwineScript_Assignee')";
+					return "TwineError.create('operation',\"I can't copy or alter a hook's value.\","
+						+ "'You should alter hooks indirectly using macros like (replace:) or (enchant:).') ";
 				}
 				return " section.selectHook('?" + token.name + "') ";
 			}

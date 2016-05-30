@@ -315,7 +315,6 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 					/*
 						Expressions
 					*/
-					case "hookRef":
 					case "variable":
 					case "tempVariable":
 					case "macro": {

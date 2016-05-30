@@ -26,12 +26,13 @@ describe("twinescript variables", function() {
 			expect("(print: (a:(set: $b to 2)))").markupToError();
 			expect("(print: $a + $b)").markupToPrint("3");
 		});
-		it("when given a hook/string assignment request, fills the hook with the contents, as twinemarkup", function() {
-			expect("|a>[Gee] |a>[Wow](set: ?a to '//Golly//')").markupToPrint("Golly Golly");
-		});
-		it("errors when a hook is assigned a non-string value", function() {
+		it("cannot assign to a hook", function() {
+			expect("|a>[Gee] |a>[Wow](set: ?a to '//Golly//')").markupToError();
 			expect("|a>[Gee] |a>[Wow](set: ?a to false)").markupToError();
 			expect("|a>[Gee] |a>[Wow](set: ?a to (a:1,2,3))").markupToError();
+		});
+		it("cannot read from a hook", function() {
+			expect("|a>[Gee] |a>[Wow](set: $a to ?a)").markupToError();
 		});
 		it("assignment requests can't be assigned", function() {
 			expect("(set: $wordy to ($wordy to 2)) ").markupToError();
@@ -88,6 +89,11 @@ describe("twinescript variables", function() {
 			expect("$x").markupToPrint("1,2");
 			runPassage("(set:$y to (a:))");
 			expect("$y").markupToPrint("");
+		});
+	});
+	describe("bare hook references in passage text", function() {
+		it("are printed literally", function() {
+			expect("|a>[Golly] ?a").markupToPrint("Golly ?a");
 		});
 	});
 });

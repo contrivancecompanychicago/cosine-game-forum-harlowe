@@ -438,8 +438,6 @@
 					passage:   match[1],
 				}),
 			},
-
-			hookRef:  { fn: textTokenFn("name") },
 			
 			variable:   { fn: textTokenFn("name") },
 			
@@ -450,6 +448,7 @@
 			Now, macro code rules.
 		*/
 		const macroRules = setupRules(macroMode, Object.assign({
+
 				/*
 					The macroName must be a separate token, because it could
 					be a method call (which in itself contains a variable token
@@ -554,6 +553,8 @@
 						},
 					}),
 				},
+				
+				hookRef:  { fn: textTokenFn("name") },
 				
 				cssTime: {
 					fn: (match) => ({
