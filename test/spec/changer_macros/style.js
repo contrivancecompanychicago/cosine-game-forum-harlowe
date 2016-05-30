@@ -18,10 +18,11 @@ describe("style changer macros", function() {
 			expect(hook.css('display')).toBe('inline-block');
 		});
 		it("can compose with itself", function() {
-			runPassage("(set: $s to (css:'display:inline-block') + (css:'clear:both'))");
+			runPassage("(set: $s to (css:'display:inline-block') + (css:'clear:both') + (css:'white-space:pre-wrap'))");
 			var hook = runPassage("$s[Hey]").find('tw-hook');
 			expect(hook.css('display')).toBe('inline-block');
 			expect(hook.css('clear')).toBe('both');
+			expect(hook.css('white-space')).toBe('pre-wrap');
 		});
 		it("compositions have structural equality", function() {
 			expect("(print: (css:'display:inline-block') + (css:'clear:both')"
@@ -330,6 +331,22 @@ describe("style changer macros", function() {
 		it("has structural equality", function() {
 			expect("(print: (align:'<==') is (align:'<=='))").markupToPrint("true");
 			expect("(print: (align:'<==') is (align:'=><=='))").markupToPrint("false");
+		});
+	});
+	it("can compose arbitrarily deep", function(done) {
+		var align = runPassage(
+			"(set:$c1 to (align:'==>'))"
+			+ "(set: $c2 to $c1 + (text-color:#400))"
+			+ "(set: $c3 to $c2 + (text-color:#400))"
+			+ "(set: $c4 to $c3 + (text-color:#400))"
+			+ "(set: $c5 to $c4 + (text-color:#400))"
+			+ "(set: $c6 to $c4 + (text-color:#400))"
+			+ "(set: $c7 to $c6 + (text-color:#400))"
+			+ "$c7[garply]"
+		).find('tw-hook');
+		setTimeout(function() {
+			expect(align.css('text-align')).toBe('right');
+			done();
 		});
 	});
 });

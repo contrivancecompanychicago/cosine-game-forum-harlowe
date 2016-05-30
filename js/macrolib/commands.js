@@ -389,15 +389,12 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 					return false;
 				}
 				const serialisation = State.serialise();
-				if (!serialisation) {
+				if (TwineError.containsError(serialisation)) {
 					/*
 						On the other hand, if serialisation fails, that's presumably
 						the fault of the author, and an error should be given.
 					*/
-					return TwineError.create(
-						"saving",
-						"The game's variables contain a complex data structure; the game can no longer be saved."
-					);
+					return serialisation;
 				}
 				/*
 					In case setItem() fails, let's run this in a try block.

@@ -41,6 +41,15 @@ describe("save macros", function() {
 			);
 			expect("(savegame:'1')").not.markupToError();
 		});
+		it("can save changer command variables", function() {
+			runPassage(
+				"(set:$c1 to (font:'Skia'))" +
+				"(set:$c2 to $c1 + (align:'==>'))" +
+				"(set:$c3 to (a:$c2 + (if: true)))",
+				"corge"
+			);
+			expect("(savegame:'1')").not.markupToError();
+		});
 		it("works from the start of the game", function() {
 			expect("(savegame:'1','Filename')", "qux").not.markupToError();
 			
@@ -108,6 +117,21 @@ describe("save macros", function() {
 			requestAnimationFrame(function() {
 				expect("$arr (text:$dm's HP) (text: $ds contains 4)").markupToPrint("egg 4 true");
 				done();
+			});
+		});
+		it("can restore changer command variables", function(done) {
+			runPassage(
+				"(set:$c1 to (text-style:'underline'))" +
+				"(set:$c2 to (a: $c1 + (hook: 'luge')))");
+			runPassage("(savegame:'1')");
+			expect("(loadgame:'1')").not.markupToError();
+			requestAnimationFrame(function() {
+				var hook = runPassage("(either:$c2's 1st)[goop]").find('tw-hook');
+				requestAnimationFrame(function() {
+					expect(hook.css('text-decoration')).toBe('underline');
+					expect(hook.attr('name')).toBe('luge');
+					done();
+				});
 			});
 		});
 	});

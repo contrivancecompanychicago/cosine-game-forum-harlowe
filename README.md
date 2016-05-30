@@ -64,11 +64,16 @@ Rough documentation is at http://twine2.neocities.org/
  * Added `(repeated:)`, which creates an array containing the passed values repeated a given number of times. `(repeated: 3, 1,2,0)` produces `(a: 1,2,0,1,2,0,1,2,0)`.
  * Added `(interlaced:)`, which interweaves the values of passed-in arrays. `(interlaced: (a: 'A','B','C','D'),(a: 1,2,3))` is the same as `(a: 'A',1,'B',2,'C',3)`. (For functional programmers, this is just a flat zip.) This can be useful alongside the `(datamap:)` macro.
 
-###1.3.0 changes (unreleased):
+###1.2.3 changes (unreleased):
 
 ####Bugfixes
 
  * Fixed a bug where the "outline" `(textstyle:)` option didn't have the correct text colour when no background colour was present, making it appear solid black.
+ * Fixed a bug where changer commands couldn't be added together more than once without the possibility of some of the added commands being lost.
+
+####Alterations
+
+ * Now, setting changer commands into variables no longer prevents the `(save-game:)` command from working.
 
 ###1.2.2 changes:
 
@@ -82,7 +87,7 @@ Rough documentation is at http://twine2.neocities.org/
  * Fixed a long-standing bug where spreading `...` datasets did not, in fact, arrange their values in sort order, but instead in parameter order.
  * Fixed a long-standing bug where a string containing an unmatched `)` inside a macro would abruptly terminate the macro.
 
-###Alterations
+####Alterations
 
  * Giving an empty string to a macro that affects or alters all occurrences of the string in the passage text, such as `(replace:)` or `(click:)`, will now result in an error (because it otherwise won't affect any part of the passage).
 

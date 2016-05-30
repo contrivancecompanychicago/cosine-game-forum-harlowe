@@ -1,4 +1,4 @@
-define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref', 'internaltypes/twineerror'], ({toJSLiteral, insensitiveName, plural}, {typeName, objectName, singleTypeCheck}, VarScope, VarRef, TwineError) => {
+define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltypes/twineerror'], ({toJSLiteral, insensitiveName, plural}, {typeName, objectName, singleTypeCheck}, VarScope, TwineError) => {
 	"use strict";
 	/*
 		Lambdas are user-created TwineScript functions. Their only purpose is to be passed to functional macros
@@ -70,7 +70,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 					It's a tad unfortunate that the preceding token before this lambda is already compiled into an incorrect
 					object, but we must deal with syntactic ambiguity in this way.
 				*/
-				if (!VarRef.isPrototypeOf(subject)
+				if (!subject.varref
 						// It must be a temp variable...
 						|| !VarScope.isPrototypeOf(subject.object)
 						// ...and not a property access on one.

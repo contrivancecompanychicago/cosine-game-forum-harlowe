@@ -1,4 +1,5 @@
-define(['utils', 'passages'], ({impossible}, Passages) => {
+define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerror', 'utils/operationutils'],
+({impossible}, Passages, ChangerCommand, TwineError, {objectName}) => {
 	"use strict";
 	/*
 		State
@@ -91,10 +92,11 @@ define(['utils', 'passages'], ({impossible}, Passages) => {
 	
 	/*
 		The serialisability status of the story state.
-		This starts as true, but will be irreversibly set to false
-		whenever a non-serialisable object is stored in a variable.
+		This is irreversibly set to a triplet of [var, value, turn] values,
+		which are used for error messages, whenever a non-serialisable object
+		is stored in a variable.
 	*/
-	let serialisable = true;
+	let serialiseProblem;
 	
 	/*
 		The current game's state.
@@ -274,10 +276,13 @@ define(['utils', 'passages'], ({impossible}, Passages) => {
 			This method is only for debugging purposes. It is called nowhere except for the test specs.
 		*/
 		reset() {
+			if (!window.jasmine) {
+				return;
+			}
 			timeline = [];
 			recent = -1;
 			present = Moment.create();
-			serialisable = true;
+			serialiseProblem = undefined;
 		},
 	},
 	/*
@@ -299,12 +304,13 @@ define(['utils', 'passages'], ({impossible}, Passages) => {
 				|| variable === null
 				|| Array.isArray(variable) && variable.every(isSerialisable)
 				|| variable instanceof Set && Array.from(variable).every(isSerialisable)
-				|| variable instanceof Map && Array.from(variable.values()).every(isSerialisable));
+				|| variable instanceof Map && Array.from(variable.values()).every(isSerialisable)
+				|| ChangerCommand.isPrototypeOf(variable));
 		}
 		
 		/*
-			This is provided to JSON.stringify(), allowing Maps and Sets to be
-			stringified, albeit in a bespoke fashion.
+			This is provided to JSON.stringify(), allowing Maps, Sets
+			and Changers to be stringified, albeit in a bespoke fashion.
 		*/
 		function replacer(name, variable) {
 			if (variable instanceof Set) {
@@ -321,6 +327,15 @@ define(['utils', 'passages'], ({impossible}, Passages) => {
 					'(datamap:)': Array.from(variable),
 				};
 			}
+			if (ChangerCommand.isPrototypeOf(variable)) {
+				return {
+					changer: {
+						name: variable.macroName,
+						params: variable.params,
+						next: variable.next,
+					}
+				};
+			}
 			return variable;
 		}
 		
@@ -329,12 +344,16 @@ define(['utils', 'passages'], ({impossible}, Passages) => {
 			revived from the encoding method used above.
 		*/
 		function reviver(name, variable) {
-			if (Object.prototype.isPrototypeOf(variable)) {
+			if (variable && typeof variable === "object") {
 				if (Array.isArray(variable['(dataset:)'])) {
 					return new Set(variable['(dataset:)']);
 				}
 				if (Array.isArray(variable['(datamap:)'])) {
 					return new Map(variable['(datamap:)']);
+				}
+				if (variable.changer && typeof variable.changer === "object") {
+					const {name, params, next} = variable.changer;
+					return ChangerCommand.create(name, params, next);
 				}
 			}
 			return variable;
@@ -354,17 +373,38 @@ define(['utils', 'passages'], ({impossible}, Passages) => {
 				of the story. (Note: currently, rewinding back past a point
 				where an unserialisable object was (set:) does NOT revert the
 				serialisability status.)
+
+				Create an array (of [var, value] pairs) that shows each variable that
+				couldn't be serialised at each particular turn.
 			*/
-			serialisable = serialisable && ret.every(
-				(moment) => Object.keys(moment.variables).every((e) => isSerialisable(moment.variables[e]))
+			const serialisability = ret.map(
+				(moment) => Object.keys(moment.variables)
+					.filter((e) => moment.variables[e] && !isSerialisable(moment.variables[e]))
+					.map(e => [e, moment.variables[e]])
 			);
 			/*
-				If it can't be serialised, just return false. Don't worry, it's
-				the responsibility of the caller to create a proper TwineError
-				as a result of this.
+				Identify the variable and value that can't be serialised, and the turn it occurred,
+				and save them into serialiseProblem. But, if such a problem was already found previously,
+				use that instead.
 			*/
-			if (!serialisable) {
-				return false;
+			if (!serialiseProblem) {
+				serialiseProblem = (serialisability.reduce(
+					(problem, [name, value], turn) => (problem || (name && [name, value, turn + 1])),
+					undefined
+				));
+			}
+			/*
+				If it can't be serialised, return a TwineError with all the details.
+			*/
+			if (serialiseProblem) {
+				const [problemVar, problemValue, problemTurn] = serialiseProblem;
+
+				return TwineError.create(
+					"saving",
+					"The variable $" + problemVar + " holds " + objectName(problemValue)
+					+ " (which is, or contains, a complex data value) on turn " + problemTurn
+					+ "; the game can no longer be saved."
+				);
 			}
 			try {
 				return JSON.stringify(ret, replacer);

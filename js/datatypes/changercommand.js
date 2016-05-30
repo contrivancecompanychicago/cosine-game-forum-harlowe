@@ -56,12 +56,20 @@ define(['utils', 'macros', 'utils/operationutils'], ({impossible}, Macros, {is})
 			styling.
 		*/
 		"TwineScript_+"(other) {
-			let ret = this.TwineScript_Clone();
-			while (ret.next) {
-				ret = ret.next;
+			/*
+				Make a copy of this changer to return.
+			*/
+			const clone = this.TwineScript_Clone();
+			/*
+				Attach the other changer to the "tail" (the end of the
+				"next" chain) of this changer.
+			*/
+			let tail = clone;
+			while (tail.next) {
+				tail = tail.next;
 			}
-			ret.next = other;
-			return ret;
+			tail.next = other;
+			return clone;
 		},
 		
 		"TwineScript_is"(other) {
