@@ -62,16 +62,12 @@ tw-story {
 		height: 100%;
 	}
 	/*
-		This is the base font size, which is
-		permuted below.
+		This is the base font size, which is permuted below.
 	*/
 	$font-size: 1.5em;
-	@if $version == 2 {
-		$font-size: 1.5rem;
-	}
 	
 	font-size:   $font-size;
-	line-height: $font-size * 1.2;
+	line-height: $font-size;
 	
 	/*
 		The <tw-story>'s default distance from the top and bottom of the page is 5%.
@@ -88,6 +84,13 @@ tw-story {
 */
 tw-passage {
 	display: block;
+}
+
+/* This causes consecutive line breaks to consume less height than they normally would. */
+br + br {
+	display:block;
+	height: 0;
+	margin: 0.8ex 0;
 }
 
 /*

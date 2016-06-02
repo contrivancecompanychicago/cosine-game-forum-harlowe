@@ -11,7 +11,7 @@ describe("enchantment macros", function () {
 			expect("(print:(enchant:(font:'Skia'), 'baz'))").markupToError();
 		});
 	});
-	describe("enchanting <tw-story>", function() {
+	xdescribe("enchanting <tw-story>", function() {
 		it("wraps the <tw-story> in a <tw-enchantment>", function(done) {
 			runPassage("(enchant:'<tw-story>',(text-style:'bold'))");
 			setTimeout(function() {
@@ -37,7 +37,7 @@ describe("enchantment macros", function () {
 			});
 		});
 	});
-	describe("enchanting <tw-passage>", function() {
+	xdescribe("enchanting <tw-passage>", function() {
 		it("wraps the current <tw-passage> in a <tw-enchantment>", function() {
 			runPassage("(enchant:'<tw-passage>',(background:'#000'))");
 			var enchantment = $('tw-passage').parent();

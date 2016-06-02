@@ -1,4 +1,4 @@
-define(['jquery', 'utils', 'utils/hookutils'], ($, Utils, {hookToSelector}) => {
+define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 	"use strict";
 	
 	/*
@@ -6,9 +6,19 @@ define(['jquery', 'utils', 'utils/hookutils'], ($, Utils, {hookToSelector}) => {
 		Twine passages can have identical titles, and both can therefore be
 		selected by the same hook reference. This class represents
 		these selections within a given Section.
+
+		In addition to regular hook selections, there is also "pseudo-hooks".
+		A "pseudo-hook" is section text selected using a search string, rather
+		than a hook tag reference. A macro instantiation like...
+			(remove: "cats")
+		...would make a pseudo-hook that matches, or "hooks", every instance of
+		the string "cats" in the passage. So, without needing to mark up
+		that text with hook syntax, the author can still manipulate it intuitively.
+		This is a powerful construct!
 		
 		These are currently exclusively created by Section.selectHook.
 	*/
+
 	/*d:
 		HookName data
 		
@@ -33,12 +43,234 @@ define(['jquery', 'utils', 'utils/hookutils'], ($, Utils, {hookToSelector}) => {
 		means that you'll have to be extra careful while typing the hook name, as misspellings will not be easily identified
 		by Harlowe itself.
 	*/
+
+	/*
+		Retrieves a substring from a text node by slicing it into (at most 3) parts,
+		specified by the inclusive start and non-inclusive end indices.
+	*/
+	function sliceNode(node, start, end) {
+		/*
+			We need to cache the length here, as the node is transformed
+			by the subsequent splitText calls.
+		*/
+		const l = node.textContent.length;
+		/*
+			Of course, we can't omit simple range checks before going further.
+		*/
+		if (start >= l) {
+			return;
+		}
+		/*
+			Now, we do the first split, separating the start of the node
+			from the start of the substring.
+			(We skip this if the substring is at the start, as splitting
+			will create a 0-char text node.)
+		*/
+		let newNode;
+		const ret = [(newNode = (start === 0 ? node : node.splitText(start)))];
+		if (end) {
+			/*
+				This function supports negative end indices, using the
+				following quick conversion:
+			*/
+			if (end <= 0) {
+				end = l - end;
+			}
+			/*
+				If that conversion causes end to become equal to l, we
+				don't bother (as it will create another 0-char text node).
+			*/
+			if (end < l) {
+				/*
+					Otherwise, the split will be performed.
+					Note that this returns the rightmost portion of the split,
+					i.e. from the end of the substring onwards.
+				*/
+				ret.push(newNode.splitText(end - start));
+			}
+		}
+		return ret;
+	}
 	
+	/*
+		This complicated function takes an array of contiguous sequential
+		text nodes, and a search string, and does the following:
+		
+		1. Finds all occurrences of the search string in the sequence,
+		even where the string spans multiple text nodes,
+		
+		2. Splits the nodes along the occurrences of the string, and
+		then returns these split-off nodes.
+		
+		The purpose of this is to allow transformations of exact
+		textual matches within passage text, *regardless* of the
+		actual DOM hierarchy which those matches bestride.
+	*/
+	function findTextInNodes(textNodes, searchString) {
+		let
+			/*
+				examinedNodes holds the text nodes which are currently being
+				scrutinised for any possibility of holding the search string.
+			*/
+			examinedNodes = [],
+			/*
+				examinedText holds the textContent of the entire set of
+				examinedNodes, for easy comparison and inspection.
+			*/
+			examinedText = '',
+			/*
+				ret is the returned array of split-off text nodes.
+			*/
+			ret = [];
+		
+		/*
+			First, if either search set is 0, return.
+		*/
+		if (!textNodes.length || !searchString) {
+			return ret;
+		}
+		/*
+			We progress through all of the text nodes.
+		*/
+		while(textNodes.length > 0) {
+			/*
+				Add the next text node to the set of those being examined.
+			*/
+			examinedNodes.push(textNodes[0]);
+			examinedText += textNodes[0].textContent;
+			textNodes.shift();
+			
+			/*
+				Now, perform the examination: does this set of nodes contain the string?
+			*/
+			let index = examinedText.indexOf(searchString);
+			/*
+				If so, proceed to extract the substring.
+			*/
+			if (index > -1) {
+				const remainingLength = examinedText.length - (index + searchString.length);
+				/*
+					First, remove all nodes which do not contain any
+					part of the search string (as this algorithm scans left-to-right
+					through nodes, these will always be in the left portion of the
+					examinedNodes list).
+				*/
+				while(index >= examinedNodes[0].textContent.length) {
+					index -= examinedNodes[0].textContent.length;
+					examinedNodes.shift();
+				}
+				/*
+					In the event that it was found within a single node,
+					simply slice that node only.
+				*/
+				if (examinedNodes.length === 1) {
+					const slices = sliceNode(examinedNodes[0], index, index + searchString.length);
+					ret.push(slices[0]);
+					// The extra slice at the end shall be examined
+					// in the next recursion.
+					if (slices[1]) {
+						textNodes.unshift(slices[1]);
+					}
+					break;
+				}
+				/*
+					We now push multiple components: a slice from the first examined node
+					(which will extract the entire right side of the node):
+				*/
+				ret.push(sliceNode(
+					examinedNodes[0],
+					index,
+					examinedNodes[0].length
+				)
+				/*
+					(Since we're extracting the right side, there will be no 'end' slice
+					returned by sliceNode. So, just use the first returned element.)
+				*/
+				[0]);
+				/*
+					Then, all of the nodes between first and last:
+				*/
+				ret.push(...examinedNodes.slice(1,-1));
+				/*
+					Then, a slice from the last examined node (which will extract
+					the entire left side).
+				*/
+				const slices = sliceNode(
+					examinedNodes[examinedNodes.length-1],
+					0,
+					examinedNodes[examinedNodes.length-1].textContent.length - remainingLength
+				);
+				ret.push(slices[0]);
+				// The extra slice at the end shall be examined
+				// in the next recursion.
+				if (slices[1]) {
+					textNodes.unshift(slices[1]);
+				}
+				// Finally, if any of the above were undefined, we remove them.
+				ret = ret.filter(Boolean);
+				break;
+			}
+		}
+		/*
+			The above only finds the first substring match. The further ones
+			are obtained through this recursive call.
+		*/
+		return [ret, ...findTextInNodes(textNodes, searchString)];
+	}
+
+	/*
+		Given a search string, this wraps all identified text nodes in the given
+		HTML tag. Currently only used to create <tw-pseudo-hook> elements.
+
+		@param {String} searchString The passage text to wrap
+		@param {jQuery} dom The DOM in which to search
+		@param {String} htmlTag The HTML tag to wrap around
+		@return {jQuery} A jQuery set holding the created HTML wrapper tags.
+	*/
+	function wrapTextNodes(searchString, dom, htmlTag) {
+		const nodes = findTextInNodes(dom.textNodes(), searchString);
+		let ret = $();
+		nodes.forEach((e) => {
+			ret = ret.add($(e).wrapAll(htmlTag));
+		});
+		return ret.parent();
+	}
+	
+	/*
+		Returns the type of a selector string.
+		Currently used simply to differentiate hookRef strings.
+		TODO: Use TwineMarkup.RegExpStrings.
+
+		@param {String} Value to examine
+		@return {String} Either "hookRef", "string", or "undefined".
+	*/
+	function selectorType(val) {
+		if (val && typeof val === "string") {
+			const r = /\?(\w*)/.exec(val);
+			if (r && r.length) {
+				return "hookRef";
+			}
+			return "string";
+		}
+		return "undefined";
+	}
+
+	/*
+		Convert a hook index string to a CSS selector.
+
+		@param {String} chain to convert
+		@return {String} classlist string
+	*/
+	function hookToSelector(c) {
+		c = c.replace(/\?/g, '').replace(/"/g, "&quot;");
+		return Selectors.hook+'[name="' + c + '"]';
+	}
+
 	/*
 		Hooks are "live" in the sense that their selected hooks are re-computed on
 		every operation performed on them.
 
-		This private function returns a jQuery collection of every <tw-hook>
+		This private method returns a jQuery collection of every <tw-hook>
 		in this HookSet's Section which matches this HookSet's selector string.
 	*/
 	function hooks() {
@@ -68,7 +300,17 @@ define(['jquery', 'utils', 'utils/hookutils'], ($, Utils, {hookToSelector}) => {
 			return $(elements.get(index));
 		};
 		if (this.selector) {
-			const ownElements = Utils.$(hookToSelector(this.selector), this.section.dom);
+			let ownElements;
+			/*
+				If this is a pseudo-hook (search string) selector, we must create the
+				temporary <tw-pseudo-hook> elements around the selection.
+			*/
+			if (selectorType(this.selector) === "string") {
+				ownElements = wrapTextNodes(this.selector, this.section.dom, '<tw-pseudo-hook>');
+			}
+			else {
+				ownElements = Utils.$(hookToSelector(this.selector), this.section.dom);
+			}
 			if (this.properties.length) {
 				ret = ret.add(this.properties.reduce(reducer, ownElements));
 			}
@@ -87,17 +329,13 @@ define(['jquery', 'utils', 'utils/hookutils'], ($, Utils, {hookToSelector}) => {
 	}
 
 	/*
-		This private function allows a specific jQuery method to be called
-		on the collection of matched hooks in the HookSet.
+		After calling hooks(), we must remove the <tw-pseudo-hook> elements
+		and normalize the text nodes that were split up as a result of the selection.
 	*/
-	function jQueryCall(methodName, ...args) {
-		const
-			/*
-				This is re-evaluated during every jQueryCall, so that it's always
-				up-to-date with the DOM.
-			*/
-			myHooks = hooks.call(this);
-		return methodName in myHooks && myHooks[methodName](...args);
+	function cleanupPseudoHooks() {
+		Utils.$('tw-pseudo-hook', this.section.dom).contents().unwrap().parent().each(function() {
+			this.normalize();
+		});
 	}
 	
 	const HookSet = Object.freeze({
@@ -113,9 +351,11 @@ define(['jquery', 'utils', 'utils/hookutils'], ($, Utils, {hookToSelector}) => {
 				{jQuery} The <tw-hook> element to manipulate.
 		*/
 		forEach(fn) {
-			return jQueryCall.call(this, "each", function(i) {
+			const ret = hooks.call(this).each(function(i) {
 				fn($(this), i);
 			});
+			cleanupPseudoHooks.call(this);
+			return ret;
 		},
 		
 		/*
@@ -162,7 +402,15 @@ define(['jquery', 'utils', 'utils/hookutils'], ($, Utils, {hookToSelector}) => {
 
 		// Like all sequential objects, HookSets have a length.
 		get length() {
-			return hooks.call(this).length;
+			const ret = hooks.call(this).length;
+			/*
+				TODO: As you know, getting the length of a pseudo-hook (which is currently
+				impossible) will cause <tw-pseudo-hook>s to be wrapped, then immediately
+				unwrapped. This could be saved by writing an option to hooks() that
+				only examines viable text nodes, without wrapping.
+			*/
+			cleanupPseudoHooks.call(this);
+			return ret;
 		},
 
 		TwineScript_Clone() {

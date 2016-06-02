@@ -116,7 +116,7 @@ describe("revision macros", function() {
 					expect(p.text()).toBe(append?'102030':'010203');
 				});
 			});
-			describe("given a <html> element string", function() {
+			xdescribe("given a <html> element string", function() {
 				it(name+"s to every found element in the passage", function() {
 					var p = runPassage("//good// <i>bad</i>("+name+":'<i>')[lands]");
 					expect(p.text()).toBe(append?'goodlands badlands':'landsgood landsbad');
@@ -131,7 +131,7 @@ describe("revision macros", function() {
 					expect(p.text()).toBe(append?'102030':'010203');
 				});
 			});
-			describe("given a <tw-story> element string", function() {
+			xdescribe("given a <tw-story> element string", function() {
 				it(name+"s to the <tw-story> element", function() {
 					runPassage("("+name+":'<tw-story>')[//hands//]");
 					var i = $('tw-story > i');

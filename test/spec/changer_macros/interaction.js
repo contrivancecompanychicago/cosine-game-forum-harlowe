@@ -141,7 +141,7 @@ describe("interaction macros", function() {
 			expect("(click-page:)[]").not.markupToError();
 			expect("(click-page:'baz')[]").markupToError();
 		});
-		it("enchants the <tw-story> element", function() {
+		xit("enchants the <tw-story> element", function() {
 			runPassage("(click-page:)[1]");
 			var e = $('tw-story').parent('tw-enchantment.enchantment-clickpage');
 			expect(e.length).toBe(1);
@@ -158,7 +158,7 @@ describe("interaction macros", function() {
 			$('tw-story').click();
 			expect(p.text()).toBe("123");
 		});
-		it("enchants the <tw-story> with a box-shadow", function() {
+		xit("enchants the <tw-story> with a box-shadow", function() {
 			runPassage("(click-page:)[1]");
 			var e = $('tw-story').parent();
 			// We can't expect to get more precise than this, unfortunately.

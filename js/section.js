@@ -6,17 +6,15 @@ define([
 	'twinescript/environ',
 	'twinescript/operations',
 	'state',
-	'utils/hookutils',
 	'utils/operationutils',
 	'datatypes/changercommand',
 	'datatypes/hookset',
-	'internaltypes/pseudohookset',
 	'internaltypes/changedescriptor',
 	'internaltypes/varscope',
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier',
 ],
-($, Utils, Selectors, Renderer, Environ, Operations, State, {selectorType}, {printBuiltinValue,objectName}, ChangerCommand, HookSet, PseudoHookSet, ChangeDescriptor, VarScope, TwineError, TwineNotifier) => {
+($, Utils, Selectors, Renderer, Environ, Operations, State, {printBuiltinValue,objectName}, ChangerCommand, HookSet, ChangeDescriptor, VarScope, TwineError, TwineNotifier) => {
 	"use strict";
 
 	let Section;
@@ -678,39 +676,13 @@ define([
 		*/
 		selectHook(selectorString) {
 			/*
-				If a HookSet or PseudoHookSet was passed in, return it unmodified.
+				If a HookSet was passed in, return it unmodified.
 				TODO: Should this be a bug?
 			*/
-			if (HookSet.isPrototypeOf(selectorString)
-				|| PseudoHookSet.isPrototypeOf(selectorString)) {
+			if (HookSet.isPrototypeOf(selectorString)) {
 				return selectorString;
 			}
-			switch(selectorType(selectorString)) {
-				case "hookRef": {
-					return HookSet.create(this, selectorString);
-				}
-				case "html": {
-					/*
-						This should be rewritten to account for more thorough HTML search
-						strings, such as:
-						<class="grault">
-						<id="grault">
-					*/
-					return Utils.findAndFilter(
-						/*
-							This selects only elements inside this section, plus the <tw-story> element.
-							This ensures stretchtext remains hygenically scoped, even though the
-							most recent passage decides the entire <tw-story>'s formatting.
-						*/
-						this.dom.add(Utils.storyElement),
-						selectorString.slice(1,-1)
-					);
-				}
-				case "string": {
-					return PseudoHookSet.create(this, selectorString);
-				}
-			}
-			return null;
+			return HookSet.create(this, selectorString);
 		},
 		
 		/*
@@ -725,7 +697,7 @@ define([
 			and <tw-hook>s (by render() and runLiveHook()).
 			
 			@param {String} The TwineMarkup code to render into the target.
-			@param The render destination. Usually a HookSet, PseudoHookSet or jQuery.
+			@param The render destination. Usually a HookSet or jQuery.
 			@param [changers] The changer function(s) to run.
 			@return {Boolean} Whether the ChangeDescriptors enabled the rendering
 				(i.e. no (if:false) macros or such were present).
