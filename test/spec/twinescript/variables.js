@@ -26,13 +26,13 @@ describe("twinescript variables", function() {
 			expect("(print: (a:(set: $b to 2)))").markupToError();
 			expect("(print: $a + $b)").markupToPrint("3");
 		});
-		it("cannot assign to a hook", function() {
+		it("cannot assign to a hook reference", function() {
 			expect("|a>[Gee] |a>[Wow](set: ?a to '//Golly//')").markupToError();
 			expect("|a>[Gee] |a>[Wow](set: ?a to false)").markupToError();
 			expect("|a>[Gee] |a>[Wow](set: ?a to (a:1,2,3))").markupToError();
 		});
-		it("cannot read from a hook", function() {
-			expect("|a>[Gee] |a>[Wow](set: $a to ?a)").markupToError();
+		it("can assign a hook reference to a variable", function() {
+			expect("|a>[Gee] |a>[Wow](set: $a to ?a)(click:$a)[]").not.markupToError();
 		});
 		it("assignment requests can't be assigned", function() {
 			expect("(set: $wordy to ($wordy to 2)) ").markupToError();

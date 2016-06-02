@@ -1,5 +1,5 @@
-define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/lambda', 'internaltypes/twineerror'],
-($, NaturalSort, {insensitiveName, nth, plural, andList, lockProperty}, {objectName, typeName, singleTypeCheck}, Lambda, TwineError) => {
+define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatypes/hookset', 'internaltypes/twineerror'],
+($, NaturalSort, {insensitiveName, nth, plural, andList, lockProperty}, {objectName, typeName, singleTypeCheck}, Lambda, HookSet, TwineError) => {
 	"use strict";
 	/*
 		This contains a registry of macro definitions, and methods to add to that registry.
@@ -27,25 +27,31 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			// Spreaders are spread out now.
 			args = args.reduce((newArgs, el) => {
 				if (el && el.spreader === true) {
+					const {value} = el;
 					/*
 						Currently, the full gamut of spreadable
-						JS objects isn't available - only arrays, sets and strings.
+						JS objects isn't available - only arrays, sets, hook refs, and strings.
 					*/
-					if (Array.isArray(el.value)
-							|| typeof el.value === "string") {
-						for(let i = 0; i < el.value.length; i++) {
-							newArgs.push(el.value[i]);
+					if (Array.isArray(value)
+							|| typeof value === "string") {
+						for(let i = 0; i < value.length; i++) {
+							newArgs.push(value[i]);
 						}
 					}
-					else if (el.value instanceof Set) {
-						newArgs.push(Array.from(el.value).sort(NaturalSort("en")));
+					else if (value instanceof Set) {
+						newArgs.push(...Array.from(value).sort(NaturalSort("en")));
+					}
+					else if (HookSet.isPrototypeOf(value)) {
+						for(let i = 0; i < value.length; i++) {
+							newArgs.push(value.TwineScript_GetElement(i));
+						}
 					}
 					else {
 						newArgs.push(
 							TwineError.create("operation",
 								"I can't spread out "
-								+ objectName(el.value)
-								+ ", because it is not a string, dataset or array."
+								+ objectName(value)
+								+ ", because it is not a string, dataset, hook reference, or array."
 							)
 						);
 					}

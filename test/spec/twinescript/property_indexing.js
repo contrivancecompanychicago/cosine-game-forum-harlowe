@@ -122,6 +122,18 @@ describe("property indexing", function() {
 			expect('(set:$a to (dataset: 2,3))(set: $a\'s 1st to 1)').markupToError();
 			expect('(set:$a to (dataset: 2,3))(set: $a\'s last to 1)').markupToError();
 		});
+		describe("for hook references", function() {
+			it("'1st', '2nd', etc. produce hook references of just the hook at that position", function() {
+				expect('|a>[1]|a>[1]|a>[1]|a>[1](replace: ?a\'s 3rd)[2]').markupToPrint("1121");
+			});
+			it("indexed hook references can be concatenated", function() {
+				expect('|a>[1]|a>[1]|a>[1]|a>[1](replace: ?a\'s 2nd + ?a\'s 4th)[2]').markupToPrint("1212");
+				expect('|a>[1]|a>[1]|b>[1]|a>[1](replace: ?a\'s 2nd + ?b)[2]').markupToPrint("1221");
+			});
+			it("cannot be assigned to", function() {
+				expect("|a>[](set:$a's 1st to (a:1,2))").markupToError();
+			});
+		});
 	});
 	describe("string indices", function() {
 		describe("for datamaps", function() {
@@ -150,10 +162,6 @@ describe("property indexing", function() {
 			it("can be chained", function() {
 				expect('(print: (datamap:"W",(datamap:"W",1))\'s W\'s W)').markupToPrint("1");
 			});
-			it("can include numbers", function() {
-				runPassage("(set: $d to (datamap:1,5))(set: $d's 2 to 4)");
-				expect('(print: $d\'s 2)').markupToPrint("4");
-			});
 			it("can't be used if the datamap already contains a different-typed similar key", function() {
 				runPassage("(set: $d to (datamap:1,5,'2',4))");
 				expect('(set: $d\'s 2 to 7)').markupToError();
@@ -162,23 +170,33 @@ describe("property indexing", function() {
 		});
 		it("only 'length' can be used with arrays", function() {
 			expect('(set: $s to (a: 2,3))(print: $s\'s length)').markupToPrint('2');
+			expect('(set: $s to (a: 2,3))(print: $s\'s thing)').markupToError();
 			expect('(set: $s to (a: 2,3))(set: $s\'s thing to 4)').markupToError();
+			expect('(set: $s to (a: 2,3))(set: $s\'s length to 4)').markupToError();
 		});
 		it("only 'length' can be used with datasets", function() {
 			expect('(set: $s to (dataset: 2,3))(print: $s\'s length)').markupToPrint('2');
+			expect('(set: $s to (dataset: 2,3))(print: $s\'s thing)').markupToError();
 			expect('(set: $s to (dataset: 2,3))(set: $s\'s thing to 4)').markupToError();
+			expect('(set: $s to (dataset: 2,3))(set: $s\'s length to 4)').markupToError();
 		});
 		it("cannot be used with booleans", function() {
-			expect('(print: false\'s "1")').markupToError();
-			expect('(print: true\'s "1")').markupToError();
-			expect('(set:$a to false)(set: $a\'s "1" to 1)').markupToError();
-			expect('(set:$a to true)(set: $a\'s "1" to 1)').markupToError();
+			expect('(print: false\'s a)').markupToError();
+			expect('(print: true\'s a)').markupToError();
+			expect('(set:$a to false)(set: $a\'s a to 1)').markupToError();
+			expect('(set:$a to true)(set: $a\'s a to 1)').markupToError();
 		});
 		it("cannot be used with numbers", function() {
-			expect('(print: 2\'s "1")').markupToError();
-			expect('(print: -0.1\'s "1")').markupToError();
-			expect('(set:$a to 2)(set: $a\'s "1" to 1)').markupToError();
-			expect('(set:$a to -0.1)(set: $a\'s "1" to 1)').markupToError();
+			expect('(print: 2\'s a)').markupToError();
+			expect('(print: -0.1\'s a)').markupToError();
+			expect('(set:$a to 2)(set: $a\'s a to 1)').markupToError();
+			expect('(set:$a to -0.1)(set: $a\'s a to 1)').markupToError();
+		});
+		it("only 'length' can be used with hook references", function() {
+			expect('|a>[]|a>[](print: ?a\'s length)').markupToPrint('2');
+			expect('|a>[]|a>[](print: ?a\'s thing)').markupToError();
+			expect('|a>[]|a>[](set: ?a\'s thing to 4)').markupToError();
+			expect('|a>[]|a>[](set: ?a\'s length to 4)').markupToError();
 		});
 	});
 	describe("belonging indices", function() {
@@ -202,6 +220,26 @@ describe("property indexing", function() {
 		});
 		it("won't conflict with 'its' indices", function() {
 			expect('(set:$a to (a:(a:7,8),(a:9,0)))(set: $a to 2nd of its 1st)$a').markupToPrint("8");
+		});
+		it("only 'length' can be used with arrays", function() {
+			expect('(set: $s to (a: 2,3))(print: length of $s)').markupToPrint('2');
+			expect('(set: $s to (a: 2,3))(set: thing of $s to 4)').markupToError();
+		});
+		it("only 'length' can be used with datasets", function() {
+			expect('(set: $s to (dataset: 2,3))(print: $s\'s length)').markupToPrint('2');
+			expect('(set: $s to (dataset: 2,3))(set: $s\'s thing to 4)').markupToError();
+		});
+		it("cannot be used with booleans", function() {
+			expect('(print: 1st of false)').markupToError();
+			expect('(print: 1st of true)').markupToError();
+			expect('(set:$a to false)(set: 1st of $a to 1)').markupToError();
+			expect('(set:$a to true)(set: 1st of $a to 1)').markupToError();
+		});
+		xit("cannot be used with numbers", function() {
+			expect('(print: 1st of 2)').markupToError();
+			expect('(print: 1st of -0.1)').markupToError();
+			expect('(set:$a to 2)(set: 1st of $a to 1)').markupToError();
+			expect('(set:$a to -0.1)(set: 1st of $a to 1)').markupToError();
 		});
 	});
 	describe("the possessive operators", function() {
@@ -247,6 +285,11 @@ describe("property indexing", function() {
 			});
 			it("allows numeric keys", function() {
 				expect('(print: (datamap:1,7)\'s (1))').markupToPrint('7');
+			});
+			it("can't be used if the datamap already contains a different-typed similar key", function() {
+				runPassage("(set: $d to (datamap:1,5,'2',4))");
+				expect('(set: $d\'s 2 to 7)').markupToError();
+				expect('(set: $d\'s "1" to 6)').markupToError();
 			});
 			describe("with an array key", function() {
 				it("evaluates to an array of keyed properties", function() {
@@ -333,6 +376,51 @@ describe("property indexing", function() {
 					expect('(set: $a to "𐌎old")(set: $a\'s (a:3,2)\'s (a:1,2) to "ar")$a').markupToPrint('𐌎rad');
 				});
 			});
+		});
+		describe("for hook references", function() {
+			it("must have numbers in range on the right side, or 'length'", function (){
+				expect("|a>[1]|a>[1](replace: ?a's (1))[2]").markupToPrint('21');
+				expect("|a>[]|a>[](print: ?a's 'length')").markupToPrint('2');
+				expect("|a>[1]|a>[1](replace: ?a's '1')[2]").markupToError();
+				expect("|a>[1]|a>[1](replace: ?a's ('13''s 1st))[2]").markupToError();
+				expect("|a>[1]|a>[1](replace: ?a's 0)[2]").markupToError();
+				// These don't error because hook refs are nullable
+				expect("|a>[1]|a>[1](replace: ?a's 9)[2]").markupToPrint('11');
+				expect("|a>[1]|a>[1](replace: ?b's 1)[2]").markupToPrint('11');
+			});
+			it("takes negative numeric expressions to obtain last, 2ndlast, etc", function() {
+				expect("|a>[1]|a>[1](replace: ?a's (-1))[2]").markupToPrint('12');
+				expect("|a>[1]|a>[1](replace: ?a's (-2))[2]").markupToPrint('21');
+				expect("|a>[1]|a>[1](replace: ?a's (-4))[2]").markupToPrint('11');
+			});
+			it("can be chained", function() {
+				expect("|a>[1]|a>[1](replace: ?a's 1st's 1st)[2]").markupToPrint('21');
+				expect("|a>[1]|a>[1](replace: ?a's 2nd's 1st)[2]").markupToPrint('12');
+				expect("|a>[1]|a>[1](replace: ?a's 2nd's 2nd)[2]").markupToPrint('11');
+			});
+			describe("with an array key", function() {
+				it("evaluates to a subset", function() {
+					expect("|a>[1]|a>[1]|a>[1]|a>[1](replace: ?a's (a:1,4))[2]").markupToPrint('2112');
+					expect("|a>[1]|a>[1]|a>[1]|a>[1](replace: ?a's (a:1,3))[2]").markupToPrint('2121');
+					expect("|a>[1]|a>[1]|a>[1]|a>[1](replace: ?a's (a:1,3))[2]").markupToPrint('2121');
+				});
+				it("can be chained", function() {
+					expect("|a>[1]|a>[1]|a>[1]|a>[1](replace: ?a's (a:1,4)'s 2nd)[2]").markupToPrint('1112');
+					expect("|a>[1]|a>[1]|a>[1]|a>[1](replace: ?a's (a:1,2,4)'s (a:2,3))[2]").markupToPrint('1212');
+				});
+			});
+		});
+		it("cannot be used with booleans", function() {
+			expect('(print: false\'s "1")').markupToError();
+			expect('(print: true\'s "1")').markupToError();
+			expect('(set:$a to false)(set: $a\'s "1" to 1)').markupToError();
+			expect('(set:$a to true)(set: $a\'s "1" to 1)').markupToError();
+		});
+		it("cannot be used with numbers", function() {
+			expect('(print: 2\'s "1")').markupToError();
+			expect('(print: -0.1\'s "1")').markupToError();
+			expect('(set:$a to 2)(set: $a\'s "1" to 1)').markupToError();
+			expect('(set:$a to -0.1)(set: $a\'s "1" to 1)').markupToError();
 		});
 	});
 	describe("the belonging operator", function() {

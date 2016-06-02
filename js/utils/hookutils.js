@@ -235,9 +235,9 @@ define(['jquery', 'utils/selectors'], ($, Selectors) => {
 			@return {String} classlist string
 		*/
 		hookToSelector(c) {
-			c = c.replace(/"/g, "&quot;");
+			c = c.replace(/\?/g, '').replace(/"/g, "&quot;");
 			return Selectors.hook+'[name="' + c + '"]';
-		}
+		},
 	};
 	return Object.freeze(HookUtils);
 });

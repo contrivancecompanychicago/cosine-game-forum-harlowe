@@ -12,7 +12,7 @@ define(['jquery', 'utils', 'utils/selectors', 'macros', 'datatypes/hookset', 'da
 		This experimental (enchant:) macro is currently just for testing purposes.
 	*/
 	Macros.add("enchant",
-		(section, changer, scope) => ({
+		(section, scope, changer) => ({
 			TwineScript_ObjectName: "an (enchant:) command",
 			TwineScript_TypeName:   "an (enchant:) command",
 			TwineScript_Print() {
@@ -25,7 +25,7 @@ define(['jquery', 'utils', 'utils/selectors', 'macros', 'datatypes/hookset', 'da
 				return "";
 			},
 		}),
-		[ChangerCommand, either(HookSet,String)]
+		[either(HookSet,String), ChangerCommand]
 	);
 
 	/*

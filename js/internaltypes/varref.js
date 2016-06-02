@@ -189,10 +189,19 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 				Recall that unary + converts negative to positive, so
 				"-0" must be used in its place.
 			*/
-			if (isSequential(obj) && prop-0 < 0) {
+			if (isSequential(obj) && prop-0 < 0 &&
+					/*
+						This should be <= because (a:1,2,3)'s (-3) should
+						access the first element.
+					*/
+					Math.abs(prop) <= obj.length) {
 				prop = obj.length + (prop-0);
 			}
-			return obj[prop];
+			if (obj.TwineScript_GetElement && Number.isFinite(+prop)) {
+				return obj.TwineScript_GetElement(prop);
+			} else {
+				return obj[prop];
+			}
 		}
 	}
 	
@@ -230,7 +239,22 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 				+ " because it's one of my special system collections.",
 			writeproofErrorMsg = "I can't modify '" + propertyDebugName(prop)
 				+ "' because it holds one of my special system collections.";
-		
+
+		/*
+			HookRefs cannot be altered.
+		*/
+		if (HookSet.isPrototypeOf(obj)) {
+			return TwineError.create('operation', "I can't modify " + objectName(obj),
+				'You should alter hooks indirectly using macros like (replace:) or (enchant:).');
+		}
+		/*
+			Neither can datasets.
+		*/
+		if (obj instanceof Set) {
+			return TwineError.create('operation', "I can't modify " + objectName(obj),
+				'You should use an (array:) if you need to modify the data inside this dataset.');
+		}
+
 		if (obj instanceof Map) {
 			/*
 				The "TwineScript_Sealed" expando property means that this map/object cannot be
@@ -316,7 +340,11 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 			if (isSequential(obj) && prop-0 < 0) {
 				prop = obj.length + (prop-0);
 			}
-			obj[prop] = value;
+			if (obj.TwineScript_Set) {
+				obj.TwineScript_Set(prop);
+			} else {
+				obj[prop] = value;
+			}
 		}
 	}
 
@@ -395,6 +423,16 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 			property key. This allows, for instance, getting a subarray by passing a range.
 		*/
 		if (Array.isArray(prop)) {
+			/*
+				HookSets, when sliced, produce another HookSet rather than an array.
+			*/
+			if (HookSet.isPrototypeOf(obj)) {
+				/*
+					HookSet's implementation of TwineScript_GetElement supports
+					arrays of properties being passed in.
+				*/
+				return obj.TwineScript_GetElement(prop);
+			}
 			return (prop.map(e => get(obj, e,
 					/*
 						This is incorrect, but I don't have access to the "original"
@@ -403,9 +441,7 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 					e
 				)))
 				/*
-					Strings are the only collection which, when sliced, produce a string
-					rather than an array. This is a complexity trade-off which is, I feel,
-					justified.
+					Strings, when sliced, produce another string rather than an array.
 				*/
 				[typeof obj === "string" ? "join" : "valueOf"]("");
 		}

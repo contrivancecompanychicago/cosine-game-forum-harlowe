@@ -446,7 +446,10 @@ describe("twinescript operators", function () {
 			expect("(a: ...(a:1,2,'ABC'))").markupToPrint("1,2,ABC");
 		});
 		it("spreads datasets into positional macro arguments, as elements", function (){
-			expect("(a: ...(dataset:1,2,2,'ABC'))").markupToPrint("1,2,ABC");
+			expect("(print: (a: ...(dataset:1,2,2,'ABC'))'s last)").markupToPrint("ABC");
+		});
+		it("spreads hook references into sub-hook references", function (){
+			expect("|a>[1]|a>[1](set:$a to (a: ...?a))(replace:$a's 1st)[2]").markupToPrint("21");
 		});
 		it("fails for non-sequential data types", function (){
 			expect("(a: ...1)").markupToError();

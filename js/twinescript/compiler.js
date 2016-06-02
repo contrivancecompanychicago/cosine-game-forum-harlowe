@@ -230,13 +230,6 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 					2. The ? sigil is needed to distinguish the hook name
 					from a pseudo-hook selector string.
 				*/
-				if (isVarRef) {
-					/*
-						Assignments to hookRefs, and copying their data, is currently not allowed.
-					*/
-					return "TwineError.create('operation',\"I can't copy or alter a hook's value.\","
-						+ "'You should alter hooks indirectly using macros like (replace:) or (enchant:).') ";
-				}
 				return " section.selectHook('?" + token.name + "') ";
 			}
 			else if (token.type === "string") {

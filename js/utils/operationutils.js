@@ -1,4 +1,4 @@
-define(['utils', 'internaltypes/twineerror'], ({impossible, toJSLiteral}, TwineError) => {
+define(['utils', 'datatypes/hookset', 'internaltypes/twineerror'], ({impossible, toJSLiteral}, HookSet, TwineError) => {
 	"use strict";
 	
 	/*
@@ -174,7 +174,7 @@ define(['utils', 'internaltypes/twineerror'], ({impossible, toJSLiteral}, TwineE
 		sequential collection functionality (e.g. Array, String, other stuff).
 	*/
 	function isSequential(value) {
-		return typeof value === "string" || Array.isArray(value);
+		return typeof value === "string" || Array.isArray(value) || HookSet.isPrototypeOf(value);
 	}
 	/*
 		Now, a function to clone arbitrary values.
