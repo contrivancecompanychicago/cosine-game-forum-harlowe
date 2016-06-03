@@ -219,8 +219,8 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 	}
 
 	/*
-		Given a search string, this wraps all identified text nodes in the given
-		HTML tag. Currently only used to create <tw-pseudo-hook> elements.
+		Given a search string, this wraps all identified text nodes inside the given DOM
+		inside the given HTML tag. Currently only used to create <tw-pseudo-hook> elements.
 
 		@param {String} searchString The passage text to wrap
 		@param {jQuery} dom The DOM in which to search
@@ -235,35 +235,29 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 		});
 		return ret.parent();
 	}
-	
-	/*
-		Returns the type of a selector string.
-		Currently used simply to differentiate hookRef strings.
-		TODO: Use TwineMarkup.RegExpStrings.
-
-		@param {String} Value to examine
-		@return {String} Either "hookRef", "string", or "undefined".
-	*/
-	function selectorType(val) {
-		if (val && typeof val === "string") {
-			const r = /\?(\w*)/.exec(val);
-			if (r && r.length) {
-				return "hookRef";
-			}
-			return "string";
-		}
-		return "undefined";
-	}
 
 	/*
-		Convert a hook index string to a CSS selector.
+		Convert a hook names string to a CSS selector.
+		This includes the "built-in" names that target certain
+		Harlowe elements: ?page, ?passage, ?sidebar, ?link.
 
 		@param {String} chain to convert
 		@return {String} classlist string
 	*/
 	function hookToSelector(c) {
-		c = c.replace(/\?/g, '').replace(/"/g, "&quot;");
-		return Selectors.hook+'[name="' + c + '"]';
+		c = Utils.insensitiveName(c).replace(/\?/g, '').replace(/"/g, "&quot;");
+		let ret = Selectors.hook+'[name="' + c + '"]';
+		/*
+			The built-in names work alongside user names: |page>[] will be
+			selected alongside the <tw-story> element.
+		*/
+		ret += ({
+			page: ", tw-story",
+			passage: ", tw-passage",
+			sidebar: ", tw-sidebar",
+			link: ", tw-link, .enchantment-link",
+		}[c]) || "";
+		return ret;
 	}
 
 	/*
@@ -300,16 +294,23 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 			return $(elements.get(index));
 		};
 		if (this.selector) {
-			let ownElements;
+			let ownElements, {dom} = this.section;
 			/*
 				If this is a pseudo-hook (search string) selector, we must create the
 				temporary <tw-pseudo-hook> elements around the selection.
 			*/
-			if (selectorType(this.selector) === "string") {
-				ownElements = wrapTextNodes(this.selector, this.section.dom, '<tw-pseudo-hook>');
+			if (!this.selector.match("^\\?" + Utils.anyLetter + "+$")) {
+				/*
+					Note that wrapTextNodes currently won't target text directly inside <tw-story>,
+					<tw-sidebar> and other <tw-passage>s.
+				*/
+				ownElements = wrapTextNodes(this.selector, dom, '<tw-pseudo-hook>');
 			}
 			else {
-				ownElements = Utils.$(hookToSelector(this.selector), this.section.dom);
+				ownElements = Utils.findAndFilter(
+					dom.add(dom.parentsUntil(Utils.storyElement.parent())),
+					hookToSelector(this.selector)
+				);
 			}
 			if (this.properties.length) {
 				ret = ret.add(this.properties.reduce(reducer, ownElements));
@@ -421,7 +422,7 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 			Creates a new HookSet, which contains the following:
 
 			{Section} section: a section from which hook elements are selected.
-			{String} selector: a hook name, such as "flank" for ?flank.
+			{String} selector: a hook name, such as "?flank" for ?flank, or a bare search string.
 			{HookSet} base: an alternative to selector. A HookSet from which the properties
 				are being extracted.
 			{Array} properties: a set of properties to restrict the current set of hooks.

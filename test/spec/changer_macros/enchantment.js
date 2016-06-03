@@ -11,9 +11,9 @@ describe("enchantment macros", function () {
 			expect("(print:(enchant:(font:'Skia'), 'baz'))").markupToError();
 		});
 	});
-	xdescribe("enchanting <tw-story>", function() {
-		it("wraps the <tw-story> in a <tw-enchantment>", function(done) {
-			runPassage("(enchant:'<tw-story>',(text-style:'bold'))");
+	describe("enchanting ?Page", function() {
+		it("wraps the ?Page in a <tw-enchantment>", function(done) {
+			runPassage("(enchant:?Page,(text-style:'bold'))");
 			setTimeout(function() {
 				var enchantment = $('tw-story').parent();
 				expect(enchantment.is('tw-enchantment')).toBe(true);
@@ -22,7 +22,7 @@ describe("enchantment macros", function () {
 			});
 		});
 		it("the <tw-enchantment> is removed when changing passages", function(done) {
-			runPassage("(enchant:'<tw-story>',(text-style:'bold'))");
+			runPassage("(enchant:?Page,(text-style:'bold'))");
 			setTimeout(function() {
 				var enchantment = $('tw-story').parent();
 				expect($('tw-story').parent().is('tw-enchantment')).toBe(true);
@@ -37,9 +37,9 @@ describe("enchantment macros", function () {
 			});
 		});
 	});
-	xdescribe("enchanting <tw-passage>", function() {
-		it("wraps the current <tw-passage> in a <tw-enchantment>", function() {
-			runPassage("(enchant:'<tw-passage>',(background:'#000'))");
+	describe("enchanting ?Passage", function() {
+		it("wraps the current ?Passage in a <tw-enchantment>", function() {
+			runPassage("(enchant:?Passage,(background:'#000'))");
 			var enchantment = $('tw-passage').parent();
 			expect(enchantment.is('tw-enchantment')).toBe(true);
 		});

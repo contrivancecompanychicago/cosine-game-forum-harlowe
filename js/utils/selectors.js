@@ -10,7 +10,6 @@ define([], () => {
 		internalLink: "tw-link",
 		brokenLink  : "tw-broken-link",
 		hook        : "tw-hook",
-		pseudoHook  : "tw-pseudo-hook",
 		enchantment : "tw-enchantment",
 		expression  : "tw-expression",
 		script      : "[role=script]",

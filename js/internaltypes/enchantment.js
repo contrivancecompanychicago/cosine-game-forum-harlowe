@@ -87,7 +87,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor'], ($, Utils, ChangeD
 					It must be performed now because the aforementioned .attr() call
 					may entirely alter the style attribute.
 				*/
-				if (e.is('tw-story')) {
+				if (e.is(Utils.storyElement)) {
 					wrapping.css({ width: '100%', height: '100%' });
 				}
 

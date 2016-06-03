@@ -23,8 +23,17 @@ describe("hooks", function () {
 		it("may also alternatively have a mirrored nametag on the other side", function (){
 			expect("[foo]<hook|").markupToPrint("foo");
 		});
+		it("names may not be empty", function (){
+			expect("|>[foo]").markupToPrint("|>foo");
+		});
 		it("names may not contain whitespace", function (){
 			expect("|hook >[foo]").markupToPrint("|hook >foo");
+		});
+		it("names may contain only underscores or numbers", function() {
+			expect("|2_>[foo]").markupToPrint("foo");
+			expect("|_2>[foo]").markupToPrint("foo");
+			expect("|_>[foo]").markupToPrint("foo");
+			expect("|2>[foo]").markupToPrint("foo");
 		});
 		it("can be nested", function (){
 			expect("[[Hello!]<b|]<a|").markupToPrint("Hello!");
@@ -38,6 +47,12 @@ describe("hooks", function () {
 		});
 		it("<tw-hook> elements have name attributes", function (){
 			runPassage("[foo]<grault|");
+			expect($('tw-passage').find('tw-hook').attr('name')).toBe('grault');
+		});
+		it("names are insensitive", function() {
+			runPassage("[foo]<GRAULT|");
+			expect($('tw-passage').find('tw-hook').attr('name')).toBe('grault');
+			runPassage("[foo]<_gra_u-lt|");
 			expect($('tw-passage').find('tw-hook').attr('name')).toBe('grault');
 		});
 	});

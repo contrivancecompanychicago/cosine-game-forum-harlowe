@@ -1,5 +1,5 @@
 define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
-({escape, impossible, toJSLiteral}, TwineMarkup, Compiler, TwineError) => {
+({escape, impossible, toJSLiteral, insensitiveName}, TwineMarkup, Compiler, TwineError) => {
 	"use strict";
 	/*
 		The Renderer takes the syntax tree from TwineMarkup and returns a HTML string.
@@ -291,7 +291,7 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 					}
 					case "hook": {
 						out += '<tw-hook '
-							+ (token.name ? 'name="' + token.name + '"' : '')
+							+ (token.name ? 'name="' + insensitiveName(token.name) + '"' : '')
 							// Debug mode: show the hook destination as a title.
 							+ ((Renderer.options.debug && token.name) ? ' title="Hook: ?' + token.name + '"' : '')
 							+ ' source="' + escape(token.innerText) + '">'

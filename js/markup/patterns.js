@@ -79,7 +79,7 @@
 		// This includes every surrogate pair character, but doesn't check their order or pairing.
 		anyLetter            = "[\\w\\-\u00c0-\u00de\u00df-\u00ff\u0150\u0170\u0151\u0171\\uD800-\\uDFFF]",
 		// Identical to the above, but excludes hyphens.
-		anyLetterStrict      =    "[\\w\u00c0-\u00de\u00df-\u00ff\u0150\u0170\u0151\u0171\\uD800-\\uDFFF]",
+		anyLetterStrict      =    anyLetter.replace("\\-", ""),
 		
 		eol                  = either("\\n", "$"),
 		
@@ -306,12 +306,12 @@
 		
 		/*
 			This determines the valid characters for a property name. Sadly, "-" is not allowed.
-			As of 1.1, this must include at least 1 non-numeral.
+			As of 1.1, this must include at least 1 non-numeral non-underscore.
 		*/
 		validPropertyName =
-			anyLetter.replace("\\-", "") + "*"
-			+ anyLetter.replace("\\-", "").replace("\\w","a-zA-Z")
-			+ anyLetter.replace("\\-", "") + "*",
+			anyLetterStrict + "*"
+			+ anyLetterStrict.replace("\\w","a-zA-Z")
+			+ anyLetterStrict + "*",
 		
 		/*d:
 			Variable markup
@@ -373,7 +373,7 @@
 		
 		macro = {
 			opener:            "\\(",
-			name:              "(" + either(anyLetter.replace("]","\\/]") + anyLetter + "*", variable) + "):",
+			name:              "(" + either(anyLetter + "+", variable) + "):",
 			closer:            "\\)",
 		},
 		
@@ -384,8 +384,8 @@
 			attrs:             "(?:\"[^\"]*\"|'[^']*'|[^'\">])*?",
 		},
 
-		hookTagFront =  "\\|(" + anyLetter.replace("]", "_]") + "*)>",
-		hookTagBack  =  "<("   + anyLetter.replace("]", "_]") + "*)\\|",
+		hookTagFront =  "\\|(" + anyLetter + "+)>",
+		hookTagBack  =  "<("   + anyLetter + "+)\\|",
 
 		tempVariable = "_(" + validPropertyName + ")" + wb,
 		

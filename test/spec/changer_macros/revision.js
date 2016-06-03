@@ -131,11 +131,36 @@ describe("revision macros", function() {
 					expect(p.text()).toBe(append?'102030':'010203');
 				});
 			});
-			xdescribe("given a <tw-story> element string", function() {
+			describe("given the ?Page hook name", function() {
 				it(name+"s to the <tw-story> element", function() {
-					runPassage("("+name+":'<tw-story>')[//hands//]");
+					runPassage("("+name+":?Page)[//hands//]");
 					var i = $('tw-story > i');
 					expect(i.text()).toBe('hands');
+				});
+			});
+			// TODO: This currently doesn't work because transforming the <tw-passage> while
+			// it's rendering will cause the DOM on which it's being rendered to be discarded,
+			// losing the pre-existing text.
+			xdescribe("given the ?Passage hook name", function() {
+				it(name+"s to the current <tw-passage> element", function() {
+					runPassage("("+name+":?Passage)[//hands//]X");
+					var i = $('tw-passage > i');
+					expect(i.text()).toBe(append? 'Xhands' : 'handsX');
+				});
+			});
+			describe("given the ?Sidebar hook name", function() {
+				it(name+"s to the current passage's <tw-sidebar> element", function() {
+					runPassage("("+name+":?Sidebar)[//hands//]X");
+					var i = $('tw-sidebar > i');
+					expect(i.text()).toBe('hands');
+				});
+			});
+			describe("given the ?Link hook name", function() {
+				it(name+"s to every <tw-link> in the passage", function() {
+					createPassage("''Red''", "grault");
+					expect("[[ad->grault]](link-goto:'ad','grault')(link:'ad')[](click:?1)[]|1>[ad]"
+						+"("+name+":?Link)[//he//]")
+						.markupToPrint(append?'adheadheadheadhe' : 'headheadheadhead');
 				});
 			});
 		});
@@ -230,6 +255,35 @@ describe("revision macros", function() {
 				runPassage("(set:$a to 0)(set:$s to (replace:'A','B') + (replace:'2','B',C'))");
 				var p = runPassage("ABC$s[(set:$a to it + 1)$a]");
 				expect(p.text()).toBe('123');
+			});
+		});
+		describe("given the ?Page hook name", function() {
+			it("replaces the <tw-story> element", function() {
+				runPassage("(replace:?Page)[//hands//]");
+				var i = $('tw-story');
+				expect(i.html()).toMatch(/<i>hands<\/i>/i);
+			});
+		});
+		describe("given the ?Passage hook name", function() {
+			it("replaces the current <tw-passage> element", function() {
+				runPassage("(replace:?Passage)[//hands//]X");
+				var i = $('tw-passage');
+				expect(i.text()).toBe('hands');
+			});
+		});
+		describe("given the ?Sidebar hook name", function() {
+			it("replaces the current passage's <tw-sidebar> element", function() {
+				runPassage("(replace:?Sidebar)[//hands//]X");
+				var i = $('tw-sidebar');
+				expect(i.text()).toBe('hands');
+			});
+		});
+		describe("given the ?Link hook name", function() {
+			it("replaces every <tw-link> in the passage", function() {
+				createPassage("''Red''", "grault");
+				expect("[[ad->grault]](link-goto:'ad','grault')(link:'ad')[](click:?1)[]|1>[ad]"
+					+"(replace:?Link)[//he//]")
+					.markupToPrint('hehehehe');
 			});
 		});
 	});
