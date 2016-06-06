@@ -62,7 +62,7 @@ define(['macros', 'utils', 'utils/operationutils', 'internaltypes/twineerror'],
 			* `(text: ...$array)`
 			
 			Rationale:
-			Unlike in Twine 1, Twine 2 will only convert numbers into strings, or strings
+			Unlike in Twine 1 and SugarCube, Twine 2 will only convert numbers into strings, or strings
 			into numbers, if you explictly ask it to. This extra carefulness decreases
 			the likelihood of unusual bugs creeping into stories (such as adding 1 and "22"
 			and getting "122"). The (text:) macro (along with (num:)) is how you can convert
@@ -120,7 +120,7 @@ define(['macros', 'utils', 'utils/operationutils', 'internaltypes/twineerror'],
 			See also:
 			(subarray:)
 
-			#string
+			#deprecated
 		*/
 		("substring", (_, string, a, b) => subset(string, a, b),
 		[String, parseInt, parseInt])
@@ -301,7 +301,7 @@ define(['macros', 'utils', 'utils/operationutils', 'internaltypes/twineerror'],
 			`(num: "25")` results in the number `25`.
 			
 			Rationale:
-			Unlike in Twine 1, Twine 2 will only convert numbers into strings, or strings
+			Unlike in Twine 1 and SugarCube, Twine 2 will only convert numbers into strings, or strings
 			into numbers, if you explictly ask it to using macros such as this. This extra
 			carefulness decreases the likelihood of unusual bugs creeping into stories
 			(such as performing `"Eggs: " + 2 + 1` and getting `"Eggs: 21"`).

@@ -33,6 +33,18 @@ const
 					const {category:leftCategory, categoryOrder:leftCategoryOrder} = this.defs[left];
 					const {category:rightCategory, categoryOrder:rightCategoryOrder} = this.defs[right];
 
+					/*
+						Deprecated macros should be listed last.
+					*/
+					if (leftCategory === "deprecated") {
+						return 1;
+					}
+					if (rightCategory === "deprecated") {
+						return -1;
+					}
+					/*
+						Otherwise, sort alphabetically, then by explicit order number.
+					*/
 					if (leftCategory !== rightCategory) {
 						return (leftCategory || "").localeCompare(rightCategory || "")
 					}

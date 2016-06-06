@@ -235,7 +235,7 @@
 			This text is not in columns, but takes up the entire width, as usual.
 			```
 
-			You can create nested columns by enclosing the inner set of columns in a named or macro-attached hook, like so:
+			You can create nested columns by enclosing the inner set of columns in an unnamed hook, like so:
 			```
 			|==
 			This is the outer left column.
@@ -246,7 +246,7 @@
 			This is the inner left column, inside the outer right column.
 			  ==|
 			This is the inner right column, inside the outer right column.
-			\]<name|
+			\]
 			```
 
 			#section

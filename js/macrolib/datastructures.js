@@ -446,7 +446,7 @@ define([
 			See also:
 			(substring:), (rotated:)
 			
-			#data structure
+			#deprecated
 		*/
 		("subarray", (_, array, a, b) => subset(array, a, b),
 		[Array, parseInt, parseInt])
@@ -575,7 +575,7 @@ define([
 			providing just two, one or none will cause an error to be presented.
 			
 			See also:
-			(subarray:), (sorted:)
+			(sorted:)
 			
 			#data structure
 		*/

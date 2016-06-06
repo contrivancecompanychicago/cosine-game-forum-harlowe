@@ -1,6 +1,30 @@
 'use strict';
 
 const fs = require('fs');
+function unescape(text) {
+	return text.replace(/&(?:amp|lt|gt|quot|nbsp|zwnj|#39|#96);/g,
+		e => ({
+			'&amp;'  : '&',
+			'&gt;'   : '>',
+			'&lt;'   : '<',
+			'&quot;' : '"',
+			'&#39;'  : "'",
+			"&nbsp;" : String.fromCharCode(160),
+			"&zwnj;" : String.fromCharCode(8204)
+		}[e])
+	);
+}
+function escape(text) {
+	return text.replace(/[&><"']/g,
+		e => ({
+			'&' : '&amp;',
+			'>' : '&gt;',
+			'<' : '&lt;',
+			'"' : '&quot;',
+			"'" : '&#39;',
+		}[e])
+	);
+}
 /*
 	This generates end-user Harlowe macro and syntax documentation (in Markup).
 */
@@ -26,6 +50,48 @@ Object.keys(metadata).map(e => metadata[e]).forEach(e=>{
 	Convert to HTML with Marked
 */
 outputFile = require('marked')(outputFile);
+
+/*
+	Compile the <pre> using the CodeMirror mode.
+	First, obtain the CodeMirror highlighting CSS.
+*/
+let highlighting;
+global.document = {
+	querySelector(){},
+	createElement: () => ({
+		setAttribute(){},
+		set innerHTML(e) {
+			highlighting = e;
+		},
+	}),
+	head: { appendChild(){} },
+};
+global.window = global;
+require('../js/markup/codemirror/mode.js');
+/*
+	Now, find the <code> elements and modify their contents.
+*/
+const lex = require('../js/markup/markup.js').lex;
+outputFile = outputFile.replace(/<code>([^<]+)<\/code>/g, (_, code) => {
+	function makeCSSClasses(pos) {
+		return root.pathAt(pos).map(token => 'cm-harlowe-' + token.type).join(' ');
+	}
+	code = unescape(code);
+	let ret = '', root = lex(code), lastPos = 0;
+	root.everyLeaf(token => {
+		while (token.start > lastPos) {
+			ret += `<span class="${makeCSSClasses(lastPos)}">${escape(code[lastPos])}</span>`;
+			lastPos += 1;
+		}
+		ret += `<span class="${makeCSSClasses(token.start)}">${escape(token.text)}</span>`;
+		lastPos = token.end;
+	});
+	while (code.length > lastPos) {
+		ret += `<span class="${makeCSSClasses(lastPos)}">${escape(code[lastPos])}</span>`;
+		lastPos += 1;
+	}
+	return `<code>${ret}</code>`;
+});
 /*
 	Append CSS and HTML header tags
 */
@@ -66,14 +132,16 @@ nav img { display:block; margin: 0 auto;}
 .nav_macro_aka { opacity: 0.75; font-size:90%; color:#3B8BBA; margin-left: 0.5em; font-style: italic; }
 .nav_macro_aka::before { content: "also known as "; opacity: 0.75; }
 /* Code blocks */
-code { background:#FFF; border:1px solid #888; color:#000; display:block; padding:12px; }
+code { background:#FFF; border:1px solid #888; color:#000; display:block; padding:12px; overflow-x: scroll; }
 /* Inline code */
 pre { display:inline; }
 :not(pre) > code { background:hsla(0,0%,100%,0.75); border:1px dotted #888; display:inline; padding:1px; white-space:nowrap; }
 /* Heading links */
 .heading_link::before { content: "§"; display:inline-block; margin-left:-25px; padding-right:10px; color:black; font-weight:100; visibility:hidden; text-decoration:none; }
 :hover > .heading_link::before { visibility:visible; }
-</style>` + navElement + "</ul></nav>" + outputFile;
+/* Highlighting */
+${highlighting}
+</style>${navElement}</ul></nav>${outputFile}`;
 /*
 	Done
 */

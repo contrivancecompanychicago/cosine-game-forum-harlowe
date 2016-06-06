@@ -16,7 +16,7 @@
 	/*
 		Produce an array of the macro names, using both their names and their aliases.
 	*/
-	const validMacros = Object.keys(macros).reduce((a,e)=>a.concat(macros[e].name, ...macros[e].aka),[]).map(insensitiveName);
+	const validMacros = macros instanceof Object && Object.keys(macros).reduce((a,e)=>a.concat(macros[e].name, ...macros[e].aka),[]).map(insensitiveName);
 
 	/*
 		Import the TwineMarkup lexer function, and store it locally.
