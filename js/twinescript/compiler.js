@@ -182,10 +182,13 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 		and returns raw Javascript code for the expression's execution.
 		
 		@param {Array} The tokens array.
-		@param {Boolean} Whether the returned expression should be a VarRef.
+		@param {Object} Some flags to carry down recursive calls to compile()
+			{Boolean} isVarRef: whether or not this value should be compiled to a VarRef
+			{String} elidedComparison: whether or not this is part of an elided comparison
+				inside an "and" or "or" operation, like "3 < 4 and 5".
 		@return {String} String of Javascript code.
 	*/
-	function compile(tokens, isVarRef) {
+	function compile(tokens, {isVarRef, elidedComparison} = {}) {
 		// Convert tokens to a 1-size array if it's just a single non-array.
 		tokens = [].concat(tokens);
 		/*
@@ -319,17 +322,17 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 		}
 		else if (type === "to") {
 			assignment = "to";
-			right = compile(tokens.slice(i + 1), "varRef");
-			left  = "Operations.setIt(" + compile(tokens.slice(0,  i), "varRef") + ")";
+			right = compile(tokens.slice(i + 1), {isVarRef:true});
+			left  = "Operations.setIt(" + compile(tokens.slice(0,  i), {isVarRef:true}) + ")";
 		}
 		else if (type === "into") {
 			assignment = "into";
-			right = compile(tokens.slice(0,  i), "varRef");
-			left  = "Operations.setIt(" + compile(tokens.slice(i + 1), "varRef") + ")";
+			right = compile(tokens.slice(0,  i), {isVarRef:true});
+			left  = "Operations.setIt(" + compile(tokens.slice(i + 1), {isVarRef:true}) + ")";
 		}
 		else if (type === "where" || type === "via") {
 			left = "Lambda.create("
-				+ compile(tokens.slice(0, i), "varRef")
+				+ compile(tokens.slice(0, i), {isVarRef:true})
 				+ ",";
 			midString = toJSLiteral(token.type)
 				+ ",";
@@ -349,7 +352,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			}
 			else {
 				left = "Lambda.create("
-					+ compile(tokens.slice(0, i), "varRef")
+					+ compile(tokens.slice(0, i), {isVarRef:true})
 					+ ",";
 				midString = toJSLiteral(token.type)
 					+ ",";
@@ -363,7 +366,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 		*/
 		else if (type === "augmentedAssign") {
 			assignment = token.operator;
-			left  = compile(tokens.slice(0,  i), "varRef");
+			left  = compile(tokens.slice(0,  i), {isVarRef:true});
 			/*
 				This line converts the "b" in "a += b" into "a + b" (for instance),
 				thus partially de-sugaring the augmented assignment.
@@ -381,26 +384,63 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			The following are the logical arithmetic operators.
 		*/
 		else if (type === "and" || type === "or") {
-			const
-				[leftSide]              = precedentToken(tokens.slice(0,  i), "least"),
-				[rightSide, ri]         = precedentToken(tokens.slice(i + 1), "least"),
-				comparisonOperator = ['inequality','is','isNot','isIn','contains'],
-				leftIsComparison = comparisonOperator.indexOf(leftSide && leftSide.type) > -1,
-				rightIsComparison = comparisonOperator.indexOf(rightSide && rightSide.type) > -1;
 			/*
-				Since the index passed by mostPrecedentToken() is relative to the passed-in slice,
-				use ri to produce an index into the full tokens array.
+				Rule: a side is a comparison if its least precedentToken's type is a comparison
+				operator, or its type is "and" or "or" and its sides are a comparison.
 			*/
-			const rightIndex = ri + i + 1;
+			const isComparisonOp = (tokens) => {
+				const [token, i] = precedentToken(tokens, "least");
+				if (!token) {
+					return;
+				}
+				if (['inequality','is','isNot','isIn','contains'].indexOf(token.type) > -1) {
+					return token;
+				}
+				if (['and','or'].indexOf(token.type) >-1) {
+					return (isComparisonOp(tokens.slice(0, i)) || isComparisonOp(tokens.slice(i + 1)));
+				}
+			};
+
+			const
+				leftIsComparison        = isComparisonOp(tokens.slice(0,  i)),
+				rightIsComparison       = isComparisonOp(tokens.slice(i + 1)),
+				// This error message is used for elided "is not" comparisons.
+				ambiguityError = "TwineError.create('operation', 'This use of \"is not\" and \""
+					+ type + "\" is grammatically ambiguous',"
+					+ "'Maybe try rewriting this as \"__ is not __ " + type + " __ is not __') ";
+			
+			operation = token.type;
+			/*
+				If elidedComparison is a matching type, then this token is a continuation of an elided
+				comparison, such as "3 < 4 and [5 and 6]".
+				Simply add the left and right side as arguments to elidedComparisonOperator().
+			*/
+			if (elidedComparison === token.type) {
+				operation = '';
+				left  = (compile(tokens.slice(0,  i), {isVarRef, elidedComparison})).trim();
+				midString = ",";
+				right = (compile(tokens.slice(i + 1), {elidedComparison})).trim();
+			}
 			/*
 				If the left side is a comparison operator, and the right side is not,
 				wrap the right side in an elidedComparisonOperator call.
 				This transforms statements like (if: $a > 2 and 3) into (if: $a > 2 and it > 3).
 			*/
-			if (leftIsComparison && !rightIsComparison) {
+			else if (leftIsComparison && !rightIsComparison) {
+				const
+					[leftSide]            = precedentToken(tokens.slice(0,  i), "least"),
+					operator = toJSLiteral(compileComparisonOperator(leftSide));
+				/*
+					The one operation for which this transformation cannot be allowed is "is not",
+					because of its semantic ambiguity ("a is not b and c") in English.
+				*/
+				if (leftSide.type === 'isNot') {
+					return ambiguityError;
+				}
 				right = "Operations.elidedComparisonOperator("
-					+ toJSLiteral(compileComparisonOperator(leftSide)) + ","
-					+ compile(tokens.slice(i + 1))
+					+ toJSLiteral(token.type) + ","
+					+ operator + ","
+					+ compile(tokens.slice(i + 1), {elidedComparison:type})
 					+ ")";
 			}
 			/*
@@ -409,14 +449,32 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				This transforms statements like (if: $a and $b < 3) into (if: 3 >= $b and it >= $a).
 			*/
 			else if (!leftIsComparison && rightIsComparison) {
+				/*
+					isComparisonOp actually returns the token holding the comparison op.
+					We can reuse that token in this computation.
+				*/
+				const rightSide = rightIsComparison,
+					rightIndex = tokens.indexOf(rightSide),
+					operator = toJSLiteral(invertComparisonOperator(rightSide));
+
+				/*
+					Again, "is not" should not be transformed.
+				*/
+				if (rightSide.type === 'isNot') {
+					return ambiguityError;
+				}
 				right = "Operations.elidedComparisonOperator("
-					+ toJSLiteral(invertComparisonOperator(rightSide)) + ","
-					+ compile(tokens.slice(0, i))
+					+ toJSLiteral(token.type) + ","
+					+ operator + ","
+					+ compile(tokens.slice(0, i), {elidedComparison:type})
 					+ ")";
 				/*
 					The following additional action swaps the tokens to the right and left of rightSide,
 					and changes rightSide's type into its inverse. This changes ($b < 3) into (3 > $b),
 					and thus alters the It value of the expression from $b to 3.
+
+					For multi-part comparisons, (3 and 4 and 5 < 6) becomes (6 > 5 and it > 3 and it > 4).
+
 					This could cause issues when "it" is used explicitly in the expression, but frankly such
 					uses are already kinda nonsensical ("(if: $a is in it and $b)"?).
 				*/
@@ -431,7 +489,6 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 						...tokens.slice(i + 1, rightIndex),
 					]);
 			}
-			operation = token.type;
 		}
 		/*
 			The following are the comparison operators.
@@ -475,7 +532,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				/*
 					belongingProperties place the variable on the right.
 				*/
-				+ compile(tokens.slice (i + 1), "varref")
+				+ compile(tokens.slice (i + 1), {isVarRef:true})
 				+ ","
 				/*
 					Utils.toJSLiteral() is used to both escape the name
@@ -494,7 +551,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			else {
 				// Since, as with belonging properties, the variable is on the right,
 				// we must compile the right side as a varref.
-				right = compile(tokens.slice (i + 1), "varref");
+				right = compile(tokens.slice (i + 1), {isVarRef:true});
 			}
 			possessive = "belonging";
 		}
@@ -511,7 +568,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				inside the Operations.get() call, while leaving the right side as is.
 			*/
 			left = "VarRef.create("
-				+ compile(tokens.slice(0, i), "varref")
+				+ compile(tokens.slice(0, i), {isVarRef:true})
 				+ ","
 				/*
 					Utils.toJSLiteral() is used to both escape the name
@@ -591,7 +648,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			needsLeft = needsRight = false;
 		}
 		else if (type === "grouping") {
-			midString = "(" + compile(token.children, isVarRef) + ")";
+			midString = "(" + compile(token.children, {isVarRef}) + ")";
 			needsLeft = needsRight = false;
 		}
 		/*
@@ -604,7 +661,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				values for left and right, but usually they will just be
 				the tokens to the left and right of the matched one.
 			*/
-			left  = left  || (compile(tokens.slice(0,  i), isVarRef)).trim();
+			left  = left  || (compile(tokens.slice(0,  i), {isVarRef})).trim();
 			right = right || (compile(tokens.slice(i + 1))).trim();
 			/*
 				The compiler should implicitly insert the "it" keyword when the
@@ -657,7 +714,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			return (('value' in tokens[0] ? tokens[0].value : tokens[0].text) + "").trim() || " ";
 		}
 		else {
-			return tokens.reduce((a, token) => a + compile(token, isVarRef), "");
+			return tokens.reduce((a, token) => a + compile(token, {isVarRef}), "");
 		}
 		return "";
 	}

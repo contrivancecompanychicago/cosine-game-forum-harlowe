@@ -226,15 +226,23 @@ define([
 
 		/*
 			This is used to implement "elided comparisons", such as (if: $A is $B or $C).
-			The right side, "or $C", is converted to "elidedComparisonOperator('or', $C)".
+			The right side, "or $C", is converted to "elidedComparisonOperator('or', 'is', $C)".
 			If $C is boolean, then the expression is considered to be (if: $A is ($B or $C)),
 			as usual. But, if it's not, then it's (if: ($A is $B) or ($A is $C)).
 		*/
-		elidedComparisonOperator(operator, value) {
-			if (typeof value === "boolean") {
-				return value;
-			}
-			return Operations[operator](It, value);
+		elidedComparisonOperator(logicalOp, comparisonOp, ...values) {
+			return values.reduce((result, value) => {
+				if (typeof value === 'boolean') {
+					return value;
+				}
+				return Operations[logicalOp](
+					result,
+					Operations[comparisonOp](It, value)
+				);
+			},
+			// This is true when logicalOp is "and", and false for "or" -
+			// that is, the identity values for those operations.
+			logicalOp === "and");
 		},
 		
 		and: onlyPrimitives("boolean", doNotCoerce((l, r) => l && r), "use 'and' to join", andOrNotMessage),

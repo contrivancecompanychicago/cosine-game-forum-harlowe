@@ -200,13 +200,29 @@ describe("twinescript operators", function () {
 			expect("(print: 3 > 2 and 4)").markupToPrint("false");
 			expect("(print: 3 and 5 < 5)").markupToPrint("false");
 			expect("(print: 'a' is 'a' and 'a')").markupToPrint("true");
-			expect("(print: 'a' is not 'b' and 'c')").markupToPrint("true");
 			expect("(print: 'ab' contains 'b' and 'a')").markupToPrint("true");
 			expect("(print: 'b' is in 'ab' and 'bc')").markupToPrint("true");
 			expect("(print: 'a' is 'a' and 'b')").markupToPrint("false");
-			expect("(print: 'a' is not 'b' and 'a')").markupToPrint("false");
 			expect("(print: 'ab' contains 'c' and 'a')").markupToPrint("false");
 			expect("(print: 'b' is in 'ac' and 'bc')").markupToPrint("false");
+		});
+		it("can infer multiple elisions", function () {
+			expect("(print: 3 < 4 and 5 and 6)").markupToPrint("true");
+			expect("(print: 3 and 4 and 2 < 5)").markupToPrint("true");
+			expect("(print: 3 > 2 and 2 and 5)").markupToPrint("false");
+			expect("(print: 3 and 3 and 6 < 5)").markupToPrint("false");
+			expect("(print: 'a' is 'a' and 'a' and 'a')").markupToPrint("true");
+			expect("(print: 'ab' contains 'b' and 'a' and 'ab')").markupToPrint("true");
+			expect("(print: 'b' is in 'ab' and 'bc' and 'bd')").markupToPrint("true");
+			expect("(print: 'a' is 'a' and 'b' and 'c')").markupToPrint("false");
+			expect("(print: 'ab' contains 'c' and 'a' and 'b')").markupToPrint("false");
+			expect("(print: 'b' is in 'ac' and 'bc' and 'dc')").markupToPrint("false");
+			expect("(print: 3 < 4 and 5 and 6 and 7 and 8 and 9)").markupToPrint("true");
+			expect("(print: 4 and 5 and 6 and 7 and 8 and 9 > 3)").markupToPrint("true");
+		});
+		it("won't infer ambiguous elisions", function() {
+			expect("(print: 'a' is not 'b' and 'a')").markupToError();
+			expect("(print: 'a' and 'b' is not 'c')").markupToError();
 		});
 		it("infers with correct precedence", function () {
 			expect("(print: 2 is 1 + 1 and 2 * 1)").markupToPrint("true");
@@ -239,13 +255,29 @@ describe("twinescript operators", function () {
 			expect("(print: 3 > 5 or 4)").markupToPrint("false");
 			expect("(print: 6 or 5 < 5)").markupToPrint("false");
 			expect("(print: 'a' is 'a' or 'b')").markupToPrint("true");
-			expect("(print: 'a' is not 'b' or 'a')").markupToPrint("true");
 			expect("(print: 'ab' contains 'b' or 'c')").markupToPrint("true");
 			expect("(print: 'b' is in 'ac' or 'bc')").markupToPrint("true");
 			expect("(print: 'a' is 'c' or 'b')").markupToPrint("false");
-			expect("(print: 'a' is not 'a' or 'a')").markupToPrint("false");
 			expect("(print: 'ab' contains 'c' or 'd')").markupToPrint("false");
 			expect("(print: 'b' is in 'ad' or 'cd')").markupToPrint("false");
+		});
+		it("can infer multiple elisions", function () {
+			expect("(print: 3 < 4 or 2 or 1)").markupToPrint("true");
+			expect("(print: 3 or 4 or 5 < 4)").markupToPrint("true");
+			expect("(print: 3 > 5 or 4 or 6)").markupToPrint("false");
+			expect("(print: 6 or 5 or 7 < 5)").markupToPrint("false");
+			expect("(print: 'a' is 'c' or 'b' or 'a')").markupToPrint("true");
+			expect("(print: 'ab' contains 'b' or 'c' or 'd')").markupToPrint("true");
+			expect("(print: 'b' is in 'ac' or 'bc' or 'cd')").markupToPrint("true");
+			expect("(print: 'a' is 'c' or 'b' or 'e')").markupToPrint("false");
+			expect("(print: 'ab' contains 'e' or 'd' or 'c')").markupToPrint("false");
+			expect("(print: 'b' is in 'ad' or 'cd')").markupToPrint("false");
+			expect("(print: 3 < 1 or 0 or -1 or 2 or -2 or 4)").markupToPrint("true");
+			expect("(print: 1 or 0 or -1 or 2 or -2 or 4 > 3)").markupToPrint("true");
+		});
+		it("won't infer ambiguous elisions", function() {
+			expect("(print: 'a' is not 'b' or 'a')").markupToError();
+			expect("(print: 'a' or 'b' or 'c' is not 'a')").markupToError();
 		});
 		it("infers with correct precedence", function () {
 			expect("(print: 2 is 1 + 1 or 3 * 1)").markupToPrint("true");
