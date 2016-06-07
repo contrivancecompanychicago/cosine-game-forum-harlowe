@@ -1,40 +1,26 @@
 'use strict';
 
 const fs = require('fs');
-function unescape(text) {
-	return text.replace(/&(?:amp|lt|gt|quot|nbsp|zwnj|#39|#96);/g,
-		e => ({
-			'&amp;'  : '&',
-			'&gt;'   : '>',
-			'&lt;'   : '<',
-			'&quot;' : '"',
-			'&#39;'  : "'",
-			"&nbsp;" : String.fromCharCode(160),
-			"&zwnj;" : String.fromCharCode(8204)
-		}[e])
-	);
-}
-function escape(text) {
-	return text.replace(/[&><"']/g,
-		e => ({
-			'&' : '&amp;',
-			'>' : '&gt;',
-			'<' : '&lt;',
-			'"' : '&quot;',
-			"'" : '&#39;',
-		}[e])
-	);
-}
+const {unescape, escape} = require('lodash');
+
 /*
 	This generates end-user Harlowe macro and syntax documentation (in Markup).
 */
 const metadata = require('./metadata');
 let outputFile = "";
-let navElement = "<nav><img src='http://twinery.org/2/storyformats/Harlowe/icon.svg' width=96 height=96></img>";
+let navElement = "<nav><img src='http://twinery.org/2/story-formats/Harlowe/icon.svg' width=96 height=96></img>";
 /*
 	Obtain the version
 */
-navElement += `<div class=nav_version>Harlowe version ${JSON.parse(fs.readFileSync('package.json')).version}</div>`
+const {version} = JSON.parse(fs.readFileSync('package.json'));
+navElement += `<div class=nav_version><p>Harlowe ${version} manual</p>
+<p>${
+	version.split('.')[0] === '1' ? `<b>${version}</b>` : `<a href="/1.html">1.2.2</a>`
+} | ${
+	version.split('.')[0] === '2' ? `<b>${version}</b>` :`<a href="/2.html">2.0.0 beta</a>`
+}</p>
+</div>`;
+
 let currentCategory;
 
 Object.keys(metadata).map(e => metadata[e]).forEach(e=>{
@@ -71,8 +57,11 @@ require('../js/markup/codemirror/mode.js');
 /*
 	Now, find the <code> elements and modify their contents.
 */
-const lex = require('../js/markup/markup.js').lex;
-outputFile = outputFile.replace(/<code>([^<]+)<\/code>/g, (_, code) => {
+const {lex} = require('../js/markup/markup.js');
+outputFile = outputFile.replace(/<code>([^<]+)<\/code>(~?)/g, (_, code, noStyle) => {
+	if (noStyle) {
+		return `<code>${code}</code>`;
+	}
 	function makeCSSClasses(pos) {
 		return root.pathAt(pos).map(token => 'cm-harlowe-' + token.type).join(' ');
 	}
@@ -95,7 +84,7 @@ outputFile = outputFile.replace(/<code>([^<]+)<\/code>/g, (_, code) => {
 /*
 	Append CSS and HTML header tags
 */
-outputFile = `<!doctype html><title>Harlowe manual</title><meta charset=utf8><style>
+outputFile = `<!doctype html><title>Harlowe ${version} manual</title><meta charset=utf8><style>
 /* Normalisation CSS */
 html { font-size:110%; font-weight:lighter; }
 body { font-family:Georgia, "Times New Roman", Times, serif; line-height:1.5; margin:0 25vw;}
@@ -118,7 +107,7 @@ h5 { font-size:1em; }
 h6 { font-size:.9em; }
 h1,h2 { padding-top:2rem; padding-bottom:5px; }
 /* Nav bar */
-nav { position:fixed; width:15vw; max-width: 20vw; top:5vh;left:5vh; bottom:5vh; overflow-y:scroll; border:1px solid #888; padding:1rem; margin-bottom:2em; font-size:90% }
+nav { position:fixed; width:15vw; max-width: 20vw; top:2.5vh;left:5vh; bottom:5vh; overflow-y:scroll; border:1px solid #888; padding:1rem; margin-bottom:2em; font-size:90% }
 nav ul { list-style-type: none; margin: 0em; padding: 0em; }
 nav img { display:block; margin: 0 auto;}
 .nav_version { text-align:center }
@@ -136,6 +125,7 @@ code { background:#FFF; border:1px solid #888; color:#000; display:block; paddin
 /* Inline code */
 pre { display:inline; }
 :not(pre) > code { background:hsla(0,0%,100%,0.75); border:1px dotted #888; display:inline; padding:1px; white-space:nowrap; }
+table :not(pre) > code { white-space: pre-wrap; }
 /* Heading links */
 .heading_link::before { content: "§"; display:inline-block; margin-left:-25px; padding-right:10px; color:black; font-weight:100; visibility:hidden; text-decoration:none; }
 :hover > .heading_link::before { visibility:visible; }

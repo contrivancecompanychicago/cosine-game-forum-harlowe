@@ -331,7 +331,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			(align: String) -> Changer
 			
 			This styling command changes the alignment of text in the attached hook, as if the
-			`===>` arrow syntax was used. In fact, these same arrows (`==>`, `=><=`, `<==>`, `====><=` etc.)
+			`===>`~ arrow syntax was used. In fact, these same arrows (`==>`~, `=><=`~, `<==>`~, `====><=`~ etc.)
 			should be supplied as a string to specify the degree of alignment.
 
 			Example usage:

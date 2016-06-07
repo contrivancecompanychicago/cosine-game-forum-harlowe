@@ -85,6 +85,26 @@ const
 		}, props);
 	},
 
+	Appendix = new Defs({
+		defName: "Appendix",
+		defCode: "appendix",
+		regExp: /Appendix: ([\w ]+)\n/,
+
+		definition({input, 0:title, 1:name}) {
+			const slugName =  name.replace(/\s/g,'-').toLowerCase();
+			let text = input.trim().replace(title, "\n<h2 class='def_title appendix_title' id=appendix_" + slugName + ">"
+				+ "<a class='heading_link' href=#appendix_" + slugName + "></a>" + name + "</h2>\n");
+
+			text = processTextTerms(
+				text,
+				name,
+				{markupNames:true, macroNames:true}
+			);
+
+			this.defs[title] = { text, anchor: "appendix_" + slugName, name };
+		},
+	}),
+
 	Markup = new Defs({
 		defName: "Passage markup",
 		defCode: "markup",
@@ -357,7 +377,7 @@ require('fs-readdir-recursive')('js/').forEach(function(path) {
 		e.replace(/\t/g,'').slice(4,-2).trim()
 	).forEach((defText) => {
 		let match;
-		[Markup,Macro,Type,Keyword,PassageTag].forEach(e=> {
+		[Appendix,Markup,Macro,Type,Keyword,PassageTag].forEach(e=> {
 			if ((match = defText.match(e.regExp))) {
 				e.definition(match);
 			}
@@ -365,4 +385,4 @@ require('fs-readdir-recursive')('js/').forEach(function(path) {
 	});
 });
 
-module.exports = {Markup, Macro, Type, Keyword, PassageTag};
+module.exports = {Markup, Macro, Type, Keyword, PassageTag, Appendix};
