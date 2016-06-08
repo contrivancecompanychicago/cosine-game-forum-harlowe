@@ -50,5 +50,14 @@ define(['jquery'], ($) => {
 			*/
 			.sort((left, right) => (left.compareDocumentPosition(right)) & 2 ? 1 : -1);
 		},
+
+		/*
+			Quick utility function that calls .filter(q).add(q).find(q),
+			which is similar to just .find() but includes the top element
+			if it also matches.
+		*/
+		findAndFilter(selector) {
+			return this.filter(selector).add(this.find(selector));
+		},
 	});
 });

@@ -419,7 +419,7 @@ define([
 		/*
 			- If the node contains <br>, replace with a single space.
 		*/
-		Utils.findAndFilter(elem, 'br:not([data-raw])')
+		elem.findAndFilter('br:not([data-raw])')
 			.filter(noVerbatim)
 			.replaceWith(document.createTextNode(" "));
 		/*
@@ -768,7 +768,7 @@ define([
 				Execute the expressions immediately.
 			*/
 			
-			Utils.findAndFilter(dom, Selectors.hook + ',' + Selectors.expression)
+			dom.findAndFilter(Selectors.hook + ',' + Selectors.expression)
 					.each(function doExpressions() {
 				const expr = $(this);
 				
@@ -826,7 +826,7 @@ define([
 				collapse(dom);
 			}
 			
-			Utils.findAndFilter(dom, Selectors.collapsed).each(function() {
+			dom.findAndFilter(Selectors.collapsed).each(function() {
 				collapse($(this));
 			});
 			

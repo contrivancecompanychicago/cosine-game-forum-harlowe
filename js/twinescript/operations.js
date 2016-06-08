@@ -311,7 +311,7 @@ define([
 					the right side also be an array. Subtracting 1 element
 					from an array requires it be wrapped in an (a:) macro.
 				*/
-				return l.filter(e => r.indexOf(e) === -1);
+				return l.filter(e => !r.includes(e));
 			}
 			let ret;
 			/*

@@ -53,7 +53,7 @@ define(['jquery', 'utils', 'utils/selectors'], ($, {unescape}, Selectors) => {
 					We need this instanceof check in case a non-datamap was added by the author.
 				*/
 				const tags = v instanceof Map && v.get('tags');
-				if (Array.isArray(tags) && tags.indexOf(tag) >-1) {
+				if (Array.isArray(tags) && tags.includes(tag)) {
 					ret.push(v);
 				}
 			});

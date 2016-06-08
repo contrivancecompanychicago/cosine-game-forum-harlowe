@@ -1,4 +1,4 @@
-define(['jquery', 'markup', 'utils/selectors'],
+define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 ($, TwineMarkup, Selectors) => {
 	"use strict";
 
@@ -35,6 +35,24 @@ define(['jquery', 'markup', 'utils/selectors'],
 		// will break if it is ever detached from the DOM.
 		nonDetachableElements = ["audio"];
 
+	let Utils;
+	/*
+		Caches the CSS time (duration + delay) for a particular transition,
+		to save on costly $css() lookups.
+
+		@param (String) Transition to use
+		@param {String} Either "transition-in" or "transition-out"
+	*/
+	function cachedTransitionTime(transIndex, className) {
+		const animClass = t8nAnimationTimes[className];
+		if (!animClass[transIndex]) {
+			const p = $('<p>').appendTo(document.body).attr("data-t8n", transIndex).addClass(className);
+			animClass[transIndex] = Utils.cssTimeUnit(p.css("animation-duration")) + Utils.cssTimeUnit(p.css("animation-delay"));
+			p.remove();
+		}
+		return animClass[transIndex];
+	}
+
 	let
 		//A binding for the cached <tw-story> reference (see below).
 		storyElement;
@@ -42,7 +60,7 @@ define(['jquery', 'markup', 'utils/selectors'],
 	/*
 		A static class with helper methods used throughout Harlowe.
 	*/
-	const Utils = {
+	Utils = {
 		/*
 			Locks a particular property of an object.
 
@@ -70,23 +88,6 @@ define(['jquery', 'markup', 'utils/selectors'],
 			built-in method that can accomplish this easily.
 		*/
 		toJSLiteral: JSON.stringify,
-
-		/*
-			Conversely, this rarer function produces a TwineScript string literal using the
-			given string.
-		*/
-		toTSStringLiteral(str) {
-			const consecutiveGraves =
-				Math.max(
-					/*
-						This finds the length of the longest run of ` characters in the string.
-					*/
-					...(str.match(/(`+)/g) || []).map(e => e.length).concat(0)
-				) + 1;
-			return "`".repeat(consecutiveGraves)
-				+ str
-				+ "`".repeat(consecutiveGraves);
-		},
 
 		/*
 			Takes a string argument, expressed as a CSS time,
@@ -196,19 +197,6 @@ define(['jquery', 'markup', 'utils/selectors'],
 		*/
 
 		/*
-			Quick utility function that calls .filter(q).add(q).find(q),
-			which is similar to just .find() but includes the top element
-			if it also matches.
-
-			@param {jQuery} jQuery to search, or initialising string/element for $()
-			@param {String} Query string
-		*/
-		findAndFilter (q, selector) {
-			q = $(q || Utils.storyElement);
-			return q.filter(selector).add(q.find(selector));
-		},
-
-		/*
 			childrenProbablyInline: returns true if the matched elements probably only contain elements that
 			are of the 'inline' or 'none' CSS display type.
 			
@@ -236,7 +224,7 @@ define(['jquery', 'markup', 'utils/selectors'],
 					If the children contain an element which is usually block,
 					then *assume* it is and return false early.
 				*/
-				if (usuallyBlockElements.indexOf(elem.tagName.toLowerCase()) >-1
+				if (usuallyBlockElements.includes(elem.tagName.toLowerCase())
 						/*
 							If it has an inline style which is NOT none or inline,
 							then go ahead and return false.
@@ -248,7 +236,7 @@ define(['jquery', 'markup', 'utils/selectors'],
 					If the child's tag name is that of an element which is
 					usually inline, then *assume* it is and return true early.
 				*/
-				if (usuallyInlineElements.indexOf(elem.tagName.toLowerCase()) >-1) {
+				if (usuallyInlineElements.includes(elem.tagName.toLowerCase())) {
 					return true;
 				}
 				/*
@@ -327,7 +315,7 @@ define(['jquery', 'markup', 'utils/selectors'],
 				*/
 				mustWrap =
 					el.length > 1 || !childrenInline ||
-					['tw-hook','tw-passage'].indexOf(el.tag()) === -1;
+					!['tw-hook','tw-passage'].includes(el.tag());
 			
 			/*
 				The default transition callback is to remove the element.
@@ -361,7 +349,7 @@ define(['jquery', 'markup', 'utils/selectors'],
 				but in the event of CSS being off, these events won't trigger
 				- whereas the below method will simply occur immediately.
 			*/
-			const delay = transitionTime || Utils.transitionTime(transIndex, "transition-out");
+			const delay = transitionTime || cachedTransitionTime(transIndex, "transition-out");
 
 			!delay ? onComplete() : window.setTimeout(onComplete, delay);
 		},
@@ -383,7 +371,7 @@ define(['jquery', 'markup', 'utils/selectors'],
 				*/
 				mustWrap =
 					el.length > 1 || !childrenInline ||
-					['tw-hook','tw-passage'].indexOf(el.tag()) === -1;
+					!['tw-hook','tw-passage'].includes(el.tag());
 			
 			/*
 				The default transition callback is to remove the transition-in
@@ -394,7 +382,7 @@ define(['jquery', 'markup', 'utils/selectors'],
 					Unwrap the wrapping... unless it contains a non-unwrappable element,
 					in which case the wrapping must just have its attributes removed.
 				*/
-				const detachable = Utils.findAndFilter(el, nonDetachableElements.join(",")).length === 0;
+				const detachable = el.findAndFilter(nonDetachableElements.join(",")).length === 0;
 				if (mustWrap && detachable) {
 					el.contents().unwrap();
 				}
@@ -426,27 +414,9 @@ define(['jquery', 'markup', 'utils/selectors'],
 			if (Utils.childrenProbablyInline(el)) {
 				el.css('display','inline-block');
 			}
-			const delay = transitionTime || Utils.transitionTime(transIndex, "transition-in");
+			const delay = transitionTime || cachedTransitionTime(transIndex, "transition-in");
 
 			!delay ? onComplete() : window.setTimeout(onComplete, delay);
-		},
-
-		/*
-			Caches the CSS time (duration + delay) for a particular transition,
-			to save on costly $css() lookups.
-
-			@param (String) Transition to use
-			@param {String} Either "transition-in" or "transition-out"
-		*/
-
-		transitionTime(transIndex, className) {
-			const animClass = t8nAnimationTimes[className];
-			if (!animClass[transIndex]) {
-				const p = $('<p>').appendTo(document.body).attr("data-t8n", transIndex).addClass(className);
-				animClass[transIndex] = Utils.cssTimeUnit(p.css("animation-duration")) + Utils.cssTimeUnit(p.css("animation-delay"));
-				p.remove();
-			}
-			return animClass[transIndex];
 		},
 
 		/*
@@ -503,7 +473,7 @@ define(['jquery', 'markup', 'utils/selectors'],
 				return;
 			}
 			for(let i in object) {
-				if (props.indexOf(i) === -1) {
+				if (!props.includes(i)) {
 					console.error("Assertion failed: object"
 						+ " had unexpected property '" + i + "'!");
 				}

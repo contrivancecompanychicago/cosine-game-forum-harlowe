@@ -456,7 +456,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 					Re-establish the moment objects' prototype link to Moment.
 				*/
 				return Object.assign(Object.create(Moment), moment);
-			})).indexOf(false) > -1) {
+			})).includes(false)) {
 				return false;
 			}
 			timeline = newTimeline;

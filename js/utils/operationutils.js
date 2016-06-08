@@ -402,7 +402,7 @@ define(['utils', 'datatypes/hookset', 'internaltypes/twineerror'], ({impossible,
 		*/
 		if (container) {
 			if (typeof container === "string") {
-				return container.indexOf(obj) > -1;
+				return container.includes(obj);
 			}
 			if(Array.isArray(container)) {
 				return container.some((e) => is(e, obj));

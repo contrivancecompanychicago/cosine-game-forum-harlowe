@@ -53,7 +53,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 	*/
 	function indexOfType(array, types) {
 		for (let i = 0; i < array.length; i+=1) {
-			if (types.indexOf(array[i].type) > -1) {
+			if (types.includes(array[i].type)) {
 				return i;
 			}
 		}
@@ -344,7 +344,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				This token requires that whitespace + a temp variable be to the right of it.
 			*/
 			const rightTokens = tokens.slice(i + 1);
-			if ([2,3].indexOf(rightTokens.length) === -1 || rightTokens[0].type !== "whitespace" || rightTokens[1].type !== "tempVariable"
+			if (![2,3].includes(rightTokens.length) || rightTokens[0].type !== "whitespace" || rightTokens[1].type !== "tempVariable"
 					|| (rightTokens[2] && rightTokens[2].type !== "whitespace")) {
 				left = "TwineError.create('operation','I need a temporary variable to the right of \\'";
 				midString = token.type;
@@ -393,10 +393,10 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				if (!token) {
 					return;
 				}
-				if (['inequality','is','isNot','isIn','contains'].indexOf(token.type) > -1) {
+				if (['inequality','is','isNot','isIn','contains'].includes(token.type)) {
 					return token;
 				}
-				if (['and','or'].indexOf(token.type) >-1) {
+				if (['and','or'].includes(token.type)) {
 					return (isComparisonOp(tokens.slice(0, i)) || isComparisonOp(tokens.slice(i + 1)));
 				}
 			};

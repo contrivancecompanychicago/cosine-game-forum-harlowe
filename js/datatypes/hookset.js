@@ -307,10 +307,8 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 				ownElements = wrapTextNodes(this.selector, dom, '<tw-pseudo-hook>');
 			}
 			else {
-				ownElements = Utils.findAndFilter(
-					dom.add(dom.parentsUntil(Utils.storyElement.parent())),
-					hookToSelector(this.selector)
-				);
+				ownElements = dom.add(dom.parentsUntil(Utils.storyElement.parent()))
+					.findAndFilter(hookToSelector(this.selector));
 			}
 			if (this.properties.length) {
 				ret = ret.add(this.properties.reduce(reducer, ownElements));

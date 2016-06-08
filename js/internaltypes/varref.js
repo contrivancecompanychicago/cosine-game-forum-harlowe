@@ -264,7 +264,7 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 				return TwineError.create("operation", specialCollectionErrorMsg);
 			}
 			if (obj.TwineScript_Writeproof &&
-					obj.TwineScript_Writeproof.indexOf(prop) > -1) {
+					obj.TwineScript_Writeproof.includes(prop)) {
 				return TwineError.create("operation", writeproofErrorMsg);
 			}
 			return true;
@@ -311,7 +311,7 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 			return TwineError.create("operation", specialCollectionErrorMsg);
 		}
 		if (obj.TwineScript_Writeproof &&
-				obj.TwineScript_Writeproof.indexOf(prop) > -1) {
+				obj.TwineScript_Writeproof.includes(prop)) {
 			return TwineError.create("operation", writeproofErrorMsg);
 		}
 		/*
