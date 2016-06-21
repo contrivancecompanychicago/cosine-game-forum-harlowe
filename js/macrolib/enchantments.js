@@ -165,131 +165,6 @@ define(['jquery', 'utils', 'utils/selectors', 'macros', 'datatypes/hookset', 'da
 			rest(either(HookSet,String))
 		);
 	});
-
-	/*d:
-		(click-page:) -> Changer
-
-		Produces a command which, when attached to a hook, hides it until the mouse is clicked (or
-		the screen is touched) anywhere on the page, whereupon it is revealed.
-
-		Example usage:
-		```
-		I saw something sink through the floor as I entered. (click-page:)[A ghost?]
-		```
-
-		Rationale:
-
-		Sometimes, you may want to advance the text of your story without requiring a specific link be clicked,
-		due to that link being styled and emphasised differently from the rest of the text - and, moreover,
-		being in different places in each passage, requiring a moment from the player to find it. This "moment"
-		may be desirable in some places - but the (click-page:) macro offers a faster-paced alternative, suited
-		for making long sections of text brisker, or fast-paced scenes punchier.
-
-		Details:
-
-		While a (click-page:) command is active, a blue link-coloured border will surround the page, and
-		the mouse cursor (on desktop browsers) will resemble a hand no matter what it's hovering over.
-
-		Clicking a link while a (click-page:) command is active will cause both the link and the (click-page:) to
-		activate at once.
-
-		Using multiple (click-page:) commands in the same hook or passage will require multiple clicks from the
-		player to activate all of them. They activate in the order they appear on the page - top to bottom.
-
-		See also:
-		(click:)
-
-		#links
-	*/
-	/*
-		A separate click event needs to be defined for this.
-	*/
-	$(() => {
-		Utils.storyElement.on(
-			/*
-				Put this event in the "enchantment" jQuery event
-				namespace, alongside the other enchantment events.
-			*/
-			"click.enchantment",
-			/*
-				Sadly, there's no way to narrow this callback to just <tw-story> elements inside
-				<tw-enchantment>s, as the selector argument to .on() precludes targeting the
-				element itself.
-			*/
-			function() {
-				/*
-					Multiple enchantments would create multiple nested <tw-enchantment> elements.
-					We must go through all of them and execute at will.
-				*/
-				Array.from($(this).parents('.enchantment-clickpage'))
-					// compareDocumentPosition mask 8 means "contains".
-					.sort((left, right) => (left.compareDocumentPosition(right)) & 8 ? 1 : -1)
-					.forEach(e => {
-						const event = $(e).data('enchantmentEvent');
-						if (event) {
-							event();
-						}
-					});
-			}
-		);
-	});
-	/*
-		And here's the macro definition.
-	*/
-	Macros.addChanger('click-page',
-		() => {
-			/*
-				Currently, no extra error checks are called for here.
-			*/
-			return ChangerCommand.create('click-page');
-		},
-		(desc) => {
-			/*
-				Like all interaction macros, this cannot run its source straight away.
-			*/
-			desc.enabled = false;
-
-			const enchantData = Enchantment.create({
-				/*
-					The <tw-story> has no special enchantment styling, except for
-					this class, which is used (at present) to alter the cursor.
-				*/
-				attr: {
-					class: "enchantment-clickpage",
-				},
-				data: {
-					enchantmentEvent() {
-						/*
-							Remove this enchantment from the Section's list.
-						*/
-						const index = desc.section.enchantments.indexOf(enchantData);
-						desc.section.enchantments.splice(index,1);
-						/*
-							Of course, the <tw-enchantment> must also be removed.
-						*/
-						enchantData.disenchant();
-						/*
-							Fill the desc's original target with the original source.
-						*/
-						desc.section.renderInto(
-							desc.source,
-							null,
-							Object.assign({}, desc, { enabled: true })
-						);
-					},
-				},
-				scope: Utils.storyElement,
-			});
-			/*
-				Add the above object to the section's enchantments.
-			*/
-			desc.section.enchantments.push(enchantData);
-			/*
-				Enchant the <tw-story>.
-			*/
-			enchantData.enchantScope();
-		},
-		null);
 	
 	/*
 		This large routine generates functions for enchantment macros, to be applied to
@@ -418,7 +293,7 @@ define(['jquery', 'utils', 'utils/selectors', 'macros', 'datatypes/hookset', 'da
 					desc.newTargets = (desc.newTargets || []).concat(selector);
 					desc.append = enchantDesc.rerender;
 				}
-				
+
 				/*
 					This enchantData object is stored in the descriptor's Section's enchantments
 					list, to allow the Section to easily enchant and re-enchant this
@@ -426,15 +301,30 @@ define(['jquery', 'utils', 'utils/selectors', 'macros', 'datatypes/hookset', 'da
 					selector are added or removed from the DOM).
 				*/
 				const enchantData = Enchantment.create({
-					attr: Object.assign({
-							class: enchantDesc.classList,
-						},
+					functions: [
+						target => {
+							/*
+								If the target <tw-enchantment> wraps a "block" element (currently defined as just
+								<tw-story>, <tw-sidebar> or <tw-passage>) then use the enchantDesc's
+								blockClassList instead of its classList. This is used to give (click: ?page)
+								a different styling than just turning the entire passage text into a link.
+							*/
+							target.attr('class',
+								target.children().is("tw-story, tw-sidebar, tw-passage")
+								? enchantDesc.blockClassList
+								: enchantDesc.classList
+							);
+						}
+					],
+					attr:
 						/*
 							Include the tabIndex for link-type enchantments, so that they
-							can also be clicked using the keyboard.
+							can also be clicked using the keyboard. This includes the clickblock
+							enchantment.
 						*/
-						enchantDesc.classList.includes("link") ? { tabIndex: '0' } : {}
-					),
+						(enchantDesc.classList + '').match(/\b(?:link|enchantment-clickblock)\b/)
+							? { tabIndex: '0' }
+							: {},
 					data: {
 						enchantmentEvent() {
 							if (enchantDesc.once) {
@@ -480,7 +370,39 @@ define(['jquery', 'utils', 'utils/selectors', 'macros', 'datatypes/hookset', 'da
 			either(HookSet,String)
 		];
 	}
-	
+
+	/*
+		A separate click event needs to be defined for .enchantment-clickblock, which is explained below.
+	*/
+	$(() => {
+		Utils.storyElement.on(
+			/*
+				Put this event in the "enchantment" jQuery event namespace, alongside the other enchantment events.
+			*/
+			"click.enchantment",
+			/*
+				Sadly, there's no way to narrow this callback to just <tw-story> elements inside
+				<tw-enchantment>s, as the selector argument to .on() precludes targeting the
+				element itself.
+			*/
+			function() {
+				/*
+					Multiple enchantments would create multiple nested <tw-enchantment> elements.
+					We must go through all of them and execute at will.
+				*/
+				Array.from($(this).parents('.enchantment-clickblock'))
+					// compareDocumentPosition mask 8 means "contains".
+					.sort((left, right) => (left.compareDocumentPosition(right)) & 8 ? 1 : -1)
+					.forEach(e => {
+						const event = $(e).data('enchantmentEvent');
+						if (event) {
+							event();
+						}
+					});
+			}
+		);
+	});
+
 	/*
 		Interaction macros produce ChangerCommands that defer their attached
 		hook's rendering, and enchantment a target hook, waiting for the
@@ -517,6 +439,18 @@ define(['jquery', 'utils', 'utils/selectors', 'macros', 'datatypes/hookset', 'da
 			Additionally, if a (click:) macro is removed from the passage, then its targets will lose the link styling and no longer be
 			affected by the macro.
 
+			Targeting ?Page or ?Passage:
+
+			When a (click:) command is targeting the ?Page or ?Passage, instead of transforming the entire passage text into
+			a link, something else will occur: a blue link-coloured border will surround the page, and
+			the mouse cursor (on desktop browsers) will resemble a hand no matter what it's hovering over.
+
+			Clicking a link when a (click:) is targeting the ?Page or ?Passage will cause both the link and the (click:) to
+			activate at once.
+
+			Using multiple (click:) commands to target the ?Page or ?Passage will require multiple clicks from the
+			player to activate all of them. They activate in the order they appear on the page - top to bottom.
+
 			See also:
 			(link:), (link-reveal:), (link-repeat:), (mouseover:), (mouseout:), (replace:), (click-replace:)
 
@@ -528,7 +462,8 @@ define(['jquery', 'utils', 'utils/selectors', 'macros', 'datatypes/hookset', 'da
 				event    : "click",
 				once     : true,
 				rerender : "",
-				classList: "link enchantment-link"
+				classList: "link enchantment-link",
+				blockClassList: "enchantment-clickblock",
 			}
 		},
 		/*d:

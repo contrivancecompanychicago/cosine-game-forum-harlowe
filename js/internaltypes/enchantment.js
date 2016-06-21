@@ -18,7 +18,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor'], ($, Utils, ChangeD
 			scope to enchant.
 		*/
 		create(descriptor) {
-			Utils.assertOnlyHas(descriptor, ['scope', 'attr', 'data', 'changer']);
+			Utils.assertOnlyHas(descriptor, ['scope', 'attr', 'data', 'changer', 'functions']);
 
 			return Object.assign(Object.create(this), {
 				/*
@@ -39,7 +39,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor'], ($, Utils, ChangeD
 			classes to the matched elements.
 		*/
 		enchantScope() {
-			const {attr, data, changer} = this;
+			const {attr, data, functions, changer} = this;
 			let {scope} = this;
 			/*
 				scope could be a jQuery, if this is a HTML scope created by, say, (enchant: "<i>"). In which
@@ -67,13 +67,16 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor'], ($, Utils, ChangeD
 				const wrapping = e.wrapAll("<tw-enchantment>").parent();
 
 				/*
-					Apply the attr and data now.
+					Apply the attr, data and functions now.
 				*/
 				if (attr) {
 					wrapping.attr(attr);
 				}
 				if (data) {
 					wrapping.data(data);
+				}
+				if (functions) {
+					functions.forEach(fn => fn(wrapping));
 				}
 				if (changer) {
 					const cd = ChangeDescriptor.create({target:wrapping});

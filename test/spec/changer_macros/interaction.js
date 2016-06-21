@@ -63,6 +63,50 @@ describe("interaction macros", function() {
 					expect(p.length).toBe(1);
 					expect(p.hasClass(e.cssClass)).toBe(true);
 				});
+				if (e.name === "click") {
+					it("gives affected hooks a tabindex", function() {
+						var p = runPassage("[cool]<foo|(" + e.name + ":?foo)[]").find('tw-enchantment');
+						expect(p.attr('tabindex')).toBe('0');
+					});
+					describe("with ?Page", function() {
+						it("enchants the <tw-story> element with the 'enchantment-clickblock' class", function() {
+							runPassage("(click:?Page)[1]");
+							var e = $('tw-story').parent('tw-enchantment.enchantment-clickblock');
+							expect(e.length).toBe(1);
+						});
+						it("does this even when targeting other hooks", function() {
+							var p = runPassage("[cool]<page|(click:?Page)[1]");
+							expect(p.find('tw-enchantment').length).toBe(1);
+							var e = $('tw-story').parent('tw-enchantment.enchantment-clickblock');
+							expect(e.length).toBe(1);
+						});
+						it("enchants the <tw-story> with a box-shadow", function() {
+							runPassage("(click:?Page)[1]");
+							var e = $('tw-story').parent();
+							// We can't expect to get more precise than this, unfortunately.
+							expect(e.css('box-shadow')).toMatch("inset");
+							expect(e.css('display')).toBe('block');
+						});
+						it("multiple enchantments are triggered in order", function() {
+							var p = runPassage(
+								"(click:?Page)[1]"
+								+ "(click:?Page)[2]"
+								+ "(click:?Page)[3]");
+							$('tw-story').click();
+							expect(p.text()).toBe("1");
+							$('tw-story').click();
+							expect(p.text()).toBe("12");
+							$('tw-story').click();
+							expect(p.text()).toBe("123");
+						});
+						it("gives it a tabindex", function() {
+							runPassage("(click:?Page)[1]");
+							var p = $('tw-story').parent('tw-enchantment.enchantment-clickblock');
+							expect(p.attr('tabindex')).toBe('0');
+						});
+					});
+					// TODO: with ?Sidebar and ?Passage
+				}
 			});
 			describe("given multiple hooks", function() {
 				it("enchants each selected hook as a link", function() {
@@ -134,36 +178,6 @@ describe("interaction macros", function() {
 					expect(p.find('tw-enchantment').length).toBe(2);
 				});
 			});
-		});
-	});
-	describe("(click-page:)", function() {
-		it("accepts no arguments", function() {
-			expect("(click-page:)[]").not.markupToError();
-			expect("(click-page:'baz')[]").markupToError();
-		});
-		xit("enchants the <tw-story> element", function() {
-			runPassage("(click-page:)[1]");
-			var e = $('tw-story').parent('tw-enchantment.enchantment-clickpage');
-			expect(e.length).toBe(1);
-		});
-		it("multiple enchantments are triggered in order", function() {
-			var p = runPassage(
-				"(click-page:)[1]"
-				+ "(click-page:)[2]"
-				+ "(click-page:)[3]");
-			$('tw-story').click();
-			expect(p.text()).toBe("1");
-			$('tw-story').click();
-			expect(p.text()).toBe("12");
-			$('tw-story').click();
-			expect(p.text()).toBe("123");
-		});
-		xit("enchants the <tw-story> with a box-shadow", function() {
-			runPassage("(click-page:)[1]");
-			var e = $('tw-story').parent();
-			// We can't expect to get more precise than this, unfortunately.
-			expect(e.css('box-shadow')).toMatch("inset");
-			expect(e.css('display')).toBe('block');
 		});
 	});
 });

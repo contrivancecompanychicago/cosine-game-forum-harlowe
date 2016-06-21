@@ -683,12 +683,12 @@
 			essentially consists of text between single `[` and `]` marks. Prose inside a hook can be modified, styled,
 			controlled and analysed in a variety of ways using macros.
 
-			Anonymous (or simple) hooks are hooks which have a macro or a variable attached to their front. This
-			attached value is used to change the hook in some way, such as hiding it based on the game state, altering
-			the styling of its text, moving its text to elsewhere in the passage.
+			A hook by itself, such as `[some text]`, is not very interesting. However, if you attach a macro or a
+			variable to the front, the attached value is used to change the hook in some way, such as hiding
+			it based on the game state, altering the styling of its text, moving its text to elsewhere in the passage.
 
 			```
-			(font: "Courier New")[This is an anonymous hook.
+			(font: "Courier New")[This is a hook.
 
 			As you can see, this has a macro instance in front of it.]
 			This text is outside the hook.
