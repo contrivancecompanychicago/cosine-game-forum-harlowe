@@ -105,12 +105,13 @@ describe("primitive value macros", function() {
 				expect("(" + level + "first: 'a')").not.markupToError();
 				expect("(" + level + "first: 'red', 'blue')").markupToError();
 			});
-			it("returns the string with the first alphanumeric character in " + level + "case", function() {
+			it("returns the string with the first non-whitespace character in " + level + "case", function() {
 				expect("(" + level + "first: ' mell')").markupToPrint(i === 0 ? " mell" : " Mell");
 				expect("(" + level + "first: ' Mell')").markupToPrint(i === 0 ? " mell" : " Mell");
 			});
-			it("doesn't affect strings beginning with non-cased characters", function() {
+			it("doesn't affect strings whose first non-whitespace character is uncased", function() {
 				expect("(" + level + "first: '2d')(" + level + "first: '𐌎d')").markupToPrint("2d𐌎d");
+				expect("(" + level + "first: ' 2d')(" + level + "first: ' 𐌎d')").markupToPrint(" 2d 𐌎d");
 			});
 		});
 	});

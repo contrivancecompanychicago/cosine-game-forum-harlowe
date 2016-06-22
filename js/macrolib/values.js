@@ -424,9 +424,10 @@ define(['macros', 'utils', 'utils/operationutils', 'internaltypes/twineerror'],
 		currenttime: [() => {
 			const d = new Date(),
 				am = d.getHours() < 12,
+				hr = ((d.getHours() % 12) || 12),
 				mins = (d.getMinutes() < 10 ? "0" : "") + d.getMinutes();
 
-			return d.getHours() % 12 + ":" + mins + " " + (am ? "A" : "P") + "M";
+			return hr + ":" + mins + " " + (am ? "A" : "P") + "M";
 		},
 		null],
 

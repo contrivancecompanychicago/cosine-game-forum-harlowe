@@ -15,6 +15,7 @@ Rough documentation is at http://twine2.neocities.org/
  * Fixed the bug where a `(goto:)` command inside a hook would prevent subsequent commands inside the hook from running, but subsequent commands outside it would still continue - for instance, `(if:true)[(go-to:'flunk')](set:$a to 2)` would still cause the `(set:)` command to run.
  * Fixed the bug where `(current-time:)` wouldn't pad the minutes value with a leading 0 when necessary.
  * Fixed the bug where referring to a variable multiple times within a single `(set:)` command, like `(set: $a to 1, $b to $a)`, wouldn't work as expected.
+ * The "pulse" transition (provided by `(transition:)`) now gives its attached hook the `display:inline-block` CSS property for the duration of the transition. This fixes a bug where block HTML elements inside such hooks would interfere with the transition animation.
 
 ####Alterations
 

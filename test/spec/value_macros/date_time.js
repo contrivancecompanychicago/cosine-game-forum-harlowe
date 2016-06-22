@@ -14,6 +14,13 @@ describe("date and time macros", function() {
 		});
 	});
 	describe("the (current-time:) macro", function() {
+		var trueDate = Date;
+		function spyOnDate(fake) {
+			spyOn(window,'Date').and.returnValue(fake);
+			Date.now = trueDate.now;
+			spyOn(fake,'getHours').and.callThrough();
+			spyOn(fake,'getMinutes').and.callThrough();
+		}
 		it("accepts 0 arguments", function() {
 			expect("(current-time:)").not.markupToError();
 			expect("(current-time: 1)").markupToError();
@@ -24,13 +31,26 @@ describe("date and time macros", function() {
 				getHours: function() { return 14; },
 				getMinutes: function() { return 6; },
 			};
-			spyOn(window,'Date').and.returnValue(fake);
-			Date.now = trueDate.now;
-			spyOn(fake,'getHours').and.callThrough();
-			spyOn(fake,'getMinutes').and.callThrough();
+			spyOnDate(fake);
 			expect("(current-time:)").markupToPrint('2:06 PM');
 			expect(fake.getHours).toHaveBeenCalled();
 			expect(fake.getMinutes).toHaveBeenCalled();
+		});
+		it("uses '12' at 12 PM", function() {
+			var fake = {
+				getHours: function() { return 12; },
+				getMinutes: function() { return 59; },
+			};
+			spyOnDate(fake);
+			expect("(current-time:)").markupToPrint('12:59 PM');
+		});
+		it("uses '12' at 12 AM", function() {
+			var fake = {
+				getHours: function() { return 0; },
+				getMinutes: function() { return 59; },
+			};
+			spyOnDate(fake);
+			expect("(current-time:)").markupToPrint('12:59 AM');
 		});
 	});
 });
