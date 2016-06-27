@@ -1,5 +1,5 @@
-define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatypes/hookset', 'internaltypes/twineerror'],
-($, NaturalSort, {insensitiveName, nth, plural, andList, lockProperty}, {objectName, typeName, singleTypeCheck}, Lambda, HookSet, TwineError) => {
+define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changercommand', 'datatypes/lambda', 'datatypes/hookset', 'internaltypes/twineerror'],
+($, NaturalSort, {insensitiveName, nth, plural, andList, lockProperty}, {objectName, typeName, singleTypeCheck}, ChangerCommand, Lambda, HookSet, TwineError) => {
 	"use strict";
 	/*
 		This contains a registry of macro definitions, and methods to add to that registry.
@@ -8,9 +8,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 	let Macros;
 	const
 		// Private collection of registered macros.
-		macroRegistry = {},
-		// Private collection of command definitions, which are created by command macros.
-		commandRegistry = {};
+		macroRegistry = {};
 		
 	/*
 		This function wraps another function (expected to be a macro implementation
@@ -237,7 +235,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		@param {String} The type (either "sensor", "changer", or, and in absentia, "value")
 		@param {Function} The function.
 	*/
-	function privateAdd(name, type, fn) {
+	function privateAdd(name, fn) {
 		// Add the fn to the macroRegistry, plus aliases (if name is an array of aliases)
 		if (Array.isArray(name)) {
 			name.forEach((n) => lockProperty(macroRegistry, insensitiveName(n), fn));
@@ -272,7 +270,6 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		*/
 		add: function add(name, fn, typeSignature) {
 			privateAdd(name,
-				"value",
 				readArguments(typeSignatureCheck(name, fn, typeSignature))
 			);
 			// Return the function to enable "bubble chaining".
@@ -296,25 +293,12 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		addChanger: function addChanger(name, fn, changerCommandFn, typeSignature) {
 			
 			privateAdd(name,
-				"changer",
 				readArguments(typeSignatureCheck(name, fn, typeSignature))
 			);
-			// I'll explain later. It involves registering the changerCommand implementation.
-			commandRegistry[Array.isArray(name) ? name[0] : name] = changerCommandFn;
+			ChangerCommand.register(Array.isArray(name) ? name[0] : name, changerCommandFn);
 			
 			// Return the function to enable "bubble chaining".
 			return addChanger;
-		},
-		
-		/*
-			This simple getter should only be called by changerCommand, in its run() method, which
-			allows the registered changer function to finally be invoked.
-			
-			TODO: This makes me wonder if this changer registering business shouldn't be in
-			the changerCommand module instead.
-		*/
-		getChangerFn(name) {
-			return commandRegistry[name];
 		},
 		
 		/*
@@ -359,7 +343,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			},
 			
 		},
-		
+
 		/*
 			Runs a macro.
 			
