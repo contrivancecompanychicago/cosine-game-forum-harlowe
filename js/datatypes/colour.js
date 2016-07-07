@@ -2,8 +2,11 @@ define(['jquery'], ($) => {
 	/*d:
 		Colour data
 
-		Colours are special built-in data values which can be provided to certain styling macros, such as (background:)
-		or (text-colour:). They consist of the following values:
+		Colours are special data values which can be provided to certain styling macros, such as (background:)
+		or (text-colour:). You can use built=in named colour values, or create other colours using the
+		(rgb:) or (hsl:) macros.
+
+		The built-in values consist of the following:
 
 		| Value | HTML colour equivalent
 		|---
@@ -24,13 +27,31 @@ define(['jquery'], ($) => {
 		(These colours were chosen to be visually pleasing when used as both background colours and text colours, without
 		the glaring intensity that certain HTML colours, like pure #f00 red, are known to exhibit.)
 
-		Additionally, you can also use HTML hex #xxxxxx and #xxx notation to specify your own colours, such as
-		`#691212` or `#a4e`. (Note that these are *not* strings, but bare values - `(background: #a4e)` is valid,
-		as is `(background:navy)`.)
+		In addition to these values, and the (rgb:) macro, you can also use HTML hex #xxxxxx and #xxx notation to specify
+		colours, such as `#691212` or `#a4e`. (Note that these are *not* strings, but bare values - `(background: #a4e)`
+		is valid, as is `(background:navy)`.) Of course, HTML hex notation is notoriously hard to read and write, so this
+		isn't recommended.
 
-		Of course, HTML hex notation is notoriously hard to read and write. It's recommended that you create other
-		colours by combining the built-in keyword values using the `+` operator: `red + orange + white`
-		produces a blend of red and orange, tinted white. `#a4e + black` is a dim purple.
+		If you want to quickly obtain a colour which is the blending of two others, you can blend them
+		using the `+` operator: `red + orange + white` produces a blend of red and orange, tinted
+		white. `#a4e + black` is a dim purple.
+
+		Like datamaps, colour values have a few read-only data names, which let you examine the **r**ed, **g**reen and **b**lue
+		components that make up the colour, as well as its **h**ue, **s**aturation and **l**ightness.
+
+		| Data name | Example | Meaning
+		|---
+		| `r` | `$colour's r` | The red component, a whole number from 0 to 255.
+		| `g` | `$colour's g` | The green component, a whole number from 0 to 255.
+		| `b` | `$colour's b` | The blue component, a whole number from 0 to 255.
+		| `h` | `$colour's h` | The hue angle in degrees, a whole number from 0 to 359.
+		| `s` | `$colour's s` | The saturation percentage, a fractional number from 0 to 1.
+		| `l` | `$colour's l` | The lightness percentage, a fractional number from 0 to 1.
+
+		These values can be used in the (hsl:) and (rgb:) macros to produce further colours. Note that some of these values
+		do not transfer one-to-one between representations! For instance, the hue of a gray is essentially irrelevant, so grays
+		will usually have a `h` value equal to 0, even if you provided a different hue to (hsl:). Furthermore, colours with a
+		lightness of 1 are always white, so their saturation and hue are irrelevant.
 	*/
 	"use strict";
 	const
@@ -94,8 +115,72 @@ define(['jquery'], ($) => {
 		};
 	}
 
+	/*
+		These two private functions converts RGB 0..255 values into H 0..359
+		and SL 0..1 values, and back.
+	*/
+	function RGBToHSL({r, g, b}) {
+		// Convert the RGB values to decimals.
+		r /= 255, g /= 255, b /= 255;
+
+		const
+			max = Math.max(r, g, b),
+			min = Math.min(r, g, b),
+			// Lightness is the average of the highest and lowest values.
+			l = (max + min) / 2,
+			delta = max - min;
+
+		if (max === min) {
+			// If all three RGB values are equal, it is a gray.
+			return { h:0, s:0, l };
+		}
+		// Calculate hue and saturation as follows.
+		let h;
+		switch (max) {
+			case r: h = (g - b) / delta + (g < b ? 6 : 0); break;
+			case g: h = (b - r) / delta + 2; break;
+			case b: h = (r - g) / delta + 4; break;
+		}
+		h = Math.round(h * 60);
+
+		const s = l > 0.5
+			? delta / (2 - max - min)
+			: delta / (max + min);
+		return { h, s, l };
+	}
+
+	function HSLToRGB({h, s, l}) {
+		// If saturation is 0, it is a grey.
+		if (s === 0) {
+			const gray = Math.floor(l * 255);
+			return { r: gray, g: gray, b: gray };
+		}
+		// Convert the H value to decimal.
+		h /= 360;
+
+		const
+			q = l < 0.5 ? l * (1 + s) : l + s - l * s,
+			p = 2 * l - q;
+
+		function hueToRGBComponent(t) {
+			// Constrain temp to the range 0..1
+			if (t < 0) t += 1;
+			if (t > 1) t -= 1;
+			// Convert to an RGB component along the graph's four slopes
+			// (rising, max, falling, min).
+			if (t < 1/6) return p + (q - p) * 6 * t;
+			if (t < 1/2) return q;
+			if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+			return p;
+		}
+		return {
+			r: Math.floor(hueToRGBComponent(h + 1/3) * 255),
+			g: Math.floor(hueToRGBComponent(h) * 255),
+			b: Math.floor(hueToRGBComponent(h - 1/3) * 255),
+		};
+	}
+
 	const Colour = Object.freeze({
-		colour: true,
 		TwineScript_TypeName:   "a colour",
 		TwineScript_ObjectName: "a colour",
 		
@@ -112,10 +197,8 @@ define(['jquery'], ($) => {
 			
 			return Colour.create({
 				/*
-					You may notice this is a fairly glib blending
-					algorithm. It's the same one from Game Maker,
-					though, so I'm hard-pressed to think of a more
-					intuitive one.
+					You may notice this is a fairly glib blending algorithm. It's the same one from Game Maker,
+					though, so I'm hard-pressed to think of a more intuitive one.
 				*/
 				r : Math.min(Math.round((l.r + r.r) * 0.6), 0xFF),
 				g : Math.min(Math.round((l.g + r.g) * 0.6), 0xFF),
@@ -140,7 +223,7 @@ define(['jquery'], ($) => {
 		},
 		
 		/*
-			This converts the colour into a 6-char HTML hex string.
+			This converts the colour into a 6-char HTML hex string, discarding alpha.
 			(No, this doesn't create a 3-char colour if one was possible. Sorry.)
 		*/
 		toHexString() {
@@ -153,8 +236,26 @@ define(['jquery'], ($) => {
 				+ (this.g).toString(16).replace(singleDigit, "0$1")
 				+ (this.b).toString(16).replace(singleDigit, "0$1");
 		},
+
+		/*
+			These getters provide h, s and l values as alternatives to this colour's
+			r, g and b values. These are accessible in user macros.
+		*/
+		get h() {
+			return RGBToHSL(this).h;
+		},
+
+		get s() {
+			return RGBToHSL(this).s;
+		},
+
+		get l() {
+			return RGBToHSL(this).l;
+		},
+
 		/*
 			This constructor accepts an object containing r, g and b numeric properties,
+			an object containing h, s and l numeric properties,
 			or a string comprising a CSS hex colour.
 		*/
 		create(rgbObj) {
@@ -163,6 +264,12 @@ define(['jquery'], ($) => {
 					return this.create(hexToRGB(rgbObj));
 				}
 				return this.create(css3ToRGB(rgbObj));
+			}
+			// To save computation, don't do the HSL to RGB conversion
+			// if the RGB values are already present.
+			if ("h" in rgbObj && "s" in rgbObj && "l" in rgbObj &&
+					!("r" in rgbObj) && !("g" in rgbObj) && !("b" in rgbObj)) {
+				return this.create(HSLToRGB(rgbObj));
 			}
 			return Object.assign(Object.create(this), rgbObj);
 		},

@@ -60,6 +60,7 @@ Rough documentation is at http://twine2.neocities.org/
  * `(altered:)` takes a lambda as its first value, and any number of other values, and uses the lambda to convert the values, placing the results in an array. For instance, `(altered: _material via _material + " Sword"), "Iron", "Wood", "Bronze", "Plastic")` will create an array `(a:"Iron Sword", "Wood Sword", "Bronze Sword", "Plastic Sword")`. (This macro is similar to Javascript's `map()` array method.)
  * `(all-pass:)`, `(some-pass:)` and `(none-pass:)` check if the given values match the lambda, and return `true` or `false`. `(all-pass: _a where _a > 2, 1, 3, 5)` produces `false`, `(some-pass: _a where _a > 2, 1, 3, 5)` produces `true`, and `(none-pass: _a where _a > 2, 1, 3, 5)` produces `false`.
  * `(folded:)` is used to combine many values into one (a "total"), using a lambda that has a `making` clause. `(folded: _a making _total via _total + "." + _a, "E", "a", "s", "y")` will first set `_total` to "E", then progressively add ".a", ".s", and ".y" to it, thus producing the resulting string, "E.a.s.y".
+ * Colour values now have read-only data names: `r`, `g` and `b` produce the red, green and blue components of the colour (from 0 to 255), and `h`, `s` and `l` produce, in order, the hue (in degrees), and the saturation and lightness percentages (from 0 to 1).
 
 #####Macros
 
@@ -69,6 +70,7 @@ Rough documentation is at http://twine2.neocities.org/
  * Added `(click-page:)`, a changer macro which is similar to `(click:)`, but triggers when you click the entire page instead of a specific link. For stories with lots of short, sequential blocks of text, this can provide a brisker interface for the player.
  * Added `(repeated:)`, which creates an array containing the passed values repeated a given number of times. `(repeated: 3, 1,2,0)` produces `(a: 1,2,0,1,2,0,1,2,0)`.
  * Added `(interlaced:)`, which interweaves the values of passed-in arrays. `(interlaced: (a: 'A','B','C','D'),(a: 1,2,3))` is the same as `(a: 'A',1,'B',2,'C',3)`. (For functional programmers, this is just a flat zip.) This can be useful alongside the `(datamap:)` macro.
+ * Added `(rgb:)` and `(hsl:)`, which produce colour values, similar to the CSS colour functions. `(rgb:252,180,0)` produces the colour #fcb400, and `(hsl:150,0.2,0.6)` produces the colour #84ad99.
 
 ###1.2.3 changes (unreleased):
 

@@ -110,6 +110,10 @@ describe("property indexing", function() {
 			expect('(set:$a to 2)(set: $a\'s 1st to 1)').markupToError();
 			expect('(set:$a to -0.1)(set: $a\'s last to 1)').markupToError();
 		});
+		it("cannot be used with colours", function() {
+			expect('(print: white\'s 1st)').markupToError();
+			expect('(print: white\'s last)').markupToError();
+		});
 		it("can be used as names in datamaps", function() {
 			expect('(print: (datamap: "Sword", "Steel")\'s 1st)').markupToError();
 			expect('(print: (datamap: "Sword", "Steel")\'s last)').markupToError();
@@ -197,6 +201,25 @@ describe("property indexing", function() {
 			expect('|a>[]|a>[](print: ?a\'s thing)').markupToError();
 			expect('|a>[]|a>[](set: ?a\'s thing to 4)').markupToError();
 			expect('|a>[]|a>[](set: ?a\'s length to 4)').markupToError();
+		});
+		describe("for colours", function() {
+			it("'r', 'g', 'b' etc. produce the colour's RGB components in the range 0 to 255", function() {
+				expect('(print: red\'s r)').markupToPrint("230");
+				expect('(print: red\'s g)').markupToPrint("25");
+				expect('(print: red\'s b)').markupToPrint("25");
+			});
+			it("'h', 's', 'l' etc. produce the colour's HSL components in the range 0 to 1", function() {
+				expect('(print: red\'s h)').markupToPrint("0");
+				expect('(print: (floor:red\'s s * 1000))').markupToPrint("803");
+				expect('(print: red\'s l)').markupToPrint("0.5");
+			});
+			it("no other values are present", function() {
+				expect("(print:red's create)").markupToError();
+				expect("(print:red's toHexString)").markupToError();
+			});
+			it("cannot be assigned to", function() {
+				expect("(set:red's r to 2)").markupToError();
+			});
 		});
 	});
 	describe("belonging indices", function() {
@@ -375,6 +398,25 @@ describe("property indexing", function() {
 					expect('(set: $a to "𐌎old")(set: $a\'s (a:2,3)\'s (a:1,2) to "ar")$a').markupToPrint('𐌎ard');
 					expect('(set: $a to "𐌎old")(set: $a\'s (a:3,2)\'s (a:1,2) to "ar")$a').markupToPrint('𐌎rad');
 				});
+			});
+		});
+		describe("for colours", function() {
+			it("'r', 'g', 'b' etc. produce the colour's RGB components in the range 0 to 255", function() {
+				expect('(print: red\'s "r")').markupToPrint("230");
+				expect('(print: red\'s "g")').markupToPrint("25");
+				expect('(print: red\'s "b")').markupToPrint("25");
+			});
+			it("'h', 's', 'l' etc. produce the colour's HSL components in the range 0 to 1", function() {
+				expect('(print: red\'s "h")').markupToPrint("0");
+				expect('(print: (floor:red\'s "s" * 1000))').markupToPrint("803");
+				expect('(print: red\'s "l")').markupToPrint("0.5");
+			});
+			it("no other values are present", function() {
+				expect("(print:red's 'create')").markupToError();
+				expect("(print:red's 'toHexString')").markupToError();
+			});
+			it("cannot be assigned to", function() {
+				expect('(set:red\'s "r" to 2)').markupToError();
 			});
 		});
 		describe("for hook references", function() {

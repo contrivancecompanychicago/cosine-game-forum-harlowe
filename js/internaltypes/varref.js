@@ -1,5 +1,5 @@
-define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/hookset'],
-(State, TwineError, {isObject, isSequential, objectName, clone, numericIndex, isValidDatamapName}, HookSet) => {
+define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/hookset', 'datatypes/colour'],
+(State, TwineError, {isObject, isSequential, objectName, clone, numericIndex, isValidDatamapName}, HookSet, Colour) => {
 	'use strict';
 	/*
 		VarRefs are essentially objects pairing a chain of properties
@@ -200,7 +200,10 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 			if (obj.TwineScript_GetElement && Number.isFinite(+prop)) {
 				return obj.TwineScript_GetElement(prop);
 			} else {
-				return obj[prop];
+				const ret = obj[prop];
+				if (typeof ret !== "function") {
+					return ret;
+				}
 			}
 		}
 	}
@@ -253,6 +256,12 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 		if (obj instanceof Set) {
 			return TwineError.create('operation', "I can't modify " + objectName(obj),
 				'You should use an (array:) if you need to modify the data inside this dataset.');
+		}
+		/*
+			Neither can colours.
+		*/
+		if (Colour.isPrototypeOf(obj)) {
+			return TwineError.create('operation', "I can't modify the components of " + objectName(obj));
 		}
 
 		if (obj instanceof Map) {

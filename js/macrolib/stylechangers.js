@@ -437,7 +437,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 					This is important as it enables the ChangerCommand to be serialised
 					as a string more easily.
 				*/
-				if (CSScolour && CSScolour.colour) {
+				if (Colour.isPrototypeOf(CSScolour)) {
 					CSScolour = CSScolour.toHexString(CSScolour);
 				}
 				return ChangerCommand.create("text-colour", [CSScolour]);
@@ -520,7 +520,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		("background",
 			(_, value) => {
 				//Convert TwineScript CSS colours to bad old hexadecimal.
-				if (value && value.colour) {
+				if (Colour.isPrototypeOf(value)) {
 					value = value.toHexString(value);
 				}
 				return ChangerCommand.create("background", [value]);
@@ -547,7 +547,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				d.styles.push(property,
 					/*
 						We also need to alter the "display" property in a case where the element
-						has block children - the background won't display if it's kept as
+						has block children - the background won't display if it's kept as initial.
 					 */
 					{ display() { return childrenProbablyInline($(this)) ? "initial" : "block"; } });
 				return d;

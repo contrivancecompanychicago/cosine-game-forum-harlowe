@@ -28,6 +28,11 @@ describe("column syntax", function() {
 		var column = runPassage("=====|\ngarply\n|==|\ngrault").find('tw-column');
 		expect(column.length).toBe(1);
 	});
+	it("works with many columns", function() {
+		var column = runPassage("|==\nA\n=|=\nB\n=|=\nC\n=|=\nD\n=|=\nE\n=|=\nF\n|==|\nG").find('tw-column');
+		expect(column.length).toBe(6);
+		expect(column[0].style.width).toMatch(/^16\.6+/);
+	});
 	it("doesn't require a final |==|", function() {
 		var passage = runPassage("|==\ngarply\n==|\ncorge");
 		expect(passage.find('tw-column').length).toBe(2);

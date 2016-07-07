@@ -1,5 +1,5 @@
-define(['macros', 'utils', 'utils/operationutils', 'internaltypes/twineerror'],
-(Macros, {whitespace, anyLetter}, {subset, objectName}, TwineError) => {
+define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internaltypes/twineerror'],
+(Macros, {whitespace, anyLetter}, {subset, objectName}, Colour, TwineError) => {
 	"use strict";
 	/*
 		Built-in value macros.
@@ -327,6 +327,98 @@ define(['macros', 'utils', 'utils/operationutils', 'internaltypes/twineerror'],
 			return +expr;
 		},
 		[String])
+
+		/*d:
+			(rgb: Number, Number, Number) -> Colour
+
+			This macro creates a colour using the three red (r), green (g) and blue (b) values
+			provided, whose values are whole numbers between 0 and 255.
+
+			Example usage:
+			`(rgb: 255, 0, 47)` produces a colour with 255 red, 0 blue and 47 green.
+			`(rgb: 90, 0, 0)'s r` produces the number 90.
+
+			Rationale:
+
+			The RGB additive colour model is commonly used for defining colours: the HTML
+			hexadecimal notation for colours (such as #9263AA) simply consists of three hexadecimal
+			values placed together. This macro allows you to create such colours computationally,
+			by providing variables for certain components.
+
+			Details:
+
+			This macro takes the same range of numbers as the CSS `rgb()` function.
+
+			Giving values higher than 255 or lower than 0, or with a fractional part,
+			will cause an error.
+
+			See also:
+			(hsl:)
+
+			#colour
+		*/
+		("rgb", (_, ...values) => {
+			for (let val, i = 0; i < values.length; i += 1) {
+				val = values[i];
+				if (val < 0 || val > 255 || ((val | 0) !== val)) {
+					return TwineError.create("macrocall",
+						"RGB values must be whole numbers between 0 and 255, not " + objectName(val) + ".");
+				}
+			}
+			return Colour.create({r: values[0], g: values[1], b: values[2]});
+		},
+		[Number, Number, Number])
+
+		/*d:
+			(hsl: Number, Number, Number) -> Colour
+
+			This macro creates a colour using the given hue (h) angle in degrees, as well as the given
+			saturation (s) and lightness (l) percentages.
+
+			Example usage:
+			`(hsl: 120, 0.8, 0.5)` produces a colour with 120 degree hue, 80% saturation and 50% lightness.
+			`(hsl: 28, 1, 0.4)'s h` produces the number 28.
+
+			Rationale:
+
+			The HSL colour model is regarded as easier to work with than the RGB model used for HTML hexadecimal
+			notation and the (rgb:) macro. Being able to set the hue with one number instead of three, for
+			instance, lets you control the hue using a single variable, and alter it at will.
+
+			Details:
+
+			This macro takes the same range of numbers as the CSS `hsl()` function.
+
+			Giving saturation or lightness values higher than 1 or lower than 0 will cause an error. However,
+			you can give any kind of hue number to (hsl:), and it will automatically round it to fit the 0-359
+			degree range. This allows you to cycle through hues easily by providing a steadily increasing variable or
+			a counter, such as `(hsl: time / 100, 1, 0.5)`.
+
+			See also:
+			(rgb:)
+
+			#colour
+		*/
+		("hsl", (_, h, s, l) => {
+			const errorMsg = " values must be numbers between 0 and 1 inclusive, not ";
+			if (s < 0 || s > 1) {
+				return TwineError.create("macrocall", "Saturation" + errorMsg + objectName(s) + ".");
+			}
+			if (l < 0 || l > 1) {
+				return TwineError.create("macrocall", "Lightness" + errorMsg + objectName(l) + ".");
+			}
+			/*
+				Unlike S and L, H is silently rounded and truncated to the 0..360 range. This allows increasing counters
+				to be given directly to the (hsl:) macro, to cycle through the hues continuously.
+				Round is used because, as the user's hue range is effectively continuous, nothing is lost by using it.
+			*/
+			h = Math.round(h) % 360;
+			if (h < 0) {
+				h += 360;
+			}
+			return Colour.create({h, s, l});
+		},
+		[Number, Number, Number])
 		;
 		/*d:
 			Boolean data

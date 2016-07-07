@@ -485,7 +485,7 @@
 				*/
 				property: {
 					fn: textTokenFn("name"),
-					canFollow: ["variable", "hookRef", "property", "tempVariable",
+					canFollow: ["variable", "hookRef", "property", "tempVariable", "colour",
 						"itsProperty", "belongingItProperty", "macro", "grouping", "string",
 						/*
 							These must also be included so that the correct error can be reported.

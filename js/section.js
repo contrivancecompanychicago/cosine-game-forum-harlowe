@@ -9,12 +9,13 @@ define([
 	'utils/operationutils',
 	'datatypes/changercommand',
 	'datatypes/hookset',
+	'datatypes/colour',
 	'internaltypes/changedescriptor',
 	'internaltypes/varscope',
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier',
 ],
-($, Utils, Selectors, Renderer, Environ, Operations, State, {printBuiltinValue,objectName}, ChangerCommand, HookSet, ChangeDescriptor, VarScope, TwineError, TwineNotifier) => {
+($, Utils, Selectors, Renderer, Environ, Operations, State, {printBuiltinValue,objectName}, ChangerCommand, HookSet, Colour, ChangeDescriptor, VarScope, TwineError, TwineNotifier) => {
 	"use strict";
 
 	let Section;
@@ -244,7 +245,7 @@ define([
 				|| result instanceof Map
 				|| result instanceof Set
 				|| Array.isArray(result)
-				|| result.colour))
+				|| Colour.isPrototypeOf(result)))
 				//  However, commands will cleanly "detach" without any error resulting.
 				|| (result && result.TwineScript_Print && !result.changer)) {
 			/*
