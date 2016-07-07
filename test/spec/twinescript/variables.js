@@ -31,8 +31,8 @@ describe("twinescript variables", function() {
 			expect("|a>[Gee] |a>[Wow](set: ?a to false)").markupToError();
 			expect("|a>[Gee] |a>[Wow](set: ?a to (a:1,2,3))").markupToError();
 		});
-		it("can assign a hook reference to a variable", function() {
-			expect("|a>[Gee] |a>[Wow](set: $a to ?a)(click:$a)[]").not.markupToError();
+		it("cannot assign a hook reference to a variable", function() {
+			expect("|a>[Gee] |a>[Wow](set: $a to ?a)(click:$a)[]").markupToError();
 		});
 		it("assignment requests can't be assigned", function() {
 			expect("(set: $wordy to ($wordy to 2)) ").markupToError();

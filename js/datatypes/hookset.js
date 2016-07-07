@@ -372,6 +372,10 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 		},
 
 		TwineScript_TypeName: "a hook reference (like ?this)",
+		/*
+			HookSets cannot be assigned to variables.
+		*/
+		TwineScript_Unobservable: true,
 
 		/*
 			HookSets can be concatenated in the same manner as ChangerCommands.

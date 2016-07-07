@@ -481,7 +481,7 @@ describe("twinescript operators", function () {
 			expect("(print: (a: ...(dataset:1,2,2,'ABC'))'s last)").markupToPrint("ABC");
 		});
 		it("spreads hook references into sub-hook references", function (){
-			expect("|a>[1]|a>[1](set:$a to (a: ...?a))(replace:$a's 1st)[2]").markupToPrint("21");
+			expect("|a>[1]|a>[1](replace: ...?a)[2]").markupToPrint("22");
 		});
 		it("fails for non-sequential data types", function (){
 			expect("(a: ...1)").markupToError();
