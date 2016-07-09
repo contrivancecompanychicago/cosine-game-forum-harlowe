@@ -373,7 +373,7 @@
 		
 		macro = {
 			opener:            "\\(",
-			name:              "(" + either(anyLetter + "+", variable) + "):",
+			name:              "(" + either(anyLetter + "+", variable) + "):" + notBefore('\\/'),
 			closer:            "\\)",
 		},
 		

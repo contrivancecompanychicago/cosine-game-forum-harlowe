@@ -19,6 +19,9 @@ describe("macro calls", function() {
 	it("cannot have whitespace between the ( and name", function() {
 		expect("( a: )").markupToPrint("( a: )");
 	});
+	it("cannot have a forward slash following the :", function() {
+		expect("(http://example.org)").markupToPrint("(http://example.org)");
+	});
 	it("can have a trailing , after the final argument", function() {
 		expect("(a:\n 1\n ,\n 1\n, )").markupToPrint("1,1");
 	});

@@ -26,6 +26,7 @@ Rough documentation is at http://twine2.neocities.org/
  * Now, various macros (`(range:)`, `(subarray:)`, `(substring:)`, `(rotated:)` etc.) which require integers (positive or negative whole numbers) will produce errors if they are given fractional numbers.
  * It is now an error to alter data structures that aren't in variables - such as `(set: (a:)'s 1st to 1)` or `(set: (passage:)'s name to "X")` - because doing so accomplishes nothing.
  * Attaching invalid values to hooks, such as `(either:"String")[text]`, `(a:2,3,4)[text]` or `(set: $x to 1) $x[text]`, will now result in an error instead of printing both the value and the hook's contents.
+ * Writing a URL in brackets, like `(http://...)`, will no longer be considered an invalid macro call. (To be precise, neither will any macro whose `:` is immediately followed by a `/`, so other protocol URLs are also capable of being written.)
 
 #####Markup
 
