@@ -1,7 +1,7 @@
 define([
 	'state',
 	'datatypes/colour',
-	'internaltypes/assignmentrequest',
+	'datatypes/assignmentrequest',
 	'utils/operationutils',
 	'internaltypes/twineerror',
 ],
@@ -183,11 +183,6 @@ define([
 					used as an assignment destination.
 				*/
 				TwineScript_Identifiers: true,
-				/*
-					It shouldn't be possible to set arbitrary valus into this object,
-					but just in case...
-				*/
-				TwineScript_Sealed: true,
 
 				get it() {
 					return It;
@@ -400,12 +395,10 @@ define([
 			}
 
 			/*
-				Also refuse if the src is a value which is "unobservable",
-				that is, must not be storable.
+				Also refuse if the src is a value which is "unstorable".
 			*/
-			if (src && src.TwineScript_Unobservable) {
-				return TwineError.create("operation",
-					"That type of value can't be stored.");
+			if (src && src.TwineScript_Unstorable) {
+				return TwineError.create("operation", "That type of value can't be stored.");
 			}
 			
 			/*

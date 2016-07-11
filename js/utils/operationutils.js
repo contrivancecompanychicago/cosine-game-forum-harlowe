@@ -138,7 +138,7 @@ define(['utils', 'datatypes/hookset', 'internaltypes/twineerror'], ({impossible,
 		}
 		
 		// The Any type permits any accessible argument, as long as it's present.
-		if (type.TwineScript_TypeName === "anything" && arg !== undefined && !arg.TwineScript_Unobservable) {
+		if (type.TwineScript_TypeName === "anything" && arg !== undefined && !arg.TwineScript_Unstorable) {
 			return true;
 		}
 		/*

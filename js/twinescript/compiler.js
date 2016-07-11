@@ -11,17 +11,28 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 		This is an otherwise plain object that may implement any of the following:
 		
 		{Function|String} TwineScript_ObjectName:
-			returns a string that's used when TwineScript needs to
+			returns a string that's used when Harlowe needs to
 			name the object in error messages or the debug menu.
+
+		{Function|String} TwineScript_TypeName:
+			returns a string that's used when Harlowe needs to
+			name the type of the object in error messages or the debug menu.
 		
 		{Function} TwineScript_Clone:
 			a function which clones the value, even if it's an oddly-shaped object.
 			Should be used exclusively by VarRef.set().
 		
 		{Function} TwineScript_+:
-			a function which is used to overload the + operator. Note that TwineScript
+			a function which is used to overload the + operator. Note that Harlowe
 			automatically forces both sides of + to be of identical type.
+
+		{Function} TwineScript_is:
+			a function which is used to overload the "is" operator.
 		
+		{Function} TwineScript_GetElement:
+			a function that, if present, is used to obtain integer-indexed elements
+			of the object, as if it were an array. Currently used by HookSets.
+
 		{Function} TwineScript_Print:
 			a function which is used when the given object is printed into the passage.
 		
@@ -29,6 +40,19 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			returns a string that's used when the object CAN be implicitly
 			coerced to string. This should be used very sparingly.
 		
+		{Boolean} TwineScript_Unstorable:
+			a value that, if present and truthy, means the value cannot be stored using
+			(set:) or (put:), nor can be used inside macros with an Any signature.
+
+		{Boolean} TwineScript_Identifiers:
+			a value that, if present and truthy, means the object is the Identifiers object
+			in Operations. Should be used exclusively by VarRef.set().
+
+		{Boolean} TwineScript_VariableStore:
+			a value that, if present and truthy, means the object is either a State's
+			variables store, or a Section's temporary variables store.
+			in Operations. Should be used exclusively by VarRef.set().
+
 		{Function} toString:
 			if this is present and !== Object.prototype.toString, then this is
 			used by Section to convert this datatype to renderable TwineMarkup code.

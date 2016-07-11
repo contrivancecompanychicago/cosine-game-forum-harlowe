@@ -22,7 +22,7 @@ define(['utils'], ({assertMustHave}) => {
 		TwineScript_TypeName: "an assignment operation",
 		TwineScript_ObjectName: "an assignment operation",
 
-		TwineScript_Unobservable: true,
+		TwineScript_Unstorable: true,
 		
 		create(dest, src, operator) {
 			// Assert: dest is a varRef

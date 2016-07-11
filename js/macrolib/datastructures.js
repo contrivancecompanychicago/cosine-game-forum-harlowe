@@ -7,7 +7,7 @@ define([
 	'engine',
 	'passages',
 	'datatypes/lambda',
-	'internaltypes/assignmentrequest',
+	'datatypes/assignmentrequest',
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier'],
 ($, NaturalSort, Macros, {objectName, typeName, subset, collectionType, isValidDatamapName, is, clone}, State, Engine, Passages, Lambda, AssignmentRequest, TwineError, TwineNotifier) => {
@@ -118,12 +118,12 @@ define([
 			/*
 				There's nothing that can be done with the results of (set:) or (put:)
 				operations, except to display nothing when they're in bare passage text.
-				Return a plain unobservable value that prints out as "".
+				Return a plain unstorable value that prints out as "".
 			*/
 			return {
 				TwineScript_TypeName:     "a (set:) operation",
 				TwineScript_ObjectName:   "a (set:) operation",
-				TwineScript_Unobservable: true,
+				TwineScript_Unstorable: true,
 				TwineScript_Print:        () => debugMessage && TwineNotifier.create(debugMessage).render(),
 			};
 		},
@@ -188,7 +188,7 @@ define([
 			return {
 				TwineScript_TypeName:     "a (put:) operation",
 				TwineScript_ObjectName:   "a (put:) operation",
-				TwineScript_Unobservable: true,
+				TwineScript_Unstorable: true,
 				TwineScript_Print:        () => debugMessage && TwineNotifier.create(debugMessage).render(),
 			};
 		},
@@ -252,16 +252,11 @@ define([
 				}
 				else {
 					/*
-						Otherwise, it's either a plain value (such as seen in
-						(move: 2 into $red)) or something which has a TwineScript_DeleteValue
-						method that should be called.
+						Otherwise, it's a plain value (such as seen in (move: 2 into $red)).
 					*/
 					result = ar.dest.set(ar.src);
 					if ((error = TwineError.containsError(result))) {
 						return error;
-					}
-					if (ar.src.TwineScript_DeleteValue) {
-						ar.src.TwineScript_DeleteValue();
 					}
 				}
 				if (Engine.options.debug) {
@@ -275,7 +270,7 @@ define([
 			return {
 				TwineScript_TypeName:     "a (move:) operation",
 				TwineScript_ObjectName:   "a (move:) operation",
-				TwineScript_Unobservable: true,
+				TwineScript_Unstorable: true,
 				TwineScript_Print:        () => debugMessage && TwineNotifier.create(debugMessage).render(),
 			};
 		},

@@ -375,7 +375,7 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 		/*
 			HookSets cannot be assigned to variables.
 		*/
-		TwineScript_Unobservable: true,
+		TwineScript_Unstorable: true,
 
 		/*
 			HookSets can be concatenated in the same manner as ChangerCommands.

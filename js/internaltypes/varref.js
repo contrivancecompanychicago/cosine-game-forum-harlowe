@@ -235,14 +235,6 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 			return prop.map(prop => canSet(obj, prop));
 		}
 
-		const
-			// Error messages which must be identical in both cases where they are used.
-			specialCollectionErrorMsg = "I won't add " + propertyDebugName(prop)
-				+ " to " + objectName(obj)
-				+ " because it's one of my special system collections.",
-			writeproofErrorMsg = "I can't modify '" + propertyDebugName(prop)
-				+ "' because it holds one of my special system collections.";
-
 		/*
 			HookRefs cannot be altered.
 		*/
@@ -265,17 +257,6 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 		}
 
 		if (obj instanceof Map) {
-			/*
-				The "TwineScript_Sealed" expando property means that this map/object cannot be
-				expanded (presumably because it's a system variable).
-			*/
-			if (obj.TwineScript_Sealed && !obj.has(prop)) {
-				return TwineError.create("operation", specialCollectionErrorMsg);
-			}
-			if (obj.TwineScript_Writeproof &&
-					obj.TwineScript_Writeproof.includes(prop)) {
-				return TwineError.create("operation", writeproofErrorMsg);
-			}
 			return true;
 		}
 		/*
@@ -312,16 +293,6 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 			return TwineError.create('keyword',
 				"I can't alter the value of the '"
 				+ prop + "' identifier.", "You can only alter data in variables and hooks, not fixed identifiers.");
-		}
-		/*
-			Sealed objects or writeproof properties must be respected.
-		*/
-		if (obj.TwineScript_Sealed && !(prop in obj)) {
-			return TwineError.create("operation", specialCollectionErrorMsg);
-		}
-		if (obj.TwineScript_Writeproof &&
-				obj.TwineScript_Writeproof.includes(prop)) {
-			return TwineError.create("operation", writeproofErrorMsg);
 		}
 		/*
 			Numbers and booleans cannot have properties altered.
@@ -380,13 +351,6 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 		*/
 		else if (obj instanceof Map || obj instanceof Set) {
 			obj.delete(prop);
-		}
-		/*
-			If it has a TwineScript_DeleteValue method, call that.
-			This will usually be a hook reference.
-		*/
-		else if (obj.TwineScript_DeleteValue) {
-			obj.TwineScript_DeleteValue(prop);
 		}
 		/*
 			Note: The only plain object anticipated to be provided here is the

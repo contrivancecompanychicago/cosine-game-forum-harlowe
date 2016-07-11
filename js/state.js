@@ -21,13 +21,6 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			and assigning to its properties does affect game state.
 		*/
 		TwineScript_VariableStore: true,
-
-		/*
-			This property means that these property names cannot be set to new
-			user values via (set:). Of course, mutating their contents
-			will cause new versions of them to appear in the Moment's variables map.
-		*/
-		TwineScript_Writeproof: [],
 	};
 
 	/*

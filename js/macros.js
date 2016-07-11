@@ -177,10 +177,10 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 						);
 					}
 					/*
-						Unobservable data types are the only kinds which Any signatures will not
+						Unstorable data types are the only kinds which Any signatures will not
 						match. Produce a special error message in this case.
 					*/
-					if (arg && arg.TwineScript_Unobservable && type === Macros.TypeSignature.Any) {
+					if (arg && arg.TwineScript_Unstorable && type === Macros.TypeSignature.Any) {
 						return TwineError.create(
 							"datatype",
 							name + "'s " + nth(ind + 1) + " value is not valid data for this macro.",
