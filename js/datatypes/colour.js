@@ -58,7 +58,6 @@ define(['jquery'], ($) => {
 		/*
 			These RegExps check for HTML #fff and #ffffff format colours.
 		*/
-		singleDigit   = /^([\da-fA-F])$/,
 		tripleDigit   = /^([\da-fA-F])([\da-fA-F])([\da-fA-F])$/,
 		sextupleDigit = /^([\da-fA-F])([\da-fA-F])([\da-fA-F])([\da-fA-F])([\da-fA-F])([\da-fA-F])$/,
 		/*
@@ -119,7 +118,7 @@ define(['jquery'], ($) => {
 		These two private functions converts RGB 0..255 values into H 0..359
 		and SL 0..1 values, and back.
 	*/
-	function RGBToHSL({r, g, b}) {
+	function RGBToHSL({r, g, b, a}) {
 		// Convert the RGB values to decimals.
 		r /= 255, g /= 255, b /= 255;
 
@@ -146,10 +145,10 @@ define(['jquery'], ($) => {
 		const s = l > 0.5
 			? delta / (2 - max - min)
 			: delta / (max + min);
-		return { h, s, l };
+		return { h, s, l, a };
 	}
 
-	function HSLToRGB({h, s, l}) {
+	function HSLToRGB({h, s, l, a}) {
 		// If saturation is 0, it is a grey.
 		if (s === 0) {
 			const gray = Math.floor(l * 255);
@@ -177,6 +176,7 @@ define(['jquery'], ($) => {
 			r: Math.floor(hueToRGBComponent(h + 1/3) * 255),
 			g: Math.floor(hueToRGBComponent(h) * 255),
 			b: Math.floor(hueToRGBComponent(h - 1/3) * 255),
+			a,
 		};
 	}
 
@@ -203,19 +203,21 @@ define(['jquery'], ($) => {
 				r : Math.min(Math.round((l.r + r.r) * 0.6), 0xFF),
 				g : Math.min(Math.round((l.g + r.g) * 0.6), 0xFF),
 				b : Math.min(Math.round((l.b + r.b) * 0.6), 0xFF),
+				a : (l.a + r.a) / 2,
 			});
 		},
 		
 		TwineScript_Print() {
-			return "<tw-colour style='background-color:rgb("
-				+ [this.r, this.g, this.b].join(',') + ");'></span>";
+			return "<tw-colour style='background-color:rgba("
+				+ [this.r, this.g, this.b, this.a].join(',') + ");'></span>";
 		},
 		
 		TwineScript_is(other) {
 			return Colour.isPrototypeOf(other) &&
 				other.r === this.r &&
 				other.g === this.g &&
-				other.b === this.b;
+				other.b === this.b &&
+				other.a === this.a;
 		},
 		
 		TwineScript_Clone() {
@@ -223,18 +225,10 @@ define(['jquery'], ($) => {
 		},
 		
 		/*
-			This converts the colour into a 6-char HTML hex string, discarding alpha.
-			(No, this doesn't create a 3-char colour if one was possible. Sorry.)
+			This converts the colour into a CSS rgba() function.
 		*/
-		toHexString() {
-			return "#"
-				/*
-					Number.toString() won't have a leading 0 unless
-					we manually insert it.
-				*/
-				+ (this.r).toString(16).replace(singleDigit, "0$1")
-				+ (this.g).toString(16).replace(singleDigit, "0$1")
-				+ (this.b).toString(16).replace(singleDigit, "0$1");
+		toRGBAString() {
+			return `rgba(${this.r}, ${this.g}, ${this.b}, ${this.a})`;
 		},
 
 		/*
@@ -271,6 +265,10 @@ define(['jquery'], ($) => {
 					!("r" in rgbObj) && !("g" in rgbObj) && !("b" in rgbObj)) {
 				return this.create(HSLToRGB(rgbObj));
 			}
+			// Assume alpha is 1 if it is not specified.
+			if (!("a" in rgbObj) || typeof rgbObj.a !== "number") {
+				rgbObj.a = 1;
+			}
 			return Object.assign(Object.create(this), rgbObj);
 		},
 		/*
@@ -279,6 +277,13 @@ define(['jquery'], ($) => {
 		isHexString(str) {
 			return (typeof str === "string" && str[0] === "#"
 				&& (str.slice(1).match(tripleDigit) || str.slice(1).match(sextupleDigit)));
+		},
+		/*
+			This static method determines if a given string resembles a CSS3 color function.
+			This doesn't check if it's a valid or well-formed CSS function, though.
+		*/
+		isCSS3Function(str) {
+			return (typeof str === "string" && /^(?:rgb|hsl)a?\(\s*\d+\s*,\s*\d+%?\s*,\s*\d+%?(?:,\s*\d+(?:\.\d+)?\s*)?\)$/.test(str));
 		},
 	});
 	return Colour;

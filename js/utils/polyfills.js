@@ -8,7 +8,7 @@ define([], function() {
 	if (typeof A.includes !== "function") {
 		A.includes = function includes(searchElement, fromIndex = 0) {
 			if (!Number.isNaN(searchElement) && Number.isFinite(fromIndex) && typeof searchElement !== 'undefined') {
-				return A.indexOf.call(searchElement, fromIndex) > -1;
+				return A.indexOf.call(this, searchElement, fromIndex) > -1;
 			}
 
 			let O = Object(this), length = parseInt(O.length);

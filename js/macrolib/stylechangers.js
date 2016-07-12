@@ -438,7 +438,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 					as a string more easily.
 				*/
 				if (Colour.isPrototypeOf(CSScolour)) {
-					CSScolour = CSScolour.toHexString(CSScolour);
+					CSScolour = CSScolour.toRGBAString(CSScolour);
 				}
 				return ChangerCommand.create("text-colour", [CSScolour]);
 			},
@@ -446,7 +446,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				d.styles.push({'color': CSScolour});
 				return d;
 			},
-			[either(String,Colour)]
+			[either(String, Colour)]
 		)
 		/*d:
 			(text-rotate: Number) -> Changer
@@ -521,7 +521,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			(_, value) => {
 				//Convert TwineScript CSS colours to bad old hexadecimal.
 				if (Colour.isPrototypeOf(value)) {
-					value = value.toHexString(value);
+					value = value.toRGBAString(value);
 				}
 				return ChangerCommand.create("background", [value]);
 			},
@@ -530,7 +530,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				/*
 					Different kinds of values can be supplied to this macro
 				*/
-				if (Colour.isHexString(value)) {
+				if (Colour.isHexString(value) || Colour.isCSS3Function(value)) {
 					property = {"background-color": value};
 				}
 				else {
