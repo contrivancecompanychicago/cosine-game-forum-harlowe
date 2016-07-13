@@ -41,22 +41,19 @@
 			// tokens are highlighted as well.
 			referenceTokens = {
 				variable: [],
+				tempVariable: [],
 				hook: [],
 				hookRef: [],
 				populate() {
 					this.variable = [];
+					this.tempVariable = [];
 					this.hook = [];
 					this.hookRef = [];
 
 					const recur = (token) => {
-						if (token.type === "variable") {
-							this.variable.push(token);
-						}
-						else if (token.type === "hook") {
-							this.hook.push(token);
-						}
-						else if (token.type === "hookRef") {
-							this.hookRef.push(token);
+						if (token.type === "variable" || token.type === "tempVariable"
+								|| token.type === "hook" || token.type === "hookRef") {
+							this[token.type].push(token);
 						}
 						token.children.forEach(recur);
 					};
@@ -133,11 +130,14 @@
 			/*
 				If the token is a variable or hookRef, then
 				highlight certain other instances in the text.
-				For variables and hookRefs, highlight all other occurrences of the variable
-				in the passage text.
+				For variables, hooks and hookRefs, highlight all other occurrences of
+				the variable in the passage text.
 			*/
-			if (token.type === "variable" || token.type === "hookRef") {
-				referenceTokens[token.type].forEach(e => {
+			if (token.type === "variable" || token.type === "tempVariable"
+					|| token.type === "hookRef" || token.type === "hook") {
+				// <hooks| should highlight matching ?hookRefs.
+				const type = token.type === "hook" ? "hookRef" : token.type;
+				referenceTokens[type].forEach(e => {
 					if (e !== token && e.name === token.name) {
 						cursorMarks.push(doc.markText(
 							doc.posFromIndex(e.start),
@@ -148,12 +148,12 @@
 				});
 			}
 			/*
-				Also for hookRefs, highlight the nametags of the named hook(s)
-				that it refers to.
+				Also for hookRefs and hooks, highlight the nametags of the
+				named hook(s) that match this one's name.
 			*/
-			if (token.type === "hookRef") {
+			if (token.type === "hookRef" || token.type === "hook") {
 				referenceTokens.hook.forEach(e => {
-					if (e.name === token.name) {
+					if (e !== token && e.name === token.name) {
 						const tagStart =
 							// This assumes that the end of the hook's text consists of its <tag|,
 							// and nothing else.
@@ -222,6 +222,13 @@
 						"Hooks can be used for many things: showing text (if:) something happened, applying a (text-style:), making a place to (append:) text later on, and much more!",
 						"Consult the Harlowe documentation for more information.",
 						].join('\n\n'));
+					/*
+						Line numbers aren't important for a primarily prose-based form as passage text,
+						but it's good to have some UI element that distinguishes new lines from
+						wrapped lines. So, we use the CM lineNumbers gutter with only bullets in it.
+					*/
+					cm.setOption('lineNumbers', true);
+					cm.setOption('lineNumberFormatter', () => "\u2022");
 				}
 				
 				return {
@@ -336,7 +343,15 @@
 		*/
 		return {
 			root: 'box-sizing:border-box;',
-			cursor: "border-bottom: 2px solid darkgray;",
+
+			// The cursor token highlight should ignore the most common tokens, unwrapped text tokens.
+			"cursor:not([class^='cm-harlowe-text cm-harlowe-root'])":
+				"border-bottom: 2px solid darkgray;",
+
+			CodeMirror: "padding: 0 !important",
+
+			// The line number bullets (see the lineNumbers option, above), are a bit too dark by default.
+			"CodeMirror-linenumber": "color: #ccc;",
 
 			// "Warm" hooks
 			hook:        warmHookBG(0.05),
@@ -387,6 +402,14 @@
 			"^=bold, ^=strong, ^=italic, ^=em, ^=sup, ^=verbatim":
 				intangible,
 
+			// These two rules implement "fake smart quotes", which should
+			// more easily convey strings' boundaries.
+			"^=string":
+				"font-style:italic; display:inline-block; transform: scaleX(-1);",
+
+			"string + ^=string":
+				"transform: none;",
+
 			"^=collapsed":
 				"font-weight:bold; color: hsl(201, 100%, 30%);",
 			
@@ -415,10 +438,12 @@
 				"color: #A15000;",
 			variable:
 				"color: #005682;",
+			tempVariable:
+				"color: #134e6c;",
 			hookRef:
 				"color: #007f54;",
 			"variableOccurrence, hookOccurrence":
-				"background: #7fffd4 !important;",
+				"background: #9fdfc9 !important;",
 			
 			heading:
 				"font-weight:bold;",
@@ -441,6 +466,9 @@
 					if (e === 'toString') {
 						return a;
 					}
+					if (e.slice(0,10) === "CodeMirror") {
+						return a + "." + e + "{" + this[e] + "}";
+					}
 					/*
 						Comma-containing names are handled by splitting them here,
 						and then re-joining them. If the property lacks a comma,
@@ -459,6 +487,9 @@
 						.map(function map(e) {
 							if (e.indexOf('.') > -1) {
 								return e.split(/\./g).map(map).join('');
+							}
+							if (e.indexOf(" + ") > -1) {
+								return e.split(/ \+ /g).map(map).join(' + ');
 							}
 							// There's no need for $= because that will always be cm-harlowe-root or cm-harlowe-cursor.
 							if (e.indexOf("^=") === 0) {
