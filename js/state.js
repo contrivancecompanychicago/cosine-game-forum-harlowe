@@ -90,6 +90,22 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		is stored in a variable.
 	*/
 	let serialiseProblem;
+
+	/*
+		Debug Mode event handlers are stored here by onChange(). These are called in newPresent() when
+		the present changes, and thus when play(), fastForward() and rewind() have been called.
+	*/
+	const eventHandlers = [];
+
+	/*
+		A private method to create a new present after altering the state.
+		@param {String} The name of the passage the player is now currently at.
+	*/
+	function newPresent(newPassageName) {
+		present = (timeline[recent] || Moment).create(newPassageName);
+		// Call the Debug Mode handlers in accordance with the change in state.
+		eventHandlers.forEach(fn => fn(timeline, recent));
+	}
 	
 	/*
 		The current game's state.
@@ -184,14 +200,6 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		/*
 			Movers/shakers
 		*/
-		
-		/*
-			Create a new present after altering the state.
-			@param {String} The name of the passage the player is now currently at.
-		*/
-		newPresent(newPassageName) {
-			present = (timeline[recent] || Moment).create(newPassageName);
-		},
 
 		/*
 			Push the present state to the timeline, and create a new state.
@@ -208,7 +216,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			recent += 1;
 			
 			// Create a new present
-			this.newPresent(newPassageName);
+			newPresent(newPassageName);
 		},
 
 		/*
@@ -236,7 +244,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				recent -= 1;
 			}
 			if (moved) {
-				this.newPresent(timeline[recent].passage);
+				newPresent(timeline[recent].passage);
 			}
 			return moved;
 		},
@@ -260,13 +268,24 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				recent += 1;
 			}
 			if (moved) {
-				this.newPresent(timeline[recent].passage);
+				newPresent(timeline[recent].passage);
 			}
 			return moved;
 		},
 		
 		/*
-			This method is only for debugging purposes. It is called nowhere except for the test specs.
+			This is used only by Debug Mode - it lets event handlers be registered and called when the State changes.
+			Handler functions have the signature (timeline, recent), where timeline is the timeline Moments array,
+			and recent is the index into the near present.
+		*/
+		onChange(fn) {
+			if (typeof fn === "function" && !eventHandlers.includes(fn)) {
+				eventHandlers.push(fn);
+			}
+		},
+
+		/*
+			This method is only for Harlowe debugging purposes. It is called nowhere except for the test specs.
 		*/
 		reset() {
 			if (!window.jasmine) {
@@ -454,7 +473,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			}
 			timeline = newTimeline;
 			recent = timeline.length - 1;
-			this.newPresent(timeline[recent].passage);
+			newPresent(timeline[recent].passage);
 		}
 		return {
 			serialise: serialise,

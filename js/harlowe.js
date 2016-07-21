@@ -21,10 +21,10 @@ require.config({
 		'jqueryplugins',
 	],
 });
-require(['jquery', 'renderer', 'state', 'engine', 'passages', 'utils/selectors', 'macros',
+require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'utils/selectors', 'macros',
 	'macrolib/values', 'macrolib/commands', 'macrolib/datastructures', 'macrolib/stylechangers', 'macrolib/enchantments', 'macrolib/links',
 	'repl'],
-		($, Renderer, State, Engine, Passages, Selectors) => {
+		($, DebugMode, Renderer, State, Engine, Passages, Selectors) => {
 	"use strict";
 	/*
 		Harlowe, the default story format for Twine 2.
@@ -155,9 +155,7 @@ require(['jquery', 'renderer', 'state', 'engine', 'passages', 'utils/selectors',
 		once at setup.
 	*/
 	let installHandlers = () => {
-		const html = $(document.documentElement),
-			debugHTML =
-			"<tw-debugger><button class='show-invisibles'>&#9903; Debug View</button></tw-debugger>";
+		const html = $(document.documentElement);
 		
 		/*
 			This gives interactable elements that should have keyboard access (via possessing
@@ -172,10 +170,7 @@ require(['jquery', 'renderer', 'state', 'engine', 'passages', 'utils/selectors',
 		
 		// If the debug option is on, add the debugger.
 		if (Engine.options.debug) {
-			$(document.body).append(debugHTML);
-			$('.show-invisibles').click(() => {
-				html.toggleClass('debug-mode').is(".debug-mode");
-			});
+			DebugMode();
 		}
 		installHandlers = null;
 	};

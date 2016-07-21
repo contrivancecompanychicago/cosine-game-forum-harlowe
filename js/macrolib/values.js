@@ -750,7 +750,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 
 			#maths
 		*/
-		pow:    [Math.pow, Number, Number],
+		pow:    [mathFilter(Math.pow), Number, Number],
 		/*d:
 			(exp: Number, Number) -> Number
 

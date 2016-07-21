@@ -197,16 +197,8 @@ tw-debugger {
 	min-width: 10em;
 	min-height: 1em;
 	padding: 1em;
-	font-size: 1.5em;
-	@media screen and (max-width: 1280px) {
-		font-size: 1.25em;
-	}
-	@media screen and (max-width: 960px) {
-		font-size: 1em;
-	}
-	@media screen and (max-width: 640px) {
-		font-size: 0.8em;
-	}
+	font-size: 1.25em;
+	font-family: sans-serif;
 	border: {
 		left: solid #000 2px;
 		top: solid #000 2px;
@@ -218,15 +210,20 @@ tw-debugger {
 	&:hover {
 		opacity: 1;
 	}
-}
 
-.show-invisibles {
-	border-radius: 3px;
-	border: solid #999 1px;
-	background-color: #fff;
-	font-size: inherit;
-	.debug-mode & {
-		background-color: #eee;
-		box-shadow: inset #ddd 3px 5px 0.5em;
+	select {
+		margin-right: 1em;
+		width: 12em;
+	}
+	.show-invisibles {
+		border-radius: 3px;
+		border: solid #999 1px;
+		background-color: #fff;
+		font-size: inherit;
+		.debug-mode & {
+			background-color: #eee;
+			box-shadow: inset #ddd 3px 5px 0.5em;
+		}
 	}
 }
+

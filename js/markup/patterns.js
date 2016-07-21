@@ -577,10 +577,10 @@
 			of `` ` `` marks used to enclose them.
 
 			Example usage:
-			* ```I want to include `[[double square brackets]]` in my story, so I use tilde ` marks.```
-			* ```I want to include ``single tildes ` in my story``, so I place them between two tilde marks.```
+			* ```I want to include `[[double square brackets]]` in my story, so I use grave ` marks.```
+			* ```I want to include ``single graves ` in my story``, so I place them between two grave marks.```
 			
-			There's no hard limit to the amount of tildes you can use to enclose the text.
+			There's no hard limit to the amount of graves you can use to enclose the text.
 
 			#extra
 		*/
