@@ -398,7 +398,7 @@ define([
 			return $(this || e).parentsUntil('tw-collapsed')
 				.filter('tw-verbatim, tw-expression, '
 					/*
-						Also, remove nodes that have collapsed=false on their parent elements,
+						Also, remove nodes that have collapsing=false on their parent elements,
 						which is currently (June 2015) only used to denote hooks whose contents were (replace:)d from
 						outside the collapsing syntax - e.g. {[]<1|}(replace:?1)[Good  golly!]
 					*/
