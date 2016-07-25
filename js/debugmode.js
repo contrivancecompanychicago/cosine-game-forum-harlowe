@@ -39,20 +39,64 @@ define(['jquery', 'utils', 'state', 'engine'],
 		}
 	});
 	/*
-		In order for the turnsDropdown view to reflect the state data, this event handler
+		In order for the turnsDropdown view to reflect the state data, these event handlers
 		must be installed on State, to be called whenever the current moment changes.
+
+		'forward' is fired when navigating to a new passage, or redoing a move. This
+		simply adds a turn to the end of the menu.
 	*/
-	State.onChange((turns, recentIndex) => {
-		turnsDropdown.empty()
+	State.on('forward', (passageName) => {
+		const i = State.pastLength;
+		if (i > 1) {
 			/*
 				The turns dropdown should be disabled only if one or less turns is
 				in the State history.
 			*/
-			[turns.length <= 1 ? 'attr' : 'removeAttr']('disabled');
-		turns.forEach((turn, i) =>
-			turnsDropdown.append("<option value=" + i
-				+ (recentIndex === i ? " selected" : "")
-				+ ">"
+			turnsDropdown.removeAttr('disabled');
+		}
+		/*
+			Create the new <option> element and select it.
+		*/
+		turnsDropdown
+			.append("<option value=" + i + ">"
+				+ (i+1) + ": " + passageName
+				+ "</option>")
+			.val(i);
+	})
+	/*
+		'back' is fired when undoing a move. This removes the final turn from the menu.
+	*/
+	.on('back', () => {
+		/*
+			As above, disable if only one turn remains in the timeline.
+		*/
+		if (State.pastLength <= 1) {
+			turnsDropdown.attr('disabled');
+		}
+		/*
+			Deselect the current selected <option>.
+		*/
+		turnsDropdown.find('[selected]').removeAttr('selected');
+		/*
+			Remove the last <option> element, and select the new last element.
+		*/
+		turnsDropdown.children().last().remove();
+		turnsDropdown.val(State.pastLength);
+	})
+	/*
+		'load' is fired when saved games are deserialised. This replaces the
+		entire menu. Immediately after, 'forward' is also fired, so we don't
+		need to set the val() here.
+	*/
+	.on('load', (timeline) => {
+		turnsDropdown.empty();
+		/*
+			As above, disable only if one turn remains in the timeline.
+		*/
+		turnsDropdown[timeline.length <= 1 ? 'attr' : 'removeAttr']('disabled');
+
+		timeline.forEach((turn, i) =>
+			turnsDropdown.append("<option value=" + i + ">"
 				+ (i+1) + ": " + turn.passage
 				+ "</option>"
 			)

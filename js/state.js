@@ -92,10 +92,15 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 	let serialiseProblem;
 
 	/*
-		Debug Mode event handlers are stored here by onChange(). These are called in newPresent() when
-		the present changes, and thus when play(), fastForward() and rewind() have been called.
+		Debug Mode event handlers are stored here by on(). "forward" and "back" handlers are called
+		when the present changes, and thus when play(), fastForward() and rewind() have been called.
+		"load" handlers are called exclusively in deserialise().
 	*/
-	const eventHandlers = [];
+	const eventHandlers = {
+		forward: [],
+		back: [],
+		load: [],
+	};
 
 	/*
 		A private method to create a new present after altering the state.
@@ -103,8 +108,6 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 	*/
 	function newPresent(newPassageName) {
 		present = (timeline[recent] || Moment).create(newPassageName);
-		// Call the Debug Mode handlers in accordance with the change in state.
-		eventHandlers.forEach(fn => fn(timeline, recent));
 	}
 	
 	/*
@@ -217,6 +220,8 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			
 			// Create a new present
 			newPresent(newPassageName);
+			// Call the 'forward' event handler with this passage name.
+			eventHandlers.forward.forEach(fn => fn(newPassageName));
 		},
 
 		/*
@@ -245,6 +250,8 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			}
 			if (moved) {
 				newPresent(timeline[recent].passage);
+				// Call the 'back' event handler.
+				eventHandlers.back.forEach(fn => fn());
 			}
 			return moved;
 		},
@@ -269,19 +276,25 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			}
 			if (moved) {
 				newPresent(timeline[recent].passage);
+				eventHandlers.forward.forEach(fn => fn(timeline[recent].passage));
 			}
 			return moved;
 		},
 		
 		/*
 			This is used only by Debug Mode - it lets event handlers be registered and called when the State changes.
-			Handler functions have the signature (timeline, recent), where timeline is the timeline Moments array,
-			and recent is the index into the near present.
+			"forward" functions have the signature (passageName). "back" functions have no signature.
+			"load" functions have the signature (timeline), where timeline is the entire timeline Moments array.
 		*/
-		onChange(fn) {
-			if (typeof fn === "function" && !eventHandlers.includes(fn)) {
-				eventHandlers.push(fn);
+		on(name, fn) {
+			if (!(name in eventHandlers)) {
+				impossible('State.on', 'invalid event name');
+				return;
 			}
+			if (typeof fn === "function" && !eventHandlers[name].includes(fn)) {
+				eventHandlers[name].push(fn);
+			}
+			return State;
 		},
 
 		/*
@@ -472,6 +485,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				return false;
 			}
 			timeline = newTimeline;
+			eventHandlers.load.forEach(fn => fn(timeline));
 			recent = timeline.length - 1;
 			newPresent(timeline[recent].passage);
 		}
