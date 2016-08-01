@@ -400,10 +400,18 @@
 						tokenData's matches, or -1.
 					*/
 					for(; ft < frontTokenStack.length; ft += 1) {
-						const {type} = frontTokenStack[ft];
+						let {type} = frontTokenStack[ft];
 						if (type in tokenData.matches) {
 							isMatchingBack = true;
 							break;
+						}
+						/*
+							For the purposes of the following comparison with cannotCross,
+							the innumerable "verbatimN" types must be converted back to
+							"verbatimOpener". This is a somewhat unfortunate hack.
+						*/
+						if (type.indexOf("verbatim") === 0) {
+							type = "verbatimOpener";
 						}
 						/*
 							If there is a front token which this back token "cannot cross" -

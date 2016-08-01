@@ -8,6 +8,13 @@ describe("collapsing whitespace syntax", function() {
 			"AB"
 		);
 	});
+	it("produces a <tw-collapsed> element", function() {
+		expect(
+			"{A}"
+		).markupToBecome(
+			"<tw-collapsed>A</tw-collapsed>"
+		);
+	});
 	it("works on whitespace enclosed in elements", function() {
 		expect(
 			"A{ '' '' // // }B"
