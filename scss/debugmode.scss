@@ -187,30 +187,38 @@
 	50%   { border-color: hsl(160,100%,70%); }
 }
 
-/* The debug button */
+$zindex: 999999;
+$borderwidth: 2px;
+$borderradius: 0.5em;
 
 tw-debugger {
+	// Dimensions and position
 	position:fixed;
+	box-sizing:border-box;
 	bottom:0;
 	right:0;
-	z-index: 999999;
+	z-index: $zindex;
 	min-width: 10em;
 	min-height: 1em;
 	padding: 1em;
+
+	// Font
 	font-size: 1.25em;
 	font-family: sans-serif;
+
+	// Design
 	border: {
-		left: solid #000 2px;
-		top: solid #000 2px;
-		top-left-radius: 0.5em;
+		left: solid #000 $borderwidth;
+		top: solid #000 $borderwidth;
+		top-left-radius: $borderradius;
 	}
 	background: #fff;
-	transition: opacity 0.2s; -webkit-transition: opacity 0.2s;
 	opacity: 0.8;
 	&:hover {
 		opacity: 1;
 	}
 
+	// Components
 	select {
 		margin-right: 1em;
 		width: 12em;
@@ -223,6 +231,54 @@ tw-debugger {
 		.debug-mode & {
 			background-color: #eee;
 			box-shadow: inset #ddd 3px 5px 0.5em;
+		}
+	}
+	.variables {
+		@include flexbox;
+		@include flex-direction(column);
+
+		// Dimensions and position
+		position:absolute;
+		bottom:100%;
+		left:-$borderwidth;
+		right: 0;
+		padding:1em;
+		max-height:90vh;
+		overflow-y: scroll;
+		overflow-x: hidden;
+		z-index:$zindex - 1;
+
+		// Design
+		background:inherit;
+		border:inherit;
+		border-top-left-radius: $borderradius;
+		border-bottom-left-radius: $borderradius;
+
+		// Font
+		font-size:0.8em;
+
+		// Hide when empty
+		&:empty {
+			display:none;
+		}
+
+		.variable-row {
+			@include flexbox;
+			@include flex-direction(row);
+			&:nth-child(2n) {
+				background:#EEE;
+			}
+		}
+		.variable-name {
+			display:inline-block;
+			width:50%;
+			&::before {
+				content: "$";
+			}
+		}
+		.variable-value {
+			display:inline-block;
+			width:50%;
 		}
 	}
 }

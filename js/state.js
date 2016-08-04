@@ -276,14 +276,14 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			}
 			if (moved) {
 				newPresent(timeline[recent].passage);
-				eventHandlers.forward.forEach(fn => fn(timeline[recent].passage));
+				eventHandlers.forward.forEach(fn => fn(timeline[recent].passage, "fastForward"));
 			}
 			return moved;
 		},
 		
 		/*
 			This is used only by Debug Mode - it lets event handlers be registered and called when the State changes.
-			"forward" functions have the signature (passageName). "back" functions have no signature.
+			"forward" functions have the signature (passageName, isFastForward). "back" functions have no signature.
 			"load" functions have the signature (timeline), where timeline is the entire timeline Moments array.
 		*/
 		on(name, fn) {
@@ -308,6 +308,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			recent = -1;
 			present = Moment.create();
 			serialiseProblem = undefined;
+			eventHandlers.load.forEach(fn => fn(timeline));
 		},
 	},
 	/*

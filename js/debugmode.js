@@ -1,6 +1,6 @@
 /*jshint strict:false */
-define(['jquery', 'utils', 'state', 'engine'],
-($, Utils, State, Engine) => () => {
+define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutils', 'engine'],
+($, Utils, State, VarRef, {objectName, typeName}, Engine) => () => {
 	'use strict';
 	/*
 		Debug Mode
@@ -11,7 +11,7 @@ define(['jquery', 'utils', 'state', 'engine'],
 
 		This module exports a single function which, when run, performs all of the Debug Mode setup.
 	*/
-	const debugElement = $("<tw-debugger>Turns: <select disabled></select><button class='show-invisibles'>&#9903; Debug View</button></tw-debugger>");
+	const debugElement = $("<tw-debugger><div class='variables'></div>Turns: <select disabled></select><button class='show-invisibles'>&#9903; Debug View</button></tw-debugger>");
 
 	/*
 		Set up the showInvisibles button, which toggles debug mode CSS (showing <tw-expression> elements and such)
@@ -45,7 +45,7 @@ define(['jquery', 'utils', 'state', 'engine'],
 		'forward' is fired when navigating to a new passage, or redoing a move. This
 		simply adds a turn to the end of the menu.
 	*/
-	State.on('forward', (passageName) => {
+	State.on('forward', (passageName, isFastForward = false) => {
 		const i = State.pastLength;
 		if (i > 1) {
 			/*
@@ -55,13 +55,24 @@ define(['jquery', 'utils', 'state', 'engine'],
 			turnsDropdown.removeAttr('disabled');
 		}
 		/*
-			Create the new <option> element and select it.
+			If we're not fast forwarding through the redo cache, then we're replacing
+			it outright. Remove all <option> elements after this one.
 		*/
-		turnsDropdown
-			.append("<option value=" + i + ">"
-				+ (i+1) + ": " + passageName
-				+ "</option>")
-			.val(i);
+		if (!isFastForward) {
+			turnsDropdown.children().each((index, e) => {
+				if (index >= i) {
+					$(e).remove();
+				}
+			});
+			/*
+				Create the new <option> element and select it.
+			*/
+			turnsDropdown
+				.append("<option value=" + i + ">"
+					+ (i+1) + ": " + passageName
+					+ "</option>")
+				.val(i);
+		}
 	})
 	/*
 		'back' is fired when undoing a move. This removes the final turn from the menu.
@@ -78,9 +89,8 @@ define(['jquery', 'utils', 'state', 'engine'],
 		*/
 		turnsDropdown.find('[selected]').removeAttr('selected');
 		/*
-			Remove the last <option> element, and select the new last element.
+			Select the new last element.
 		*/
-		turnsDropdown.children().last().remove();
 		turnsDropdown.val(State.pastLength);
 	})
 	/*
@@ -101,6 +111,108 @@ define(['jquery', 'utils', 'state', 'engine'],
 				+ "</option>"
 			)
 		);
+	});
+
+	/*
+		Here, we set up the variables table.
+	*/
+	const variablesTable = debugElement.find('.variables');
+	/*
+		This function is responsible for creating the inner DOM structure of the
+		variablesTable and updating it, one row at a time.
+	*/
+	function update(name, value) {
+		/*
+			First, obtain the row which needs to be updated. If it doesn't exist,
+			create it below.
+		*/
+		let row = variablesTable.children('[data-name="' + name + '"]');
+		/*
+			objectName() is re-used here as a human, though inexact, object
+			description string.
+		*/
+		const val = objectName(value);
+		if (!row.length) {
+			/*
+				To provide easy comparisons for the refresh() method below,
+				store the name and value of the row as data attributes of its element.
+			*/
+			row = $('<div class="variable-row" data-name="' + name
+				+ '" data-value="' + val +'"></div>').appendTo(variablesTable);
+			// TODO: Sort the variablesTable
+		}
+		/*
+			Create the <span>s for the variable's name and value.
+		*/
+		row.empty().append(
+			"<span class='variable-name'>" + name +
+			"</span><span class='variable-value'>" + objectName(value) + "</span>"
+		);
+	}
+	/*
+		This function, called as a State event handler, synchronises the variablesTable
+		with the entire variable state at the present.
+	*/
+	function refresh() {
+		const updated = [];
+		/*
+			For performance purposes, we try to avoid removing and re-creating
+			unchanged variables. So, we first loop through each variable-row and
+			check if its value needs to be updated or removed.
+		*/
+		variablesTable.children().each((_,e) => {
+			e = $(e);
+			const name = e.attr('data-name'),
+				value  = e.attr('data-value');
+
+			/*
+				"TwineScript" values, of course, must not be displayed.
+			*/
+			if (name.startsWith('TwineScript')) {
+				return;
+			}
+			if (name in State.variables) {
+				/*
+					If the variable's value is different to that in State.variables,
+					update it. Either way, add it to the "updated" list.
+				*/
+				updated.push(name);
+				if (objectName(State.variables[name]) !== value) {
+					update(name, State.variables[name]);
+				}
+			}
+			else {
+				e.remove();
+			}
+		});
+		/*
+			Now, add new variables that may not be present here, using the preceding
+			"updated" list.
+		*/
+		for (let name in State.variables) {
+			if (!name.startsWith('TwineScript') && !updated.includes(name)) {
+				update(name, State.variables[name]);
+			}
+		}
+	}
+	/*
+		Having defined those functions, we register them as event handlers now.
+	*/
+	State.on('forward', refresh).on('back', refresh);
+
+	VarRef.on('set', (obj, name, value) => {
+		if (obj === State.variables) {
+			update(name, value);
+		}
+	})
+	/*
+		Deleting a row doesn't require its own function, but it does assume certain things
+		about the variablesTable (such as, each row has a data-name attribute.)
+	*/
+	.on('delete', (obj, name) => {
+		if (obj === State.variables) {
+			variablesTable.find('[data-name="' + name + '"]').remove();
+		}
 	});
 
 	/*

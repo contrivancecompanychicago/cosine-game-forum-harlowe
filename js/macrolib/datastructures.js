@@ -329,7 +329,7 @@ define([
 			| `-` | Subtracts arrays. | `(a:1,1,2,3,4,5) - (a:1,2)` (is `(a:3,4,5)`)
 			| `...` | When used in a macro call, it separates each value in the right side. | `(a: 0, ...(a:1,2,3,4), 5)` (is `(a:0,1,2,3,4,5)`)
 			| `'s` | Obtains the item at the right numeric position. | `(a:"Y","Z")'s 1st` (is "Y")<br>`(a:4,5)'s (2)` (is 5)
-			| `of` | Obtains the item at the left numeric position. | `1st of "YO"` (is "Y")<br>`(2) of "PS"` (is "S")
+			| `of` | Obtains the item at the left numeric position. | `1st of (a:"Y","O")` (is "Y")<br>`(2) of (a:"P","S")` (is "S")
 		*/
 		/*d:
 			(a: [...Any]) -> Array
@@ -984,7 +984,7 @@ define([
 			| `is not` | Evaluates to `true` if both sides differ in items or ordering. | `(datamap:"HP",5) is not (datamap:"HP",4)` (is true)<br>`(datamap:"HP",5) is not (datamap:"MP",5)` (is true)
 			| `contains` | Evaluates to `true` if the left side contains the name on the right.<br>(To check that a datamap contains a value, try using `contains` with (datavalues:)) | `(datamap:"HP",5) contains "HP"` (is true)<br>`(datamap:"HP",5) contains 5` (is false)
 			| `is in` | Evaluates to `true` if the right side contains the name on the left. | `"HP" is in (datamap:"HP",5)` (is true)
-			| `+` | Joins datamaps, using the right side's value whenever both sides contain the same name. | `(datamap:"HP",5) + (datamap:"MP",5)`)
+			| `+` | Joins datamaps, using the right side's value whenever both sides contain the same name. | `(datamap:"HP",5) + (datamap:"MP",5)`
 		*/
 		/*d:
 			(datamap: [...Any]) -> Datamap

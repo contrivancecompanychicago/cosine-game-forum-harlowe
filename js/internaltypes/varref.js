@@ -1,5 +1,5 @@
-define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/hookset', 'datatypes/colour'],
-(State, TwineError, {isObject, isSequential, objectName, clone, numericIndex, isValidDatamapName}, HookSet, Colour) => {
+define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'datatypes/hookset', 'datatypes/colour'],
+(State, TwineError, {impossible}, {isObject, isSequential, objectName, clone, numericIndex, isValidDatamapName}, HookSet, Colour) => {
 	'use strict';
 	/*
 		VarRefs are essentially objects pairing a chain of properties
@@ -16,6 +16,14 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 		and variables, is 0.
 	*/
 	const defaultValue = 0;
+
+	/*
+		Debug Mode event handlers are stored here by on().
+	*/
+	const eventHandlers = {
+		set: [],
+		delete: [],
+	};
 
 	/*
 		This converts a single TwineScript property index into a JavaScript property indexing
@@ -308,6 +316,7 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 		This should only be run after canSet(), above, has verified it is safe.
 	*/
 	function objectOrMapSet(obj, prop, value) {
+		const origProp = prop;
 		if (obj instanceof Map) {
 			obj.set(prop, value);
 		} else {
@@ -326,6 +335,7 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 				obj[prop] = value;
 			}
 		}
+		eventHandlers.set.forEach(fn => fn(obj, origProp, value));
 	}
 
 	/*
@@ -333,6 +343,7 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 		which performs the actual deletoon based on object type.
 	*/
 	function objectOrMapDelete(obj, prop) {
+		const origProp = prop;
 		/*
 			As mentioned previously, conversion of negative props must occur now.
 		*/
@@ -357,6 +368,7 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 			state variables object.
 		*/
 		else delete obj[prop];
+		eventHandlers.delete.forEach(fn => fn(obj, origProp));
 	}
 	
 	/*
@@ -752,6 +764,22 @@ define(['state', 'internaltypes/twineerror', 'utils/operationutils', 'datatypes/
 					? propertyDebugName(this.propertyChain[0])
 					: this.propertyChain.reduce((a, e) => a + "'s " + propertyDebugName(e))
 				);
+		},
+
+		/*
+			This is used only by Debug Mode - it lets event handlers be registered and called when variables change.
+			"set" functions have the signature (obj, prop, value).
+			"delete" functions have the signature (obj, prop).
+		*/
+		on(name, fn) {
+			if (!(name in eventHandlers)) {
+				impossible('VarRef.on', 'invalid event name');
+				return;
+			}
+			if (typeof fn === "function" && !eventHandlers[name].includes(fn)) {
+				eventHandlers[name].push(fn);
+			}
+			return VarRefProto;
 		},
 	});
 	
