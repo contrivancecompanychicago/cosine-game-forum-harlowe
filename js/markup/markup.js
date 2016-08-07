@@ -778,12 +778,10 @@
 			return exporter(Lexer);
 		});
 	}
-	// Evaluated by a TwineJS StoryFormat
-	else if (typeof StoryFormat === 'function' && this instanceof StoryFormat) {
+	// Loaded as a story format in TwineJS
+	else if (this && this.loaded && this.modules) {
 		Patterns = this.modules.Patterns;
 		this.modules.Markup = exporter(this.modules.Lexer);
-		// Install the lexer function in a more visible place.
-		this.lex = this.modules.Markup.lex;
 	}
 	else {
 		Patterns = this.Patterns;

@@ -904,8 +904,8 @@
 			return Patterns;
 		});
 	}
-	// Evaluated by a TwineJS StoryFormat
-	else if (typeof StoryFormat === 'function' && this instanceof StoryFormat) {
+	// Loaded as a story format in TwineJS
+	else if (this && this.loaded) {
 		this.modules || (this.modules = {});
 		this.modules.Patterns = Patterns;
 	}
