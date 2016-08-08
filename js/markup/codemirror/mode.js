@@ -445,6 +445,15 @@
 				"color: #007f54;",
 			"variableOccurrence, hookOccurrence":
 				"background: #9fdfc9 !important;",
+
+			where:
+				"color: #007f00; font-style:italic;",
+			via:
+				"color: #007f00; font-style:italic;",
+			with:
+				"color: #007f00; font-style:italic;",
+			making:
+				"color: #007f00; font-style:italic;",
 			
 			heading:
 				"font-weight:bold;",

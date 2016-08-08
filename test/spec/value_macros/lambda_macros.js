@@ -46,6 +46,11 @@ describe("lambda macros", function() {
 			expect("(altered: _a via _a*2, 1,2,3)").markupToPrint("2,4,6");
 			expect("(set: $a to 3)(altered: _a via _a*$a, 1,2,3)").markupToPrint("3,6,9");
 		});
+		it("works on datamaps, datasets and colours", function() {
+			expect("(altered: _a via _a's A, (dm: 'A', 4), (dm: 'A', 7))").markupToPrint("4,7");
+			expect("(altered: _a via 'b' is in _a, (ds: 'b'), (ds:), (ds:3,'b'))").markupToPrint("true,false,true");
+			expect("(altered: _a via _a's r, (rgb: 20,60,90), (rgba: 120,10,10,0.1))").markupToPrint("20,120");
+		});
 		it("if one iteration errors, the result is an error", function() {
 			expect("(altered: _a via _a*2, 1, 2, true, 4)").markupToError();
 		});

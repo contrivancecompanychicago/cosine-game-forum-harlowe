@@ -73,16 +73,16 @@ Rough documentation is at http://twine2.neocities.org/
 #####Macros
 
  * Added `(find:)`, which uses a lambda to filter a sequence of values, and place the results in an array. For instance, `(find: _item where _item's 1st is "A", "Arrow", "Shield", "Axe", "Wand")` produces the array `(a: "Arrow", "Axe")`. (This macro is similar to Javascript's `filter()` array method.)
- * Added `(altered:)`, which takes a lambda as its first value, and any number of other values, and uses the lambda to convert the values, placing the results in an array. For instance, `(altered: _material via _material + " Sword"), "Iron", "Wood", "Bronze", "Plastic")` will create an array `(a:"Iron Sword", "Wood Sword", "Bronze Sword", "Plastic Sword")`. (This macro is similar to Javascript's `map()` array method.)
+ * Added `(altered:)`, which takes a lambda as its first value, and any number of other values, and uses the lambda to convert the values, placing the results in an array. For instance, `(altered: _material via _material + " Sword", "Iron", "Wood", "Bronze", "Plastic")` will create an array `(a:"Iron Sword", "Wood Sword", "Bronze Sword", "Plastic Sword")`. (This macro is similar to Javascript's `map()` array method.)
  * Added `(all-pass:)`, `(some-pass:)` and `(none-pass:)`, which check if the given values match the lambda, and return `true` or `false`. `(all-pass: _a where _a > 2, 1, 3, 5)` produces `false`, `(some-pass: _a where _a > 2, 1, 3, 5)` produces `true`, and `(none-pass: _a where _a > 2, 1, 3, 5)` produces `false`.
  * Added `(folded:)`, which is used to combine many values into one (a "total"), using a lambda that has a `making` clause. `(folded: _a making _total via _total + "." + _a, "E", "a", "s", "y")` will first set `_total` to "E", then progressively add ".a", ".s", and ".y" to it, thus producing the resulting string, "E.a.s.y".
  * Added the aliases `(dm:)` and `(ds:)` for `(datamap:)` and `(dataset:)`, respectively.
  * Added `(lowercase:)` and `(uppercase:)`, which take a string and convert it to all-lowercase or all-uppercase, as well as `(lowerfirst:)` and `(upperfirst:)`, which only convert the first non-whitespace character in the string and leave the rest untouched.
  * Added `(words:)`, which takes a string and produces an array of the words (that is, the sequences of non-whitespace characters) in it. For instance, `(words: "2 big one's")` produces `(a: "2", "big", "one's")`.
- * Added `(click-page:)`, a changer macro which is similar to `(click:)`, but triggers when you click the entire page instead of a specific link. For stories with lots of short, sequential blocks of text, this can provide a brisker interface for the player.
  * Added `(repeated:)`, which creates an array containing the passed values repeated a given number of times. `(repeated: 3, 1,2,0)` produces `(a: 1,2,0,1,2,0,1,2,0)`.
  * Added `(interlaced:)`, which interweaves the values of passed-in arrays. `(interlaced: (a: 'A','B','C','D'),(a: 1,2,3))` is the same as `(a: 'A',1,'B',2,'C',3)`. (For functional programmers, this is just a flat zip.) This can be useful alongside the `(datamap:)` macro.
  * Added `(rgb:)`, `(rgba:)`, `(hsl:)` and `(hsla:)`, which produce colour values, similar to the CSS colour functions. `(rgb:252,180,0)` produces the colour #fcb400, and `(hsl:150,0.2,0.6)` produces the colour #84ad99.
+ * Added `(dataentries:)`, which complements `(datanames:)` and `(datavalues:)` by producing, from a datamap, an array of the datamap's name-value pairs. Each pair is a datamap with "name" and "value" data, which can be examined using the lambda macros.
 
 ###1.2.3 changes (unreleased):
 

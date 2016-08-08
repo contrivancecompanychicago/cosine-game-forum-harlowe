@@ -438,7 +438,6 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		if (typeof obj === "string") {
 			obj = [...obj];
 		}
-
 		const result =  objectOrMapGet(obj, prop);
 		/*
 			An additional error condition exists for get(): if the property

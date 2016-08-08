@@ -717,42 +717,42 @@ define([
 	}
 
 	Macros.add
-		/*
-			(altered: Lambda, ...Any)
+		/*d:
+			(altered: Lambda, ...Any) -> Array
 		*/
 		("altered", (section, lambda, ...args) => args.map(loop => lambda.apply(section, {loop})),
 		[Lambda.TypeSignature('via'), rest(Any)])
-		/*
-			(find: Lambda, ...Any)
+		/*d:
+			(find: Lambda, ...Any) -> Any
 		*/
 		("find", (section, lambda, ...args) => lambdaFilter(section, lambda, args),
 		[Lambda.TypeSignature('where'), rest(Any)])
-		/*
-			(all-pass: Lambda, ...Any)
+		/*d:
+			(all-pass: Lambda, ...Any) -> Boolean
 		*/
 		("all-pass", (section, lambda, ...args) => {
 			const ret = lambdaFilter(section, lambda, args);
 			return TwineError.containsError(ret) || ret.length === args.length;
 		},
 		[Lambda.TypeSignature('where'), rest(Any)])
-		/*
-			(some-pass: Lambda, ...Any)
+		/*d:
+			(some-pass: Lambda, ...Any) -> Boolean
 		*/
 		("some-pass", (section, lambda, ...args) => {
 			const ret = lambdaFilter(section, lambda, args);
 			return TwineError.containsError(ret) || ret.length > 0;
 		},
 		[Lambda.TypeSignature('where'), rest(Any)])
-		/*
-			(none-pass: Lambda, ...Any)
+		/*d:
+			(none-pass: Lambda, ...Any) -> Boolean
 		*/
 		("none-pass", (section, lambda, ...args) => {
 			const ret = lambdaFilter(section, lambda, args);
 			return TwineError.containsError(ret) || ret.length === 0;
 		},
 		[Lambda.TypeSignature('where'), rest(Any)])
-		/*
-			(folded: Lambda, ...Any)
+		/*d:
+			(folded: Lambda, ...Any) -> Boolean
 		*/
 		("folded", (section, lambda, ...args) => args.reduce((making,loop) => lambda.apply(section, {making,loop})),
 		[Lambda.TypeSignature('via making'), rest(Any)])
@@ -766,7 +766,7 @@ define([
 			alphabetically.
 			
 			Example usage:
-			`(datanames: (datamap:'B','Y', 'A','X'))` produces the array `(a: 'A','B')`
+			`(datanames: (dm:'B','Y', 'A','X'))` produces the array `(a: 'A','B')`
 			
 			Rationale:
 			Sometimes, you may wish to obtain some information about a datamap. You may want
@@ -776,7 +776,7 @@ define([
 			of the array, obtain a subarray, and other things you can do to arrays.
 			
 			See also:
-			(datavalues:)
+			(datavalues:), (dataentries:)
 			
 			#data structure
 		*/
@@ -789,7 +789,7 @@ define([
 			alphabetically by their name.
 			
 			Example usage:
-			`(datavalues: (datamap:'B',24, 'A',25))` produces the array `(a: 25,24)`
+			`(datavalues: (dm:'B',24, 'A',25))` produces the array `(a: 25,24)`
 			
 			Rationale:
 			Sometimes, you may wish to examine the values stored in a datamap without
@@ -800,7 +800,7 @@ define([
 			their associated names.
 			
 			See also:
-			(datanames:)
+			(datanames:), (dataentries:)
 			
 			#data structure
 		*/
@@ -813,6 +813,40 @@ define([
 				(a,b) => ([a[0],b[0]].sort(NaturalSort("en"))[0] === a[0] ? -1 : 1)
 			).map(
 				e => clone(e[1])
+			),
+		[Map])
+		/*d:
+			(dataentries: Datamap) -> Array
+			
+			This takes a datamap, and returns an array of its name/value pairs. Each pair
+			is a datamap that only has "name" and "value" data. The pairs are ordered by their name.
+			
+			Example usage:
+			* `(datapairs: (dm:'B',24, 'A',25))` produces the following array:
+			`(a: (dm: "name", "A", "value", 25), (dm: "name", "B", "value", 24))`
+			* `(altered: _entry via _entry's name + ":" + _entry's value, ...(datapairs: $m))` creates
+			an array of strings from the $m datamap's names and values.
+			
+			Rationale:
+			There are occasions where operating on just the names, or the values, of
+			a datamap isn't good enough - you'll want both. Rather than the verbose process
+			of taking the (datanames:) and (datavalues:) arrays and using them (interlaced:)
+			with each other, you can use this macro instead, which allows the name and value of
+			each entry to be referenced using "name" and "value" properties.
+			
+			See also:
+			(datanames:), (datavalues:)
+			
+			#data structure
+		*/
+		("dataentries", (_, map) =>
+			/*
+				As with (datavalues:), we need to sort values by their keys.
+			*/
+			Array.from(map.entries()).sort(
+				(a,b) => ([a[0],b[0]].sort(NaturalSort("en"))[0] === a[0] ? -1 : 1)
+			).map(
+				e => new Map([["name", e[0]], ["value", clone(e[1])]])
 			),
 		[Map])
 		

@@ -1,13 +1,47 @@
 define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltypes/twineerror'], ({toJSLiteral, insensitiveName, plural}, {typeName, objectName, singleTypeCheck}, VarScope, TwineError) => {
 	"use strict";
-	/*
-		Lambdas are user-created TwineScript functions. Their only purpose is to be passed to functional macros
-		like (converted:), (filtered:) and (combined:), which serve as TwineScript's map/filter/reduce equivalents.
+	/*d:
+		Lambda data
+
+		Suppose you want to do a complicated task with an array, like, say, convert all of its strings to lowercase,
+		or check if any of its datamaps have "health" data equal to 0, or join all of its strings together
+		into a single string. You want to be able to tell Harlowe to search for "each string where the string's 1st
+		letter is A". You want to write a "function" for how the search is to be conducted.
+
+		Lambdas are user-created functions that let you tell certain macros, like (find:), (altered:) and (folded:),
+		precisely how to search, alter, or combine the data provided to them.
+
+		There are several types of lambdas:
+
+		* "where" lambdas, used by the (find:) macro, are used to search for and filter data. The lambda `_item where _item's
+		1st is "A"` tells the macro to searches for items whose `1st` is the string "A".
+		
+		* "via" lambdas, used by the (altered:) macro, are used to transform and change data. The lambda `_item via _item + "s"`
+		tells the macro to add the string "s" to the end of each item.
+		
+		* "making" lambdas, used by the (folded:) are used to build or "make" a single data value by adding something from
+		each item to it. The lambda `_item making _total via _total + (max: _item, 0)` tells the macro to add each item to
+		the total, but only if the item is greater than 0. ...Actually, you can also use "where" inside a "making" lambda -
+		you could rewrite that lambda as `_item making _total via _total + _item where _item > 0`.
+
+		An important feature is that you can save lambdas into variables, and reuse them in your story easily. You
+		could, for instance, `(set: $statsReadout to (_stat making _readout via _readout + "|" + _stat's name + ":" + _stat's value))`,
+		and then use $printStats with the (folded:) macro in different places, such as `(folded: $statsReadout, ...(dataentries: $playerStats))` for displaying the player's stats, `(folded: $statsReadout, ...(dataentries: $monsterStats))` for a monster's stats, etc.
+
+		Lambdas are named after the lambda calculus, and the "lambda" keyword used in many popular programming languages.
+		They may seem complicated, but as long as you think of them as just a special way of writing a repeating instruction,
+		and understand how their macros work, you may find that they are very convenient.
 	*/
 	const Lambda = Object.freeze({
 		lambda: true,
 		TwineScript_TypeName:   "a lambda",
-		TwineScript_ObjectName: "a lambda",
+		TwineScript_ObjectName() {
+			return "a \""
+				+ (("making" in this) ? "making ... " : "")
+				+ (("where" in this) ? "where ... " : "")
+				+ (("via" in this) ? "via ... " : "")
+				+ "\" lambda";
+		},
 
 		TwineScript_Print() {
 			// TODO: Make this string more detailed.
@@ -109,28 +143,28 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 				We run the JS code of this lambda, inserting the arguments by adding them to a "tempVariables"
 				object. The tempVariable references in the code are compiled to VarRefs for tempVariables.
 			*/
-			section.stack.unshift(Object.assign(Object.create(null), {tempVariables: Object.create(VarScope)}));
-			
-			const makeTempVariable = (name, arg) =>
-				(name ? "section.stack[0].tempVariables['" + name + "'] = " + toJSLiteral(arg) + ";" : '');
+			const tempVariables = Object.create(VarScope);
+			[
+				[this.loop, loopArg],
+				[this.with, withArg],
+				[this.making, makingArg],
+			].forEach(([name, arg]) => name && (tempVariables[name] = arg));
+
+			section.stack.unshift(Object.assign(Object.create(null), {tempVariables}));
 
 			const ret = section.eval(
-				makeTempVariable(this.loop, loopArg)
-				+ makeTempVariable(this.with, withArg)
-				+ makeTempVariable(this.making, makingArg)
 				/*
 					If a lambda has a "where" clause, then the "where" clause filters out
 					values. Filtered-out values are replaced by the failVal.
 					If a lambda has a "via" clause, then its result becomes the result of the
 					call. Otherwise, the passVal is used.
 				*/
-				+ ('where' in this
+				'where' in this
 					? "Operations.where("
 						+ this.where + ","
 						+ (this.via || toJSLiteral(passArg)) + ","
 						+ toJSLiteral(failArg) + ")"
 					: (this.via || toJSLiteral(passArg))
-				)
 			);
 			section.stack.shift();
 			return ret;
