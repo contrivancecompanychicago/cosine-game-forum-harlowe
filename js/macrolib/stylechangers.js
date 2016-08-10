@@ -455,7 +455,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			degrees. The rotational axis is in the centre of the hook.
 
 			Example usage:
-			`(text-rotate:45)[Tilted]`
+			`(text-rotate:45)[Tilted]` will produce <span style="display:inline-block;transform:rotate(45deg);">Tilted</span>
 			
 			Details:
 
@@ -465,6 +465,9 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 
 			A rotation of 180 degrees will, due to the rotational axis, flip the hook upside-down and back-to-front, as
 			if the (text-style:) styles "mirror" and "upside-down" were both applied.
+
+			Due to browser limitations, hooks using this macro will have its CSS `display` attribute
+			set to `inline-block`.
 
 			See also:
 			(text-style:)
@@ -575,22 +578,35 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			which are otherwise unavailable or difficult to produce.
 			
 			Details:
-			At present, the following text strings will produce a particular style:
-			* "bold", "italic", "underline", "strike", "superscript", "subscript", "blink", "mark", "delete"
-			* "outline"
-			* "shadow"
-			* "emboss"
-			* "condense"
-			* "expand"
-			* "blur"
-			* "blurrier",
-			* "smear"
-			* "mirror"
-			* "upside-down"
-			* "fade-in-out"
-			* "rumble"
-			* "shudder"
+			At present, the following text strings will produce a particular style.
+
+			| String | Example
+			|---
+			| "bold"           | <t-s style="font-weight:bold"></t-s>
+			| "italic"         | <t-s style="font-style:italic"></t-s>
+			| "underline"      | <t-s style="text-decoration: underline"></t-s>
+			| "strike"         | <t-s style="text-decoration: line-through"></t-s>
+			| "superscript"    | <t-s style="vertical-align:super;font-size:.83em"></t-s>
+			| "subscript"      | <t-s style="vertical-align:sub;font-size:.83em"></t-s>
+			| "mark"           | <t-s style="background-color: hsla(60, 100%, 50%, 0.6)"></t-s>
+			| "outline"        | <t-s style="color:white; text-shadow: -1px -1px 0 black, 1px -1px 0 black, -1px  1px 0 black, 1px  1px 0 black"></t-s>
+			| "shadow"         | <t-s style="text-shadow: 0.08em 0.08em 0.08em black"></t-s>
+			| "emboss"         | <t-s style="text-shadow: 0.08em 0.08em 0em black"></t-s>
+			| "condense"       | <t-s style="letter-spacing:-0.08em"></t-s>
+			| "expand"         | <t-s style="letter-spacing:0.1em"></t-s>
+			| "blur"           | <t-s style="text-shadow: 0em 0em 0.08em black; color:transparent"></t-s>
+			| "blurrier"       | <t-s style="text-shadow: 0em 0em 0.2em black; color:transparent"></t-s>
+			| "smear"          | <t-s style="text-shadow: 0em 0em 0.02em black, -0.2em 0em 0.5em black, 0.2em 0em 0.5em black; color:transparent"></t-s>
+			| "mirror"         | <t-s style="display:inline-block;transform:scaleX(-1)"></t-s>
+			| "upside-down"    | <t-s style="display:inline-block;transform:scaleY(-1)"></t-s>
+			| "blink"          | <t-s style="animation:fade-in-out 1s steps(1,end) infinite alternate"></t-s>
+			| "fade-in-out"    | <t-s style="animation:fade-in-out 2s ease-in-out infinite alternate"></t-s>
+			| "rumble"         | <t-s style="display:inline-block;animation:rumble linear 0.1s 0s infinite"></t-s>
+			| "shudder"        | <t-s style="display:inline-block;animation:shudder linear 0.1s 0s infinite"></t-s>
 			
+			Due to browser limitations, hooks using "mirror", "upside-down", "rumble" or "shudder" will have its CSS `display`
+			attribute set to `inline-block`.
+
 			See also:
 			(css:)
 			

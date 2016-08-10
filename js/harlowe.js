@@ -85,8 +85,8 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'util
 		| Passing | All data passed by value: arrays, datamaps and such are deep-cloned when (set:). | Objects passed by reference; all primitives passed by value.
 		| Type coercion | Operators and macros do not coerce types. | Standard JavaScript coercion.
 		|**Element access**
-		| Array element access | `$arr's 1st`,<br>`$arr's ($index)` | `$arr[0]`~<br>`$arr[$index]`~
-		| Last array element access | `$arr's last`,<br>`$arr's ($index)` | `$arr[$arr.length-1]`~,<br>`$arr[$arr.length-$index-1]`~
+		| Array element access | `$arr's 1st`,<br>`$arr's ($index)` (where `$index` is 1-based) | `$arr[0]`~<br>`$arr[$index]`~ (where `$index`~ is 0-based)
+		| Last array element access | `$arr's last`,<br>`$arr's (-$index)` (where `$index` is 1-based) | `$arr[$arr.length-1]`~,<br>`$arr[$arr.length-$index-1]`~ (where `$index`~ is 0-based)
 		| Array slicing | `$arr's (a:1,4))` | `$arr.slice(0,3)`~
 		|**Randomness**
 		| "Either" macro/function | `(either: 1, 1, 3, 4)` | `either(1, 1, 3, 4)`~

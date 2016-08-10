@@ -38,6 +38,10 @@ Object.keys(metadata).map(e => metadata[e]).forEach(e=>{
 outputFile = require('marked')(outputFile);
 
 /*
+	Add animations from animations.scss.
+*/
+let animations = require('child_process').execSync("sass --style compressed --scss ./scss/animations.scss");
+/*
 	Compile the <pre> using the CodeMirror mode.
 	First, obtain the CodeMirror highlighting CSS.
 */
@@ -54,6 +58,9 @@ global.document = {
 };
 global.window = global;
 require('../js/markup/codemirror/mode.js');
+if (highlighting === undefined) {
+	throw new Error("The kludge to import the CodeMirror mode's CSS didn't work.");
+}
 /*
 	Now, find the <code> elements and modify their contents.
 */
@@ -106,12 +113,14 @@ h4 { font-size:1.2em; }
 h5 { font-size:1em; }
 h6 { font-size:.9em; }
 h1,h2 { padding-top:2rem; padding-bottom:5px; }
+
 /* Nav bar */
 nav { position:fixed; width:15vw; max-width: 20vw; top:2.5vh;left:5vh; bottom:5vh; overflow-y:scroll; border:1px solid #888; padding:1rem; margin-bottom:2em; font-size:90% }
 nav ul { list-style-type: none; margin: 0em; padding: 0em; }
 nav img { display:block; margin: 0 auto;}
 .nav_version { text-align:center }
 @media screen and (max-width: 800px) { nav { position:relative; } }
+
 /* Main styles */
 .def_title { background:linear-gradient(180deg,white,white 70%,silver); border-bottom:1px solid silver; padding-bottom:5px; }
 .macro_signature { opacity:0.75 }
@@ -120,8 +129,10 @@ nav img { display:block; margin: 0 auto;}
 @media screen and (max-width: 1600px) { .nav_macro_return_type { font-size:80% } }
 .nav_macro_aka { opacity: 0.75; font-size:90%; color:#3B8BBA; margin-left: 0.5em; font-style: italic; }
 .nav_macro_aka::before { content: "also known as "; opacity: 0.75; }
+
 /* Code blocks */
 code { background:#FFF; border:1px solid #888; color:#000; display:block; padding:12px; overflow-x: scroll; }
+
 /* Inline code */
 pre { display:inline; }
 :not(pre) > code { background:hsla(0,0%,100%,0.75); border:1px dotted #888; display:inline; padding:1px; white-space:nowrap; }
@@ -129,8 +140,15 @@ table :not(pre) > code { white-space: pre-wrap; }
 /* Heading links */
 .heading_link::before { content: "§"; display:inline-block; margin-left:-25px; padding-right:10px; color:black; font-weight:100; visibility:hidden; text-decoration:none; }
 :hover > .heading_link::before { visibility:visible; }
+
+/* Kludge for the (text-style:) macro */
+t-s::before { content: 'Example text'; }
+
 /* Highlighting */
 ${highlighting}
+
+/* Animations */
+${animations}
 </style>${navElement}</ul></nav>${outputFile}`;
 /*
 	Done

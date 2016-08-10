@@ -11,7 +11,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 		Lambdas are user-created functions that let you tell certain macros, like (find:), (altered:) and (folded:),
 		precisely how to search, alter, or combine the data provided to them.
 
-		There are several types of lambdas:
+		There are several types of lambdas.
 
 		* "where" lambdas, used by the (find:) macro, are used to search for and filter data. The lambda `_item where _item's
 		1st is "A"` tells the macro to searches for items whose `1st` is the string "A".
@@ -23,6 +23,12 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 		each item to it. The lambda `_item making _total via _total + (max: _item, 0)` tells the macro to add each item to
 		the total, but only if the item is greater than 0. ...Actually, you can also use "where" inside a "making" lambda -
 		you could rewrite that lambda as `_item making _total via _total + _item where _item > 0`.
+
+		Lambdas use temp variables as "placeholders" for the actual values. For instance, in `(find: _num where _num > 2, 5,6,0)`,
+		the temp variable _num is used to mean each individual value given to the macro, in turn. It will be 5, 6 and 0, respectively.
+		Importantly, this will *not* alter any existing temp variable called _num - the inside of a lambda can be thought
+		of as a hook, so just as the inner _x in `(set: _x to 1) |a>[ (set:_x to 2) ]` is different from the outer _x, the _num in the
+		lambda will not affect any other _num.
 
 		An important feature is that you can save lambdas into variables, and reuse them in your story easily. You
 		could, for instance, `(set: $statsReadout to (_stat making _readout via _readout + "|" + _stat's name + ":" + _stat's value))`,
@@ -38,6 +44,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 		TwineScript_ObjectName() {
 			return "a \""
 				+ (("making" in this) ? "making ... " : "")
+				+ (("with" in this) ? "with ... " : "")
 				+ (("where" in this) ? "where ... " : "")
 				+ (("via" in this) ? "via ... " : "")
 				+ "\" lambda";
