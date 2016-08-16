@@ -177,6 +177,27 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 	}
 
 	/*
+		This helper converts negative property positions into JS positions.
+		As mentioned in compilePropertyIndex, obj.length
+		cannot be accurately determined until objectOrMapGet() and objectOrMapSet().
+	*/
+	function convertNegativeProp(obj, prop) {
+		/*
+			Recall that unary + converts negative to positive, so
+			"-0" must be used in its place.
+		*/
+		if (prop-0 < 0 &&
+				/*
+					This should be <= because (a:1,2,3)'s (-3) should
+					access the first element.
+				*/
+				Math.abs(prop) <= obj.length) {
+			return obj.length + (prop-0);
+		}
+		return prop;
+	}
+
+	/*
 		As Maps have a different means of accessing stored values
 		than arrays, these tiny utility functions are needed.
 		They have the slight bonus that they can fit into some .reduce() calls
@@ -191,19 +212,8 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		} else if (obj instanceof Map) {
 			return obj.get(prop);
 		} else {
-			/*
-				As mentioned in compilePropertyIndex, obj.length
-				cannot be accurately determined until here and now.
-				Recall that unary + converts negative to positive, so
-				"-0" must be used in its place.
-			*/
-			if (isSequential(obj) && prop-0 < 0 &&
-					/*
-						This should be <= because (a:1,2,3)'s (-3) should
-						access the first element.
-					*/
-					Math.abs(prop) <= obj.length) {
-				prop = obj.length + (prop-0);
+			if (isSequential(obj)) {
+				prop = convertNegativeProp(obj,prop);
 			}
 			if (obj.TwineScript_GetElement && Number.isFinite(+prop)) {
 				return obj.TwineScript_GetElement(prop);
@@ -320,14 +330,8 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		if (obj instanceof Map) {
 			obj.set(prop, value);
 		} else {
-			/*
-				As mentioned in compilePropertyIndex, obj.length
-				cannot be accurately determined until here and now.
-				Recall that unary + converts negative to positive, so
-				"-0" must be used in its place.
-			*/
-			if (isSequential(obj) && prop-0 < 0) {
-				prop = obj.length + (prop-0);
+			if (isSequential(obj)) {
+				prop = convertNegativeProp(obj, prop);
 			}
 			if (obj.TwineScript_Set) {
 				obj.TwineScript_Set(prop);
@@ -347,8 +351,8 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		/*
 			As mentioned previously, conversion of negative props must occur now.
 		*/
-		if (isSequential(obj) && prop-0 < 0) {
-			prop = obj.length + (prop-0);
+		if (isSequential(obj)) {
+			prop = convertNegativeProp(obj, prop);
 		}
 		/*
 			If it's an array, and the prop is an index,
@@ -551,20 +555,9 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				*/
 				let error;
 				if ((error = TwineError.containsError(value, object, property) || TwineError.containsError(
-						isObject(object) && canSet(object, property)
+						canSet(object, property)
 					))) {
 					return error;
-				}
-
-				/*
-					HookSets have a special restriction: only strings can be assigned to it.
-					As of July 2015, nothing else has an assignee restriction.
-				*/
-				if (HookSet.isPrototypeOf(object) && typeof value !== "string") {
-					return TwineError.create(
-						"datatype",
-						"You can only set hook references to strings, not " + objectName(value) + "."
-					);
 				}
 
 				/*
@@ -664,7 +657,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				*/
 				let error;
 				if ((error = TwineError.containsError(value, object, property) || TwineError.containsError(
-						isObject(object) && canSet(object, property)
+						canSet(object, property)
 					))) {
 					return error;
 				}
@@ -679,22 +672,43 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 					If this is the first iteration, then delete the property.
 				*/
 				if (value === null) {
-					if (isObject(object)) {
+					/*
+						Much as in set(), we must convert strings to an array in order
+						to delete characters from them.
+					*/
+					const isString = typeof object === "string";
+					if (isString) {
+						object = [...object];
+					}
+
+					/*
+						If the property is an array of properties, delete each property.
+					*/
+					if (Array.isArray(property)) {
 						/*
-							If the property is an array of properties, delete each property.
+							Iterate over each property position, and delete them.
+							If the object is sequential, we must first remove duplicate
+							positions, and sort the unique positions in descending order,
+							so that deleting one will not change the positions of the next.
+
+							Note that property sequences which include "length" should still
+							work with this.
 						*/
-						if (Array.isArray(property)) {
-							/*
-								Iterate over each property, and zip it with the value
-								to set at that property position. For example:
-								(a: 1) to (a: "wow")
-								would set "wow" to the position "1"
-							*/
-							property.forEach(prop => objectOrMapDelete(object, prop));
+						if (isSequential(object)) {
+							property = [...new Set(property)];
+							property.sort((a,b) =>
+								convertNegativeProp(object, b) - convertNegativeProp(object, a));
 						}
-						else {
-							objectOrMapDelete(object, property);
-						}
+						property.forEach(prop => objectOrMapDelete(object, prop));
+					}
+					else {
+						objectOrMapDelete(object, property);
+					}
+					/*
+						Now, convert the string back, if string it once was.
+					*/
+					if (isString) {
+						object = object.join('');
 					}
 				}
 				/*

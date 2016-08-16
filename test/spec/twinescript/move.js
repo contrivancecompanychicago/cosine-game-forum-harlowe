@@ -36,6 +36,21 @@ describe("the (move:) macro", function() {
 		expect("$b").markupToPrint("2");
 		expect("(print:$a's last)").markupToPrint("3");
 	});
+	it("can remove array slices", function() {
+		runPassage("(set: $a to (a:1,2,3,4,5,6))(move: $a's (a:2,3) into $b)");
+		expect("$b").markupToPrint("2,3");
+		expect("$a").markupToPrint("1,4,5,6");
+	});
+	it("can remove string properties", function() {
+		runPassage("(set: $a to \"Bol𐌎\")(move: $a's last into $b)");
+		expect("$b").markupToPrint("𐌎");
+		expect("(print:$a's last)").markupToPrint("l");
+	});
+	it("can remove string slices", function() {
+		runPassage("(set: $a to \"Bol𐌎\")(move: $a's (a:2,3) into $b)");
+		expect("$b").markupToPrint("ol");
+		expect("$a").markupToPrint("B𐌎");
+	});
 	it("can insert datamap properties", function() {
 		runPassage("(set: $d to (datamap:))(set: $b to 3)(move: $b into $d's A)");
 		expect("$b").markupToPrint("0");

@@ -354,6 +354,12 @@ describe("property indexing", function() {
 				it("can be used in assignments", function() {
 					expect('(set: $a to (a:7,8))(set: $a\'s (a:1,2) to (a:3,9))$a').markupToPrint('3,9');
 				});
+				it("cannot be used to set arbitrary names", function() {
+					expect('(set: $a to (a:7,8))(set: $a\'s (a:1,"garply") to (a:3,9))$a').markupToError();
+				});
+				it("cannot be used to set 'length'", function() {
+					expect('(set: $a to (a:7,8))(set: $a\'s (a:1,"length") to (a:3,9))$a').markupToError();
+				});
 				it("can also be chained in assignments", function() {
 					expect('(set: $a to (a:7,8))(set: $a\'s (a:1,2)\'s (a:1,2) to (a:3,9))$a').markupToPrint('3,9');
 				});
@@ -393,6 +399,12 @@ describe("property indexing", function() {
 					expect('(set: $a to "𐌎old")(set: $a\'s (a:2,3) to "ar")$a').markupToPrint('𐌎ard');
 					expect('(set: $a to "𐌎old")(set: $a\'s (a:3,2) to "ar")$a').markupToPrint('𐌎rad');
 					expect('(set: $a to "o𐌎o")(set: $a\'s (a:3,1,3,1) to "abcd")$a').markupToPrint('d𐌎c');
+				});
+				it("cannot be used to set arbitrary names", function() {
+					expect('(set: $a to "𐌎old")(set: $a\'s (a:1,"garply") to "ar")$a').markupToError();
+				});
+				it("cannot be used to set 'length'", function() {
+					expect('(set: $a to "𐌎old")(set: $a\'s (a:1,"length") to "ar")$a').markupToError();
 				});
 				it("can also be chained in assignments", function() {
 					expect('(set: $a to "𐌎old")(set: $a\'s (a:2,3)\'s (a:1,2) to "ar")$a').markupToPrint('𐌎ard');
