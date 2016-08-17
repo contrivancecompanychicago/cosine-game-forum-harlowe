@@ -64,23 +64,36 @@ if (highlighting === undefined) {
 /*
 	Now, find the <code> elements and modify their contents.
 */
+const {modes} = require('../js/markup/lexer.js');
 const {lex} = require('../js/markup/markup.js');
-outputFile = outputFile.replace(/<code>([^<]+)<\/code>(~?)/g, (_, code, noStyle) => {
+// These are used to determine what lexing mode to use for code blocks.
+const sectionMarkupStart = outputFile.search('<h1 id="section_markup">');
+const sectionMarkupEnd   = outputFile.slice(sectionMarkupStart + 5).search('<h1 ') + sectionMarkupStart + 5;
+
+outputFile = outputFile.replace(/<code>([^<]+)<\/code>(~?)/g, ({length}, code, noStyle, offset) => {
 	if (noStyle) {
 		return `<code>${code}</code>`;
 	}
 	function makeCSSClasses(pos) {
-		return root.pathAt(pos).map(token => 'cm-harlowe-' + token.type).join(' ');
+		return root.pathAt(pos + root.start).map(token => 'cm-harlowe-' + token.type).join(' ');
 	}
 	code = unescape(code);
-	let ret = '', root = lex(code), lastPos = 0;
+	let ret = '', root, lastPos = 0;
+	// If the offset is inside the "Passage markup" section, OR is followed by a </pre>, use the normal mode.
+	// Otherwise, use the macro mode.
+	if (offset > sectionMarkupEnd && !outputFile.slice(offset + length).startsWith("</pre>")) {
+		modes.start = modes.macro;
+	} else {
+		modes.start = modes.markup;
+	}
+	root = lex(code);
 	root.everyLeaf(token => {
-		while (token.start > lastPos) {
+		while (token.start - root.start > lastPos) {
 			ret += `<span class="${makeCSSClasses(lastPos)}">${escape(code[lastPos])}</span>`;
 			lastPos += 1;
 		}
 		ret += `<span class="${makeCSSClasses(token.start)}">${escape(token.text)}</span>`;
-		lastPos = token.end;
+		lastPos = token.end - root.start;
 	});
 	while (code.length > lastPos) {
 		ret += `<span class="${makeCSSClasses(lastPos)}">${escape(code[lastPos])}</span>`;
@@ -94,7 +107,7 @@ outputFile = outputFile.replace(/<code>([^<]+)<\/code>(~?)/g, (_, code, noStyle)
 outputFile = `<!doctype html><title>Harlowe ${version} manual</title><meta charset=utf8><style>
 /* Normalisation CSS */
 html { font-size:110%; font-weight:lighter; }
-body { font-family:Georgia, "Times New Roman", Times, serif; line-height:1.5; margin:0 25vw;}
+body { font-family:Georgia, "Times New Roman", Times, serif; line-height:1.5; margin:0 25vw 4em 25vw;}
 p { margin-top:1em; }
 strong,b { font-weight: bold; }
 a { color:#3B8BBA; }
@@ -149,7 +162,8 @@ ${highlighting}
 
 /* Animations */
 ${animations}
-</style>${navElement}</ul></nav>${outputFile}`;
+</style>${navElement}</ul></nav>${outputFile}
+<p><small>This manual was generated at: ${new Date}</small></p>`;
 /*
 	Done
 */

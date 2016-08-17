@@ -742,7 +742,12 @@
 			Declare that the starting mode for lexing, before any
 			tokens are appraised, is...
 		*/
-		Lexer.startMode = markupMode;
+		Lexer.modes.start = Lexer.modes.markup = markupMode;
+		/*
+			But macroMode is also exposed in order for certain consumers
+			(such as the documentation) to be able to lex in that context.
+		*/
+		Lexer.modes.macro = macroMode;
 		return Lexer;
 	}
 	
@@ -750,9 +755,9 @@
 		/*
 			Export the TwineMarkup module.
 			
-			Since this is a light freeze, Utils and Patterns are still modifiable.
-		*/	
-		const TwineMarkup = Object.freeze({
+			Since this is a light freeze, Patterns is still modifiable.
+		*/
+		return Object.freeze({
 			
 			lex: rules(Lexer).lex,
 			
@@ -762,7 +767,6 @@
 			*/
 			Patterns,
 		});
-		return TwineMarkup;
 	}
 	
 	/*

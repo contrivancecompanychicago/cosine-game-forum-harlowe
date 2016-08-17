@@ -32,7 +32,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 			Strings are similar to arrays, in that their individual characters can be accessed: `"ABC"'s 1st` evaluates to "A",
 			`"Gosh"'s 2ndlast` evaluates to "s", and `"Exeunt"'s last` evaluates to "t". They, too, have a "length":
 			`"Marathon"'s length` is 8. If you don't know the exact position of a character, you can use an expression,
-			in brackers, after it: `$string's ($pos - 3)`.
+			in brackers, after it: `$string's ($pos - 3)`. And, you can access a substring by providing an array of positions
+			in place of a single position: `"Dog"'s (a: 2,3)` is "og".
 
 			Also, you can use the `contains` and `is in` operators to see if a certain string is contained within another: `"mother"
 			contains "moth"` is true, as is `"a" is in "a"`.
@@ -46,8 +47,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 			| `is not` | Evaluates to boolean `true` if both sides are not equal, otherwise `false`. | `$friends is not $enemies`
 			| `contains` | Evaluates to boolean `true` if the left side contains the right side, otherwise `false`. | `"Fear" contains "ear"`
 			| `is in` | Checking if the right string contains the left string, otherwise `false`. | `"ugh" is in "Through"`
-			| `'s` | Obtaining the character at the right numeric position. | `"YO"'s 1st` (is "Y")<br>`"PS"'s (2)` (is "S")
-			| `of` | Obtaining the character at the left numeric position. | `1st of "YO"` (is "Y")<br>`(2) of "PS"` (is "S")
+			| `'s` | Obtaining the character or substring at the right numeric position. | `"YO"'s 1st` (is "Y")<br>`"PS"'s (2)` (is "S")<br>`"ear"'s (a: 2,3)` (is "ar")
+			| `of` | Obtaining the character at the left numeric position. | `1st of "YO"` (is "Y")<br>`(2) of "PS"` (is "S")<br>`(a: 2,3) of "ear"` (is "ar")
 		*/
 		/*d:
 			(text: ...[Number or String or Boolean or Array]) -> String

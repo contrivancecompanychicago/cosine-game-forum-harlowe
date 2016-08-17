@@ -621,14 +621,19 @@
 				innerText:               src,
 				children:                 [],
 				childAt:                  {},
-				innerMode:   Lexer.startMode,
+				innerMode: Lexer.modes.start,
 			}));
 		},
 		/*
 			The (initially empty) rules object should be augmented with
 			whatever rules the language requires.
 		*/
-		rules: rules
+		rules: rules,
+		/*
+			The (initially empty) modes object should be filled with
+			the language's modes, as well.
+		*/
+		modes: {},
 	};
 	
 	if(typeof module === 'object') {

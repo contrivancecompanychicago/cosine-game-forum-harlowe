@@ -85,9 +85,9 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'util
 		| Passing | All data passed by value: arrays, datamaps and such are deep-cloned when (set:). | Objects passed by reference; all primitives passed by value.
 		| Type coercion | Operators and macros do not coerce types. | Standard JavaScript coercion.
 		|**Element access**
-		| Array element access | `$arr's 1st`,<br>`$arr's ($index)` (where `$index` is 1-based) | `$arr[0]`~<br>`$arr[$index]`~ (where `$index`~ is 0-based)
-		| Last array element access | `$arr's last`,<br>`$arr's (-$index)` (where `$index` is 1-based) | `$arr[$arr.length-1]`~,<br>`$arr[$arr.length-$index-1]`~ (where `$index`~ is 0-based)
-		| Array slicing | `$arr's (a:1,4))` | `$arr.slice(0,3)`~
+		| Array/string element access | `$arr's 1st`,<br>`$arr's ($index)` (where `$index` is 1-based) | `$arr[0]`~<br>`$arr[$index]`~ (where `$index`~ is 0-based)
+		| Last element access | `$arr's last`,<br>`$arr's (-$index)` (where `$index` is 1-based) | `$arr[$arr.length-1]`~,<br>`$arr[$arr.length-$index-1]`~ (where `$index`~ is 0-based)
+		| Array/string slicing | `$arr's (a:1,4)` | `$arr.slice(0,3)`~
 		|**Randomness**
 		| "Either" macro/function | `(either: 1, 1, 3, 4)` | `either(1, 1, 3, 4)`~
 		| Random whole numbers | `(random: 1, 4)` | `random(1, 4)`~
@@ -110,7 +110,7 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'util
 		| "Remember" macro | Not offered | `<<remember $x = 1>>`~
 		| "Run" macro | Not offered | `<<run alert("Hi")>>`~
 		| Inline Javascript | `<script>document.title = "Huh?"</script>`| `<<script>>document.title = "Huh?"<</script>>`~
-		| "Display" macro | `(display: "Duel")`, `<div>(display: "Duel")</div>` | `<<display "Duel">>`~,<br>`<<display "Duel" "div">>`~
+		| "Display" macro | `(display: "Duel")`,<br>`<div>(display: "Duel")</div>` | `<<display "Duel">>`~,<br>`<<display "Duel" "div">>`~
 		| "If" macro | `(if: $armed)[well-armed]` | `<<if $armed>>well-armed<</if>>`~
 		| "For" macro | Not offered | `<<for $i to 0; $i lt $dogs.length; $i++>> <<print $dogs[i]>> <</for>>`~
 		|**Data value macros**

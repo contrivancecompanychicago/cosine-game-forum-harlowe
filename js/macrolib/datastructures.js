@@ -538,13 +538,13 @@ define([
 		/*d:
 			(rotated: Number, [...Any]) -> Array
 			
-			Identical to the typical array constructor macro, but it also takes a number at
-			the start, and moves each item forward by that number, wrapping back to the start
+			Similar to the (a:) macro, but it also takes a number at the start, and moves
+			each item forward by that number, wrapping back to the start
 			if they pass the end of the array.
 			
 			Example usage:
-			`(rotated: 1, 'A','B','C','D')` is equal to `(a: 'D','A','B','C')`.
-			`(rotated: -2, 'A','B','C','D')` is equal to `(a: 'C','D','A','B')`.
+			* `(rotated: 1, 'A','B','C','D')` is equal to `(a: 'D','A','B','C')`.
+			* `(rotated: -2, 'A','B','C','D')` is equal to `(a: 'C','D','A','B')`.
 			
 			Rationale:
 			Sometimes, you may want to cycle through a number of values, without
@@ -603,8 +603,8 @@ define([
 			those values repeated, in order, by the given number of times.
 			
 			Example usage:
-			`(repeated: 5, false)` produces `(a: false, false, false, false, false)`
-			`(repeated: 3, 1,2,3)` produces `(a: 1,2,3,1,2,3,1,2,3)`
+			* `(repeated: 5, false)` produces `(a: false, false, false, false, false)`
+			* `(repeated: 3, 1,2,3)` produces `(a: 1,2,3,1,2,3,1,2,3)`
 			
 			Rationale:
 			This macro, as well as (range:), are the means by which you can create a large array of
@@ -719,16 +719,59 @@ define([
 	Macros.add
 		/*d:
 			(altered: Lambda, ...Any) -> Array
+
+			#data structure
 		*/
 		("altered", (section, lambda, ...args) => args.map(loop => lambda.apply(section, {loop})),
 		[Lambda.TypeSignature('via'), rest(Any)])
 		/*d:
 			(find: Lambda, ...Any) -> Any
+
+			Searches through the given values, and produces an array of those which match the given search
+			test (which is expressed using a temp variable, `where`, and a Boolean condition).
+			If none match, an empty array is produced.
+
+			Example usage:
+			* `(find: _item where _item's 1st is "A", "Thorn", "Apple", "Cryptid", "Anchor")` produces `(a: "Apple", "Anchor")`.
+			* `(find: _num where (_num >= 12) and (it % 2 is 0), 9, 10, 11, 12, 13, 14, 15, 16)` produces `(a: 12, 14, 16)`.
+			* `(find: _val where _val + 2, 9, 10, 11)` produces an error, because `_item + 2` isn't a Boolean.
+
+			Rationale:
+			Selecting specific data from arrays based on a user-provided Boolean condition is one of the more common and powerful
+			operations in programmng. This macro allows you to immediately work with a subset of the array's data, without
+			caring what kind of subset it is. The condition can be based on a string's characters, a datamap's values, a number's
+			evenness or oddness, whether a variable matches it... anything you can write.
+
+			This macro uses a lambda (which is just the "temp variable `where` a condition" expression) to check every one of
+			the values given after it. For `(find: _item where _item > 40, 30, 60, 90)`, it will first check if `30 > 40` (which
+			is `false`), if `60 > 40` (which is `true`), and if `90 > 40` (which is `true`), and include in the returned array
+			those values which resulted in `true`.
+
+			Details:
+			The temp variable, which you can name anything you want, is controlled entirely by the lambda - it doesn't exist
+			outside of it, it won't alter identically-named temp variables outside of it, and you can't manually (set:)
+			it within the lambda.
+
+			You can refer to other variables, including other temp variables, in the `where` condition. For instance, you can
+			write `(set: _name to "Eva")(find: _item where _item is _name, "Evan", "Eve", "Eva")`. However, for obvious reasons,
+			if the outer temp variable is named the same as the lambda's temp variable, it can't be referred to in the condition.
+
+			There isn't a way to examine the position of a value in the condition - you can't write, say, `(find: _item where
+			_pos % 2 is 0, "A", "B", "C", "D")` to select just "B" and "D".
+
+			You shouldn't use this macro to try and alter the given values! Consider the (altered:) or (folded:) macro instead.
+
+			See also:
+			(sorted:), (all-pass:), (some-pass:), (none-pass:)
+
+			#data structure
 		*/
 		("find", (section, lambda, ...args) => lambdaFilter(section, lambda, args),
 		[Lambda.TypeSignature('where'), rest(Any)])
 		/*d:
 			(all-pass: Lambda, ...Any) -> Boolean
+
+			#data structure
 		*/
 		("all-pass", (section, lambda, ...args) => {
 			const ret = lambdaFilter(section, lambda, args);
@@ -737,6 +780,8 @@ define([
 		[Lambda.TypeSignature('where'), rest(Any)])
 		/*d:
 			(some-pass: Lambda, ...Any) -> Boolean
+
+			#data structure
 		*/
 		("some-pass", (section, lambda, ...args) => {
 			const ret = lambdaFilter(section, lambda, args);
@@ -745,6 +790,8 @@ define([
 		[Lambda.TypeSignature('where'), rest(Any)])
 		/*d:
 			(none-pass: Lambda, ...Any) -> Boolean
+
+			#data structure
 		*/
 		("none-pass", (section, lambda, ...args) => {
 			const ret = lambdaFilter(section, lambda, args);
@@ -753,6 +800,8 @@ define([
 		[Lambda.TypeSignature('where'), rest(Any)])
 		/*d:
 			(folded: Lambda, ...Any) -> Boolean
+
+			#data structure
 		*/
 		("folded", (section, lambda, ...args) => args.reduce((making,loop) => lambda.apply(section, {making,loop})),
 		[Lambda.TypeSignature('via making'), rest(Any)])
@@ -1007,18 +1056,20 @@ define([
 			`(datamap: "dog", "bark")`.
 			
 			You may notice that you usually need to know the names a datamap contains in order to access its values. There are certain
-			macros which provide other ways of examining a datamap's contents: (datanames:) provides a sorted array of its names, and
-			(datavalues:) provides a sorted array of its values.
+			macros which provide other ways of examining a datamap's contents: (datanames:) provides a sorted array of its names,
+			(datavalues:) provides a sorted array of its values, and (dataentries:) provides an array of names and values.
 
 			To summarise, the following operators work on datamaps.
 			
 			| Operator | Purpose | Example
 			|---
-			| `is` | Evaluates to boolean `true` if both sides contain equal names and values, otherwise `false`. | `(datamap:"HP",5) is (datamap:"HP",5)` (is true)
-			| `is not` | Evaluates to `true` if both sides differ in items or ordering. | `(datamap:"HP",5) is not (datamap:"HP",4)` (is true)<br>`(datamap:"HP",5) is not (datamap:"MP",5)` (is true)
-			| `contains` | Evaluates to `true` if the left side contains the name on the right.<br>(To check that a datamap contains a value, try using `contains` with (datavalues:)) | `(datamap:"HP",5) contains "HP"` (is true)<br>`(datamap:"HP",5) contains 5` (is false)
-			| `is in` | Evaluates to `true` if the right side contains the name on the left. | `"HP" is in (datamap:"HP",5)` (is true)
-			| `+` | Joins datamaps, using the right side's value whenever both sides contain the same name. | `(datamap:"HP",5) + (datamap:"MP",5)`
+			| `is` | Evaluates to boolean `true` if both sides contain equal names and values, otherwise `false`. | `(dm:"HP",5) is (dm:"HP",5)` (is true)
+			| `is not` | Evaluates to `true` if both sides differ in items or ordering. | `(dm:"HP",5) is not (dm:"HP",4)` (is true)<br>`(dm:"HP",5) is not (datamap:"MP",5)` (is true)
+			| `contains` | Evaluates to `true` if the left side contains the name on the right.<br>(To check that a datamap contains a value, try using `contains` with (datavalues:)) | `(datamap:"HP",5) contains "HP"` (is true)<br>`(dm:"HP",5) contains 5` (is false)
+			| `is in` | Evaluates to `true` if the right side contains the name on the left. | `"HP" is in (dm:"HP",5)` (is true)
+			| `+` | Joins datamaps, using the right side's value whenever both sides contain the same name. | `(dm:"HP",5) + (dm:"MP",5)`
+			| `'s` | Obtaining the value using the name on the right. | `(dm:"love",155)'s love` (is 155).
+			| `of` | Obtaining the value using the name on the left. | `love of (dm:"love",155)` (is 155).
 		*/
 		/*d:
 			(datamap: [...Any]) -> Datamap
@@ -1200,8 +1251,8 @@ define([
 		/*d:
 			(count: Any, Any) -> Number
 
-			Accepts two values, and produces the number of times the second value is inside
-			the first value.
+			Accepts two string or array values, and produces the number of times the second value
+			is inside the first value.
 
 			Example usage:
 			`(count: (a:1,2,3,2,1), 1)` produces 2.
@@ -1212,7 +1263,8 @@ define([
 			appear in the left side, (count:) produces the actual number of occurrences.
 
 			Details:
-			If you use this with a datamap or dataset (which can't have duplicates) then an error will result.
+			If you use this with a number, boolean, datamap, dataset (which can't have duplicates),
+			or anything else which can't have a value, then an error will result.
 
 			See also:
 			(datanames:), (datavalues:)

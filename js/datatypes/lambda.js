@@ -4,7 +4,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 		Lambda data
 
 		Suppose you want to do a complicated task with an array, like, say, convert all of its strings to lowercase,
-		or check if any of its datamaps have "health" data equal to 0, or join all of its strings together
+		or check if its datamaps have "health" data equal to 0, or join all of its strings together
 		into a single string. You want to be able to tell Harlowe to search for "each string where the string's 1st
 		letter is A". You want to write a "function" for how the search is to be conducted.
 
@@ -21,14 +21,14 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 		
 		* "making" lambdas, used by the (folded:) are used to build or "make" a single data value by adding something from
 		each item to it. The lambda `_item making _total via _total + (max: _item, 0)` tells the macro to add each item to
-		the total, but only if the item is greater than 0. ...Actually, you can also use "where" inside a "making" lambda -
-		you could rewrite that lambda as `_item making _total via _total + _item where _item > 0`.
+		the total, but only if the item is greater than 0. (Incidentally, you can also use "where" inside a "making" lambda -
+		you could rewrite that lambda as `_item making _total via _total + _item where _item > 0`.)
 
 		Lambdas use temp variables as "placeholders" for the actual values. For instance, in `(find: _num where _num > 2, 5,6,0)`,
-		the temp variable _num is used to mean each individual value given to the macro, in turn. It will be 5, 6 and 0, respectively.
-		Importantly, this will *not* alter any existing temp variable called _num - the inside of a lambda can be thought
-		of as a hook, so just as the inner _x in `(set: _x to 1) |a>[ (set:_x to 2) ]` is different from the outer _x, the _num in the
-		lambda will not affect any other _num.
+		the temp variable `_num` is used to mean each individual value given to the macro, in turn. It will be 5, 6 and 0, respectively.
+		Importantly, this will *not* alter any existing temp variable called `_num` - the inside of a lambda can be thought
+		of as a hook, so just as the inner `_x` in `(set: _x to 1) |a>[ (set:_x to 2) ]` is different from the outer `_x`, the `_num` in the
+		lambda will not affect any other `_num`.
 
 		An important feature is that you can save lambdas into variables, and reuse them in your story easily. You
 		could, for instance, `(set: $statsReadout to (_stat making _readout via _readout + "|" + _stat's name + ":" + _stat's value))`,
