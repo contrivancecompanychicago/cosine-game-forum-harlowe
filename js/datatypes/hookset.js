@@ -336,6 +336,25 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 			this.normalize();
 		});
 	}
+
+	/*
+		This is used exclusively by TwineScript_is() to provide a crude string serialisation
+		of all of a HookSet's relevant distinguishing properties, order-insensitive, which can
+		be compared using ===. This takes advantage of the fact that all of these properties
+		can be serialised to strings with little fuss.
+
+		Note: this actually returns an array, so that it can recursively call itself. But, it's
+		expected that consumers will convert it to a string.
+	*/
+	function hash(hookset) {
+		if (!hookset) {
+			return [];
+		}
+		const {selector, base, properties, prev} = hookset;
+		// The hash of ?red + ?blue should equal that of ?blue + ?red. To do this,
+		// the prev's hash and this hookset's hash is added to an array, which is then sorted and returned.
+		return [JSON.stringify([selector || "", hash(base), [...properties].sort()]), ...hash(prev)].sort();
+	}
 	
 	const HookSet = Object.freeze({
 		
@@ -393,11 +412,21 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 		},
 
 		/*
+			HookSets are identical if they have the same selector, base, properties (and if
+			a property is a slices, it is order-sensitive) and prev.
+			The section is not important.
+		*/
+		TwineScript_is(other) {
+			return hash(this) + "" === hash(other) + "";
+		},
+
+		/*
 			These are used by VarRef, under the assumption that this is a sequential object.
 			Accessing 1st, 2nd, etc. for a HookSet will produce only the nth document-order
 			element for that hookset.
 
 			Note that index may actually be an array of indices, as created by "?a's (a:1,2,4)".
+			The order of this array must be preserved, so that "?a's (a:2,4)'s 2nd" works correctly.
 		*/
 		TwineScript_GetElement(index) {
 			return HookSet.create(this.section, undefined, this, [index], undefined);

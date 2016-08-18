@@ -1,5 +1,5 @@
-define(['jquery', 'utils', 'utils/selectors', 'macros', 'datatypes/hookset', 'datatypes/changercommand', 'internaltypes/enchantment', 'internaltypes/twineerror'],
-($, Utils, Selectors, Macros, HookSet, ChangerCommand, Enchantment, TwineError) => {
+define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 'datatypes/hookset', 'datatypes/changercommand', 'internaltypes/enchantment', 'internaltypes/twineerror'],
+($, Utils, Selectors, {is}, Macros, HookSet, ChangerCommand, Enchantment, TwineError) => {
 	"use strict";
 
 	const {either,rest} = Macros.TypeSignature;
@@ -153,8 +153,12 @@ define(['jquery', 'utils', 'utils/selectors', 'macros', 'datatypes/hookset', 'da
 				}
 				/*
 					Having done that, we may now alter the desc's target.
+					We need to eliminate duplicate targets, in cases such as (replace:?1) + (replace:?1, ?2).
 				*/
-				desc.newTargets = (desc.newTargets || []).concat(scopes);
+				desc.newTargets = (desc.newTargets || []);
+				desc.newTargets.push(
+					...scopes.filter(item1 => !desc.newTargets.some(item2 => is(item1, item2)))
+				);
 				desc.append = e;
 				return desc;
 			},

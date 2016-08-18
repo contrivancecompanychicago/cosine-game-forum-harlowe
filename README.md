@@ -44,6 +44,8 @@ Rough documentation is at http://twine2.neocities.org/
  * Now, you can optionally put 'is' at the start of inequality operators - you can write `$a is < 3` as a more readable alternative to `$a < 3`. Also, `$a is not > 3` can be written as well, which negates the operator (making it behave like `$a is <= 3`).
  * Passage links can now be used as values inside macros - `(set: $x to [[Go down->Cellar]])` is now valid. You may recall that passage links are treated as equivalent to `(link-goto:)` macro calls. As such, `(set: $x to [[Go down->Cellar]])` is treated as identical to `(set: $x to (link-goto:"Go down","Cellar"))`.
  * Revision macros such as `(replace:)`, `(append:)` and `(prepend:)` can now accept multiple values: `(replace:?ape, ?hen)`, for instance, can affect both hooks equally, and `(replace:'red', 'green')` can affect occurrences of either string.
+ * Now, adding two `(append:)` or `(prepend:)` macros which target the same hook, such as `(append:?elf) + (append:?elf)`, no longer creates a changer that appends/prepends to that same hook twice.
+ * Hook names, even added together, can now be recognised as the same by the `is` operator if they target the same hooks (including sub-elements).
  * The `(move:)` macro now accepts multiple `into` values, like `(put:)`.
  * Now, `debug-header` tagged passages are run after `header` tagged passages in debug mode, for consistency with the order of `debug-startup` and `startup`.
 

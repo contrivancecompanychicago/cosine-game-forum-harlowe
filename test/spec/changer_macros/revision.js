@@ -65,7 +65,7 @@ describe("revision macros", function() {
 					var p = runPassage("(set:$a to 0)|foo>[A][B]<bar|[C]<baz|("+name+":?foo,?baz,?bar)[(set:$a to it + 1)$a]");
 					expect(p.text()).toBe(append?'A1B2C3':'1A2B3C');
 				});
-				xit("can be composed with other ("+name+":)s", function() {
+				it("can be composed with other ("+name+":)s", function() {
 					var p = runPassage("(set:$s to ("+name+":?foo, ?bar) + ("+name+":?bar, ?baz))|foo>[1][2]<bar|[3]<baz|$s[0]");
 					expect(p.text()).toBe(append?'102030':'010203');
 				});
@@ -110,7 +110,7 @@ describe("revision macros", function() {
 					var p = runPassage("(set:$a to 0)ABC("+name+":'A','C','B')[(set:$a to it + 1)$a]");
 					expect(p.text()).toBe(append?'A1B2C3':'1A2B3C');
 				});
-				xit("can be composed with other ("+name+":)s", function() {
+				it("can be composed with other ("+name+":)s", function() {
 					runPassage("(set:$s to ("+name+":'1','2') + ("+name+":'2','3'))");
 					var p = runPassage("123$s[0]");
 					expect(p.text()).toBe(append?'102030':'010203');
@@ -251,8 +251,8 @@ describe("revision macros", function() {
 				var p = runPassage("(set:$a to 0)ABC(replace:'A','C','B')[(set:$a to it + 1)$a]");
 				expect(p.text()).toBe('123');
 			});
-			xit("can be composed with other (replace:)s", function() {
-				runPassage("(set:$a to 0)(set:$s to (replace:'A','B') + (replace:'2','B',C'))");
+			it("can be composed with other (replace:)s", function() {
+				runPassage("(set:$a to 0)(set:$s to (replace:'A','B') + (replace:'2','B','C'))");
 				var p = runPassage("ABC$s[(set:$a to it + 1)$a]");
 				expect(p.text()).toBe('123');
 			});

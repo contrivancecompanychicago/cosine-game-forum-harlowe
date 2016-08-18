@@ -337,6 +337,17 @@ describe("twinescript operators", function () {
 			expect("(print: (dataset:2,3,4) is (dataset:2,3,4))").markupToPrint("true");
 			expect("(print: (dataset:2,3,4) is (dataset:2,3,4,5))").markupToPrint("false");
 		});
+		it("compares hooksets by selectors and properties", function (){
+			expect("(print: ?red is ?red)").markupToPrint("true");
+			expect("(print: ?red is ?blue)").markupToPrint("false");
+			expect("(print: ?red's 1st is ?red's 1st)").markupToPrint("true");
+			expect("(print: ?red is ?red's 1st)").markupToPrint("false");
+			expect("(print: ?red's (a:1,3,5) is ?red's (a:1,3,5))").markupToPrint("true");
+			expect("(print: ?red's (a:1,3,5) is ?red's (a:3,5,1))").markupToPrint("false");
+			expect("(print: ?red's (a:1,3,5) is ?red's (a:1,2,3,5))").markupToPrint("false");
+			expect("(print: ?red's 1st + ?blue's 2nd is ?red's 1st + ?blue's 2nd)").markupToPrint("true");
+			expect("(print: ?red + ?blue is ?blue + ?red)").markupToPrint("true");
+		});
 		it("won't be matched from within text", function (){
 			expect("(print: typeof xxisxx)").markupToPrint("undefined");
 		});
