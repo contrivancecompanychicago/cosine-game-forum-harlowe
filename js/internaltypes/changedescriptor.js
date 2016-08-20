@@ -201,14 +201,14 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 				*/
 				dom = dom.add(this.create({ target, append, newTargets:null }).render());
 			};
-			[].concat(target).forEach(function loop(target, _, __, append = this.append) {
+			[].concat(target).forEach(function loop(target, _, __, append_ = append) {
 				// Is it a HookSet,
 				if (HookSet.isPrototypeOf(target)) {
-					target.forEach(section, renderAll(append));
+					target.forEach(section, renderAll(append_));
 				}
 				// a jQuery of <tw-hook> or <tw-expression> elements,
 				else if (target.jquery && target.length > 1) {
-					Array.from(target).map($).forEach(renderAll(append));
+					Array.from(target).map($).forEach(renderAll(append_));
 				}
 				// or a newTarget object?
 				else if (target.target && target.append) {

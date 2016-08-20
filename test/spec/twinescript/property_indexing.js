@@ -258,7 +258,7 @@ describe("property indexing", function() {
 			expect('(set:$a to false)(set: 1st of $a to 1)').markupToError();
 			expect('(set:$a to true)(set: 1st of $a to 1)').markupToError();
 		});
-		xit("cannot be used with numbers", function() {
+		it("cannot be used with numbers", function() {
 			expect('(print: 1st of 2)').markupToError();
 			expect('(print: 1st of -0.1)').markupToError();
 			expect('(set:$a to 2)(set: 1st of $a to 1)').markupToError();

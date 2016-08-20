@@ -391,10 +391,8 @@
 		
 		/*
 			This includes NaN, but I wonder if it should.
-			This doesn't include the - sign because arithmetic's pattern will trump it.
-			Negative numerals are handled in TwineScript as unary uses of arithmetic.
 		*/
-		number = '\\b(\\d+(?:\\.\\d+)?(?:[eE][+\\-]?\\d+)?|NaN)' + notBefore("m?s") + wb
+		number = '\\b(\\-?\\d+(?:\\.\\d+)?(?:[eE][+\\-]?\\d+)?|NaN)' + notBefore("m?s") + wb
 		;
 	
 	passageLink.main =
@@ -880,7 +878,7 @@
 		contains:   "contains" + wb,
 		
 		addition:          escape("+")      + notBefore("="),
-		subtraction:       escape("-")      + notBefore("="),
+		subtraction:       escape("-")      + notBefore("=", "\\d"),
 		multiplication:    escape("*")      + notBefore("="),
 		division:          either("/", "%") + notBefore("="),
 		
