@@ -504,8 +504,7 @@ define([
 		
 		This is exclusively called by runExpression().
 		
-		@param {Function} The sensor function.
-		@param {jQuery} The <tw-hook> that the sensor is connected to.
+		@param {jQuery} The <tw-hook>.
 		@param {Number} The timeout delay.
 	*/
 	function runLiveHook(target, delay) {
@@ -665,25 +664,6 @@ define([
 				return errors;
 			}
 			return p.text();
-		},
-		
-		/*
-			This method takes a selector string and selects hooks - usually single <tw-hook>s,
-			but also "pseudo-hooks", consecutive text nodes that match the selector -
-			querying only this section's DOM and all above it.
-			
-			This is most commonly invoked by TwineScript's desugaring of the HookRef
-			syntax (e.g. "?cupboard" becoming "section.selectHook('?cupboard')").
-		*/
-		selectHook(selectorString) {
-			/*
-				If a HookSet was passed in, return it unmodified.
-				TODO: Should this be a bug?
-			*/
-			if (HookSet.isPrototypeOf(selectorString)) {
-				return selectorString;
-			}
-			return HookSet.create(this, selectorString);
 		},
 		
 		/*

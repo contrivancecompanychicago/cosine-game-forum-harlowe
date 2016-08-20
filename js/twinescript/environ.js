@@ -3,6 +3,7 @@ define([
 	'state',
 	'utils',
 	'datatypes/colour',
+	'datatypes/hookset',
 	'datatypes/lambda',
 	'internaltypes/varref',
 	'internaltypes/twineerror',
@@ -11,7 +12,7 @@ define([
 /*
 	To keep the eval scope very clean in compiled code, no destructuring is done here.
 */
-(Macros, State, Utils, Colour, Lambda, VarRef, TwineError, OperationsProto) => {
+(Macros, State, Utils, Colour, HookSet, Lambda, VarRef, TwineError, OperationsProto) => {
 	"use strict";
 	/*
 		Creates a new script execution environment. This accepts and

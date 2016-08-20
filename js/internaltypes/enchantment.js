@@ -18,18 +18,15 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor'], ($, Utils, ChangeD
 			scope to enchant.
 		*/
 		create(descriptor) {
-			Utils.assertOnlyHas(descriptor, ['scope', 'attr', 'data', 'changer', 'functions']);
+			Utils.assertOnlyHas(descriptor, ['scope', 'section', 'attr', 'data', 'changer', 'functions']);
 
 			return Object.assign(Object.create(this), {
 				/*
-					A store for the <tw-enchantment> wrappers created
-					by enchantScope.
+					A store for the <tw-enchantment> wrappers created by enchantScope.
 					
-					This is a case of a jQuery object being used as a
-					data structure rather than as a query result set.
-					Search function calls for DOM elements 'contained' in
-					these enchantments is more succinct using jQuery
-					than using a plain Array or Set.
+					This is a case of a jQuery object being used as a data structure rather
+					than as a query result set. Search function calls for DOM elements 'contained' in
+					these enchantments is more succinct using jQuery than using a plain Array or Set.
 				*/
 				enchantments: $(),
 			}, descriptor);
@@ -39,7 +36,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor'], ($, Utils, ChangeD
 			classes to the matched elements.
 		*/
 		enchantScope() {
-			const {attr, data, functions, changer} = this;
+			const {attr, data, functions, section, changer} = this;
 			let {scope} = this;
 			/*
 				scope could be a jQuery, if this is a HTML scope created by, say, (enchant: "<i>"). In which
@@ -57,7 +54,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor'], ($, Utils, ChangeD
 			/*
 				Now, enchant each selected word or hook within the scope.
 			*/
-			scope.forEach((e) => {
+			scope.forEach(section, (e) => {
 				/*
 					Create a fresh <tw-enchantment>, and wrap the elements in it.
 
@@ -95,7 +92,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor'], ($, Utils, ChangeD
 				}
 
 				/*
-					Store the wrapping in the Section's enchantments list.
+					Store the wrapping in the enchantments list.
 				*/
 				this.enchantments = this.enchantments.add(wrapping);
 			});

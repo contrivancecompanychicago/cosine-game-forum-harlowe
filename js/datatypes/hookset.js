@@ -15,8 +15,6 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 		the string "cats" in the passage. So, without needing to mark up
 		that text with hook syntax, the author can still manipulate it intuitively.
 		This is a powerful construct!
-		
-		These are currently exclusively created by Section.selectHook.
 	*/
 
 	/*d:
@@ -33,6 +31,7 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 		If you only want some of the hooks with the given name to be affected, you can treat the hook name as a sort of read-only
 		array: access its `1st` element (such as by `?red's 1st`) to only affect the first such named hook in the passage, access
 		the `last` to affect the last, and so forth. (Even specifying an array of positions, like `?red's (a:1,3,5)`, will work.)
+		Unlike arrays, though, you can't access their `length`, nor can you spread them with `...`.
 
 		If you need to, you cal also add hook names together to affect both at the same time: `(click: ?red + ?blue's 1st)` will
 		affect all hooks tagged `<red|`, as well as the first hook tagged `<blue|`.
@@ -267,7 +266,7 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 		This private method returns a jQuery collection of every <tw-hook>
 		in this HookSet's Section which matches this HookSet's selector string.
 	*/
-	function hooks() {
+	function hooks({dom}) {
 		let ret = $();
 
 		/*
@@ -275,7 +274,7 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 			this was concatenated to. (For instance, [?a] + ?b's 1st)
 		*/
 		if (this.prev) {
-			ret = ret.add(hooks.call(this.prev));
+			ret = ret.add(hooks.call(this.prev, {dom}));
 		}
 		/*
 			If this has a selector itself (such as ?a + [?b]'s 1st), add those elements
@@ -294,7 +293,7 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 			return $(elements.get(index));
 		};
 		if (this.selector) {
-			let ownElements, {dom} = this.section;
+			let ownElements;
 			/*
 				If this is a pseudo-hook (search string) selector, we must create the
 				temporary <tw-pseudo-hook> elements around the selection.
@@ -322,7 +321,7 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 			(as restricted by the properties).
 		*/
 		if (this.base) {
-			ret = ret.add(this.properties.reduce(reducer, hooks.call(this.base)));
+			ret = ret.add(this.properties.reduce(reducer, hooks.call(this.base, {dom})));
 		}
 		return ret;
 	}
@@ -331,8 +330,8 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 		After calling hooks(), we must remove the <tw-pseudo-hook> elements
 		and normalize the text nodes that were split up as a result of the selection.
 	*/
-	function cleanupPseudoHooks() {
-		Utils.$('tw-pseudo-hook', this.section.dom).contents().unwrap().parent().each(function() {
+	function cleanupPseudoHooks({dom}) {
+		Utils.$('tw-pseudo-hook', dom).contents().unwrap().parent().each(function() {
 			this.normalize();
 		});
 	}
@@ -365,14 +364,15 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 			This is currently just used by Section.renderInto, to iterate over each
 			word and render it individually.
 			
+			@param {Section} The section the hooks should target.
 			@param {Function} The callback, which is passed the following:
 				{jQuery} The <tw-hook> element to manipulate.
 		*/
-		forEach(fn) {
-			const ret = hooks.call(this).each(function(i) {
+		forEach(section, fn) {
+			const ret = hooks.call(this, section).each(function(i) {
 				fn($(this), i);
 			});
-			cleanupPseudoHooks.call(this);
+			cleanupPseudoHooks.call(this, section);
 			return ret;
 		},
 		
@@ -414,7 +414,6 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 		/*
 			HookSets are identical if they have the same selector, base, properties (and if
 			a property is a slices, it is order-sensitive) and prev.
-			The section is not important.
 		*/
 		TwineScript_is(other) {
 			return hash(this) + "" === hash(other) + "";
@@ -429,30 +428,19 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 			The order of this array must be preserved, so that "?a's (a:2,4)'s 2nd" works correctly.
 		*/
 		TwineScript_GetElement(index) {
-			return HookSet.create(this.section, undefined, this, [index], undefined);
+			return HookSet.create(undefined, this, [index], undefined);
 		},
 
-		// Like all sequential objects, HookSets have a length.
-		get length() {
-			const ret = hooks.call(this).length;
-			/*
-				TODO: As you know, getting the length of a pseudo-hook (which is currently
-				impossible) will cause <tw-pseudo-hook>s to be wrapped, then immediately
-				unwrapped. This could be saved by writing an option to hooks() that
-				only examines viable text nodes, without wrapping.
-			*/
-			cleanupPseudoHooks.call(this);
-			return ret;
-		},
+		// As of 19-08-2016, HookSets no longer have a length property, because calculating it requires
+		// passing in a section, and it doesn't make much sense to ever do so.
 
 		TwineScript_Clone() {
-			return HookSet.create(this.section, this.selector, this.base, this.properties, this.prev);
+			return HookSet.create(this.selector, this.base, this.properties, this.prev);
 		},
 		
 		/*
 			Creates a new HookSet, which contains the following:
 
-			{Section} section: a section from which hook elements are selected.
 			{String} selector: a hook name, such as "?flank" for ?flank, or a bare search string.
 			{HookSet} base: an alternative to selector. A HookSet from which the properties
 				are being extracted.
@@ -465,10 +453,17 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 			(?apple + ?banana's  2ndlast)'s 2ndlast
 			[          base            ]   [properties]
 		*/
-		create(section, selector, base, properties = [], prev = undefined) {
-			return Object.assign(Object.create(this), {
-				section, selector, base, properties, prev
+		create(selector, base, properties = [], prev = undefined) {
+			return Object.assign(Object.create(this || HookSet), {
+				selector, base, properties, prev
 			});
+		},
+
+		/*
+			This brief sugar method is only used in macrolib/enchantments.
+		*/
+		from(arg) {
+			return HookSet.isPrototypeOf(arg) ? arg : HookSet.create(arg);
 		},
 	});
 	return HookSet;

@@ -18,6 +18,7 @@ Rough documentation is at http://twine2.neocities.org/
  * Fixed the bug where `(current-time:)` wouldn't pad the minutes value with a leading 0 when necessary.
  * Fixed the bug where referring to a variable multiple times within a single `(set:)` command, like `(set: $a to 1, $b to $a)`, wouldn't work as expected.
  * The "pulse" transition (provided by `(transition:)`) now gives its attached hook the `display:inline-block` CSS property for the duration of the transition. This fixes a bug where block HTML elements inside such hooks would interfere with the transition animation.
+ * Revision changers (`(replace:)`, `(append:)`, `(prepend:)`) that use hook names can now work when they're stored in a variable and used in a different passage. So, running `(set: $x to (replace:?1))` in one passage and `$x[Hey]` in the next will work as expected.
 
 ####Alterations
 
@@ -71,7 +72,7 @@ Rough documentation is at http://twine2.neocities.org/
    * Also note that temp variables that are `(set:)` inside hooks won't affect same-named temp variables outside them: `(set: _a to 1) |hook>[(set: _a to 2)]` will make `_a` be 2 inside the hook, but remain as 1 outside of it.
  * Lambdas (tentative name) are a new data type - they are, essentially, user-created functions. You can just think of them as "data converters" - reusable instructions that convert values into different values, filter them, or join multiple values together. They use temporary variables (which only exist inside the lambda) to hold values while computing them, and this is shown in their syntax. An example is `_a where _a > 2`, which filters out data that's smaller than 2, or `_name via "a " + _name`, which converts values by adding 1 to them. Various new macros use these to easily apply the same conversion to sequences of data.
  * Colour values now have read-only data names: `r`, `g` and `b` produce the red, green and blue components of the colour (from 0 to 255), and `h`, `s` and `l` produce, in order, the hue (in degrees), and the saturation and lightness percentages (from 0 to 1).
- * You can now access sub-elements in hook names, as if they were an array: `(click: ?red's 1st)` will only affect the first such named hook in the passage, for instance, and you can also specify an array of positions, like `?red's (a:1,3,5)`.
+ * You can now access sub-elements in hook names, as if they were an array: `(click: ?red's 1st)` will only affect the first such named hook in the passage, for instance, and you can also specify an array of positions, like `?red's (a:1,3,5)`. Unlike arrays, though, you can't access their `length`, nor can you spread them with `...`.
  * You can now add hook names together to affect both at the same time: `(click: ?red + ?blue's 1st)` will affect all hooks tagged `<red|`, as well as the first hook tagged `<blue|`.
 
 #####Macros

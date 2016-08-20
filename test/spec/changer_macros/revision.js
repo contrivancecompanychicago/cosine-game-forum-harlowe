@@ -38,7 +38,7 @@ describe("revision macros", function() {
 					var p = runPassage("(set:$s to ("+name+":?foo) + ("+name+":?bar))|foo>[1][2]<bar|$s[0]");
 					expect(p.text()).toBe(append?'1020':'0102');
 				});
-				xit("when stored, can work across passages", function() {
+				it("when stored, can work across passages", function() {
 					runPassage("(set:$s to ("+name+":?bar))");
 					var p = runPassage("[2]<bar|$s[0]");
 					expect(p.text()).toBe(append?'20':'02');
@@ -196,6 +196,11 @@ describe("revision macros", function() {
 			it("nested replacements are triggered one by one", function() {
 				var p = runPassage("[1]<foo|(replace:?foo)[2(replace:?foo)[3]](replace:?foo)[4]");
 				expect(p.text()).toBe('4');
+			});
+			it("when stored, can work across passages", function() {
+				runPassage("(set:$s to (replace:?bar))");
+				var p = runPassage("[2]<bar|$s[0]");
+				expect(p.text()).toBe('0');
 			});
 		});
 		describe("given multiple same-named hooks", function() {

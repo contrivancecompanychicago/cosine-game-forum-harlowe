@@ -17,8 +17,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 
 			TwineScript_TypeName:   "an (enchant:) command",
 			TwineScript_Print() {
 				const enchantment = Enchantment.create({
-					scope: section.selectHook(scope),
-					changer,
+					scope: HookSet.from(scope), changer, section,
 				});
 				section.enchantments.push(enchantment);
 				enchantment.enchantScope();
@@ -139,7 +138,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 
 						+ ":) macro was empty."
 					);
 				}
-				return ChangerCommand.create(e, scopes);
+				return ChangerCommand.create(e, scopes.map(HookSet.from));
 			},
 			(desc, ...scopes) => {
 				/*
@@ -239,28 +238,19 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 
 			macro (in the case of "(macro: ?1)", selector will be "?1").
 		*/
 		return [
-			(_, selector) => {
+			(_, ...selectors) => {
 				/*
-					If the selector is a HookRef (which it usually is), we must unwrap it
-					and extract its plain selector string, as this ChangerCommand
-					could be used far from the hooks that this HookRef selects,
-					and we'll need to re-run the desc's section's selectHook() anyway.
-				*/
-				if (selector.selector) {
-					selector = selector.selector;
-				}
-				/*
-					If the selector is empty (which means it's the empty string) then throw an error,
+					If one of the selectors is empty (which means it's the empty string) then throw an error,
 					because nothing can be selected.
 				*/
-				if (!selector) {
+				if (!selectors.every(Boolean)) {
 					return TwineError.create("datatype",
-						"The string given to this ("
+						"A string given to this ("
 						+ name
 						+ ":) macro was empty."
 					);
 				}
-				return ChangerCommand.create(name, [selector]);
+				return ChangerCommand.create(name, selectors.map(HookSet.from));
 			},
 			/*
 				This ChangerCommand registers a new enchantment on the Section that the
@@ -355,7 +345,8 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 
 							);
 						},
 					},
-					scope: desc.section.selectHook(selector),
+					scope: selector,
+					section: desc.section,
 				});
 				/*
 					Add the above object to the section's enchantments.

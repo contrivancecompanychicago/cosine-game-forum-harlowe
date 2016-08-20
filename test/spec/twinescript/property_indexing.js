@@ -196,8 +196,8 @@ describe("property indexing", function() {
 			expect('(set:$a to 2)(set: $a\'s a to 1)').markupToError();
 			expect('(set:$a to -0.1)(set: $a\'s a to 1)').markupToError();
 		});
-		it("only 'length' can be used with hook references", function() {
-			expect('|a>[]|a>[](print: ?a\'s length)').markupToPrint('2');
+		it("cannot be used with hook references", function() {
+			expect('|a>[]|a>[](print: ?a\'s length)').markupToError();
 			expect('|a>[]|a>[](print: ?a\'s thing)').markupToError();
 			expect('|a>[]|a>[](set: ?a\'s thing to 4)').markupToError();
 			expect('|a>[]|a>[](set: ?a\'s length to 4)').markupToError();
@@ -432,9 +432,9 @@ describe("property indexing", function() {
 			});
 		});
 		describe("for hook references", function() {
-			it("must have numbers in range on the right side, or 'length'", function (){
+			it("must have numbers in range on the right side", function (){
 				expect("|a>[1]|a>[1](replace: ?a's (1))[2]").markupToPrint('21');
-				expect("|a>[]|a>[](print: ?a's 'length')").markupToPrint('2');
+				expect("|a>[]|a>[](print: ?a's 'length')").markupToError();
 				expect("|a>[1]|a>[1](replace: ?a's '1')[2]").markupToError();
 				expect("|a>[1]|a>[1](replace: ?a's ('13''s 1st))[2]").markupToError();
 				expect("|a>[1]|a>[1](replace: ?a's 0)[2]").markupToError();

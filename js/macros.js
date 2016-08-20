@@ -28,7 +28,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 					const {value} = el;
 					/*
 						Currently, the full gamut of spreadable
-						JS objects isn't available - only arrays, sets, hook refs, and strings.
+						JS objects isn't available - only arrays, sets, and strings.
 					*/
 					if (Array.isArray(value)
 							|| typeof value === "string") {
@@ -38,11 +38,6 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 					}
 					else if (value instanceof Set) {
 						newArgs.push(...Array.from(value).sort(NaturalSort("en")));
-					}
-					else if (HookSet.isPrototypeOf(value)) {
-						for(let i = 0; i < value.length; i++) {
-							newArgs.push(value.TwineScript_GetElement(i));
-						}
 					}
 					else {
 						newArgs.push(

@@ -1,4 +1,4 @@
-define(['jquery', 'utils', 'renderer'], ($, {assertOnlyHas, impossible, transitionIn}, {exec}) => {
+define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas, impossible, transitionIn}, {exec}, HookSet) => {
 	"use strict";
 	/*
 		When a new Section (generally a hook or expression) is about to be rendered,
@@ -28,7 +28,7 @@ define(['jquery', 'utils', 'renderer'], ($, {assertOnlyHas, impossible, transiti
 		//                            (Disabled code won't be used until something enables it).
 		enabled:          true,
 		
-		// {jQuery} target            Where to render the source, if not the hookElement.
+		// {jQuery|HookSet}           Where to render the source, if not the hookElement.
 		target:           null,
 
 		// {Array} newTargets         Alternative targets to use instead of the original.
@@ -93,9 +93,13 @@ define(['jquery', 'utils', 'renderer'], ($, {assertOnlyHas, impossible, transiti
 			const {section, newTargets} = this;
 			let {target} = this;
 			
-			const forEachTarget = (target) => {
+			/*
+				This loop iterates over every DOM element that the target
+				ultimately includes.
+			*/
+			const forEachTarget = (elem) => {
 				/*
-					Apply the style attributes to the target element.
+					Apply the style attributes to the element.
 				*/
 				if (Array.isArray(this.styles) && this.styles.length > 0) {
 					/*
@@ -107,45 +111,48 @@ define(['jquery', 'utils', 'renderer'], ($, {assertOnlyHas, impossible, transiti
 						until it's connected to the DOM. So, now this .css call is deferred
 						for 1 frame, which should (._.) be enough time for it to become attached.
 					*/
-					setTimeout(() => target.css(Object.assign(...[{}].concat(this.styles))));
+					setTimeout(() => elem.css(Object.assign(...[{}].concat(this.styles))));
 				}
 				/*
-					If HTML attributes were included in the changerDescriptor, apply them now.
+					If HTML attributes were included in the changeDescriptor, apply them now.
 				*/
 				if (this.attr) {
-					this.attr.forEach(e => target.attr(e));
+					this.attr.forEach(e => elem.attr(e));
 				}
 				/*
 					Same with jQuery data (such as functions to call in event of, say, clicking).
 				*/
 				if (this.data) {
-					target.data(this.data);
+					elem.data(this.data);
 				}
 			};
 
 			/*
-				These three if-statements are explained in render(), from which they have
-				been plucked. In short, forEachTarget should be run on every target element,
-				be there a set or a single one.
+				forEachTarget should be run on every target element, be there a set or a single one.
+				As in render(), the newTargets should be used instead of the original if present.
 			*/
 			if (Array.isArray(newTargets) && newTargets.length) {
 				target = newTargets;
 			}
-			if (typeof target === "string") {
-				target = section.selectHook(target);
-			}
-			if (typeof target.forEach === "function") {
-				target.forEach(forEachTarget);
-			}
-			else {
-				forEachTarget(target);
-			}
+
+			[].concat(target).forEach(target => {
+				if (HookSet.isPrototypeOf(target)) {
+					target.forEach(section, forEachTarget);
+				}
+				else {
+					/*
+						It's OK for length>1 jQuery collections to be treated as single
+						elements here, because the methods called on them (data(), attr(), css())
+						work regardless of number of contained elements.
+					*/
+					forEachTarget(target);
+				}
+			});
 		},
 		
 		/*
-			This method renders TwineMarkup, executing the TwineScript expressions
-			within. The expressions only have visibility
-			within this passage.
+			This method renders TwineMarkup, executing the expressions
+			within. The expressions only have visibility within this passage.
 			
 			@return {jQuery} The rendered passage DOM.
 		*/
@@ -165,53 +172,54 @@ define(['jquery', 'utils', 'renderer'], ($, {assertOnlyHas, impossible, transiti
 			}
 
 			/*
-				newTargets are targets (such as ?foo in (replace:?foo)) which should be used instead of
-				the original. This substitution will be caught by the next two if-statements.
+				newTargets are targets specified by revision macros (such as ?foo in (replace:?foo))
+				which should be used instead of the original.
 			*/
 			if (Array.isArray(newTargets) && newTargets.length) {
 				target = newTargets;
 			}
 			/*
-				As you know, in TwineScript a pseudo-hook selector is just a
-				raw string. Such strings are passed directly to macros, and,
-				at that point of execution inside TwineScript.eval, they don't
-				have access to a particular section to call selectHook() from.
-				
-				So, we currently defer creating a PseudoHookSet from the selector string
-				until just here.
-			*/
-			if (typeof target === "string") {
-				target = section.selectHook(target);
-			}
-			/*
-				Each individual element of the HookSet, jQuery, Array, etc. must be rendered separately.
-				This simplifies the implementation of render() considerably, and moreover allows the multiple
-				DOMs created at each target to be united into a single jQuery collection to return.
-			*/
-			if (target.jquery && target.length > 1) {
-				target = Array.from(target).map($);
-			}
-			if (typeof target.forEach === "function") {
-				let dom = $();
-				target.forEach((e) => {
-					/*
-						Generate a new descriptor which has the same properties
-						(rather, delegates to the old one via the prototype chain)
-						but has just this hook/word as its target.
-						Then, render using that descriptor.
-					*/
-					dom = dom.add(this.create({ target: e, newTargets:null }).render());
-				});
-				return dom;
-			}
-			/*
-				If there's no target, something incorrect has transpired.
+				If there's no target (after modifying newTargets), something incorrect has transpired.
 			*/
 			if (!target) {
 				impossible("ChangeDescriptor.render",
 					"ChangeDescriptor has source but not a target!");
 				return $();
 			}
+			/*
+				For "collection" targets (a HookSet or a length>1 jQuery), each target must be rendered separately,
+				by performing recursive render() calls. Then, return a jQuery containing every created element,
+				so that consumers like Section.renderInto() can modify all of their <tw-expressions>, etc.
+			*/
+			let dom = $();
+			const renderAll = (e) => {
+				/*
+					Generate a new descriptor which has the same properties
+					(rather, delegates to the old one via the prototype chain)
+					but has just this hook/word as its target.
+					Then, render using that descriptor.
+				*/
+				dom = dom.add(this.create({ target: e, newTargets:null }).render());
+			};
+			[].concat(target).forEach(target => {
+				if (HookSet.isPrototypeOf(target)) {
+					target.forEach(section, renderAll);
+				}
+				else if (target.jquery && target.length > 1) {
+					Array.from(target).map($).forEach(renderAll);
+				}
+			});
+			/*
+				Return the compiled DOM, or return an empty set if the target is a collection
+				and the above loop didn't produce anything.
+			*/
+			if (dom.length || Array.isArray(target) || HookSet.isPrototypeOf(target)) {
+				return dom;
+			}
+			/*
+				Henceforth, the target is a single jQuery.
+			*/
+
 			/*
 				Check to see that the given jQuery method in the descriptor
 				actually exists, and potentially tweak the name if it does not.
@@ -258,7 +266,7 @@ define(['jquery', 'utils', 'renderer'], ($, {assertOnlyHas, impossible, transiti
 				early-exit from this method.
 			*/
 			
-			const dom = $(source &&
+			dom = $(source &&
 				$.parseHTML(exec(source), document, true));
 			
 			/*
