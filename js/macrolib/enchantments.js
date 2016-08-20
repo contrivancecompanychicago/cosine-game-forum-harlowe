@@ -156,9 +156,16 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 
 				*/
 				desc.newTargets = (desc.newTargets || []);
 				desc.newTargets.push(
-					...scopes.filter(item1 => !desc.newTargets.some(item2 => is(item1, item2)))
+					...scopes.filter(target1 => !desc.newTargets.some(
+							({target:target2, append}) => is(target1, target2) && e === append
+						))
+						/*
+							Create a newTarget object, which is a {target, append} object that pairs the revision
+							method with the target. This allows "(append: ?a) + (prepend:?b)" to work on the same
+							ChangeDescriptor.
+						*/
+						.map(target => ({target, append:e}))
 				);
-				desc.append = e;
 				return desc;
 			},
 			rest(either(HookSet,String))
@@ -280,8 +287,8 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 
 					(Yes, the name "rerender" is #awkward.)
 				*/
 				if (enchantDesc.rerender) {
-					desc.newTargets = (desc.newTargets || []).concat(selector);
-					desc.append = enchantDesc.rerender;
+					desc.newTargets = (desc.newTargets || [])
+						.concat({ target: selector, append: enchantDesc.rerender });
 				}
 
 				/*

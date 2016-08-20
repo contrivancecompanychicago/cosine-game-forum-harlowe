@@ -31,7 +31,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		// {jQuery|HookSet}           Where to render the source, if not the hookElement.
 		target:           null,
 
-		// {Array} newTargets         Alternative targets to use instead of the original.
+		// {[newTarget]} newTargets   Alternative targets (which are {target,append} objects) to use instead of the original.
 		newTargets:       null,
 		
 		// {String} append            Which jQuery method name to append the source to the dest with.
@@ -132,7 +132,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 				As in render(), the newTargets should be used instead of the original if present.
 			*/
 			if (Array.isArray(newTargets) && newTargets.length) {
-				target = newTargets;
+				target = newTargets.map(t => t.target);
 			}
 
 			[].concat(target).forEach(target => {
@@ -187,26 +187,37 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 				return $();
 			}
 			/*
-				For "collection" targets (a HookSet or a length>1 jQuery), each target must be rendered separately,
+				For "collection" targets (a HookSet, newTarget array, or a length>1 jQuery), each target must be rendered separately,
 				by performing recursive render() calls. Then, return a jQuery containing every created element,
 				so that consumers like Section.renderInto() can modify all of their <tw-expressions>, etc.
 			*/
 			let dom = $();
-			const renderAll = (e) => {
+			const renderAll = append => target => {
 				/*
 					Generate a new descriptor which has the same properties
 					(rather, delegates to the old one via the prototype chain)
 					but has just this hook/word as its target.
 					Then, render using that descriptor.
 				*/
-				dom = dom.add(this.create({ target: e, newTargets:null }).render());
+				dom = dom.add(this.create({ target, append, newTargets:null }).render());
 			};
-			[].concat(target).forEach(target => {
+			[].concat(target).forEach(function loop(target, _, __, append = this.append) {
+				// Is it a HookSet,
 				if (HookSet.isPrototypeOf(target)) {
-					target.forEach(section, renderAll);
+					target.forEach(section, renderAll(append));
 				}
+				// a jQuery of <tw-hook> or <tw-expression> elements,
 				else if (target.jquery && target.length > 1) {
-					Array.from(target).map($).forEach(renderAll);
+					Array.from(target).map($).forEach(renderAll(append));
+				}
+				// or a newTarget object?
+				else if (target.target && target.append) {
+					/*
+						the newTarget's "target" property may be a HookSet or jQuery.
+						To handle this, we unwrap the newTarget object and pass its "append"
+						value to a recursive call to "loop"
+					*/
+					loop(target.target, _, __, target.append);
 				}
 			});
 			/*

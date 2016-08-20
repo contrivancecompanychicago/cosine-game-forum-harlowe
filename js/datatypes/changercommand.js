@@ -76,7 +76,7 @@ define(['utils', 'utils/operationutils'], ({impossible}, {is}) => {
 			return clone;
 		},
 		
-		"TwineScript_is"(other) {
+		TwineScript_is(other) {
 			if (ChangerCommand.isPrototypeOf(other)) {
 				return this.macroName === other.macroName &&
 					is(this.params, other.params) &&

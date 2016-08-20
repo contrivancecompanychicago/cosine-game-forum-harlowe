@@ -292,7 +292,7 @@ describe("revision macros", function() {
 			});
 		});
 	});
-	xit("can be composed with each other", function() {
+	it("can be composed with each other", function() {
 		runPassage("(set:$s to (append:'1') + (prepend:'2'))");
 		var p = runPassage("12$s[0]");
 		expect(p.text()).toBe('1002');
