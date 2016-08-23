@@ -356,7 +356,9 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 		}
 		else if (type === "where" || type === "via") {
 			left = "Lambda.create("
-				+ compile(tokens.slice(0, i), {isVarRef:true})
+				+ (compile(tokens.slice(0, i), {isVarRef:true}).trim()
+					// Omitting the temp variable means that you must use "it"
+					|| "undefined")
 				+ ",";
 			midString = toJSLiteral(token.type)
 				+ ",";
@@ -376,7 +378,9 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			}
 			else {
 				left = "Lambda.create("
-					+ compile(tokens.slice(0, i), {isVarRef:true})
+					+ (compile(tokens.slice(0, i), {isVarRef:true}).trim()
+						// Omitting the temp variable means that you must use "it"
+						|| "undefined")
 					+ ",";
 				midString = toJSLiteral(token.type)
 					+ ",";

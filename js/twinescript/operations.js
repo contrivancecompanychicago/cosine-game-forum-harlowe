@@ -442,6 +442,15 @@ define([
 			}
 			return (It = e.get()), e;
 		},
+
+		/*
+			This, however, is more low-level: instead of being directly called from compiled
+			user code, it is called indirectly in order to discreetly mutate the "it" identifier.
+			To underscore that this must not be called from user code, it returns undefined.
+		*/
+		initialiseIt(e) {
+			It = e;
+		},
 	};
 	return Object.freeze(Operations);
 });

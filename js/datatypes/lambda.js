@@ -107,20 +107,21 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 			}
 			else {
 				/*
-					If the subject is a temporary variable (and it's a mistake if it's not), create a fresh lambda object.
-					It's a tad unfortunate that the preceding token before this lambda is already compiled into an incorrect
-					object, but we must deal with syntactic ambiguity in this way.
+					If the subject is a temporary variable or undefined (and it's a mistake if it's not), create a fresh
+					lambda object. It's a tad unfortunate that the preceding token before this lambda is already
+					compiled into an incorrect object, but we must deal with syntactic ambiguity in this way.
 				*/
-				if (!subject.varref
+				if (subject !== undefined &&
+						(!subject || !subject.varref
 						// It must be a temp variable...
 						|| !VarScope.isPrototypeOf(subject.object)
 						// ...and not a property access on one.
-						|| subject.propertyChain.length > 1) {
+						|| subject.propertyChain.length > 1)) {
 					return TwineError.create('syntax', "This lambda needs to start with a single temporary variable.");
 				}
 				ret = Object.create(this);
 				// Extract the variable name from the TempVar, and make that the 'loop' variable name.
-				ret.loop = subject.propertyChain[0];
+				ret.loop = (subject ? subject.propertyChain[0] : "");
 			}
 			/*
 				We add the new clause, then do some further error-checking afterwards.
@@ -158,6 +159,16 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 			].forEach(([name, arg]) => name && (tempVariables[name] = arg));
 
 			section.stack.unshift(Object.assign(Object.create(null), {tempVariables}));
+
+			/*
+				If this lambda has no "making" or "with" clauses, then the "it"
+				keyword is set to the loop arg. Note that this doesn't require the presence of
+				this.loop - if it is omitted, then you can only access the loop var in the "where"
+				clause using "it".
+			*/
+			if (loopArg && !this.with && !this.making) {
+				section.eval("Operations").initialiseIt(loopArg);
+			}
 
 			const ret = section.eval(
 				/*

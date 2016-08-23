@@ -22,6 +22,14 @@ describe("identifiers", function () {
 		it("can't be used as the subject of a 'to' operation", function (){
 			expect("(set:$red to 1)(set:it to it + 2)").markupToError();
 		});
+		it("also refers to the variable of a 'where' lambda", function() {
+			expect("(find: _a where it > 2, 1, 3, 6, 1)").markupToPrint("3,6");
+			expect("(altered: _a via it + 1, 2,5)").markupToPrint("3,6");
+		});
+		it("can be used in a lambda when the variable name is missing", function() {
+			expect("(find: where it > 2, 1, 3, 6, 1)").markupToPrint("3,6");
+			expect("(altered: via it + 1, 2,5)").markupToPrint("3,6");
+		});
 	});
 	describe("implicit 'it'", function () {
 		it("is added for incomplete comparisons", function (){

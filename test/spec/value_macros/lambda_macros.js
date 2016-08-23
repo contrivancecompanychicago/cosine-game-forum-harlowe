@@ -1,10 +1,14 @@
 describe("lambdas", function() {
 	'use strict';
-	it("consist of a temporary variable, and clauses starting with 'making', 'where', 'via' or 'with'", function() {
+	it("consist of an optional temporary variable, and clauses starting with 'making', 'where', 'via' or 'with'", function() {
 		expect("(print: _a where 2)").not.markupToError();
 		expect("(print: _a making _b)").not.markupToError();
 		expect("(print: _a via _a)").not.markupToError();
 		expect("(print: _a with _b)").not.markupToError();
+		expect("(print: where 2)").not.markupToError();
+		expect("(print: making _b)").not.markupToError();
+		expect("(print: via _a)").not.markupToError();
+		expect("(print: with _b)").not.markupToError();
 	});
 	it("can be nested", function() {
 		expect("(print: _a via (_b where c))").not.markupToError();

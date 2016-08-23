@@ -290,7 +290,7 @@ define([
 			use an array containing these values.
 			
 			Arrays are one of the two major "data structures" you can use in Harlowe. The other, datamaps,
-			are created with (datamap:). Generally, you want to use arrays when you're dealing with values that
+			are created with (dm:). Generally, you want to use arrays when you're dealing with values that
 			directly correspond to *numbers*, and whose *order* and *position* relative to each other matter.
 			If you instead need to refer to values by a name, and don't care about their order, a datamap is best used.
 			
@@ -358,7 +358,7 @@ define([
 			the (a:) macro will accomplish nothing: `(a: ...$array)` is the same as just the `$array`.
 			
 			See also:
-			(datamap:), (dataset:)
+			(dm:), (ds:)
 			
 			#data structure 1
 		*/
@@ -652,9 +652,9 @@ define([
 			
 			Rationale:
 			There are a couple of other macros which accept data in pairs - the most notable being
-			(datamap:), which takes data names and data values paired. This macro can help
+			(dm:), which takes data names and data values paired. This macro can help
 			with using such macros. For instance, you can supply an array of (datanames:) and
-			(datavalues:) to (interlaced:), and supply that to (datamap:), to produce the original
+			(datavalues:) to (interlaced:), and supply that to (dm:), to produce the original
 			datamap again. Or, you can supply just the names, and use a macro like (repeated:) to
 			fill the other values.
 			
@@ -728,18 +728,20 @@ define([
 			(find: Lambda, ...Any) -> Any
 
 			Searches through the given values, and produces an array of those which match the given search
-			test (which is expressed using a temp variable, `where`, and a Boolean condition).
+			test (which is expressed using a temp variable, the `where` keyword, and a Boolean condition).
 			If none match, an empty array is produced.
 
 			Example usage:
+			* `(find: _person where _person is not "Alice", ...$people)` produces a subset of $people not containing the string `"Alice"`.
 			* `(find: _item where _item's 1st is "A", "Thorn", "Apple", "Cryptid", "Anchor")` produces `(a: "Apple", "Anchor")`.
 			* `(find: _num where (_num >= 12) and (it % 2 is 0), 9, 10, 11, 12, 13, 14, 15, 16)` produces `(a: 12, 14, 16)`.
 			* `(find: _val where _val + 2, 9, 10, 11)` produces an error, because `_item + 2` isn't a Boolean.
+			* `1st of (find: _room where _room's objs contains "Egg", ...$rooms)` finds the first datamap in $rooms whose "objs" contains the string `"Egg"`.
 
 			Rationale:
-			Selecting specific data from arrays based on a user-provided Boolean condition is one of the more common and powerful
+			Selecting specific data from arrays or sequences based on a user-provided Boolean condition is one of the more common and powerful
 			operations in programmng. This macro allows you to immediately work with a subset of the array's data, without
-			caring what kind of subset it is. The condition can be based on a string's characters, a datamap's values, a number's
+			caring what kind of subset it is. The subset can be based on each string's characters, each datamap's values, each number's
 			evenness or oddness, whether a variable matches it... anything you can write.
 
 			This macro uses a lambda (which is just the "temp variable `where` a condition" expression) to check every one of
@@ -1050,10 +1052,10 @@ define([
 			You can express the name as a bare word if it doesn't have a space or other punctuation in it - `$animals's frog` is OK, but
 			`$animals's komodo dragon` is not. In that case, you'll need to always supply it as a string - `$animals's "komodo dragon"`.
 			
-			Datamaps may be joined by adding them together: `(datamap: "goose", "honk") + (datamap: "robot", "whirr")` is the same as
-			`(datamap: "goose", "honk", "robot", "whirr")`. In the event that the second datamap has the same name as the first one,
-			it will override the first one's value - `(datamap: "dog", "woof") + (datamap: "dog", "bark")` will act as
-			`(datamap: "dog", "bark")`.
+			Datamaps may be joined by adding them together: `(dm: "goose", "honk") + (dm: "robot", "whirr")` is the same as
+			`(dm: "goose", "honk", "robot", "whirr")`. In the event that the second datamap has the same name as the first one,
+			it will override the first one's value - `(dm: "dog", "woof") + (dm: "dog", "bark")` will act as
+			`(dm: "dog", "bark")`.
 			
 			You may notice that you usually need to know the names a datamap contains in order to access its values. There are certain
 			macros which provide other ways of examining a datamap's contents: (datanames:) provides a sorted array of its names,
@@ -1064,27 +1066,27 @@ define([
 			| Operator | Purpose | Example
 			|---
 			| `is` | Evaluates to boolean `true` if both sides contain equal names and values, otherwise `false`. | `(dm:"HP",5) is (dm:"HP",5)` (is true)
-			| `is not` | Evaluates to `true` if both sides differ in items or ordering. | `(dm:"HP",5) is not (dm:"HP",4)` (is true)<br>`(dm:"HP",5) is not (datamap:"MP",5)` (is true)
-			| `contains` | Evaluates to `true` if the left side contains the name on the right.<br>(To check that a datamap contains a value, try using `contains` with (datavalues:)) | `(datamap:"HP",5) contains "HP"` (is true)<br>`(dm:"HP",5) contains 5` (is false)
+			| `is not` | Evaluates to `true` if both sides differ in items or ordering. | `(dm:"HP",5) is not (dm:"HP",4)` (is true)<br>`(dm:"HP",5) is not (dm:"MP",5)` (is true)
+			| `contains` | Evaluates to `true` if the left side contains the name on the right.<br>(To check that a datamap contains a value, try using `contains` with (datavalues:)) | `(dm:"HP",5) contains "HP"` (is true)<br>`(dm:"HP",5) contains 5` (is false)
 			| `is in` | Evaluates to `true` if the right side contains the name on the left. | `"HP" is in (dm:"HP",5)` (is true)
 			| `+` | Joins datamaps, using the right side's value whenever both sides contain the same name. | `(dm:"HP",5) + (dm:"MP",5)`
 			| `'s` | Obtaining the value using the name on the right. | `(dm:"love",155)'s love` (is 155).
 			| `of` | Obtaining the value using the name on the left. | `love of (dm:"love",155)` (is 155).
 		*/
 		/*d:
-			(datamap: [...Any]) -> Datamap
-			Also known as: (dm:)
+			(dm: [...Any]) -> Datamap
+			Also known as: (datamap:)
 
 			Creates a datamap, which is a data structure that pairs string names with data values.
 			You should provide a string name, followed by the value paired with it, and then another
 			string name, another value, and so on, for as many as you'd like.
 
 			Example usage:
-			`(datamap:)` creates an empty datamap.
-			`(datamap: "Cute", 4, "Wit", 7)` creates a datamap with two names and values.
+			`(dm:)` creates an empty datamap.
+			`(dm: "Cute", 4, "Wit", 7)` creates a datamap with two names and values.
 			The following code also creates a datamap, with the names and values laid out in a readable fashion:
 			```
-			(datamap:
+			(dm:
 				"Susan", "A petite human in a yellow dress",
 				"Tina", "A ten-foot lizardoid in a three-piece suit",
 				"Gertie", "A griffin draped in a flowing cape",
@@ -1100,13 +1102,13 @@ define([
 			create "momentary" datamaps which are used only in some operation. For instance,
 			to add several values to a datamap at once, you can do something like this:
 			```
-			(set: $map to it + (datamap: "Name 1", "Value 1", "Name 2", "Value 2"))
+			(set: $map to it + (dm: "Name 1", "Value 1", "Name 2", "Value 2"))
 			```
 
-			You can also use (datamap:) as a kind of "multiple choice" structure, if you combine it with
+			You can also use (dm:) as a kind of "multiple choice" structure, if you combine it with
 			the `'s` or `of` syntax. For instance...
 			```
-			(set: $element to $monsterName of (datamap:
+			(set: $element to $monsterName of (dm:
 				"Chilltoad", "Ice",
 				"Rimeswan", "Ice",
 				"Brisketoid", "Fire",
@@ -1117,7 +1119,7 @@ define([
 			none of those names matches $monsterName, an error will result.
 
 			See also:
-			(a:), (dataset:)
+			(a:), (ds:)
 
 			#data structure 2
 		*/
@@ -1221,14 +1223,14 @@ define([
 			| `...` | When used in a macro call, it separates each value in the right side.<br>The dataset's values are sorted before they are spread out.| `(a: 0, ...(dataset:1,2,3,4), 5)` (is `(a:0,1,2,3,4,5)`)
 		*/
 		/*d:
-			(dataset: [...Any]) -> Dataset
-			Also known as: (ds:)
+			(ds: [...Any]) -> Dataset
+			Also known as: (dataset:)
 
 			Creates a dataset, which is an unordered collection of unique values.
 			
 			Example usage:
-			`(dataset:)` creates an empty dataset, which could be filled with other values later.
-			`(dataset: "gold", "frankincense", "myrrh")` creates a dataset with three strings.
+			`(ds:)` creates an empty dataset, which could be filled with other values later.
+			`(ds: "gold", "frankincense", "myrrh")` creates a dataset with three strings.
 			
 			Rationale:
 			For an explanation of what datasets are, see the Dataset article. This macro is the primary
@@ -1236,10 +1238,10 @@ define([
 			
 			Details:
 			You can also use this macro to remove duplicate values from an array (though also eliminating the array's
-			order) by using the spread `...` operator like so: `(a: ...(dataset: ...$array))`.
+			order) by using the spread `...` operator like so: `(a: ...(ds: ...$array))`.
 			
 			See also:
-			(datamap:), (a:)
+			(dm:), (a:)
 			
 			#data structure 3
 		*/

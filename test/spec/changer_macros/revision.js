@@ -116,21 +116,6 @@ describe("revision macros", function() {
 					expect(p.text()).toBe(append?'102030':'010203');
 				});
 			});
-			xdescribe("given a <html> element string", function() {
-				it(name+"s to every found element in the passage", function() {
-					var p = runPassage("//good// <i>bad</i>("+name+":'<i>')[lands]");
-					expect(p.text()).toBe(append?'goodlands badlands':'landsgood landsbad');
-				});
-				it("recomputes the source within each target, in document position order", function() {
-					var p = runPassage("(set:$a to 0)//A//<i>B</i>//C//("+name+":'<i>')[(set:$a to it + 1)z$a]");
-					expect(p.text()).toBe(append?'Az1Bz2Cz3':'z1Az2Bz3C');
-				});
-				xit("can be composed with other ("+name+":)s", function() {
-					runPassage("(set:$s to ("+name+":'<i>') + ("+name+":'<b>'))");
-					var p = runPassage("//1//''2''//3//$s[0]");
-					expect(p.text()).toBe(append?'102030':'010203');
-				});
-			});
 			describe("given the ?Page hook name", function() {
 				it(name+"s to the <tw-story> element", function() {
 					runPassage("("+name+":?Page)[//hands//]");
@@ -138,14 +123,11 @@ describe("revision macros", function() {
 					expect(i.text()).toBe('hands');
 				});
 			});
-			// TODO: This currently doesn't work because transforming the <tw-passage> while
-			// it's rendering will cause the DOM on which it's being rendered to be discarded,
-			// losing the pre-existing text.
-			xdescribe("given the ?Passage hook name", function() {
+			describe("given the ?Passage hook name", function() {
 				it(name+"s to the current <tw-passage> element", function() {
-					runPassage("("+name+":?Passage)[//hands//]X");
-					var i = $('tw-passage > i');
-					expect(i.text()).toBe(append? 'Xhands' : 'handsX');
+					runPassage("("+name+":?Passage)[//hands//]''X''");
+					var i = $('tw-passage').find('tw-sidebar').remove().end();
+					expect(i.text()).toBe(append ? 'Xhands' : 'handsX');
 				});
 			});
 			describe("given the ?Sidebar hook name", function() {
