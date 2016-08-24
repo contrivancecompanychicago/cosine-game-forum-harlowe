@@ -269,7 +269,7 @@ define(['utils', 'datatypes/hookset', 'internaltypes/twineerror'], ({impossible,
 			: Array.isArray(obj) ? "an array"
 			: obj instanceof Map ? "a datamap"
 			: obj instanceof Set ? "a dataset"
-			: typeof obj === "boolean" ? "the Boolean value '" + obj + "'"
+			: typeof obj === "boolean" ? "the boolean value '" + obj + "'"
 			: (typeof obj === "string" || typeof obj === "number")
 				? 'the ' + typeof obj + " " + toJSLiteral(obj)
 			: obj === undefined ? "an empty variable"

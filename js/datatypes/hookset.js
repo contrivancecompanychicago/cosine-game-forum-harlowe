@@ -385,12 +385,12 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 				if it's anything more than basic.
 			*/
 			if (this.properties.length > 0 || this.prev) {
-				return "a complex hook reference";
+				return "a complex hook name";
 			}
-			return this.selector + " (a hook reference)";
+			return this.selector + " (a hook name)";
 		},
 
-		TwineScript_TypeName: "a hook reference (like ?this)",
+		TwineScript_TypeName: "a hook name (like ?this)",
 		/*
 			HookSets cannot be assigned to variables.
 		*/

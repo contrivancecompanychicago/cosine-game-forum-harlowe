@@ -728,18 +728,18 @@ define([
 			(find: Lambda, ...Any) -> Any
 
 			Searches through the given values, and produces an array of those which match the given search
-			test (which is expressed using a temp variable, the `where` keyword, and a Boolean condition).
+			test (which is expressed using a temp variable, the `where` keyword, and a boolean condition).
 			If none match, an empty array is produced.
 
 			Example usage:
 			* `(find: _person where _person is not "Alice", ...$people)` produces a subset of $people not containing the string `"Alice"`.
 			* `(find: _item where _item's 1st is "A", "Thorn", "Apple", "Cryptid", "Anchor")` produces `(a: "Apple", "Anchor")`.
 			* `(find: _num where (_num >= 12) and (it % 2 is 0), 9, 10, 11, 12, 13, 14, 15, 16)` produces `(a: 12, 14, 16)`.
-			* `(find: _val where _val + 2, 9, 10, 11)` produces an error, because `_item + 2` isn't a Boolean.
+			* `(find: _val where _val + 2, 9, 10, 11)` produces an error, because `_item + 2` isn't a boolean.
 			* `1st of (find: _room where _room's objs contains "Egg", ...$rooms)` finds the first datamap in $rooms whose "objs" contains the string `"Egg"`.
 
 			Rationale:
-			Selecting specific data from arrays or sequences based on a user-provided Boolean condition is one of the more common and powerful
+			Selecting specific data from arrays or sequences based on a user-provided boolean condition is one of the more common and powerful
 			operations in programmng. This macro allows you to immediately work with a subset of the array's data, without
 			caring what kind of subset it is. The subset can be based on each string's characters, each datamap's values, each number's
 			evenness or oddness, whether a variable matches it... anything you can write.

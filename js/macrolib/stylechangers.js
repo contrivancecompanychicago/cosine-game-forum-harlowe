@@ -249,7 +249,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				if (validT8ns.indexOf(name) === -1) {
 					return TwineError.create(
 						"macrocall",
-						"'" + name + '" is not a valid (transition:)',
+						"'" + name + '\' is not a valid (transition:)',
 						"Only the following names are recognised (capitalisation and hyphens ignored): "
 							+ validT8ns.join(", "));
 				}
@@ -740,7 +740,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 						if (!(styleName in styleTagNames)) {
 							return TwineError.create(
 								"macrocall",
-								"'" + styleName + '" is not a valid (textstyle:)',
+								"'" + styleName + '\' is not a valid (text-style:)',
 								"Only the following names are recognised (capitalisation and hyphens ignored): "
 									+ Object.keys(styleTagNames).join(", "));
 						}

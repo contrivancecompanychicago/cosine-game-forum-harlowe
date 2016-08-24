@@ -92,9 +92,10 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			else if (prop === "last") {
 				prop = -1;
 			}
-			else if (prop !== "length") {
+			else if (prop !== "length" || HookSet.isPrototypeOf(obj)) {
 				return TwineError.create("property",
-					"You can only access position strings/numbers ('4th', 'last', '2ndlast', (2), etc.) and 'length' of "
+					"You can only access position strings/numbers ('4th', 'last', '2ndlast', (2), etc.)"
+					+ (HookSet.isPrototypeOf(obj) ? "" : " and 'length'") + " of "
 					+ objectName(obj) + ", not " + objectName(prop) + ".");
 			}
 		}
@@ -460,6 +461,16 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			*/
 			if (obj === State.variables) {
 				return defaultValue;
+			}
+			/*
+				If this is a temp variable access, display the following error message
+				about the visibility of temp variables.
+			*/
+			if (obj.TwineScript_VariableStore) {
+				return TwineError.create("property",
+					// Don't use propertyDebugName(), because it puts the string name in quotes.
+					"There isn't a temp variable named _" + originalProp + " in this place.",
+					"Temp variables only exist inside the same passage and hook in which they're (set:).");
 			}
 			return TwineError.create("property", "I can't find a "
 				// Use the original non-compiled property key in the error message.

@@ -160,9 +160,9 @@ describe("twinescript operators", function () {
 			expect("(print: 1 >= 1)").markupToPrint("true");
 		});
 		it("can't be used on other types", function () {
-			expect("(print: '15' > '2')").markupToError();
-			expect("(print: true > true)").markupToError();
-			expect("(print: (a:2) > (a:2))").markupToError();
+			expect("(print: '15' >= '2')").markupToError();
+			expect("(print: true >= true)").markupToError();
+			expect("(print: (a:2) >= (a:2))").markupToError();
 		});
 		it("can also be written as 'is >='", function (){
 			expect("(print: 31 is >= 10)").markupToPrint("true");

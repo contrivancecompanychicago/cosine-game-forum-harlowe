@@ -5,7 +5,7 @@ define([
 	'utils/operationutils',
 	'internaltypes/twineerror',
 ],
-(State, Colour, AssignmentRequest, {isObject, collectionType, coerceToString, is, contains, objectName}, TwineError) => {
+(State, Colour, AssignmentRequest, {isObject, collectionType, coerceToString, is, contains, typeName, objectName}, TwineError) => {
 	"use strict";
 	/*
 		Operation objects are a table of operations which TwineScript proxies
@@ -398,13 +398,13 @@ define([
 				Also refuse if the src is a value which is "unstorable".
 			*/
 			if (src && src.TwineScript_Unstorable) {
-				return TwineError.create("operation", "That type of value can't be stored.");
+				return TwineError.create("operation", "A " + typeName(src) + " can't be stored.");
 			}
 			
 			/*
 				Also refuse if the dest is not, actually, a VarRef.
 			*/
-			if (!isObject(dest) || !("propertyChain" in dest)) {
+			if (!isObject(dest) || !("varref" in dest)) {
 				return TwineError.create("operation",
 					"I can't store a new value inside "
 					+ objectName(dest)

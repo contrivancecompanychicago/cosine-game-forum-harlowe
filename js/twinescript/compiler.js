@@ -435,7 +435,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				// This error message is used for elided "is not" comparisons.
 				ambiguityError = "TwineError.create('operation', 'This use of \"is not\" and \""
 					+ type + "\" is grammatically ambiguous',"
-					+ "'Maybe try rewriting this as \"__ is not __ " + type + " __ is not __') ";
+					+ "'Maybe try rewriting this as \"__ is not __ " + type + " __ is not __\"') ";
 			
 			operation = token.type;
 			/*

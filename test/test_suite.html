@@ -130,7 +130,16 @@ window.Engine = Engine;
 <script>
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
+// Store Harlowe error messages, so that they can be appraised.
+var ErrorMessages = '';
+afterAll(function() {
+	$('.errormessages').text(ErrorMessages);
+});
+
 beforeEach(function() {
+	function recordErrorMessage(str) {
+		ErrorMessages += str + '\n';
+	}
 	function hexToRGBA(str) {
 		if (str[0] !== "#") {
 			return "";
@@ -165,7 +174,9 @@ beforeEach(function() {
 				var p = runPassage(a);
 				var error = p.find('tw-error:not(.javascript)');
 				if (error.length > 0) {
-					return { pass: true,  message: "Expected markup '" + a + "' not to error, but its error was '" + p.text() + "'" };
+					var text = error.contents()[0].textContent;
+					recordErrorMessage(text);
+					return { pass: true,  message: "Expected markup '" + a + "' not to error, but its error was '" + text + "'" };
 				} else {
 					return { pass: false, message: "Expected markup '" + a + "' to error, but it rendered '" + p.html() + "'" };
 				}
@@ -174,7 +185,9 @@ beforeEach(function() {
 				var p = runPassage(a);
 				var error = p.find('tw-error'); // Includes tw-error.javascript
 				if (error.length > 0) {
-					return { pass: false,  message: "Expected markup '" + a + "' not to error, but its error was '" + p.text() + "'" };
+					var text = error.contents()[0].textContent;
+					recordErrorMessage(text);
+					return { pass: false,  message: "Expected markup '" + a + "' not to error, but its error was '" + text + "'" };
 				} else {
 					return { pass: true, message: "Expected markup '" + a + "' to error, but it rendered '" + p.html() + "'" };
 				}
@@ -185,7 +198,8 @@ beforeEach(function() {
 				var p = runPassage(a);
 				var error = p.find('tw-error.javascript');
 				if (error.length > 0) {
-					return { pass: true,  message: "Expected markup '" + a + "' not to throw a JS error, but its error was '" + p.text() + "'" };
+					var text = error.contents()[0].textContent;
+					return { pass: true,  message: "Expected markup '" + a + "' not to throw a JS error, but its error was '" + text + "'" };
 				} else {
 					return { pass: false, message: "Expected markup '" + a + "' to throw a JS error, but it rendered '" + p.html() + "'" };
 				}

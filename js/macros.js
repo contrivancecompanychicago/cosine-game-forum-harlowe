@@ -44,7 +44,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 							TwineError.create("operation",
 								"I can't spread out "
 								+ objectName(value)
-								+ ", because it is not a string, dataset, hook reference, or array."
+								+ ", because it is not a string, dataset, or array."
 							)
 						);
 					}
@@ -175,10 +175,12 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 						Unstorable data types are the only kinds which Any signatures will not
 						match. Produce a special error message in this case.
 					*/
-					if (arg && arg.TwineScript_Unstorable && type === Macros.TypeSignature.Any) {
+					if (arg && arg.TwineScript_Unstorable &&
+							(type === Macros.TypeSignature.Any ||
+								(type.innerType && type.innerType === Macros.TypeSignature.Any))) {
 						return TwineError.create(
 							"datatype",
-							name + "'s " + nth(ind + 1) + " value is not valid data for this macro.",
+							name + "'s " + nth(ind + 1) + " value, " + objectName(arg) + ", is not valid data for this macro.",
 							signatureInfo
 						);
 					}

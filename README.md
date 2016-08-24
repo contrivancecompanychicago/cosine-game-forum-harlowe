@@ -20,6 +20,7 @@ Rough documentation is at http://twine2.neocities.org/
  * The "pulse" transition (provided by `(transition:)`) now gives its attached hook the `display:inline-block` CSS property for the duration of the transition. This fixes a bug where block HTML elements inside such hooks would interfere with the transition animation.
  * Revision changers (`(replace:)`, `(append:)`, `(prepend:)`) that use hook names can now work when they're stored in a variable and used in a different passage. So, running `(set: $x to (replace:?1))` in one passage and `$x[Hey]` in the next will work as expected.
  * Differing revision changers can be added together - `(append: ?name) + (prepend: ?title)`, for instance, no longer produces a changer which only prepends to both hooks.
+ * Fixed various mistakes or vaguaries in numerous error messages.
 
 ####Alterations
 

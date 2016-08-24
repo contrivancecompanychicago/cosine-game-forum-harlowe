@@ -19,14 +19,14 @@ define(['utils'], ({assertMustHave}) => {
 		/*
 			These should normally only appear during type signature error messages.
 		*/
-		TwineScript_TypeName: "an assignment operation",
-		TwineScript_ObjectName: "an assignment operation",
+		TwineScript_TypeName: "a 'to' or 'into' expression",
+		TwineScript_ObjectName: "a 'to' or 'into' expression",
 
 		TwineScript_Unstorable: true,
 		
 		create(dest, src, operator) {
 			// Assert: dest is a varRef
-			assertMustHave(dest, ["propertyChain", "object"]);
+			assertMustHave(dest, ["varref"]);
 			
 			return Object.assign(Object.create(this), {
 				dest:              dest,

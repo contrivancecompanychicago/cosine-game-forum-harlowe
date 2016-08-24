@@ -544,7 +544,7 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 
 			When this macro is evaluated, a browser pop-up dialog box is shown with the given string displayed,
 			as well as "OK" and "Cancel" button to confirm or cancel whatever action or fact the string tells the player.
-			When it is submitted, it evaluates to the Boolean true if "OK" had been pressed, and false if "Cancel" had.
+			When it is submitted, it evaluates to the boolean true if "OK" had been pressed, and false if "Cancel" had.
 
 			Example usage:
 			`(set: $makeCake to (confirm: "Transform your best friend into a cake?"))`
