@@ -320,6 +320,7 @@
 			hookPrependedFront: {
 				fn: (match) => ({
 					name: match[1],
+					hidden: match[2] === ")",
 					isFront: true,
 					tagPosition: "prepended"
 				}),
@@ -344,7 +345,8 @@
 
 			hookAppendedBack: {
 				fn: (match) => ({
-					name: match[1],
+					name: match[2],
+					hidden: match[1] === "(",
 					tagPosition: "appended",
 					matches: {
 						hookFront: "hook",

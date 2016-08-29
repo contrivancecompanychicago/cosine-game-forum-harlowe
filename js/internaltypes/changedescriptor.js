@@ -75,6 +75,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 					// so we have to copy the arrays.
 					attr:   [].concat(this.attr   || []),
 					styles: [].concat(this.styles || []),
+					data:   this.data || {},
 				}, properties);
 			/*
 				If a ChangerCommand was passed in, run it.
@@ -165,9 +166,22 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 			assertOnlyHas(this, changeDescriptorShape);
 
 			/*
-				First: if this isn't enabled, everything is fine and nothing needs to be done.
+				First: if this isn't enabled, nothing needs to be rendered. However,
+				the source needs to be saved in case the (show:) macro is used on this.
+				We store it as "hiddenSource" in every element's jQuery data store.
 			*/
-			if (!enabled) {
+			if (!enabled || (target.popAttr('hidden') !== undefined)) {
+				/*
+					You may wonder if this should use the descriptor's 'innerSource', which is used by
+					(link:) to store the "inner" source behind the link's <tw-link> source. What should
+					happen is that when the hidden hook is shown, the link's <tw-link> is shown, which then
+					remains clickable and able to reveal the innerSource.
+
+					Also, this should not use newTargets, as a construction of the form "(hide:)(replace:?b)|a>[]"
+					followed by (show:?a) should result in ?a appearing, instead of nothing happening. (And
+					(show:?b) shouldn't do anything, either.)
+				*/
+				ChangeDescriptor.create({target,data:{hiddenSource:source}}).update();
 				return $();
 			}
 

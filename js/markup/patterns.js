@@ -384,8 +384,8 @@
 			attrs:             "(?:\"[^\"]*\"|'[^']*'|[^'\">])*?",
 		},
 
-		hookTagFront =  "\\|(" + anyLetter + "+)>",
-		hookTagBack  =  "<("   + anyLetter + "+)\\|",
+		hookTagFront =  "\\|(" + anyLetter + "+)(>|\\))",
+		hookTagBack  =  "(<|\\))("   + anyLetter + "+)\\|",
 
 		tempVariable = "_(" + validPropertyName + ")" + wb,
 		
@@ -667,8 +667,34 @@
 			As you can see, the top sentence remains mostly readable despite the fact that several words have (click:) behaviours
 			assigned to them.
 
-			#coding
+			#coding 4
 		*/
+		/*d:
+			Hidden hook markup
+			Hidden hooks are an advanced kind of named hook that can be shown using macros like (show:). For a general introduction to
+			named hooks, see their respective markup description.
+
+			There may be hooks whose contained prose you don't want to be visible as soon as the passage appears -
+			a time delay, or the click of a link should be used to show them. You can set a hook to be *hidden* by altering
+			the hook tag syntax - replace the `>` or `<` mark with a parenthesis:
+
+			```
+			|visible>[This hook is visible when the passage loads.]
+			|cloaked)[This hook is hidden when the passage loads, and needs a macro like `(show:)` to reveal it.]
+
+
+			[My commanding officer - a war hero, and a charismatic face for the military.]<sight|
+			[Privately, I despise the man. His vacuous boosterism makes a mockery of my sacrifices.](thoughts|
+			```
+
+			(You can think of this as being visually similar to comic speech balloons vs. thought balloons.)
+
+			In order to be useful, hidden hooks must have a name, which macros like (show:) can use to show them. Hence,
+			there's no way to make a hidden unnamed hook - at least, without using a conditional macro like (if:).
+
+			#coding 5
+		*/
+
 		hookAppendedFront:  "\\[",
 		hookPrependedFront:
 			hookTagFront + "\\[",
@@ -711,7 +737,7 @@
 
 			For more information about command macros, consult the descriptions for each of them in turn.
 
-			#coding
+			#coding 3
 		*/
 		hookFront: "\\[",
 		hookBack:  "\\]" + notBefore(hookTagBack),

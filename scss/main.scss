@@ -127,6 +127,12 @@ tw-icon {
 	tw-icon    : the undo button
 */
 
+// This ensures that hooks styled with borders, etc. won't be visible if they have their
+// contents suppressed by an (if:) macro.
+tw-hook:empty, tw-expression:empty {
+	display:none;
+}
+
 tw-error {
 	display: inline-block;
 	border-radius: 0.2em;

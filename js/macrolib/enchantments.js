@@ -59,6 +59,10 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 
 				using macros such as (link:), (click:) or (live:), and you can make these changes using macros
 				such as (replace:).
 
+				Using (replace:) is only one way of providing this dynamism, however - the (show:) macro also
+				offers similar functionality. See that macro's article for an explanation of when you might prefer
+				to use it over (replace:), and vice-versa.
+
 				Details:
 				(replace:) lets you specify a target, and a block of text to replace the target with. The attached hook
 				will not be rendered normally - thus, you can essentially place (replace:) commands anywhere in the passage
@@ -74,7 +78,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 
 				certain named hooks throughout the entire game, without them interfering with other passages.
 
 				See also:
-				(append:), (prepend:)
+				(append:), (prepend:), (show:)
 
 				#revision
 			*/

@@ -1,5 +1,5 @@
-define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltypes/twineerror', 'utils/operationutils'],
-(requestAnimationFrame, Macros, {toJSLiteral, unescape}, State, Passages, Engine, TwineError, {printBuiltinValue}) => {
+define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltypes/twineerror', 'datatypes/hookset', 'utils/operationutils'],
+(requestAnimationFrame, Macros, {toJSLiteral, unescape}, State, Passages, Engine, TwineError, HookSet, {printBuiltinValue}) => {
 	"use strict";
 	
 	/*d:
@@ -13,7 +13,7 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 		(link-goto:), and more.
 	*/
 	const
-		{Any, optional} = Macros.TypeSignature;
+		{Any, rest, optional} = Macros.TypeSignature;
 	
 	const hasStorage = !!localStorage
 		&& (() => {
@@ -130,11 +130,9 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 		*/
 		("print", (_, expr) => {
 			return {
-				TwineScript_ObjectName:
-					"a (print:) command",
+				TwineScript_ObjectName: "a (print:) command",
 
-				TwineScript_TypeName:
-					"a (print:) command",
+				TwineScript_TypeName:   "a (print:) command",
 				
 				TwineScript_Print() {
 					/*
@@ -147,7 +145,85 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			};
 		},
 		[Any])
-		
+
+		/*d:
+			(show: ...HookName) -> Command
+
+			Reveals hidden hooks, running the code within.
+
+			Example usage:
+			```
+			(hide:)|fan>[The overhead fan spins lazily.]
+			
+			(link:"Turn on fan")[(show:?fan)]
+			```
+
+			Rationale:
+			The purpose of hidden hooks is, of course, to eventually show them - and this macro is
+			how you show them. You can use this command inside a (link:), trigger it in real-time with
+			a (live:) macro, or anywhere else.
+
+			Using (show:) vs (replace:):
+			There are different reasons for using hidden hooks and (show:) instead of (replace:). For your stories,
+			think about whether the prose being revealed is part of the "main" text of the passage, or is just an aside.
+			In neatly-coded stories, the main text should appear early in a passage's code, as the focus of the
+			writer's attention.
+
+			When using (replace:), the replacement prose is written far from its insertion point. This can improve
+			readability when the insertion point is part of a long paragraph or sentence, and the prose is a minor aside
+			or amendment, similar to a footnote or post-script, that would clutter the paragraph were it included inside.
+			Additionally, (replace:) can be used in a "header" or "footer" tagged passage to affect certain named hooks
+			throughout the story.
+
+			```
+			You turn away from her, facing the grandfather clock, its [stern ticking]<1| filling the tense silence.
+
+			(click-replace: ?1)[echoing, hollow ticking]
+			```
+
+			When using (show:), the hidden hook's position is fixed in the passage prose. This can improve
+			readability when the hidden hook contains a lot of the "main" text of a passage, which provides vital context
+			and meaning for the rest of the text.
+
+			```
+			I don't know where to begin... |1)[The weird state of my birth, the prophecy made centuries ago,
+			my first day of school, the day of the meteors, the day I awoke my friends' powers... so many strands in
+			the tapestry of my tale, and no time to unravel them.] ...so for now I'll start with when we fell down the hole.
+
+			(link:"Where, indeed?")[(show:?1)]
+			```
+
+			But, there aren't any hard rules for when you should use one or the other. As a passage changes in the writing, you should feel free to change between one or the other, or leave your choice as-is.
+
+			Details:
+			(show:) will reveal every hook with the given name. To only reveal a specific hook, you can use the
+			possessive syntax, as usual: `(show: ?shrub's 1st)`.
+
+			If you provide to (show:) a hook which is already visible, an error will be produced.
+
+			#showing and hiding
+		*/
+		("show", (section, ...hooks) => {
+			return {
+				TwineScript_ObjectName: "a (show:) command",
+
+				TwineScript_TypeName:   "a (show:) command",
+				
+				TwineScript_Print() {
+					hooks.forEach(hook => hook.forEach(section, elem => {
+						const hiddenSource = elem.data('hiddenSource');
+						if (hiddenSource === undefined) {
+							return TwineError.create("operation",
+								"I can't reveal a hook which is already visible.");
+						}
+						section.renderInto(hiddenSource, elem);
+					}));
+					return '';
+				},
+			};
+		},
+		[rest(HookSet)])
+
 		/*d:
 			(go-to: String) -> Command
 			This command stops passage code and sends the player to a new passage.

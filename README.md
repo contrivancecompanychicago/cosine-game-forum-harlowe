@@ -59,6 +59,7 @@ Rough documentation is at http://twine2.neocities.org/
  * Altered the CSS of `<h1>`, `<h2>`, `<h3>`, `<h4>`, `<h5>` and `<h6>` elements to have a slightly lower margin-top.
  * Now, `<tw-passage>` elements (that is, passages' HTML elements) have a `tags` attribute containing all of the passage's tags in a space-separated list. This allows such elements to be styled using author CSS, or selected using author Javascript, in a manner similar to Twine 1.4 (but using the `[tags~= ]` selector instead of `[data-tags~= ]`).
  * Removed the CSS directives that reduce the font size based on the player's device width, because this functionality seems to be non-obvious to users, and can interfere with custom CSS in an unpleasant way.
+ * Now, hooks and expressions which contain nothing (due to, for instance, having a false `(if:)` attached) will now have `display:none`, so that styling specific to their borders, etc. won't still be visible.
 
 ####Additions
 
@@ -66,6 +67,7 @@ Rough documentation is at http://twine2.neocities.org/
 
  * Added column markup, which is, like aligner markup, a special single-line token indicating that the subsequent text should be separated into columns. They consist of a number of `|` marks, indicating the size of the column relative to the other columns, and a number of `=` marks surrounding it, indicating the size of the column's margins in CSS "em" units (which are about the width of a capital M). Separate each column's text with tokens like `|===` and `==||`, and end them with a final `|==|` token to return to normal page layout.
  * Now, it's possible to attach multiple changers to a single hook - `(text-style:'bold')(align:'==>')$robotFont[Text]` will apply `(text-style:'bold')`, `(align:'==>')` and the changer in the variable $robotFont, as if they had been added together with `+` in a single variable. Again, you can put whitespace between them – `(text-style:'bold')  (align:'==>')  $robotFont  [Text]` is equally valid, and causes the whitespace between each changer and the hook itself to be discarded.
+ * Now, you can make hooks which are hidden when the passage is initially displayed, to be revealed when a macro (see below) is run. Simply replace the `<` and `>` symbol with a `(` or `)`. For example: `|h)[This hook is hidden]`. (You can think of this as being visually similar to comic speech balloons vs. thought balloons.) This is an alternative to the revision macros, and can be used in situations where the readability of the passage prose is improved by having hidden hooks alongside visible text, rather than separate `(replace:)` hooks. (Of course, the revision macros are still useful in a variety of other situations, including `header` passages.)
 
 #####Code
 
@@ -83,6 +85,8 @@ Rough documentation is at http://twine2.neocities.org/
  * Added `(altered:)`, which takes a lambda as its first value, and any number of other values, and uses the lambda to convert the values, placing the results in an array. For instance, `(altered: _material via _material + " Sword", "Iron", "Wood", "Bronze", "Plastic")` will create an array `(a:"Iron Sword", "Wood Sword", "Bronze Sword", "Plastic Sword")`. (This macro is similar to Javascript's `map()` array method.)
  * Added `(all-pass:)`, `(some-pass:)` and `(none-pass:)`, which check if the given values match the lambda, and return `true` or `false`. `(all-pass: _a where _a > 2, 1, 3, 5)` produces `false`, `(some-pass: _a where _a > 2, 1, 3, 5)` produces `true`, and `(none-pass: _a where _a > 2, 1, 3, 5)` produces `false`.
  * Added `(folded:)`, which is used to combine many values into one (a "total"), using a lambda that has a `making` clause. `(folded: _a making _total via _total + "." + _a, "E", "a", "s", "y")` will first set `_total` to "E", then progressively add ".a", ".s", and ".y" to it, thus producing the resulting string, "E.a.s.y".
+ * Added `(show:)`, a command to show a hidden named hook (see above). `(show: ?secret)` will show all hidden hooks named `|secret)`. This can also be used to reveal named hooks hidden with `(if:)`, `(else-if:)`, `(else:)` and `(unless:)`.
+ * Added `(hidden:)`, which is equivalent to `(if:false)`, and can be used to produce a changer to hide its attached hook.
  * Added the aliases `(dm:)` and `(ds:)` for `(datamap:)` and `(dataset:)`, respectively.
  * Added `(lowercase:)` and `(uppercase:)`, which take a string and convert it to all-lowercase or all-uppercase, as well as `(lowerfirst:)` and `(upperfirst:)`, which only convert the first non-whitespace character in the string and leave the rest untouched.
  * Added `(words:)`, which takes a string and produces an array of the words (that is, the sequences of non-whitespace characters) in it. For instance, `(words: "2 big one's")` produces `(a: "2", "big", "one's")`.

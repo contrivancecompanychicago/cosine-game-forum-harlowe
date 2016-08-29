@@ -283,7 +283,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 			| `>` | Evaluates to boolean `true` if the left side is greater than the right side, otherwise `false`. | `$money > 3.75`
 			| `>=` | Evaluates to boolean `true` if the left side is greater than or equal to the right side, otherwise `false`. | `$apples >= $carrots + 5`
 			| `<` | Evaluates to boolean `true` if the left side is less than the right side, otherwise `false`. | `$shoes < $people * 2`
-			| `<=` | Evaluates to boolean `true` if the left side is less than or equal to the right side, otherwise `false`. | `65 <= $age`
+			| `<=`~ | Evaluates to boolean `true` if the left side is less than or equal to the right side, otherwise `false`. | `65 <= $age`
 			
 			You can only perform these operations (apart from `is`) on two pieces of data if they're both numbers. Adding the
 			string "5" to the number 2 would produce an error, and not the number 7 nor the string "52". You must

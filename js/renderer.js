@@ -291,6 +291,7 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 					}
 					case "hook": {
 						out += '<tw-hook '
+							+ (token.hidden ? 'hidden ' : '')
 							+ (token.name ? 'name="' + insensitiveName(token.name) + '"' : '')
 							// Debug mode: show the hook destination as a title.
 							+ ((Renderer.options.debug && token.name) ? ' title="Hook: ?' + token.name + '"' : '')

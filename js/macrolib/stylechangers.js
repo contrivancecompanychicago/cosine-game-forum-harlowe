@@ -60,8 +60,17 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			state of the world. The (if:), (unless:), (else-if:) and (else:) macros let these modifications be
 			switched on or off depending on variables, comparisons or calculations of your choosing.
 			
+			Details:
+			Note that the (if:) macro only runs once, when the passage or hook containing it is rendered. Any
+			future change to the condition (such as a (link:) containing a (set:) that changes a variable) won't
+			cause it to "re-run", and show/hide the hook anew.
+
+			However, if you attach (if:) to a named hook, and the (if:) hides the hook, you can manually reveal
+			the hook later in the passage (such as, after a (link:) has been clicked) by using the (show:) macro
+			to target the hook. Named hooks hidden with (if:) are thus equivalent to hidden named hooks like `|this)[]`.
+
 			Alternatives:
-			The (if:) macro is not the only attachment that can hide or show hooks! In fact,
+			The (if:) and (hidden:) macros are not the only attachment that can hide or show hooks! In fact,
 			a variable that contains a boolean can be used in its place. For example:
 			
 			```
@@ -73,9 +82,9 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			```
 			By storing a boolean inside `$isAWizard`, it can be used repeatedly throughout the story to
 			hide or show hooks as you please.
-			
+
 			See also:
-			(unless:), (else-if:), (else:)
+			(unless:), (else-if:), (else:), (hidden:)
 
 			#basics 6
 		*/
@@ -129,18 +138,23 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			The (else-if:) and (else:) macros are convenient variants of (if:) designed to make this easier: you
 			can merely say "if A happened", "else, if B happened", "else, if C happened" in your code.
 			
-			Note:
-			You may be familiar with the `if` keyword in other programming languages. Do heed this, then:
-			the (else-if:) and (else:) macros need *not* be paired with (if:)! You can use (else-if:) and (else:)
-			in conjunction with variable attachments, like so:
+			Details:
+			Just like the (if:) macro, (else-if:) only checks its condition once, when the passage or hook contaning
+			it is rendered.
+
+			The (else-if:) and (else:) macros do not need to only be paired with (if:)! You can use (else-if:) and
+			(else:) in conjunction with boolean variables, like so:
 			```
 			$married[You hope this warrior will someday find the sort of love you know.]
 			(else-if: not $date)[You hope this warrior isn't doing anything this Sunday (because
 			you've got overtime on Saturday.)]
 			```
-			
+
+			If you attach (else-if:) to a named hook, and the (else-if:) hides the hook, you can reveal the hook later
+			in the passage by using the (show:) macro to target the hook.
+
 			See also:
-			(if:), (unless:), (else:)
+			(if:), (unless:), (else:), (hidden:)
 
 			#basics 8
 		*/
@@ -172,7 +186,10 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			
 			For more information, see the documentation of (else-if:).
 			
-			Note:
+			Notes:
+			Just like the (if:) macro, (else:) only checks its condition once, when the passage or hook contaning
+			it is rendered.
+
 			Due to a mysterious quirk, it's possible to use multiple (else:) macro calls in succession:
 			```
 			$isUtterlyEvil[You suddenly grip their ankles and spread your warm smile into a searing smirk.]
@@ -182,6 +199,12 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			```
 			This usage can result in a somewhat puzzling passage source structure, where each (else:) hook
 			alternates between visible and hidden depending on the first such hook. So, it is best avoided.
+
+			If you attach (else:) to a named hook, and the (else:) hides the hook, you can reveal the hook later
+			in the passage by using the (show:) macro to target the hook.
+
+			See also:
+			(if:), (unless:), (else-if:), (hidden:)
 
 			#basics 9
 		*/
@@ -193,6 +216,34 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		},
 		(d, expr) => d.enabled = d.enabled && expr,
 		null)
+
+		/*d:
+			(hidden:) -> Changer
+
+			Produces a command that can be attached to hooks to hide them.
+
+			Example usage:
+			`Don't you recognise me? (hidden:)|truth>[I'm your OC, brought to life!]` is the same as
+			`Don't you recognise me? |truth)[I'm your OC, brought to life!]`.
+
+			Rationale:
+			While there is a way to succinctly mark certain named hooks as hidden, by using parentheses instead of
+			`<` or `>` marks, this macro provides a clear way for complex changers to hide their attached hooks.
+			This works well when added to the (hook:) macro, for instance, to specify a hook's name and visibility
+			in a single changer.
+
+			This macro is essentially identical in behaviour to `(if:false)`, but reads better.
+
+			See also:
+			(if:), (hook:)
+
+			#showing and hiding
+		*/
+		("hidden",
+			() => ChangerCommand.create("hidden"),
+			(d) => d.enabled = false,
+			null
+		)
 
 		/*d:
 			(hook: String) -> Changer
@@ -211,9 +262,12 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			`(hook: "eyes" + (string:$eyeCount))` is valid, and will, as you'd expect, give the hook
 			the name of `eyes1` if `$eyeCount` is 1.
 
+			See also:
+			(hidden:)
+
 			#styling
 		*/
-		(["hook"],
+		("hook",
 			(_, name) => ChangerCommand.create("hook", [name]),
 			(d, name) => d.attr.push({name: name}),
 			[String]

@@ -25,6 +25,12 @@ describe("control flow macros", function() {
 			expect("(set: $a to (if: true) + (text-style:'bold'))$a[Gee]").markupToPrint("Gee");
 			expect("(set: $a to (if: false) + (text-style:'bold'))$a[Gee]").markupToPrint("");
 		});
+		it("won't keep styling visible if it disables the hook", function() {
+			var p = runPassage("(set: $a to (if: true) + (css:'border:2px solid red'))$a[Gee]").find('tw-hook');
+			expect(p.css('border-top-color')).toMatch(/#FF0000|rgb\(\s*255,\s*0,\s*0\s*\)/);
+			p = runPassage("(set: $a to (if: false) + (css:'border:2px solid red'))$a[Gee]").find('tw-hook');
+			expect(p.css('border-top-color')).toMatch(/#000000|rgb\(\s*0,\s*0,\s*0\s*\)/);
+		});
 	});
 	describe("the (unless:) macro", function() {
 		it("accepts exactly 1 boolean argument", function() {
@@ -102,7 +108,52 @@ describe("control flow macros", function() {
 			expect("(either:true)[(either:true)[Wow](else:)[Gee]](else:)[Gosh]").markupToPrint('Wow');
 		});
 	});
-	it("in debug mode, the <tw-expression> has the 'false' class when the hook is hidden", function() {
-		expect(runPassage("(if:false)[Gosh]").find('tw-expression').attr('class')).toMatch(/\bfalse\b/);
+	describe("the (hidden:) macro", function() {
+		it("takes no arguments", function() {
+			expect('(hidden:1)').markupToError();
+			expect('(hidden:"Red")').markupToError();
+			expect('(hidden:?1)[]<1|').markupToError();
+		});
+		it("hides hooks it is attached to", function() {
+			expect('(hidden:)|3>[Red]White').markupToPrint('White');
+			expect('(set: $a to (hidden:))$a[Red]White').markupToPrint('White');
+		});
+		it("can be composed with other style macros", function() {
+			expect("(set: $a to (hidden:) + (text-style:'bold'))$a[Gee]").markupToPrint("");
+		});
+	});
+	describe("the (show:) macro", function() {
+		it("reveals hidden named hooks", function() {
+			expect('|3)[Red](show:?3)').markupToPrint('Red');
+			var p = runPassage('|3)[Red](link:"A")[(show:?3)]');
+			expect(p.text()).toBe('A');
+			p.find('tw-link').click();
+			expect(p.text()).toBe('Red');
+		});
+		[
+			['(hidden:)', '(hidden:)'],
+			['(if:)',     '(if:false)'],
+			['(unless:)', '(unless:true)'],
+			['(else-if:)','(if:true)[](else-if:true)'],
+			['(else:)',   '(if:true)[](else:)'],
+			['booleans', '(set:$x to false)$x'],
+		].forEach(function(arr) {
+			var name = arr[0], code = arr[1];
+			it("reveals hooks hidden with " + name, function() {
+				expect(code + '|3>[Red](show:?3)').markupToPrint('Red');
+				var p = runPassage(code + '|3>[Red](link:"A")[(show:?3)]');
+				expect(p.text()).toBe('A');
+				p.find('tw-link').click();
+				expect(p.text()).toBe('Red');
+			});
+		});
+	});
+	describe("in debug mode, the <tw-expression> has the 'false' class when the hook is hidden", function() {
+		it("by (if:)", function() {
+			expect(runPassage("(if:false)[Gosh]").find('tw-expression').attr('class')).toMatch(/\bfalse\b/);
+		});
+		it("but not by (hidden:)", function() {
+			expect(runPassage("(hidden:)[Gosh]").find('tw-expression').attr('class')).not.toMatch(/\bfalse\b/);
+		});
 	});
 });

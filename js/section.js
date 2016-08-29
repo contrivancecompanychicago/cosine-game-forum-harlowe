@@ -67,17 +67,20 @@ define([
 			);
 
 			if (!enabled) {
+				const name = Utils.insensitiveName(expr.attr('name'));
 				/*
 					The 'false' class is used solely by debug mode to visually denote
-					that a macro such as (if:) suppressed a hook.
+					that a macro such as (if:) (but not (hidden:)) suppressed a hook.
 				*/
-				expr.addClass("false");
-				/*
-					Unfortunately, (else-if:) must be special-cased, so that it doesn't affect
-					lastHookShown, instead preserving the value of the original (if:).
-				*/
-				if (Utils.insensitiveName(expr.attr('name')) !== "elseif") {
-					this.stack[0].lastHookShown = false;
+				if (["if", "elseif", "unless", "else"].includes(name)) {
+					expr.addClass("false");
+					/*
+						Unfortunately, (else-if:) must be special-cased, so that it doesn't affect
+						lastHookShown, instead preserving the value of the original (if:).
+					*/
+					if (name !== "elseif") {
+						this.stack[0].lastHookShown = false;
+					}
 				}
 				return;
 			}
@@ -94,7 +97,13 @@ define([
 			that follows this will pass.
 		*/
 		else if (result === false) {
-			nextHook.removeAttr('source');
+			/*
+				Just as in ChangeDescriptor.render(), suppressing a hook will move
+				its source into a 'hiddenSource' data store.
+			*/
+			if (nextHook.attr('source')) {
+				nextHook.data('hiddenSource', nextHook.popAttr('source'));
+			}
 			expr.addClass("false");
 			
 			this.stack[0].lastHookShown = false;
@@ -757,13 +766,22 @@ define([
 					case Selectors.hook:
 					{
 						/*
+							First, hidden hooks should not be rendered, and instead stash
+							their source as "hiddenSource" data for macros to activate
+							later.
+						*/
+						if (expr.attr('hidden')) {
+							expr.removeAttr('hidden');
+							expr.data('hiddenSource', expr.popAttr('source'));
+						}
+						/*
+							Now we can render visible hooks.
 							Note that hook rendering may be triggered early by attached
 							expressions, so a hook lacking a 'source' attr may have
 							already been rendered.
 						*/
 						if (expr.attr('source')) {
-							section.renderInto(expr.attr('source'), expr);
-							expr.removeAttr('source');
+							section.renderInto(expr.popAttr('source'), expr);
 						}
 						/*
 							If the hook's render contained an earlyexit

@@ -154,18 +154,16 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 					append method) - the others merely append.
 				*/
 				desc.append = arr[0] === "link" ? "replace" : "append";
-				desc.data = {
-					clickEvent(link) {
-						desc.source = desc.innerSource;
-						desc.section.renderInto(desc.innerSource + "", null, desc);
-						/*
-							Only (link-reveal:) turns the link into plain text:
-							the others either remove it (via the above) or leave it be.
-						*/
-						if (arr[0] === "link-reveal") {
-							link.contents().unwrap();
-						}
-					},
+				desc.data.clickEvent = (link) => {
+					desc.source = desc.innerSource;
+					desc.section.renderInto(desc.innerSource + "", null, desc);
+					/*
+						Only (link-reveal:) turns the link into plain text:
+						the others either remove it (via the above) or leave it be.
+					*/
+					if (arr[0] === "link-reveal") {
+						link.contents().unwrap();
+					}
 				};
 			},
 			[String]
