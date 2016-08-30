@@ -385,7 +385,7 @@
 		},
 
 		hookTagFront =  "\\|(" + anyLetter + "+)(>|\\))",
-		hookTagBack  =  "(<|\\))("   + anyLetter + "+)\\|",
+		hookTagBack  =  "(<|\\()("   + anyLetter + "+)\\|",
 
 		tempVariable = "_(" + validPropertyName + ")" + wb,
 		

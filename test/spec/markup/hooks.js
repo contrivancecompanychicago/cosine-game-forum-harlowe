@@ -42,10 +42,12 @@ describe("hooks", function () {
 			expect("|a>[[Hello!]<b|]").markupToPrint("Hello!");
 		});
 		it("become <tw-hook> elements", function (){
-			expect(runPassage("[foo]<hook|").find('tw-hook').text()).toBe('foo');
+			runPassage("[foo]<hook|");
+			expect($('tw-passage').find('tw-hook').text()).toBe('foo');
 		});
 		it("<tw-hook> elements have name attributes", function (){
-			expect(runPassage("[foo]<grault|").find('tw-hook').attr('name')).toBe('grault');
+			runPassage("[foo]<grault|");
+			expect($('tw-passage').find('tw-hook').attr('name')).toBe('grault');
 		});
 		it("names are insensitive", function() {
 			runPassage("[foo]<GRAULT|");
@@ -149,17 +151,19 @@ describe("hooks", function () {
 	});
 	describe("hidden named hooks", function () {
 		it("are named hooks with the square bracket replaced with a parenthesis", function (){
-			expect(("|hook)[foo]").find('tw-hook').attr('name')).toBe('foo');
-			expect(("[foo](hook|").find('tw-hook').attr('name')).toBe('foo');
+			runPassage("|hook)[foo]");
+			expect($('tw-story').find('tw-hook').attr('name')).toBe('hook');
+			runPassage("[foo](hook|");
+			expect($('tw-story').find('tw-hook').attr('name')).toBe('hook');
 		});
 		it("are hidden when the passage initially renders", function (){
 			expect("[foo](hook|").markupToPrint("");
 		});
-		it("can be revealed initially if (if:) is attached", function (){
-			expect("(if:true)[foo](hook|").markupToPrint("foo");
+		it("are not revealed if (if:) is attached", function (){
+			expect("(if:true)[foo](hook|").markupToPrint("");
 		});
-		it("can be revealed initially if true is attached", function (){
-			expect("(set:$a to true)$a[foo](hook|").markupToPrint("foo");
+		it("are not revealed if true is attached", function (){
+			expect("(set:$a to true)$a[foo](hook|").markupToPrint("");
 		});
 	});
 });

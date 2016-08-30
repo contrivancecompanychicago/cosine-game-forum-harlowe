@@ -542,9 +542,10 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			/*
 				Show an error if this request is attempting to assign to a value which isn't
 				stored in the variables or temp. variables.
-				e.g. (set: (a:)'s 1st to 1)
+				e.g. (set: (a:)'s 1st to 1).
+				The identifiers store has a different, better error message produced by canSet().
 			*/
-			if (this.object && !(this.object.TwineScript_VariableStore)) {
+			if (this.object && !this.object.TwineScript_VariableStore && !this.object.TwineScript_Identifiers) {
 				return TwineError.create("macrocall", "I can't (set:) "
 					+ objectName(this)
 					+ ", if the "

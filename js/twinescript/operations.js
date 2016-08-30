@@ -356,6 +356,10 @@ define([
 			the passVal and failVal are internally supplied.
 		*/
 		where(bool, passVal, failVal) {
+			let err;
+			if ((err = TwineError.containsError(bool))) {
+				return err;
+			}
 			if (typeof bool !== "boolean") {
 				return TwineError.create("operation",
 					"This lambda's 'where' clause must evaluate to true or false, not "
