@@ -10,7 +10,7 @@ define([
 	'datatypes/assignmentrequest',
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier'],
-($, NaturalSort, Macros, {objectName, typeName, subset, collectionType, isValidDatamapName, is, clone}, State, Engine, Passages, Lambda, AssignmentRequest, TwineError, TwineNotifier) => {
+($, NaturalSort, Macros, {objectName, typeName, subset, collectionType, isValidDatamapName, is, unique, clone}, State, Engine, Passages, Lambda, AssignmentRequest, TwineError, TwineNotifier) => {
 	"use strict";
 	
 	const {optional, rest, either, zeroOrMore, Any}   = Macros.TypeSignature;
@@ -1245,7 +1245,7 @@ define([
 			
 			#data structure 3
 		*/
-		(["dataset","ds"], (_, ...args) => new Set(args.map(clone)), zeroOrMore(Any))
+		(["dataset","ds"], (_, ...args) => new Set(args.filter(unique).map(clone)), zeroOrMore(Any))
 		
 		/*
 			COLLECTION OPERATIONS

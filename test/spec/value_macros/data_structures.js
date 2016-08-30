@@ -306,6 +306,10 @@ describe("data structure macros", function () {
 			expect("(print: $set contains 's')").markupToPrint("true");
 			expect("(print: $set contains '1')").markupToPrint("false");
 		});
+		it("compares objects by value when constructing", function() {
+			expect("(set: $a to (a:))(set:$ds to (ds:$a,$a,$a))").not.markupToError();
+			expect("(print:$ds's length)").markupToPrint('1');
+		});
 		it("when spread, returns the values in their natural-sort order", function() {
 			runPassage("(set: $set to (dataset:'D1','E','É','D11','D2','F','E'))");
 			expect("(print: (a:...$set))").markupToPrint("D1,D2,D11,E,É,F");

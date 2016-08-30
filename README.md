@@ -7,6 +7,10 @@ Rough documentation is at http://twine2.neocities.org/
 ####Bugfixes
 
  * Fixed a bug where comparing a value with an error (such as `2 is (3 + 'X')`) would suppress the error.
+ * Fixed a bug where subtracting non-subtractable values (such as booleans) wouldn't produce an error, instead implicitly converting the values to numbers, and potentially producing the Javascript value `NaN`.
+ * Fixed a bug where subtracting arrays and datasets wouldn't correctly compare contained data structures - for instance, `(a:(a:1)) - (a:(a:1))` wouldn't work correctly.
+ * Fixed a bug where the `(dataset:)` macro, and adding datasets, wouldn't correctly compare data structures - for instance, `(dataset: (a:),(a:))` would contain both identical arrays, as would `(dataset: (a:)) + (dataset: (a:))`.
+   * Additionally fixed a bug where data structures were storied in datasets by reference, allowing two variables to reference (and remotely alter) the same data.
  * Fixed a bug where using `(move:)` to move a subarray or substring (such as `(move: $a's (a:2,3) to $b))` wouldn't work.
  * Fixed a bug where using `(set:)` to set a substring, when the given array of positions contained "length" (such as `(set: $a's (a:1,"length")) to "foo")`), wouldn't produce an error.
  * Now, a `(print:)` command that contains a command will only execute the contained command if itself is actually displayed in the passage - the code `(set: $x to (print:(goto:'X')))` would formerly perform the (goto:) immediately, even though the (print:) was never displayed.

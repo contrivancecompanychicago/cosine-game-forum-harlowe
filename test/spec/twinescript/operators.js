@@ -18,6 +18,18 @@ describe("twinescript operators", function () {
 			expect("(print: (a:1) + (a:2))").markupToPrint("1,2");
 			expect("(print: (a:1,3) + (a:2,4))").markupToPrint("1,3,2,4");
 		});
+		it("can be used to concatenate datasets", function () {
+			expect("(print: (ds:1) + (ds:2))").markupToPrint("1,2");
+			expect("(print: (ds:1,4,3) + (ds:2,3,4))").markupToPrint("1,2,3,4");
+		});
+		it("compares objects by value when concatenating datasets", function() {
+			runPassage("(set: $a to (a:))(set:$ds to (ds:))"
+				+ "(set:$ds to it + (ds:$a))");
+			expect("(print:$ds's length)").markupToPrint('1');
+			runPassage("(set:$a2 to $a)"
+				+ "(set:$ds to it + (ds:$a2))");
+			expect("(print:$ds's length)").markupToPrint('1');
+		});
 		it("cannot concatenate hook references and strings", function () {
 			expect("[]<a|(print: ?a + '2')").markupToError();
 		});
@@ -37,8 +49,28 @@ describe("twinescript operators", function () {
 			expect("(print: '51' - '5')").markupToPrint("1");
 			expect("(print: 'reeeed' - 'e')").markupToPrint("rd");
 		});
+		it("can't be used on booleans", function () {
+			expect("(print: false - true)").markupToError("1");
+		});
 		it("can be used on arrays", function () {
 			expect("(print: (a:1,3,5,3) - (a:3))").markupToPrint("1,5");
+		});
+		it("can be used on datasets", function () {
+			expect("(print: (ds:1,3,5) - (ds:3))").markupToPrint("1,5");
+		});
+		it("compares objects by value when subtracting datasets", function() {
+			expect("(set:$ds to (ds:(a:),(a:1)))"
+				+ "(set:$ds to $ds - (ds:(a:)))").not.markupToError();
+			expect("(print:$ds's length)").markupToPrint('1');
+			expect("(set:$ds to it - (ds:(a:1)))").not.markupToError();
+			expect("(print:$ds's length)").markupToPrint('0');
+		});
+		it("compares objects by value when subtracting arrays", function() {
+			expect("(set:$a to (a:(a:),(a:1)))"
+				+ "(set:$a to it - (a:(a:)))").not.markupToError();
+			expect("(print:$a's length)").markupToPrint('1');
+			expect("(set:$a to it - (a:(a:1)))").not.markupToError();
+			expect("(print:$a's length)").markupToPrint('0');
 		});
 	});
 	describe("the * operator", function () {

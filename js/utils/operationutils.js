@@ -201,13 +201,10 @@ define(['utils', 'datatypes/hookset', 'internaltypes/twineerror'], ({impossible,
 			For ES6 collections, we can depend on the constructors.
 		*/
 		if (value instanceof Map) {
-			// Use Object.assign to assign any expando properties on the old map to the new one.
-			// TODO: Remove that?
-			return Object.assign(new Map(value), value);
+			return new Map(value);
 		}
 		if (value instanceof Set) {
-			// Same as above.
-			return Object.assign(new Set(value), value);
+			return new Set(value);
 		}
 		/*
 			If it's a function, Function#bind() makes a copy without altering its 'this'.
@@ -365,7 +362,7 @@ define(['utils', 'datatypes/hookset', 'internaltypes/twineerror'], ({impossible,
 			);
 		}
 		if (l instanceof Set && r instanceof Set) {
-			return is(Array.from(l.values()), Array.from(r.values()));
+			return is([...l], [...r]);
 		}
 		/*
 			For TwineScript built-ins, use the TwineScript_is() method to determine
@@ -556,6 +553,12 @@ define(['utils', 'datatypes/hookset', 'internaltypes/twineerror'], ({impossible,
 			be replaced with a function.
 		*/
 		numericIndex: /^(?:[1-9]\d*|0)$/,
+		/*
+			An Array#filter() function which filters out duplicates using the is() comparator
+			instead of Javascript referencing. This manually filters out similar array/map objects which
+			Set()'s constructor won't filter out by itself.
+		*/
+		unique: (val1,ind,arr) => !arr.slice(ind + 1).some(val2 => is(val1, val2)),
 	});
 	return OperationUtils;
 });

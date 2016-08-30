@@ -5,7 +5,7 @@ define([
 	'utils/operationutils',
 	'internaltypes/twineerror',
 ],
-(State, Colour, AssignmentRequest, {isObject, collectionType, coerceToString, is, contains, typeName, objectName}, TwineError) => {
+(State, Colour, AssignmentRequest, {isObject, collectionType, coerceToString, is, clone, unique, contains, typeName, objectName}, TwineError) => {
 	"use strict";
 	/*
 		Operation objects are a table of operations which TwineScript proxies
@@ -273,9 +273,7 @@ define([
 				return ret;
 			}
 			if (l instanceof Set) {
-				ret = new Set(l);
-				r.forEach((v) => ret.add(v));
-				return ret;
+				return new Set([...l, ...r].filter(unique).map(clone));
 			}
 			/*
 				If a TwineScript object implements a + method, use that.
@@ -306,16 +304,14 @@ define([
 					the right side also be an array. Subtracting 1 element
 					from an array requires it be wrapped in an (a:) macro.
 				*/
-				return l.filter(e => !r.includes(e));
+				return l.filter(val1 => !r.some(val2 => is(val1, val2)));
 			}
-			let ret;
 			/*
 				Sets, but not Maps, can be subtracted.
 			*/
 			if (l instanceof Set) {
-				ret = new Set(l);
-				r.forEach(v => ret.delete(v));
-				return ret;
+				const rvals = [...r];
+				return new Set([...l].filter(val1 => !rvals.some(val2 => is(val1, val2))));
 			}
 			if (typeof l === "string") {
 				/*
@@ -324,7 +320,13 @@ define([
 				*/
 				return l.split(r).join('');
 			}
-			return l - r;
+			/*
+				Finally, if it's a number, subtract it.
+			*/
+			if (typeof l === "number") {
+				return l - r;
+			}
+			return TwineError.create("operation", "I can't use - on " + objectName(l) + ".");
 		}),
 		"*":  onlyPrimitives("number", doNotCoerce((l, r) => l * r), "multiply"),
 		"/":  onlyPrimitives("number", doNotCoerce((l, r) => {

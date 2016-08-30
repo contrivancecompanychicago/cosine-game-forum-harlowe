@@ -94,7 +94,7 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'util
 		| Random floating-point numbers | Not offered | `randomFloat(1, 4)`~
 		| Random array elements | `(either: ...$arr's (a:1,4))` | `$arr.random(0,3)`~
 		| PRNG seeding | Not offered | `History.initPRNG("abadidea")`~
-		| "Shuffled" macro/function | `(shuffled: $...arr)` | `$arr.shuffle()`~ (alters `$arr`~)
+		| "Shuffled" macro/function | `(shuffled: ...$arr)` | `$arr.shuffle()`~ (alters `$arr`~)
 		|**Game state**
 		| "Time" identifier/function | `time` | `time()`~
 		| Number of turns elapsed | `(history: )'s length` | `turns()`~
