@@ -118,6 +118,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			Absent token types have the least precedence.
 		*/
 		[
+			["error"],
 			["comma"],
 			["spread"],
 			["to"],
@@ -320,6 +321,9 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			/*
 				If no token was found, skip the rest of these checks.
 			*/
+		}
+		else if (type === "error") {
+			return "TwineError.create('syntax'," + toJSLiteral(token.message) + ")";
 		}
 		/*
 			I'll admit it: I'm not yet sure what place the JS comma will have in

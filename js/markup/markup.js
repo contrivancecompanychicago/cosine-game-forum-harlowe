@@ -663,6 +663,32 @@
 					*/
 					cannotFollow: "text",
 				},
+
+				incorrectOperator: {
+					fn: (match) => {
+						const correction = {
+								"=>": ">=",
+								"=<": "<=",
+								"gte": ">=",
+								"lte": "<=",
+								"gt": ">",
+								"lt": "<",
+								"eq": "is",
+								"isnot": "is not",
+								"neq": "is not",
+								"are": "is",
+								"x": "*",
+							}[match[0].toLowerCase()];
+
+						return {
+							type: "error",
+							message: "Please say "
+								+ (correction ? "'" + correction + "'" : "something else")
+								+ " instead of '" + match[0] + "'.",
+						};
+					},
+					cannotFollow: "text",
+				},
 			},
 			["boolean", "is", "to", "into", "where", "via", "with", "making", "and", "or", "not",
 			"isNot", "contains", "isIn"].reduce(function(a, e) {

@@ -538,4 +538,9 @@ describe("twinescript operators", function () {
 			expect("(a: 1, ...(a:2),3)").markupToPrint("1,2,3");
 		});
 	});
+	it("common incorrect operators produce an error", function () {
+		["=>","=<","gte","lte","gt","lt","eq","isnot","neq","are","x"].forEach(function(op){
+			expect("(print:1 " + op + " 2)").markupToError();
+		});
+	});
 });

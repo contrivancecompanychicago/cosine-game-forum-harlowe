@@ -378,6 +378,8 @@
 		},
 		
 		twine1Macro = "<<[^>\\s]+\\s*(?:\\\\.|'(?:[^'\\\\]*\\\\.)*[^'\\\\]*'|\"(?:[^\"\\\\]*\\\\.)*[^\"\\\\]*\"|[^'\"\\\\>]|>(?!>))*>>",
+
+		incorrectOperator = either("=<", "=>", "[gl]te?" + wb, "n?eq" + wb, "isnot" + wb, "are" + wb, "x" + wb),
 		
 		tag = {
 			name:              "[a-zA-Z][\\w\\-]*",
@@ -919,6 +921,8 @@
 		via:        "via" + wb,
 		with:       "with" + wb,
 		augmentedAssign: either("\\+", "\\-", "\\*", "\\\/", "%") + "=",
+
+		incorrectOperator,
 	};
 	
 	if (typeof module === 'object') {
