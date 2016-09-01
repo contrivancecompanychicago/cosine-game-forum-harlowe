@@ -636,6 +636,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 
 			| String | Example
 			|---
+			| "none"           | <t-s></t-s>
 			| "bold"           | <t-s style="font-weight:bold"></t-s>
 			| "italic"         | <t-s style="font-style:italic"></t-s>
 			| "underline"      | <t-s style="text-decoration: underline"></t-s>
@@ -657,6 +658,8 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			| "fade-in-out"    | <t-s style="animation:fade-in-out 2s ease-in-out infinite alternate"></t-s>
 			| "rumble"         | <t-s style="display:inline-block;animation:rumble linear 0.1s 0s infinite"></t-s>
 			| "shudder"        | <t-s style="display:inline-block;animation:shudder linear 0.1s 0s infinite"></t-s>
+			
+			You can use the "none" style to remove an existing style from a combined changer.
 			
 			Due to browser limitations, hooks using "mirror", "upside-down", "rumble" or "shudder" will have its CSS `display`
 			attribute set to `inline-block`.
@@ -681,6 +684,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 						to CSS attributes that implement the styles. These are all hand-coded.
 					*/
 					styleTagNames = Object.assign(Object.create(null), {
+						none:         {},
 						bold:         { 'font-weight': 'bold' },
 						italic:       { 'font-style': 'italic' },
 						underline:    { 'text-decoration': 'underline' },
@@ -802,7 +806,12 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 					},
 					(d, styleName) => {
 						assertMustHave(styleTagNames,[styleName]);
-						d.styles = d.styles.concat(styleTagNames[styleName]);
+						if (styleName === "none") {
+							d.styles = [];
+						}
+						else {
+							d.styles = d.styles.concat(styleTagNames[styleName]);
+						}
 						return d;
 					}
 				];

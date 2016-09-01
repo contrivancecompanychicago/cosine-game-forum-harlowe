@@ -52,12 +52,35 @@ describe("twinescript variables", function() {
 			Engine.goBack();
 			expect("(print: $a)").markupToPrint("1");
 		});
-		it("doesn't pollute past turns, even when deeply modifying data structures", function() {
+		it("doesn't pollute past turns, even when deeply modifying arrays", function() {
 			runPassage("(set: $a to (a:(a:1),1))","one");
 			runPassage("(set: $a's 1st's 1st to 2)","two");
 			runPassage("(set: $a's 1st's 1st to 3)","three");
 			Engine.goBack();
 			expect("(print: $a)").markupToPrint("2,1");
+
+			runPassage("(set:$deep to (a:(a:1),1))(set: $a to $deep)","one");
+			runPassage("(set:$a's 1st's 1st to 2)","two");
+			Engine.goBack();
+			expect("(print: $deep)").markupToPrint("1,1");
+		});
+		it("doesn't pollute past turns, even when deeply modifying datamaps", function() {
+			runPassage("(set: $dm to (dm:'a',(dm:'a',1)))","one");
+			runPassage("(set: $dm's a's a to 2)","two");
+			runPassage("(set: $dm's a's a to 3)","three");
+			Engine.goBack();
+			expect("(print: $dm's a's a)").markupToPrint("2");
+
+			runPassage("(set:$deep to (dm:'a',(dm:'a',1)))(set: $dm to $deep)","one");
+			runPassage("(set:$dm's a's a to 2)","two");
+			Engine.goBack();
+			expect("(print: $deep's a's a)").markupToPrint("1");
+		});
+		it("doesn't pollute past turns, even when deeply modifying datasets", function() {
+			runPassage("(set:$deep to (ds:(dm:'a',1)))(set: $ds to $deep)","one");
+			runPassage("(set:(a:...$ds)'s 1st's a to 2)","two");
+			Engine.goBack();
+			expect("(print: (a:...$ds)'s 1st's a)").markupToPrint("1");
 		});
 		it("can't mutate an unassigned collection", function() {
 			expect("(set: (a:2)'s 1st to 1)").markupToError();

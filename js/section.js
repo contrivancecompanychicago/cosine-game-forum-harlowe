@@ -157,10 +157,11 @@ define([
 		let result = this.eval(expr.popAttr('js') || '');
 
 		/*
-			Consecutive changer expressions that connect to a hook will "chain up" into a
-			single command, which is then applied to that hook.
+			Consecutive changer expressions, separated with "+" and followed by a hook,
+			will "chain up" into a single command, which is then applied to that hook.
 
-			As long as the result is a changer, it may link up with an expression following it.
+			As long as the result is a changer, it may link up with an expression following it
+			if a "+" is placed between them.
 
 			Note: If the result isn't a changer at all, then it might be another kind of value
 			(a boolean, or a (live:) command) which still can be attached, but not chained.
@@ -168,50 +169,61 @@ define([
 		let whitespace, nextElem, nextHook = $();
 		nextElem = expr;
 
-		while(ChangerCommand.isPrototypeOf(result) && !nextHook.length) {
+		while(ChangerCommand.isPrototypeOf(result)) {
 			/*
-				Check if the next non-whitespace element is an expression or anonymous hook.
+				Check if the next non-whitespace element is a +, or an anonymous hook.
 			*/
 			({whitespace, nextElem} = nextNonWhitespace(nextElem));
-			if (nextElem.is(Selectors.expression)) {
+			if (nextElem[0] instanceof Text && nextElem[0].textContent.trim() === "+") {
 				/*
-					If it's an expression, add them up, and remove the interstitial whitespace.
+					Having found a +, we must confirm the non-ws element after it is an expression.
 				*/
-				const nextValue = this.eval(nextElem.popAttr('js'));
-				const newResult = Operations["+"](result, nextValue);
-				whitespace.remove();
+				let whitespaceAfter, plusMark = nextElem;
+				({whitespace:whitespaceAfter, nextElem} = nextNonWhitespace(plusMark));
+				if (nextElem.is(Selectors.expression)) {
+					/*
+						It's an expression - we can join them.
+						Add the expressions, and remove the interstitial + and whitespace.
+					*/
+					const nextValue = this.eval(nextElem.popAttr('js'));
+					const newResult = Operations["+"](result, nextValue);
+					$(whitespace).add(plusMark).add(whitespaceAfter).remove();
+					/*
+						If this causes result to become an error, create a new error with a more appropriate
+						message.
+					*/
+					if (TwineError.containsError(newResult)) {
+						result = TwineError.create("operation",
+							"I can't combine " + objectName(result) + " with " + objectName(nextValue) + "."
+						);
+					}
+					else {
+						result = newResult;
+					}
+					continue;
+				}
 				/*
-					If this causes result to become an error, create a new error with a more appropriate
-					message.
+					If the next element wasn't an expression, fall down to the error below.
 				*/
-				if (TwineError.containsError(newResult)) {
-					result = TwineError.create("operation",
-						"I can't combine " + objectName(result) + " with " + objectName(nextValue) + "."
-					);
-				}
-				else {
-					result = newResult;
-				}
 			}
-			else if (nextElem.is(Selectors.hook)) {
+			if (nextElem.is(Selectors.hook)) {
 				/*
 					If it's an anonymous hook, apply the summed changer to it
 					(and remove the whitespace).
 				*/
 				whitespace.remove();
 				nextHook = nextElem;
-			}
-			else {
-				/*
-					If it's neither hook nor expression, then this evidently isn't connected to
-					a hook at all. Produce an error.
-				*/
-				expr.replaceWith(TwineError.create("syntax",
-					"The (" + result.macroName + ":) command should be assigned to a variable or attached to a hook.",
-					"Macros like this should appear to the left of a hook: " + expr.attr('title') + "[Some text]"
-				).render(expr.attr('title')));
 				break;
 			}
+			/*
+				If it's neither hook nor expression, then this evidently isn't connected to
+				a hook at all. Produce an error.
+			*/
+			expr.replaceWith(TwineError.create("syntax",
+				"The (" + result.macroName + ":) command should be assigned to a variable or attached to a hook.",
+				"Macros like this should appear to the left of a hook: " + expr.attr('title') + "[Some text]"
+			).render(expr.attr('title')));
+			break;
 		}
 		/*
 			IF the above loop wasn't entered at all (i.e. the result wasn't a changer) then an error may

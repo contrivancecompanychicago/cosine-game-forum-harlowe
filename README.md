@@ -71,7 +71,7 @@ Rough documentation is at http://twine2.neocities.org/
 #####Markup
 
  * Added column markup, which is, like aligner markup, a special single-line token indicating that the subsequent text should be separated into columns. They consist of a number of `|` marks, indicating the size of the column relative to the other columns, and a number of `=` marks surrounding it, indicating the size of the column's margins in CSS "em" units (which are about the width of a capital M). Separate each column's text with tokens like `|===` and `==||`, and end them with a final `|==|` token to return to normal page layout.
- * Now, it's possible to attach multiple changers to a single hook - `(text-style:'bold')(align:'==>')$robotFont[Text]` will apply `(text-style:'bold')`, `(align:'==>')` and the changer in the variable $robotFont, as if they had been added together with `+` in a single variable. Again, you can put whitespace between them – `(text-style:'bold')  (align:'==>')  $robotFont  [Text]` is equally valid, and causes the whitespace between each changer and the hook itself to be discarded.
+ * Now, it's possible to attach multiple changers to a single hook by joining them with `+`, even outside of a macro - `(text-style:'bold')+(align:'==>')+$robotFont[Text]` will apply `(text-style:'bold')`, `(align:'==>')` and the changer in the variable $robotFont, as if they had been added together in a single variable. Again, you can put whitespace between them – `(text-style:'bold') + (align:'==>') + $robotFont  [Text]` is equally valid, and causes the whitespace between each changer and the hook itself to be discarded.
  * Now, you can make hooks which are hidden when the passage is initially displayed, to be revealed when a macro (see below) is run. Simply replace the `<` and `>` symbol with a `(` or `)`. For example: `|h)[This hook is hidden]`. (You can think of this as being visually similar to comic speech balloons vs. thought balloons.) This is an alternative to the revision macros, and can be used in situations where the readability of the passage prose is improved by having hidden hooks alongside visible text, rather than separate `(replace:)` hooks. (Of course, the revision macros are still useful in a variety of other situations, including `header` passages.)
 
 #####Code
@@ -99,6 +99,7 @@ Rough documentation is at http://twine2.neocities.org/
  * Added `(interlaced:)`, which interweaves the values of passed-in arrays. `(interlaced: (a: 'A','B','C','D'),(a: 1,2,3))` is the same as `(a: 'A',1,'B',2,'C',3)`. (For functional programmers, this is just a flat zip.) This can be useful alongside the `(datamap:)` macro.
  * Added `(rgb:)`, `(rgba:)`, `(hsl:)` and `(hsla:)`, which produce colour values, similar to the CSS colour functions. `(rgb:252,180,0)` produces the colour #fcb400, and `(hsl:150,0.2,0.6)` produces the colour #84ad99.
  * Added `(dataentries:)`, which complements `(datanames:)` and `(datavalues:)` by producing, from a datamap, an array of the datamap's name-value pairs. Each pair is a datamap with "name" and "value" data, which can be examined using the lambda macros.
+ * Now, you can specify `"none"` as a `(text-style:)` and produce a changer which, when added to other `(text-style:)` combined changers, removes their styles.
 
 ###1.2.3 changes (unreleased):
 

@@ -141,6 +141,24 @@ describe("style changer macros", function() {
 				});
 			});
 		});
+		describe("'none' style", function() {
+			it("removes other styles it is composed to the right with", function(done) {
+				var hook = runPassage("(set:$x to (text-style:'bold'))(set:$x to it + (text-style:'none'))$x[Goobar]")
+					.find('tw-hook');
+				setTimeout(function() {
+					expect(hook.attr('style')).toBe(undefined);
+					done();
+				});
+			});
+			it("doesn't remove styles if it is composed to the left", function(done) {
+				var hook = runPassage("(set:$x to (text-style:'bold'))(set:$x to (text-style:'none') + it)$x[Goobar]")
+					.find('tw-hook');
+				setTimeout(function() {
+					expect(hook.attr('style')).toMatch(/font-weight:\s*(bold|800)/);
+					done();
+				});
+			});
+		});
 	});
 	describe("the (transition:) macro", function() {
 		it("requires exactly 1 string argument", function() {

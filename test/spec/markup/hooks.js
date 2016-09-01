@@ -84,17 +84,18 @@ describe("hooks", function () {
 		it("will error if the hook has no closing bracket", function (){
 			expect("(if:true)[(if:true)[Good golly]", 2).markupToError();
 		});
-		it("can chain changers", function (){
-			expect("(text-color:#639)(text-style:'bold')[foo]").markupToPrint("foo");
+		it("can chain changers with +", function (){
+			expect("(text-color:#639)+(text-style:'bold')[foo]").markupToPrint("foo");
 		});
-		it("can chain changers with any amount of whitespace", function (){
-			expect("(text-color:#639)\n(text-style:'bold')    [foo]").markupToPrint("foo");
+		it("can chain changers with any amount of whitespace around the +", function (){
+			expect("(text-color:#639)  +  (text-style:'bold')    [foo]").markupToPrint("foo");
+			expect("(text-color:#639)\n+(text-style:'bold')\n[foo]").markupToPrint("foo");
 		});
 		it("won't initiate chains with non-changer values", function (){
-			expect("(either:7)(text-style:'bold')[foo]").markupToPrint("7foo");
+			expect("(either:7)+(text-style:'bold')[foo]").markupToPrint("7+foo");
 		});
 		it("will error when chaining with non-changers", function (){
-			expect("(text-style:'bold')(either:7,8)(text-style:'italic')[foo]").markupToError();
+			expect("(text-style:'bold')+(either:7,8)+(text-style:'italic')[foo]").markupToError();
 		});
 	});
 	describe("changer variable attached hooks", function () {
@@ -134,19 +135,20 @@ describe("hooks", function () {
 		});
 		it("can chain changers", function (){
 			runPassage("(set: $bar to (text-color:#639))(set: $baz to (text-style:'bold'))");
-			expect("$bar$baz[foo]").markupToPrint("foo");
+			expect("$bar+$baz[foo]").markupToPrint("foo");
 		});
 		it("can chain changers with any amount of whitespace", function (){
 			runPassage("(set: $bar to (text-color:#639))(set: $baz to (text-style:'bold'))");
-			expect("$bar  \n  $baz    [foo]").markupToPrint("foo");
+			expect("$bar  \n+  $baz    [foo]").markupToPrint("foo");
+			expect("$bar  +\n  $baz    [foo]").markupToPrint("foo");
 		});
 		it("won't initiate chains with non-changer values", function (){
 			runPassage("(set: $bar to 7)(set: $baz to (text-style:'bold'))");
-			expect("$bar$baz[foo]").markupToPrint("7foo");
+			expect("$bar+$baz[foo]").markupToPrint("7+foo");
 		});
 		it("will error when chaining with non-changers", function (){
 			runPassage("(set: $bar to 7)(set: $baz to (text-style:'bold'))");
-			expect("$bar$baz$bar[foo]").markupToError();
+			expect("$bar+$baz+$bar[foo]").markupToError();
 		});
 	});
 	describe("hidden named hooks", function () {
