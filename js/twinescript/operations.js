@@ -136,18 +136,44 @@ define([
 	}
 	
 	/*
-		Converts a function to set It after it is done.
+		Converts a function to handle determiners ("any", "all") and to set It after it is done.
 		@return {Function}
 	*/
 	function comparisonOp(fn) {
-		return (left, right) => {
+		const compare = (left, right) => {
 			let error;
 			if ((error = TwineError.containsError(left, right))) {
 				return error;
 			}
 			It = left;
+			if (left.determiner) {
+				const all = left.determiner === "all";
+				/*
+					Normally we'd use Array#every and Array#some here, but we also need
+					to pull out any TwineErrors which are produced doing each of these
+					comparisons. So, these looping methods are expanded as follows.
+				*/
+				return left.array.reduce((result, e) => {
+					let error, next = compare(e, right);
+					if ((error = TwineError.containsError(result, next))) {
+						return error;
+					}
+					return (all ? result && next : result || next);
+				}, all);
+			}
+			else if (right.determiner) {
+				const all = right.determiner === "all";
+				return right.array.reduce((result, e) => {
+					let error, next = compare(left, e);
+					if ((error = TwineError.containsError(result, next))) {
+						return error;
+					}
+					return (all ? result && next : result || next);
+				}, all);
+			}
 			return fn(left, right);
 		};
+		return compare;
 	}
 
 	const andOrNotMessage =
@@ -398,13 +424,6 @@ define([
 			
 			if (error) {
 				return error;
-			}
-
-			/*
-				Also refuse if the src is a value which is "unstorable".
-			*/
-			if (src && src.TwineScript_Unstorable) {
-				return TwineError.create("operation", "A " + typeName(src) + " can't be stored.");
 			}
 			
 			/*

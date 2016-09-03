@@ -36,15 +36,17 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 			in place of a single position: `"Dog"'s (a: 2,3)` is "og".
 
 			Also, you can use the `contains` and `is in` operators to see if a certain string is contained within another: `"mother"
-			contains "moth"` is true, as is `"a" is in "a"`.
+			contains "moth"` is true, as is `"a" is in "a"`. Again, like arrays, strings have special `any` and `all` data names which
+			can be used with `contains` and `is in` to check all their characters - `all of $string is not "w"` is true if the string doesn't
+			contain "w", and `$string contains any of "aeiou"` is true if the string contains those five letters.
 
 			To summarise, here are the operations you can perform on strings.
 
 			| Operator | Function | Example
 			|---
 			| `+` | Joining. | `"A" + "Z"` (is "AZ")
-			| `is` | Evaluates to boolean `true` if both sides are equal, otherwise `false`. | `$name is "Frederika"`
-			| `is not` | Evaluates to boolean `true` if both sides are not equal, otherwise `false`. | `$friends is not $enemies`
+			| `is` | Evaluates to boolean `true` if both sides are equal, otherwise `false`. | `$name is "Frederika"`<br>`any of "Buxom" is "x"`
+			| `is not` | Evaluates to boolean `true` if both sides are not equal, otherwise `false`. | `$friends is not $enemies`<br>`all of "Gadsby" is not "e"`
 			| `contains` | Evaluates to boolean `true` if the left side contains the right side, otherwise `false`. | `"Fear" contains "ear"`
 			| `is in` | Checking if the right string contains the left string, otherwise `false`. | `"ugh" is in "Through"`
 			| `'s` | Obtaining the character or substring at the right numeric position. | `"YO"'s 1st` (is "Y")<br>`"PS"'s (2)` (is "S")<br>`"ear"'s (a: 2,3)` (is "ar")

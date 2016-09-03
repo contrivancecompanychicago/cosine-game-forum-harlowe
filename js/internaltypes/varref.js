@@ -1,5 +1,5 @@
 define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'datatypes/hookset', 'datatypes/colour'],
-(State, TwineError, {impossible}, {isObject, isSequential, objectName, clone, numericIndex, isValidDatamapName}, HookSet, Colour) => {
+(State, TwineError, {impossible}, {isObject, isSequential, objectName, typeName, clone, numericIndex, isValidDatamapName}, HookSet, Colour) => {
 	'use strict';
 	/*
 		VarRefs are essentially objects pairing a chain of properties
@@ -50,6 +50,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			1st, 2nd etc.: indices.
 			last: antonym of 1st.
 			2ndlast, 3rdlast: reverse indices.
+			any, all: produce special "determiner" objects used for comparison operations.
 		*/
 		if (isSequential(obj)) {
 			let match;
@@ -92,20 +93,20 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			else if (prop === "last") {
 				prop = -1;
 			}
-			else if (prop !== "length" || HookSet.isPrototypeOf(obj)) {
+			else if (!["length","any","all"].includes(prop) || HookSet.isPrototypeOf(obj)) {
 				return TwineError.create("property",
 					"You can only access position strings/numbers ('4th', 'last', '2ndlast', (2), etc.)"
-					+ (HookSet.isPrototypeOf(obj) ? "" : " and 'length'") + " of "
+					+ (HookSet.isPrototypeOf(obj) ? "" : ", 'length', 'any' and 'all'") + " of "
 					+ objectName(obj) + ", not " + objectName(prop) + ".");
 			}
 		}
 		/*
 			Sets, being essentially a limited kind of arrays, cannot have any
-			property access other than 'length'.
+			property access other than 'length', 'any' and 'all'.
 		*/
 		else if (obj instanceof Set) {
-			if (prop !== "length") {
-				return TwineError.create("property", "You can only get the 'length' of a "
+			if (!["length","any","all"].includes(prop)) {
+				return TwineError.create("property", "You can only get the 'length', 'any' and 'all' of a "
 					+ objectName(obj)
 					+ ".",
 					"To check contained values, use the 'contains' operator.");
@@ -114,7 +115,9 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				This kludge must be used to pave over a little difference
 				between Arrays and Sets.
 			*/
-			prop = "size";
+			if (prop === "length") {
+				prop = "size";
+			}
 		}
 		/*
 			Numbers and booleans cannot have properties accessed.
@@ -199,6 +202,30 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 	}
 
 	/*
+		This helper creates a determiner, which is a special object returned
+		from a sequence's "any" or "all" properties, and, when used in comparison
+		operations like "contains" and ">", allows all of the sequence's elements
+		to be compared succinctly.
+	*/
+	function createDeterminer(obj, prop) {
+		const name = {
+			any: "'any' value of ",
+			all: "'all' values of ",
+		}[prop];
+
+		return {
+			determiner: prop,
+			array: [...obj],
+			TwineScript_ObjectName: name + objectName(obj),
+			TwineScript_TypeName: name + "a data structure",
+			TwineScript_Unstorable: true,
+			TwineScript_Print() {
+				return "`[" + this.TwineScript_TypeName + "]`";
+			},
+		};
+	}
+
+	/*
 		As Maps have a different means of accessing stored values
 		than arrays, these tiny utility functions are needed.
 		They have the slight bonus that they can fit into some .reduce() calls
@@ -215,6 +242,9 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		} else {
 			if (isSequential(obj)) {
 				prop = convertNegativeProp(obj,prop);
+			}
+			if (prop === "any" || prop === "all") {
+				return createDeterminer(obj,prop);
 			}
 			if (obj.TwineScript_GetElement && Number.isFinite(+prop)) {
 				return obj.TwineScript_GetElement(prop);
@@ -287,10 +317,10 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				Unlike in JavaScript, you can't change the length of
 				an array or string - it's fixed.
 			*/
-			if(prop === "length") {
+			if(["length","any","all"].includes(prop)) {
 				return TwineError.create(
 					"operation",
-					"I can't forcibly alter the length of " + objectName(obj) + "."
+					"I can't forcibly alter the '" + prop + "' of " + objectName(obj) + "."
 				);
 			}
 			/*
@@ -570,6 +600,12 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 						canSet(object, property)
 					))) {
 					return error;
+				}
+				/*
+					Produce an error if the value is "unstorable".
+				*/
+				if (value && value.TwineScript_Unstorable) {
+					return TwineError.create("operation", typeName(value) + " can't be stored.");
 				}
 
 				/*

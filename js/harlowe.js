@@ -76,8 +76,8 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'util
 		| Inequality operators | `3 > 2`,<br>`3 >= 3`,<br>`2 < 3`,<br>`2 <= 3` | `3 gt 2`~,<br>`3 gte 3`~,<br>`2 lt 3`~,<br>`2 lte 3`~
 		| "Is variable defined" operator | Not offered | `def $lunchpack`~
 		| "Contains" operation for arrays | `$arr contains "Pink"`,<br>`$arr's (a:3, -1) contains "Pink"`~ | `$arr.contains("pink")`~,<br>`$arr.contains("pink", 3)`~
-		| "Contains all" operation for arrays | Not offered | `$arr.containsAll("pink", "green")`~,<br>`$arr.containsAll($arr2)`~
-		| "Contains any" operation for arrays | Not offered | `$arr.containsAny("pink", "green")`~,<br>`$arr.containsAny($arr2)`~
+		| "Contains all" operation for arrays | `$arr contains all of (a: "pink", "green")` | `$arr.containsAll("pink", "green")`~,<br>`$arr.containsAll($arr2)`~
+		| "Contains any" operation for arrays | `$arr contains any of (a: "pink", "green")`| `$arr.containsAny("pink", "green")`~,<br>`$arr.containsAny($arr2)`~
 		| "Count" operation | `(count: $arr, "Frog")` | `$arr.count("Frog")`~
 		| Increment/decrement | `$a to it + 1`,<br>`$a to it - 1` | `$a++`~<br>`$a--`~
 		| Spread operator | `...$arr` | Not offered

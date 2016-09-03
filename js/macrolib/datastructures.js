@@ -294,11 +294,21 @@ define([
 			directly correspond to *numbers*, and whose *order* and *position* relative to each other matter.
 			If you instead need to refer to values by a name, and don't care about their order, a datamap is best used.
 			
-			Array data is referenced much like string characters are. You can refer to data positions using `1st`,
-			`2nd`, `3rd`, and so forth: `$array's 1st` refers to the value in the first position. Additionally, you can
-			use `last` to refer to the last position, `2ndlast` to refer to the second-last, and so forth. Arrays also
-			have a `length` number: `$array's length` tells you how many values are in it. If you don't know the exact
-			position to remove an item from, you can use an expression, in brackers, after it: `$array's ($pos - 3)`.
+			You can refer to and extract data at certain positions inside arrays using `1st`, `2nd`, `3rd`, and so forth:
+			`$array's 1st`, also written as `1st of $array`, refers to the value in the first position. Additionally, you can
+			use `last` to refer to the last position, `2ndlast` to refer to the second-last, and so forth. Arrays also have
+			a `length` number: `$array's length` tells you how many values are in it. If you don't know the exact position
+			to remove an item from, you can use an expression, in brackers, after it: `$array's ($pos - 3)`.
+			
+			To see if arrays contain certain values, you can use the `contains` and `is in` operators like so: `$array contains 1`
+			is true if it contains the number 1 anywhere, and false if it does not. `1 is in $array` is another way to write that.
+			If you want to check if an array contains some, or all of the values, in another array, you can compare with a special
+			`any` or `all` name on the other array: `$array contains any of (a:2,4,6)`, and `$array contains all of (a:2,4,6)`
+			will check if `$array` contains some, or all, of the numbers 2, 4 and 6.
+
+			(Incidentally, `any` and `all` can also be used with other operators, like `is`, `is not`, `>`, `<`, `>=`, and `<=`,
+			to compare every value in the array with a number or other value. For instance, `all of (a:2,4) >= 2` is true, as is
+			`any of (a:2,4) >= 4`.)
 			
 			Arrays may be joined by adding them together: `(a: 1, 2) + (a: 3, 4)` is the same as `(a: 1, 2, 3, 4)`.
 			You can only join arrays to other arrays. To add a bare value to the front or back of an array, you must
@@ -323,13 +333,13 @@ define([
 			|---
 			| `is` | Evaluates to boolean `true` if both sides contain equal items in an equal order, otherwise `false`. | `(a:1,2) is (a:1,2)` (is true)
 			| `is not` | Evaluates to `true` if both sides differ in items or ordering. | `(a:4,5) is not (a:5,4)` (is true)
-			| `contains` | Evaluates to `true` if the left side contains the right side. | `(a:"Ape") contains "Ape"`<br>`(a:(a:99)) contains (a:99)`
-			| `is in` | Evaluates to `true` if the right side contains the left side. | `"Ape" is in (a:"Ape")`
+			| `contains` | Evaluates to `true` if the left side contains the right side. | `(a:"Ape") contains "Ape"`<br>`(a:(a:99)) contains (a:99)`<br>`(a:1,2) contains any of (a:2,3)`<br>`(a:1,2) contains all of (a:2,1)`
+			| `is in` | Evaluates to `true` if the right side contains the left side. | `"Ape" is in (a:"Ape")`<br>`(a:99) is in (a:(a:99))`<br>`any of (a:2,3) is in (a:1,2)`<br>`all of (a:2,1) is in (a:1,2)`
 			| `+` | Joins arrays. | `(a:1,2) + (a:1,2)` (is `(a:1,2,1,2)`)
-			| `-` | Subtracts arrays. | `(a:1,1,2,3,4,5) - (a:1,2)` (is `(a:3,4,5)`)
+			| `-` | Subtracts arrays, producing an array containing every value in the left side but not the right. | `(a:1,1,2,3,4,5) - (a:1,2)` (is `(a:3,4,5)`)
 			| `...` | When used in a macro call, it separates each value in the right side. | `(a: 0, ...(a:1,2,3,4), 5)` (is `(a:0,1,2,3,4,5)`)
-			| `'s` | Obtains the item at the right numeric position. | `(a:"Y","Z")'s 1st` (is "Y")<br>`(a:4,5)'s (2)` (is 5)
-			| `of` | Obtains the item at the left numeric position. | `1st of (a:"Y","O")` (is "Y")<br>`(2) of (a:"P","S")` (is "S")
+			| `'s` | Obtains the item at the right numeric position, or the `length`, `any` or `all` values. | `(a:"Y","Z")'s 1st` (is "Y")<br>`(a:4,5)'s (2)` (is 5)<br>`(a:5,5,5)'s length` (is 3)
+			| `of` | Obtains the item at the left numeric position, or the `length`, `any` or `all` values. | `1st of (a:"Y","O")` (is "Y")<br>`(2) of (a:"P","S")` (is "S")<br>`length of (a:5,5,5)` (is 3)
 		*/
 		/*d:
 			(a: [...Any]) -> Array
@@ -1197,7 +1207,7 @@ define([
 
 			* You can't access any positions within the dataset (so, for instance, the `1st`, `2ndlast`
 			and `last` aren't available, although the `length` still is) and can only use `contains`
-			and `is in` to see whether a value is inside.
+			and `is in` to see whether a value is inside (or, by using `any` and `all`, many values).
 
 			* Datasets only contain unique values: adding the string "Go" to a dataset already
 			containing "Go" will do nothing.
@@ -1214,13 +1224,13 @@ define([
 
 			| Operator | Purpose | Example
 			|---
-			| `is` | Evaluates to boolean `true` if both sides contain equal items, otherwise `false`. | `(dataset:1,2) is (dataset 2,1)` (is true)
-			| `is not` | Evaluates to `true` if both sides differ in items. | `(dataset:5,4) is not (dataset:5)` (is true)
-			| `contains` | Evaluates to `true` if the left side contains the right side. | `(dataset:"Ape") contains "Ape"`<br>`(dataset:(dataset:99)) contains (dataset:99)`
-			| `is in` | Evaluates to `true` if the right side contains the left side. | `"Ape" is in (dataset:"Ape")`
-			| `+` | Joins datasets. | `(dataset:1,2,3) + (dataset:1,2,4)` (is `(dataset:1,2,3,4)`)
-			| `-` | Subtracts datasets. | `(dataset:1,2,3) - (dataset:1,3)` (is `(dataset:2)`)
-			| `...` | When used in a macro call, it separates each value in the right side.<br>The dataset's values are sorted before they are spread out.| `(a: 0, ...(dataset:1,2,3,4), 5)` (is `(a:0,1,2,3,4,5)`)
+			| `is` | Evaluates to boolean `true` if both sides contain equal items, otherwise `false`. | `(ds:1,2) is (ds 2,1)` (is true)
+			| `is not` | Evaluates to `true` if both sides differ in items. | `(ds:5,4) is not (ds:5)` (is true)
+			| `contains` | Evaluates to `true` if the left side contains the right side. | `(ds:"Ape") contains "Ape"`<br>`(ds:(ds:99)) contains (ds:99)`<br>`(ds: 1,2,3) contains all of (a:2,3)`<br>`(ds: 1,2,3) contains any of (a:3,4)`
+			| `is in` | Evaluates to `true` if the right side contains the left side. | `"Ape" is in (ds:"Ape")`<br>`(a:3,4) is in (ds:1,2,3)`
+			| `+` | Joins datasets. | `(ds:1,2,3) + (ds:1,2,4)` (is `(ds:1,2,3,4)`)
+			| `-` | Subtracts datasets. | `(ds:1,2,3) - (ds:1,3)` (is `(ds:2)`)
+			| `...` | When used in a macro call, it separates each value in the right side.<br>The dataset's values are sorted before they are spread out.| `(a: 0, ...(ds:1,2,3,4), 5)` (is `(a:0,1,2,3,4,5)`)
 		*/
 		/*d:
 			(ds: [...Any]) -> Dataset

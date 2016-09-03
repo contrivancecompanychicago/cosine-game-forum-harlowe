@@ -690,6 +690,8 @@
 					cannotFollow: "text",
 				},
 			},
+			// As these consist of word characters, they cannot follow text nodes, lest they
+			// match subwords like "xxisxx".
 			["boolean", "is", "to", "into", "where", "via", "with", "making", "and", "or", "not",
 			"isNot", "contains", "isIn"].reduce(function(a, e) {
 				a[e] = {
@@ -698,6 +700,7 @@
 				};
 				return a;
 			},{}),
+			// These, being purely symbols, do not have that necessity.
 			["comma", "spread", "addition", "subtraction",
 			"multiplication", "division"].reduce(function(a, e) {
 				a[e] = { fn: emptyFn };

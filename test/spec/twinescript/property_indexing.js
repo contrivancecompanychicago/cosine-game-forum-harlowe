@@ -172,17 +172,17 @@ describe("property indexing", function() {
 				expect('(set: $d\'s "1" to 6)').markupToError();
 			});
 		});
-		it("only 'length' can be used with arrays", function() {
-			expect('(set: $s to (a: 2,3))(print: $s\'s length)').markupToPrint('2');
-			expect('(set: $s to (a: 2,3))(print: $s\'s thing)').markupToError();
-			expect('(set: $s to (a: 2,3))(set: $s\'s thing to 4)').markupToError();
-			expect('(set: $s to (a: 2,3))(set: $s\'s length to 4)').markupToError();
-		});
-		it("only 'length' can be used with datasets", function() {
-			expect('(set: $s to (dataset: 2,3))(print: $s\'s length)').markupToPrint('2');
-			expect('(set: $s to (dataset: 2,3))(print: $s\'s thing)').markupToError();
-			expect('(set: $s to (dataset: 2,3))(set: $s\'s thing to 4)').markupToError();
-			expect('(set: $s to (dataset: 2,3))(set: $s\'s length to 4)').markupToError();
+		[
+			["strings", '"AB"'],
+			["arrays", "(a:2,4)"],
+			["datasets", "(ds:2,4)"]
+		].forEach(function(arr) {
+			it("only 'length', 'any' and 'all' can be used with " + arr[0], function() {
+				expect('(set: $s to ' + arr[1] + ')(print: $s\'s length)').markupToPrint('2');
+				expect('(set: $s to ' + arr[1] + ')(print: $s\'s thing)').markupToError();
+				expect('(set: $s to ' + arr[1] + ')(print: $s\'s any is 0)').not.markupToError();
+				expect('(set: $s to ' + arr[1] + ')(print: $s\'s all is 0)').not.markupToError();
+			});
 		});
 		it("cannot be used with booleans", function() {
 			expect('(print: false\'s a)').markupToError();
@@ -244,13 +244,17 @@ describe("property indexing", function() {
 		it("won't conflict with 'its' indices", function() {
 			expect('(set:$a to (a:(a:7,8),(a:9,0)))(set: $a to 2nd of its 1st)$a').markupToPrint("8");
 		});
-		it("only 'length' can be used with arrays", function() {
-			expect('(set: $s to (a: 2,3))(print: length of $s)').markupToPrint('2');
-			expect('(set: $s to (a: 2,3))(set: thing of $s to 4)').markupToError();
-		});
-		it("only 'length' can be used with datasets", function() {
-			expect('(set: $s to (dataset: 2,3))(print: $s\'s length)').markupToPrint('2');
-			expect('(set: $s to (dataset: 2,3))(set: $s\'s thing to 4)').markupToError();
+		[
+			["strings", '"AB"'],
+			["arrays", "(a:2,4)"],
+			["datasets", "(ds:2,4)"]
+		].forEach(function(arr) {
+			it("only 'length', 'any' and 'all' can be used with " + arr[0], function() {
+				expect('(set: $s to ' + arr[1] + ')(print: length of $s)').markupToPrint('2');
+				expect('(set: $s to ' + arr[1] + ')(print: thing of $s)').markupToError();
+				expect('(set: $s to ' + arr[1] + ')(print: any of $s is 0)').not.markupToError();
+				expect('(set: $s to ' + arr[1] + ')(print: all of $s is 0)').not.markupToError();
+			});
 		});
 		it("cannot be used with booleans", function() {
 			expect('(print: 1st of false)').markupToError();
@@ -331,13 +335,15 @@ describe("property indexing", function() {
 				expect("(set: $a to (a:1,2))(set: $a\'s (1) to 2)$a").markupToPrint("2,2");
 				expect("(set: $a to (a:(a:1)))(set: $a\'s 1st\'s 1st to 2)$a").markupToPrint("2");
 			});
-			it("must have numbers in range on the right side, or 'length'", function (){
+			it("must have numbers in range on the right side, or 'length', 'any' or 'all'", function (){
 				expect("(print: (a:'Red','Blue')\'s '1')").markupToError();
 				expect("(print: (a:'Red')\'s ('13'\'s 1st))").markupToError();
 				expect("(print: (a:'Red','Blue')'s 'length')").markupToPrint("2");
 				expect("(print: (a:'Red','Blue')\'s 0)").markupToError();
 				expect("(print: (a:'Red','Blue')\'s 9)").markupToError();
 				expect("(print: (a:)\'s 1)").markupToError();
+				expect("(print: (a:'Red','Blue')'s 'any' is 0)").not.markupToError();
+				expect("(print: (a:'Red','Blue')'s 'all' is 0)").not.markupToError();
 			});
 			it("takes negative numeric expressions to obtain last, 2ndlast, etc", function() {
 				expect('(print: (a:7)\'s (-1))').markupToPrint('7');
@@ -366,7 +372,7 @@ describe("property indexing", function() {
 			});
 		});
 		describe("for strings", function() {
-			it("must have numbers in range on the right side, or 'length'", function (){
+			it("must have numbers in range on the right side, or 'length', 'any' or 'all'", function (){
 				expect("(print: \"𐌎ed\"'s (1))").markupToPrint("𐌎");
 				expect("(print: \"𐌎ed\"'s 'length')").markupToPrint("3");
 				expect("(print: '𐌎ed''s '1')").markupToError();
@@ -374,6 +380,9 @@ describe("property indexing", function() {
 				expect("(print: \"𐌎ed\"'s 0)").markupToError();
 				expect("(print: \"𐌎ed\"'s 9)").markupToError();
 				expect("(print: \"\"'s 1)").markupToError();
+				expect("(print: \"𐌎ed\"'s 'length')").markupToPrint("3");
+				expect("(print: \"𐌎ed\"'s 'any' is 0)").not.markupToError();
+				expect("(print: \"𐌎ed\"'s 'all' is 0)").not.markupToError();
 			});
 			it("takes negative numeric expressions to obtain last, 2ndlast, etc", function() {
 				expect('(print: "A𐌎B"\'s (-1))').markupToPrint('B');
@@ -403,8 +412,10 @@ describe("property indexing", function() {
 				it("cannot be used to set arbitrary names", function() {
 					expect('(set: $a to "𐌎old")(set: $a\'s (a:1,"garply") to "ar")$a').markupToError();
 				});
-				it("cannot be used to set 'length'", function() {
+				it("cannot be used to set 'length', 'any' or 'all'", function() {
 					expect('(set: $a to "𐌎old")(set: $a\'s (a:1,"length") to "ar")$a').markupToError();
+					expect('(set: $a to "𐌎old")(set: $a\'s (a:1,"any") to "ar")$a').markupToError();
+					expect('(set: $a to "𐌎old")(set: $a\'s (a:1,"all") to "ar")$a').markupToError();
 				});
 				it("can also be chained in assignments", function() {
 					expect('(set: $a to "𐌎old")(set: $a\'s (a:2,3)\'s (a:1,2) to "ar")$a').markupToPrint('𐌎ard');
@@ -524,19 +535,23 @@ describe("property indexing", function() {
 				expect("(set: $a to (a:1,2))(set: (1) of $a\ to 2)$a").markupToPrint("2,2");
 				expect("(set: $a to (a:(a:1)))(set: (1) of (1) of $a\ to 2)$a").markupToPrint("2");
 			});
-			it("must have in-range numbers on the left side, or 'length'", function (){
+			it("must have in-range numbers on the left side, or 'length', 'any' or 'all'", function (){
 				expect("(print: 1 of (a:'Red','Blue'))").markupToPrint("Red");
 				expect("(print: '1' of (a:'Red','Blue'))").markupToError();
 				expect("(print: ('13'\'s 1st) of (a:'Red'))").markupToError();
 				expect("(print: 'length' of (a:'Red'))").markupToPrint("1");
+				expect("(print: 'any' of (a:'Red') is 0)").not.markupToError();
+				expect("(print: 'all' of (a:'Red') is 0)").not.markupToError();
 				expect("(print: 0 of (a:'Red'))").markupToError();
 				expect("(print: 3 of (a:'Red'))").markupToError();
 			});
 		});
 		describe("for strings", function() {
-			it("must have in-range numbers on the left side, or 'length'", function (){
+			it("must have in-range numbers on the left side, or 'length', 'any' or 'all'", function (){
 				expect("(print: (1) of '𐌎ed')").markupToPrint("𐌎");
 				expect("(print: 'length' of \"𐌎ed\")").markupToPrint("3");
+				expect("(print: 'any' of 'Red' is 0)").not.markupToError();
+				expect("(print: 'all' of 'Red' is 0)").not.markupToError();
 				expect("(print: '1' of '𐌎ed')").markupToError();
 				expect("(print: 0 of '𐌎ed')").markupToError();
 				expect("(print: 9 of '𐌎ed')").markupToError();

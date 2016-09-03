@@ -12,8 +12,9 @@ const
 	/*
 		This matches a mixed-case type name, optionally plural, but not whenever
 		it seems to be part of a macro name.
+		Due to its commonality in English, "any" is not included.
 	*/
-	typeName = /([^\-])\b(hookname|colour|variabletovalue|any|changer|command|string|number|boolean|array|data(?:map|set))(s?)(?!\:\))\b/ig,
+	typeName = /([^\-])\b(hookname|colour|variabletovalue|changer|command|string|number|boolean|array|data(?:map|set))(s?)(?!\:\))\b/ig,
 	
 	Defs = function(props) {
 		return Object.assign({

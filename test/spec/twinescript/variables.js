@@ -41,6 +41,7 @@ describe("twinescript variables", function() {
 		});
 		it("cannot assign a hook reference to a variable", function() {
 			expect("|a>[Gee] |a>[Wow](set: $a to ?a)(click:$a)[]").markupToError();
+			expect("|a>[Gee] |a>[Wow](set: $a to ?a's 1st)(click:$a)[]").markupToError();
 		});
 		it("assignment requests can't be assigned", function() {
 			expect("(set: $wordy to ($wordy to 2)) ").markupToError();
