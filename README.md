@@ -13,6 +13,7 @@ Rough documentation is at http://twine2.neocities.org/
    * Additionally fixed a bug where data structures were storied in datasets by reference, allowing two variables to reference (and remotely alter) the same data.
  * Fixed a bug where using `(move:)` to move a subarray or substring (such as `(move: $a's (a:2,3) to $b))` wouldn't work.
  * Fixed a bug where using `(set:)` to set a substring, when the given array of positions contained "length" (such as `(set: $a's (a:1,"length")) to "foo")`), wouldn't produce an error.
+ * Fixed a bug where the `(count:)` macro would give the wrong result when the data to count (the second value) was an empty string.
  * Now, a `(print:)` command that contains a command will only execute the contained command if itself is actually displayed in the passage - the code `(set: $x to (print:(goto:'X')))` would formerly perform the (goto:) immediately, even though the (print:) was never displayed.
  * Now, datasets contained in other datasets should be printed correctly, listing their contents.
  * `(alert:)`, `(open-url:)`, `(reload:)` and `(goto-url:)` now correctly return command values rather than the non-Harlowe value `undefined`. This means that `(alert:)`'s' time of execution changes relative to `(prompt:)` and `(confirm:)` - `(set: $x to (prompt:"X"))` will display a JS dialog immediately, but `(set: $x to (alert:"X"))` will not - although this is conceptually reasonable given that `(prompt:)` and `(confirm:)` are essentially "input" commands obtaining data from the player, and `(alert:)` is strictly an "output" command.
@@ -55,6 +56,7 @@ Rough documentation is at http://twine2.neocities.org/
  * Now, adding two `(append:)` or `(prepend:)` macros which target the same hook, such as `(append:?elf) + (append:?elf)`, no longer creates a changer that appends/prepends to that same hook twice.
  * Hook names, even added together, can now be recognised as the same by the `is` operator if they target the same hooks (including sub-elements).
  * The `(move:)` macro now accepts multiple `into` values, like `(put:)`.
+ * The `(count:)` macro now accepts multiple data values, and will count the total occurences of every value. For instance, `(count: "AMAZE", "A", "Z")` produces 3.
  * Now, `debug-header` tagged passages are run after `header` tagged passages in debug mode, for consistency with the order of `debug-startup` and `startup`.
 
 #####HTML/CSS

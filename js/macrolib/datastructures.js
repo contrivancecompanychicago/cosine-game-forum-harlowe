@@ -32,7 +32,7 @@ define([
 			or stored in data structures.
 		*/
 		/*d:
-			(set: VariableToValue, [...VariableToValue]) -> Instant
+			(set: ...VariableToValue) -> Instant
 			
 			Stores data values in variables.
 			
@@ -130,7 +130,7 @@ define([
 		[rest(AssignmentRequest)])
 		
 		/*d:
-			(put: VariableToValue, [...VariableToValue]) -> Instant
+			(put: ...VariableToValue) -> Instant
 			
 			A left-to-right version of (set:) that requires the word `into` rather than `to`.
 			
@@ -195,7 +195,7 @@ define([
 		[rest(AssignmentRequest)])
 		
 		/*d:
-			(move: VariableToValue, [...VariableToValue]) -> Instant
+			(move: ...VariableToValue) -> Instant
 			
 			A variant of (put:) that deletes the source value after copying it - in effect
 			moving the value from the source to the destination.
@@ -1261,29 +1261,56 @@ define([
 			COLLECTION OPERATIONS
 		*/
 		/*d:
-			(count: Any, Any) -> Number
+			(count: Array or String, ...Any) -> Number
 
-			Accepts two string or array values, and produces the number of times the second value
-			is inside the first value.
+			Accepts a string or array, followed by a value, and produces the number of times any of the values
+			are inside the string or array.
 
 			Example usage:
-			`(count: (a:1,2,3,2,1), 1)` produces 2.
+			`(count: (a:1,2,3,2,1), 1, 2)` produces 4.
+			`(count: "Though", "ugh","u","h")` produces 4.
 
 			Rationale:
 			You can think of this macro as being like the `contains` operator, but more powerful.
-			While `contains` produces `true` or `false` if one or more occurrences of the right side
+			While `contains` produces `true` or `false` if occurrences of the right side
 			appear in the left side, (count:) produces the actual number of occurrences.
+
+			Note that if you only want to check if an array or string contains any or all of the
+			values, it's easier to use `contains` with the `all` property like so: `$arr contains all of (a:1,2)`
+			and `$arr contains any of (a:1,2)`. But, if you need an exact figure for the number of occurrences,
+			this macro will be of use.
 
 			Details:
 			If you use this with a number, boolean, datamap, dataset (which can't have duplicates),
 			or anything else which can't have a value, then an error will result.
+
+			If you use this with a string, and the values aren't also strings, then an error will result.
+
+			Substrings are counted separately from each other - that is, the string "Though" contains "ugh" once and "h"
+			once, and `(count: "Though","ugh","h")` results in 3. To check for "h" occurrences that are not contained in "ugh",
+			you can try subtracting two (count:)s - `(count: "Though","ugh") - (count: "Though","h")` produces 1.
 
 			See also:
 			(datanames:), (datavalues:)
 
 			#data structure
 		*/
-		("count", (_, collection, value) => {
+		("count", function count(_, collection, ...values) {
+			/*
+				As with many other macros, this handles multiple data values by recursively calling itself.
+			*/
+			if (values.length > 1) {
+				let error;
+				const recur = values.map(value => count(_, collection, value));
+				if ((error = TwineError.containsError(recur))) {
+					return error;
+				}
+				return recur.reduce((a,e) => a + e, 0);
+			}
+			const [value] = values;
+			/*
+				With a single value in hand, we now perform the count.
+			*/
 			switch(collectionType(collection)) {
 				case "dataset":
 				case "datamap": {
@@ -1304,8 +1331,11 @@ define([
 					/*
 						Since String#split() always produces an array of length 1 or more,
 						this will always produce 0 or higher.
+
+						Incidentally, if the value is the empty string, then 0 occurrences
+						should be reported.
 					*/
-					return collection.split(value).length-1;
+					return !value ? 0 : collection.split(value).length-1;
 				}
 				case "array": {
 					return collection.reduce((count, e) => count + is(e,value), 0);
@@ -1324,7 +1354,7 @@ define([
 			This currently has "Any" instead of "either(Array,String)" as its signature's first argument, so
 			that the above special error messages can appear for certain wrong argument types.
 		*/
-		[Any, Any])
+		[Any, rest(Any)])
 		
 		// End of macros
 		;

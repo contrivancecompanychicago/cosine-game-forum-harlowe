@@ -324,22 +324,29 @@ describe("data structure macros", function () {
 		});
 	});
 	describe("the (count:) macro", function() {
-		it("accepts 1 string or array argument, then an argument of any valid value", function() {
+		it("accepts 1 string or array argument, then arguments of any valid value", function() {
 			expect("(count:)").markupToError();
 			expect("(count: (a:'1'))").markupToError();
 			expect("(count: 2, 2)").markupToError();
 			expect("(count: '2', 2)").markupToError();
+			expect("(count: (a:), 2,2,2,2,2,2)").not.markupToError();
 			expect("(count: '2', 'a')").not.markupToError();
 			expect("(count: (a:6,7), 1)").not.markupToError();
 			expect("(count: (datamap:6,7), 1)").markupToError();
 			expect("(count: (dataset:6,7), 1)").markupToError();
+			expect("(count: 'ABRACADABRA', 'RA', 'B', 'C', (a:))").markupToError();
 		});
 		it("returns the number of occurrences of the value in the container", function() {
 			expect("(count: 'AAAA', 'B')").markupToPrint('0');
 			expect("(count: 'AAAA', 'A')").markupToPrint('4');
+			expect("(count: 'AAAA', 'A', '')").markupToPrint('4');
+			expect("(count: 'ABRACADABRA', 'RA', 'B', 'C', 'E')").markupToPrint('5');
 
 			expect("(count: (a:6,7), 1)").markupToPrint('0');
 			expect("(count: (a:6,7,6,6), 6)").markupToPrint('3');
+		});
+		it("counts string occurrences independently", function() {
+			expect("(count: 'UGH', 'GH', 'H')").markupToPrint('2');
 		});
 		it("compares values by structural equality", function() {
 			expect("(count: (a:(font:'Skia')), (font:'Skia'))").markupToPrint('1');
