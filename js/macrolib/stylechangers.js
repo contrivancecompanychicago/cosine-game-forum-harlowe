@@ -1,5 +1,5 @@
-define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'datatypes/changercommand', 'internaltypes/twineerror'],
-($, Macros, {insensitiveName, assertMustHave, childrenProbablyInline}, Selectors, Colour, ChangerCommand, TwineError) => {
+define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'datatypes/changercommand', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
+($, Macros, Utils, Selectors, Colour, ChangerCommand, ChangeDescriptor, TwineError) => {
 	"use strict";
 
 	/*
@@ -37,6 +37,56 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		{either, wrapped} = Macros.TypeSignature,
 		IfTypeSignature = [wrapped(Boolean, "If you gave a number, you may instead want to check that the number is not 0. "
 			+ "If you gave a string, you may instead want to check that the string is not \"\".")];
+
+	/*
+		The (hover-style:) macro uses these jQuery events to add and remove the
+		hover styles when hovering occurs.
+	*/
+	$(() => $(Utils.storyElement).on(
+		/*
+			The jQuery event namespace is "hover-macro".
+		*/
+		"mouseenter.hover-macro",
+		/*
+			The "hover" attr is set by (hover-style:), and used to signal that a hover
+			style is attached to the <tw-hook>.
+
+			To be confident that these handlers fire with no race conditions,
+			the selectors require the signalling 'hover' value be true or false,
+			and the handlers manually set them, in mimickry of the CSS :hover pseudo.
+		*/
+		"[hover=false]",
+		function () {
+			const elem = $(this),
+				changer = elem.data('hoverChanger');
+			/*
+				To restore the element's current styles when mousing off it, we must
+				store the attr in a data slot.
+			*/
+			elem.data({ mouseoutStyle: elem.attr('style') || '' });
+			/*
+				Now, we can apply the hover style to the element.
+			*/
+			ChangeDescriptor.create({ target: elem }, changer).update();
+			elem.attr('hover',true);
+		}
+	)
+	.on(
+		"mouseleave.hover-macro",
+		"[hover=true]",
+		function () {
+			const elem = $(this),
+				/*
+					As outlined above, the style the element had before hovering
+					can now be reinstated, erasing the hover style.
+				*/
+				mouseoutStyle = elem.data('mouseoutStyle');
+
+			elem.attr('style', mouseoutStyle)
+				.removeData('mouseoutStyle')
+				.attr('hover',false);
+		}
+	));
 
 	/*
 		A list of valid transition names. Used by (transition:).
@@ -299,7 +349,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		*/
 		(["transition", "t8n"],
 			(_, name) => {
-				name = insensitiveName(name);
+				name = Utils.insensitiveName(name);
 				if (validT8ns.indexOf(name) === -1) {
 					return TwineError.create(
 						"macrocall",
@@ -606,7 +656,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 						We also need to alter the "display" property in a case where the element
 						has block children - the background won't display if it's kept as initial.
 					 */
-					{ display() { return childrenProbablyInline($(this)) ? "initial" : "block"; } });
+					{ display() { return Utils.childrenProbablyInline($(this)) ? "initial" : "block"; } });
 				return d;
 			},
 			[either(String,Colour)]
@@ -793,7 +843,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 							The name should be insensitive to normalise both capitalisation,
 							and hyphenation of names like "upside-down".
 						*/
-						styleName = insensitiveName(styleName);
+						styleName = Utils.insensitiveName(styleName);
 						
 						if (!(styleName in styleTagNames)) {
 							return TwineError.create(
@@ -805,7 +855,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 						return ChangerCommand.create("text-style", [styleName]);
 					},
 					(d, styleName) => {
-						assertMustHave(styleTagNames,[styleName]);
+						Utils.assertMustHave(styleTagNames,[styleName]);
 						if (styleName === "none") {
 							d.styles = [];
 						}
@@ -817,6 +867,77 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				];
 			})(),
 			[String]
+		)
+
+		/*d:
+			(hover-style: Changer) -> Changer
+
+			Given a style-altering changer, it makes a changer which only applies when the hook or expression is hovered over
+			with the mouse pointer, and is removed when hovering off.
+
+			Example usage:
+			The following makes a (link:) that turns cyan and italic when the mouse hovers over it.
+			```
+			(hover-style:(text-color:cyan) + (text-style:'italic'))+(link:"The lake")
+			[The still, cold lake.]
+			```
+
+			Rationale:
+			Making text react in small visual ways when the pointer hovers over it is an old hypertext tradition. It lends a
+			degree of "life" to the text, making it seem aware of the player. This feeling of life is best used to signify
+			interactivity - it seems to invite the player to answer in turn, by clicking. So, adding them to (link:) changers,
+			instead of just bare words or paragraphs, is highly recommended.
+
+			Details:
+			True to its name, this macro can only be used for subtle style changes. Only the following changers (and combinations
+			thereof) may be given to (hover-style:) - any others will produce an error:
+			* (align:)
+			* (background:)
+			* (css:)
+			* (font:)
+			* (text-colour:)
+			* (text-rotate:)
+			* (text-style:)
+			
+			More extensive mouse-based interactivity should use the (mouseover:) and (mouseout:) macros.
+
+			This macro is not recommended for use in games or stories intended for use on touch devices, as
+			the concept of "hovering" over an element doesn't really make sense with that input method.
+
+			See also:
+			(mouseover:), (mouseout:)
+
+			#styling
+		*/
+		("hover-style",
+			(_, changer) => {
+				/*
+					To verify that this changer exclusively alters the style, we run this test ChangeDescriptor through.
+				*/
+				const desc = ChangeDescriptor.create(),
+					test = (changer.run(desc), desc.summary());
+
+				if (test + '' !== "styles") {
+					/*
+						For (css:), check that only "attr" is also present, and that attr's only
+						element is a {style} object.
+					*/
+					if (!(test.every(e => e === "styles" || e === "attr") &&
+							desc.attr.every(elem => Object.keys(elem) + '' === "style"))) {
+						return TwineError.create(
+							"macrocall",
+							"The changer given to (hover-style:) must only change the hook's style."
+						);
+					}
+				}
+				return ChangerCommand.create("hover-style", [changer]);
+			},
+			(d, changer) => {
+				d.data.hoverChanger = changer;
+				d.attr.push({ hover: false });
+				return d;
+			},
+			[ChangerCommand]
 		)
 		
 		/*d:
@@ -858,7 +979,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				return ChangerCommand.create("css", [text]);
 			},
 			(d, text) => {
-				d.attr.push({'style'() {
+				d.attr.push({style() {
 					return ($(this).attr('style') || "") + text;
 				}});
 				return d;

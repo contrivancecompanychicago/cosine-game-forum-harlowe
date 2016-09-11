@@ -49,6 +49,12 @@ describe("save macros", function() {
 				"corge"
 			);
 			expect("(savegame:'1')").not.markupToError();
+			runPassage(
+				"(set:$c4 to (hover-style:(font:'Skia')))" +
+				"(set:$c5 to $c4 + (align:'==>'))",
+				"grault"
+			);
+			expect("(savegame:'1')").not.markupToError();
 		});
 		it("works from the start of the game", function() {
 			expect("(savegame:'1','Filename')", "qux").not.markupToError();

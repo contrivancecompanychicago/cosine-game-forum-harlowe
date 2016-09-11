@@ -30,12 +30,12 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		
 		// {jQuery|HookSet}           Where to render the source, if not the hookElement.
 		target:           null,
-
-		// {[newTarget]} newTargets   Alternative targets (which are {target,append} objects) to use instead of the original.
-		newTargets:       null,
 		
 		// {String} append            Which jQuery method name to append the source to the dest with.
 		append:           "append",
+
+		// {[newTarget]} newTargets   Alternative targets (which are {target,append} objects) to use instead of the original.
+		newTargets:       null,
 		
 		// {String} [transition]      Which built-in transition to use.
 		transition:       "instant",
@@ -44,7 +44,6 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		transitionTime:   null,
 		
 		// {Array} styles             A set of CSS styles to apply inline to the hook's element.
-		//                            Used by (position-x:), etc.
 		styles:           null,
 		
 		// {Array} [attr]             Array of objects of attributes to apply to the <tw-expression> using $.fn.attr().
@@ -62,6 +61,24 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		//                            their enchantments to.
 		section:          null,
 		
+		/*
+			This method produces a short list of properties this descriptor has, which were altered by the changers
+			run against it (or supplied to it at creation).
+			It's used by (hover-style:) to ensure that the changers it receives only affect styles.
+		*/
+		summary() {
+			return [
+				"source", "innerSource", "enabled", "target", "append", "newTargets",
+				"transition", "transitionTime"
+			]
+			.filter(e => this.hasOwnProperty(e))
+			.concat([
+				this.attr.length && "attr",
+				this.styles.length && "styles",
+				Object.keys(this.data).length && "data",
+			].filter(Boolean));
+		},
+
 		/*
 			This creates an inheriting ChangeDescriptor, and is basically
 			another shorthand for the old create-assign pattern.

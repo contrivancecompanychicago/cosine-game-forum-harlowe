@@ -186,6 +186,13 @@ define([
 						Add the expressions, and remove the interstitial + and whitespace.
 					*/
 					const nextValue = this.eval(nextElem.popAttr('js'));
+					/*
+						(But, don't join them if the nextValue contains its own error.)
+					*/
+					if (TwineError.containsError(nextValue)) {
+						result = nextValue;
+						break;
+					}
 					const newResult = Operations["+"](result, nextValue);
 					$(whitespace).add(plusMark).add(whitespaceAfter).remove();
 					/*

@@ -351,6 +351,64 @@ describe("style changer macros", function() {
 			expect("(print: (align:'<==') is (align:'=><=='))").markupToPrint("false");
 		});
 	});
+	describe("the (hover-style:) macro", function() {
+		it("requires exactly 1 style changer argument", function() {
+			expect("(hover-style:)[]").markupToError();
+			expect("(hover-style:1)[]").markupToError();
+			expect("(hover-style:'A')[]").markupToError();
+			expect("(hover-style:(font:'Skia'),(textstyle:'bold'))[]").markupToError();
+
+			expect("(hover-style:(align:'==>'))[]").not.markupToError();
+			expect("(hover-style:(background:black))[]").not.markupToError();
+			expect("(hover-style:(css:'display:block'))[]").not.markupToError();
+			expect("(hover-style:(font:'Skia'))[]").not.markupToError();
+			expect("(hover-style:(text-colour:red))[]").not.markupToError();
+			expect("(hover-style:(text-rotate:2))[]").not.markupToError();
+		});
+		it("applies the passed-in style only when hovering over the hook", function(done) {
+			var hover = runPassage("(hover-style:(textstyle:'bold'))[garply]").find('tw-hook');
+			hover.mouseenter();
+			setTimeout(function() {
+				expect(hover.attr('style')).toMatch(/font-weight:\s*(bold|800)/);
+				hover.mouseleave();
+				setTimeout(function() {
+					expect(hover.attr('style')).not.toMatch(/font-weight:\s*(bold|800)/);
+					done();
+				});
+			});
+		});
+		it("applies the style alongside existing styles", function(done) {
+			var hover = runPassage("(hover-style:(textstyle:'bold'))+(text-color:'#ea1dac')[garply]").find('tw-hook');
+			hover.mouseenter();
+			setTimeout(function() {
+				expect(hover.attr('style')).toMatch(/font-weight:\s*(bold|800)/);
+				expect(hover).toHaveColour('#ea1dac');
+				hover.mouseleave();
+				done();
+			});
+		});
+		it("removes the passed-in style when leaving the hook", function(done) {
+			var hover = runPassage("(hover-style:(text-color:'#fadaba'))+(text-color:'#ea1dac')[garply]").find('tw-hook');
+			setTimeout(function() {
+				expect(hover).toHaveColour('#ea1dac');
+				hover.mouseenter();
+				setTimeout(function() {
+					expect(hover).toHaveColour('#fadaba');
+					hover.mouseleave();
+					setTimeout(function() {
+						expect(hover).toHaveColour('#ea1dac');
+						done();
+					});
+				});
+			});
+		});
+		it("errors if the passed-in changer isn't just a style changer", function() {
+			expect("(hover-style:(replace:?1))[]").markupToError();
+			expect("(hover-style:(if:true))[]").markupToError();
+			expect("(hover-style:(t8n:'dissolve'))[]").markupToError();
+			expect("(hover-style:(text-color:'red')+(hook:'E'))[]").markupToError();
+		});
+	});
 	it("can compose arbitrarily deep", function(done) {
 		var align = runPassage(
 			"(set:$c1 to (align:'==>'))"

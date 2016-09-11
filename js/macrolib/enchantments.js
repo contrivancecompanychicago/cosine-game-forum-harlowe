@@ -472,7 +472,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 
 			(mouseover: HookName or String) -> Changer
 
 			A variation of (click:) that, instead of showing the hook when the target is clicked, shows it
-			when the mouse merely hovers over it. The target is also styled differently, to denote this
+			when the mouse pointer merely hovers over it. The target is also styled differently, to denote this
 			hovering functionality.
 
 			Rationale:
@@ -491,7 +491,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 
 			the concept of "hovering" over an element doesn't really make sense with that input method.
 			
 			See also:
-			(link:), (link-reveal:), (link-repeat:), (click:), (mouseout:), (replace:), (mouseover-replace:)
+			(link:), (link-reveal:), (link-repeat:), (click:), (mouseout:), (replace:), (mouseover-replace:), (hover-style:)
 
 			#links 9
 		*/
@@ -508,7 +508,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 
 			(mouseout: HookName or String) -> Changer
 
 			A variation of (click:) that, instead of showing the hook when the target is clicked, shows it
-			when the mouse moves over it, and then leaves. The target is also styled differently, to denote this
+			when the mouse pointer moves over it, and then leaves. The target is also styled differently, to denote this
 			hovering functionality.
 
 			Rationale:
@@ -529,7 +529,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 
 			the concept of "hovering" over an element doesn't really make sense with that input method.
 			
 			See also:
-			(link:), (link-reveal:), (link-repeat:), (click:), (mouseover:), (replace:), (mouseout-replace:)
+			(link:), (link-reveal:), (link-repeat:), (click:), (mouseover:), (replace:), (mouseout-replace:), (hover-style:)
 
 			#links 13
 		*/
