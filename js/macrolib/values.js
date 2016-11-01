@@ -1,6 +1,6 @@
+"use strict";
 define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internaltypes/twineerror'],
 (Macros, {whitespace, anyLetter}, {subset, objectName}, Colour, TwineError) => {
-	"use strict";
 	/*
 		Built-in value macros.
 		These macros manipulate the primitive values - boolean, string, number.

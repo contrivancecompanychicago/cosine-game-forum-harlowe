@@ -1,3 +1,4 @@
+"use strict";
 define([
 	'state',
 	'datatypes/colour',
@@ -6,7 +7,6 @@ define([
 	'internaltypes/twineerror',
 ],
 (State, Colour, AssignmentRequest, {isObject, collectionType, coerceToString, is, clone, unique, contains, typeName, objectName}, TwineError) => {
-	"use strict";
 	/*
 		Operation objects are a table of operations which TwineScript proxies
 		for/sugars over JavaScript. These include basic fixes like the elimination

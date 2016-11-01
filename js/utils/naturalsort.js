@@ -3,8 +3,8 @@
  * Author: Jim Palmer (based on chunking idea from Dave Koelle)
  * Expanded by Leon Arnott to use Intl.Collator, 2015.
  */
+"use strict";
 define([], function() {
-	'use strict';
 	return function NaturalSort(locale) {
 		return function naturalSort(a, b) {
 			var re = /(^-?[0-9]+(\.?[0-9]*)[df]?e?[0-9]?$|^0x[0-9a-f]+$|[0-9]+)/gi,

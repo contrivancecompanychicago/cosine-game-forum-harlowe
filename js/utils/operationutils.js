@@ -1,5 +1,5 @@
+"use strict";
 define(['utils', 'datatypes/hookset', 'internaltypes/twineerror'], ({impossible, toJSLiteral}, HookSet, TwineError) => {
-	"use strict";
 	
 	/*
 		First, a quick shortcut to determine whether the

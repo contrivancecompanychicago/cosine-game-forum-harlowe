@@ -2,8 +2,8 @@
 	Polyfills for post-ES6 functions.
 	Currently only contains Array.prototype.includes()
 */
+"use strict";
 define([], function() {
-	'use strict';
 	const A = Array.prototype;
 	if (typeof A.includes !== "function") {
 		A.includes = function includes(searchElement, fromIndex = 0) {

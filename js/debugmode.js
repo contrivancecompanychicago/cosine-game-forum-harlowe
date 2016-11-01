@@ -1,7 +1,6 @@
-/*jshint strict:false */
+"use strict";
 define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutils', 'engine'],
 ($, Utils, State, VarRef, {objectName, typeName}, Engine) => () => {
-	'use strict';
 	/*
 		Debug Mode
 

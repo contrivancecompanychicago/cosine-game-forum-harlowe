@@ -1,5 +1,5 @@
+"use strict";
 define(['utils', 'markup', 'twinescript/compiler', 'twinescript/environ'], function(Utils, TwineMarkup, Compiler, Environ) {
-	"use strict";
 	/*
 		REPL
 		These are debugging functions, used in the browser console to inspect the output of

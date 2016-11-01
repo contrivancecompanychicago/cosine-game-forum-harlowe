@@ -4,6 +4,7 @@
 	
 	Consumers must augment this object's 'rules' property.
 */
+/*jshint strict:true*/
 (function(){
 	"use strict";
 	let Lexer;

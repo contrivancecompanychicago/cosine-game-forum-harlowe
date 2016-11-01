@@ -1,5 +1,5 @@
+"use strict";
 define(['jquery', 'utils', 'utils/selectors'], ($, {unescape}, Selectors) => {
-	"use strict";
 	/*
 		Passages
 		A userland registry of Passage objects.

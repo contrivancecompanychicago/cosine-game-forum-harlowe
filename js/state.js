@@ -1,6 +1,6 @@
+"use strict";
 define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerror', 'utils/operationutils'],
 ({impossible}, Passages, ChangerCommand, TwineError, {objectName}) => {
-	"use strict";
 	/*
 		State
 		Singleton controlling the running game state.

@@ -1,6 +1,6 @@
+"use strict";
 define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'datatypes/changercommand', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
 ($, Macros, Utils, Selectors, Colour, ChangerCommand, ChangeDescriptor, TwineError) => {
-	"use strict";
 
 	/*
 		Built-in hook style changer macros.

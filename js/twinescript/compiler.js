@@ -1,5 +1,5 @@
+"use strict";
 define(['utils'], ({toJSLiteral, impossible}) => {
-	"use strict";
 	
 	/*
 		A module that handles the JIT compilation of TwineScript syntax tokens

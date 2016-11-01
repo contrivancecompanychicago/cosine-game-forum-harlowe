@@ -1,5 +1,5 @@
+"use strict";
 define(['jquery'], ($) => {
-	"use strict";
 	
 	$.prototype.extend({
 		/*

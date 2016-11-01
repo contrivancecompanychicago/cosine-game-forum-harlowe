@@ -1,6 +1,6 @@
+"use strict";
 define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 ($, Utils, Selectors, State, Section, Passages) => {
-	"use strict";
 	/*
 		Utils.storyElement is a getter, so we need a reference to Utils as well
 		as all of these methods.

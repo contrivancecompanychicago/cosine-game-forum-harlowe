@@ -18,7 +18,7 @@
 	"nonew"    : true,
 	"undef"    : true,
 	"unused"   : true,
-	"strict"   : true,
+	"strict"   : "global",
 	
 	"evil"     : true,
 	"expr"     : true,

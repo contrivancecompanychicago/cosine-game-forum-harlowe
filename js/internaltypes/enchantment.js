@@ -1,5 +1,5 @@
+"use strict";
 define(['jquery', 'utils', 'internaltypes/changedescriptor'], ($, Utils, ChangeDescriptor) => {
-	'use strict';
 	/*
 		Enchantments are special styling that is applied to selected elements of a
 		passage by a macro. Enchantments are registered with a Section by pushing

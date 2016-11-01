@@ -1,3 +1,4 @@
+"use strict";
 define(['jquery'], ($) => {
 	/*d:
 		Colour data
@@ -53,7 +54,6 @@ define(['jquery'], ($) => {
 		will usually have a `h` value equal to 0, even if you provided a different hue to (hsl:). Furthermore, colours with a
 		lightness of 1 are always white, so their saturation and hue are irrelevant.
 	*/
-	"use strict";
 	const
 		/*
 			These RegExps check for HTML #fff and #ffffff format colours.

@@ -1,5 +1,5 @@
+"use strict";
 define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltypes/twineerror'], ({toJSLiteral, insensitiveName, plural}, {typeName, objectName, singleTypeCheck}, VarScope, TwineError) => {
-	"use strict";
 	/*d:
 		Lambda data
 

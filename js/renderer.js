@@ -1,6 +1,6 @@
+"use strict";
 define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 ({escape, impossible, toJSLiteral, insensitiveName}, TwineMarkup, Compiler, TwineError) => {
-	"use strict";
 	/*
 		The Renderer takes the syntax tree from TwineMarkup and returns a HTML string.
 		

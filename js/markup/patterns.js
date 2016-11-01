@@ -3,6 +3,7 @@
 	These are used primarily by the Markup module, where they are attached to
 	lexer rules.
 */
+/*jshint strict:true*/
 (function(){
 	"use strict";
 	let Patterns;

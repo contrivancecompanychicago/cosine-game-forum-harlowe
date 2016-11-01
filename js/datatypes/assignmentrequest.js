@@ -1,3 +1,4 @@
+"use strict";
 define(['utils'], ({assertMustHave}) => {
 	/*
 		AssignmentRequests represent an assignment statement. Different
@@ -10,7 +11,6 @@ define(['utils'], ({assertMustHave}) => {
 
 		They are unobservable - attempts to store them or use them in any other macros must fail.
 	*/
-	"use strict";
 	
 	const assignmentRequest = Object.freeze({
 		

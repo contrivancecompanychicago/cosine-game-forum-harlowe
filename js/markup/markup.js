@@ -2,6 +2,7 @@
 	TwineMarkup, by Leon Arnott.
 	This module, alongside the Patterns module, defines the standard syntax of Harlowe.
 */
+/*jshint strict:true*/
 (function () {
 	"use strict";
 	

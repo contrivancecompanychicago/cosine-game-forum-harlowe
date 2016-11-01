@@ -1,6 +1,6 @@
+"use strict";
 define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 'datatypes/hookset', 'datatypes/changercommand', 'internaltypes/enchantment', 'internaltypes/twineerror'],
 ($, Utils, Selectors, {is}, Macros, HookSet, ChangerCommand, Enchantment, TwineError) => {
-	"use strict";
 
 	const {either,rest} = Macros.TypeSignature;
 	/*

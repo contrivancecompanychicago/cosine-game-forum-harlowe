@@ -1,3 +1,4 @@
+"use strict";
 define([
 	'jquery',
 	'utils',
@@ -16,7 +17,6 @@ define([
 	'internaltypes/twinenotifier',
 ],
 ($, Utils, Selectors, Renderer, Environ, Operations, State, {printBuiltinValue,objectName}, ChangerCommand, HookSet, Colour, ChangeDescriptor, VarScope, TwineError, TwineNotifier) => {
-	"use strict";
 
 	let Section;
 

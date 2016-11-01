@@ -1,3 +1,4 @@
+"use strict";
 define([
 	'jquery',
 	'utils/naturalsort',
@@ -11,7 +12,6 @@ define([
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier'],
 ($, NaturalSort, Macros, {objectName, typeName, subset, collectionType, isValidDatamapName, is, unique, clone}, State, Engine, Passages, Lambda, AssignmentRequest, TwineError, TwineNotifier) => {
-	"use strict";
 	
 	const {optional, rest, either, zeroOrMore, Any}   = Macros.TypeSignature;
 	

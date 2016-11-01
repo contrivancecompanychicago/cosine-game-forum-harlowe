@@ -1,6 +1,6 @@
+"use strict";
 define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'engine', 'datatypes/changercommand'],
 ($, Macros, Utils, Selectors, State, Passages, Engine, ChangerCommand) => {
-	"use strict";
 	/*
 		This module defines the behaviour of links in Harlowe - both
 		the normal passage links, and the (link:) macro's links.

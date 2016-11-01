@@ -1,3 +1,4 @@
+/*jshint strict:true*/
 (function() {
 	'use strict';
 	/*
@@ -328,10 +329,8 @@
 		a CSS selector, and the value maps directly to CSS attributes assigned by the selector.
 	*/
 	harloweStyles.innerHTML = (() => {
-		function nestedBG(h,s,l) {
-			return (e) => "background-color: hsla(" + h + "," + s + "%," + l + "%," + e +");";
-		}
 		const
+			nestedBG     = (h,s,l) => e => "background-color: hsla(" + h + "," + s + "%," + l + "%," + e +");",
 			warmHookBG   = nestedBG(40, 100, 50),
 			coolHookBG   = nestedBG(220, 100, 50),
 			macro        = percent => nestedBG(320, 44, 50)(percent) + "color: #a84186;",

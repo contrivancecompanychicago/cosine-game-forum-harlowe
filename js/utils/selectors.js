@@ -1,5 +1,5 @@
+"use strict";
 define([], () => {
-	"use strict";
 	/*
 		Static namespace containing CSS/jQuery selectors for Harlowe DOM elements
 	*/

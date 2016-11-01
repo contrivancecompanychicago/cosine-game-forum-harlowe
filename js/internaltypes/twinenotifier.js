@@ -1,5 +1,5 @@
+"use strict";
 define(['jquery', 'utils'], ($, {impossible}) => {
-	"use strict";
 	/*
 		TwineNotifiers are special debug notifications created by the TwineScript runtime in debug mode.
 		They are used to signify when a special event has occurred.

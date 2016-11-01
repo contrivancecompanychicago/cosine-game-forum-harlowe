@@ -1,6 +1,5 @@
+"use strict";
 define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
-	"use strict";
-	
 	/*
 		A HookSet is an object representing a "hook selection". Hooks in
 		Twine passages can have identical titles, and both can therefore be

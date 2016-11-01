@@ -1,5 +1,5 @@
+"use strict";
 define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas, impossible, transitionIn}, {exec}, HookSet) => {
-	"use strict";
 	/*
 		When a new Section (generally a hook or expression) is about to be rendered,
 		a ChangeDescriptor is created and fed into all of the ChangerCommands which are
