@@ -113,6 +113,7 @@ Rough documentation is at http://twine2.neocities.org/
  * Fixed a bug where changer commands couldn't be added together more than once without the possibility of some of the added commands being lost.
  * Fixed a bug where `(pow:)` only accepted 1 value instead of 2, and, moreover, that it could return the Javascript value `NaN`, which Harlowe macros shouldn't be able to return.
  * Fixed a bug where the verbatim markup couldn't enclose a `]` inside a hook, a `}` inside the collapsing markup, or any of the formatting markup's closing tokens immediately after an opening token.
+ * Fixed a bug where the Javascript in the resulting HTML files contained the Unicode non-character U+FFFE, causing encoding problems when the file is hosted on some older servers.
 
 ####Alterations
 

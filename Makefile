@@ -8,7 +8,7 @@ requirejs_twinemarkup_flags = baseUrl=js/markup name=markup include=codemirror/m
 
 jshint_flags = --reporter scripts/jshintreporter.js
 
-uglify_flags = -c --comments --screw-ie8 -m
+uglify_flags = -c --comments --screw-ie8 -m -b beautify=false,ascii-only=true
 
 # This function accepts two comma-separated JS string expressions,
 # and replaces every instance of the former in the stream with the latter.
