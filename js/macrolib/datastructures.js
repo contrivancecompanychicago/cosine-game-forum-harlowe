@@ -653,7 +653,7 @@ define([
 			(interlaced: Array, ...Array) -> Array
 			
 			Takes multiple arrays, and pairs up each value in those arrays: it
-			creates an array containing each array's first value, an array containing each
+			creates an array containing each array's first value followed by each
 			array's second value, and so forth. If some values have no matching pair (i.e. one array
 			is longer than the other) then those values are ignored.
 			
@@ -974,7 +974,7 @@ define([
 			#game state
 		*/
 		("passage", (_, passageName) =>
-			Passages.get(passageName || State.passage)
+			clone(Passages.get(passageName || State.passage))
 				|| TwineError.create('macrocall', "There's no passage named '" + passageName + "' in this story."),
 		[optional(String)])
 		

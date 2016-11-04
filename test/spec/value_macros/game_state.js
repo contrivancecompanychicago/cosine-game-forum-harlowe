@@ -18,8 +18,15 @@ describe("game state macros", function() {
 			expect("(print: (passage: 'The Kitchen'))").markupToError();
 		});
 		it("passage datamaps have tags", function (){
-			createPassage("Red","The Kitchen", ["area"]);
+			createPassage("","The Kitchen", ["area"]);
 			expect("(print: (passage: 'The Kitchen')'s tags contains 'area')").markupToPrint("true");
+		});
+		it("doesn't pass data by reference", function (){
+			createPassage("","The Kitchen");
+			expect("(set: $a to (passage:'The Kitchen'))"
+				+ "(set: $b to (passage:'The Kitchen'))"
+				+ "(set: $a's foobaz to 1)"
+				+ "(print: $b contains 'foobaz')").markupToPrint("false");
 		});
 	});
 });

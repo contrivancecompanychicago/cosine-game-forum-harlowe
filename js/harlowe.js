@@ -45,7 +45,7 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'util
 		| Startup passages | "startup" tagged passages | "StoryInit" passage
 		| Pre-render passages | "header" tagged passages | "PassageReady" passage (not printed)
 		| Post-render passages | "footer" tagged passages | "PassageDone" passage (not printed)
-		| Story sidebar modification | Not offered | "StoryMenu" passage
+		| Story sidebar modification | `(replace:?sidebar)[Sidebar code]` | "StoryMenu" passage
 		| Debug-only passages | "debug-header", "debug-footer" and "debug-startup" tagged passages | Not offered
 		|**Styling markup**
 		| Aligner markup | `==><=`~ | Not offered
