@@ -24,6 +24,10 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 		the total, but only if the item is greater than 0. (Incidentally, you can also use "where" inside a "making" lambda -
 		you could rewrite that lambda as `_item making _total via _total + _item where _item > 0`.)
 
+		* "each" lambdas are a simple but rare variety - they simply go through each of the items, assign them to a temporary variable
+		in turn, and let the macro do something with them. The lambda `each _item` tells the macro to do something with each value,
+		using the temporary variable `_item` to refer to them.
+
 		Lambdas use temp variables as "placeholders" for the actual values. For instance, in `(find: _num where _num > 2, 5,6,0)`,
 		the temp variable `_num` is used to mean each individual value given to the macro, in turn. It will be 5, 6 and 0, respectively.
 		Importantly, this will *not* alter any existing temp variable called `_num` - the inside of a lambda can be thought
@@ -124,9 +128,11 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 				ret.loop = (subject ? subject.propertyChain[0] : "");
 			}
 			/*
-				We add the new clause, then do some further error-checking afterwards.
+				We add the new clause (if it exists - "each" lambdas may not have it), then do some further error-checking afterwards.
 			*/
-			ret[clauseType] = clause;
+			if (clauseType) {
+				ret[clauseType] = clause;
+			}
 			/*
 				The "making", "with" or "loop" variables' names must always be unique.
 			*/

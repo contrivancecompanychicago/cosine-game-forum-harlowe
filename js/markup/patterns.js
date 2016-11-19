@@ -937,6 +937,7 @@
 		where:      "where" + wb,
 		via:        "via" + wb,
 		with:       "with" + wb,
+		each:       "each" + wb,
 		augmentedAssign: either("\\+", "\\-", "\\*", "\\\/", "%") + "=",
 
 		incorrectOperator,

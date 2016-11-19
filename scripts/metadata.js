@@ -14,7 +14,7 @@ const
 		it seems to be part of a macro name.
 		Due to its commonality in English, "any" is not included.
 	*/
-	typeName = /([^\-])\b(hookname|colour|variabletovalue|changer|command|string|number|boolean|array|data(?:map|set))(s?)(?!\:\))\b/ig,
+	typeName = /([^\-])\b(hookname|colour|variabletovalue|lambda|changer|command|string|number|boolean|array|data(?:map|set))(s?)(?!\:\))\b/ig,
 	
 	Defs = function(props) {
 		return Object.assign({

@@ -124,7 +124,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			["to"],
 			["into"],
 			{rightAssociative: ["where", "via"]},
-			{rightAssociative: ["with", "making"]},
+			{rightAssociative: ["with", "making", "each"]},
 			["augmentedAssign"],
 			["and", "or"],
 			["is", "isNot"],
@@ -369,7 +369,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			right = toJSLiteral(compile(tokens.slice(i + 1)))
 				+ ")";
 		}
-		else if (type === "with" || type === "making") {
+		else if (type === "with" || type === "making" || type === "each") {
 			/*
 				This token requires that whitespace + a temp variable be to the right of it.
 			*/
@@ -381,15 +381,28 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				right = "\\'.')";
 			}
 			else {
-				left = "Lambda.create("
-					+ (compile(tokens.slice(0, i), {isVarRef:true}).trim()
-						// Omitting the temp variable means that you must use "it"
-						|| "undefined")
-					+ ",";
-				midString = toJSLiteral(token.type)
-					+ ",";
-				right = toJSLiteral(rightTokens[1].name)
-					+ ")";
+				/*
+					The optional "each" keyword simply permits a lambda to be created using a bare
+					successive temp variable, without any other clauses. As such, it doesn't have a
+					temp variable preceding it, and its "clause" (the temp variable) is really its subject.
+				*/
+				if (type === "each") {
+					left = "Lambda.create(";
+					midString = compile(rightTokens, {isVarRef:true}).trim();
+					right = ")";
+				}
+				// Other keywords can have a preceding temp variable, though.
+				else {
+					left = "Lambda.create("
+						+ (compile(tokens.slice(0, i), {isVarRef:true}).trim()
+							// Omitting the temp variable means that you must use "it"
+							|| "undefined")
+						+ ",";
+					midString = toJSLiteral(token.type)
+						+ ",";
+					right = toJSLiteral(rightTokens[1].name)
+						+ ")";
+				}
 			}
 		}
 		/*

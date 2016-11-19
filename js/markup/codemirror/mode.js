@@ -453,6 +453,8 @@
 				"color: #007f00; font-style:italic;",
 			making:
 				"color: #007f00; font-style:italic;",
+			each:
+				"color: #007f00; font-style:italic;",
 			
 			heading:
 				"font-weight:bold;",
