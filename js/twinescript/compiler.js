@@ -372,6 +372,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 		else if (type === "with" || type === "making" || type === "each") {
 			/*
 				This token requires that whitespace + a temp variable be to the right of it.
+				(Hence, why "each" is included among them.)
 			*/
 			const rightTokens = tokens.slice(i + 1);
 			if (![2,3].includes(rightTokens.length) || rightTokens[0].type !== "whitespace" || rightTokens[1].type !== "tempVariable"
@@ -389,7 +390,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				if (type === "each") {
 					left = "Lambda.create(";
 					midString = compile(rightTokens, {isVarRef:true}).trim();
-					right = ")";
+					right = ",'where','true')";
 				}
 				// Other keywords can have a preceding temp variable, though.
 				else {

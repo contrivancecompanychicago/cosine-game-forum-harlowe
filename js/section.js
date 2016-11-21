@@ -739,120 +739,152 @@ define([
 			});
 			
 			/*
-				This stores the returned DOM created by rendering the changeDescriptor.
-			*/
-			let dom = $();
-			
-			/*
 				Infinite regress can occur from a couple of causes: (display:) loops, or evaluation loops
 				caused by something as simple as (set: $x to "$x")$x.
 				So here's a rudimentary check: bail if the stack length has now proceeded over 50 levels deep.
 			*/
 			if (this.stack.length >= 50) {
-				dom = TwineError.create("infinite", "Printing this expression may have trapped me in an infinite loop.")
+				TwineError.create("infinite", "Printing this expression may have trapped me in an infinite loop.")
 					.render(target.attr('title')).replaceAll(target);
 			}
-			else {
-				/*
-					Now, run the changer.
-				*/
-				dom = desc.render();
-			}
-			
-			/*
-				Before executing the expressions, put a fresh object on the
-				expression data stack.
-			*/
-			this.stack.unshift(Object.assign(Object.create(null), {
-				tempVariables: Object.create(this.stack.length ?  this.stack[0].tempVariables : VarScope)
-			}));
-			
-			/*
-				This provides (sigh) a reference to this object usable by the
-				inner doExpressions function, below.
-			*/
-			const section = this;
 
-			/*
-				Execute the expressions immediately.
-			*/
-			
-			dom.findAndFilter(Selectors.hook + ',' + Selectors.expression)
-					.each(function doExpressions() {
-				const expr = $(this);
+			const renderAndExecute = (desc, stackObject) => {
+				/*
+					Run the changer, and get all the newly rendered elements.
+				*/
+				const dom = desc.render();
 				
-				switch(expr.tag()) {
-					case Selectors.hook:
-					{
-						/*
-							First, hidden hooks should not be rendered, and instead stash
-							their source as "hiddenSource" data for macros to activate
-							later.
-						*/
-						if (expr.attr('hidden')) {
-							expr.removeAttr('hidden');
-							expr.data('hiddenSource', expr.popAttr('source'));
-						}
-						/*
-							Now we can render visible hooks.
-							Note that hook rendering may be triggered early by attached
-							expressions, so a hook lacking a 'source' attr may have
-							already been rendered.
-						*/
-						if (expr.attr('source')) {
-							section.renderInto(expr.popAttr('source'), expr);
-						}
-						/*
-							If the hook's render contained an earlyexit
-							expression (see below), halt here also.
-						*/
-						if (expr.find('[earlyexit]').length) {
-							return false;
-						}
-						break;
-					}
-					case Selectors.expression:
-					{
-						if (expr.attr('js')) {
+				/*
+					Put the passed-in object on the data stack.
+				*/
+				this.stack.unshift(stackObject);
+				
+				/*
+					This provides (sigh) a reference to this object usable by the
+					inner doExpressions function, below.
+				*/
+				const section = this;
+
+				/*
+					Execute the expressions immediately.
+				*/
+				
+				dom.findAndFilter(Selectors.hook + ',' + Selectors.expression)
+						.each(function doExpressions() {
+					const expr = $(this);
+					
+					switch(expr.tag()) {
+						case Selectors.hook:
+						{
 							/*
-								If this returns false, then the entire .each() loop
-								will terminate, thus halting expression evaluation.
+								First, hidden hooks should not be rendered, and instead stash
+								their source as "hiddenSource" data for macros to activate
+								later.
 							*/
-							const result = runExpression.call(section, expr);
-							if (result === "earlyexit") {
-								dom.attr('earlyexit', true);
+							if (expr.attr('hidden')) {
+								expr.removeAttr('hidden');
+								expr.data('hiddenSource', expr.popAttr('source'));
+							}
+							/*
+								Now we can render visible hooks.
+								Note that hook rendering may be triggered early by attached
+								expressions, so a hook lacking a 'source' attr may have
+								already been rendered.
+							*/
+							if (expr.attr('source')) {
+								section.renderInto(expr.popAttr('source'), expr);
+							}
+							/*
+								If the hook's render contained an earlyexit
+								expression (see below), halt here also.
+							*/
+							if (expr.find('[earlyexit]').length) {
 								return false;
 							}
-							return result;
+							break;
+						}
+						case Selectors.expression:
+						{
+							if (expr.attr('js')) {
+								/*
+									If this returns false, then the entire .each() loop
+									will terminate, thus halting expression evaluation.
+								*/
+								const result = runExpression.call(section, expr);
+								if (result === "earlyexit") {
+									dom.attr('earlyexit', true);
+									return false;
+								}
+								return result;
+							}
 						}
 					}
+				});
+
+				/*
+					Special case for hooks inside existing collapsing syntax:
+					their whitespace must collapse as well.
+					(This may or may not change in a future version).
+					
+					Important note: this uses the **original** target, not desc.target,
+					to determine if it's inside a <tw-collapsed>. This means that
+					{(replace:?1)[  H  ]} will always collapse the affixed hook regardless of
+					where the ?1 hook is.
+				*/
+				if (dom.length && target instanceof $ && target.is(Selectors.hook)
+						&& target.parents('tw-collapsed').length > 0) {
+					collapse(dom);
 				}
-			});
-			
-			/*
-				Special case for hooks inside existing collapsing syntax:
-				their whitespace must collapse as well.
-				(This may or may not change in a future version).
 				
-				Important note: this uses the **original** target, not desc.target,
-				to determine if it's inside a <tw-collapsed>. This means that
-				{(replace:?1)[  H  ]} will always collapse the affixed hook regardless of
-				where the ?1 hook is.
-			*/
-			if (dom.length && target instanceof $ && target.is(Selectors.hook)
-					&& target.parents('tw-collapsed').length > 0) {
-				collapse(dom);
-			}
-			
-			dom.findAndFilter(Selectors.collapsed).each(function() {
-				collapse($(this));
-			});
-			
+				dom.findAndFilter(Selectors.collapsed).each(function() {
+					collapse($(this));
+				});
+				
+				/*
+					After evaluating the expressions, pop the passed-in data stack object (and its scope).
+				*/
+				this.stack.shift();
+			};
+
 			/*
-				After evaluating the expressions, pop the expression data stack.
-				The data is purely temporary and can be safely discarded.
+				The temp variable scope of the rendered DOM inherit from the current
+				stack, or, if absent, the base VarScope class.
 			*/
-			this.stack.shift();
+			const tempVariables = Object.create(this.stack.length ?  this.stack[0].tempVariables : VarScope);
+			/*
+				If the descriptor features a loopVar, we must loop - that is, render and execute once for
+				each value in the loopVars, assigning the value to their temp. variable names in a new data stack per loop.
+
+				For a loopVars such as {
+					a: [1,2,3],
+					b: [5,6],
+				},
+				the created tempVariables objects should be these two:
+				{ a: 1, b: 5 },
+				{ a: 2, b: 6 }.
+			*/
+			if (Object.keys(desc.loopVars).length) {
+				// Copy the loopVars, to avoid permuting the descriptor.
+				const loopVars = Object.assign({}, desc.loopVars);
+				// Find the shortest loopVars array, and iterate that many times ()
+				let i = Math.min(...Object.keys(loopVars).map(name => loopVars[name].length));
+
+				/*jshint -W083 */
+				for(; i > 0; i -= 1) {
+					renderAndExecute(desc, {
+						tempVariables: Object.keys(loopVars).reduce((a,name) => {
+							a[name] = loopVars[name].shift();
+							return a;
+						}, Object.create(tempVariables)),
+					});
+				}
+			}
+			/*
+				Otherwise, just render and execute once normally.
+			*/
+			else {
+				renderAndExecute(desc, { tempVariables });
+			}
 			
 			/*
 				Finally, update the enchantments now that the DOM is modified.

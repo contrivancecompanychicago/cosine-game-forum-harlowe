@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'datatypes/changercommand', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
-($, Macros, Utils, Selectors, Colour, ChangerCommand, ChangeDescriptor, TwineError) => {
+define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
+($, Macros, Utils, Selectors, Colour, ChangerCommand, Lambda, ChangeDescriptor, TwineError) => {
 
 	/*
 		Built-in hook style changer macros.
@@ -34,7 +34,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		```
 	*/
 	const
-		{either, wrapped} = Macros.TypeSignature,
+		{either, wrapped, rest, Any} = Macros.TypeSignature,
 		IfTypeSignature = [wrapped(Boolean, "If you gave a number, you may instead want to check that the number is not 0. "
 			+ "If you gave a string, you may instead want to check that the string is not \"\".")];
 
@@ -323,6 +323,36 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			[String]
 		)
 
+
+		/*d:
+			(for: Lambda, ...Any) -> Changer
+			Also known as: (loop:)
+
+			A command that repeats the attached hook, setting a temporary variable to a different value on each repeat.
+
+			Example usage:
+			* `(for: each _item, ...$array) [You have the _item.]` prints "You have the " and the item, for each item in $array.
+			* `(for: _ingredient where it contains "petal", ...$reagents) [Cook the _ingredient?]` prints "Cook the " and the string, for
+			each string in $reagents which contains "petal".
+
+			TBW
+
+			#basics 10
+		*/
+		(["for", "loop"],
+			(_, lambda, ...args) => {
+				if (!lambda.loop) {
+					return TwineError.create(
+						"macrocall",
+						"The lambda provided to (for:) must refer to a temp variable, not just 'it'."
+					);
+				}
+				return ChangerCommand.create("for", [lambda, args]);
+			},
+			(d, lambda, args) => d.loopVars[lambda.loop] = lambda.filter(d.section, args),
+			[Lambda.TypeSignature('where'), rest(Any)]
+		)
+
 		/*d:
 			(transition: String) -> Changer
 			Also known as: (t8n:)
@@ -390,7 +420,8 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				if (time <= 0) {
 					return TwineError.create(
 						"macrocall",
-						"(transition-time:) should be a positive number of (milli)seconds, not " + time);
+						"(transition-time:) should be a positive number of (milli)seconds, not " + time
+					);
 				}
 				return ChangerCommand.create("transition-time", [time]);
 			},

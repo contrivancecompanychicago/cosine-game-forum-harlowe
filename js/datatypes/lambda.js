@@ -24,9 +24,9 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 		the total, but only if the item is greater than 0. (Incidentally, you can also use "where" inside a "making" lambda -
 		you could rewrite that lambda as `_item making _total via _total + _item where _item > 0`.)
 
-		* "each" lambdas are a simple but rare variety - they simply go through each of the items, assign them to a temporary variable
-		in turn, and let the macro do something with them. The lambda `each _item` tells the macro to do something with each value,
-		using the temporary variable `_item` to refer to them.
+		* For certain macros, like (for:), you may want to use a "where" lambda that doesn't filter out any of the values -
+		`_item where true`, for instance, will include every item. There is a special, more readable shorthand for this type
+		of "where" lambda: writing just `each _item` is equivalent.
 
 		Lambdas use temp variables as "placeholders" for the actual values. For instance, in `(find: _num where _num > 2, 5,6,0)`,
 		the temp variable `_num` is used to mean each individual value given to the macro, in turn. It will be 5, 6 and 0, respectively.
@@ -100,8 +100,10 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 				/*
 					An error only identifiable while adding clauses:
 					two of one clause (such as "where _a > 2 where _b < 2") is a mistake.
+					The only exception is "where true", which can always be replaced (because
+					it's created by the shorthand "each _a").
 				*/
-				if (clauseType in subject) {
+				if (clauseType in subject && !(clauseType === "where" && subject[clauseType] === "true")) {
 					return TwineError.create('syntax', "This lambda has two '" + clauseType + "' clauses.");
 				}
 				/*
@@ -128,11 +130,9 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 				ret.loop = (subject ? subject.propertyChain[0] : "");
 			}
 			/*
-				We add the new clause (if it exists - "each" lambdas may not have it), then do some further error-checking afterwards.
+				We add the new clause, then do some further error-checking afterwards.
 			*/
-			if (clauseType) {
-				ret[clauseType] = clause;
-			}
+			ret[clauseType] = clause;
 			/*
 				The "making", "with" or "loop" variables' names must always be unique.
 			*/
@@ -192,6 +192,31 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 			);
 			section.stack.shift();
 			return ret;
+		},
+
+		/*
+			This convenience function is used to run reduce() on macro args using a lambda,
+			which is an operation common to (find:), (all-pass:) and (some-pass:).
+		*/
+		filter(section, args) {
+			return args.reduce((result, arg) => {
+				/*
+					If an earlier iteration produced an error, don't run any more
+					computations and just return.
+				*/
+				let error;
+				if ((error = TwineError.containsError(result))) {
+					return error;
+				}
+				/*
+					Run the lambda, to determine whether to filter out this element.
+				*/
+				const passedFilter = this.apply(section, {loop:arg, pass:true, fail:false});
+				if ((error = TwineError.containsError(passedFilter))) {
+					return error;
+				}
+				return result.concat(passedFilter ? [arg] : []);
+			}, []);
 		},
 	});
 	return Lambda;

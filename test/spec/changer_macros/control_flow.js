@@ -156,4 +156,50 @@ describe("control flow macros", function() {
 			expect(runPassage("(hidden:)[Gosh]").find('tw-expression').attr('class')).not.toMatch(/\bfalse\b/);
 		});
 	});
+	describe("the (for:) macro", function() {
+		it("accepts a 'where' or 'each' lambda, plus one or more other values", function() {
+			expect("(for:)[]").markupToError();
+			expect("(for:1)[]").markupToError();
+			expect("(for: _a where _a*2)[]").markupToError();
+			for(var i = 2; i < 10; i += 1) {
+				expect("(for: _a where true," + "2,".repeat(i) + ")[]").not.markupToError();
+			}
+			expect("(for: each _a)[]").markupToError();
+			expect("(for: _a via true,2)[]").markupToError();
+			expect("(for:_a with _b where _a is _b,2)[]").markupToError();
+			expect("(for:_a making _b where true,2)[]").markupToError();
+		});
+		it("errors if the 'where' lambda doesn't name the temp variable", function() {
+			expect("(for: where it > 2, 1,2,3)[]").markupToError();
+		});
+		it("renders the attached hook's code once for each value", function() {
+			expect("(for: each _a, 1)[A]").markupToPrint("A");
+			expect("(for: each _a, 1, 2)[A]").markupToPrint("AA");
+			expect("(for: each _a, 1, 2, 3)[A]").markupToPrint("AAA");
+			expect("(set:$a to 0)(for: each _a, 1)[(set: $a to it+1)]$a").markupToPrint("1");
+			expect("(set:$a to 0)(for: each _a, 1,2)[(set: $a to it+1)]$a").markupToPrint("2");
+			expect("(set:$a to 0)(for: each _a, 1,2,3)[(set: $a to it+1)]$a").markupToPrint("3");
+		});
+		it("is also known as (loop:)", function() {
+			expect("(loop: each _a, 1,2,3)[A]").markupToPrint("AAA");
+		});
+		it("uses the 'where' clause to determine which values to iterate over", function() {
+			expect("(for: _a where _a > 4, 1,2,3,4)[A]").markupToPrint("");
+			expect("(for: _a where _a > 3, 1,2,3,4)[A]").markupToPrint("A");
+			expect("(for: _a where _a > 2, 1,2,3,4)[A]").markupToPrint("AA");
+		});
+		it("sets the temporary variable for each loop", function() {
+			expect("(for: each _a, 1,2,3)[_a]").markupToPrint("123");
+			expect("(set:_a to 0)(for: each _a, 1,2,3)[_a(set:_a to 4)_a]_a").markupToPrint("1424340");
+		});
+		it("can be composed with other style macros", function() {
+			expect("(set: $a to (for: each _a, 1,2,3) + (text-style:'bold'))$a[Gee]").markupToPrint("GeeGeeGee");
+			expect("(set: $a to (if: false) + (for: each _a, 1,2,3))$a[Gee]").markupToPrint("");
+		});
+		it("can be composed with itself", function() {
+			expect("(set: $a to (for: each _a, 1,2,3) + (for: each _b, 4,5,6))$a[_a _b ]").markupToPrint("1 4 2 5 3 6 ");
+			expect("(set: $a to (for: each _a, 1,2) + (for: each _b, 4,5,6))$a[_a _b ]").markupToPrint("1 4 2 5 ");
+			expect("(set: $a to (for: _a where _a > 3, 1,2) + (for: each _b, 4,5,6))$a[_a _b ]").markupToPrint("");
+		});
+	});
 });

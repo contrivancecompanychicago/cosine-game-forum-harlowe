@@ -48,6 +48,7 @@ describe("lambda macros", function() {
 			for(var i = 2; i < 10; i += 1) {
 				expect("(altered: _a via _a*2," + "2,".repeat(i) + ")").not.markupToError();
 			}
+			expect("(altered: each _a, 2)").markupToError();
 			expect("(altered: _a where _a*2, 2)").markupToError();
 			expect("(altered: _a with _b via _a*_b*2, 2)").markupToError();
 			expect("(altered: _a making _b via _a*_b*2, 2)").markupToError();
@@ -71,13 +72,14 @@ describe("lambda macros", function() {
 		});
 	});
 	describe("the (find:) macro", function() {
-		it("accepts a 'where' lambda returning a boolean, plus one or more other values", function() {
+		it("accepts a 'where' or 'each' lambda returning a boolean, plus one or more other values", function() {
 			expect("(find:)").markupToError();
 			expect("(find:1)").markupToError();
 			expect("(find:_a where _a*2)").markupToError();
 			for(var i = 2; i < 10; i += 1) {
 				expect("(find: _a where true," + "2,".repeat(i) + ")").not.markupToError();
 			}
+			expect("(find: each _a,2)").not.markupToError();
 			expect("(find:_a via true,2)").markupToError();
 			expect("(find:_a with _b where _a is _b,2)").markupToError();
 			expect("(find:_a making _b where true,2)").markupToError();
@@ -92,13 +94,14 @@ describe("lambda macros", function() {
 		});
 	});
 	describe("the (all-pass:) macro", function() {
-		it("accepts a 'where' lambda, plus one or more other values", function() {
+		it("accepts a 'where'  or 'each' lambda, plus one or more other values", function() {
 			expect("(all-pass:)").markupToError();
 			expect("(all-pass:1)").markupToError();
 			expect("(all-pass: _a where _a*2)").markupToError();
 			for(var i = 2; i < 10; i += 1) {
 				expect("(all-pass: _a where true," + "2,".repeat(i) + ")").not.markupToError();
 			}
+			expect("(all-pass: each _a, 1)").not.markupToError();
 			expect("(all-pass: _a via true,2)").markupToError();
 			expect("(all-pass:_a with _b where _a is _b,2)").markupToError();
 			expect("(all-pass:_a making _b where true,2)").markupToError();
@@ -116,13 +119,14 @@ describe("lambda macros", function() {
 		});
 	});
 	describe("the (some-pass:) macro", function() {
-		it("accepts a 'where' lambda, plus one or more other values", function() {
+		it("accepts a 'where' or 'each' lambda, plus one or more other values", function() {
 			expect("(some-pass:)").markupToError();
 			expect("(some-pass:1)").markupToError();
 			expect("(some-pass: _a where _a*2)").markupToError();
 			for(var i = 2; i < 10; i += 1) {
 				expect("(some-pass: _a where true," + "2,".repeat(i) + ")").not.markupToError();
 			}
+			expect("(some-pass: each _a,1)").not.markupToError();
 			expect("(some-pass: _a via true,2)").markupToError();
 			expect("(some-pass:_a with _b where _a is _b,2)").markupToError();
 			expect("(some-pass:_a making _b where true,2)").markupToError();
@@ -140,13 +144,14 @@ describe("lambda macros", function() {
 		});
 	});
 	describe("the (none-pass:) macro", function() {
-		it("accepts a 'where' lambda, plus one or more other values", function() {
+		it("accepts a 'where' or 'each' lambda, plus one or more other values", function() {
 			expect("(none-pass:)").markupToError();
 			expect("(none-pass:1)").markupToError();
 			expect("(none-pass: _a where _a*2)").markupToError();
 			for(var i = 2; i < 10; i += 1) {
 				expect("(none-pass: _a where true," + "2,".repeat(i) + ")").not.markupToError();
 			}
+			expect("(none-pass: each _a,1)").not.markupToError();
 			expect("(none-pass: _a via true,2)").markupToError();
 			expect("(none-pass:_a with _b where _a is _b,2)").markupToError();
 			expect("(none-pass:_a making _b where true,2)").markupToError();
@@ -167,6 +172,7 @@ describe("lambda macros", function() {
 		it("accepts a 'via' and 'making' lambda, plus one or more other values", function() {
 			expect("(folded:)").markupToError();
 			expect("(folded:1)").markupToError();
+			expect("(folded: each _a, 1)").markupToError();
 			expect("(folded: _a via _a * 2)").markupToError();
 			expect("(folded: _a making _b)").markupToError();
 			expect("(folded: _a via _a + _b making _b)").markupToError();

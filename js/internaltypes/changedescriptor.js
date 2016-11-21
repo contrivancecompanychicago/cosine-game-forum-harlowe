@@ -42,6 +42,10 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		
 		// {Number|Null} [transitionTime]  The duration of the transition, in ms, or null if the default speed should be used.
 		transitionTime:   null,
+
+		// {Object} loopVars          An object of {temp variable : values array} pairs, which the source should loop over.
+		//                            Used only by (for:)
+		loopVars:         null,
 		
 		// {Array} styles             A set of CSS styles to apply inline to the hook's element.
 		styles:           null,
@@ -75,6 +79,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 			.concat([
 				this.attr.length && "attr",
 				this.styles.length && "styles",
+				Object.keys(this.loopVars).length && "loopVars",
 				Object.keys(this.data).length && "data",
 			].filter(Boolean));
 		},
@@ -90,9 +95,10 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 			const ret = Object.assign(Object.create(this), {
 					// Of course, we can't inherit array contents from the prototype chain,
 					// so we have to copy the arrays.
-					attr:   [].concat(this.attr   || []),
-					styles: [].concat(this.styles || []),
-					data:   this.data || {},
+					attr:          [].concat(this.attr          || []),
+					styles:        [].concat(this.styles        || []),
+					loopVars:      this.loopVars || {},
+					data:          this.data || {},
 				}, properties);
 			/*
 				If a ChangerCommand was passed in, run it.

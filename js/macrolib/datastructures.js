@@ -701,35 +701,12 @@ define([
 		[Array, rest(Array)])
 		;
 
-	/*
-		This convenience function is used to run reduce() on macro args using a passed-in lambda,
-		which is an operation common to (find:), (all-pass:) and (some-pass:).
-	*/
-	function lambdaFilter(section, lambda, args) {
-		return args.reduce((result, arg) => {
-			/*
-				If an earlier iteration produced an error, don't run any more
-				computations and just return.
-			*/
-			let error;
-			if ((error = TwineError.containsError(result))) {
-				return error;
-			}
-			/*
-				Run the lambda, to determine whether to filter out this element.
-			*/
-			const passedFilter = lambda.apply(section, {loop:arg, pass:true, fail:false});
-			if ((error = TwineError.containsError(passedFilter))) {
-				return error;
-			}
-			return result.concat(passedFilter ? [arg] : []);
-		}, []);
-	}
-
 	Macros.add
 		/*d:
 			(altered: Lambda, ...Any) -> Array
 
+			TBW
+			
 			#data structure
 		*/
 		("altered", (section, lambda, ...args) => args.map(loop => lambda.apply(section, {loop})),
@@ -778,41 +755,49 @@ define([
 
 			#data structure
 		*/
-		("find", (section, lambda, ...args) => lambdaFilter(section, lambda, args),
+		("find", (section, lambda, ...args) => lambda.filter(section, args),
 		[Lambda.TypeSignature('where'), rest(Any)])
 		/*d:
 			(all-pass: Lambda, ...Any) -> Boolean
 
+			TBW
+
 			#data structure
 		*/
 		("all-pass", (section, lambda, ...args) => {
-			const ret = lambdaFilter(section, lambda, args);
+			const ret = lambda.filter(section, args);
 			return TwineError.containsError(ret) || ret.length === args.length;
 		},
 		[Lambda.TypeSignature('where'), rest(Any)])
 		/*d:
 			(some-pass: Lambda, ...Any) -> Boolean
 
+			TBW
+
 			#data structure
 		*/
 		("some-pass", (section, lambda, ...args) => {
-			const ret = lambdaFilter(section, lambda, args);
+			const ret = lambda.filter(section, args);
 			return TwineError.containsError(ret) || ret.length > 0;
 		},
 		[Lambda.TypeSignature('where'), rest(Any)])
 		/*d:
 			(none-pass: Lambda, ...Any) -> Boolean
 
+			TBW
+
 			#data structure
 		*/
 		("none-pass", (section, lambda, ...args) => {
-			const ret = lambdaFilter(section, lambda, args);
+			const ret = lambda.filter(section, args);
 			return TwineError.containsError(ret) || ret.length === 0;
 		},
 		[Lambda.TypeSignature('where'), rest(Any)])
 		/*d:
 			(folded: Lambda, ...Any) -> Boolean
 
+			TBW
+			
 			#data structure
 		*/
 		("folded", (section, lambda, ...args) => args.reduce((making,loop) => lambda.apply(section, {making,loop})),
