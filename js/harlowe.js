@@ -112,7 +112,7 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'util
 		| Inline Javascript | `<script>document.title = "Huh?"</script>`| `<<script>>document.title = "Huh?"<</script>>`~
 		| "Display" macro | `(display: "Duel")`,<br>`<div>(display: "Duel")</div>` | `<<display "Duel">>`~,<br>`<<display "Duel" "div">>`~
 		| "If" macro | `(if: $armed)[well-armed]` | `<<if $armed>>well-armed<</if>>`~
-		| "For" macro | Not offered | `<<for $i to 0; $i lt $dogs.length; $i++>> <<print $dogs[i]>> <</for>>`~
+		| "For" macro | `(for: each _dog, ...$dogs)[_dog]` | `<<for $i to 0; $i lt $dogs.length; $i++>> <<print $dogs[i]>> <</for>>`~
 		|**Data value macros**
 		| Converting to string | `(text: $num)` | `$num + ""`~
 		| Converting to number | `(num: $str)` | `+$str`~

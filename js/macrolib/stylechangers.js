@@ -331,7 +331,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			A command that repeats the attached hook, setting a temporary variable to a different value on each repeat.
 
 			Example usage:
-			* `(for: each _item, ...$array) [You have the _item.]` prints "You have the " and the item, for each item in $array.
+			* `(for: each _item, ...$arr) [You have the _item.]` prints "You have the " and the item, for each item in $arr.
 			* `(for: _ingredient where it contains "petal", ...$reagents) [Cook the _ingredient?]` prints "Cook the " and the string, for
 			each string in $reagents which contains "petal".
 

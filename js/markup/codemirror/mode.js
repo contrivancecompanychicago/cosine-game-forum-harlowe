@@ -36,7 +36,7 @@
 	/*
 		The mode is defined herein.
 	*/
-	window.CodeMirror && CodeMirror.defineMode('harlowe', () => {
+	window.CodeMirror && CodeMirror.defineMode('harlowe-2', () => {
 		let cm, tree,
 			// These caches are used to implement special highlighting when the cursor
 			// rests on variables or hookRefs, such that all the other variable/hook
@@ -127,7 +127,7 @@
 			cursorMarks.push(doc.markText(
 				doc.posFromIndex(token.start),
 				doc.posFromIndex(token.end),
-				{className: 'cm-harlowe-cursor'}
+				{className: 'cm-harlowe-2-cursor'}
 			));
 			/*
 				If the token is a variable or hookRef, then
@@ -144,7 +144,7 @@
 						cursorMarks.push(doc.markText(
 							doc.posFromIndex(e.start),
 							doc.posFromIndex(e.end),
-							{className: 'cm-harlowe-variableOccurrence'}
+							{className: 'cm-harlowe-2-variableOccurrence'}
 						));
 					}
 				});
@@ -166,7 +166,7 @@
 						cursorMarks.push(doc.markText(
 							doc.posFromIndex(tagStart),
 							doc.posFromIndex(tagStart + e.name.length),
-							{className: 'cm-harlowe-hookOccurrence'}
+							{className: 'cm-harlowe-2-hookOccurrence'}
 						));
 					}
 				});
@@ -213,7 +213,7 @@
 						TwineJS's PassageEditor stashes a reference to the CodeMirror instance in
 						the Harlowe modes object - and here, we retrieve it.
 					*/
-					cm = CodeMirror.modes.harlowe.cm;
+					cm = CodeMirror.modes['harlowe-2'].cm;
 					cm.setOption('placeholder', [
 						"Enter the body text of your passage here.",
 						"''Bold'', //italics//, ^^superscript^^, ~~strikethrough~~, and <p>HTML tags</p> are available.",
@@ -284,7 +284,7 @@
 				let ret = '';
 				for (let i = 0; i < currentBranch.length; i+=1) {
 					const type = currentBranch[i].type;
-					let name = "harlowe-" + type;
+					let name = "harlowe-2-" + type;
 					counts[name] = (counts[name] || 0) + 1;
 					// If this name has been used earlier in the chain, suffix
 					// this name with an additional number.
@@ -298,7 +298,7 @@
 						*/
 						case "macroName":
 							if (validMacros.indexOf(insensitiveName(currentBranch[i].text.slice(0,-1))) === -1) {
-								name += " harlowe-error";
+								name += " harlowe-2-error";
 							}
 							break;
 					}
@@ -317,10 +317,10 @@
 		If the style element already exists, it is reused. Otherwise, it's created.
 		(Let's use pure DOM calls in the absence of a jQuery require() call.)
 	*/
-	let harloweStyles = document.querySelector('style#cm-harlowe');
+	let harloweStyles = document.querySelector('style#cm-harlowe-2');
 	if (!harloweStyles) {
 		harloweStyles = document.createElement('style');
-		harloweStyles.setAttribute('id','cm-harlowe');
+		harloweStyles.setAttribute('id','cm-harlowe-2');
 		document.head.appendChild(harloweStyles);
 	}
 	/*
@@ -345,7 +345,7 @@
 			root: 'box-sizing:border-box;',
 
 			// The cursor token highlight should ignore the most common tokens, unwrapped text tokens.
-			"cursor:not([class^='cm-harlowe-text cm-harlowe-root'])":
+			"cursor:not([class^='cm-harlowe-2-text cm-harlowe-2-root'])":
 				"border-bottom: 2px solid darkgray;",
 
 			CodeMirror: "padding: 0 !important",
@@ -504,9 +504,9 @@
 							}
 							// There's no need for $= because that will always be cm-harlowe-root or cm-harlowe-cursor.
 							if (e.indexOf("^=") === 0) {
-								return "[class^='cm-harlowe-" + e.slice(2) + "']";
+								return "[class^='cm-harlowe-2-" + e.slice(2) + "']";
 							}
-							return ".cm-harlowe-" + e;
+							return ".cm-harlowe-2-" + e;
 						});
 					return a + selector.join(', ') + "{" + this[e] + "}";
 				}, '');
