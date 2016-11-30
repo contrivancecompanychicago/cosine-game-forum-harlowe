@@ -8,8 +8,12 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 
 		This module modifies the Macros module only, and exports nothing.
 	*/
 
-	/*
-		This experimental (enchant:) macro is currently just for testing purposes.
+	/*d:
+		(enchant: HookName, Changer) -> Command
+
+		TBW
+
+		#basics
 	*/
 	Macros.add("enchant",
 		(section, scope, changer) => ({

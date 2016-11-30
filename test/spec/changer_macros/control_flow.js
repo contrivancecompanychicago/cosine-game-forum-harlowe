@@ -26,10 +26,11 @@ describe("control flow macros", function() {
 			expect("(set: $a to (if: false) + (text-style:'bold'))$a[Gee]").markupToPrint("");
 		});
 		it("won't keep styling visible if it disables the hook", function() {
+			var dominantTextColour = $('tw-story').css('color');
 			var p = runPassage("(set: $a to (if: true) + (css:'border:2px solid red'))$a[Gee]").find('tw-hook');
 			expect(p.css('border-top-color')).toMatch(/#FF0000|rgb\(\s*255,\s*0,\s*0\s*\)/);
 			p = runPassage("(set: $a to (if: false) + (css:'border:2px solid red'))$a[Gee]").find('tw-hook');
-			expect(p.css('border-top-color')).toMatch(/#000000|rgb\(\s*0,\s*0,\s*0\s*\)/);
+			expect(p.css('border-top-color')).toBe(dominantTextColour);
 		});
 	});
 	describe("the (unless:) macro", function() {

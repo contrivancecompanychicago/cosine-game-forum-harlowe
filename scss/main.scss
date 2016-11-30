@@ -7,7 +7,6 @@ $version: 2;
 	<html> controls the background of the page.
 	Given that the text colour is intimately connected to the background,
 	this also controls the text colour.
-	This element can be styled by setting a ChangerCommand to page.body
 */
 html {
 	font: 100% Georgia, serif;
@@ -51,15 +50,21 @@ tw-storydata {
 
 /*
 	The <tw-story> element houses all of the <tw-passage>s.
+	This element can be styled by setting a ChangerCommand to ?page
 */
 tw-story {
 	@include flexbox;
 	@include flex-direction(column);
 	
-	width: 60%;
 	@if $version == 2 {
+		/*
+			Instead of a 60% width, this uses 40% horizontal padding (applied below).
+		*/
 		width: 100%;
 		height: 100%;
+	}
+	@else {
+		width: 60%;
 	}
 	/*
 		This is the base font size, which is permuted below.
@@ -72,10 +77,21 @@ tw-story {
 	/*
 		The <tw-story>'s default distance from the top and bottom of the page is 5%.
 	*/
-	margin: 5% auto;
 	@if $version == 2 {
 		padding: 5% 20%;
 		margin: 0;
+	}
+	@else {
+		margin: 5% auto;
+	}
+
+	@if $version == 2 {
+		/*
+			The new dark colour scheme. (This is permissible because of the previous
+			width:100% command.)
+		*/
+		background-color: black;
+		color: #fff;
 	}
 }
 

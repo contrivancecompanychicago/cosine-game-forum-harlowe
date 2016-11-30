@@ -1,5 +1,11 @@
 describe("style changer macros", function() {
 	'use strict';
+	var dominantTextColour, dominantBackground;
+	beforeAll(function() {
+		dominantTextColour = $('tw-story').css('color');
+		dominantBackground = $('tw-story').css('background-color');
+	});
+
 	describe("the (css:) macro", function() {
 		it("requires exactly 1 string argument", function() {
 			expect("(css:)").markupToError();
@@ -65,7 +71,7 @@ describe("style changer macros", function() {
 					var hook = runPassage("(text-style:'" + e + "')[Goobar]")
 						.find('tw-hook');
 					setTimeout(function() {
-						expect(hook).toHaveTextShadowColour('#000000');
+						expect(hook).toHaveTextShadowColour(dominantTextColour);
 						done();
 					});
 				});
@@ -92,7 +98,7 @@ describe("style changer macros", function() {
 						var hook = runPassage("(text-style:'outline')[Goobar]")
 							.find('tw-hook');
 						setTimeout(function() {
-							expect(hook).toHaveColour('#ffffff');
+							expect(hook).toHaveColour(dominantBackground);
 							done();
 						});
 					});
@@ -246,17 +252,17 @@ describe("style changer macros", function() {
 			});
 		});
 		it("given a colour, applies it as the background-color property", function(done) {
-			var p = runPassage("(background:black)[Hey]").find('tw-hook');
+			var p = runPassage("(background:'#800000')[Hey]").find('tw-hook');
 			setTimeout(function() {
-				expect(p.attr('style')).toMatch(/background-color:\s*(?:#000000|rgb\(\s*0,\s*0,\s*0\s*\))/);
+				expect(p.attr('style')).toMatch(/background-color:\s*(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
 				done();
 			});
 		});
 		it("can compose with itself", function(done) {
-			var p = runPassage("(set: $x to (background:black)+(background:'garply'))$x[Hey]").find('tw-hook');
+			var p = runPassage("(set: $x to (background:'#800000')+(background:'garply'))$x[Hey]").find('tw-hook');
 			setTimeout(function() {
 				expect(p.attr('style')).toMatch(/background-image:\s*url\(['"]?.*?garply['"]?\)/);
-				expect(p.attr('style')).toMatch(/background-color:\s*(?:#000000|rgb\(\s*0,\s*0,\s*0\s*\))/);
+				expect(p.attr('style')).toMatch(/background-color:\s*(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
 				done();
 			});
 		});
