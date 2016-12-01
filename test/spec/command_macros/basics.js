@@ -255,4 +255,49 @@ describe("basic command macros", function() {
 			expect("(set: $x to (goto-url:'http://example.org'))").not.markupToError();
 		});
 	});
+	describe("the (undo:) macro", function() {
+
+		function waitForUndo(callback) {
+			setTimeout(function f() {
+				if($('tw-passage:last-of-type tw-expression[name=undo]').length > 0) {
+					return setTimeout(f, 20);
+				}
+				callback();
+			}, 20);
+		}
+
+		it("takes no arguments", function() {
+			expect("(set: $x to (undo:1))").markupToError();
+			expect("(set: $x to (undo:'e'))").markupToError();
+		});
+		it("when run, undoes the current turn", function(done) {
+			runPassage("(set: $a to 1)","one");
+			runPassage("(set: $a to 2)(undo:)","two");
+			waitForUndo(function() {
+				expect("(print: $a) (print:(history:)'s length)").markupToPrint("1 1");
+				done();
+			});
+		});
+		it("errors when run in the first turn", function(){
+			expect("(undo:)").markupToError();
+		});
+		it("prevents macros after it from running", function(done) {
+			runPassage("");
+			runPassage("(set:$a to 1)(undo:)(set:$a to 2)");
+			expect("$a").markupToPrint("1");
+			waitForUndo(done);
+		});
+		it("evaluates to a command object that can't be +'d", function() {
+			expect("(print: (undo:) + (undo:))").markupToError();
+		});
+		it("can be (set:) into a variable", function(done) {
+			runPassage("''Red''","one");
+			runPassage("(set: $x to (undo:))$x");
+			waitForUndo(function() {
+				var expr = $('tw-passage:last-child').find('b');
+				expect(expr.text()).toBe("Red");
+				done();
+			});
+		});
+	});
 });

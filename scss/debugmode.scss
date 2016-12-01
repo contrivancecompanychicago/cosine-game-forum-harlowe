@@ -190,6 +190,7 @@
 $zindex: 999999;
 $borderwidth: 2px;
 $borderradius: 0.5em;
+$background: white;
 
 tw-debugger {
 	// Dimensions and position
@@ -212,11 +213,8 @@ tw-debugger {
 		top: solid #000 $borderwidth;
 		top-left-radius: $borderradius;
 	}
-	background: #fff;
-	opacity: 0.8;
-	&:hover {
-		opacity: 1;
-	}
+	background: $background;
+	opacity: 1;
 
 	// Components
 	select {
@@ -249,7 +247,7 @@ tw-debugger {
 		z-index:$zindex - 1;
 
 		// Design
-		background:inherit;
+		background:$background;
 		border:inherit;
 		border-top-left-radius: $borderradius;
 		border-bottom-left-radius: $borderradius;

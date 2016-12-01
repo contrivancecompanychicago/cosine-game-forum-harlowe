@@ -1,24 +1,14 @@
-/*
-	This toggles compatibility with 1.x.x Harlowe.
-*/
-$version: 2;
+$color: white;
+$background-color: black;
 
 /*
-	<html> controls the background of the page.
-	Given that the text colour is intimately connected to the background,
-	this also controls the text colour.
+	<html> should be left alone, except where needed to accomodate <tw-story>.
 */
 html {
-	font: 100% Georgia, serif;
 	margin: 0;
-	background-color: transparent;
-	color: #000;
 	// This allows <tw-story> to cover the entire page
 	height:100%;
 	overflow-x:hidden;
-	
-	// Use the more intuitive box model.
-	box-sizing: border-box;
 }
 /*
 	This enables border-box on every element by default, unless overridden
@@ -33,11 +23,8 @@ html {
 // This is just a reset.
 body {
 	margin: 0;
-	background-color: transparent;
-	@if $version == 2 {
-		// This allows <tw-story> to cover the entire page
-		height:100%;
-	}
+	// This allows <tw-story> to cover the entire page
+	height:100%;
 }
 
 /*
@@ -56,16 +43,15 @@ tw-story {
 	@include flexbox;
 	@include flex-direction(column);
 	
-	@if $version == 2 {
-		/*
-			Instead of a 60% width, this uses 40% horizontal padding (applied below).
-		*/
-		width: 100%;
-		height: 100%;
-	}
-	@else {
-		width: 60%;
-	}
+	font: 100% Georgia, serif;
+	// Use the more intuitive box model.
+	box-sizing: border-box;
+
+	/*
+		Instead of a 60% width, this uses 40% horizontal padding (applied below).
+	*/
+	width: 100%;
+	height: 100%;
 	/*
 		This is the base font size, which is permuted below.
 	*/
@@ -77,22 +63,11 @@ tw-story {
 	/*
 		The <tw-story>'s default distance from the top and bottom of the page is 5%.
 	*/
-	@if $version == 2 {
-		padding: 5% 20%;
-		margin: 0;
-	}
-	@else {
-		margin: 5% auto;
-	}
+	padding: 5% 20%;
+	margin: 0;
 
-	@if $version == 2 {
-		/*
-			The new dark colour scheme. (This is permissible because of the previous
-			width:100% command.)
-		*/
-		background-color: black;
-		color: #fff;
-	}
+	background-color: $background-color;
+	color: $color;
 }
 
 /*
@@ -157,11 +132,11 @@ tw-error {
 	cursor: help;
 	&.error {
 		background-color: hsla(312, 72%, 55%, 0.4); // A demure pink
-		color:black;
+		color:$color;
 	}
 	&.warning {
 		background-color: hsla(30, 72%, 55%, 0.4); // A stained orange
-		color:black;
+		color:$color;
 		display: none; // Only available in debug mode.
 		.debug-mode & {
 			display: inline;

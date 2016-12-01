@@ -240,8 +240,8 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			a string. You can, for instance, go to a randomly selected passage by combining it with
 			(either:) - `(go-to: (either: "Win", "Lose", "Draw"))`.
 			
-			(go-to:) can be combined with (link:) to produce a structure not unlike a
-			normal passage link: `(link:"Enter the hole")[(go-to:"Falling")]` However, you
+			(go-to:) can be combined with (link:) to accomplish the same thing as (link-goto:):
+			`(link:"Enter the hole")[(go-to:"Falling")]` However, you
 			can include other macros inside the hook to run before the (go-to:), such as (set:),
 			(put:) or (save-game:).
 			
@@ -256,10 +256,11 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			will *not* cause `$listen` to become `"I love you"` when it runs.
 			
 			Going to a passage using this macro will count as a new "turn" in the game's passage history,
-			much as if a passage link was clicked.
+			much as if a passage link was clicked. If you want to go back to the previous passage,
+			forgetting the current turn, then you may use (undo:).
 			
 			See also:
-			(loadgame:)
+			(link-goto:), (undo:), (loadgame:)
 
 			#links
 		*/
@@ -323,6 +324,57 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 				},
 			}),
 		[String, String])
+
+		/*d:
+			(undo:) -> Command
+			This command stops passage code and "undoes" the current turn, sending the player to the previous visited
+			passage and forgetting any variable changes that occurred in this passage.
+
+			Example usage:
+			`You scurry back whence you came... (live:2s)[(undo:)]` will undo the current turn after 2 seconds.
+
+			Rationale:
+			The (go-to:) macro sends players to different passages instantly. But, it's common to want to
+			send players back to the passage they previously visited, acting as if this turn never happened.
+			(undo:) provides this functionality.
+
+			By default, Harlowe offers a button in its sidebar that lets players undo at any time, going
+			back to the beginning of the game session. However, you may wish to restrict that ability, and
+			(replace:) the ?sidebar with something else. If so, you can selectively provide undos at certain
+			parts of your story instead, by using this macro inside (link:) hooks.
+
+			Details:
+			If this is the first turn of the game session, (undo:) will produce an error.
+
+			Just like (go-to:), (undo:) will "halt" the passage and prevent any macros and text
+			after it from running.
+
+			#links
+		*/
+		("undo", () => ({
+				TwineScript_ObjectName: "a (undo:) command",
+				TwineScript_TypeName:   "a (undo:) command",
+				TwineScript_Print() {
+					/*
+						Users of (undo:) should always check that (history:) is longer than 1.
+					*/
+					if (State.pastLength < 1) {
+						return TwineError.create("macrocall", "I can't (undo:) on the first turn.");
+					}
+					/*
+						As with the (goto:) macro, the change of passage must be deferred until
+						just after the passage has ceased rendering, to avoid <tw-story> being
+						detached twice.
+					*/
+					requestAnimationFrame(()=> Engine.goBack());
+					/*
+						As with the (goto:) macro, this returned object signals to
+						Section's runExpression() to cease evaluation.
+					*/
+					return { earlyExit: 1 };
+				},
+			}),
+		[])
 		
 		/*d:
 			(live: [Number]) -> Changer

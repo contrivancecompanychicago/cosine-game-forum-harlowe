@@ -63,6 +63,7 @@ Rough documentation is at http://twine2.neocities.org/
 #####HTML/CSS
 
  * The default Harlowe colour scheme is now white text on black, in keeping with SugarCube and Sugarcane, rather than black text on white. The light colour scheme can be reinstated by putting `(enchant: ?page, (text-colour:black)+(background:white))` in a passage with the `header` tag.
+ * Now, the default CSS applies the default Harlowe `font` (Georgia) to the `<tw-story>` element instead of `html` - so, to override it, write CSS `font` properties for `tw-story` (which is what most custom CSS should be altering now) instead of `html` or `body`.
  * Fixed a bug where the "Story stylesheet" `<style>` element was attached between `<head>` and `<body>`. This should have had no obvious effects in any browser, but was untidy anyway.
  * Altered the CSS of `<tw-story>` to use vertical padding instead of vertical margins, and increased the line-height slightly.
  * Altered the CSS of `<h1>`, `<h2>`, `<h3>`, `<h4>`, `<h5>` and `<h6>` elements to have a slightly lower margin-top.
@@ -91,6 +92,7 @@ Rough documentation is at http://twine2.neocities.org/
 
 #####Macros
 
+ * Added `(undo:)`, a command similar to `(go-to:)` which performs the same function as the undo button in the default sidebar. Use it as an alternative to `(go-to: (history:)'s last)` which forgets the current turn as well as going back.
  * Added `(for:)`, a command that repeats the attached hook, using a lambda to set a temporary variable to a different value on each repeat. It uses "where" lambdas, and accepts the "each" shorthand for `where true`, which accepts every value. `(for: each _item, ...$array) [You have the _item]` prints "You have the " and the item, for each item in `$array`.
  * Added `(find:)`, which uses a lambda to filter a sequence of values, and place the results in an array. For instance, `(find: _item where _item's 1st is "A", "Arrow", "Shield", "Axe", "Wand")` produces the array `(a: "Arrow", "Axe")`. (This macro is similar to Javascript's `filter()` array method.)
  * Added `(altered:)`, which takes a lambda as its first value, and any number of other values, and uses the lambda to convert the values, placing the results in an array. For instance, `(altered: _material via _material + " Sword", "Iron", "Wood", "Bronze", "Plastic")` will create an array `(a:"Iron Sword", "Wood Sword", "Bronze Sword", "Plastic Sword")`. (This macro is similar to Javascript's `map()` array method.)
