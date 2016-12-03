@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'engine', 'datatypes/changercommand'],
-($, Macros, Utils, Selectors, State, Passages, Engine, ChangerCommand) => {
+define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'engine', 'datatypes/changercommand', 'internaltypes/twineerror'],
+($, Macros, Utils, Selectors, State, Passages, Engine, ChangerCommand, TwineError) => {
 	/*
 		This module defines the behaviour of links in Harlowe - both
 		the normal passage links, and the (link:) macro's links.
@@ -29,7 +29,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 				/*
 					This could be a (link:) command. Such links' events
 					are, due to limitations in the ChangeDescriptor format,
-					attached to the <tw-expression> next to it.
+					attached to the <tw-expression> containing it.
 				*/
 				event = link.parent().data('clickEvent');
 			
@@ -39,13 +39,20 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			}
 			/*
 				If no event was registered, then this must be
-				a passage link (a non-command).
+				a passage link...
 			*/
 			const next = link.attr('passage-name');
-			
 			if (next) {
 				// TODO: stretchtext
 				Engine.goToPassage(next,false);
+				return;
+			}
+			/*
+				Or, a (link-undo:) link.
+			*/
+			if (link.is('[undo]')) {
+				Engine.goBack();
+				return;
 			}
 		}
 	));
@@ -175,40 +182,40 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		passage name ((goto:)'s argument) is evaluated alongside (link:)'s argument.
 		It is also what the standard link syntax desugars to.
 	*/
-	/*d:
-		(link-goto: String, [String]) -> Command
-		
-		Takes a string of link text, and an optional destination passage name, and makes a command to create
-		a link that takes the player to another passage. The link functions identically to a standard link.
-		This command should not be attached to a hook.
-		
-		Example usage:
-		* `(link-goto: "Enter the cellar", "Cellar")` is approximately the same as `[[Enter the cellar->Cellar]]`.
-		* `(link-goto: "Cellar")` is the same as `[[Cellar]]`.
-
-		Rationale:
-		This macro serves as an alternative to the standard link syntax (`[[Link text->Destination]]`), but has a couple of
-		slight differences.
-
-		* The link syntax lets you supply a fixed text string for the link, and an expression for the destination
-		passage's name. However, it does not provide any other means of computing the link. (link-goto:) also
-		allows the link text to be any expression - so, something like `(link-goto: "Move " + $name + "to the cellar", "Cellar")`
-		can be written.
-
-		* The resulting command from this macro, like all commands, can be saved and used elsewhere.
-		If you have a complicated link you need to use in several passages, you could (set:) it to a variable and use that variable
-		in its place.
-
-		Details:
-		As a bit of trivia... the Harlowe engine actually converts all standard links into (link-goto:) macro calls internally -
-		the link syntax is, essentially, a syntactic shorthand for (link-goto:).
-
-		See also:
-		(link:), (link-reveal:), (link-repeat:), (goto:)
-
-		#links 4
-	*/
 	Macros.add
+		/*d:
+			(link-goto: String, [String]) -> Command
+			
+			Takes a string of link text, and an optional destination passage name, and makes a command to create
+			a link that takes the player to another passage. The link functions identically to a standard link.
+			This command should not be attached to a hook.
+			
+			Example usage:
+			* `(link-goto: "Enter the cellar", "Cellar")` is approximately the same as `[[Enter the cellar->Cellar]]`.
+			* `(link-goto: "Cellar")` is the same as `[[Cellar]]`.
+
+			Rationale:
+			This macro serves as an alternative to the standard link syntax (`[[Link text->Destination]]`), but has a couple of
+			slight differences.
+
+			* The link syntax lets you supply a fixed text string for the link, and an expression for the destination
+			passage's name. However, it does not provide any other means of computing the link. (link-goto:) also
+			allows the link text to be any expression - so, something like `(link-goto: "Move " + $name + "to the cellar", "Cellar")`
+			can be written.
+
+			* The resulting command from this macro, like all commands, can be saved and used elsewhere.
+			If you have a complicated link you need to use in several passages, you could (set:) it to a variable and use that variable
+			in its place.
+
+			Details:
+			As a bit of trivia... the Harlowe engine actually converts all standard links into (link-goto:) macro calls internally -
+			the link syntax is, essentially, a syntactic shorthand for (link-goto:).
+
+			See also:
+			(link:), (link-reveal:), (link-repeat:), (link-undo:), (goto:)
+
+			#links 4
+		*/
 		(["link-goto"],
 			/*
 				Return a new (link-goto:) object.
@@ -272,5 +279,54 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 						+ '">' + (text || passage) + '</tw-link>';
 				}
 			}),
-		[String, optional(String)]);
+		[String, optional(String)])
+
+		/*d:
+			(link-undo: String) -> Command
+
+			Takes a string of link text, and produces a link that, when clicked, undoes the current turn and
+			sends the player back to the previously visited passage. The link appears identical to a typical
+			passage link.
+			This command should not be attached to a hook.
+
+			Example usage:
+			`(link-undo:"Retreat")` behaves the same as `(link:"Retreat")[(undo:)]`.
+
+			Rationale:
+			The ability to undo the player's last turn, as an alternative to (go-to:), is explained in the documentation
+			of the (undo:) macro. This macro provides a shorthand for placing (undo:) inside a (link:) attached hook.
+
+			You may, as part of customising your story, be using (replace:) to change the ?sidebar, and remove its
+			default "undo" link. If so, you can selectively provide undo links at certain parts of your story instead,
+			by using this macro.
+
+			Details:
+			As with (undo:), if this command is used on the play session's first turn, an error will be produced (as there
+			is yet nothing to undo at that time.) You can check which turn it is by examining the `length` of the (history:)
+			array.
+
+			See also:
+			(undo:), (link-goto:)
+
+			#links 5
+		*/
+		("link-undo", (section, text) => ({
+				TwineScript_ObjectName: "a (link-undo:"
+					+ Utils.toJSLiteral(text) + ") command",
+				TwineScript_TypeName:   "a (link-undo:) command",
+				TwineScript_Print() {
+					/*
+						Users of (link-undo:) should always check that (history:) is longer than 1.
+					*/
+					if (State.pastLength < 1) {
+						return TwineError.create("macrocall", "I can't use (link-undo:) on the first turn.");
+					}
+					/*
+						Much like (link-goto:), this too reveals its purpose by including an 'undo' attribute,
+						which is used by the "click.passage-link" event handler.
+					*/
+					return '<tw-link tabindex=0 undo>' + text + '</tw-link>';
+				},
+			}),
+		[String]);
 });

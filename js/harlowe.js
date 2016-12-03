@@ -123,7 +123,7 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'util
 		| "Actions" macro | Not offered | `<<actions [[Talk to Ms Gine]] [[Talk to Ms Holk]]>>`~
 		| "Go to" macro | `(goto: "Cloister")`| `<<goto "Cloister">>`~
 		| "Return" macro | `(link:"Go back")[(goto: (history: )'s last)]`,<br>`(link:"Go back")[(goto: (history: )'s 3rdlast)]` | `<<return "Go back">>`~,<br>`<<return "Go back" go 3>>`~
-		| "Back" macro | Not offered | `<<back "Go back">>`~
+		| "Undo" macro | `(link-undo: "Go back")` | `<<back "Go back">>`~
 		|**UI element macros**
 		| "Click/Link" macro | `(link: "Grab")[You grabbed it]` | `<<click "Grab">>You grabbed it<</click>>`~
 		| "Mouseover" macro | `∣p>[A bubble] (mouseover-replace: ?p)[Pop!]` | Not offered

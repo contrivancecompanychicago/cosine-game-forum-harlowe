@@ -339,15 +339,19 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			(undo:) provides this functionality.
 
 			By default, Harlowe offers a button in its sidebar that lets players undo at any time, going
-			back to the beginning of the game session. However, you may wish to restrict that ability, and
-			(replace:) the ?sidebar with something else. If so, you can selectively provide undos at certain
-			parts of your story instead, by using this macro inside (link:) hooks.
+			back to the beginning of the game session. However, if you wish to use this macro, and only permit undos
+			in certain passages and occasions, you may remove the button by using (replace:) on the ?sidebar in
+			a header tagged passage.
 
 			Details:
-			If this is the first turn of the game session, (undo:) will produce an error.
+			If this is the first turn of the game session, (undo:) will produce an error. You can check which turn it is
+			by examining the `length` of the (history:) array.
 
 			Just like (go-to:), (undo:) will "halt" the passage and prevent any macros and text
 			after it from running.
+
+			See also:
+			(go-to:), (link-undo:)
 
 			#links
 		*/

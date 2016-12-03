@@ -93,6 +93,7 @@ Rough documentation is at http://twine2.neocities.org/
 #####Macros
 
  * Added `(undo:)`, a command similar to `(go-to:)` which performs the same function as the undo button in the default sidebar. Use it as an alternative to `(go-to: (history:)'s last)` which forgets the current turn as well as going back.
+   * Also added a link shorthand of the above, `(link-undo:)`, which is used similarly to `(link-goto:)`.
  * Added `(for:)`, a command that repeats the attached hook, using a lambda to set a temporary variable to a different value on each repeat. It uses "where" lambdas, and accepts the "each" shorthand for `where true`, which accepts every value. `(for: each _item, ...$array) [You have the _item]` prints "You have the " and the item, for each item in `$array`.
  * Added `(find:)`, which uses a lambda to filter a sequence of values, and place the results in an array. For instance, `(find: _item where _item's 1st is "A", "Arrow", "Shield", "Axe", "Wand")` produces the array `(a: "Arrow", "Axe")`. (This macro is similar to Javascript's `filter()` array method.)
  * Added `(altered:)`, which takes a lambda as its first value, and any number of other values, and uses the lambda to convert the values, placing the results in an array. For instance, `(altered: _material via _material + " Sword", "Iron", "Wood", "Bronze", "Plastic")` will create an array `(a:"Iron Sword", "Wood Sword", "Bronze Sword", "Plastic Sword")`. (This macro is similar to Javascript's `map()` array method.)
