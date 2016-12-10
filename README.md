@@ -1,6 +1,6 @@
 #Harlowe - the default [Twine 2](https://bitbucket.org/klembot/twinejs) story format.
 
-Rough documentation is at http://twine2.neocities.org/
+Rough documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
 ###2.0.0 changes (unreleased; also see 1.2.3 changes):
 
@@ -301,3 +301,18 @@ Rough documentation is at http://twine2.neocities.org/
 ####New Features
 
 * Added the ability to property-reference arbitrary values, not just variables. This means that you can now use `(history:)'s last`, or `"Red"'s 1st` as expressions, without having to put the entity in a variable first.
+
+###Compilation
+
+Harlowe is a story format file, called `format.js`, which is used by Twine 2. The Twine 2 program bundles this format with authored story code and assets to produce standalone HTML games.
+
+Use these commands to build Harlowe:
+
+* `make`: As the JS files can be run directly in a browser without compilation (as is used by the test suite), this only lints the JS source files and builds the CSS file.
+* `make jshint`: Lints the JS source files.
+* `make css`: Builds the CSS file, `build/harlowe-css.css`, from the Sass sources. This is an intermediate build product whose contents are included in the final `format.js` file.
+* `make docs`: Builds the official documentation file, `dist/harloweDocs.html`, deriving macro and markup definitions from specially-marked comments in the JS files.
+* `make format`: Builds the Harlowe `format.js` file.
+* `make all`: Builds the Harlowe `format.js` file, the documentation, and an example file, `dist/exampleOutput.html`, which is a standalone game that displays "Success!" when run, to confirm that the story format is capable of being bundled by Twine 2 correctly.
+* `make clean`: Deletes the `build` and `dist` directories and their contents.
+* `make dirs`: Produces empty `build` and `dist` directories, which usually shouldn't be necessary.

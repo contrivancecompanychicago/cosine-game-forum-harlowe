@@ -32,9 +32,9 @@ css = "{{CSS}}", JSON.stringify("<style title=\"Twine CSS\">" + read("build/harl
 default: dirs jshint css
 
 css: build/harlowe-css.css
-
 docs:
 	@node scripts/harlowedocs.js
+format: dist/format.js
 
 all: dirs jshint dist/format.js docs dist/exampleOutput.html
 
@@ -74,7 +74,7 @@ build/twinemarkup-min.js: js/markup/*.js js/markup/*/*.js
 	| uglifyjs - $(uglify_flags) \
 	> build/twinemarkup-min.js
 
-dist/format.js : build/harlowe-min.js build/twinemarkup-min.js css
+dist/format.js: build/harlowe-min.js build/twinemarkup-min.js css
 	@cat format.js \
 	| $(call node_replace, $(source)) \
 	| $(call node_replace, $(setup)) \
@@ -96,4 +96,3 @@ dist/exampleOutput.html: build/harlowe-min.js css
 	> dist/exampleOutput.html
 
 .PHONY : all dirs default jshint clean css docs
-
