@@ -703,6 +703,15 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 		*/
 		if (i > -1) {
 			/*
+				If two variables are being compared (such as $a < $y or $b contains $c)
+				and the comparison operation is in potential VarRef position
+				(such as (set: $x to $a < $y)) then don't compile the variables into VarRefs
+				(because comparison operations can't, and shouldn't, process VarRefs instead of values.)
+			*/
+			if (operation) {
+				isVarRef = false;
+			}
+			/*
 				Any of the comparisons above could have provided specific
 				values for left and right, but usually they will just be
 				the tokens to the left and right of the matched one.

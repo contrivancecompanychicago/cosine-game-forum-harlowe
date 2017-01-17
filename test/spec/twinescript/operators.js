@@ -133,6 +133,17 @@ describe("twinescript operators", function () {
 			expect("(print: -10 is not >= 1)").markupToPrint("true");
 			expect("(print: 1 is not >= 1)").markupToPrint("false");
 		});
+		it("has correct order of operations with 'to' and 'into'", function (){
+			expect("(set: $a to 1 < 2)(print:$a)").markupToPrint("true");
+			expect("(put: 1 < 2 into $a)(print:$a)").markupToPrint("true");
+			expect("(set: $a to 4 < 3)(print:$a)").markupToPrint("false");
+			expect("(put: 4 < 3 into $a)(print:$a)").markupToPrint("false");
+		});
+		it("can compare variables as the subject of 'to' and 'into'", function (){
+			runPassage("(set:$a to 1)");
+			expect("(set: $b to $a < $a)(print:$b)").markupToPrint("false");
+			expect("(put: $a < $a into $b)(print:$b)").markupToPrint("false");
+		});
 	});
 	describe("the > operator", function () {
 		it("performs 'less than' on two numbers", function (){
@@ -157,6 +168,17 @@ describe("twinescript operators", function () {
 			expect("(print: 1 is not <= 10)").markupToPrint("false");
 			expect("(print: -10 is not <= 1)").markupToPrint("false");
 			expect("(print: 1 is not <= 1)").markupToPrint("false");
+		});
+		it("has correct order of operations with 'to' and 'into'", function (){
+			expect("(set: $a to 1 > 2)(print:$a)").markupToPrint("false");
+			expect("(put: 1 > 2 into $a)(print:$a)").markupToPrint("false");
+			expect("(set: $a to 4 > 3)(print:$a)").markupToPrint("true");
+			expect("(put: 4 > 3 into $a)(print:$a)").markupToPrint("true");
+		});
+		it("can compare variables as the subject of 'to' and 'into'", function (){
+			runPassage("(set:$a to 1)");
+			expect("(set: $b to $a > $a)(print:$b)").markupToPrint("false");
+			expect("(put: $a > $a into $b)(print:$b)").markupToPrint("false");
 		});
 	});
 	describe("the <= operator", function () {
@@ -183,6 +205,17 @@ describe("twinescript operators", function () {
 			expect("(print: -10 is not > 1)").markupToPrint("true");
 			expect("(print: 1 is not > 1)").markupToPrint("true");
 		});
+		it("has correct order of operations with 'to' and 'into'", function (){
+			expect("(set: $a to 1 <= 2)(print:$a)").markupToPrint("true");
+			expect("(put: 1 <= 2 into $a)(print:$a)").markupToPrint("true");
+			expect("(set: $a to 4 <= 3)(print:$a)").markupToPrint("false");
+			expect("(put: 4 <= 3 into $a)(print:$a)").markupToPrint("false");
+		});
+		it("can compare variables as the subject of 'to' and 'into'", function (){
+			runPassage("(set:$a to 1)");
+			expect("(set: $b to $a <= $a)(print:$b)").markupToPrint("true");
+			expect("(put: $a <= $a into $b)(print:$b)").markupToPrint("true");
+		});
 	});
 	describe("the >= operator", function () {
 		it("performs 'less than' on two numbers", function (){
@@ -207,6 +240,17 @@ describe("twinescript operators", function () {
 			expect("(print: 1 is not < 10)").markupToPrint("false");
 			expect("(print: -10 is not < 1)").markupToPrint("false");
 			expect("(print: 1 is not < 1)").markupToPrint("true");
+		});
+		it("has correct order of operations with 'to' and 'into'", function (){
+			expect("(set: $a to 1 >= 2)(print:$a)").markupToPrint("false");
+			expect("(put: 1 >= 2 into $a)(print:$a)").markupToPrint("false");
+			expect("(set: $a to 4 >= 3)(print:$a)").markupToPrint("true");
+			expect("(put: 4 >= 3 into $a)(print:$a)").markupToPrint("true");
+		});
+		it("can compare variables as the subject of 'to' and 'into'", function (){
+			runPassage("(set:$a to 1)");
+			expect("(set: $b to $a >= $a)(print:$b)").markupToPrint("true");
+			expect("(put: $a >= $a into $b)(print:$b)").markupToPrint("true");
 		});
 	});
 	describe("the 'and' operator", function () {

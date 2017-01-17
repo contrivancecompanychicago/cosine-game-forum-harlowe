@@ -20,6 +20,7 @@ describe("game state macros", function() {
 		it("passage datamaps have tags", function (){
 			createPassage("","The Kitchen", ["area"]);
 			expect("(print: (passage: 'The Kitchen')'s tags contains 'area')").markupToPrint("true");
+			expect("(set: $x to (passage: 'The Kitchen')'s tags contains 'area')(print:$x)").markupToPrint("true");
 		});
 		it("doesn't pass data by reference", function (){
 			createPassage("","The Kitchen");
