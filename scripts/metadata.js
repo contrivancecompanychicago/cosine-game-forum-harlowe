@@ -21,7 +21,7 @@ const
 			defs: {},
 
 			entries() {
-				return Object.keys(defs).map(e=>[e,defs[e]]);
+				return Object.keys(this.defs).map(e=>[e,this.defs[e]]);
 			},
 			navLink(def) {
 				return `<li><a href="#${def.anchor}">${def.name}</a></li>`;
@@ -89,7 +89,7 @@ const
 	Appendix = new Defs({
 		defName: "Appendix",
 		defCode: "appendix",
-		regExp: /Appendix: ([\w ]+)\n/,
+		regExp: /^\s*Appendix: (.+?)\n/,
 
 		definition({input, 0:title, 1:name}) {
 			const slugName =  name.replace(/\s/g,'-').toLowerCase();
@@ -106,10 +106,30 @@ const
 		},
 	}),
 
+	Introduction = new Defs({
+		defName: "Introduction",
+		defCode: "introduction",
+		regExp: /^\s*Introduction: (.+?)\n/,
+
+		definition({input, 0:title, 1:name}) {
+			const slugName =  name.replace(/\s/g,'-').toLowerCase();
+			let text = input.trim().replace(title, "\n<h2 class='def_title introduction_title' id=introduction_" + slugName + ">"
+				+ "<a class='heading_link' href=#introduction_" + slugName + "></a>" + name + "</h2>\n");
+
+			text = processTextTerms(
+				text,
+				name,
+				{markupNames:true, macroNames:true}
+			);
+
+			this.defs[title] = { text, anchor: "introduction_" + slugName, name };
+		},
+	}),
+
 	Markup = new Defs({
 		defName: "Passage markup",
 		defCode: "markup",
-		regExp: /([\w ]+) markup\n/,
+		regExp: /^\s*([\w ]+) markup\n/,
 
 		definition({input, 0:title, 1:name}) {
 			const slugName =  name.replace(/\s/g,'-').toLowerCase();
@@ -122,7 +142,6 @@ const
 				name,
 				{markupNames:true, macroNames:true}
 			);
-
 			this.defs[title] = { text, anchor: "markup_" + slugName, name, category, categoryOrder };
 		},
 	}),
@@ -130,7 +149,7 @@ const
 	Type = new Defs({
 		defName: "Types of data",
 		defCode: "type",
-		regExp: /([\w]+) data\n/,
+		regExp: /^\s*([\w]+) data\n/,
 
 		definition({input, 0:title, 1:name}) {
 			const slugName =  name.replace(/\s/g,'-').toLowerCase();
@@ -151,7 +170,7 @@ const
 	Keyword = new Defs({
 		defName: "Special keywords",
 		defCode: "keyword",
-		regExp: /([\w]+) keyword\n/,
+		regExp: /^\s*([\w]+) keyword\n/,
 
 		definition({input, 0:title, 1:name}) {
 			const slugName =  name.replace(/\s/g,'-').toLowerCase();
@@ -171,7 +190,7 @@ const
 	PassageTag = new Defs({
 		defName: "Special passage tags",
 		defCode: "passagetag",
-		regExp: /([\w\-]+) tag\n/,
+		regExp: /^\s*([\w\-]+) tag\n/,
 
 		definition({input, 0:title, 1:name}) {
 			const slugName =  name.replace(/\s/g,'-').toLowerCase();
@@ -192,7 +211,7 @@ const
 	Macro = new Defs({
 		defName: "List of macros",
 		defCode: "macro",
-		regExp: /\(([\w\-\d]+):([\s\w\.\,\[\]]*)\) -> ([\w]+)/,
+		regExp: /^\s*\(([\w\-\d]+):([\s\w\.\,\[\]]*)\) -> ([\w]+)/,
 
 		navLink(def) {
 			return `<li><a href="#${def.anchor}">(${def.name}:)</a>
@@ -366,24 +385,34 @@ function processTextTerms(text, name, allow) {
 }
 
 /*
-	Read the definitions from every JS file.
+	Read the definitions from every JS and MD file.
 */
-require('fs-readdir-recursive')('js/').forEach(function(path) {
-	let defs = fs.readFileSync('js/' + path, {encoding:'utf8'}).match(/\/\*d:[^]*?\*\//g);
-	if (!defs) {
-		return;
+let rr = require('fs-readdir-recursive');
+rr('js/').map(e=>'js/'+e).concat(rr('miscdocs/').map(e=>'miscdocs/'+e)).forEach(function(path) {
+	let file = fs.readFileSync(path, {encoding:'utf8'});
+	let defs;
+	// .md files should be treated as entire single definitions
+	if (path.endsWith('.md')) {
+		defs = [file];
+	} else {
+		// Extract definitions from the JS file
+		defs = file.match(/\/\*d:[^]*?\*\//g);
+		if (!defs) {
+			return;
+		}
+		defs = defs.map((e) =>
+			// Remove the /*d: and */ markers, whitespace, and tabs.
+			e.replace(/\t/g,'').slice(4,-2).trim()
+		)
 	}
-	defs.map((e) =>
-		// Remove the /*d: and */ markers, whitespace, and tabs.
-		e.replace(/\t/g,'').slice(4,-2).trim()
-	).forEach((defText) => {
+	defs.forEach((defText) => {
 		let match;
-		[Appendix,Markup,Macro,Type,Keyword,PassageTag].forEach(e=> {
+		[Introduction,Appendix,Markup,Macro,Type,Keyword,PassageTag].forEach(e=> {
 			if ((match = defText.match(e.regExp))) {
 				e.definition(match);
 			}
 		})
 	});
 });
-
-module.exports = {Markup, Macro, Type, Keyword, PassageTag, Appendix};
+// Order of this object determines the overall document order.
+module.exports = {Introduction, Markup, Macro, Type, Keyword, PassageTag, Appendix};

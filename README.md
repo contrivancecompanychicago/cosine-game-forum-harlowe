@@ -63,6 +63,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
 #####HTML/CSS
 
  * The default Harlowe colour scheme is now white text on black, in keeping with SugarCube and Sugarcane, rather than black text on white. The light colour scheme can be reinstated by putting `(enchant: ?page, (text-colour:black)+(background:white))` in a passage with the `header` tag.
+ * The `<tw-story>` element is now kept inside whatever element originally enclosed it, instead of being moved to inside `<html>`.
  * Now, the default CSS applies the default Harlowe `font` (Georgia) to the `<tw-story>` element instead of `html` - so, to override it, write CSS `font` properties for `tw-story` (which is what most custom CSS should be altering now) instead of `html` or `body`.
  * Fixed a bug where the "Story stylesheet" `<style>` element was attached between `<head>` and `<body>`. This should have had no obvious effects in any browser, but was untidy anyway.
  * Altered the CSS of `<tw-story>` to use vertical padding instead of vertical margins, and increased the line-height slightly.

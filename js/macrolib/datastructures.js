@@ -37,15 +37,21 @@ define([
 			Stores data values in variables.
 			
 			Example usage:
-			```
-			(set: $battlecry to "Save a " + $favouritefood + " for me!")
-			```
+			* `(set: $battlecry to "Save a " + $favouritefood + " for me!")` sets a variable called $battlecry.
+			* `(set: _dist to $altitude - $enemyAltitude)` sets a temp variable called _dist.
 			
 			Rationale:
 			
 			Variables are data storage for your game. You can store data values under special names
-			of your choosing, and refer to them later. They persist between passages, and can be
-			used throughout the entire game in other macros, such as (if:).
+			of your choosing, and refer to them later.
+
+			There are two kinds of variables. Normal variables, whose names begin with `$`, persist between passages,
+			and should be used to store data that will be needed throughout the entire game. Temp variables,
+			whose names begin with `_`, only exist inside the hook or passage that they're first (set:), and
+			are forgotten after the hook or passage ends. You should use temp variables if you're writing passage
+			code that mustn't accidentally affect any other passages' variables (by using (set:) on a variable name
+			that someone else was using for something different). This can be essential in collaborative work
+			with other authors working on the same story independently, or when writing code to be used in multiple stories.
 			
 			Variables have many purposes: keeping track of what the player has accomplished,
 			managing some other state of the story, storing hook styles and changers, and

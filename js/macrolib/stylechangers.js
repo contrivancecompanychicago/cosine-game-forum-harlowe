@@ -323,7 +323,6 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			[String]
 		)
 
-
 		/*d:
 			(for: Lambda, ...Any) -> Changer
 			Also known as: (loop:)
@@ -335,7 +334,37 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			* `(for: _ingredient where it contains "petal", ...$reagents) [Cook the _ingredient?]` prints "Cook the " and the string, for
 			each string in $reagents which contains "petal".
 
-			TBW
+			Rationale:
+			Suppose you're using arrays to store strings representing inventory items, or character datamaps,
+			or other kinds of sequential game information - or even just built-in arrays like (history:) - and you
+			want to print out a sentence or paragraph for each item. The (for:) macro can be used to print something "for each"
+			item in an array easily - simply write a hook using a temp variable where each item should be printed or used,
+			then give (for:) an "each" lambda that uses the same temp variable.
+
+			Details:
+			Don't make the mistake of believing you can alter an array by trying to (set:) the temp variable in each loop - such
+			as `(for: each _a, ...$arr)[(set: _a to it + 1)]`. This will NOT change $arr - only the temp variable will change (and
+			only until the next loop, where another $arr value will be put into it). If you want to alter an array item-by-item, use
+			the (altered:) macro.
+
+			The temp variable inside the hook will shadow any other identically-named temp variables outside of it: if you
+			`(set: _a to 1)`, then `(for: each _a, 2,3)[ (print: _a) ]`, the inner hook will print "2" and "3", and you won't be
+			able to print or set the "outer" _a.
+
+			You may want to simply print several copies of a hook a certain number of times, without any particular
+			array data being looped over. You can use the (range:) macro with it instead: `(for: each _i in ...(range:1,10))`, and
+			not use the temp variable inside the hook at all.
+
+			As it is a changer macro, (for:)'s value is a changer command which can be stored in a variable - this command stores all
+			of the values originally given to it, and won't reflect any changes to the values, or their container arrays, since then.
+
+			Alternatives:
+			You may be tempted to use (for:) not to print anything at all, but to find values inside arrays using (if:), or
+			form a "total" using (set:). The lambda macros (find:) and (folded:), while slightly less straightforward,
+			are recommended to be used instead.
+
+			See also:
+			(find:), (folded:), (if:)
 
 			#basics 10
 		*/

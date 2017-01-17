@@ -318,14 +318,16 @@
 			Variable markup
 			
 			As described in the documentation for the (set:) macro, variables are used to remember data values
-			in your game, keep track of the player's status, and so forth. You can print variables, arrays' items,
-			using the (print:) macro.
+			in your game, keep track of the player's status, and so forth. They start with `$` (for normal variables)
+			or `_` (for temp variables, which only exist inside a single passage, hook or lambda).
 
-			Or, if you only want to print a single variable, you can just enter the variable's name directly in
-			your passage's prose.
+			You can print the contents of variables, or any further items within them, using the (print:) and (for:)
+			macros. Or, if you only want to print a single variable, you can just enter the variable's name directly
+			in your passage's prose.
 
 			```
 			Your beloved plushie, $plushieName, awaits you after a long work day.
+			You put your _heldItem down and lift it for a snuggle.
 			```
 
 			Furthermore, if the variable contains a changer command, such as that created by (text-style:) and such,
@@ -333,6 +335,7 @@
 
 			```
 			$robotText[Good golly! Your flesh... it's so soft!]
+			_assistantText[Don't touch me, please! I'm ticklish.]
 			```
 
 			#coding 2

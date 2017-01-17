@@ -75,7 +75,7 @@ outputFile = outputFile.replace(/<code>([^<]+)<\/code>(~?)/g, ({length}, code, n
 		return `<code>${code}</code>`;
 	}
 	function makeCSSClasses(pos) {
-		return root.pathAt(pos + root.start).map(token => 'cm-harlowe-' + token.type).join(' ');
+		return root.pathAt(pos + root.start).map(token => 'cm-harlowe-2-' + token.type).join(' ');
 	}
 	code = unescape(code);
 	let ret = '', root, lastPos = 0;
