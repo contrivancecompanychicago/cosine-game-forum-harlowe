@@ -368,7 +368,7 @@
 				"font-weight:bold;",
 			
 			//TODO: whitespace within collapsed
-			error:
+			"error:not([class*='cm-harlowe-2-string'])":
 				invalid,
 			
 			macro:        macro(0.05),

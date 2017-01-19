@@ -141,7 +141,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 			support. For instance, 'İ' in lowercase should be 'i̇', but some browsers don't support this.
 			
 			See also:
-			(uppercase:), (startcase:)
+			(uppercase:), (lowerfirst:), (upperfirst:)
 
 			#string
 		*/
@@ -161,7 +161,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 			support. For instance, 'ß' in uppercase should be 'SS', but some browsers don't support this.
 			
 			See also:
-			(uppercase:), (upperfirst:), (lowerfirst:), (startcase:),
+			(lowercase:), (upperfirst:), (lowerfirst:)
 
 			#string
 		*/
@@ -185,7 +185,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 			support. For instance, 'İ' in lowercase should be 'i̇', but some browsers don't support this.
 			
 			See also:
-			(uppercase:), (lowercase:), (upperfirst:), (startcase:)
+			(uppercase:), (lowercase:), (upperfirst:)
 
 			#string
 		*/
@@ -216,7 +216,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 			support. For instance, 'ß' in uppercase should be 'SS', but some browsers don't support this.
 			
 			See also:
-			(uppercase:), (startcase:)
+			(uppercase:), (lowercase:), (lowerfirst:)
 
 			#string
 		*/

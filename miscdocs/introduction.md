@@ -7,18 +7,21 @@ A lot of features have been added to Harlowe 2.0, many of which are designed to 
  * Using `is` with comparison operators, like `$a is < 3`, is now valid.
  * Changers can be attached to hooks with whitespace between them - `(if: $coverBlown) [Run!]` is now valid.
  * Changers can be attached to named hooks - `(if: true) |moths>[Several moths!]` is now valid.
- * Changers can be added together using + while attaching them to a hook - `(font:'Shatter') + (text-style:'outline') [Helllo?]` is now valid.
+ * Changers can be added together using + while attaching them to a hook - `(font:'Shatter')+(text-style:'outline')[CRASH!]` is now valid.
 
 The following new features also deserve your attention.
 
  * The built-in `?page`, `?passage`, `?sidebar` and `?link` hooks
- * Hidden hooks, and the (show:) and (hide:) command macros
+ * Hidden hooks, and the (show:) and (hidden:) command macros
  * Temp variables (see the (set:) article)
  * The special `any` and `all` data names for arrays, strings and datasets (see each type's articles)
- * The (for:) and (enchant:) changer macros
+ * The (for:) changer macro
+ * The (enchant:) command macro
  * The (find:), (altered:) and (folded:) data macros
  * The (dm:) and (ds:) aliases for (datamap:) and (dataset:)
  * Column markup
+
+For a complete list of changes, consult the <a href="#changes_2.0.0-changes-(also-see-1.2.3-changes)">change log</a> section.
 
 Changing back from dark to light:
 You may want to use the black-on-white colour scheme of Harlowe 1 instead of the new white-on-black colour scheme. A few of the new features described above can help you do this without using CSS! Simply create a `header` tagged passage (a passage with the tag 'header'), and include this in it:

@@ -153,7 +153,7 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 
 			Example usage:
 			```
-			(hide:)|fan>[The overhead fan spins lazily.]
+			|fan)[The overhead fan spins lazily.]
 			
 			(link:"Turn on fan")[(show:?fan)]
 			```
@@ -200,6 +200,9 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			possessive syntax, as usual: `(show: ?shrub's 1st)`.
 
 			If you provide to (show:) a hook which is already visible, an error will be produced.
+
+			See also:
+			(hidden:), (replace:)
 
 			#showing and hiding
 		*/

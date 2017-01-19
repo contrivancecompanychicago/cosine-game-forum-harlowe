@@ -511,6 +511,17 @@ describe("twinescript operators", function () {
 		it("won't be matched from within text", function (){
 			expect("(print: typeof xxcontainsxx)").markupToPrint("undefined");
 		});
+		it("has correct order of operations with 'to' and 'into'", function (){
+			expect("(set: $a to 'a' contains 'b')(print:$a)").markupToPrint("false");
+			expect("(put: 'a' contains 'b' into $a)(print:$a)").markupToPrint("false");
+			expect("(set: $a to 'bc' contains 'b')(print:$a)").markupToPrint("true");
+			expect("(put: 'bc' contains 'b' into $a)(print:$a)").markupToPrint("true");
+		});
+		it("can compare variables as the subject of 'to' and 'into'", function (){
+			runPassage("(set:$a to 'a')");
+			expect("(set: $b to $a contains $a)(print:$b)").markupToPrint("true");
+			expect("(put: $a contains $a into $b)(print:$b)").markupToPrint("true");
+		});
 	});
 	describe("the 'is in' operator", function () {
 		it("errors when used on non-string primitives", function() {
@@ -555,6 +566,17 @@ describe("twinescript operators", function () {
 		});
 		it("won't be matched from within text", function (){
 			expect("(print: typeof xxis in Object)").markupToPrint("false");
+		});
+		it("has correct order of operations with 'to' and 'into'", function (){
+			expect("(set: $a to 'a' is in 'b')(print:$a)").markupToPrint("false");
+			expect("(put: 'a' is in 'b' into $a)(print:$a)").markupToPrint("false");
+			expect("(set: $a to 'b' contains 'bc')(print:$a)").markupToPrint("true");
+			expect("(put: 'b' is in 'bc' into $a)(print:$a)").markupToPrint("true");
+		});
+		it("can compare variables as the subject of 'to' and 'into'", function (){
+			runPassage("(set:$a to 'a')");
+			expect("(set: $b to $a is in $a)(print:$b)").markupToPrint("true");
+			expect("(put: $a is in $a into $b)(print:$b)").markupToPrint("true");
 		});
 	});
 	describe("the '...' operator", function () {

@@ -703,7 +703,7 @@
 
 			```
 			|visible>[This hook is visible when the passage loads.]
-			|cloaked)[This hook is hidden when the passage loads, and needs a macro like `(show:)` to reveal it.]
+			|cloaked)[This hook is hidden when the passage loads, and needs a macro like `(show:?cloaked)` to reveal it.]
 
 			[My commanding officer - a war hero, and a charismatic face for the military.]<sight|
 			[Privately, I despise the man. His vacuous boosterism makes a mockery of my sacrifices.](thoughts|

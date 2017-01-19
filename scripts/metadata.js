@@ -106,6 +106,20 @@ const
 		},
 	}),
 
+	Changes = new Defs({
+		defName: "Change log",
+		defCode: "changes",
+		regExp: /^###(\d\.\d\.\d[^:]*):/,
+
+		definition({input, 0:title, 1:name}) {
+			const slugName =  name.replace(/\s/g,'-').toLowerCase();
+			let text = input.trim().replace(title, "\n<h2 class='def_title changes_title' id=changes_" + slugName + ">"
+				+ "<a class='heading_link' href=#changes_" + slugName + "></a>" + name + "</h2>\n");
+
+			this.defs[title] = { text: "\n"+text.trim()+"\n", anchor: "changes_" + slugName, name, categoryOrder: Object.keys(this.defs).length };
+		},
+	}),
+
 	Introduction = new Defs({
 		defName: "Introduction",
 		defCode: "introduction",
@@ -388,11 +402,17 @@ function processTextTerms(text, name, allow) {
 	Read the definitions from every JS and MD file.
 */
 let rr = require('fs-readdir-recursive');
-rr('js/').map(e=>'js/'+e).concat(rr('miscdocs/').map(e=>'miscdocs/'+e)).forEach(function(path) {
+let paths = rr('js/').map(e=>'js/'+e)
+	.concat(rr('miscdocs/').map(e=>'miscdocs/'+e))
+	.concat('README.md');
+
+paths.forEach(function(path) {
 	let file = fs.readFileSync(path, {encoding:'utf8'});
 	let defs;
 	// .md files should be treated as entire single definitions
-	if (path.endsWith('.md')) {
+	if (path === "README.md") {
+		defs = file.match(/###\d\.\d\.\d[^]*?\n(?=###[^#])/g).slice(0,2);
+	} else if (path.endsWith('.md')) {
 		defs = [file];
 	} else {
 		// Extract definitions from the JS file
@@ -407,7 +427,7 @@ rr('js/').map(e=>'js/'+e).concat(rr('miscdocs/').map(e=>'miscdocs/'+e)).forEach(
 	}
 	defs.forEach((defText) => {
 		let match;
-		[Introduction,Appendix,Markup,Macro,Type,Keyword,PassageTag].forEach(e=> {
+		[Introduction,Appendix,Markup,Macro,Type,Keyword,Changes,PassageTag].forEach(e=> {
 			if ((match = defText.match(e.regExp))) {
 				e.definition(match);
 			}
@@ -415,4 +435,4 @@ rr('js/').map(e=>'js/'+e).concat(rr('miscdocs/').map(e=>'miscdocs/'+e)).forEach(
 	});
 });
 // Order of this object determines the overall document order.
-module.exports = {Introduction, Markup, Macro, Type, Keyword, PassageTag, Appendix};
+module.exports = {Introduction, Markup, Macro, Type, Keyword, PassageTag, Changes, Appendix};

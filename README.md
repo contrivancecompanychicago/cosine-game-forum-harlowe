@@ -2,7 +2,7 @@
 
 Rough documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
-###2.0.0 changes (unreleased; also see 1.2.3 changes):
+###2.0.0 changes (also see 1.2.3 changes):
 
 ####Bugfixes
 
@@ -112,7 +112,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
  * Added `(hover-style:)`, which, when given a style-altering changer, like `(hover-style:(text-color:green))`, makes its style only apply when the hook or expression is hovered over with the mouse pointer, and removed when hovering off.
  * Now, you can specify `"none"` as a `(text-style:)` and produce a changer which, when added to other `(text-style:)` combined changers, removes their styles.
 
-###1.2.3 changes (unreleased):
+###1.2.3 changes:
 
 ####Bugfixes
 

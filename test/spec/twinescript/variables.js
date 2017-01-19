@@ -15,6 +15,12 @@ describe("twinescript variables", function() {
 		it("when given a variable assignment request, sets the variable to a value", function() {
 			expect("(set: $a to 1)$a").markupToPrint("1");
 		});
+		it("can set variables to values in other variables", function() {
+			expect("(set: $b to 1)(set: $a to $b)$a").markupToPrint("1");
+			expect("(set: $b to 1)(set: $a to $b + 1)$a").markupToPrint("2");
+			expect("(set: $b to 1)(set: $c to 1)(set: $a to (either:$b,$c))$a").markupToPrint("1");
+			expect("(set: $b to 1)(set: $c to 1)(set: $a to (either:$b,$c)+1)$a").markupToPrint("2");
+		});
 		it("can set a lot of variables", function() {
 			expect(Object.keys($).reduce(function(a, e, i) {
 				return a + "(set: $" + e + " to " +

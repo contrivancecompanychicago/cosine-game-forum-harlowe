@@ -711,14 +711,45 @@ define([
 		/*d:
 			(altered: Lambda, ...Any) -> Array
 
-			TBW
-			
+			This takes a "via" lambda and a sequence of values, and creates a new array with the same values in the same order,
+			but altered via the operation in the lambda's "via" clause.
+
+			Example usage:
+			* `(altered: _monster via "Dark " + _monster, "Wolf", "Ape", "Triffid")` produces `(a: "Dark Wolf", "Dark Ape", "Dark Triffid")`
+			* `(altered: _player via _player + (dm: "HP", _player's HP - 1), ...$players)` produces an array of $players datamaps whose "HP" datavalue is decreased by 1.
+
+			Rationale:
+			Transforming entire arrays or datasets, performing an operation on every item at once, allows arrays to be modified with the same ease
+			that single values can - just as you can add some extra text to a string with a single +, so too can you add extra text to an entire
+			array of strings using a single call to (altered:).
+
+			This macro uses a lambda (which is just the "temp variable `via` an expression" expression) to take each item in the sequence and produce a new
+			value to populate the resulting array. For `(altered: _a via _a + 1, 10,20,30)` it will produce 10 + 1, 20 + 1 and 30 + 1, and put those
+			into a new array.
+
+			Details:
+			Of course, if any operation applied to any of the values causes an error, such as trying to add a string to a number,
+			an error will result.
+
+			The temp variable, which you can name anything you want, is controlled entirely by the lambda - it doesn't exist
+			outside of it, it won't alter identically-named temp variables outside of it, and you can't manually (set:)
+			it within the lambda.
+
+			You can refer to other variables, including other temp variables, in the `via` expression. For instance, you can write
+			`(altered: _object via _playerName + "'s " + _object, "Glove", "Hat", "Purse")`. However, for obvious reasons,
+			if the outer temp variable is named the same as the lambda's temp variable, it can't be referred to in the expression.
+
+			If no values are given to (altered:) except for the lambda, an empty array will be produced.
+
+			See also:
+			(for:), (folded:)
+
 			#data structure
 		*/
 		("altered", (section, lambda, ...args) => args.map(loop => lambda.apply(section, {loop})),
 		[Lambda.TypeSignature('via'), rest(Any)])
 		/*d:
-			(find: Lambda, ...Any) -> Any
+			(find: Lambda, ...Any) -> Array
 
 			Searches through the given values, and produces an array of those which match the given search
 			test (which is expressed using a temp variable, the `where` keyword, and a boolean condition).
@@ -733,7 +764,7 @@ define([
 
 			Rationale:
 			Selecting specific data from arrays or sequences based on a user-provided boolean condition is one of the more common and powerful
-			operations in programmng. This macro allows you to immediately work with a subset of the array's data, without
+			operations in programming. This macro allows you to immediately work with a subset of the array's data, without
 			caring what kind of subset it is. The subset can be based on each string's characters, each datamap's values, each number's
 			evenness or oddness, whether a variable matches it... anything you can write.
 
@@ -743,6 +774,8 @@ define([
 			those values which resulted in `true`.
 
 			Details:
+			Of course, if any condition causes an error, such as checking if a number contains a number, an error will result.
+
 			The temp variable, which you can name anything you want, is controlled entirely by the lambda - it doesn't exist
 			outside of it, it won't alter identically-named temp variables outside of it, and you can't manually (set:)
 			it within the lambda.

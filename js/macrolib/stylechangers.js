@@ -273,8 +273,13 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			Produces a command that can be attached to hooks to hide them.
 
 			Example usage:
-			`Don't you recognise me? (hidden:)|truth>[I'm your OC, brought to life!]` is the same as
-			`Don't you recognise me? |truth)[I'm your OC, brought to life!]`.
+			```
+			Don't you recognise me? (hidden:)|truth>[I'm your OC, brought to life!]
+			```
+			The above example is the same as
+			```
+			Don't you recognise me? |truth)[I'm your OC, brought to life!]
+			```
 
 			Rationale:
 			While there is a way to succinctly mark certain named hooks as hidden, by using parentheses instead of
@@ -285,7 +290,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			This macro is essentially identical in behaviour to `(if:false)`, but reads better.
 
 			See also:
-			(if:), (hook:)
+			(if:), (hook:), (show:)
 
 			#showing and hiding
 		*/
