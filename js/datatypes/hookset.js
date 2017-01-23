@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
+define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {Patterns}) => {
 	/*
 		A HookSet is an object representing a "hook selection". Hooks in
 		Twine passages can have identical titles, and both can therefore be
@@ -297,7 +297,7 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 				If this is a pseudo-hook (search string) selector, we must create the
 				temporary <tw-pseudo-hook> elements around the selection.
 			*/
-			if (!this.selector.match("^\\?" + Utils.anyLetter + "+$")) {
+			if (!this.selector.match("^" + Patterns.hookRef + "$")) {
 				/*
 					Note that wrapTextNodes currently won't target text directly inside <tw-story>,
 					<tw-sidebar> and other <tw-passage>s.
@@ -351,7 +351,7 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 		const {selector, base, properties, prev} = hookset;
 		// The hash of ?red + ?blue should equal that of ?blue + ?red. To do this,
 		// the prev's hash and this hookset's hash is added to an array, which is then sorted and returned.
-		return [JSON.stringify([selector || "", hash(base), [...properties].sort()]), ...hash(prev)].sort();
+		return [JSON.stringify([Utils.insensitiveName(selector) || "", hash(base), [...properties].sort()]), ...hash(prev)].sort();
 	}
 	
 	const HookSet = Object.freeze({

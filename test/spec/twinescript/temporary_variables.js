@@ -1,4 +1,4 @@
-describe("twinescript temporary variables", function() {
+describe("temporary variables", function() {
 	'use strict';
 	it("can be set and printed, when using the _ sigil", function() {
 		expect("(set: _a to 1)(print: _a)").markupToPrint("1");

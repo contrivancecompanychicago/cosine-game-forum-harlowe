@@ -1,4 +1,4 @@
-describe("twinescript variables", function() {
+describe("variables", function() {
 	'use strict';
 	describe("the (set:) macro", function() {
 		it("requires one or more assignment requests", function() {
@@ -133,11 +133,6 @@ describe("twinescript variables", function() {
 			expect("$2").markupToPrint("$2");
 			expect("$2_").markupToPrint("$2_");
 			expect("$_2").markupToPrint("$_2");
-		});
-	});
-	describe("bare hook references in passage text", function() {
-		it("are printed literally", function() {
-			expect("|a>[Golly] ?a").markupToPrint("Golly ?a");
 		});
 	});
 });

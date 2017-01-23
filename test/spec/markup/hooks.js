@@ -50,10 +50,10 @@ describe("hooks", function () {
 			expect($('tw-passage').find('tw-hook').attr('name')).toBe('grault');
 		});
 		it("names are insensitive", function() {
-			runPassage("[foo]<GRAULT|");
-			expect($('tw-passage').find('tw-hook').attr('name')).toBe('grault');
-			runPassage("[foo]<_gra_u-lt|");
-			expect($('tw-passage').find('tw-hook').attr('name')).toBe('grault');
+			var p = runPassage("[foo]<GRAULT| ");
+			expect(p.find('tw-hook').attr('name')).toBe('grault');
+			p = runPassage("[foo]<_gra_u-lt| ");
+			expect(p.find('tw-hook').attr('name')).toBe('grault');
 		});
 	});
 	describe("changer macro attached hooks", function () {

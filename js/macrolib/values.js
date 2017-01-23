@@ -1,6 +1,6 @@
 "use strict";
 define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internaltypes/twineerror'],
-(Macros, {whitespace, anyLetter}, {subset, objectName}, Colour, TwineError) => {
+(Macros, {realWhitespace, anyRealLetter}, {subset, objectName}, Colour, TwineError) => {
 	/*
 		Built-in value macros.
 		These macros manipulate the primitive values - boolean, string, number.
@@ -191,7 +191,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 		*/
 		("lowerfirst", (_, string) =>
 			// This has to be an entire word, to handle surrogate pairs and single characters alike.
-			string.replace(new RegExp(anyLetter + "+"), word => {
+			string.replace(new RegExp(anyRealLetter + "+"), word => {
 				// Split the word into code points first.
 				word = Array.from(word);
 				return word[0].toLowerCase() + (word.slice(1).join('')).toLowerCase();
@@ -222,7 +222,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 		*/
 		("upperfirst", (_, string) =>
 			// This has to be an entire word, to handle surrogate pairs and single characters alike.
-			string.replace(new RegExp(anyLetter + "+"), word => {
+			string.replace(new RegExp(anyRealLetter + "+"), word => {
 				// Split the word into code points first.
 				word = Array.from(word);
 				return word[0].toUpperCase() + (word.slice(1).join('')).toLowerCase();
@@ -258,7 +258,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 
 			#string
 		*/
-		("words", (_, string) => string.split(new RegExp(whitespace + "+")).filter(Boolean),
+		("words", (_, string) => string.split(new RegExp(realWhitespace + "+")).filter(Boolean),
 		[String])
 
 		/*d:

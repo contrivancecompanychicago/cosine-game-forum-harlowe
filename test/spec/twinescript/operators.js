@@ -570,7 +570,7 @@ describe("twinescript operators", function () {
 		it("has correct order of operations with 'to' and 'into'", function (){
 			expect("(set: $a to 'a' is in 'b')(print:$a)").markupToPrint("false");
 			expect("(put: 'a' is in 'b' into $a)(print:$a)").markupToPrint("false");
-			expect("(set: $a to 'b' contains 'bc')(print:$a)").markupToPrint("true");
+			expect("(set: $a to 'b' contains 'bc')(print:$a)").markupToPrint("false");
 			expect("(put: 'b' is in 'bc' into $a)(print:$a)").markupToPrint("true");
 		});
 		it("can compare variables as the subject of 'to' and 'into'", function (){
