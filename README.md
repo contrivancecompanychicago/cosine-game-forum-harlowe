@@ -59,6 +59,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
  * The `(move:)` macro now accepts multiple `into` values, like `(put:)`.
  * The `(count:)` macro now accepts multiple data values, and will count the total occurences of every value. For instance, `(count: "AMAZE", "A", "Z")` produces 3.
  * Now, `debug-header` tagged passages are run after `header` tagged passages in debug mode, for consistency with the order of `debug-startup` and `startup`.
+ * Link macros like `(link-replace:)` will now produce an error when given an empty string.
 
 #####HTML/CSS
 

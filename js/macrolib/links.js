@@ -8,6 +8,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		are technically not links (but behave identically).
 	*/
 	const {optional} = Macros.TypeSignature;
+	const emptyLinkTextError = "Links can't have empty strings for their displayed text.";
 	
 	/*
 		Register the event that this enchantment responds to
@@ -146,7 +147,12 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		["link-repeat"]
 	].forEach(arr =>
 		Macros.addChanger(arr,
-			(_, expr) => ChangerCommand.create(arr[0], [expr]),
+			(_, expr) => {
+				if (!expr) {
+					return TwineError.create("macrocall", emptyLinkTextError);
+				}
+				return ChangerCommand.create(arr[0], [expr]);
+			},
 			(desc, text) => {
 				/*
 					This check ensures that multiple concatenations of (link:) do not overwrite
@@ -220,65 +226,70 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			/*
 				Return a new (link-goto:) object.
 			*/
-			(section, text, passage) => ({
-				TwineScript_TypeName: "a (link-goto: "
-					+ Utils.toJSLiteral(text) + ", "
-					+ Utils.toJSLiteral(passage) + ") command",
-				TwineScript_ObjectName: "a (link-goto:) command",
-				
-				TwineScript_Print() {
-					/*
-						The string representing the passage name is evaluated as TwineMarkup here -
-						the link syntax accepts TwineMarkup in both link and passage position
-						(e.g. [[**Go outside**]], [[$characterName->$nextLocation]]), and the text
-						content of the evaluated TwineMarkup is regarded as the passage name,
-						even though it is never printed.
-						
-						One concern is that of evaluation order: the passage name is always evaluated
-						before the link text, as coded here. But, considering the TwineMarkup parser
-						already discards the ordering of link text and passage name in the link
-						syntax ([[a->b]] vs [[b<-a]]) then this can't be helped, and probably doesn't matter.
-					*/
-					const passageName = section.evaluateTwineMarkup(Utils.unescape(passage || text));
-					
-					/*
-						If a <tw-error> was returned by evaluateTwineMarkup, replace the link with it.
-					*/
-					if (passageName instanceof $) {
-						/*
-							section.runExpression() is able to accept jQuery objects
-							being returned from TwineScript_Print().
-						*/
-						return passageName;
-					}
-					/*
-						Check that the passage is indeed available.
-					*/
-					if (!Passages.has(passageName)) {
-						/*
-							Since the passage isn't available, create a broken link.
-							TODO: Maybe this should be an error as well??
-						*/
-						return '<tw-broken-link passage-name="' + Utils.escape(passageName) + '">'
-							+ (text || passage)
-							+ '</tw-broken-link>';
-					}
-					/*
-						Previously visited passages may be styled differently compared
-						to unvisited passages.
-					*/
-					const visited = (State.passageNameVisited(passageName));
-					
-					/*
-						This regrettably exposes the destination passage name in the DOM...
-						but I hope to somehow eliminate this in the near future.
-					*/
-					return '<tw-link tabindex=0 ' + (visited > 0 ? 'class="visited" ' : '')
-						// Always remember to Utils.escape() any strings that must become raw HTML attributes.
-						+ 'passage-name="' + Utils.escape(passageName)
-						+ '">' + (text || passage) + '</tw-link>';
+			(section, text, passage) => {
+				if (!text) {
+					return TwineError.create("macrocall", emptyLinkTextError);
 				}
-			}),
+				return {
+					TwineScript_TypeName: "a (link-goto: "
+						+ Utils.toJSLiteral(text) + ", "
+						+ Utils.toJSLiteral(passage) + ") command",
+					TwineScript_ObjectName: "a (link-goto:) command",
+					
+					TwineScript_Print() {
+						/*
+							The string representing the passage name is evaluated as TwineMarkup here -
+							the link syntax accepts TwineMarkup in both link and passage position
+							(e.g. [[**Go outside**]], [[$characterName->$nextLocation]]), and the text
+							content of the evaluated TwineMarkup is regarded as the passage name,
+							even though it is never printed.
+							
+							One concern is that of evaluation order: the passage name is always evaluated
+							before the link text, as coded here. But, considering the TwineMarkup parser
+							already discards the ordering of link text and passage name in the link
+							syntax ([[a->b]] vs [[b<-a]]) then this can't be helped, and probably doesn't matter.
+						*/
+						const passageName = section.evaluateTwineMarkup(Utils.unescape(passage || text));
+						
+						/*
+							If a <tw-error> was returned by evaluateTwineMarkup, replace the link with it.
+						*/
+						if (passageName instanceof $) {
+							/*
+								section.runExpression() is able to accept jQuery objects
+								being returned from TwineScript_Print().
+							*/
+							return passageName;
+						}
+						/*
+							Check that the passage is indeed available.
+						*/
+						if (!Passages.has(passageName)) {
+							/*
+								Since the passage isn't available, create a broken link.
+								TODO: Maybe this should be an error as well??
+							*/
+							return '<tw-broken-link passage-name="' + Utils.escape(passageName) + '">'
+								+ (text || passage)
+								+ '</tw-broken-link>';
+						}
+						/*
+							Previously visited passages may be styled differently compared
+							to unvisited passages.
+						*/
+						const visited = (State.passageNameVisited(passageName));
+						
+						/*
+							This regrettably exposes the destination passage name in the DOM...
+							but I hope to somehow eliminate this in the near future.
+						*/
+						return '<tw-link tabindex=0 ' + (visited > 0 ? 'class="visited" ' : '')
+							// Always remember to Utils.escape() any strings that must become raw HTML attributes.
+							+ 'passage-name="' + Utils.escape(passageName)
+							+ '">' + (text || passage) + '</tw-link>';
+					}
+				};
+			},
 		[String, optional(String)])
 
 		/*d:
@@ -310,23 +321,28 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 
 			#links 5
 		*/
-		("link-undo", (section, text) => ({
-				TwineScript_ObjectName: "a (link-undo:"
-					+ Utils.toJSLiteral(text) + ") command",
-				TwineScript_TypeName:   "a (link-undo:) command",
-				TwineScript_Print() {
-					/*
-						Users of (link-undo:) should always check that (history:) is longer than 1.
-					*/
-					if (State.pastLength < 1) {
-						return TwineError.create("macrocall", "I can't use (link-undo:) on the first turn.");
-					}
-					/*
-						Much like (link-goto:), this too reveals its purpose by including an 'undo' attribute,
-						which is used by the "click.passage-link" event handler.
-					*/
-					return '<tw-link tabindex=0 undo>' + text + '</tw-link>';
-				},
-			}),
+		("link-undo", (section, text) => {
+				if (!text) {
+					return TwineError.create("macrocall", emptyLinkTextError);
+				}
+				return {
+					TwineScript_ObjectName: "a (link-undo:"
+						+ Utils.toJSLiteral(text) + ") command",
+					TwineScript_TypeName:   "a (link-undo:) command",
+					TwineScript_Print() {
+						/*
+							Users of (link-undo:) should always check that (history:) is longer than 1.
+						*/
+						if (State.pastLength < 1) {
+							return TwineError.create("macrocall", "I can't use (link-undo:) on the first turn.");
+						}
+						/*
+							Much like (link-goto:), this too reveals its purpose by including an 'undo' attribute,
+							which is used by the "click.passage-link" event handler.
+						*/
+						return '<tw-link tabindex=0 undo>' + text + '</tw-link>';
+					},
+				};
+			},
 		[String]);
 });

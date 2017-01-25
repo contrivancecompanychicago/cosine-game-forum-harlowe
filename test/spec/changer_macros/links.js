@@ -2,8 +2,9 @@ describe("link macros", function() {
 	'use strict';
 	
 	describe("(link-replace:)", function() {
-		it("accepts exactly 1 string", function() {
+		it("accepts exactly 1 non-empty string", function() {
 			expect("(print:(link-replace:))").markupToError();
+			expect("(print:(link-replace:''))").markupToError();
 			expect("(print:(link-replace:'baz'))").not.markupToError();
 			expect("(print:(link-replace:2))").markupToError();
 			expect("(print:(link-replace:false))").markupToError();
@@ -38,8 +39,9 @@ describe("link macros", function() {
 		});
 	});
 	describe("(link-reveal:)", function() {
-		it("accepts exactly 1 string", function() {
+		it("accepts exactly 1 non-empty string", function() {
 			expect("(print:(link-reveal:))").markupToError();
+			expect("(print:(link-reveal:''))").markupToError();
 			expect("(print:(link-reveal:'baz'))").not.markupToError();
 			expect("(print:(link-reveal:2))").markupToError();
 			expect("(print:(link-reveal:false))").markupToError();
@@ -63,8 +65,9 @@ describe("link macros", function() {
 		});
 	});
 	describe("(link-repeat:)", function() {
-		it("accepts exactly 1 string", function() {
+		it("accepts exactly 1 non-empty string", function() {
 			expect("(print:(link-repeat:))").markupToError();
+			expect("(print:(link-repeat:''))").markupToError();
 			expect("(print:(link-repeat:'baz'))").not.markupToError();
 			expect("(print:(link-repeat:2))").markupToError();
 			expect("(print:(link-repeat:false))").markupToError();
@@ -113,8 +116,9 @@ describe("link macros", function() {
 			expect(link.tag()).toBe("tw-broken-link");
 			expect(link.html()).toBe("mire");
 		});
-		it("accepts 1 or 2 strings", function() {
+		it("accepts 1 or 2 non-empty strings", function() {
 			expect("(link-goto:)").markupToError();
+			expect("(link-goto:'')").markupToError();
 			expect("(link-goto:2)").markupToError();
 			expect("(link-goto:true)").markupToError();
 
@@ -151,9 +155,10 @@ describe("link macros", function() {
 		});
 	});
 	describe("(link-undo:)", function() {
-		it("accepts exactly 1 string", function() {
+		it("accepts exactly 1 non-empty string", function() {
 			expect("(link-undo:)").markupToError();
 			expect("(link-undo:2)").markupToError();
+			expect("(link-undo:'')").markupToError();
 			expect("(link-undo:true)").markupToError();
 			
 			expect("(link-undo:'s')").not.markupToError();

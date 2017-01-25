@@ -11,7 +11,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 	/*d:
 		Changer data
 		
-		Changer commands are similar to ordinary commands, but they only have an effect when they're attached to hooks,
+		Changer commands (changers) are similar to ordinary commands, but they only have an effect when they're attached to hooks,
 		and modify the hook in a certain manner. Macros that work like this include (text-style:), (font:), (transition:),
 		(text-rotate:), (hook:), (click:), (link:), and more.
 
@@ -20,17 +20,17 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		(set: $robotic to (font:'Courier New'))
 		$robotic[Hi, it's me. Your clanky, cold friend.]
 		```
-
-		Changer commands can be combined using the `+` operator: `(set: $x to (text-colour: red) + (font: "Skia"))` sets $x to a command
-		that can make a hook's text red-coloured and in Skia. This command can be re-used over and over in your story, and
-		is in essence a custom text style.
-
+		Alternatively, you may prefer to use the (enchant:) macro to accomplish the same thing using only hook names:
 		```
-		(set: $alertText to (font:"Courier New") + (text-style: "shudder") + (text-colour:"#e74"))
-		$alertText[This text is red shuddering Courier New.]
-		$alertText[Fuel warning: the petrol is upside-down.]
-		$alertText[Social alert: no one read the emails you sent yesterday.]
-		$alertText[Arithmetic error: I forgot my seven-times-tables.]
+		|robotic>[Hi, it's me. Your clanky, cold friend.]
+		(enchant: ?robotic, (font:'Courier New'))
+		```
+		Changers can be combined using the `+` operator: `(text-colour: red) + (font: "Courier New")[This text is red Courier New.]`
+		styles the text using both changers at once. These combined changers, too, can be saved in variables or used with (enchant:).
+		```
+		(set: _alertText to (font:"Courier New") + (text-style: "shudder") + (text-colour:"#e74"))
+		_alertText[Social alert: no one read the emails you sent yesterday.]
+		_alertText[Arithmetic error: I forgot my seven-times-tables.]
 		```
 	*/
 	const

@@ -10,6 +10,7 @@ describe("enchantment macros", function () {
 			expect("(print:(enchant:'baz'))").markupToError();
 			expect("(print:(enchant:(font:'Skia'), 'baz'))").markupToError();
 		});
+		//TODO: write more basic functionality tests comparable to (click:)'s
 	});
 	describe("enchanting ?Page", function() {
 		it("wraps the ?Page in a <tw-enchantment>", function(done) {

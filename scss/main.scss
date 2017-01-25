@@ -51,7 +51,7 @@ tw-story {
 		Instead of a 60% width, this uses 40% horizontal padding (applied below).
 	*/
 	width: 100%;
-	height: 100%;
+	min-height: 100%;
 	/*
 		This is the base font size, which is permuted below.
 	*/

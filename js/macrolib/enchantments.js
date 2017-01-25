@@ -9,9 +9,51 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 
 	*/
 
 	/*d:
-		(enchant: HookName, Changer) -> Command
+		(enchant: HookName or String, Changer) -> Command
 
-		TBW
+		Applies a changer to every occurrence of a hook or string in a passage, and continues applying that changer to any further
+		occurrences that are made to appear in the same passage later.
+
+		Example usage:
+		* `(enchant: "gold", (text-colour: yellow) + (text-style:'bold'))` makes all occurrences of "gold" in the text be bold and yellow.
+		* `(enchant: ?dossier, (link: "Click to read"))` makes all the hooks named "dossier" be hidden behind links reading
+		"Click to read".
+
+		Rationale:
+		While changers allow you to style or transform certain hooks in a passage, it can be tedious and error-prone to attach them to every
+		occurrence as you're writing your story, especially if the attached changers are complicated. You can
+		simplify this by storing changers in short variables, and attaching just the variables, like so:
+		```
+		(set: _ghost to (text-style:'outline'))
+		_ghost[Awoo]
+		_ghost[Ooooh]
+		```
+		Nevertheless, this can prove undesirable: you may want to remove the _ghost styling later in development, which would
+		force you to remove the attached variables to avoid producing an error; you may want to only style a single word or phrase,
+		and find it inconvenient to place it in a hook; you may simply not like having code, like that (set:) macro,
+		be at the start of your passage; you may not want to keep track of which variables hold which changers, given the possibility (if
+		you're using normal variables) that they could be changed previously in the story.
+
+		Instead, you can give the hooks the name "ghost", and then (enchant:) them afterward like so:
+		```
+		|ghost>[Awoo]
+		|ghost>[Ooooh]
+		(enchant: ?ghost, (text-style:'outline'))
+		```
+		The final (enchant:) macro can target words instead of hooks, much like (click:) - simply provide a string instead of a hook name.
+
+		This macro works well in "header" tagged passages - using a lot of (enchant:) commands to style certain words or parts of
+		every passage, you can essentially write a "styling language" for your story, where certain hook names "mean" certain colours or
+		behaviour. (This is loosely comparable to using CSS to style class names, but exclusively uses macros.)
+
+		Details:
+		As with (click:), the "enchantment" affects the text produced by (display:) macros, and any hooks changed by (replace:) etc. in the future,
+		until the player makes their next turn.
+
+		The built-in hook names, ?Page, ?Passage, ?Sidebar and ?Link, can be targeted by this macro, and can be styled on a per-passage basis this way.
+
+		See also:
+		(click:)
 
 		#basics
 	*/
