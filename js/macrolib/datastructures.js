@@ -728,7 +728,7 @@ define([
 			into a new array.
 
 			Details:
-			Of course, if any operation applied to any of the values causes an error, such as trying to add a string to a number,
+			Of course, if any operation applied to any of the values should cause an error, such as trying to add a string to a number,
 			an error will result.
 
 			The temp variable, which you can name anything you want, is controlled entirely by the lambda - it doesn't exist
@@ -751,7 +751,7 @@ define([
 		/*d:
 			(find: Lambda, ...Any) -> Array
 
-			Searches through the given values, and produces an array of those which match the given search
+			This searches through the given values, and produces an array of those which match the given search
 			test (which is expressed using a temp variable, the `where` keyword, and a boolean condition).
 			If none match, an empty array is produced.
 
@@ -774,7 +774,7 @@ define([
 			those values which resulted in `true`.
 
 			Details:
-			Of course, if any condition causes an error, such as checking if a number contains a number, an error will result.
+			Of course, if any condition should cause an error, such as checking if a number contains a number, then the error will appear.
 
 			The temp variable, which you can name anything you want, is controlled entirely by the lambda - it doesn't exist
 			outside of it, it won't alter identically-named temp variables outside of it, and you can't manually (set:)
@@ -833,14 +833,70 @@ define([
 		},
 		[Lambda.TypeSignature('where'), rest(Any)])
 		/*d:
-			(folded: Lambda, ...Any) -> Boolean
+			(folded: Lambda, ...Any) -> Any
 
-			TBW
-			
+			This takes a "making" lambda and a sequence of values, and creates a new value (the "total") by feeding every value in the
+			sequence to the lambda, akin to folding a long strip of paper into a single square.
+
+			Example usage:
+			* `(folded: _enemy making _allHP via _allHP + _enemy's hp, ...$enemies)` will first set _sum to $enemies's 1st's hp, then add the remaining hp values in $enemies to it.
+			* `(folded: _name making _allNames via _allNames + "/" + _name, ...(history:))` will create a string of every passage name in the (history:) array,
+			separated by a forward slash.
+
+			Rationale:
+			The (for:) macro, while intended to display multiple copies of a hook, can also be used to run a single macro call multiple times. You may
+			wish to use this to repeatedly (set:) a variable to itself plus one of the looped values (or some other operation). (folded:) is meant
+			to let you perform this in a shorter, more fluid fashion.
+
+			Consider, first of all, a typical (for:) and (set:) loop such as the following:
+			```
+			{(set:$allNames to "")
+			(for: each _name, ...(history:))[
+			    (set:$allNames to it + "/" _name)
+			]}
+			You've visited: $allNames
+			```
+			This can be rewritten using (folded:) as follows. While this version may seem a little harder to read if you're not used to it, it
+			allows you to accomplish the same thing in a single line, by immediately using the macro's provided value without a variable:
+			```
+			You've visited: (folded: _name making _allNames via _allNames + "/" + _name, ...(history:)))
+			```
+			This macro uses a lambda (which is the "temp variable `making` another temp variable `via` expression" expression) to run the
+			expression using every provided value, much like those repeated (set:) calls.
+
+			If you need to perform this operation at various different times in your story, you may wish to (set:) the lambda into a variable,
+			so that you, for instance, might need only write:
+			```
+			You've visited: (folded: $namesWithForwardSlashes, ...(history:)))
+			```
+
+			Details:
+			Of course, if at any time the expression should cause an error, such as adding a number to a string, then an error will result.
+
+			Both of the temp variables, the value and the total, can be named anything you want. As with other lambda macros, they don't exist
+			outside of it, won't alter identically-named temp variables outside of it, and can't be manually (set:) within the lambda.
+
+			You can refer to other variables, including other temp variables, in the `via` expression. For instance, you can write
+			`(folded: _score making _totalScore via _totalScore + _score * _bonusMultiplier)`. However, for obvious reasons,
+			if the outer temp variable is named the same as the lambda's temp variables, it can't be referred to in the expression.
+
+			You can also use a "where" clause inside the "making" lambda to prevent an operation from occurring if a value isn't suitable -
+			`(folded: _item making _total via _total + _item where _item > 0, ...$arr)` will only sum up the values in $arr which are greater than 0.
+
+			See also:
+			(for:), (altered:)
+
 			#data structure
 		*/
-		("folded", (section, lambda, ...args) => args.reduce((making,loop) => lambda.apply(section, {making,loop})),
-		[Lambda.TypeSignature('via making'), rest(Any)])
+		("folded", (section, lambda, ...args) => {
+			// Run the optional "where" clause to filter out values, if it's present.
+			if ("where" in lambda) {
+				args = lambda.filter(section, args);
+			}
+			return TwineError.containsError(args) || args
+				.reduce((making,loop) => lambda.apply(section,{making,loop}));
+		},
+		[either(Lambda.TypeSignature('where via making'), Lambda.TypeSignature('via making')), rest(Any)])
 		;
 		
 	Macros.add

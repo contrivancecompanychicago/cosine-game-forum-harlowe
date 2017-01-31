@@ -14,11 +14,7 @@ let navElement = "<nav><img src='http://twinery.org/2/story-formats/Harlowe/icon
 */
 const {version} = JSON.parse(fs.readFileSync('package.json'));
 navElement += `<div class=nav_version><p>Harlowe ${version} manual</p>
-<p>${
-	version.split('.')[0] === '1' ? `<b>${version}</b>` : `<a href="/1.html">1.2.2</a>`
-} | ${
-	version.split('.')[0] === '2' ? `<b>${version}</b>` :`<a href="/2.html">2.0.0 beta</a>`
-}</p>
+<p><a href="/1.html">1.2.3</a> | <b>${version}</b></p>
 </div>`;
 
 let currentCategory;

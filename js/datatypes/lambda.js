@@ -152,7 +152,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 			This needs to have the macro's section passed in so that its JS code can be eval()'d in
 			the correct scope.
 		*/
-		apply(section, {loop:loopArg, 'with':withArg, making:makingArg, fail:failArg, pass:passArg}) {
+		apply(section, {loop:loopArg, 'with':withArg, making:makingArg, fail:failArg, pass:passArg, ignoreVia}) {
 			/*
 				We run the JS code of this lambda, inserting the arguments by adding them to a "tempVariables"
 				object. The tempVariable references in the code are compiled to VarRefs for tempVariables.
@@ -175,6 +175,24 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 			if (loopArg && !this.with && !this.making) {
 				section.eval("Operations").initialiseIt(loopArg);
 			}
+			/*
+				Otherwise, stuff the "it" value with a special error message that should propagate up
+				if "it" is ever used inside this macro.
+			*/
+			else {
+				section.eval("Operations").initialiseIt(
+					TwineError.create("operation",
+						"I can't use 'it', or an implied 'it', in " + this.TwineScript_ObjectName()
+					)
+				);
+			}
+
+			/*
+				At the start of a "making via where" lambda, we must filter out the values that fail
+				the "making" clause, without running the "via" clause at all. So, ignoreVia is used by filter()
+				to signify that this must be done.
+			*/
+			const via = (!ignoreVia && this.via);
 
 			const ret = section.eval(
 				/*
@@ -186,9 +204,9 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 				'where' in this
 					? "Operations.where("
 						+ this.where + ","
-						+ (this.via || toJSLiteral(passArg)) + ","
+						+ (via || toJSLiteral(passArg)) + ","
 						+ toJSLiteral(failArg) + ")"
-					: (this.via || toJSLiteral(passArg))
+					: (via || toJSLiteral(passArg))
 			);
 			section.stack.shift();
 			return ret;
@@ -211,7 +229,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 				/*
 					Run the lambda, to determine whether to filter out this element.
 				*/
-				const passedFilter = this.apply(section, {loop:arg, pass:true, fail:false});
+				const passedFilter = this.apply(section, {loop:arg, pass:true, fail:false, ignoreVia:true});
 				if ((error = TwineError.containsError(passedFilter))) {
 					return error;
 				}

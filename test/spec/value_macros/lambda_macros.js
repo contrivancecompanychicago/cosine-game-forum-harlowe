@@ -70,6 +70,9 @@ describe("lambda macros", function() {
 		it("doesn't affect temporary variables outside it", function() {
 			expect("(set: _a to 1)(altered: _a via _a*2, 5,6) _a").markupToPrint("10,12 1");
 		});
+		it("sets the 'it' identifier to the loop value", function() {
+			expect("(print: (altered: _a via it*2, 1)'s 1st + 1)").markupToPrint("3");
+		});
 	});
 	describe("the (find:) macro", function() {
 		it("accepts a 'where' or 'each' lambda returning a boolean, plus one or more other values", function() {
@@ -91,6 +94,9 @@ describe("lambda macros", function() {
 		});
 		it("if one iteration errors, the result is an error", function() {
 			expect("(find: _a where not _a, true, true, 6, true)").markupToError();
+		});
+		it("sets the 'it' identifier to the loop value", function() {
+			expect("(print: (find: _a where it > 2, 1,3)'s 1st + 1)").markupToPrint("4");
 		});
 	});
 	describe("the (all-pass:) macro", function() {
@@ -169,7 +175,7 @@ describe("lambda macros", function() {
 		});
 	});
 	describe("the (folded:) macro", function() {
-		it("accepts a 'via' and 'making' lambda, plus one or more other values", function() {
+		it("accepts a 'via', 'making', and (optional) 'where' lambda, plus one or more other values", function() {
 			expect("(folded:)").markupToError();
 			expect("(folded:1)").markupToError();
 			expect("(folded: each _a, 1)").markupToError();
@@ -184,6 +190,14 @@ describe("lambda macros", function() {
 			expect("(print: (folded: _a making _total via _a + _total, 2, 4, 7))").markupToPrint("13");
 			expect("(print: (folded: _a making _total via _a + _total, '2','4','7'))").markupToPrint("742");
 			expect("(print: (folded: _a making _total via (round:_a), 2.1))").markupToPrint("2.1");
+		});
+		it("uses the 'where' clause to filter out values", function() {
+			expect("(print: (folded: _a making _total via _total + _a where _a > 2, 2, 4, 7))").markupToPrint("11");
+			expect("(print: (folded: _a making _total via _total + _a, 2, 4, 7))").markupToPrint("13");
+		});
+		it("produces an error if 'it' is used", function() {
+			expect("(print: (folded: _a making _total via _total + _a where it > 2, 2, 4, 7))").markupToError();
+			//expect("(print: (folded: _a making _total via _total + it, 2, 4, 7))").markupToError();
 		});
 		it("if one iteration errors, the result is an error", function() {
 			expect("(folded: _a making _total via _a + _total, 2, '4', 7)").markupToError();

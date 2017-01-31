@@ -8,6 +8,7 @@ A lot of features have been added to Harlowe 2.0, many of which are designed to 
  * Changers can be attached to hooks with whitespace between them - `(if: $coverBlown) [Run!]` is now valid.
  * Changers can be attached to named hooks - `(if: true) |moths>[Several moths!]` is now valid.
  * Changers can be added together using + while attaching them to a hook - `(font:'Shatter')+(text-style:'outline')[CRASH!]` is now valid.
+ * The default CSS has been changed such that the story's `font` must be overridden on `tw-story` rather than `html` (for consistency with other CSS properties).
 
 The following new features also deserve your attention.
 
@@ -20,6 +21,7 @@ The following new features also deserve your attention.
  * The (find:), (altered:) and (folded:) data macros
  * The (dm:) and (ds:) aliases for (datamap:) and (dataset:)
  * Column markup
+ * `tw-passage` elements now have a `tags` attribute.
 
 For a complete list of changes, consult the <a href="#changes_2.0.0-changes-(also-see-1.2.3-changes)">change log</a> section.
 
