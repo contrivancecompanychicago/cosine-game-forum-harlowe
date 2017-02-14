@@ -799,7 +799,33 @@ define([
 		/*d:
 			(all-pass: Lambda, ...Any) -> Boolean
 
-			TBW
+			This takes a "where" lambda and a series of values, and evaluates to true if the lambda, when run using each value, always evaluated to true.
+
+			Example usage:
+			* `(all-pass: _num where _num > 1 and _num < 14, 6, 8, 12, 10, 9)` is true.
+			* `(all-pass: _room where "Egg" is not in _room's objs, ...$rooms)` is true if each datamap in $rooms doesn't have the string `"Egg"` in its "objs".
+
+			Rationale:
+			While the `contains` and `is in` operators can be used to quickly check if a sequence of values contains an exact value or values, you'll
+			often find yourself wanting to check that the values in a sequence merely resemble a kind of value - for instance, that they're positive
+			numbers, or strings beginning with "E".
+
+			The (all-pass:) macro lets you perform these checks easily using a lambda, identical to that used with (find:) - simply write a "temp variable
+			`where` a condition" expression, and every value will be put into the temp variable one by one, and the condition checked for each.
+
+			Details:
+			Of course, if any condition should cause an error, such as checking if a number contains a number, then the error will appear.
+
+			The temp variable, which you can name anything you want, is controlled entirely by the lambda - it doesn't exist
+			outside of it, it won't alter identically-named temp variables outside of it, and you can't manually (set:)
+			it within the lambda.
+
+			You can refer to other variables, including other temp variables, in the `where` condition. For instance, you can
+			write `(set: _name to "Eva")(all-pass: _item where _item is _name, "Evan", "Eve", "Eva")`. However, for obvious reasons,
+			if the outer temp variable is named the same as the lambda's temp variable, it can't be referred to in the condition.
+
+			See also:
+			(sorted:), (count:), (find:), (some-pass:), (none-pass:)
 
 			#data structure
 		*/
@@ -811,7 +837,9 @@ define([
 		/*d:
 			(some-pass: Lambda, ...Any) -> Boolean
 
-			TBW
+			This is similar to (all-pass:), but produces true if one or more value, when given to the lambda, evaluated to false.
+			It can be thought of as shorthand for putting `not` in front of (none-pass:).
+			For more information, consult the description of (all-pass:).
 
 			#data structure
 		*/
@@ -823,7 +851,8 @@ define([
 		/*d:
 			(none-pass: Lambda, ...Any) -> Boolean
 
-			TBW
+			This can be thought of as the opposite of (all-pass:): it produces true if every value, when given to the lambda, evaluated to false.
+			For more information, consult the description of (all-pass:).
 
 			#data structure
 		*/
@@ -840,7 +869,7 @@ define([
 
 			Example usage:
 			* `(folded: _enemy making _allHP via _allHP + _enemy's hp, ...$enemies)` will first set _sum to $enemies's 1st's hp, then add the remaining hp values in $enemies to it.
-			* `(folded: _name making _allNames via _allNames + "/" + _name, ...(history:))` will create a string of every passage name in the (history:) array,
+			* `(folded: _name making _allNames via _allNames + "/" + _name, ...(history: ))` will create a string of every passage name in the (history:) array,
 			separated by a forward slash.
 
 			Rationale:
@@ -851,7 +880,7 @@ define([
 			Consider, first of all, a typical (for:) and (set:) loop such as the following:
 			```
 			{(set:$allNames to "")
-			(for: each _name, ...(history:))[
+			(for: each _name, ...(history: ))[
 			    (set:$allNames to it + "/" _name)
 			]}
 			You've visited: $allNames
@@ -859,7 +888,7 @@ define([
 			This can be rewritten using (folded:) as follows. While this version may seem a little harder to read if you're not used to it, it
 			allows you to accomplish the same thing in a single line, by immediately using the macro's provided value without a variable:
 			```
-			You've visited: (folded: _name making _allNames via _allNames + "/" + _name, ...(history:)))
+			You've visited: (folded: _name making _allNames via _allNames + "/" + _name, ...(history: )))
 			```
 			This macro uses a lambda (which is the "temp variable `making` another temp variable `via` expression" expression) to run the
 			expression using every provided value, much like those repeated (set:) calls.
@@ -867,7 +896,7 @@ define([
 			If you need to perform this operation at various different times in your story, you may wish to (set:) the lambda into a variable,
 			so that you, for instance, might need only write:
 			```
-			You've visited: (folded: $namesWithForwardSlashes, ...(history:)))
+			You've visited: (folded: $namesWithForwardSlashes, ...(history: )))
 			```
 
 			Details:
