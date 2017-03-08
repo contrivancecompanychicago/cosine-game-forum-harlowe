@@ -2,6 +2,12 @@
 
 Rough documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
+###2.0.1 changes
+
+####Bugfixes
+
+ * Fixed a bug where `(enchant:)` applied to ?Page couldn't override CSS properties for `<tw-story>` (including the default background colour and colour).
+
 ###2.0.0 changes (also see 1.2.3 changes):
 
 ####Bugfixes

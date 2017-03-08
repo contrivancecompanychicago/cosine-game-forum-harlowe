@@ -62,7 +62,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 			Example usages:
 			* `(text: $cash + 200)`
 			* `(if: (text: $cash)'s length > 3)[Phew! Over four digits!]`
-			* `(text: ...$array)`
+			* `(text: ...$arr)`
 			
 			Rationale:
 			Unlike in Twine 1 and SugarCube, Twine 2 will only convert numbers into strings, or strings

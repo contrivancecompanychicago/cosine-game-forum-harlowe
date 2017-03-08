@@ -79,6 +79,23 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor'], ($, Utils, ChangeD
 					const cd = ChangeDescriptor.create({target:wrapping});
 					changer.run(cd);
 					cd.update();
+					/*
+						CSS kludge for <tw-story>: when style properties are written on its enclosing <tw-enchantment>,
+						add "inherit" CSS for those same properties on <tw-story> itself, so that it won't override
+						it with its own default CSS.
+					*/
+					if (e.is(Utils.storyElement)) {
+						const enchantedProperties = Object.keys(Object.assign({},...cd.styles));
+						e.css(enchantedProperties.reduce((a,e)=>{
+							a[e] = "inherit";
+							return a;
+						},{}));
+						/*
+							Store the list of enchanted properties as data on this wrapping,
+							so that they can be removed later.
+						*/
+						wrapping.data({enchantedProperties});
+					}
 				}
 
 				/*
@@ -108,7 +125,15 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor'], ($, Utils, ChangeD
 				the previous call to enchantScope().
 			*/
 			this.enchantments.each(function() {
-				$(this).contents().unwrap();
+				const c = $(this).contents();
+				c.unwrap();
+				/*
+					Undo the preceding CSS "inherit" kludge for <tw-story>.
+				*/
+				const enchantedProperties = $(this).data('enchantedProperties');
+				if (enchantedProperties && c.has(Utils.storyElement)) {
+					Utils.storyElement.css(enchantedProperties.reduce((a,e)=>(a[e] = "",a),{}));
+				}
 			});
 		},
 

@@ -352,6 +352,8 @@
 
 			// The line number bullets (see the lineNumbers option, above), are a bit too dark by default.
 			"CodeMirror-linenumber": "color: #ccc;",
+			// Also, the gutters sometimes encroach on the text area for some reason.
+			"CodeMirror-gutters": "left: 0px !important;",
 
 			// "Warm" hooks
 			hook:        warmHookBG(0.05),
@@ -437,9 +439,9 @@
 			number:
 				"color: #A15000;",
 			variable:
-				"color: #005682;",
+				"color: #0076b2;",
 			tempVariable:
-				"color: #134e6c;",
+				"color: #1a6e97;",
 			hookRef:
 				"color: #007f54;",
 			"variableOccurrence, hookOccurrence":
@@ -461,9 +463,9 @@
 			hr:
 				"display:block; background-image: linear-gradient(0deg, transparent, transparent 45%, silver 45%, transparent 55%, transparent);",
 			align:
-				"display:block; color: hsl(14, 99%, 27%); background-color: hsla(14, 99%, 87%, 0.2);",
+				"display:block; color: hsl(14, 99%, 37%); background-color: hsla(14, 99%, 87%, 0.2);",
 			column:
-				"display:block; color: hsl(204, 99%, 27%); background-color: hsla(204, 99%, 87%, 0.2);",
+				"display:block; color: hsl(204, 99%, 37%); background-color: hsla(204, 99%, 87%, 0.2);",
 			
 			escapedLine:
 				"font-weight:bold; color: hsl(51, 100%, 30%);",
