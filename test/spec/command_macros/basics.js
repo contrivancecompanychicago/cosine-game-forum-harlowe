@@ -206,9 +206,10 @@ describe("basic command macros", function() {
 			expect("(open-url:1)").markupToError();
 			expect("(open-url:'e','f')").markupToError();
 		});
-		it("produces a command which calls window.open", function() {
+		it("produces a command which calls window.open and prints nothing", function() {
 			spyOn(window,'open');
-			runPassage("(open-url:'http://example.org')");
+			var p = runPassage("foo(open-url:'http://example.org')bar");
+			expect(p.text()).toBe("foobar");
 			expect(window.open).toHaveBeenCalledWith('http://example.org','');
 		});
 		it("evaluates to a command object that can't be +'d", function() {

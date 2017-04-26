@@ -52,6 +52,7 @@ describe("primitive value macros", function() {
 			});
 			expect("(random:1,1,1)").markupToError();
 			expect("(random:1,1)").not.markupToError();
+			expect("(random:1)").not.markupToError();
 		});
 		it("returns a random number between each value, inclusive", function() {
 			for(var j = 0; j < 5; j += 1) {

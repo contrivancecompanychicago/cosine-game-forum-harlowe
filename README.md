@@ -2,13 +2,14 @@
 
 Rough documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
-###2.0.1 changes
+###2.0.1 changes:
 
 ####Bugfixes
 
  * Fixed a bug where `(enchant:)` applied to ?Page couldn't override CSS properties for `<tw-story>` (including the default background colour and colour).
+ * Fixed a Passage Editor display bug where the left margin obscured the first letter of lines.
 
-###2.0.0 changes (also see 1.2.3 changes):
+###2.0.0 changes:
 
 ####Bugfixes
 
@@ -118,6 +119,17 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
  * Added `(dataentries:)`, which complements `(datanames:)` and `(datavalues:)` by producing, from a datamap, an array of the datamap's name-value pairs. Each pair is a datamap with "name" and "value" data, which can be examined using the lambda macros.
  * Added `(hover-style:)`, which, when given a style-altering changer, like `(hover-style:(text-color:green))`, makes its style only apply when the hook or expression is hovered over with the mouse pointer, and removed when hovering off.
  * Now, you can specify `"none"` as a `(text-style:)` and produce a changer which, when added to other `(text-style:)` combined changers, removes their styles.
+
+###1.2.4 changes:
+
+####Bugfixes
+
+ * `(random:)` now no longer incorrectly errors when given a single whole number instead of two.
+ * `(alert:)`, `(open-url:)`, `(reload:)` and `(goto-url:)` now return empty strings rather than the non-Harlowe value `undefined` (or, for `(open-url:)` a Javascript Window object). This differs slightly from 2.0, which returns more useful command values.
+ * Additionally, backported the following fixes from 2.0.0:
+   * Fixed a bug where comparing a value with an error (such as `2 is (3 + 'X')`) would suppress the error.
+   * Fixed a bug where subtracting non-subtractable values (such as booleans) wouldn't produce an error, instead implicitly converting the values to numbers, and potentially producing the Javascript value `NaN`.
+   * Fixed the bug where `(current-time:)` wouldn't pad the minutes value with a leading 0 when necessary, and '12' was printed as '0'.
 
 ###1.2.3 changes:
 

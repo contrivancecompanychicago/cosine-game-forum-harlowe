@@ -83,6 +83,10 @@ describe("revision macros", function() {
 					var p = runPassage("("+name+":'red')[blue]red");
 					expect(p.text()).toBe(append?'redblue':'bluered');
 				});
+				it("can target verbatim text", function() {
+					var p = runPassage("`[]`("+name+":'[]')[blue]");
+					expect(p.text()).toBe(append?'[]blue':'blue[]');
+				});
 				it("sequential "+name+"s occur one by one", function() {
 					var p = runPassage("red("+name+":'red')[blue]("+name+": 'blue')[green]");
 					expect(p.text()).toBe(append?'redbluegreen':'greenbluered');
@@ -215,6 +219,10 @@ describe("revision macros", function() {
 			it("only affects occurrences in a single pass", function() {
 				var p = runPassage("reded(replace:'red')[blue r]");
 				expect(p.text()).toBe('blue red');
+			});
+			it("can replace verbatim text", function() {
+				var p = runPassage("`[]`(replace:'[]')[blue]");
+				expect(p.text()).toBe('blue');
 			});
 			it("sequential replacements occur one by one", function() {
 				var p = runPassage("red(replace:'red')[blue](replace: 'blue')[green]");
