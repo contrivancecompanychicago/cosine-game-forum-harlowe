@@ -121,7 +121,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			(link-repeat: String) -> Changer
 			
 			Makes a command to create a special link that shows a hook, and, when clicked again,
-			re-runs the hook, replacing its contents with a newer version.
+			re-runs the hook, appending its contents again.
 			
 			Example usage:
 			`(link-repeat: "Add cheese")[(set:$cheese to it + 1)]` will create a link reading "Add cheese"
@@ -130,14 +130,14 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			Rationale:
 			
 			This is similar to (link:), but allows the created link to remain in the passage
-			after it is clicked. It can be used to make a link that displays different text after
+			after it is clicked. It can be used to make a link that displays more text after
 			each click, or which must be clicked multiple times before something can happen (using (set:)
 			and (if:) to keep count of the number of clicks).
 			
 			Details:
 			This creates a link which is visually indistinguishable from normal passage links.
 			Each time the link is clicked, the text and macros printed in the previous run are
-			removed and replaced.
+			appended.
 			
 			See also:
 			(link-reveal:), (link:), (link-goto:), (click:)
