@@ -34,6 +34,10 @@ default: dirs jshint css
 css: build/harlowe-css.css
 docs:
 	@node scripts/harlowedocs.js
+doku:
+	@node scripts/harlowedocs.js --doku
+	pandoc --from markdown_github --to dokuwiki -o dist/harloweDocs.doku dist/harloweDocs.md
+
 format: dist/format.js
 
 all: dirs jshint dist/format.js docs dist/exampleOutput.html

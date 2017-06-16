@@ -312,6 +312,11 @@ function processTextTerms(text, name, allow) {
 		typeNamesLinked = [],
 		markupNamesLinked = [],
 		headingMatch = /<h2[^]+?<\/h2>/g.exec(text);
+	
+	const linkFn = {
+		markdown: (name, type, text = name.toLowerCase()) => "[" + name + "](#" + type + "_" + text + ")",
+		dokuwiki: (name, type, text = name.toLowerCase()) => "[[harlowe:" + name + "|" + text + "]]",
+	}[process.argv.includes("--doku") ? "dokuwiki" : "markdown"];
 
 	text =
 		/*
@@ -340,7 +345,7 @@ function processTextTerms(text, name, allow) {
 			}
 			if (markupNamesLinked.indexOf($2) === -1) {
 				markupNamesLinked.push($2);
-				return $1 + "[" + $2 + "](#markup_" + $2.toLowerCase() + ")";
+				return $1 + linkFn($2,"markup");
 			}
 			return text;
 		})
@@ -366,7 +371,7 @@ function processTextTerms(text, name, allow) {
 			}
 			if (typeNamesLinked.indexOf(matchName) === -1) {
 				typeNamesLinked.push(matchName);
-				return preceding + "[" + matchName + plural + "](#type_" + matchName.toLowerCase() + ")";
+				return preceding + linkFn(matchName, "type");
 			}
 			return text;
 		})
@@ -384,7 +389,7 @@ function processTextTerms(text, name, allow) {
 			if ($1.toLowerCase() === name.toLowerCase()) {
 				return text;
 			}
-			return "[(" + $1 + ":)](#macro_" + $1.toLowerCase() + ")";
+			return linkFn($1,"macro","(" + $1 + ":)");
 		})
 		/*
 			Convert the minor headings into <h4> elements.

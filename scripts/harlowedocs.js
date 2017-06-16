@@ -29,6 +29,10 @@ Object.keys(metadata).map(e => metadata[e]).forEach(e=>{
 });
 
 /*
+	Output the MD docs as an intermediate product.
+*/
+fs.writeFileSync('dist/harloweDocs.md',outputFile);
+/*
 	Convert to HTML with Marked
 */
 outputFile = require('marked')(outputFile);
