@@ -2,6 +2,12 @@
 
 Rough documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
+###2.1.0 changes:
+
+####Bugfixes
+
+ * Fixed a bug where the alternative macro spellings `(text-color:)` and `(color:)` were displayed as erroneous in the editor.
+
 ###2.0.1 changes:
 
 ####Bugfixes

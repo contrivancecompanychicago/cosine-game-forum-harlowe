@@ -278,7 +278,7 @@ const
 
 			const {1:category, 2:categoryOrder} = (categoryTag.exec(text) || {});
 
-			const [,...aka] = macroEmpty.exec((macroAliases.exec(text) || [''])[0]) || [];
+			const [,...aka] = ((macroAliases.exec(text) || [''])[0].match(macroEmpty) || []).map(e=> (new RegExp(macroEmpty).exec(e) || [])[1]) || [];
 
 			text = processTextTerms(text, name, {typeNames: true, macroNames:true});
 			

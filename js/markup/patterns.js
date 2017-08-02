@@ -185,9 +185,9 @@
 			'modal' - all text from the token onward (until another aligner is encountered) is wrapped in a `<tw-align>` element
 			(or unwrapped in the case of left-alignment, as that is the default).
 
-			 * Right-alignment, resembling `==>` is produced with 2 or more `=`s followed by a `>`.
-			 * Left-alignment, resembling `<==` is restored with a `<` followed by 2 or more `=`.
-			 * Justified alignment, resembling `<==>` is produced with `<`, 2 or more `=`, and a closing `>`.
+			 * Right-alignment, resembling `==>`~ is produced with 2 or more `=`s followed by a `>`.
+			 * Left-alignment, resembling `<==`~ is restored with a `<` followed by 2 or more `=`.
+			 * Justified alignment, resembling `<==>`~ is produced with `<`, 2 or more `=`, and a closing `>`.
 			 * Mixed alignment is 1 or more `=`, then `><`, then 1 or more `=`. The ratio of quantity of left `=`s and right `=`s determines
 			the alignment: for instance, one `=` to the left and three `=`s to the right produces 25% left alignment.
 			
