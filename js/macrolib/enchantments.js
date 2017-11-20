@@ -62,6 +62,17 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 
 			TwineScript_ObjectName: "an (enchant:) command",
 			TwineScript_TypeName:   "an (enchant:) command",
 			TwineScript_Print() {
+				/*
+					First, test the changer to confirm it contains no revision macros.
+				*/
+				const summary = changer.summary();
+				if (summary.includes('newTargets') || summary.includes('target')) {
+					return TwineError.create(
+						"macrocall",
+						"The changer given to (enchant:) can't include a revision command like (replace:) or (append:)."
+					);
+				}
+				
 				const enchantment = Enchantment.create({
 					scope: HookSet.from(scope), changer, section,
 				});

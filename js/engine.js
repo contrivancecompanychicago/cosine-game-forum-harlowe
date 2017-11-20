@@ -117,7 +117,6 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 				But first, undo the (enchant:) "inherit" kludge for <tw-story>, described in Enchantment.
 			*/
 			const enchantedProperties = parent.data('enchantedProperties');
-			console.log(enchantedProperties);
 			if (enchantedProperties) {
 				story.css(enchantedProperties.reduce((a,e)=>(a[e] = "",a),{}));
 			}

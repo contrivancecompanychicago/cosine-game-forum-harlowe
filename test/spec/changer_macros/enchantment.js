@@ -10,6 +10,9 @@ describe("enchantment macros", function () {
 			expect("(print:(enchant:'baz'))").markupToError();
 			expect("(print:(enchant:(font:'Skia'), 'baz'))").markupToError();
 		});
+		it("errors when the changer contains a revision command", function() {
+			expect("[]<foo|(enchant:?foo,(append:?baz))").markupToError();
+		});
 		//TODO: write more basic functionality tests comparable to (click:)'s
 	});
 	describe("enchanting ?Page", function() {

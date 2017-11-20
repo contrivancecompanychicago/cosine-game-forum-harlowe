@@ -1,5 +1,5 @@
 "use strict";
-define(['utils', 'utils/operationutils'], ({impossible}, {is}) => {
+define(['utils', 'utils/operationutils', 'internaltypes/changedescriptor'], ({impossible}, {is}, ChangeDescriptor) => {
 	/*
 		A ChangerCommand is a command that is used to alter the way a particular
 		Section renders the value. It does this by mutating a passed-in ChangeDescriptor
@@ -25,6 +25,17 @@ define(['utils', 'utils/operationutils'], ({impossible}, {is}) => {
 			return "`[A '" + this.macroName + "' command]`";
 		},
 		
+		/*
+			This returns a summary of all ChangeDescriptor properties altered by this ChangerCommand,
+			were it run against one. This delegates to ChangeDescriptor.summary(), which knows which
+			properties a ChangeDescriptor normally has.
+		*/
+		summary() {
+			const desc = ChangeDescriptor.create();
+			this.run(desc);
+			return desc.summary();
+		},
+
 		/*
 			ChangerCommands are created and returned changer macro calls.
 			The arguments passed to them are essentially direct representations

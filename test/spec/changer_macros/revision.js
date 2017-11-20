@@ -75,6 +75,10 @@ describe("revision macros", function() {
 					var p = runPassage("good good("+name+":'good')[lands]");
 					expect(p.text()).toBe(append?'goodlands goodlands':'landsgood landsgood');
 				});
+				it("does nothing when no occurrences exist", function() {
+					var p = runPassage("good good("+name+":'bad')[lands]");
+					expect(p.text()).toBe("good good");
+				});
 				it("only affects occurrences in a single pass", function() {
 					var p = runPassage("reded("+name+":'red')[ r]");
 					expect(p.text()).toBe(append?'red red':' rreded');
@@ -215,6 +219,10 @@ describe("revision macros", function() {
 			it("replaces every found string in the passage", function() {
 				var p = runPassage("goodlands goodminton(replace:'good')[bad]");
 				expect(p.text()).toBe('badlands badminton');
+			});
+			it("does nothing when no occurrences exist", function() {
+				var p = runPassage("good good(replace:'bad')[lands]");
+				expect(p.text()).toBe("good good");
 			});
 			it("only affects occurrences in a single pass", function() {
 				var p = runPassage("reded(replace:'red')[blue r]");

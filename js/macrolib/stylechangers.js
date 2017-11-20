@@ -978,6 +978,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			(_, changer) => {
 				/*
 					To verify that this changer exclusively alters the style, we run this test ChangeDescriptor through.
+					(We could use changer.summary(), but we need a finer-grained look at the attr of the ChangeDescriptor.)
 				*/
 				const desc = ChangeDescriptor.create(),
 					test = (changer.run(desc), desc.summary());

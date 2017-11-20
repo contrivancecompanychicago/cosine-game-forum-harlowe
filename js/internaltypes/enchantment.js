@@ -76,7 +76,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor'], ($, Utils, ChangeD
 					functions.forEach(fn => fn(wrapping));
 				}
 				if (changer) {
-					const cd = ChangeDescriptor.create({target:wrapping});
+					const cd = ChangeDescriptor.create({section, target:wrapping});
 					changer.run(cd);
 					cd.update();
 					/*

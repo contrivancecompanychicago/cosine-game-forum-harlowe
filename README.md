@@ -7,6 +7,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
 ####Bugfixes
 
  * Fixed a bug where the alternative macro spellings `(text-color:)` and `(color:)` were displayed as erroneous in the editor.
+ * Now, `(enchant:)` correctly displays an error when the changer provided to it includes a `(replace:)`, `(append:)` or `(prepend:)` command.
 
 ###2.0.1 changes:
 

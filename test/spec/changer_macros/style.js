@@ -156,6 +156,14 @@ describe("style changer macros", function() {
 					done();
 				});
 			});
+			xit("removes other styles in already enchanted text", function(done) {
+				var hook = runPassage("[Goobar]<x|(enchant:?x, (text-style:'bold'))(enchant:?x, (text-style:'none'))")
+					.find('tw-hook');
+				setTimeout(function() {
+					expect(hook.css('font-weight')).toBe("400");
+					done();
+				});
+			});
 			it("doesn't remove styles if it is composed to the left", function(done) {
 				var hook = runPassage("(set:$x to (text-style:'bold'))(set:$x to (text-style:'none') + it)$x[Goobar]")
 					.find('tw-hook');
