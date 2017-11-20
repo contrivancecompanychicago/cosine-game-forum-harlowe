@@ -398,10 +398,13 @@
 			"sup":
 				"vertical-align: super;font-size:0.8em;",
 
+			"strike":
+				"text-decoration: line-through;",
+
 			"verbatim":
 				"background-color: hsla(0,0%,50%,0.1);",
 
-			"^=bold, ^=strong, ^=italic, ^=em, ^=sup, ^=verbatim":
+			"^=bold, ^=strong, ^=italic, ^=em, ^=sup, ^=verbatim, ^=strike":
 				intangible,
 
 			// These two rules implement "fake smart quotes", which should

@@ -18,9 +18,9 @@ describe("basic text style markup", function() {
 			html:   ["<sup>","</sup>"],
 		},
 		{
-			name:   "deletion markup",
+			name:   "strikethrough markup",
 			markup: ["~~","~~"],
-			html:   ["<del>","</del>"],
+			html:   ["<s>","</s>"],
 		},
 	]
 	.forEach(function(e) {

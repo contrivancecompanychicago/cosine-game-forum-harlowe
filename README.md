@@ -8,6 +8,12 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
 
  * Fixed a bug where the alternative macro spellings `(text-color:)` and `(color:)` were displayed as erroneous in the editor.
  * Now, `(enchant:)` correctly displays an error when the changer provided to it includes a `(replace:)`, `(append:)` or `(prepend:)` command.
+ * Re-fixed the bug where `(pow:)` only accepted 1 value instead of 2, and also fixed `(sqrt:)` and the `(log:)` variants, which weren't working at all.
+
+####Alterations
+
+ * Changed the `~~` markup to produce a strikethrough style using an `<s>` element, instead of a censor-bar style using a `<del>` element. The censor-bar style, which was used in all previous versions but not ever properly documented, was bugged to always be black even if the text colour was not black. It can be replicated in stories by simply using a `(background-colour:)` macro (preferably set to a variable) in its place.
+ * Removed the default `line-height` CSS for `<h1>` and other header elements, because it was causing problems with line-wrapped headers.
 
 ###2.0.1 changes:
 

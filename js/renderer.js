@@ -264,10 +264,13 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 					}
 					case "sub": // Note: there's no sub syntax yet.
 					case "sup":
-					case "del":
 					case "strong":
 					case "em": {
 						out += renderTag(token, token.type);
+						break;
+					}
+					case "strike": {
+						out += renderTag(token, "s");
 						break;
 					}
 					case "bold": {

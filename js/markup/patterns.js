@@ -536,7 +536,7 @@
 			|---
 			| Italics | `//text//` | <i>text</i> |`<i>text</i>`
 			| Boldface | `''text''` | <b>text</b> |`<b>text</b>`
-			| Deleted/spoiler text | `~~text~~` | <del>text</del> | `<del>text</del>`
+			| Strikethrough text | `~~text~~` | <s>text</s> | `<s>text</s>`
 			| Emphasis | `*text*` | *text* |`<em>text</em>`
 			| Strong emphasis | `**text**` | **text** |`<strong>text</strong>`
 			| Superscript | `meters/second^^2^^` | meters/second<sup>2</sup> | `meters/second<sup>2</sup>`
@@ -557,7 +557,7 @@
 
 			#basics
 		*/
-		delOpener:        escape("~~"),
+		strikeOpener:     escape("~~"),
 		italicOpener:     escape("//"),
 		boldOpener:       escape("''"),
 		supOpener:        escape("^^"),

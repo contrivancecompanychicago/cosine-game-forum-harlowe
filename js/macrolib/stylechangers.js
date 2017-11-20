@@ -357,7 +357,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			able to print or set the "outer" _a.
 
 			You may want to simply print several copies of a hook a certain number of times, without any particular
-			array data being looped over. You can use the (range:) macro with it instead: `(for: each _i in ...(range:1,10))`, and
+			array data being looped over. You can use the (range:) macro with it instead: `(for: each _i, ...(range:1,10))`, and
 			not use the temp variable inside the hook at all.
 
 			As it is a changer macro, (for:)'s value is a changer command which can be stored in a variable - this command stores all

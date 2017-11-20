@@ -551,7 +551,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 		namely log, sqrt, etc.
 	*/
 	function mathFilter (fn) {
-		return (args) => {
+		return (...args) => {
 			const result = fn(...args);
 			if (typeof result !== "number" || isNaN(result)) {
 				return TwineError.create("macrocall", "This mathematical expression doesn't compute!");
@@ -753,15 +753,15 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 
 			#maths
 		*/
-		pow:    [mathFilter(Math.pow), Number, Number],
+		pow:    [mathFilter(Math.pow), [Number, Number]],
 		/*d:
-			(exp: Number, Number) -> Number
+			(exp: Number) -> Number
 
-			This maths macro raises Euler's number to the power of the second number, and
+			This maths macro raises Euler's number to the power of the given number, and
 			provides the result.
 
 			Example usage:
-			`(exp: 6)` produces approximately 7.38905609893065.
+			`(exp: 6)` produces approximately 403.
 
 			#maths
 		*/
@@ -881,7 +881,6 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 				if (key) {
 					let fn = this[key][0];
 					let typeSignature = this[key][1];
-					
 					/*
 						Of course, the mandatory first argument of all macro
 						functions is section, so we have to convert the above

@@ -298,7 +298,7 @@
 			
 			boldOpener:    { fn: openerFn("boldOpener",   "bold")   },
 			italicOpener:  { fn: openerFn("italicOpener", "italic") },
-			delOpener:     { fn: openerFn("delOpener",    "del")    },
+			strikeOpener:  { fn: openerFn("strikeOpener", "strike") },
 			supOpener:     { fn: openerFn("supOpener",    "sup")    },
 			
 			commentFront: {

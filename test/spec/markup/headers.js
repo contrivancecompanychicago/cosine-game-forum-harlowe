@@ -4,14 +4,14 @@ describe("headers and rules", function() {
 		[1,2,3,4,5,6].forEach(function(i) {
 			it("wraps a line starting with " + "#".repeat(i) + " with a <h" + i + "> element", function() {
 				expect(
-					"#".repeat(i) + "A"
+					"#".repeat(i) + "Haruyasumi natsuyasumi akiyasumi fuyuyasumi"
 				).markupToBecome(
-					"<h" + i + ">A</h" + i + ">"
+					"<h" + i + ">Haruyasumi natsuyasumi akiyasumi fuyuyasumi</h" + i + ">"
 				);
 				expect(
-					"#".repeat(i) + "A\n"
+					"#".repeat(i) + "Haruyasumi natsuyasumi akiyasumi fuyuyasumi\n"
 				).markupToBecome(
-					"<h" + i + ">A</h" + i + ">"
+					"<h" + i + ">Haruyasumi natsuyasumi akiyasumi fuyuyasumi</h" + i + ">"
 				);
 			});
 		});

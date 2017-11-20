@@ -64,6 +64,31 @@ describe("primitive value macros", function() {
 			}
 		});
 	});
+	describe("the maths macros", function() {
+		[
+			["min","(min: 2, -5, 2, 7, 0.1)",       "-5"],
+			["max","(max: 2, -5, 2, 7, 0.1)",        "7"],
+			["abs","(abs: -4)",                      "4"],
+			["sign","(sign: -4)",                   "-1"],
+			["sin","(sin: 3.14159265 / 2)",          "1"],
+			["cos","(cos: 3.14159265)",             "-1"],
+			["tan","(round:(tan: 3.14159265 / 4))",  "1"],
+			["floor","(floor: 1.99)",                "1"],
+			["round","(round: 1.5)",                 "2"],
+			["ceil","(ceil: 1.1)",                   "2"],
+			["pow","(pow: 2, 8)",                  "256"],
+			["exp","(round:(exp: 6))",             "403"],
+			["sqrt","(sqrt: 25)",                    "5"],
+			["log","(log: (exp:5))",                 "5"],
+			["log10","(log10: 100)",                 "2"],
+			["log2","(log2: 256)",                   "8"],
+		].forEach(function(p){
+			var name = p[0], code = p[1], res = p[2];
+			it("(" + name + ":) produces values as documented", function() {
+				expect("(print: " + code + " + 0)").markupToPrint(res);
+			});
+		});
+	});
 	describe("the (substring:) macro", function() {
 		it("accepts 1 string argument, then two number arguments", function() {
 			expect("(substring:)").markupToError();

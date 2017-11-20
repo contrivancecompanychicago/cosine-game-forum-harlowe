@@ -10,7 +10,7 @@ h3 {
 	font-size: 1.75em;
 }
 h1, h2, h3, h4, h5, h6 {
-	line-height: 1rem;
+	line-height: 1em;
 	margin: 0.3em 0 0.6em 0;
 }
 
@@ -36,11 +36,6 @@ ins {
 	background-color: hsla(45,100%,90%,0.5); /* Yellowed correction fluid */
 	border-radius:0.5em;
 	box-shadow: 0em 0em 0.2em hsl(45,100%,80%);
-	text-decoration:none;
-}
-
-del {
-	background-color: #000; /* Censored text */
 	text-decoration:none;
 }
 
