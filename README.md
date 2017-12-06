@@ -15,6 +15,14 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
  * Changed the `~~` markup to produce a strikethrough style using an `<s>` element, instead of a censor-bar style using a `<del>` element. The censor-bar style, which was used in all previous versions but not ever properly documented, was bugged to always be black even if the text colour was not black. It can be replicated in stories by simply using a `(background-colour:)` macro (preferably set to a variable) in its place.
  * Removed the default `line-height` CSS for `<h1>` and other header elements, because it was causing problems with line-wrapped headers.
 
+####Additions
+
+###Debug Mode
+
+ * Added a button to hide/show the variables pane at will.
+ * Reduced the maximum CSS height of the variables pane from 90vh (90% of the window's height) to 40vh.
+ * Gave variable rows a flex-shrink of 0, which I'm told prevents rows from contracting to unreadability when the pane requires scrolling.
+
 ###2.0.1 changes:
 
 ####Bugfixes

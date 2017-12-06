@@ -10,7 +10,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 
 		This module exports a single function which, when run, performs all of the Debug Mode setup.
 	*/
-	const debugElement = $("<tw-debugger><div class='variables'></div>Turns: <select disabled></select><button class='show-invisibles'>&#9903; Debug View</button></tw-debugger>");
+	const debugElement = $("<tw-debugger><div class='variables'></div>Turns: <select disabled></select><button class='show-invisibles'>Debug View</button><button class='show-variables enabled'>0 Variables</button></tw-debugger>");
 
 	/*
 		Set up the showInvisibles button, which toggles debug mode CSS (showing <tw-expression> elements and such)
@@ -19,6 +19,16 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 	const showInvisibles = debugElement.find('.show-invisibles');
 	showInvisibles.click(() => {
 		$(document.documentElement).toggleClass('debug-mode');
+		showInvisibles.toggleClass('enabled');
+	});
+	/*
+		Additionally, set up the showVariables button, which hides and shows the variable pane (which is visible initially).
+	*/
+	const showVariables = debugElement.find('.show-variables');
+	const variablesTable = debugElement.find('.variables');
+	showVariables.click(() => {
+		variablesTable[showVariables.is('.enabled') ? "attr" : "removeAttr"]("hidden",'');
+		showVariables.toggleClass('enabled');
 	});
 
 	/*
@@ -114,9 +124,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 
 	/*
 		Here, we set up the variables table.
-	*/
-	const variablesTable = debugElement.find('.variables');
-	/*
+
 		This function is responsible for creating the inner DOM structure of the
 		variablesTable and updating it, one row at a time.
 	*/
@@ -147,6 +155,11 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 			"<span class='variable-name'>" + name +
 			"</span><span class='variable-value'>" + objectName(value) + "</span>"
 		);
+		/*
+			Update the number of variables on the showVariables button.
+		*/
+		const children = variablesTable.children();
+		showVariables.text(`${children.length} Variable${children.length !== 1 ? 's' : ''}`);
 	}
 	/*
 		This function, called as a State event handler, synchronises the variablesTable

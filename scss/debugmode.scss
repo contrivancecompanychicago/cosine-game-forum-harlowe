@@ -102,7 +102,7 @@
 		background-color: hsla(220,100%,50%,0.1) !important;
 		
 		/*
-			Show the hook syntax. This should line up with what TwineMarkup expects.
+			Show the hook syntax. This should line up with what Harlowe expects.
 			
 			But, of course, anonymous hooks shouldn't be highlighted like this.
 		*/
@@ -221,12 +221,13 @@ tw-debugger {
 		margin-right: 1em;
 		width: 12em;
 	}
-	.show-invisibles {
+	button {
 		border-radius: 3px;
 		border: solid #999 1px;
+		margin: auto 4px;
 		background-color: #fff;
 		font-size: inherit;
-		.debug-mode & {
+		&.enabled {
 			background-color: #eee;
 			box-shadow: inset #ddd 3px 5px 0.5em;
 		}
@@ -241,7 +242,7 @@ tw-debugger {
 		left:-$borderwidth;
 		right: 0;
 		padding:1em;
-		max-height:90vh;
+		max-height:40vh;
 		overflow-y: scroll;
 		overflow-x: hidden;
 		z-index:$zindex - 1;
@@ -255,14 +256,15 @@ tw-debugger {
 		// Font
 		font-size:0.8em;
 
-		// Hide when empty
-		&:empty {
+		// Hide when empty or hidden
+		&:empty, &[hidden] {
 			display:none;
 		}
 
 		.variable-row {
 			@include flexbox;
 			@include flex-direction(row);
+			flex-shrink: 0;
 			&:nth-child(2n) {
 				background:#EEE;
 			}

@@ -8,7 +8,7 @@ const {unescape, escape} = require('lodash');
 */
 const metadata = require('./metadata');
 let outputFile = "";
-let navElement = "<nav><img src='http://twinery.org/2/story-formats/Harlowe/icon.svg' width=96 height=96></img>";
+let navElement = "<nav><img src='icon.svg' width=96 height=96></img>";
 /*
 	Obtain the version
 */
