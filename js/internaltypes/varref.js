@@ -812,19 +812,30 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		},
 		
 		get TwineScript_ObjectName() {
+			const debugName = (name, pos) => {
+				if (!pos && (this.object === State.variables || this.object.TwineScript_VariableStore))
+					return name;
+				return propertyDebugName(name);
+			};
 			/*
-				If this.object is State.variables, then
-				print a $ instead of "[name]'s"
+				If this.object is State.variables, then print a $ instead of "[name]'s".
+				Conversely, print "_" for temporary variables inside a VariableStore.
 			*/
-			return (this.object === State.variables ? "$" : (objectName(this.object) + "'s "))
+			return (this.object === State.variables ? "$" :
+					this.object.TwineScript_VariableStore ? "_" :
+					(objectName(this.object) + "'s ")) +
 				/*
 					If the property chain contains a single, potentially computed value, then get the
 					value's debug name. Otherwise, get the full chain's debug names.
 				*/
-				+ (this.propertyChain.length === 1
-					? propertyDebugName(this.propertyChain[0])
-					: this.propertyChain.reduce((a, e) => a + "'s " + propertyDebugName(e))
-				);
+				(this.propertyChain.length === 1
+					? debugName(this.propertyChain[0])
+					: this.propertyChain.reduce((a, e, i) => a + "'s " + debugName(e,i))
+				) +
+				/*
+					Include the name of the VariableStore's scope, if this is a temp. variable.
+				*/
+				(this.object.TwineScript_VariableStore ? (" in " + this.object.TwineScript_VariableStoreName) : "");
 		},
 
 		/*

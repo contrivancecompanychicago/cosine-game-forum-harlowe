@@ -737,6 +737,11 @@ define([
 					changer.run(desc);
 				}
 			});
+
+			/*
+				The changers may have altered the target - update the target variable to match.
+			*/
+			target = desc.target;
 			
 			/*
 				Infinite regress can occur from a couple of causes: (display:) loops, or evaluation loops
@@ -851,6 +856,20 @@ define([
 				stack, or, if absent, the base VarScope class.
 			*/
 			const tempVariables = Object.create(this.stack.length ?  this.stack[0].tempVariables : VarScope);
+			/*
+				For debug mode, the temp variables store needs to also carry the name of its enclosing lexical scope.
+				We derive this from the current target.
+
+				(The target should always be truthy, but, just in case...)
+			*/
+			const targetTag = target && target.tag();
+			tempVariables.TwineScript_VariableStoreName = (
+				targetTag === Selectors.hook ? (target.attr('name') ? ("?" + target.attr('name')) : "an unnamed hook") :
+				targetTag === Selectors.expression ? ("a " + target.attr('type') + " expression") :
+				targetTag === Selectors.passage ? "this passage" :
+				"an unknown scope"
+			);
+
 			/*
 				If the descriptor features a loopVar, we must loop - that is, render and execute once for
 				each value in the loopVars, assigning the value to their temp. variable names in a new data stack per loop.

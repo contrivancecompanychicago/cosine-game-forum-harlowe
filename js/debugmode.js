@@ -128,7 +128,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 		This function is responsible for creating the inner DOM structure of the
 		variablesTable and updating it, one row at a time.
 	*/
-	function update(name, value) {
+	function update(name, value, tempScope) {
 		/*
 			First, obtain the row which needs to be updated. If it doesn't exist,
 			create it below.
@@ -152,7 +152,9 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 			Create the <span>s for the variable's name and value.
 		*/
 		row.empty().append(
-			"<span class='variable-name'>" + name +
+			"<span class='variable-name " + (tempScope ? "temporary" : "") +
+			"'>" + name +
+			(tempScope ? ("<span class='temporary-variable-scope'>" + tempScope + "</span>") : "") +
 			"</span><span class='variable-value'>" + objectName(value) + "</span>"
 		);
 		/*
@@ -196,6 +198,11 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 			else {
 				e.remove();
 			}
+			/*
+				Since refresh() is called when the turn begins, no temporary variables should be
+				instantiated yet, so we don't need to explicitly go through various scopes to
+				find them.
+			*/
 		});
 		/*
 			Now, add new variables that may not be present here, using the preceding
@@ -213,8 +220,8 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 	State.on('forward', refresh).on('back', refresh);
 
 	VarRef.on('set', (obj, name, value) => {
-		if (obj === State.variables) {
-			update(name, value);
+		if (obj === State.variables || obj.TwineScript_VariableStore) {
+			update(name, value, obj === State.variables ? "" : obj.TwineScript_VariableStoreName);
 		}
 	})
 	/*
@@ -223,7 +230,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 	*/
 	.on('delete', (obj, name) => {
 		if (obj === State.variables) {
-			variablesTable.find('[data-name="' + name + '"]').remove();
+			variablesTable.find('[data-name="' + name + '"]:not(.temporary)').remove();
 		}
 	});
 

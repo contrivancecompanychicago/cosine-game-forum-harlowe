@@ -321,6 +321,9 @@
 			in your game, keep track of the player's status, and so forth. They start with `$` (for normal variables)
 			or `_` (for temp variables, which only exist inside a single passage, hook or lambda).
 
+			Due to this syntax potentially conflicting with dollar values (such as $1.50) in your story text,
+			variables cannot begin with a numeral.
+
 			You can print the contents of variables, or any further items within them, using the (print:) and (for:)
 			macros. Or, if you only want to print a single variable, you can just enter the variable's name directly
 			in your passage's prose.

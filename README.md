@@ -22,6 +22,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
  * Added a button to hide/show the variables pane at will.
  * Reduced the maximum CSS height of the variables pane from 90vh (90% of the window's height) to 40vh.
  * Gave variable rows a flex-shrink of 0, which I'm told prevents rows from contracting to unreadability when the pane requires scrolling.
+ * The variables pane should now also list temporary variables, and their locations. This currently only lists those that have been explicitly (set:) or (put:), and ignores those that are created inside (for:) loops.
 
 ###2.0.1 changes:
 

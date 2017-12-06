@@ -275,6 +275,16 @@ tw-debugger {
 			&::before {
 				content: "$";
 			}
+			&.temporary::before {
+				content: "_";
+			}
+			.temporary-variable-scope {
+				opacity:0.8;
+				font-size:0.75em;
+				&::before {
+					content: " in ";
+				}
+			}
 		}
 		.variable-value {
 			display:inline-block;

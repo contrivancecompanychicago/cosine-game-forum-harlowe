@@ -53,6 +53,11 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			variables store, or a Section's temporary variables store.
 			in Operations. Should be used exclusively by VarRef.set().
 
+		{String} TwineScript_VariableStoreName:
+			requires the truthy presence of TwineScript_VariableStore. Provides a name
+			for the enclosing scope of the variables inside this store, to be used by
+			Debug Mode's variable listing.
+
 		{Function} toString:
 			if this is present and !== Object.prototype.toString, then this is
 			used by Section to convert this datatype to renderable TwineMarkup code.

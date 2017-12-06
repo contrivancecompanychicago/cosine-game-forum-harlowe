@@ -71,6 +71,9 @@ define([
 			If the destination isn't something that can be changed - for instance, if you're trying to set a
 			bare value to another value, like `(set: true to 2)` - then an error will be printed. This includes
 			modifying arrays - `(set: (a:2,3)'s 1st to 1)` is also an error.
+
+			Due to the variable syntax potentially conflicting with dollar values (such as $1.50) in your story text,
+			variables cannot begin with a numeral.
 			
 			See also:
 			(push:), (move:)
