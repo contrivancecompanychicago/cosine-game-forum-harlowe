@@ -214,19 +214,29 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 		@param {Array} The tokens array.
 		@param {Object} Some flags to carry down recursive calls to compile()
 			{Boolean} isVarRef: whether or not this value should be compiled to a VarRef
+			{String} [whitespaceError]: if isVarRef is true and this is given, this is used as an error
+				to be returned if the token was just whitespace.
 			{String} elidedComparison: whether or not this is part of an elided comparison
 				inside an "and" or "or" operation, like "3 < 4 and 5".
 		@return {String} String of Javascript code.
 	*/
-	function compile(tokens, {isVarRef, elidedComparison} = {}) {
+	function compile(tokens, {isVarRef, whitespaceError, elidedComparison} = {}) {
 		// Convert tokens to a 1-size array if it's just a single non-array.
 		tokens = [].concat(tokens);
 		/*
 			Recursive base case: no tokens.
-			Any behaviour that should be done in the event of no tokens
+			Any special behaviour that should be done in the event of no tokens
 			must be performed elsewhere.
 		*/
 		if (!tokens.length) {
+			/*
+				Operations recursively calling this, which require certain data to be in
+				these tokens, and which provide an error message to display if they aren't,
+				should be abided.
+			*/
+			if (isVarRef && whitespaceError) {
+				return "TwineError.create('operation'," + toJSLiteral(whitespaceError) + ")";
+			}
 			return "";
 		}
 		/*
@@ -285,6 +295,15 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			else if (token.type === "root") {
 				return compile(token.children);
 			}
+			/*
+				Whitespace is usually harmless, but if it's meant as a VarRef,
+				it's almost certainly a mistake.
+			*/
+			else if (token.type === "whitespace") {
+				if (isVarRef && whitespaceError) {
+					return "TwineError.create('operation'," + toJSLiteral(whitespaceError) + ")";
+				}
+			}
 		}
 
 		/*
@@ -293,6 +312,10 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 		let i;
 		[token, i] = precedentToken(tokens, "least");
 		const type = (token || {}).type;
+		/*
+			This helper creates arguments for recursive compile() calls whose results should be VarRefs.
+		*/
+		const varRefArgs = (side) => ({isVarRef:true, whitespaceError:`I need usable data to be on the ${side} of "${token.text}".`});
 
 		let
 			/*
@@ -355,17 +378,18 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 		}
 		else if (type === "to") {
 			assignment = "to";
-			right = compile(tokens.slice(i + 1), {isVarRef:true});
-			left  = "Operations.setIt(" + compile(tokens.slice(0,  i), {isVarRef:true}) + ")";
+			right = compile(tokens.slice(i + 1), varRefArgs("right"));
+			left  = "Operations.setIt(" + compile(tokens.slice(0,  i), varRefArgs("left")) + ")";
 		}
 		else if (type === "into") {
 			assignment = "into";
-			right = compile(tokens.slice(0,  i), {isVarRef:true});
-			left  = "Operations.setIt(" + compile(tokens.slice(i + 1), {isVarRef:true}) + ")";
+			// varRefArgs uses the syntactic left, which isn't the compiler's left.
+			right = compile(tokens.slice(0,  i), varRefArgs("left"));
+			left  = "Operations.setIt(" + compile(tokens.slice(i + 1), varRefArgs("right")) + ")";
 		}
 		else if (type === "where" || type === "via") {
 			left = "Lambda.create("
-				+ (compile(tokens.slice(0, i), {isVarRef:true}).trim()
+				+ (compile(tokens.slice(0, i), {isVarRef:true, whitespaceError:null}).trim()
 					// Omitting the temp variable means that you must use "it"
 					|| "undefined")
 				+ ",";
@@ -394,13 +418,13 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				*/
 				if (type === "each") {
 					left = "Lambda.create(";
-					midString = compile(rightTokens, {isVarRef:true}).trim();
+					midString = compile(rightTokens, varRefArgs("right")).trim();
 					right = ",'where','true')";
 				}
 				// Other keywords can have a preceding temp variable, though.
 				else {
 					left = "Lambda.create("
-						+ (compile(tokens.slice(0, i), {isVarRef:true}).trim()
+						+ (compile(tokens.slice(0, i), {isVarRef:true, whitespaceError:null}).trim()
 							// Omitting the temp variable means that you must use "it"
 							|| "undefined")
 						+ ",";
@@ -417,7 +441,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 		*/
 		else if (type === "augmentedAssign") {
 			assignment = token.operator;
-			left  = compile(tokens.slice(0,  i), {isVarRef:true});
+			left  = compile(tokens.slice(0,  i), varRefArgs("left"));
 			/*
 				This line converts the "b" in "a += b" into "a + b" (for instance),
 				thus partially de-sugaring the augmented assignment.
@@ -583,7 +607,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				/*
 					belongingProperties place the variable on the right.
 				*/
-				+ compile(tokens.slice (i + 1), {isVarRef:true})
+				+ compile(tokens.slice (i + 1), varRefArgs("right"))
 				+ ","
 				/*
 					Utils.toJSLiteral() is used to both escape the name
@@ -602,7 +626,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			else {
 				// Since, as with belonging properties, the variable is on the right,
 				// we must compile the right side as a varref.
-				right = compile(tokens.slice (i + 1), {isVarRef:true});
+				right = compile(tokens.slice (i + 1), varRefArgs("right"));
 			}
 			possessive = "belonging";
 		}
@@ -619,7 +643,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				inside the Operations.get() call, while leaving the right side as is.
 			*/
 			left = "VarRef.create("
-				+ compile(tokens.slice(0, i), {isVarRef:true})
+				+ compile(tokens.slice(0, i), varRefArgs("left"))
 				+ ","
 				/*
 					Utils.toJSLiteral() is used to both escape the name

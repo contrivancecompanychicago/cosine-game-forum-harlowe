@@ -45,6 +45,10 @@ describe("twinescript operators", function () {
 			expect("(print: 3 - 5 * 2)").markupToPrint("-7");
 			expect("(print: 5 * 2 - 3)").markupToPrint("7");
 		});
+		it("works correctly in the absence of surrounding whitespace", function () {
+			expect("(print: 3-5*2)").markupToPrint("-7");
+			expect("(print: 5*2-3)").markupToPrint("7");
+		});
 		it("can be used on strings", function () {
 			expect("(print: '51' - '5')").markupToPrint("1");
 			expect("(print: 'reeeed' - 'e')").markupToPrint("rd");

@@ -398,10 +398,7 @@
 
 		tempVariable = "_(" + validPropertyName + ")" + wb,
 		
-		/*
-			This includes NaN, but I wonder if it should.
-		*/
-		number = '\\b(\\-?\\d+(?:\\.\\d+)?(?:[eE][+\\-]?\\d+)?|NaN)' + notBefore("m?s") + wb
+		number = '\\b(\\d+(?:\\.\\d+)?(?:[eE][+\\-]?\\d+)?)' + notBefore("m?s") + wb
 		;
 	
 	passageLink.main =
@@ -930,7 +927,7 @@
 		contains:   "contains" + wb,
 		
 		addition:          escape("+")      + notBefore("="),
-		subtraction:       escape("-")      + notBefore("=", "\\d"),
+		subtraction:       escape("-")      + notBefore("="),
 		multiplication:    escape("*")      + notBefore("="),
 		division:          either("/", "%") + notBefore("="),
 		
