@@ -152,10 +152,11 @@ beforeEach(function() {
 	jasmine.addMatchers({
 		markupToBecome: Object.bind(Object,{
 			compare: function(a,e) {
-				if ((runPassage(a).html() || '') === e) {
+				var result = (runPassage(a).html() || '');
+				if (result === e) {
 					return { pass: true,  message: "Expected markup '" + a + "' not to become '" + e + "'" };
 				} else {
-					return { pass: false, message: "Expected markup '" + a + "' to become '" + e + "'" };
+					return { pass: false, message: "Expected markup '" + a + "' to become '" + e + "', not '" + result + "'" };
 				}
 			}
 		}),

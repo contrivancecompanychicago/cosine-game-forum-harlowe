@@ -15,6 +15,26 @@ describe("enchantment macros", function () {
 		});
 		//TODO: write more basic functionality tests comparable to (click:)'s
 	});
+	describe("enchanting ?Link", function() {
+		it("wraps each <tw-link> in a <tw-enchantment>", function(done) {
+			createPassage("","bar");
+			runPassage("(enchant:?Link,(text-style:'italic'))[[Next->bar]]");
+			setTimeout(function() {
+				var enchantment = $('tw-link').parent();
+				expect(enchantment.is('tw-enchantment')).toBe(true);
+				expect(enchantment.attr('style')).toMatch(/font-style: \s*italic/);
+				done();
+			});
+		});
+		it("can override properties that <tw-link> inherits from CSS", function(done) {
+			createPassage("","bar");
+			runPassage("(enchant:?Link,(text-style:'blur')+(color:'#800000'))[[Next->bar]]");
+			setTimeout(function() {
+				expect($('tw-link').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+				done();
+			},400);
+		});
+	});
 	describe("enchanting ?Page", function() {
 		it("wraps the ?Page in a <tw-enchantment>", function(done) {
 			runPassage("(enchant:?Page,(text-style:'bold'))");

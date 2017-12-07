@@ -6,9 +6,11 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
 
 ####Bugfixes
 
+ * Now, using `(enchant:)` to change the `(text-colour:)` of `?Link` (normal links) will correctly override the default CSS link colour.
  * Fixed a bug where the alternative macro spellings `(text-color:)` and `(color:)` were displayed as erroneous in the editor.
  * Now, `(enchant:)` correctly displays an error when the changer provided to it includes a `(replace:)`, `(append:)` or `(prepend:)` command.
  * Re-fixed the bug where `(pow:)` only accepted 1 value instead of 2, and also fixed `(sqrt:)` and the `(log:)` variants, which weren't working at all.
+ * Fixed a parsing bug where `5*3-2`, without whitespace around the minus sign, would break the order of operations.
 
 ####Alterations
 

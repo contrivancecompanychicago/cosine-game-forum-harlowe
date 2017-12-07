@@ -8,8 +8,16 @@ tw-link, .link, tw-icon, .enchantment-clickblock {
 	cursor: pointer;
 }
 
+@mixin enchantable-color {
+	tw-enchantment[style^="color"] &:not(:hover),
+	tw-enchantment[style*=" color"] &:not(:hover) {
+		color: inherit;
+	}
+}
+
 tw-link, .enchantment-link {
 	color: $linkcolour;
+	@include enchantable-color;
 	font-weight: bold;
 	text-decoration: none;
 	
@@ -25,6 +33,7 @@ tw-link, .enchantment-link {
 
 .visited {
 	color: $visitedcolour;
+	@include enchantable-color;
 	&:hover {
 		color: $visitedhovercolour;
 	}
@@ -32,6 +41,7 @@ tw-link, .enchantment-link {
 
 tw-broken-link {
 	color: #993333; // A clotted blood colour
+	@include enchantable-color;
 	border-bottom: 2px solid #993333;
 	cursor: not-allowed;
 }

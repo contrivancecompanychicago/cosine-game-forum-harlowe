@@ -54,6 +54,13 @@ describe("list markup", function() {
 				"<ul><li>A</li></ul>B"
 			);
 		});
+		xit("work inside hooks", function() {
+			expect(
+				" |x>[\n* A\n* B]\n"
+			).markupToBecome(
+				" <tw-hook name=\"x\" title=\"Hook: ?x\"><br><ul><li>A</li><li>B</li></ul></tw-hook><br>"
+			);
+		});
 		it("(unlike Markdown) allows nested lists by the addition of more consecutive *'s", function() {
 			expect(
 				"* A\n** B\n** C\n* D"
@@ -139,6 +146,13 @@ describe("list markup", function() {
 				"0. A\nB"
 			).markupToBecome(
 				"<ol><li>A</li></ol>B"
+			);
+		});
+		xit("work inside hooks", function() {
+			expect(
+				" |x>[\n0. A\n0. B]\n"
+			).markupToBecome(
+				" <tw-hook name=\"x\" title=\"Hook: ?x\"><br><ol><li>A</li><li>B</li></ol></tw-hook><br>"
 			);
 		});
 		it("(unlike Markdown) allows nested lists by the addition of more consecutive *'s", function() {
