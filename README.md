@@ -19,7 +19,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
 
 ####Additions
 
-###Debug Mode
+#####Debug Mode
 
  * Added a button to hide/show the variables pane at will.
  * Reduced the maximum CSS height of the variables pane from 90vh (90% of the window's height) to 40vh.

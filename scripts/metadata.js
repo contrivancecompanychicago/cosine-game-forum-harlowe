@@ -314,7 +314,7 @@ function processTextTerms(text, name, allow) {
 		headingMatch = /<h2[^]+?<\/h2>/g.exec(text);
 	
 	const linkFn = {
-		markdown: (name, type, text = name.toLowerCase()) => "[" + name + "](#" + type + "_" + text + ")",
+		markdown: (name, type, text = name.toLowerCase()) => "[" + text + "](#" + type + "_" + name + ")",
 		dokuwiki: (name, type, text = name.toLowerCase()) => "[[harlowe:" + name + "|" + text + "]]",
 	}[process.argv.includes("--doku") ? "dokuwiki" : "markdown"];
 

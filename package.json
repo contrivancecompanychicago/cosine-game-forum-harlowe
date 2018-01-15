@@ -1,6 +1,6 @@
 {
   "name": "twine-harlowe",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "author": "Leon Arnott",
   "description": "The default runtime for Twine 2 stories",
   "license": "Zlib",
