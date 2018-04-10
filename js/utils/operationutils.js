@@ -290,7 +290,7 @@ define(['utils', 'datatypes/hookset', 'internaltypes/twineerror'], ({impossible,
 		/*
 			First, check for the "either" type descriptor.
 		*/
-		if (obj.innerType) {
+		if (Object.getPrototypeOf(obj) === Object.prototype && obj.innerType) {
 			if (obj.pattern === "either") {
 				if(!Array.isArray(obj.innerType)) {
 					impossible("typeName",'"either" pattern had non-array inner type');

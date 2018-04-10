@@ -50,7 +50,7 @@ define([
 		/*
 			If result is a ChangerCommand, please run it.
 		*/
-		if (result && typeof result === "object" && result.changer) {
+		if (result && typeof result === "object" && ChangerCommand.isPrototypeOf(result)) {
 			const enabled = this.renderInto(
 				/*
 					The use of popAttr prevents the hook from executing normally
@@ -275,7 +275,7 @@ define([
 				|| Array.isArray(result)
 				|| Colour.isPrototypeOf(result)))
 				//  However, commands will cleanly "detach" without any error resulting.
-				|| (result && result.TwineScript_Print && !result.changer)) {
+				|| (result && result.TwineScript_Print && !ChangerCommand.isPrototypeOf(result))) {
 			/*
 				TwineScript_Print(), when called by printBuiltinValue(), typically emits
 				side-effects. These will occur... now.
@@ -321,7 +321,7 @@ define([
 		/*
 			The only remaining values should be unattached changers, or booleans.
 		*/
-		else if (!(result.changer || typeof result === "boolean")) {
+		else if (!(ChangerCommand.isPrototypeOf(result) || typeof result === "boolean")) {
 			Utils.impossible('Section.runExpression', "The expression evaluated to an unknown value: " + result.toSource());
 		}
 	}
@@ -730,7 +730,7 @@ define([
 					Honestly, having non-changer descriptor-altering objects
 					is a bit displeasingly rough-n-ready, but it's convenient...
 				*/
-				if (!changer.changer) {
+				if (!ChangerCommand.isPrototypeOf(changer)) {
 					Object.assign(desc, changer);
 				}
 				else {

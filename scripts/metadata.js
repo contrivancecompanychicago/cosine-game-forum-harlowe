@@ -278,7 +278,7 @@ const
 
 			const {1:category, 2:categoryOrder} = (categoryTag.exec(text) || {});
 
-			const [,...aka] = ((macroAliases.exec(text) || [''])[0].match(macroEmpty) || []).map(e=> (new RegExp(macroEmpty).exec(e) || [])[1]) || [];
+			const aka = ((macroAliases.exec(text) || [''])[0].match(macroEmpty) || []).map(e=> (new RegExp(macroEmpty).exec(e) || [])[1]) || [];
 
 			text = processTextTerms(text, name, {typeNames: true, macroNames:true});
 			
@@ -314,8 +314,8 @@ function processTextTerms(text, name, allow) {
 		headingMatch = /<h2[^]+?<\/h2>/g.exec(text);
 	
 	const linkFn = {
-		markdown: (name, type, text = name.toLowerCase()) => "[" + text + "](#" + type + "_" + name + ")",
-		dokuwiki: (name, type, text = name.toLowerCase()) => "[[harlowe:" + name + "|" + text + "]]",
+		markdown: (name, type, text = name) => "[" + text + "](#" + type + "_" + name.toLowerCase() + ")",
+		dokuwiki: (name, type, text = name) => "[[harlowe:" + name.toLowerCase() + "|" + text + "]]",
 	}[process.argv.includes("--doku") ? "dokuwiki" : "markdown"];
 
 	text =
