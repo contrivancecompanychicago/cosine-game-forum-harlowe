@@ -2,6 +2,16 @@
 
 Rough documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
+###2.1.1 changes:
+
+####Alterations
+
+ * The `(text:)` macro now has another alias, `(str:)`. This alias will now be the preferred name for this macro in the documentation, mainly due to the arrival of other string macros that begin with "str-", and additionally to avoid semantic conflict with the various "text-" changer macros like `(text-style:)`.
+
+####Additions
+
+ * Added a string-specific shorthand of `(repeated:)` called `(str-repeated:)` (and aliased as `(string-repeated:)`). `(str: ...(repeated: 14, "-+*+"))` is the same as `(str-repeated: 14, "-+*+")`.
+
 ###2.1.0 changes:
 
 ####Bugfixes
@@ -41,7 +51,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
  * Fixed a bug where subtracting non-subtractable values (such as booleans) wouldn't produce an error, instead implicitly converting the values to numbers, and potentially producing the Javascript value `NaN`.
  * Fixed a bug where subtracting arrays and datasets wouldn't correctly compare contained data structures - for instance, `(a:(a:1)) - (a:(a:1))` wouldn't work correctly.
  * Fixed a bug where the `(dataset:)` macro, and adding datasets, wouldn't correctly compare data structures - for instance, `(dataset: (a:),(a:))` would contain both identical arrays, as would `(dataset: (a:)) + (dataset: (a:))`.
-   * Additionally fixed a bug where data structures were storied in datasets by reference, allowing two variables to reference (and remotely alter) the same data.
+   * Additionally fixed a bug where data structures were stored in datasets by reference, allowing two variables to reference (and remotely alter) the same data.
  * Fixed a bug where using `(move:)` to move a subarray or substring (such as `(move: $a's (a:2,3) to $b))` wouldn't work.
  * Fixed a bug where using `(set:)` to set a substring, when the given array of positions contained "length" (such as `(set: $a's (a:1,"length")) to "foo")`), wouldn't produce an error.
  * Fixed a bug where the `(count:)` macro would give the wrong result when the data to count (the second value) was an empty string.

@@ -582,7 +582,7 @@ define([
 			and so forth.
 
 			Incidentally... you can also use this macro to rotate a string's characters, by doing
-			something like this: `(string: ...(rotated: 1, ...$str))`
+			something like this: `(str: ...(rotated: 1, ...$str))`
 			
 			Details:
 			To ensure that it's being used correctly, this macro requires three or more items -
@@ -679,8 +679,8 @@ define([
 			
 			However, (interlaced:) can also be of use alongside macros which accept a sequence: you
 			can use it to cleanly insert values between each item. For instance, one can pair
-			an array with another array of spaces, and then convert them to a string with (text:).
-			`(text: ...(interlaced: $arr, (repeated: $arr's length, ' '))` will create a string containing
+			an array with another array of spaces, and then convert them to a string with (str:).
+			`(str: ...(interlaced: $arr, (repeated: $arr's length, ' '))` will create a string containing
 			each element of $arr, followed by a space.
 			
 			Details:

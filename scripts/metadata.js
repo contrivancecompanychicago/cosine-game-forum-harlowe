@@ -371,7 +371,7 @@ function processTextTerms(text, name, allow) {
 			}
 			if (typeNamesLinked.indexOf(matchName) === -1) {
 				typeNamesLinked.push(matchName);
-				return preceding + linkFn(matchName, "type");
+				return preceding + linkFn(matchName, "type", matchName + plural);
 			}
 			return text;
 		})

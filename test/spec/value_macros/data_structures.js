@@ -163,6 +163,8 @@ describe("data structure macros", function () {
 		it("returns an array containing arguments 1+, rotated by the number", function() {
 			runPassage("(set: $a to (rotated:1,1,2,3,4))");
 			expect("(print: $a)").markupToPrint("4,1,2,3");
+			runPassage("(set: $a to (rotated:-2,1,2,3,4))");
+			expect("(print: $a)").markupToPrint("3,4,1,2");
 		});
 		it("produces an error if the number is greater than the quantity of items", function() {
 			expect("(rotated:5,1,2,3,4))").markupToError();

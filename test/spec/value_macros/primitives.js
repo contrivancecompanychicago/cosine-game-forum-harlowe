@@ -158,4 +158,28 @@ describe("primitive value macros", function() {
 			expect("(print: (words: 'Golly')'s 1st is 'Golly')").markupToPrint('true');
 		});
 	});
+	describe("the (string-repeated:) macro", function() {
+		it("accepts 1 integer and 1 string", function() {
+			expect("(string-repeated:)").markupToError();
+			expect("(string-repeated:1)").markupToError();
+			expect("(string-repeated:1,1)").markupToError();
+			expect("(string-repeated:'A')").markupToError();
+			expect("(string-repeated:'A',2)").markupToError();
+			expect("(string-repeated:1,true)").markupToError();
+			expect("(string-repeated:1.1,'X')").markupToError();
+		});
+		it("returns the passed string repeated the given number of times", function() {
+			runPassage("(set: $a to (string-repeated:4,'garply'))");
+			expect("(print: $a)").markupToPrint("garplygarplygarplygarply");
+			runPassage("(set: $b to (string-repeated:8,'x'))");
+			expect("(print: $b)").markupToPrint("xxxxxxxx");
+		});
+		it("produces an error if the number is smaller than 1", function() {
+			expect("(string-repeated:-2,'grault'))").markupToError();
+			expect("(string-repeated:0,'grault'))").markupToError();
+		});
+		it("produces an error if the string is empty", function() {
+			expect("(string-repeated:2,'')").markupToError();
+		});
+	});
 });

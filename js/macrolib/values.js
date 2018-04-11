@@ -53,34 +53,34 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 			| `of` | Obtaining the character at the left numeric position. | `1st of "YO"` (is "Y")<br>`(2) of "PS"` (is "S")<br>`(a: 2,3) of "ear"` (is "ar")
 		*/
 		/*d:
-			(text: ...[Number or String or Boolean or Array]) -> String
-			Also known as: (string:)
+			(str: ...[Number or String or Boolean or Array]) -> String
+			Also known as: (string:), (text:)
 			
-			(text:) accepts any amount of expressions and tries to convert them all
+			(str:) accepts any amount of expressions and tries to convert them all
 			to a single String.
 			
 			Example usages:
-			* `(text: $cash + 200)`
-			* `(if: (text: $cash)'s length > 3)[Phew! Over four digits!]`
-			* `(text: ...$arr)`
+			* `(str: $cash + 200)`
+			* `(if: (str: $cash)'s length > 3)[Phew! Over four digits!]`
+			* `(str: ...$arr)`
 			
 			Rationale:
 			Unlike in Twine 1 and SugarCube, Twine 2 will only convert numbers into strings, or strings
 			into numbers, if you explictly ask it to. This extra carefulness decreases
 			the likelihood of unusual bugs creeping into stories (such as adding 1 and "22"
-			and getting "122"). The (text:) macro (along with (num:)) is how you can convert
+			and getting "122"). The (str:) macro (along with (num:)) is how you can convert
 			non-string values to a string.
 			
 			Details:
 			This macro can also be used much like the (print:) macro - as it evaluates to a
 			string, and strings can be placed in the story source freely,
 			
-			If you give an array to (text:), it will attempt to convert every element
+			If you give an array to (str:), it will attempt to convert every element
 			contained in the array to a String, and then join them up with commas. So,
-			`(text: (a: 2, "Hot", 4, "U"))` will result in the string "2,Hot,4,U".
+			`(str: (a: 2, "Hot", 4, "U"))` will result in the string "2,Hot,4,U".
 			If you'd rather this not occur, you can also pass the array's individual
 			elements using the `...` operator - this will join them with nothing in between.
-			So, `(text: ...(a: 2, "Hot", 4, "U"))` will result in the string "2Hot4U".
+			So, `(str: ...(a: 2, "Hot", 4, "U"))` will result in the string "2Hot4U".
 			
 			See also:
 			(num:)
@@ -94,7 +94,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 				to do anything more than join() the array.
 			*/
 			(_, ...args) => args.join(''),
-		// (text: accepts a lot of any primitive)
+		// (str: accepts a lot of any primitive)
 		[zeroOrMore(Macros.TypeSignature.either(String, Number, Boolean, Array))])
 
 		/*d:
@@ -260,6 +260,39 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 		*/
 		("words", (_, string) => string.split(new RegExp(realWhitespace + "+")).filter(Boolean),
 		[String])
+		/*d:
+			(str-repeated: Number, String) -> String
+			Also known as: (string-repeated:)
+			
+			A special shorthand combination of the (str:) and (repeated:) macros, this accepts a single string
+			and duplicates it the given number of times.
+			
+			Example usage:
+			* `(str-repeated: 5, "Fool! ")` produces `"Fool! Fool! Fool! Fool! Fool! "`
+			
+			Rationale:
+			This macro is a shorthand form of nesting (repeated:) inside (str:). This example:
+			`(str: ...(repeated: 14, "-+*+"))` is the same as `(str-repeated: 14, "-+*+")`.
+			
+			Details:
+			An error will, of course, be produced if the number given is 0 or less, or contains a fraction.
+			
+			See also:
+			(repeated:), (str-rotated:)
+			
+			#string
+		*/
+		(["str-repeated", "string-repeated"], (_, number, string) => {
+			if (number <= 0) {
+				return TwineError.create("macrocall",
+					"I can't repeat this string " + number + " times.");
+			}
+			if (string.length === 0) {
+				return TwineError.create("macrocall", "I can't repeat an empty string.");
+			}
+			return string.repeat(number);
+		},
+		[parseInt, String])
 
 		/*d:
 			Number data
@@ -289,7 +322,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 			
 			You can only perform these operations (apart from `is`) on two pieces of data if they're both numbers. Adding the
 			string "5" to the number 2 would produce an error, and not the number 7 nor the string "52". You must
-			convert one side or the other using the (num:) or (text:) macros.
+			convert one side or the other using the (num:) or (str:) macros.
 		*/
 		/*d:
 			(num: String) -> Number
@@ -314,7 +347,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 			this macro will be necessary.
 			
 			See also:
-			(text:)
+			(str:)
 
 			#number
 		*/

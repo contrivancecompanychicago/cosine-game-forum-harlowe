@@ -106,7 +106,7 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			`(print: $var + "s")`
 			
 			Details:
-			It is capable of printing things which (text:) cannot convert to a string,
+			It is capable of printing things which (str:) cannot convert to a string,
 			such as changer commands - but these will usually become bare descriptive
 			text like `[A (font: ) command]`. You may find this useful for debugging purposes.
 			
@@ -124,7 +124,7 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			compared to just setting `$p` to a string, but is available nonetheless.
 			
 			See also:
-			(text:), (display:)
+			(str:), (display:)
 
 			#basics 4
 		*/
