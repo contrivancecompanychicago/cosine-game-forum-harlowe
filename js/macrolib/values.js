@@ -278,7 +278,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 			An error will, of course, be produced if the number given is 0 or less, or contains a fraction.
 			
 			See also:
-			(repeated:), (str-rotated:)
+			(repeated:)
 			
 			#string
 		*/
@@ -293,6 +293,33 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 			return string.repeat(number);
 		},
 		[parseInt, String])
+		/*d:
+			(str-reversed: String) -> String
+			Also known as: (string-reversed:)
+			
+			A special shorthand combination of the (str:) and (reversed:) macros, this accepts a single string
+			and reverses it.
+			
+			Example usage:
+			* `(str-reversed: "sknahT")` produces `"Thanks"`
+			
+			Rationale:
+			This macro is a shorthand form of nesting (reversed:) inside (str:). This example:
+			`(str: ...(reversed: "ABRAXAS"))` is the same as `(str-reversed: "ABRAXAS")`.
+			
+			Details:
+			This accepts strings of 0 or 1 character, as well as symmetrical strings, even though their
+			"reversal" is the same as their current form.
+
+			If you wish to reverse just the words in a string, you can use the ordinary (reversed:) and (words:) macros
+			like so: `(reversed: ...(words: "Gilly Golly Milly Molly"))`.
+			
+			See also:
+			(reversed:)
+			
+			#string
+		*/
+		(["str-reversed", "string-reversed"], (_, string) => [...string].reverse().join(''), [String])
 
 		/*d:
 			Number data

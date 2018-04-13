@@ -182,4 +182,15 @@ describe("primitive value macros", function() {
 			expect("(string-repeated:2,'')").markupToError();
 		});
 	});
+	describe("the (string-reversed:) macro", function() {
+		it("accepts 1 string argument", function() {
+			expect("(string-reversed:)").markupToError();
+			expect("(string-reversed: 1)").markupToError();
+			expect("(string-reversed: 'a')").not.markupToError();
+			expect("(string-reversed: 'red', 'blue')").markupToError();
+		});
+		it("returns the string, reversed", function() {
+			expect("(print: (string-reversed:' good  -gre𐌎t\n\texcellent: '))").markupToPrint(" :tnellecxe\t\nt𐌎erg-  doog ");
+		});
+	});
 });

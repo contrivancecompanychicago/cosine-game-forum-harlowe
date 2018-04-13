@@ -148,6 +148,25 @@ describe("data structure macros", function () {
 				+"(set:$b's 1st's 1st to 4)$a").markupToPrint("1,2,3");
 		});
 	});
+	describe("the (reversed:) macro", function() {
+		it("accepts zero or more arguments of any type", function() {
+			expect("(reversed:)").not.markupToError();
+			["1", "'X'", "true"].forEach(function(e) {
+				for(var i = 2; i < 10; i += 1) {
+					expect("(reversed: " + (e + ",").repeat(i) + ")").not.markupToError();
+				}
+			});
+		});
+		it("returns an array containing the arguments in reverse order", function() {
+			runPassage("(set: $a to (reversed:1,2,3,5,'foo'))");
+			expect("(print: $a)").markupToPrint("foo,5,3,2,1");
+		});
+		it("doesn't pass contained data by reference", function() {
+			expect("(set:$a to (a:1,2,3))"
+				+"(set:$b to (reversed: $a, $a))"
+				+"(set:$b's 1st's 1st to 4)$a").markupToPrint("1,2,3");
+		});
+	});
 	describe("the (rotated:) macro", function() {
 		it("accepts 1 integer and 2 or more arguments of any type", function() {
 			expect("(rotated:)").markupToError();
@@ -183,12 +202,13 @@ describe("data structure macros", function () {
 			expect("(sorted:)").markupToError();
 			expect("(sorted: 'A')").markupToError();
 			expect("(sorted: 3)").markupToError();
+			expect("(sorted: (a:2))").markupToError();
 			for(var i = 2; i < 10; i += 1) {
 				expect("(sorted:" + ("'X',").repeat(i) + ")").not.markupToError();
 				expect("(sorted:" + ("61,").repeat(i) + ")").not.markupToError();
 			}
 		});
-		it("returns an array of the items, sorted in natural-sort iorder", function() {
+		it("returns an array of the items, sorted in natural-sort order", function() {
 			expect("(sorted:'D1','E','e','É','D11','D2','F',1,' 1',2)").markupToPrint("1, 1,2,D1,D2,D11,e,E,É,F");
 		});
 		it("doesn't coerce the types", function() {

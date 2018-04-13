@@ -466,21 +466,48 @@ define([
 		[Array, parseInt, parseInt])
 		
 		/*d:
-			(shuffled: Any, Any, [...Any]) -> Array
+			(reversed: [...Any]) -> Array
 			
-			Identical to (a:), except that it randomly rearranges the elements
+			Similar to (a:), except that it creates an array containing the elements in reverse order.
+			
+			Example usage:
+			`(set: $a to (reversed: ...$a, 2))` sets $a to its reverse, with `2` at the start.
+
+			Rationale:
+			Having stored items in an array, or obtained a built-in array like (history:), you may
+			want to perform some action using it - maybe assemble them into a single string using (folded:) -
+			in the opposite order to which they are stored. (reversed:) allows this reversal to be easily created.
+
+			Details:
+			Unlike (shuffled:), which produces an error if one or no elements are given, this does not error if
+			a non-reversible sequence of one or zero is given. This is meant to permit its wider use with data
+			whose length you may not always have control over, such as the (history:) array.
+
+			If you wish to specifically reverse the characters in a string, please use (str-reversed:).
+			
+			See also:
+			(a:), (shuffled:), (rotated:), (str-reversed:)
+			
+			#data structure
+		*/
+		("reversed", (_, ...args) => args.reverse().map(clone), zeroOrMore(Any))
+
+		/*d:
+			(shuffled: Any, ...Any) -> Array
+			
+			Similar to (a:), except that it randomly rearranges the elements
 			instead of placing them in the given order.
 			
 			Example usage:
 			```
-			(set: $a to (a: 1,2,3,4,5,6))
-			(print: (shuffled: ...$a))
+			(set: $a to (shuffled: 1,2,3,4,5,6))
+			(print: $a)
 			```
 			
 			Rationale:
 			If you're making a particularly random story, you'll often want to create a 'deck'
 			of random descriptions, elements, etc. that are only used once. That is to say, you'll want
-			to put them in an array, then randomise the array's order, preserving that random order
+			to put them in a random order in an array, preserving that random order
 			for the duration of a game.
 			
 			The (either:) macro is useful for selecting an element from an array randomly
@@ -639,9 +666,11 @@ define([
 			
 			Details:
 			An error will, of course, be produced if the number given is 0 or less, or contains a fraction.
+
+			If you wish to repeat a string multiple times, please use (str-repeated:).
 			
 			See also:
-			(a:), (range:)
+			(a:), (range:), (str-repeated:)
 			
 			#data structure
 		*/

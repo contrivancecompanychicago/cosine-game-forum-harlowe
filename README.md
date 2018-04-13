@@ -11,6 +11,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
 ####Additions
 
  * Added a string-specific shorthand of `(repeated:)` called `(str-repeated:)` (and aliased as `(string-repeated:)`). `(str: ...(repeated: 14, "-+*+"))` is the same as `(str-repeated: 14, "-+*+")`.
+ * Added `(reversed:)`, a macro which constructs an array with the given enements in reverse order, and `(str-reversed:)`, a shorthand that reverses a single string's characters.
 
 ###2.1.0 changes:
 
