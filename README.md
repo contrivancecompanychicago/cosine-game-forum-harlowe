@@ -2,7 +2,7 @@
 
 Rough documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
-###2.1.1 changes:
+###2.2.0 changes:
 
 ####Alterations
 
@@ -11,7 +11,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
 ####Additions
 
  * Added a string-specific shorthand of `(repeated:)` called `(str-repeated:)` (and aliased as `(string-repeated:)`). `(str: ...(repeated: 14, "-+*+"))` is the same as `(str-repeated: 14, "-+*+")`.
- * Added `(reversed:)`, a macro which constructs an array with the given enements in reverse order, and `(str-reversed:)`, a shorthand that reverses a single string's characters.
+ * Added `(reversed:)`, a macro which constructs an array with the given enements in reverse order, and `(str-reversed:)`, a shorthand that reverses a single string's characters. (Prior to now, you could accomplish this with `(folded: _e making _a via (a: _e) + _a, (a:), ...$arr)`, but this offers a far easier formulation.)
 
 ###2.1.0 changes:
 

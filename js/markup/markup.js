@@ -572,6 +572,13 @@
 					}),
 				},
 				
+				typeName: {
+					cannotFollow: ["text"],
+					fn: (match) => ({
+						name: match[0].toLowerCase(),
+					}),
+				},
+
 				colour: {
 					cannotFollow: ["text"],
 					/*

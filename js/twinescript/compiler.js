@@ -288,6 +288,11 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 					+ toJSLiteral(token.colour)
 					+ ")";
 			}
+			else if (token.type === "typeName") {
+				return "TypeName.create("
+					+ toJSLiteral(token.name)
+					+ ")";
+			}
 			/*
 				Root tokens are usually never passed in, but let's
 				harmlessly handle them anyway.

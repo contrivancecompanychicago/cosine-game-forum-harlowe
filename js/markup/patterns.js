@@ -890,6 +890,13 @@
 			// Hexadecimal
 			"#[\\dA-Fa-f]{3}(?:[\\dA-Fa-f]{3})?"
 		),
+
+		// Type names
+		typeName: either(
+			"array", "boolean", "changer", "colour",
+			"color", "command", "dm", "datamap", "ds", "dataset", "data", "hookname",
+			"lambda", "number", "num", "string", "str", "vtov"
+		),
 		
 		/*
 			Natural types
@@ -914,8 +921,11 @@
 			Macro operators
 		*/
 		
-		is:        "is" + notBefore(mws + "not", mws + "in", mws + "<", mws + ">") + wb,
+		is:        "is" + notBefore(mws + "not" + wb, mws + "an?" + wb, mws + "in" + wb, mws + "<", mws + ">") + wb,
 		isNot:     "is" + mws + "not" + wb,
+		isA:       "is" + mws + "an?" + wb,
+		matches:   "matches" + mws,
+		// "matches" has no "contains" equivalent, but you can use "any of $c matches t"
 		
 		and:       "and" + wb,
 		or:        "or"  + wb,

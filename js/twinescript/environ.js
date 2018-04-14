@@ -6,6 +6,7 @@ define([
 	'datatypes/colour',
 	'datatypes/hookset',
 	'datatypes/lambda',
+	'datatypes/typename',
 	'internaltypes/varref',
 	'internaltypes/twineerror',
 	'twinescript/operations'
@@ -13,7 +14,7 @@ define([
 /*
 	To keep the eval scope very clean in compiled code, no destructuring is done here.
 */
-(Macros, State, Utils, Colour, HookSet, Lambda, VarRef, TwineError, OperationsProto) => {
+(Macros, State, Utils, Colour, HookSet, Lambda, TypeName, VarRef, TwineError, OperationsProto) => {
 	/*
 		Creates a new script execution environment. This accepts and
 		decorates a Section object (see Engine.showPassage) with the
