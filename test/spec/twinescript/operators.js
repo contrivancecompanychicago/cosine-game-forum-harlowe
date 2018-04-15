@@ -279,9 +279,13 @@ describe("twinescript operators", function () {
 			expect("(print: 3 and 4 < 5)").markupToPrint("true");
 			expect("(print: 3 > 2 and 4)").markupToPrint("false");
 			expect("(print: 3 and 5 < 5)").markupToPrint("false");
+			expect("(print: 1 is 1 and 1)").markupToPrint("true");
+			expect("(print: 1 and 1 is 1)").markupToPrint("true");
 			expect("(print: 'a' is 'a' and 'a')").markupToPrint("true");
 			expect("(print: 'ab' contains 'b' and 'a')").markupToPrint("true");
 			expect("(print: 'b' is in 'ab' and 'bc')").markupToPrint("true");
+			expect("(print: 1 is 1 and 2)").markupToPrint("false");
+			expect("(print: 1 and 1 is 2)").markupToPrint("false");
 			expect("(print: 'a' is 'a' and 'b')").markupToPrint("false");
 			expect("(print: 'ab' contains 'c' and 'a')").markupToPrint("false");
 			expect("(print: 'b' is in 'ac' and 'bc')").markupToPrint("false");
@@ -334,9 +338,12 @@ describe("twinescript operators", function () {
 			expect("(print: 3 or 4 < 4)").markupToPrint("true");
 			expect("(print: 3 > 5 or 4)").markupToPrint("false");
 			expect("(print: 6 or 5 < 5)").markupToPrint("false");
+			expect("(print: 1 or 2 is 1)").markupToPrint("true");
 			expect("(print: 'a' is 'a' or 'b')").markupToPrint("true");
 			expect("(print: 'ab' contains 'b' or 'c')").markupToPrint("true");
 			expect("(print: 'b' is in 'ac' or 'bc')").markupToPrint("true");
+			expect("(print: 1 is 2 or 3)").markupToPrint("false");
+			expect("(print: 3 or 2 is 1)").markupToPrint("false");
 			expect("(print: 'a' is 'c' or 'b')").markupToPrint("false");
 			expect("(print: 'ab' contains 'c' or 'd')").markupToPrint("false");
 			expect("(print: 'b' is in 'ad' or 'cd')").markupToPrint("false");
@@ -609,7 +616,7 @@ describe("twinescript operators", function () {
 		});
 	});
 	it("common incorrect operators produce an error", function () {
-		["=>","=<","gte","lte","gt","lt","eq","isnot","neq","are","x"].forEach(function(op){
+		["=>","=<","gte","lte","gt","lt","eq","isnot","neq","are","x","isa"].forEach(function(op){
 			expect("(print:1 " + op + " 2)").markupToError();
 		});
 	});

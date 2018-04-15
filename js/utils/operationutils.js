@@ -311,7 +311,7 @@ define(['utils', 'datatypes/hookset', 'internaltypes/twineerror'], ({impossible,
 			(   obj === String ||
 				obj === Number ||
 				obj === Boolean)  ? "a " + typeof obj()
-			:   obj === parseInt  ? "a non-fractional number"
+			:   obj === parseInt  ? "a whole number"
 			:   obj === Map       ? "a datamap"
 			:   obj === Set       ? "a dataset"
 			:   obj === Array     ? "an array"
@@ -415,6 +415,20 @@ define(['utils', 'datatypes/hookset', 'internaltypes/twineerror'], ({impossible,
 			Default: produce an error.
 		*/
 		return TwineError.create("operation", objectName(container) + " cannot contain any values, let alone " + objectName(obj));
+	}
+
+	/*
+		This is the base function for Operations.isA and Operations.typifies, the latter being a purely internal
+		reversal used by elided comparison compilation.
+	*/
+	function isA(l,r) {
+		/*
+			Only pure typenames can be used as the right side of "is a".
+		*/
+		if (typeof r.TwineScript_IsTypeOf === "function") {
+			return r.TwineScript_IsTypeOf(l);
+		}
+		return TwineError.create("operation", "\"is a\" should only be used to compare type names, not " + objectName(r) + ".");
 	}
 	
 	/*
@@ -545,6 +559,7 @@ define(['utils', 'datatypes/hookset', 'internaltypes/twineerror'], ({impossible,
 		typeName,
 		is,
 		contains,
+		isA,
 		subset,
 		printBuiltinValue,
 		/*

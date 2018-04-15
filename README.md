@@ -4,6 +4,10 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
 
 ###2.2.0 changes:
 
+####Bugfixes
+
+ * Fixed a bug where supplying multiple shortened `is` or `is not` comparisons, in a form such as `$a is $b and $c`, would produce an incorrect result.
+
 ####Alterations
 
  * The `(text:)` macro now has another alias, `(str:)`. This alias will now be the preferred name for this macro in the documentation, mainly due to the arrival of other string macros that begin with "str-", and additionally to avoid semantic conflict with the various "text-" changer macros like `(text-style:)`.

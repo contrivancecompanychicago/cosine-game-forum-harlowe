@@ -1,12 +1,11 @@
 "use strict";
 define([
 	'state',
-	'datatypes/colour',
 	'datatypes/assignmentrequest',
 	'utils/operationutils',
 	'internaltypes/twineerror',
 ],
-(State, Colour, AssignmentRequest, {isObject, collectionType, coerceToString, is, clone, unique, contains, typeName, objectName}, TwineError) => {
+(State, AssignmentRequest, {isObject, collectionType, coerceToString, is, isA, clone, unique, contains, typeName, objectName}, TwineError) => {
 	/*
 		Operation objects are a table of operations which TwineScript proxies
 		for/sugars over JavaScript. These include basic fixes like the elimination
@@ -378,6 +377,16 @@ define([
 		isNot: comparisonOp((l,r) => !Operations.is(l,r)),
 		contains: comparisonOp(contains),
 		isIn: comparisonOp((l,r) => contains(r,l)),
+
+		isA: comparisonOp(isA),
+		isNotA: comparisonOp((l,r) => !isA(l,r)),
+
+		/*
+			"typifies", the reverse of "is a", is currently not a user-exposed operator, but this is
+			required so that the compiler can process elided comparisons like "$a is not a number or string".
+		*/
+		typifies: comparisonOp((l,r) => isA(r,l)),
+		untypifies: comparisonOp((l,r) => !isA(r,l)),
 		
 		/*
 			The only user-produced value which is passed into this operation is the bool -

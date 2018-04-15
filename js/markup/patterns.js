@@ -386,7 +386,7 @@
 		
 		twine1Macro = "<<[^>\\s]+\\s*(?:\\\\.|'(?:[^'\\\\]*\\\\.)*[^'\\\\]*'|\"(?:[^\"\\\\]*\\\\.)*[^\"\\\\]*\"|[^'\"\\\\>]|>(?!>))*>>",
 
-		incorrectOperator = either("=<", "=>", "[gl]te?" + wb, "n?eq" + wb, "isnot" + wb, "are" + wb, "x" + wb),
+		incorrectOperator = either("=<", "=>", "[gl]te?" + wb, "n?eq" + wb, "isnot" + wb, "are" + wb, "x" + wb, "isa" + wb),
 		
 		tag = {
 			name:              "[a-zA-Z][\\w\\-]*",
@@ -895,7 +895,7 @@
 		typeName: either(
 			"array", "boolean", "changer", "colour",
 			"color", "command", "dm", "datamap", "ds", "dataset", "data", "hookname",
-			"lambda", "number", "num", "string", "str", "vtov"
+			"lambda", "number", "num", "string", "str"
 		),
 		
 		/*
@@ -922,8 +922,9 @@
 		*/
 		
 		is:        "is" + notBefore(mws + "not" + wb, mws + "an?" + wb, mws + "in" + wb, mws + "<", mws + ">") + wb,
-		isNot:     "is" + mws + "not" + wb,
+		isNot:     "is" + mws + "not" + notBefore(mws + "a" + wb) + wb,
 		isA:       "is" + mws + "an?" + wb,
+		isNotA:    "is" + mws + "not" + mws + "an?" + wb,
 		matches:   "matches" + mws,
 		// "matches" has no "contains" equivalent, but you can use "any of $c matches t"
 		

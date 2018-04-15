@@ -28,6 +28,11 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 
 		{Function} TwineScript_is:
 			a function which is used to overload the "is" operator.
+
+		{Function} TwineScript_IsTypeOf:
+			a function which is used to implement the "is a" operator. Should only be
+			present on TypeName data. Note that this reverses "is a"'s arguments so
+			that the right side has its TwineScript_isTypeOf method called.
 		
 		{Function} TwineScript_GetElement:
 			a function that, if present, is used to obtain integer-indexed elements
@@ -134,6 +139,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			["and", "or"],
 			["is", "isNot"],
 			["contains", "isIn"],
+			["isA", "isNotA"],
 			["inequality"],
 			["addition", "subtraction"],
 			["multiplication", "division"],
@@ -189,11 +195,11 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 	}
 
 	/*
-		A helper which performs compileComparisonOperator(), then returns the inverse of
+		A helper which performs compileComparisonOperator(), then returns the reverse of
 		the compiled operation. Used in the "and" and "or" operator compilation
 		to flip child comparisons.
 	*/
-	function invertComparisonOperator(token) {
+	function reverseComparisonOperator(token) {
 		const type = compileComparisonOperator(token);
 		return ({
 			'>' :     '<',
@@ -202,9 +208,11 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			'<=':     '>=',
 			contains: "isIn",
 			isIn:     "contains",
-			is:       "isNot",
-			isNot:    "is",
-		}[type]);
+			isA:      "typifies",
+			typifies: "isA",
+			isNotA:   "untypifies",
+			untypifies: "isNotA",
+		}[type]) || type;
 	}
 	
 	/*
@@ -473,7 +481,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				if (!token) {
 					return;
 				}
-				if (['inequality','is','isNot','isIn','contains'].includes(token.type)) {
+				if (['inequality','is','isNot','isIn','contains','isA','typifies','isNotA','untypifies'].includes(token.type)) {
 					return token;
 				}
 				if (['and','or'].includes(token.type)) {
@@ -488,7 +496,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				ambiguityError = "TwineError.create('operation', 'This use of \"is not\" and \""
 					+ type + "\" is grammatically ambiguous',"
 					+ "'Maybe try rewriting this as \"__ is not __ " + type + " __ is not __\"') ";
-			
+
 			operation = token.type;
 			/*
 				If elidedComparison is a matching type, then this token is a continuation of an elided
@@ -514,7 +522,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 					The one operation for which this transformation cannot be allowed is "is not",
 					because of its semantic ambiguity ("a is not b and c") in English.
 				*/
-				if (leftSide.type === 'isNot') {
+				if (leftSide.type === 'isNot' || leftSide.type === 'isNotA' || leftSide.type === 'untypifies') {
 					return ambiguityError;
 				}
 				right = "Operations.elidedComparisonOperator("
@@ -535,12 +543,12 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				*/
 				const rightSide = rightIsComparison,
 					rightIndex = tokens.indexOf(rightSide),
-					operator = toJSLiteral(invertComparisonOperator(rightSide));
+					operator = toJSLiteral(reverseComparisonOperator(rightSide));
 
 				/*
 					Again, "is not" should not be transformed.
 				*/
-				if (rightSide.type === 'isNot') {
+				if (rightSide.type === 'isNot' || rightSide.type === 'isNotA' || rightSide.type === "untypifies") {
 					return ambiguityError;
 				}
 				right = "Operations.elidedComparisonOperator("
@@ -548,6 +556,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 					+ operator + ","
 					+ compile(tokens.slice(0, i), {elidedComparison:type})
 					+ ")";
+
 				/*
 					The following additional action swaps the tokens to the right and left of rightSide,
 					and changes rightSide's type into its inverse. This changes ($b < 3) into (3 > $b),
@@ -564,7 +573,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 						// Create a copy of rightSide with the type changed, rather than mutate it in-place.
 						Object.assign(Object.create(rightSide), {
 							[rightSide.type === "inequality" ? "operator" : "type"]:
-								invertComparisonOperator(rightSide),
+								reverseComparisonOperator(rightSide),
 						}),
 						...tokens.slice(i + 1, rightIndex),
 					]);
@@ -573,7 +582,8 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 		/*
 			The following are the comparison operators.
 		*/
-		else if (type === "is" || type === "isNot" || type === "contains" || type === "isIn" || type === "inequality") {
+		else if (type === "is" || type === "isNot" || type === "contains" || type === "isIn" || type === "inequality"
+				|| type === "isA" || type === "typifies" || type === "isNotA" || type === "untypifies") {
 			implicitLeftIt = true;
 			operation = compileComparisonOperator(token);
 		}

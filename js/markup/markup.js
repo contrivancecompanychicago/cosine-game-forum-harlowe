@@ -684,6 +684,7 @@
 								"eq": "is",
 								"isnot": "is not",
 								"neq": "is not",
+								"isa": "is a",
 								"are": "is",
 								"x": "*",
 							}[match[0].toLowerCase()];
@@ -701,7 +702,7 @@
 			// As these consist of word characters, they cannot follow text nodes, lest they
 			// match subwords like "xxisxx".
 			["boolean", "is", "to", "into", "where", "via", "with", "making", "each", "and", "or", "not",
-			"isNot", "contains", "isIn"].reduce(function(a, e) {
+			"isNot", "contains", "isIn", "isA", "isNotA"].reduce(function(a, e) {
 				a[e] = {
 					fn: emptyFn,
 					cannotFollow: ["text"],
