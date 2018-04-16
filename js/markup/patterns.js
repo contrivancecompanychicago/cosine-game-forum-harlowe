@@ -386,7 +386,8 @@
 		
 		twine1Macro = "<<[^>\\s]+\\s*(?:\\\\.|'(?:[^'\\\\]*\\\\.)*[^'\\\\]*'|\"(?:[^\"\\\\]*\\\\.)*[^\"\\\\]*\"|[^'\"\\\\>]|>(?!>))*>>",
 
-		incorrectOperator = either("=<", "=>", "[gl]te?" + wb, "n?eq" + wb, "isnot" + wb, "are" + wb, "x" + wb, "isa" + wb),
+		incorrectOperator = either("=<", "=>", "[gl]te?" + wb, "n?eq" + wb, "isnot" + wb, "are" + wb, "x" + wb,
+			"isa" + wb, "or" + mws + "a" + wb),
 		
 		tag = {
 			name:              "[a-zA-Z][\\w\\-]*",
@@ -891,11 +892,11 @@
 			"#[\\dA-Fa-f]{3}(?:[\\dA-Fa-f]{3})?"
 		),
 
-		// Type names
-		typeName: either(
+		// Data types
+		datatype: either(
 			"array", "boolean", "changer", "colour",
-			"color", "command", "dm", "datamap", "ds", "dataset", "data", "hookname",
-			"lambda", "number", "num", "string", "str"
+			"color", "command", "dm", "datamap", "ds", "dataset",
+			"number", "num", "string", "str"
 		),
 		
 		/*

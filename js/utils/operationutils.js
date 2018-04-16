@@ -423,12 +423,55 @@ define(['utils', 'datatypes/hookset', 'internaltypes/twineerror'], ({impossible,
 	*/
 	function isA(l,r) {
 		/*
-			Only pure typenames can be used as the right side of "is a".
+			Only datatype values can be used as the right side of "is a".
 		*/
 		if (typeof r.TwineScript_IsTypeOf === "function") {
 			return r.TwineScript_IsTypeOf(l);
 		}
 		return TwineError.create("operation", "\"is a\" should only be used to compare type names, not " + objectName(r) + ".");
+	}
+
+	/*
+		Pattern-matching is fully implmented by this function. It's essentially the same as structural equality
+		checks, except that when datatype names appears, the other side is compared using "is a". This allows
+		them to act as loose matches for values.
+	*/
+	function matches(l, r) {
+		/*
+			Mainly for readability, the datatype checks are done first.
+		*/
+		if (l && typeof l.TwineScript_IsTypeOf === "function") {
+			return l.TwineScript_IsTypeOf(r);
+		}
+		if (r && typeof r.TwineScript_IsTypeOf === "function") {
+			return r.TwineScript_IsTypeOf(l);
+		}
+		/*
+			All subsequent code strongly resembles is(), because matching is close
+			to equality except where datatype values are concerned.
+		*/
+		if (Array.isArray(l) && Array.isArray(r)) {
+			return l.length === r.length && l.every((e,i) => matches(e,r[i]));
+		}
+		/*
+			Again, Maps are reduced to arrays for comparison purposes.
+		*/
+		if (l instanceof Map && r instanceof Map) {
+			// Don't forget that Map.prototype.entries() returns an iterator!
+			return matches(
+				// Since datamaps are supposed to be unordered, we must sort these arrays
+				// so that different-ordered maps are regarded as equal.
+				Array.from(l.entries()).sort(),
+				Array.from(r.entries()).sort()
+			);
+		}
+		if (l instanceof Set && r instanceof Set) {
+			return matches([...l], [...r]);
+		}
+		/*
+			From here, all the data structures are covered, so we can just invoke is() directly.
+		*/
+		return is(l,r);
 	}
 	
 	/*
@@ -560,6 +603,7 @@ define(['utils', 'datatypes/hookset', 'internaltypes/twineerror'], ({impossible,
 		is,
 		contains,
 		isA,
+		matches,
 		subset,
 		printBuiltinValue,
 		/*

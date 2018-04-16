@@ -616,8 +616,11 @@ describe("twinescript operators", function () {
 		});
 	});
 	it("common incorrect operators produce an error", function () {
-		["=>","=<","gte","lte","gt","lt","eq","isnot","neq","are","x","isa"].forEach(function(op){
+		["=>","=<","gte","lte","gt","lt","eq","isnot","neq","are","x"].forEach(function(op){
 			expect("(print:1 " + op + " 2)").markupToError();
 		});
+		expect("(print:1 isa number)").markupToError();
+		expect("(print:1 is a number or a number)").markupToError();
+		expect("(print:1 is a number or    a  number)").markupToError();
 	});
 });

@@ -572,7 +572,7 @@
 					}),
 				},
 				
-				typeName: {
+				datatype: {
 					cannotFollow: ["text"],
 					fn: (match) => ({
 						name: match[0].toLowerCase(),
@@ -675,25 +675,27 @@
 				incorrectOperator: {
 					fn: (match) => {
 						const correction = {
-								"=>": ">=",
-								"=<": "<=",
-								"gte": ">=",
-								"lte": "<=",
-								"gt": ">",
-								"lt": "<",
-								"eq": "is",
-								"isnot": "is not",
-								"neq": "is not",
-								"isa": "is a",
-								"are": "is",
-								"x": "*",
-							}[match[0].toLowerCase()];
+							"=>": ">=",
+							"=<": "<=",
+							"gte": ">=",
+							"lte": "<=",
+							"gt": ">",
+							"lt": "<",
+							"eq": "is",
+							"isnot": "is not",
+							"neq": "is not",
+							"isa": "is a",
+							"are": "is",
+							"x": "*",
+							"or a" : "or",
+						}[match[0].toLowerCase().replace(/\s+/g,' ')];
 
 						return {
 							type: "error",
 							message: "Please say "
 								+ (correction ? "'" + correction + "'" : "something else")
 								+ " instead of '" + match[0] + "'.",
+							explanation: "In the interests of readability, I want certain operators to be in a specific form.",
 						};
 					},
 					cannotFollow: "text",
@@ -702,7 +704,7 @@
 			// As these consist of word characters, they cannot follow text nodes, lest they
 			// match subwords like "xxisxx".
 			["boolean", "is", "to", "into", "where", "via", "with", "making", "each", "and", "or", "not",
-			"isNot", "contains", "isIn", "isA", "isNotA"].reduce(function(a, e) {
+			"isNot", "contains", "isIn", "isA", "isNotA", "matches"].reduce(function(a, e) {
 				a[e] = {
 					fn: emptyFn,
 					cannotFollow: ["text"],

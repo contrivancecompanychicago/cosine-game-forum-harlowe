@@ -31,7 +31,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 
 		{Function} TwineScript_IsTypeOf:
 			a function which is used to implement the "is a" operator. Should only be
-			present on TypeName data. Note that this reverses "is a"'s arguments so
+			present on Datatype data. Note that this reverses "is a"'s arguments so
 			that the right side has its TwineScript_isTypeOf method called.
 		
 		{Function} TwineScript_GetElement:
@@ -140,6 +140,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			["is", "isNot"],
 			["contains", "isIn"],
 			["isA", "isNotA"],
+			["matches"],
 			["inequality"],
 			["addition", "subtraction"],
 			["multiplication", "division"],
@@ -296,8 +297,8 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 					+ toJSLiteral(token.colour)
 					+ ")";
 			}
-			else if (token.type === "typeName") {
-				return "TypeName.create("
+			else if (token.type === "datatype") {
+				return "Datatype.create("
 					+ toJSLiteral(token.name)
 					+ ")";
 			}
@@ -481,7 +482,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				if (!token) {
 					return;
 				}
-				if (['inequality','is','isNot','isIn','contains','isA','typifies','isNotA','untypifies'].includes(token.type)) {
+				if (['inequality','is','isNot','isIn','contains','isA','typifies','isNotA','untypifies','matches'].includes(token.type)) {
 					return token;
 				}
 				if (['and','or'].includes(token.type)) {
@@ -583,7 +584,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			The following are the comparison operators.
 		*/
 		else if (type === "is" || type === "isNot" || type === "contains" || type === "isIn" || type === "inequality"
-				|| type === "isA" || type === "typifies" || type === "isNotA" || type === "untypifies") {
+				|| type === "isA" || type === "typifies" || type === "isNotA" || type === "untypifies" || type === "matches") {
 			implicitLeftIt = true;
 			operation = compileComparisonOperator(token);
 		}

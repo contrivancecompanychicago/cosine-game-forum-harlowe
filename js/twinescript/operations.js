@@ -5,7 +5,7 @@ define([
 	'utils/operationutils',
 	'internaltypes/twineerror',
 ],
-(State, AssignmentRequest, {isObject, collectionType, coerceToString, is, isA, clone, unique, contains, typeName, objectName}, TwineError) => {
+(State, AssignmentRequest, {isObject, collectionType, coerceToString, is, isA, clone, unique, contains, matches, typeName, objectName}, TwineError) => {
 	/*
 		Operation objects are a table of operations which TwineScript proxies
 		for/sugars over JavaScript. These include basic fixes like the elimination
@@ -387,6 +387,8 @@ define([
 		*/
 		typifies: comparisonOp((l,r) => isA(r,l)),
 		untypifies: comparisonOp((l,r) => !isA(r,l)),
+
+		matches: comparisonOp(matches),
 		
 		/*
 			The only user-produced value which is passed into this operation is the bool -
