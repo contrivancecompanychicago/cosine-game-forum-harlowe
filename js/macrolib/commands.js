@@ -382,49 +382,7 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 				},
 			}),
 		[])
-		
-		/*d:
-			(live: [Number]) -> Changer
-			When you attach this macro to a hook, the hook becomes "live", which means that it's repeatedly re-run
-			every certain number of milliseconds, replacing the source inside of the hook with a newly computed version.
-			
-			Example usage:
-			```
-			{(live: 0.5s)[
-			    (either: "Bang!", "Kaboom!", "Whammo!", "Pow!")
-			]}
-			```
-			
-			Rationale:
-			Twine passage text generally behaves like a HTML document: it starts as code, is changed into a
-			rendered page when you "open" it, and remains so until you leave. But, you may want a part of the
-			page to change itself before the player's eyes, for its code to be re-renders "live"
-			in front of the player, while the remainder of the passage remains the same.
-			
-			Certain macros, such as the (link:) macro, allow a hook to be withheld until after an element is
-			interacted with. The (live:) macro is more versatile: it re-renders a hook every specified number of
-			milliseconds. If (if:) or (unless:) macros are inside the hook, they of course will be re-evaluated each time.
-			By using these two kinds of macros, you can make a (live:) macro repeatedly check if an event has occurred, and
-			only change its text at that point.
-			
-			Details:
-			Live hooks will continue to re-render themselves until they encounter and print a (stop:) macro.
 
-			#live
-		*/
-		/*
-			Yes, the actual implementation of this is in Section, not here.
-		*/
-		("live",
-			(_, delay) => ({
-				TwineScript_ObjectName: "a (live: " + delay + ") command",
-				TwineScript_TypeName:   "a (live:) command",
-				live: true,
-				delay,
-			}),
-			[optional(Number)]
-		)
-		
 		/*d:
 			(stop:) -> Command
 			This macro, which accepts no arguments, creates a (stop:) command, which is not configurable.

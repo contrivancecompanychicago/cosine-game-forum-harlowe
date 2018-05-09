@@ -1,6 +1,6 @@
 describe("lambdas", function() {
 	'use strict';
-	it("consist of an optional temporary variable (with an optional 'each'), and clauses starting with 'making', 'where', 'via' or 'with'", function() {
+	it("consist of an optional temporary variable (with an optional 'each'), and clauses starting with 'making', 'where', 'when', 'via' or 'with'", function() {
 		expect("(print: _a where 2)").not.markupToError();
 		expect("(print: _a making _b)").not.markupToError();
 		expect("(print: _a via _a)").not.markupToError();
@@ -11,6 +11,7 @@ describe("lambdas", function() {
 		expect("(print: each _a via _a)").not.markupToError();
 		expect("(print: each _a with _b)").not.markupToError();
 		expect("(print: where 2)").not.markupToError();
+		expect("(print: when 2)").not.markupToError();
 		expect("(print: making _b)").not.markupToError();
 		expect("(print: via _a)").not.markupToError();
 		expect("(print: with _b)").not.markupToError();
@@ -24,6 +25,21 @@ describe("lambdas", function() {
 	it("'making' and 'with' clauses must have temporary variables following", function() {
 		expect("(print: _a making (_a + 1))").markupToError();
 		expect("(print: _a with (_a + 1))").markupToError();
+	});
+	it("'when' cannot have any other clauses", function() {
+		expect("(print: when $a > 2 where $a > 4)").markupToError();
+		expect("(print: when $a > 2 via $a + 1)").markupToError();
+	});
+	it("'when' cannot have the optional temp variable", function() {
+		expect("(print: _a when _a > 2)").markupToError();
+		expect("(print: each _a when _a > 2)").markupToError();
+	});
+	it("'when' cannot refer to 'it' (and this is checked at runtime)", function(done) {
+		var p = runPassage("(event: when it > 2)[]");
+		setTimeout(function() {
+			expect(p.find('tw-error:not(.javascript)').length).toBe(1);
+			done();
+		},20);
 	});
 	it("cannot have duplicate variable names", function() {
 		expect("(print: _a with _a)").markupToError();

@@ -950,6 +950,7 @@
 		into:       "into" + wb,
 		making:     "making" + wb,
 		where:      "where" + wb,
+		when:       "when" + wb,
 		via:        "via" + wb,
 		with:       "with" + wb,
 		each:       "each" + wb,

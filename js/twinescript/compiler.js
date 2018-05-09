@@ -133,7 +133,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			["spread"],
 			["to"],
 			["into"],
-			{rightAssociative: ["where", "via"]},
+			{rightAssociative: ["where", "when", "via"]},
 			{rightAssociative: ["with", "making", "each"]},
 			["augmentedAssign"],
 			["and", "or"],
@@ -401,7 +401,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			right = compile(tokens.slice(0,  i), varRefArgs("left"));
 			left  = "Operations.setIt(" + compile(tokens.slice(i + 1), varRefArgs("right")) + ")";
 		}
-		else if (type === "where" || type === "via") {
+		else if (type === "where" || type === "when" || type === "via") {
 			left = "Lambda.create("
 				+ (compile(tokens.slice(0, i), {isVarRef:true, whitespaceError:null}).trim()
 					// Omitting the temp variable means that you must use "it"

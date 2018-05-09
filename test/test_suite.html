@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <title>Jasmine Spec Runner v2.4.1</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.4.1/jasmine.css">
+<link rel="stylesheet" href="../node_modules/jasmine/jasmine.css">
 <style>.jasmine-disabled { display:none; } .jasmine-open { z-index:2; }</style>
 <script src="../node_modules/es6-shim/es6-shim.min.js"></script>
 <script src="../node_modules/requirejs/require.js"></script>
@@ -31,9 +31,9 @@ else {
 	}
 }
 </script>
-<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.4.1/jasmine.js"></script>
-<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.4.1/jasmine-html.js"></script>
-<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.4.1/boot.js"></script>
+<script src="../node_modules/jasmine/jasmine.js"></script>
+<script src="../node_modules/jasmine/jasmine-html.js"></script>
+<script src="../node_modules/jasmine/boot.js"></script>
 <script role="script" type="text/twine-javascript">
 window.createPassage = function(text, name, tags) {
 	Passages.set(name, new Map([
@@ -333,6 +333,7 @@ afterAll(function() {
 <script src="spec/changer_macros/revision.js"></script>
 
 <script src="spec/command_macros/basics.js"></script>
+<script src="spec/command_macros/live.js"></script>
 <script src="spec/command_macros/saving.js"></script>
 
 <tw-story style='visibility:hidden'></tw-story>

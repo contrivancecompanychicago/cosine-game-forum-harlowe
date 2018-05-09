@@ -835,7 +835,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				/*
 					Include the name of the VariableStore's scope, if this is a temp. variable.
 				*/
-				(this.object.TwineScript_VariableStore ? (" in " + this.object.TwineScript_VariableStoreName) : "");
+				(this.object.TwineScript_VariableStoreName ? (" in " + this.object.TwineScript_VariableStoreName) : "");
 		},
 
 		/*

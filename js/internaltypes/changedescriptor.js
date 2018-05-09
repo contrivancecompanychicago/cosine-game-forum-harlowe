@@ -56,8 +56,8 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		//                            Used by (hook:) and (css:).
 		attr:             null,
 		
-		// {Object} [data]            Data to attach to the <tw-expression> using $.fn.attr().
-		//                            Used only by (link:).
+		// {Object} [data]            Data to attach to the <tw-hook> (NOT the <tw-expression>) using $.fn.data().
+		//                            Used only by (link:), (live:) and (event:).
 		data:             null,
 		
 		// {Object} [section]         A Section that 'owns' this ChangeDescriptor.
@@ -182,7 +182,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		*/
 		render() {
 			const
-				{source, transition, transitionTime, enabled, section, newTargets} = this;
+				{source, transition, transitionTime, enabled, data, section, newTargets} = this;
 			let
 				{target, append} = this;
 			
@@ -204,7 +204,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 					followed by (show:?a) should result in ?a appearing, instead of nothing happening. (And
 					(show:?b) shouldn't do anything, either.)
 				*/
-				ChangeDescriptor.create({target,data:{hiddenSource:source}}).update();
+				ChangeDescriptor.create({target,data:Object.assign({}, data, {hiddenSource:source})}).update();
 				return $();
 			}
 

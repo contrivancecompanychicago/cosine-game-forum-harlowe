@@ -703,7 +703,7 @@
 			},
 			// As these consist of word characters, they cannot follow text nodes, lest they
 			// match subwords like "xxisxx".
-			["boolean", "is", "to", "into", "where", "via", "with", "making", "each", "and", "or", "not",
+			["boolean", "is", "to", "into", "where", "when", "via", "with", "making", "each", "and", "or", "not",
 			"isNot", "contains", "isIn", "isA", "isNotA", "matches"].reduce(function(a, e) {
 				a[e] = {
 					fn: emptyFn,

@@ -28,11 +28,20 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 		`_item where true`, for instance, will include every item. There is a special, more readable shorthand for this type
 		of "where" lambda: writing just `each _item` is equivalent.
 
+		* "when" lambdas are a variant of "where" used exclusively by (event:), and are used to specify a live event when a hook should
+		be shown. The lambda `when $fuel > 8` tells (event:) to show the attached hook when `$fuel` is increased (due to an interaction macro
+		like (click-repeat:), a (live:) macro, or anything else). This really shouln't be called a "lambda", but you can perhaps think of it in
+		terms of it filtering moments in time that pass or fail the condition.
+
 		Lambdas use temp variables as "placeholders" for the actual values. For instance, in `(find: _num where _num > 2, 5,6,0)`,
 		the temp variable `_num` is used to mean each individual value given to the macro, in turn. It will be 5, 6 and 0, respectively.
 		Importantly, this will *not* alter any existing temp variable called `_num` - the inside of a lambda can be thought
 		of as a hook, so just as the inner `_x` in `(set: _x to 1) |a>[ (set:_x to 2) ]` is different from the outer `_x`, the `_num` in the
 		lambda will not affect any other `_num`.
+
+		You can use the "it" shorthand to save on having to write the temporary variable's name multiple times.
+		`_num where _num > 2` can be rewritten as`_num where it > 2`. Not only that, but you can even save on naming the temporary
+		variable at all, by just using `where` (or `via` or `making`) without the name and only using `it` to refer to the variable: `where it > 2`.
 
 		An important feature is that you can save lambdas into variables, and reuse them in your story easily. You
 		could, for instance, `(set: $statsReadout to (_stat making _readout via _readout + "|" + _stat's name + ":" + _stat's value))`,
@@ -50,6 +59,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 				+ (("making" in this) ? "making ... " : "")
 				+ (("with" in this) ? "with ... " : "")
 				+ (("where" in this) ? "where ... " : "")
+				+ (("when" in this) ? "when ... " : "")
 				+ (("via" in this) ? "via ... " : "")
 				+ "\" lambda";
 		},
@@ -79,10 +89,10 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 
 		/*
 			Lambdas consist of five clauses: the loop variable's name, the 'making' variable's name,
-			the 'with' variable's name, the 'where' clause, and the 'via' clause.
+			the 'with' variable's name, the 'where' clause (and its special 'when' variant), and the 'via' clause.
 
 			Lambdas are constructed by joining one of these clauses with a subject (which is either another
-			lambda - thus adding their clauses - or a ).
+			lambda - thus adding their clauses - or a temp variable).
 		*/
 		create(subject, clauseType, clause) {
 			let ret;
@@ -97,6 +107,12 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 				Operations.createLambda() calls), add this clause to that lambda.
 			*/
 			else if (Lambda.isPrototypeOf(subject)) {
+				/*
+					"when" is a special variant of "where" that can't be joined with any other clauses.
+				*/
+				if (clauseType === "when" || "when" in subject) {
+					return TwineError.create('syntax', "A 'when' lambda cannot have any other clauses, such as '" + clauseType + "'.");
+				}
 				/*
 					An error only identifiable while adding clauses:
 					two of one clause (such as "where _a > 2 where _b < 2") is a mistake.
@@ -113,8 +129,17 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 			}
 			else {
 				/*
+					"when" is a special variant that, for readability, shouldn't have a subject.
+				*/
+				if (clauseType === "when" && subject !== undefined) {
+					return TwineError.create('syntax',
+						"A 'when' lambda shouldn't begin with a temporary variable (just use 'when' followed by the condition).");
+				}
+				/*
 					If the subject is a temporary variable or undefined (and it's a mistake if it's not), create a fresh
-					lambda object. It's a tad unfortunate that the preceding token before this lambda is already
+					lambda object with only a "loop" property.
+
+					It's a tad unfortunate that the preceding token before this lambda is already
 					compiled into an incorrect object, but we must deal with syntactic ambiguity in this way.
 				*/
 				if (subject !== undefined &&
@@ -167,12 +192,12 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 			section.stack.unshift(Object.assign(Object.create(null), {tempVariables}));
 
 			/*
-				If this lambda has no "making" or "with" clauses, then the "it"
+				If this lambda has no "making" or "with" clauses (and isn't a "when" lambda), then the "it"
 				keyword is set to the loop arg. Note that this doesn't require the presence of
 				this.loop - if it is omitted, then you can only access the loop var in the "where"
 				clause using "it".
 			*/
-			if (loopArg && !this.with && !this.making) {
+			if (loopArg && !this.with && !this.making && !this.when) {
 				section.eval("Operations").initialiseIt(loopArg);
 			}
 			/*
@@ -196,14 +221,14 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 
 			const ret = section.eval(
 				/*
-					If a lambda has a "where" clause, then the "where" clause filters out
+					If a lambda has a "where" (or "when") clause, then the "where" clause filters out
 					values. Filtered-out values are replaced by the failVal.
 					If a lambda has a "via" clause, then its result becomes the result of the
 					call. Otherwise, the passVal is used.
 				*/
-				'where' in this
+				('where' in this || 'when' in this)
 					? "Operations.where("
-						+ this.where + ","
+						+ (this.where || this.when) + ","
 						+ (via || toJSLiteral(passArg)) + ","
 						+ toJSLiteral(failArg) + ")"
 					: (via || toJSLiteral(passArg))

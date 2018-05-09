@@ -34,7 +34,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		```
 	*/
 	const
-		{either, wrapped, rest, Any} = Macros.TypeSignature,
+		{either, wrapped, rest, optional, Any} = Macros.TypeSignature,
 		IfTypeSignature = [wrapped(Boolean, "If you gave a number, you may instead want to check that the number is not 0. "
 			+ "If you gave a string, you may instead want to check that the string is not \"\".")];
 
@@ -298,6 +298,61 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			() => ChangerCommand.create("hidden"),
 			(d) => d.enabled = false,
 			null
+		)
+
+		/*d:
+			(live: [Number]) -> Changer
+			When you attach this macro to a hook, the hook becomes "live", which means that it's repeatedly re-run
+			every certain number of milliseconds, replacing the source inside of the hook with a newly computed version.
+			
+			Example usage:
+			```
+			{(live: 0.5s)[
+			    (either: "Bang!", "Kaboom!", "Whammo!", "Pow!")
+			]}
+			```
+			
+			Rationale:
+			Twine passage text generally behaves like a HTML document: it starts as code, is changed into a
+			rendered page when you "open" it, and remains so until you leave. But, you may want a part of the
+			page to change itself before the player's eyes, for its code to be re-renders "live"
+			in front of the player, while the remainder of the passage remains the same.
+			
+			Certain macros, such as the (link:) macro, allow a hook to be withheld until after an element is
+			interacted with. The (live:) macro is more versatile: it re-renders a hook every specified number of
+			milliseconds. If (if:) or (unless:) macros are inside the hook, they of course will be re-evaluated each time.
+			By using these two kinds of macros, you can make a (live:) macro repeatedly check if an event has occurred, and
+			only change its text at that point.
+			
+			Details:
+			Live hooks will continue to re-render themselves until they encounter and print a (stop:) macro.
+
+			#live
+		*/
+		/*
+			Yes, the actual implementation of this is in Section, not here.
+		*/
+		("live",
+			(_, delay) => ChangerCommand.create("live", [delay]),
+			(d, delay) => {
+				d.enabled = false;
+				d.data.live = {delay};
+			},
+			optional(Number)
+		)
+
+		/*d:
+			(event: Lambda) -> Changer
+
+			TBW
+		*/
+		("event",
+			(_, event) => ChangerCommand.create("event", [event]),
+			(d, event) => {
+				d.enabled = false;
+				d.data.live = {event};
+			},
+			Lambda.TypeSignature('when')
 		)
 
 		/*d:

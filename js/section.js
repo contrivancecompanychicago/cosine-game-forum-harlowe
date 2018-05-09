@@ -82,17 +82,19 @@ define([
 						this.stack[0].lastHookShown = false;
 					}
 				}
+				/*
+					If the changer command included a (live:) or (event:) command,
+					set up the intervals to live-update the attached macro.
+				*/
+				if (nextHook.data('live')) {
+					const {delay, event} = nextHook.data('live');
+					runLiveHook.call(this, expr, nextHook, delay, event);
+				}
 				return;
 			}
 		}
 		/*
-			Else, if it's a live macro, please run that.
-		*/
-		else if (result && typeof result === "object" && result.live) {
-			runLiveHook.call(this, nextHook, result.delay, result.event);
-		}
-		/*
-			And finally, the false case.
+			Attached false values hide hooks as well.
 			This is special: as it prevents hooks from being run, an (else:)
 			that follows this will pass.
 		*/
@@ -530,31 +532,18 @@ define([
 		A live hook is one that has the (live:) macro attached.
 		It repeatedly re-renders, allowing a passage to have "live" behaviour.
 		
+		The default delay for (live:), which is also used by (event:), is 20ms.
+
 		This is exclusively called by runExpression().
-		
-		@param {jQuery} The <tw-hook>.
-		@param {Number} The timeout delay.
 	*/
-	function runLiveHook(target, delay) {
+	function runLiveHook(expr, target, delay = 20, event = undefined) {
 		/*
-			Remember the code of the hook.
-			
-			(We also remove (pop) the code from the hook
-			so that doExpressions() doesn't render it.)
+			Obtain the code of the hook that the (live:) or (event:) changer suppressed.
 		*/
-		const source = target.popAttr('source') || "";
-		
-		/*
-			Default the delay to 20ms if none was given.
-		*/
-		delay = (delay === undefined ? 20 : delay);
-		
+		const source = target.data('hiddenSource') || "";
 		/*
 			This closure runs every frame from now on, until
 			the target hook is gone.
-			
-			Notice that as this is bound, giving it a name isn't
-			all that useful.
 		*/
 		const recursive = (() => {
 			/*
@@ -565,7 +554,29 @@ define([
 			if (!this.inDOM()) {
 				return;
 			}
+			/*
+				If this is an (event:) command, check the event (which should be a "when" lambda)
+				and if it's not happened yet, wait for the next timeout.
+			*/
+			const eventFired = (event && event.filter(this, [undefined]));
+			if (TwineError.containsError(eventFired)) {
+				eventFired.render(expr.attr('title')).replaceAll(expr);
+				return;
+			}
+			if (event && !eventFired) {
+				setTimeout(recursive, delay);
+				return;
+			}
+			/*
+				(live:) macros always render; (event:) macros only render once the event fired.
+			*/
 			this.renderInto(source, target, {append:'replace'});
+			/*
+				If the event DID fire, on the other hand, we should stop.
+			*/
+			if (eventFired) {
+				return;
+			}
 			/*
 				The (stop:) command causes the nearest (live:) command enclosing
 				it to be stopped. Inside an (if:), it allows one-off live events to be coded.
@@ -719,8 +730,6 @@ define([
 			
 			/*
 				Run all the changer functions.
-				[].concat() wraps a non-array in an array, while
-				leaving arrays intact.
 			*/
 			changers.forEach((changer) => {
 				/*
