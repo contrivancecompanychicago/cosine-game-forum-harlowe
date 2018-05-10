@@ -63,7 +63,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			(link: String) -> Changer
 			Also known as: (link-replace:)
 			
-			Makes a command to create a special link that can be used to show a hook.
+			Makes a changer to create a special link that can be used to show a hook.
 			
 			Example usage:
 			`(link: "Stake")[The dracula crumbles to dust.]` will create a link reading "Stake"
@@ -91,7 +91,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		/*d:
 			(link-reveal: String) -> Changer
 			
-			Makes a command to create a special link that shows a hook, keeping the link's
+			Makes a changer to create a special link that shows a hook, keeping the link's
 			text visible after clicking.
 			
 			Example usage:
@@ -120,7 +120,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		/*d:
 			(link-repeat: String) -> Changer
 			
-			Makes a command to create a special link that shows a hook, and, when clicked again,
+			Makes a changer to create a special link that shows a hook, and, when clicked again,
 			re-runs the hook, appending its contents again.
 			
 			Example usage:
@@ -168,8 +168,6 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 				*/
 				desc.append = arr[0] === "link" ? "replace" : "append";
 				desc.data.clickEvent = (link) => {
-					desc.source = desc.innerSource;
-					desc.section.renderInto(desc.innerSource + "", null, desc);
 					/*
 						Only (link-reveal:) turns the link into plain text:
 						the others either remove it (via the above) or leave it be.
@@ -177,6 +175,8 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 					if (arr[0] === "link-reveal") {
 						link.contents().unwrap();
 					}
+					desc.source = desc.innerSource;
+					desc.section.renderInto(desc.innerSource + "", null, desc);
 				};
 			},
 			[String]
@@ -232,8 +232,8 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 				}
 				return {
 					TwineScript_TypeName: "a (link-goto: "
-						+ Utils.toJSLiteral(text) + ", "
-						+ Utils.toJSLiteral(passage) + ") command",
+						+ Utils.toJSLiteral(text)
+						+ (passage ? ", " + Utils.toJSLiteral(passage) : "") + ") command",
 					TwineScript_ObjectName: "a (link-goto:) command",
 					
 					TwineScript_Print() {
@@ -270,8 +270,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 								TODO: Maybe this should be an error as well??
 							*/
 							return '<tw-broken-link passage-name="' + Utils.escape(passageName) + '">'
-								+ (text || passage)
-								+ '</tw-broken-link>';
+								+ text + '</tw-broken-link>';
 						}
 						/*
 							Previously visited passages may be styled differently compared
@@ -286,7 +285,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 						return '<tw-link tabindex=0 ' + (visited > 0 ? 'class="visited" ' : '')
 							// Always remember to Utils.escape() any strings that must become raw HTML attributes.
 							+ 'passage-name="' + Utils.escape(passageName)
-							+ '">' + (text || passage) + '</tw-link>';
+							+ '">' + text + '</tw-link>';
 					}
 				};
 			},
@@ -301,7 +300,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			This command should not be attached to a hook.
 
 			Example usage:
-			`(link-undo:"Retreat")` behaves the same as `(link:"Retreat")[(undo:)]`.
+			`(link-undo:"Retreat")` behaves the same as `(link:"Retreat")[(undo: )]`.
 
 			Rationale:
 			The ability to undo the player's last turn, as an alternative to (go-to:), is explained in the documentation
@@ -319,7 +318,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			See also:
 			(undo:), (link-goto:)
 
-			#links 5
+			#links 6
 		*/
 		("link-undo", (section, text) => {
 				if (!text) {
@@ -345,4 +344,94 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 				};
 			},
 		[String]);
+
+	/*d:
+		(link-reveal-goto: String, [String]) -> Changer
+		
+		TBW
+		
+		Example usage:
+		 * `(link-reveal-goto: "Study English", "Afternoon 1")[(set:$eng to it + 1)]` will create a link reading "Study English"
+		which, when clicked, adds 1 to the $eng variable using (set:), and then goes to the passage "Afternoon 1".
+		 * `(link-reveal-goto: "Fight the King of England", "Death")[(alert:"You asked for it!")]` will create a link reading
+		 "Fight the King of England" which, when clicked, displays an alert using (alert:), and then goes to the passage "Death".
+		
+		Rationale:
+		
+		TBW
+		
+		Details:
+
+		TBW
+		
+		See also:
+		(link-reveal:), (link:), (link-goto:), (click:)
+		
+		#links 5
+	*/
+	Macros.addChanger(["link-reveal-goto"],
+		(section, text, passage) => {
+			if (!text) {
+				return TwineError.create("macrocall", emptyLinkTextError);
+			}
+			/*
+				Being a variant of (link-goto:), this uses the same rules for passage name computation
+				from TwineMarkup, as described in that macro.
+			*/
+			const passageName = section.evaluateTwineMarkup(Utils.unescape(passage || text));
+			/*
+				If TwineMarkup rendering produced an error, return it.
+				<tw-error> elements have the original TwineError object stashed on them, which we
+				can retrieve now.
+			*/
+			if (passageName instanceof $) {
+				return passageName.data('TwineError');
+			}
+			/*
+				We could check for the passage's existence here, but because this is a desugaring of
+				the link syntax, like (link-goto:), we should create a broken link instead, when
+				the changer is attached.
+			*/
+			return ChangerCommand.create("link-reveal-goto", [text || passage, passageName]);
+		},
+		(desc, text, passageName) => {
+			/*
+				As explained above, we create the broken link now, and dispose of
+				whatever the contained hook had.
+			*/
+			if (!Passages.has(passageName)) {
+				desc.source = '<tw-broken-link passage-name="' + Utils.escape(passageName) + '">'
+					+ text + '</tw-broken-link>';
+				return;
+			}
+			/*
+				All of the following assigned properties are those assigned by (link-reveal:).
+			*/
+			if (!desc.innerSource) {
+				desc.innerSource = desc.source;
+			}
+			/*
+				Previously visited passages may be styled differently compared
+				to unvisited passages.
+			*/
+			const visited = (State.passageNameVisited(passageName));
+			desc.source = '<tw-link tabindex=0 ' + (visited > 0 ? 'class="visited" ' : '') + '>' + text + '</tw-link>';
+			desc.append = "append";
+			desc.data.clickEvent = (link) => {
+				desc.source = desc.innerSource;
+				/*
+					It may seem pointless to unwrap the link, now that we're going to
+					somewhere else, but this change could be observed if a modal (alert:)
+					was displayed by the innerSource.
+				*/
+				link.contents().unwrap();
+				desc.section.renderInto(desc.innerSource + "", null, desc);
+				/*
+					Having revealed, we now go-to.
+				*/
+				Engine.goToPassage(passageName);
+			};
+		},
+		[String, optional(String)]
+	)
 });

@@ -98,60 +98,75 @@ describe("link macros", function() {
 		});
 	});
 	/*
-		Though these are not changers, they are similar enough to the above in terms of API.
+		Though (link-goto:) and (link-undo:) are not changers, they are similar enough to the above in terms of API.
 	*/
-	describe("(link-goto:)", function() {
-		it("renders to a <tw-link> element if the linked passage exists", function() {
-			createPassage("","mire");
-			var link = runPassage("(link-goto:'mire')").find('tw-link');
-			
-			expect(link.parent().is('tw-expression')).toBe(true);
-			expect(link.tag()).toBe("tw-link");
-			expect(link.attr("passage-name")).toBe("mire");
-		});
-		it("becomes a <tw-broken-link> if the linked passage is absent", function() {
-			var link = runPassage("(link-goto: 'mire')").find('tw-broken-link');
-			
-			expect(link.parent().is('tw-expression')).toBe(true);
-			expect(link.tag()).toBe("tw-broken-link");
-			expect(link.html()).toBe("mire");
-		});
-		it("accepts 1 or 2 non-empty strings", function() {
-			expect("(link-goto:)").markupToError();
-			expect("(link-goto:'')").markupToError();
-			expect("(link-goto:2)").markupToError();
-			expect("(link-goto:true)").markupToError();
+	['link-goto', 'link-reveal-goto'].forEach(function(name) {
+		var hook = name === "link-reveal-goto" ? "[]" : "";
 
-			expect("(link-goto:'s')").not.markupToError();
-			expect("(link-goto:'s','s')").not.markupToError();
-			expect("(link-goto:'s','s','s')").markupToError();
-		});
-		it("renders markup in the link text, and ignores it for discerning the passage name", function() {
-			createPassage("","mire");
-			var p = runPassage("(link-goto:'//glower//','//mire//')");
-			expect(p.find('i').text()).toBe("glower");
-			expect(p.find('tw-link').attr("passage-name")).toBe("mire");
+		describe("("+name+":)", function() {
+			it("accepts 1 or 2 non-empty strings" + (hook && ", and attaches to a hook"), function() {
+				expect("("+name+":)"+hook).markupToError();
+				expect("("+name+":'')"+hook).markupToError();
+				expect("("+name+":2)"+hook).markupToError();
+				expect("("+name+":true)"+hook).markupToError();
 
-			p = runPassage("(link-goto:'//mire//')");
-			expect(p.find('i').text()).toBe("mire");
-			expect(p.find('tw-link').attr("passage-name")).toBe("mire");
-		});
-		it("goes to the passage when clicked", function() {
-			createPassage("<p>garply</p>","mire");
-			var link = runPassage("(link-goto:'mire')").find('tw-link');
-			link.click();
-			expect($('tw-passage p').text()).toBe("garply");
-		});
-		it("can be focused", function() {
-			createPassage("","mire");
-			var link = runPassage("(link-goto:'mire')").find('tw-link');
-			expect(link.attr("tabindex")).toBe("0");
-		});
-		it("behaves as if clicked when the enter key is pressed while it is focused", function() {
-			createPassage("<p>garply</p>","mire");
-			var link = runPassage("(link-goto:'mire')").find('tw-link');
-			link.trigger($.Event('keydown', { which: 13 }));
-			expect($('tw-passage p').text()).toBe("garply");
+				expect("("+name+":'s')"+hook).not.markupToError();
+				expect("("+name+":'s','s')"+hook).not.markupToError();
+				expect("("+name+":'s','s','s')"+hook).markupToError();
+
+				if (hook) {
+					expect("("+name+":'s','s')").markupToError();
+				}
+			});
+			it("renders to a <tw-link> element if the linked passage exists", function() {
+				createPassage("","mire");
+				var link = runPassage("("+name+":'mire')"+hook).find('tw-link');
+				
+				expect(link.parent().is(hook ? 'tw-hook' : 'tw-expression')).toBe(true);
+				expect(link.tag()).toBe("tw-link");
+			});
+			it("becomes a <tw-broken-link> if the linked passage is absent", function() {
+				var link = runPassage("("+name+": 'mire')"+hook).find('tw-broken-link');
+				
+				expect(link.parent().is(hook ? 'tw-hook' : 'tw-expression')).toBe(true);
+				expect(link.tag()).toBe("tw-broken-link");
+				expect(link.html()).toBe("mire");
+			});
+			it("renders markup in the link text, and ignores it for discerning the passage name", function() {
+				createPassage("","mire");
+				var p = runPassage("("+name+":'//glower//','//mire//')"+hook);
+				expect(p.find('i').text()).toBe("glower");
+
+				p = runPassage("("+name+":'//mire//')"+hook);
+				expect(p.find('i').text()).toBe("mire");
+			});
+			if (hook) {
+				it("runs the hook when clicked, before going to the passage", function() {
+					createPassage("<p>$foo</p>","mire");
+					var link = runPassage("(link-reveal-goto:'mire')[(set:$foo to 'garply')]").find('tw-link');
+					link.click();
+					expect($('tw-passage p').text()).toBe("garply");
+				});
+			}
+			else {
+				it("goes to the passage when clicked", function() {
+					createPassage("<p>garply</p>","mire");
+					var link = runPassage("(link-goto:'mire')").find('tw-link');
+					link.click();
+					expect($('tw-passage p').text()).toBe("garply");
+				});
+			}
+			it("can be focused", function() {
+				createPassage("","mire");
+				var link = runPassage("("+name+":'mire')"+hook).find('tw-link');
+				expect(link.attr("tabindex")).toBe("0");
+			});
+			it("behaves as if clicked when the enter key is pressed while it is focused", function() {
+				createPassage("<p>garply</p>","mire");
+				var link = runPassage("("+name+":'mire')"+hook).find('tw-link');
+				link.trigger($.Event('keydown', { which: 13 }));
+				expect($('tw-passage p').text()).toBe("garply");
+			});
 		});
 	});
 	describe("(link-undo:)", function() {

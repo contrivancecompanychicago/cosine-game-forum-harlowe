@@ -132,6 +132,13 @@ define(['jquery', 'utils'], ($, {impossible, escape}) => {
 			});
 			
 			errorElement.append(explanationButton).append(explanationElement);
+
+			/*
+				Storing this TwineError object on the element is currently only required for
+				macros that evaluate TwineMarkup strings passed into them to examine their text content,
+				such as (link-reveal-goto:).
+			*/
+			errorElement.data('TwineError', this);
 			
 			return errorElement;
 		},
