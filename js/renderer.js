@@ -284,12 +284,18 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 					case "twineLink": {
 						/*
 							This crudely desugars the twineLink token into a
-							(link-goto:) token.
+							(link-goto:) token. However, the original link syntax is preserved
+							for debug mode display.
 						*/
-						const newTwineLinkToken = TwineMarkup.lex("(link-goto:"
+						const [linkGotoMacroToken] = TwineMarkup.lex("(link-goto:"
 							+ toJSLiteral(token.innerText) + ","
-							+ toJSLiteral(token.passage) + ")");
-						out += render(newTwineLinkToken.children);
+							+ toJSLiteral(token.passage) + ")").children;
+
+						out += '<tw-expression type="macro" name="link-goto"'
+							// Debug mode: show the link syntax as a title.
+							+ (Renderer.options.debug ? ' title="' + escape(token.text) + '"' : '')
+							+ ' js="' + escape(Compiler(linkGotoMacroToken)) + '">'
+							+ '</tw-expression>';
 						break;
 					}
 					case "hook": {

@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 'datatypes/hookset', 'datatypes/changercommand', 'internaltypes/enchantment', 'internaltypes/twineerror'],
-($, Utils, Selectors, {is}, Macros, HookSet, ChangerCommand, Enchantment, TwineError) => {
+define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 'passages', 'macros', 'datatypes/hookset', 'datatypes/changercommand', 'internaltypes/enchantment', 'internaltypes/twineerror'],
+($, Utils, Selectors, {is}, Engine, Passages, Macros, HookSet, ChangerCommand, Enchantment, TwineError) => {
 
 	const {either,rest} = Macros.TypeSignature;
 	/*
@@ -255,7 +255,8 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 
 		is ready for the player to trigger an event on it.
 		* {String} rerender Determines whether to clear the span before rendering into it ("replace"),
 		append the rendering to its current contents ("append") or prepend it ("prepend").
-		Only used for "combos", like click-replace().
+		Only used for "combos", like (click-replace:)
+		* {String} [goto] A passage to go to after rendering.
 		* {Boolean} once Whether or not the enchanted DOM elements can trigger this macro
 		multiple times.
 		
@@ -306,19 +307,15 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 
 			macro (in the case of "(macro: ?1)", selector will be "?1").
 		*/
 		return [
-			(_, ...selectors) => {
+			(_, selector) => {
 				/*
-					If one of the selectors is empty (which means it's the empty string) then throw an error,
+					If the selector is empty (which means it's the empty string) then throw an error,
 					because nothing can be selected.
 				*/
-				if (!selectors.every(Boolean)) {
-					return TwineError.create("datatype",
-						"A string given to this ("
-						+ name
-						+ ":) macro was empty."
-					);
+				if (!selector) {
+					return TwineError.create("datatype", "A string given to this (" + name + ":) macro was empty.");
 				}
-				return ChangerCommand.create(name, selectors.map(HookSet.from));
+				return ChangerCommand.create(name, [HookSet.from(selector)]);
 			},
 			/*
 				This ChangerCommand registers a new enchantment on the Section that the
@@ -396,6 +393,15 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 
 									must also be removed.
 								*/
 								enchantData.disenchant();
+							}
+							/*
+								If the enchantDesc has a "goto" property, then instead of filling the
+								target with the source, go to the named passage (whose existence
+								has already been verified).
+							*/
+							if (enchantDesc.goto) {
+								Engine.goToPassage(enchantDesc.goto);
+								return;
 							}
 							/*
 								At last, the target originally specified
@@ -717,5 +723,57 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'macros', 
 				name = interactionType.name + "-" + revisionType;
 			Macros.addChanger(name, ...newEnchantmentMacroFns(enchantDesc, name));
 		});
+	});
+	/*d:
+		(click-goto: HookName or String, String) -> Command
+
+		TBW
+	*/
+	/*d:
+		(mouseover-goto: HookName or String, String) -> Command
+
+		TBW
+	*/
+	/*d:
+		(mouseout-goto: HookName or String, String) -> Command
+
+		TBW
+	*/
+	interactionTypes.forEach((interactionType) => {
+		const name = interactionType.name + "-goto";
+		Macros.add(name, (section, selector, passage) => {
+			/*
+				If either of the arguments are the empty string, show an error.
+			*/
+			if (!selector || !passage) {
+				return TwineError.create("datatype", "A string given to this (" + name + ":) macro was empty.");
+			}
+			/*
+				First, of course, check for the passage's existence.
+			*/
+			if (!Passages.has(passage)) {
+				return TwineError.create("macrocall",
+					"I can't (" + name + ":) the passage '" + passage + "' because it doesn't exist."
+				);
+			}
+			/*
+				Now, newEnchantmentMacroFns() is only designed to return functions for use with addChanger().
+				What this kludge does is take the second changer function, whose signature is (descriptor, selector),
+				and then call it in TwineScript_Print() when the command is run, passing in a fake ChangeDescriptor
+				with only a "section" property.
+			*/
+			const [,makeEnchanter] = newEnchantmentMacroFns(Object.assign({}, interactionType.enchantDesc, {
+				goto: passage
+			}), name);
+
+			return ({
+				TwineScript_ObjectName: "a (click-goto:) command",
+				TwineScript_TypeName:   "a (click-goto:) command",
+				TwineScript_Print() {
+					makeEnchanter({section}, HookSet.from(selector));
+					return "";
+				},
+			});
+		}, [either(HookSet,String), String]);
 	});
 });

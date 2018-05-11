@@ -199,7 +199,7 @@
 			Runs a function on every leaf token in the tree,
 			and returns true if all returned truthy values.
 		*/
-		everyLeaf: function everyLeaf(fn) {
+		everyLeaf(fn) {
 			if (!this.children || this.children.length === 0) {
 				return !!fn(this);
 			}

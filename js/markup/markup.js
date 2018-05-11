@@ -429,9 +429,9 @@
 			passageLink: {
 				fn(match) {
 					const
-						p1 = match[1],
-						p2 = match[2],
-						p3 = match[3];
+						p1 = match[1] || '',
+						p2 = match[2] || '',
+						p3 = match[3] || '';
 					return {
 						type: "twineLink",
 						innerText: p2 ? p3 : p1,
@@ -443,8 +443,8 @@
 			simpleLink: {
 				fn: (match) => ({
 					type: "twineLink",
-					innerText: match[1],
-					passage:   match[1],
+					innerText: match[1] || '',
+					passage:   match[1] || '',
 				}),
 			},
 			

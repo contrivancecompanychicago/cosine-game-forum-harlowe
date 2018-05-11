@@ -69,6 +69,14 @@ describe("link syntax", function() {
 		
 			expect(expression.text()).toBe("in");
 		});
+		it("errors if there's no link text", function() {
+			expect("[[->out]]").markupToError();
+			expect("[[out<-]]").markupToError();
+		});
+		it("errors if there's no passage name", function() {
+			expect("[[out->]]").markupToError();
+			expect("[[<-out]]").markupToError();
+		});
 		it("links to the passage pointed to by the arrow", function() {
 			createPassage("", "out");
 		

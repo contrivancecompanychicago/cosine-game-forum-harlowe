@@ -8,7 +8,10 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		are technically not links (but behave identically).
 	*/
 	const {optional} = Macros.TypeSignature;
-	const emptyLinkTextError = "Links can't have empty strings for their displayed text.";
+	const emptyLinkTextMessages = ["Links can't have empty strings for their displayed text.",
+		"In the link syntax, a link's displayed text is inside the [[ and ]], and on the non-pointy side of the -> or <- arrow if it's there."];
+	const emptyPassageNameMessages = ["Passage links must have a passage name.",
+		"In the link syntax, a link's passage name is inside the [[ and ]], and on the pointy side of the -> or <- arrow if it's there."];
 	
 	/*
 		Register the event that this enchantment responds to
@@ -149,7 +152,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		Macros.addChanger(arr,
 			(_, expr) => {
 				if (!expr) {
-					return TwineError.create("macrocall", emptyLinkTextError);
+					return TwineError.create("macrocall", emptyLinkTextMessages[0]);
 				}
 				return ChangerCommand.create(arr[0], [expr]);
 			},
@@ -228,7 +231,10 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			*/
 			(section, text, passage) => {
 				if (!text) {
-					return TwineError.create("macrocall", emptyLinkTextError);
+					return TwineError.create("macrocall", ...emptyLinkTextMessages);
+				}
+				if (!passage) {
+					return TwineError.create("macrocall", ...emptyPassageNameMessages);
 				}
 				return {
 					TwineScript_TypeName: "a (link-goto: "
@@ -322,7 +328,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		*/
 		("link-undo", (section, text) => {
 				if (!text) {
-					return TwineError.create("macrocall", emptyLinkTextError);
+					return TwineError.create("macrocall", emptyLinkTextMessages[0]);
 				}
 				return {
 					TwineScript_ObjectName: "a (link-undo:"
@@ -372,7 +378,10 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 	Macros.addChanger(["link-reveal-goto"],
 		(section, text, passage) => {
 			if (!text) {
-				return TwineError.create("macrocall", emptyLinkTextError);
+				return TwineError.create("macrocall", ...emptyLinkTextMessages);
+			}
+			if (!passage) {
+				return TwineError.create("macrocall", ...emptyPassageNameMessages);
 			}
 			/*
 				Being a variant of (link-goto:), this uses the same rules for passage name computation
