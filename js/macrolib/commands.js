@@ -571,6 +571,39 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			[String]
 		)
 		/*d:
+			(cycling-link: Bind, ...String) -> Command
+
+			A command that, when evaluated, creates a cycling link - a link which does not go anywhere, but changes its own text
+			to the next in a looping sequence of strings, and sets the bound variable to match the string value of the text.
+
+			Example usage:
+			`(cycling-link: bind $head's hair, "Black", "Brown", "Blonde", "Red", "White")`
+
+			Rationale:
+			The cycling link was an interaction idiom popularised in Twine 1 which combined the utility of a dial input element with
+			the discovery and visual consistency of a link: the player can only discover that this is a cycling link by clicking it,
+			and can then only discover the full set of labels by clicking through them. This affords a number of subtle dramatic and humourous
+			possibilities, and moreover allows the link to sit comfortably among passage prose without standing out as an interface element.
+
+			The addition of a variable bound to the link, changing to match whichever text the player finally dialed the link to, allows
+			cycling links to affect subsequent passages, and thus for the link to be just as meaningful in affecting the story's course as any
+			other, even though no hooks and (set:)s can be attached to them.
+
+			#input
+		*/
+		("cycling-link",
+			(_, bind, ...labels) => ({
+				TwineScript_ObjectName: "a (cycling-link:) command",
+				TwineScript_TypeName:   "a (cycling-link:) command",
+				TwineScript_Print() {
+					// NEED evaluateTwineMarkup() here...
+					return $('<tw-link>' + labels[0] + '</tw-link>')
+				},
+			}),
+			[String]
+		)
+
+		/*d:
 			(alert: String) -> Command
 
 			This macro produces a command that, when evaluated, shows a browser pop-up dialog box with the given

@@ -194,6 +194,10 @@ describe("style changer macros", function() {
 		it("has structural equality", function() {
 			expect("(print: (transition:'dissolve') is (transition:'dissolve'))").markupToPrint("true");
 			expect("(print: (transition:'dissolve') is (transition:'pulse'))").markupToPrint("false");
+			runPassage("(link:'Garply')+(transition:'shudder')[Grault]")
+		});
+		it("is aliased to (t8n:)", function() {
+			expect("(print: (t8n:'dissolve') is (transition:'dissolve'))").markupToPrint("true");
 		});
 		// TODO: Add .css() tests of output.
 	});
@@ -215,6 +219,9 @@ describe("style changer macros", function() {
 		it("has structural equality", function() {
 			expect("(print: (transition-time:2s) is (transition-time:2s))").markupToPrint("true");
 			expect("(print: (transition-time:2s) is (transition-time:2ms))").markupToPrint("false");
+		});
+		it("is aliased to (t8n-time:)", function() {
+			expect("(print: (t8n-time:2s) is (transition-time:2s))").markupToPrint("true");
 		});
 		// TODO: Add .css() tests of output.
 	});
@@ -438,5 +445,11 @@ describe("style changer macros", function() {
 			expect(align.css('text-align')).toBe('right');
 			done();
 		});
+	});
+	it("errors if composed with non-changer objects", function() {
+		expect("(set: $a to (align:'==>')+?Foo)").markupToError();
+		expect("(set: $a to (align:'==>')+(goto:'Foo'))").markupToError();
+		expect("(set: $a to (align:'==>')+(stop:))").markupToError();
+		expect("(set: $a to (align:'==>')+red)").markupToError();
 	});
 });

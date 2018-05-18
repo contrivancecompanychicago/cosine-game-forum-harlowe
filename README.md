@@ -9,6 +9,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
  * Fixed a bug where supplying multiple shortened `is` or `is not` comparisons, in a form such as `$a is $b and $c`, would produce an incorrect result.
  * Fixed a bug where the Debug View's (set:) messages were worded incorrectly when setting global variables.
  * A more useful error message is given if you write a link with no passage name (such as `[[Go->]]`).
+ * Fixed a bug where you could + a Changer, a HookName, or a Colour to any arbitrary command, like a `(goto:)` command.
 
 ####Alterations
 

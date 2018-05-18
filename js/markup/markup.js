@@ -704,7 +704,7 @@
 			// As these consist of word characters, they cannot follow text nodes, lest they
 			// match subwords like "xxisxx".
 			["boolean", "is", "to", "into", "where", "when", "via", "with", "making", "each", "and", "or", "not",
-			"isNot", "contains", "isIn", "isA", "isNotA", "matches"].reduce(function(a, e) {
+			"isNot", "contains", "isIn", "isA", "isNotA", "matches", "bind"].reduce((a, e) => {
 				a[e] = {
 					fn: emptyFn,
 					cannotFollow: ["text"],
@@ -713,7 +713,7 @@
 			},{}),
 			// These, being purely symbols, do not have that necessity.
 			["comma", "spread", "addition", "subtraction",
-			"multiplication", "division"].reduce(function(a, e) {
+			"multiplication", "division"].reduce((a, e) => {
 				a[e] = { fn: emptyFn };
 				return a;
 			},{})

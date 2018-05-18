@@ -956,6 +956,8 @@
 		each:       "each" + wb,
 		augmentedAssign: either("\\+", "\\-", "\\*", "\\\/", "%") + "=",
 
+		bind:       "bind" + wb,
+
 		incorrectOperator,
 	};
 	

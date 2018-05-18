@@ -35,7 +35,7 @@ define(['jquery', 'utils', 'utils/selectors'], ($, {unescape}, Selectors) => {
 				These must unfortunately be own-properties, as passages must inherit from
 				Map rather than this object.
 			*/
-			TwineScript_TypeName: "passage datamap",
+			TwineScript_TypeName: "a passage datamap",
 			TwineScript_ObjectName: "a passage datamap"
 		});
 	}

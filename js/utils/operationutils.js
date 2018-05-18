@@ -1,5 +1,5 @@
 "use strict";
-define(['utils', 'datatypes/hookset', 'internaltypes/twineerror'], ({impossible, toJSLiteral}, HookSet, TwineError) => {
+define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($, {impossible, toJSLiteral}, HookSet, TwineError) => {
 	
 	/*
 		First, a quick shortcut to determine whether the
@@ -11,7 +11,7 @@ define(['utils', 'datatypes/hookset', 'internaltypes/twineerror'], ({impossible,
 	}
 	
 	/*
-		Next, a quick function used for distinguishing the 3 types of collections
+		Next, a quick function used for distinguishing the types of collections
 		native to TwineScript.
 	*/
 	function collectionType(value) {
@@ -226,33 +226,6 @@ define(['utils', 'datatypes/hookset', 'internaltypes/twineerror'], ({impossible,
 		*/
 		impossible("OperationUtils.clone", "The value " + (value.toSource ? value.toSource() : value) + " cannot be cloned!");
 		return value;
-	}
-
-	/*
-		Some TwineScript objects can, in fact, be coerced to string.
-		HookRefs, for instance, coerce to the string value of their first
-		matching hook.
-		
-		(Will I pay for this later???)
-		
-		This returns the resulting string, or false if it couldn't be performed.
-		@return {String|Boolean}
-	*/
-	function coerceToString(fn, left, right) {
-		if (typeof left  === "string" && isObject(right) &&
-				"TwineScript_ToString" in right) {
-			return fn(left, right.TwineScript_ToString());
-		}
-		/*
-			We can't really replace this case with a second call to
-			canCoerceToString, passing (fn, right, left), because fn
-			may not be symmetric.
-		*/
-		if (typeof right === "string" && isObject(left) &&
-				"TwineScript_ToString" in left) {
-			return fn(left.TwineScript_ToString(), right);
-		}
-		return false;
 	}
 	
 	/*
@@ -575,6 +548,9 @@ define(['utils', 'datatypes/hookset', 'internaltypes/twineerror'], ({impossible,
 		else if (Array.isArray(value)) {
 			return value.map(printBuiltinValue) + "";
 		}
+		else if (value instanceof $) {
+			return value;
+		}
 		/*
 			If it's an object we don't know how to print, emit an error
 			instead of [object Object].
@@ -597,7 +573,6 @@ define(['utils', 'datatypes/hookset', 'internaltypes/twineerror'], ({impossible,
 		collectionType,
 		isSequential,
 		clone,
-		coerceToString,
 		objectName,
 		typeName,
 		is,

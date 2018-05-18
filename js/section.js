@@ -173,12 +173,14 @@ define([
 
 		while(ChangerCommand.isPrototypeOf(result)) {
 			/*
-				Check if the next non-whitespace element is a +, or an anonymous hook.
+				Check if the next non-whitespace element is a +, an attachable expression, or a hook.
 			*/
 			({whitespace, nextElem} = nextNonWhitespace(nextElem));
 			if (nextElem[0] instanceof Text && nextElem[0].textContent.trim() === "+") {
 				/*
 					Having found a +, we must confirm the non-ws element after it is an expression.
+					If it is, we try to + it with the changer.
+					(If it's a Hook Expression, this + will fail and neither it nor the changer will be executed)
 				*/
 				let whitespaceAfter, plusMark = nextElem;
 				({whitespace:whitespaceAfter, nextElem} = nextNonWhitespace(plusMark));
@@ -203,17 +205,58 @@ define([
 					*/
 					if (TwineError.containsError(newResult)) {
 						result = TwineError.create("operation",
-							"I can't combine " + objectName(result) + " with " + objectName(nextValue) + "."
+							"I can't combine " + objectName(result) + " with " + objectName(nextValue) + ".",
+							"Changers can only be added to other changers."
 						);
 					}
 					else {
 						result = newResult;
 					}
+					/*
+						Because changers cannot be +'d with anything other than themselves,
+						this continue, jumping back to the while condition above, will always continue
+						the loop.
+					*/
 					continue;
 				}
 				/*
 					If the next element wasn't an expression, fall down to the error below.
 				*/
+			}
+			/*
+				If instead of a +, it's another kind of expression, we attempt to determine if it's a Hook Expression (a (print:) macro or somesuch).
+				If not, then the changer's attempted attachment fails and an error results, and it doesn't matter if the expression
+				is dropped (by us executing its js early) as well.
+			*/
+			if (nextElem.is(Selectors.expression)) {
+				const nextValue = this.eval(nextElem.popAttr('js'));
+				/*
+					Errors produced by expression evaluation should be propagated above changer attachment errors, I guess.
+				*/
+				if (TwineError.containsError(nextValue)) {
+					result = nextValue;
+					break;
+				}
+				/*
+					Here's where the attachment happens, if it can. If an error results from TwineScript_Attach(), it'll be handled down the line.
+				*/
+				if (nextValue && typeof nextValue === "object" && typeof nextValue.TwineScript_Attach === "function") {
+					/*
+						This should subtly mutate the command object in-place (which doesn't really matter as it was produced
+						from raw JS just a few lines above) leaving it ready to be TwineScript_Print()ed far below.
+					*/
+					result = nextValue.TwineScript_Attach(result);
+				}
+				/*
+					When the attachment can't happen, produce an error mentioning that only certain structures allow changers to attach.
+				*/
+				else {
+					expr.replaceWith(TwineError.create("operation",
+						"The (" + result.macroName + ":) changer can't attach to " + objectName(nextValue) + ".",
+						"Changers can only attach to hooks, or macros that produce hooks."
+					).render(expr.attr('title')));
+					return;
+				}
 			}
 			if (nextElem.is(Selectors.hook)) {
 				/*
@@ -228,14 +271,15 @@ define([
 				If it's neither hook nor expression, then this evidently isn't connected to
 				a hook at all. Produce an error.
 			*/
+			const macroCall = (expr.attr('title') || ("(" + result.macroName + ": ...)"));
 			expr.replaceWith(TwineError.create("syntax",
-				"The (" + result.macroName + ":) command should be assigned to a variable or attached to a hook.",
-				"Macros like this should appear to the left of a hook: " + expr.attr('title') + "[Some text]"
+				"The (" + result.macroName + ":) changer should be stored in a variable or attached to a hook.",
+				"Macros like this should appear to the left of a hook: " + macroCall + "[Some text]"
 			).render(expr.attr('title')));
-			break;
+			return;
 		}
 		/*
-			IF the above loop wasn't entered at all (i.e. the result wasn't a changer) then an error may
+			If the above loop wasn't entered at all (i.e. the result wasn't a changer) then an error may
 			be called for. For now, obtain the next hook anyway.
 		*/
 		nextHook = nextHook.length ? nextHook : nextNonWhitespace(expr).nextElem.filter(Selectors.hook);
@@ -537,6 +581,9 @@ define([
 		This is exclusively called by runExpression().
 	*/
 	function runLiveHook(expr, target, delay = 20, event = undefined) {
+		if (event) {
+			Utils.assertMustHave(event, "when");
+		}
 		/*
 			Obtain the code of the hook that the (live:) or (event:) changer suppressed.
 		*/

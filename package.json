@@ -36,6 +36,7 @@
     "jshint": "latest",
     "marked": "0.3.3",
     "requirejs": "latest",
+    "jasmine-core": "2.4",
     "replacestream": "latest",
     "uglifyjs": "latest"
   }

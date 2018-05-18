@@ -5,7 +5,7 @@ define([
 	'utils/operationutils',
 	'internaltypes/twineerror',
 ],
-(State, AssignmentRequest, {isObject, collectionType, coerceToString, is, isA, clone, unique, contains, matches, typeName, objectName}, TwineError) => {
+(State, AssignmentRequest, {isObject, collectionType, is, isA, clone, unique, contains, matches, typeName, objectName}, TwineError) => {
 	/*
 		Operation objects are a table of operations which TwineScript proxies
 		for/sugars over JavaScript. These include basic fixes like the elimination
@@ -112,23 +112,22 @@ define([
 				This checks that left and right are generally different types
 				(both different typeof or, if both are object, different collection types)
 			*/
-			if (typeof left !== typeof right
-				|| collectionType(left) !== collectionType(right)) {
-				/*
-					Attempt to coerce to string using TwineScript specific
-					methods, and return an error if it fails.
-				*/
-				return coerceToString(fn, left, right)
+			if (typeof left !== typeof right ||
+				(
+					isObject(left) && "TwineScript_TypeName" in left &&
+					isObject(right) && "TwineScript_TypeName" in right &&
+					left.TwineScript_TypeName !== right.TwineScript_TypeName
+				) || collectionType(left) !== collectionType(right)) {
 					/*
 						TwineScript errors are handled by TwineScript, not JS,
 						so don't throw this error, please.
 					*/
-					|| TwineError.create("operation",
-						// BUG: This isn't capitalised.
-						objectName(left)
-						+ " isn't the same type of data as "
-						+ objectName(right)
-					);
+				return TwineError.create("operation",
+					// BUG: This isn't capitalised.
+					objectName(left)
+					+ " isn't the same type of data as "
+					+ objectName(right)
+				);
 			}
 			return fn(left, right);
 		};

@@ -73,7 +73,7 @@ describe("link syntax", function() {
 			expect("[[->out]]").markupToError();
 			expect("[[out<-]]").markupToError();
 		});
-		it("errors if there's no passage name", function() {
+		xit("errors if there's no passage name", function() {
 			expect("[[out->]]").markupToError();
 			expect("[[<-out]]").markupToError();
 		});

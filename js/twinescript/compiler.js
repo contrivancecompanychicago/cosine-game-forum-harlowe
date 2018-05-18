@@ -385,8 +385,13 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				is probably easily disputed.
 			*/
 			midString = "Operations.makeSpreader(";
-			right =
-				compile(tokens.slice(i + 1))
+			right = compile(tokens.slice(i + 1))
+				+ ")";
+			needsLeft = false;
+		}
+		else if (type === "bind") {
+			midString = "VarBind.create(";
+			right = compile(tokens.slice(i + 1), varRefArgs("right"))
 				+ ")";
 			needsLeft = false;
 		}

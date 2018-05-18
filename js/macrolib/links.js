@@ -234,7 +234,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 					return TwineError.create("macrocall", ...emptyLinkTextMessages);
 				}
 				if (!passage) {
-					return TwineError.create("macrocall", ...emptyPassageNameMessages);
+					passage = text;
 				}
 				return {
 					TwineScript_TypeName: "a (link-goto: "
@@ -285,8 +285,9 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 						const visited = (State.passageNameVisited(passageName));
 						
 						/*
-							This regrettably exposes the destination passage name in the DOM...
-							but I hope to somehow eliminate this in the near future.
+							For compatibility reasons, this exposes the destination passage name in the DOM
+							in case user CSS targets it... but this will be removed in a major release
+							(which will return a jQuery with the passage name attached as data).
 						*/
 						return '<tw-link tabindex=0 ' + (visited > 0 ? 'class="visited" ' : '')
 							// Always remember to Utils.escape() any strings that must become raw HTML attributes.
@@ -381,7 +382,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 				return TwineError.create("macrocall", ...emptyLinkTextMessages);
 			}
 			if (!passage) {
-				return TwineError.create("macrocall", ...emptyPassageNameMessages);
+				passage = text;
 			}
 			/*
 				Being a variant of (link-goto:), this uses the same rules for passage name computation
