@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changercommand', 'datatypes/lambda', 'datatypes/hookset', 'internaltypes/twineerror'],
-($, NaturalSort, {insensitiveName, nth, plural, andList, lockProperty}, {objectName, typeName, singleTypeCheck}, ChangerCommand, Lambda, HookSet, TwineError) => {
+define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changercommand', 'datatypes/lambda', 'datatypes/hookset', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
+($, NaturalSort, {insensitiveName, nth, plural, andList, lockProperty}, {objectName, typeName, singleTypeCheck}, ChangerCommand, Lambda, HookSet, ChangeDescriptor, TwineError) => {
 	/*
 		This contains a registry of macro definitions, and methods to add to that registry.
 	*/
@@ -240,6 +240,55 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			lockProperty(macroRegistry, insensitiveName(name), fn);
 		}
 	}
+
+	/*
+		A helper for addCommand() and addHookCommand(), which produces a function that makes
+		that macro's Command objects. Currently, Commands do not have a shared prototype,
+		so this function performs their initialisation in its stead.
+	*/
+	const commandMaker = (firstName, checkFn, runFn, isHookCommand) => (...args) => {
+		/*
+			The passed-in checkFn should only return a value if the check fails,
+			and that value must be a TwineError. I'm so confident about this that I'm not even
+			going to add a TwineError.containsError() call here.
+		*/
+		/*
+			Since the mandatory "section" argument SHOULD be unnecessary for checkFns (which
+			evaluate the validity of input in a vacuum, given a Command can be stored and used
+			across multiple passages), it gets sliced off.
+		*/
+		const error = checkFn(...args.slice(1));
+		if (error) {
+			return error;
+		}
+		/*
+			For HookCommands only: this ChangeDescriptor is a private variable of the object,
+			permuted by TwineScript_Attach(), and given to the printFn whenever that's
+			finally called.
+		*/
+		let cd;
+		if (isHookCommand) {
+			cd = ChangeDescriptor.create();
+		}
+		return Object.assign({
+				TwineScript_ObjectName: "a (" + firstName + ":) command",
+				TwineScript_TypeName: "a (" + firstName + ":) command",
+				TwineScript_Print: () => "`[A (" + firstName + ":) command]`",
+			},
+			/*
+				Only assign the TwineScript_Attach() method, and a TwineScript_Run() that
+				passes in the ChangeDescriptor, if this is a HookCommand.
+			*/
+			isHookCommand ? {
+				TwineScript_Attach: changer => {
+					changer.run(cd);
+					return ret;
+				},
+				TwineScript_Run: () => runFn(cd, ...args),
+			} : {
+				TwineScript_Run: () => runFn(...args),
+		});
+	};
 	
 	Macros = {
 		/*
@@ -259,11 +308,9 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		},
 		
 		/*
-			A high-level wrapper for add() that creates a Value Macro from 3
-			entities: a macro implementation function, a ChangerCommand function, and
+			A high-level wrapper for privateAdd() that creates a macro from
+			a name (or array of names), a macro implementation function, and
 			a parameter type signature array.
-			
-			The passed-in function should return a changer.
 		*/
 		add: function add(name, fn, typeSignature) {
 			privateAdd(name,
@@ -274,7 +321,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		},
 	
 		/*
-			Takes a function, and registers it as a live Changer macro.
+			Takes two functions, and registers them as a live Changer macro.
 			
 			Changers return a transformation function (a ChangerCommand) that is used to mutate
 			a ChangeDescriptor object, that itself is used to alter a Section's rendering.
@@ -296,6 +343,44 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			
 			// Return the function to enable "bubble chaining".
 			return addChanger;
+		},
+
+		/*
+			Takes a function, and produces a Command (a macro that produces an opaque object with
+			TwineScript_ObjectName(), TwineScript_TypeName(), TwineScript_Print() and TwineScript_Run()
+			functions). This is used for basic side-effect operation macros like (alert:) or (savegame:).
+		*/
+		addCommand: function addCommand(name, checkFn, runFn, typeSignature) {
+			/*
+				Since name can be either a single string or an array, this is needed
+				to unwrap it.
+			*/
+			const firstName = [].concat(name)[0];
+			privateAdd(name,
+				readArguments(typeSignatureCheck(name, commandMaker(firstName, checkFn, runFn, false), typeSignature))
+			);
+			// Return the function to enable "bubble chaining".
+			return addCommand;
+		},
+
+		/*
+			Takes a function, and produces a "HookCommand", which is a command that also
+			has a TwineScript_Attach() function, which permutes an internal ChangeDescriptor
+			that the object later passes to its TwineScript_Print() function. This is used
+			for macros like (link:) which can have changers like (t8n:) attached to
+			them, as if like hooks.
+		*/
+		addHookCommand: function addHookCommand(name, checkFn, runFn, typeSignature) {
+			/*
+				Since name can be either a single string or an array, this is needed
+				to unwrap it.
+			*/
+			const firstName = [].concat(name)[0];
+			privateAdd(name,
+				readArguments(typeSignatureCheck(name, commandMaker(firstName, checkFn, runFn, true), typeSignature))
+			);
+			// Return the function to enable "bubble chaining".
+			return addHookCommand;
 		},
 		
 		/*

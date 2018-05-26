@@ -528,7 +528,7 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 			return value.reduce((html, [pair1, pair2]) =>
 				/*
 					Print each value, calling printBuiltinValue() on
-					each of them,. Notice that the above conversion means
+					each of them. Notice that the above conversion means
 					that none of these pairs contain error.
 				*/
 				html + "<tr><td>`" +

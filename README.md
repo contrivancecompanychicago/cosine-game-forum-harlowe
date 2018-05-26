@@ -14,6 +14,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
 ####Alterations
 
  * The `(text:)` macro now has another alias, `(str:)`. This alias will now be the preferred name for this macro in the documentation, mainly due to the arrival of other string macros that begin with "str-", and additionally to avoid semantic conflict with the various "text-" changer macros like `(text-style:)`.
+ * To more clearly separate the concepts of "printing data" and "running commands" in Harlowe, the `(print:)` macro will no longer run commands passed to it (that is, `(print:(go-to:"Foo"))` and `(go-to:"Foo")` will no longer do the same thing - the former will just print out a descriptive string, as if printing out a changer). Commands can now only be run by placing them directly in the passage (either as plain calls or inside variables).
 
 ####Additions
 

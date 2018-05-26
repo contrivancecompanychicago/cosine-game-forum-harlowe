@@ -12,8 +12,8 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 		Macros that produce commands include (display:), (print:), (go-to:), (save-game:), (load-game:),
 		(link-goto:), and more.
 	*/
-	const
-		{Any, rest, optional} = Macros.TypeSignature;
+	const {Any, rest, optional} = Macros.TypeSignature;
+	const {assign} = Object;
 	
 	const hasStorage = !!localStorage
 		&& (() => {
@@ -38,10 +38,9 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 		return "(" + text + " " + Engine.options.ifid + ") ";
 	}
 	
-	Macros.add
-	
+	Macros.addHookCommand
 		/*d:
-			(display: String) -> Command
+			(display: String) -> HookCommand
 			
 			This command writes out the contents of the passage with the given string name.
 			If a passage of that name does not exist, this produces an error.
@@ -70,36 +69,25 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			#basics 5
 		*/
 		("display",
-			/*
-				Create a DisplayCommand.
-			*/
-			(_, name) => ({
-				TwineScript_ObjectName:
-					"a (display: " + toJSLiteral(name) + ") command",
-				
-				TwineScript_TypeName:
-					"a (display:) command",
-				
-				TwineScript_Print() {
-					/*
-						Test for the existence of the named passage in the story.
-						This and the next check must be made now, because the Passages
-						datamap could've been tinkered with since this was created.
-					*/
-					if (!Passages.has(name)) {
-						return TwineError.create("macrocall",
-							"I can't (display:) the passage '"
-							+ name
-							+ "' because it doesn't exist."
-						);
-					}
-					return unescape(Passages.get(name).get('source'));
-				},
-			}),
-		[String])
+			(name) => {
+				/*
+					Test for the existence of the named passage in the story.
+					This and the next check must be made now, because the Passages
+					datamap could've been tinkered with since this was created.
+				*/
+				if (!Passages.has(name)) {
+					return TwineError.create("macrocall",
+						"I can't (display:) the passage '"
+						+ name
+						+ "' because it doesn't exist."
+					);
+				}
+			},
+			(cd, _, name) => assign(cd, { source: unescape(Passages.get(name).get('source')) }),
+			[String])
 		
 		/*d:
-			(print: Any) -> Command
+			(print: Any) -> HookCommand
 			This command prints out any single argument provided to it, as text.
 			
 			Example usage:
@@ -128,24 +116,50 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 
 			#basics 4
 		*/
-		("print", (_, expr) => {
-			return {
-				TwineScript_ObjectName: "a (print:) command",
+		("print",
+			() => {},
+			(cd, _, val) =>
+				/*
+					The printBuiltinValue() call can call commands' TwineScript_Print() method,
+					so it must be withheld until here, so that wordings like (set: $x to (print:(goto:'X')))
+					do not execute the command prematurely.
+				*/
+				assign(cd, { source: printBuiltinValue(val) }),
+			[Any])
 
-				TwineScript_TypeName:   "a (print:) command",
-				
-				TwineScript_Print() {
-					/*
-						The printBuiltinValue() call can call commands' TwineScript_Print() method,
-						so it must be withheld until here, so that wordings like (set: $x to (print:(goto:'X')))
-						do not execute the command prematurely.
-					*/
-					return printBuiltinValue(expr);
-				},
-			};
-		},
-		[Any])
+		/*d:
+			(cycling-link: Bind, ...String) -> Command
 
+			A command that, when evaluated, creates a cycling link - a link which does not go anywhere, but changes its own text
+			to the next in a looping sequence of strings, and sets the bound variable to match the string value of the text.
+
+			Example usage:
+			`(cycling-link: bind $head's hair, "Black", "Brown", "Blonde", "Red", "White")`
+
+			Rationale:
+			The cycling link was an interaction idiom popularised in Twine 1 which combined the utility of a dial input element with
+			the discovery and visual consistency of a link: the player can only discover that this is a cycling link by clicking it,
+			and can then only discover the full set of labels by clicking through them. This affords a number of subtle dramatic and humourous
+			possibilities, and moreover allows the link to sit comfortably among passage prose without standing out as an interface element.
+
+			The addition of a variable bound to the link, changing to match whichever text the player finally dialed the link to, allows
+			cycling links to affect subsequent passages, and thus for the link to be just as meaningful in affecting the story's course as any
+			other, even though no hooks and (set:)s can be attached to them.
+
+			Details:
+			TBW
+
+			#input
+		*/
+		("cycling-link",
+			() => {},
+			(cd, _, bind, ...labels) => {
+				// NEED evaluateTwineMarkup() here...
+				return assign(cd, { source: '<tw-link>' + labels[0] + '</tw-link>' });
+			},
+			[String]);
+
+	Macros.addCommand
 		/*d:
 			(show: ...HookName) -> Command
 
@@ -206,26 +220,20 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 
 			#showing and hiding
 		*/
-		("show", (section, ...hooks) => {
-			return {
-				TwineScript_ObjectName: "a (show:) command",
-
-				TwineScript_TypeName:   "a (show:) command",
-				
-				TwineScript_Print() {
-					hooks.forEach(hook => hook.forEach(section, elem => {
-						const hiddenSource = elem.data('hiddenSource');
-						if (hiddenSource === undefined) {
-							return TwineError.create("operation",
-								"I can't reveal a hook which is already visible.");
-						}
-						section.renderInto(hiddenSource, elem);
-					}));
-					return '';
-				},
-			};
-		},
-		[rest(HookSet)])
+		("show",
+			() => {},
+			(section, ...hooks) => {
+				hooks.forEach(hook => hook.forEach(section, elem => {
+					const hiddenSource = elem.data('hiddenSource');
+					if (hiddenSource === undefined) {
+						return TwineError.create("operation",
+							"I can't reveal a hook which is already visible.");
+					}
+					section.renderInto(hiddenSource, elem);
+				}));
+				return '';
+			},
+			[rest(HookSet)])
 
 		/*d:
 			(go-to: String) -> Command
@@ -267,66 +275,39 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 
 			#links
 		*/
-		("goto", (_, name) => ({
-				TwineScript_ObjectName: "a (go-to: " + toJSLiteral(name) + ") command",
-				TwineScript_TypeName:   "a (go-to:) command",
-				TwineScript_Print() {
-					/*
-						First, of course, check for the passage's existence.
-					*/
-					if (!Passages.has(name)) {
-						return TwineError.create("macrocall",
-							"I can't (go-to:) the passage '"
-							+ name
-							+ "' because it doesn't exist."
-						);
-					}
-					/*
-						When a passage is being rendered, <tw-story> is detached from the main DOM.
-						If we now call another Engine.goToPassage in here, it will attempt
-						to detach <tw-story> twice, causing a crash.
-						So, the change of passage must be deferred until just after
-						the passage has ceased rendering.
-					*/
-					requestAnimationFrame(()=> Engine.goToPassage(name));
-					/*
-						But how do you immediately cease rendering the passage?
-						
-						This object's property name causes Section's runExpression() to
-						cancel expression evaluation at that point. This means that for, say,
-							(goto: "X")(set: $y to 1)
-						the (set:) will not run because it is after the (goto:)
-					*/
-					return { earlyExit: 1 };
-				},
-			}),
-		[String])
-
-		/*
-			This is an experimental variant of the above, which isn't yet confirmed for public release.
-		*/
-		("goto-transition", (_, passageName, transitionName) => ({
-				TwineScript_ObjectName: "a (goto-transition: " + toJSLiteral(passageName) + "," + toJSLiteral(transitionName) + ") command",
-				TwineScript_TypeName:   "a (goto-transition:) command",
-				TwineScript_Print() {
-					/*
-						First, of course, check for the passage's existence.
-					*/
-					if (!Passages.has(passageName)) {
-						return TwineError.create("macrocall",
-							"I can't (goto-transition:) the passage '"
-							+ transitionName
-							+ "' because it doesn't exist."
-						);
-					}
-					requestAnimationFrame(() => Engine.goToPassage(passageName, {
-						transitionIn: transitionName,
-						transitionOut: transitionName,
-					}));
-					return { earlyExit: 1 };
-				},
-			}),
-		[String, String])
+		("go-to",
+			(name) => {
+				/*
+					First, of course, check for the passage's existence.
+				*/
+				if (!Passages.has(name)) {
+					return TwineError.create("macrocall",
+						"I can't (go-to:) the passage '"
+						+ name
+						+ "' because it doesn't exist."
+					);
+				}
+			},
+			(_, name) => {
+				/*
+					When a passage is being rendered, <tw-story> is detached from the main DOM.
+					If we now call another Engine.goToPassage in here, it will attempt
+					to detach <tw-story> twice, causing a crash.
+					So, the change of passage must be deferred until just after
+					the passage has ceased rendering.
+				*/
+				requestAnimationFrame(()=> Engine.goToPassage(name));
+				/*
+					But how do you immediately cease rendering the passage?
+					
+					This object's property name causes Section's runExpression() to
+					cancel expression evaluation at that point. This means that for, say,
+						(goto: "X")(set: $y to 1)
+					the (set:) will not run because it is after the (goto:)
+				*/
+				return { earlyExit: 1 };
+			},
+			[String])
 
 		/*d:
 			(undo:) -> Command
@@ -358,30 +339,25 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 
 			#links
 		*/
-		("undo", () => ({
-				TwineScript_ObjectName: "a (undo:) command",
-				TwineScript_TypeName:   "a (undo:) command",
-				TwineScript_Print() {
-					/*
-						Users of (undo:) should always check that (history:) is longer than 1.
-					*/
-					if (State.pastLength < 1) {
-						return TwineError.create("macrocall", "I can't (undo:) on the first turn.");
-					}
-					/*
-						As with the (goto:) macro, the change of passage must be deferred until
-						just after the passage has ceased rendering, to avoid <tw-story> being
-						detached twice.
-					*/
-					requestAnimationFrame(()=> Engine.goBack());
-					/*
-						As with the (goto:) macro, this returned object signals to
-						Section's runExpression() to cease evaluation.
-					*/
-					return { earlyExit: 1 };
-				},
-			}),
-		[])
+		("undo",
+			() => {},
+			() => {
+				if (State.pastLength < 1) {
+					return TwineError.create("macrocall", "I can't (undo:) on the first turn.");
+				}
+				/*
+					As with the (goto:) macro, the change of passage must be deferred until
+					just after the passage has ceased rendering, to avoid <tw-story> being
+					detached twice.
+				*/
+				requestAnimationFrame(()=> Engine.goBack());
+				/*
+					As with the (goto:) macro, this returned object signals to
+					Section's runExpression() to cease evaluation.
+				*/
+				return { earlyExit: 1 };
+			},
+			[])
 
 		/*d:
 			(stop:) -> Command
@@ -406,15 +382,10 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			#live
 		*/
 		("stop",
-			() => ({
-				TwineScript_ObjectName: "a (stop:) command",
-				TwineScript_TypeName:   "a (stop:) command",
-				TwineScript_Print() {
-					return "";
-				},
-			}),
-			[]
-		)
+			() => {},
+			() => "",
+			[])
+
 		/*d:
 			(save-game: String, [String]) -> Boolean
 			
@@ -466,7 +437,8 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 
 			#saving
 		*/
-		("savegame",
+		("save-game",
+			() => {},
 			(_, slotName, fileName) => {
 				/*
 					The default filename is the empty string.
@@ -516,8 +488,8 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 					return false;
 				}
 			},
-			[String, optional(String)]
-		)
+			[String, optional(String)])
+
 		/*d:
 			(load-game: String) -> Command
 			
@@ -545,63 +517,25 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			
 			#saving
 		*/
-		("loadgame",
+		("load-game",
+			() => {},
 			(_, slotName) => {
-				return {
-					TwineScript_ObjectName: "a (load-game:) command",
-					TwineScript_TypeName:   "a (load-game:) command",
-					TwineScript_Print() {
-						const saveData = localStorage.getItem(storagePrefix("Saved Game") + slotName);
-						
-						if (!saveData) {
-							return TwineError.create("saving", "I can't find a save slot named '" + slotName + "'!");
-						}
-						
-						State.deserialise(saveData);
-						/*
-							There's not a strong reason to check for the destination passage existing,
-							because (save-game:) can only be run inside a passage. If this fails,
-							the save itself is drastically incorrect.
-						*/
-						requestAnimationFrame(Engine.showPassage.bind(Engine, State.passage, false /* stretchtext value */));
-						return { earlyExit: 1 };
-					},
-				};
+				const saveData = localStorage.getItem(storagePrefix("Saved Game") + slotName);
+				
+				if (!saveData) {
+					return TwineError.create("saving", "I can't find a save slot named '" + slotName + "'!");
+				}
+				
+				State.deserialise(saveData);
+				/*
+					There's not a strong reason to check for the destination passage existing,
+					because (save-game:) can only be run inside a passage. If this fails,
+					the save itself is drastically incorrect.
+				*/
+				requestAnimationFrame(Engine.showPassage.bind(Engine, State.passage, false /* stretchtext value */));
+				return { earlyExit: 1 };
 			},
-			[String]
-		)
-		/*d:
-			(cycling-link: Bind, ...String) -> Command
-
-			A command that, when evaluated, creates a cycling link - a link which does not go anywhere, but changes its own text
-			to the next in a looping sequence of strings, and sets the bound variable to match the string value of the text.
-
-			Example usage:
-			`(cycling-link: bind $head's hair, "Black", "Brown", "Blonde", "Red", "White")`
-
-			Rationale:
-			The cycling link was an interaction idiom popularised in Twine 1 which combined the utility of a dial input element with
-			the discovery and visual consistency of a link: the player can only discover that this is a cycling link by clicking it,
-			and can then only discover the full set of labels by clicking through them. This affords a number of subtle dramatic and humourous
-			possibilities, and moreover allows the link to sit comfortably among passage prose without standing out as an interface element.
-
-			The addition of a variable bound to the link, changing to match whichever text the player finally dialed the link to, allows
-			cycling links to affect subsequent passages, and thus for the link to be just as meaningful in affecting the story's course as any
-			other, even though no hooks and (set:)s can be attached to them.
-
-			#input
-		*/
-		("cycling-link",
-			(_, bind, ...labels) => ({
-				TwineScript_ObjectName: "a (cycling-link:) command",
-				TwineScript_TypeName:   "a (cycling-link:) command",
-				TwineScript_Print() {
-					// NEED evaluateTwineMarkup() here...
-					return $('<tw-link>' + labels[0] + '</tw-link>')
-				},
-			}),
-			[String]
-		)
+			[String])
 
 		/*d:
 			(alert: String) -> Command
@@ -627,16 +561,13 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			#popup
 		*/
 		("alert",
-			(_, text) => ({
-				TwineScript_ObjectName: "an (alert:) command",
-				TwineScript_TypeName:   "an (alert:) command",
-				TwineScript_Print() {
-					window.alert(text);
-					return "";
-				},
-			}),
-			[String]
-		)
+			() => {},
+			(_, text) => {
+				window.alert(text);
+				return "";
+			},
+			[String])
+
 		/*d:
 			(prompt: String, String) -> String
 
@@ -662,9 +593,10 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			#popup
 		*/
 		("prompt",
+			() => {},
 			(_, text, value) => window.prompt(text, value) || "",
-			[String, String]
-		)
+			[String, String])
+
 		/*d:
 			(confirm: String) -> Boolean
 
@@ -690,9 +622,10 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			#popup
 		*/
 		("confirm",
+			() => {},
 			(_, text) => window.confirm(text),
-			[String]
-		)
+			[String])
+
 		/*d:
 			(open-url: String) -> Command
 
@@ -717,17 +650,14 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 
 			#url
 		*/
-		("openURL",
-			(_, text) => ({
-				TwineScript_ObjectName: "an (open-url:) command",
-				TwineScript_TypeName:   "an (open-url:) command",
-				TwineScript_Print() {
-					window.open(text, '');
-					return "";
-				},
-			}),
-			[String]
-		)
+		("open-url",
+			() => {},
+			(_, text) => {
+				window.open(text, '');
+				return "";
+			},
+			[String])
+
 		/*d:
 			(reload:) -> Command
 
@@ -744,24 +674,21 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			#url
 		*/
 		("reload",
-			()=>({
-				TwineScript_ObjectName: "a (reload:) command",
-				TwineScript_TypeName:   "a (reload:) command",
-				TwineScript_Print() {
-					if (State.pastLength < 1) {
-						return TwineError.create("infinite", "I mustn't (reload:) the page in the starting passage.");
-					}
-					window.location.reload();
-					/*
-						This technically doesn't need to be an "early exit" command
-						like (goto:), because reload() halts all execution by itself.
-						But, when proper error-checking is added, this will be necessary.
-					*/
-					return { earlyExit: 1 };
-				},
-			}),
-			[]
-		)
+			() => {},
+			() => {
+				if (State.pastLength < 1) {
+					return TwineError.create("infinite", "I mustn't (reload:) the page in the starting passage.");
+				}
+				window.location.reload();
+				/*
+					This technically doesn't need to be an "early exit" command
+					like (goto:), because reload() halts all execution by itself.
+					But, when proper error-checking is added, this will be necessary.
+				*/
+				return { earlyExit: 1 };
+			},
+			[])
+
 		/*d:
 			(goto-url: String) -> Command
 
@@ -786,21 +713,18 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 
 			#url
 		*/
-		("gotoURL",
-			(_, url)=>({
-				TwineScript_ObjectName: "a (goto-url:) command",
-				TwineScript_TypeName:   "a (goto-url:) command",
-				TwineScript_Print() {
-					window.location.assign(url);
-					/*
-						As with (reload:), this early exit signal will be useful once
-						proper editing is added.
-					*/
-					return { earlyExit: 1 };
-				},
-			}),
-			[String]
-		)
+		("goto-url",
+			() => {},
+			(_, url)=>{
+				window.location.assign(url);
+				/*
+					As with (reload:), this early exit signal will be useful once
+					proper editing is added.
+				*/
+				return { earlyExit: 1 };
+			},
+			[String])
+
 		/*d:
 			(page-url:) -> String
 
@@ -815,6 +739,8 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 
 			#url
 		*/
-		("pageURL", () => window.location.href, [])
-		;
+		("page-url", 
+			() => {},
+			() => window.location.href,
+			[]);
 });

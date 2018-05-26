@@ -1,5 +1,5 @@
 "use strict";
-define(['utils'], ({assertMustHave}) => {
+define(['utils', 'utils/operationutils', 'internaltypes/varref', 'internaltypes/twineerror'], (Utils, {objectName}, VarRef, TwineError) => {
 	/*
 		VarBinds provide a means for certain UI input macros like (textarea:) to bind changes to their contents
 		to a variable.
@@ -7,6 +7,15 @@ define(['utils'], ({assertMustHave}) => {
 		They are unobservable - attempts to store them or use them in any other macros must fail.
 	*/
 	
+	/*d:
+		Bound Variable data
+
+		TBW
+
+		| Operator | Purpose | Example
+		|---
+		| `bind` | Binds the named variable on the right. | `bind $weapon`, `bind _hat`
+	*/
 	const VarBind = Object.freeze({
 		/*
 			These should normally only appear during type signature error messages.
@@ -23,8 +32,13 @@ define(['utils'], ({assertMustHave}) => {
 			changed).
 		*/
 		create(varRef, bind = "one way") {
-			// Assert: dest is a varRef
-			assertMustHave(varRef, ["varref"]);
+			/*
+				Produce a user-facing error if a non-varRef was given.
+				Since "bind" is just another operator, this can't be picked up in compilation until now.
+			*/
+			if (!VarRef.isPrototypeOf(varRef)) {
+				return TwineError.create("operation", "I can only 'bind' a variable, not " + objectName(varRef) + ".");
+			}
 			
 			return Object.assign(Object.create(this), { varRef, bind });
 		},

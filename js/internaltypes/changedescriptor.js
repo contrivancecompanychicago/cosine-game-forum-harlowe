@@ -304,7 +304,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 				
 				Notice also that the entire expression is wrapped in $():
 				a jQuery must be returned by this method, and $(false)
-				conveniently evaluates to $().Otherwise, it converts the
+				conveniently evaluates to $(). Otherwise, it converts the
 				array returned by $.parseHTML into a jQuery.
 				
 				This has to be run as close to insertion as possible because of

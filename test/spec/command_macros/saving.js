@@ -95,21 +95,21 @@ describe("save macros", function() {
 			runPassage("dos(savegame:'1','Filename')", "dos");
 			runPassage("tres", "tres");
 			expect("cuatro(loadgame:'1')").not.markupToError();
-			requestAnimationFrame(function() {
+			setTimeout(function() {
 				expect($("tw-passage").last().text()).toMatch("dos");
 				expect("(history:)").markupToPrint("uno,dos");
 				done();
-			});
+			}, 20);
 		});
 		it("restores the saved game's variables", function(done) {
 			runPassage("(set:$foo to 'egg')(set:$bar to 2)(set:$baz to true)", "uno");
 			runPassage("(set:$bar to it + 2)(savegame:'1','Filename')", "dos");
 			runPassage("(set:$bar to it + 2)(set:$foo to 'nut')", "tres");
 			expect("(set:$bar to it + 2)(loadgame:'1')").not.markupToError();
-			requestAnimationFrame(function() {
+			setTimeout(function() {
 				expect("$foo $bar (text: $baz)").markupToPrint("egg 4 true");
 				done();
-			});
+			}, 20);
 		});
 		it("can restore collection variables", function(done) {
 			runPassage(
@@ -120,10 +120,10 @@ describe("save macros", function() {
 				"corge"
 			);
 			expect("(loadgame:'1')").not.markupToError();
-			requestAnimationFrame(function() {
+			setTimeout(function() {
 				expect("$arr (text:$dm's HP) (text: $ds contains 4)").markupToPrint("egg 4 true");
 				done();
-			});
+			}, 20);
 		});
 		it("can restore changer command variables", function(done) {
 			runPassage(
@@ -133,11 +133,11 @@ describe("save macros", function() {
 			expect("(loadgame:'1')").not.markupToError();
 			requestAnimationFrame(function() {
 				var hook = runPassage("(either:$c2's 1st)[goop]").find('tw-hook');
-				requestAnimationFrame(function() {
+				setTimeout(function() {
 					expect(hook.css('text-decoration')).toBe('underline');
 					expect(hook.attr('name')).toBe('luge');
 					done();
-				});
+				}, 20);
 			});
 		});
 	});

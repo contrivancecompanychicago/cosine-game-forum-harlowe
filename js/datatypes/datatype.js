@@ -17,8 +17,8 @@ define([
 
 		| Operator | Purpose | Example
 		|---
-		| `matches` | produces boolean `true` if the data on the left matches the pattern on the right | `(a:2,3) matches (a: number, number)`
-		| `is a`, `is an` | similar to `matches`, but requires the right side to be just a type name. | `(a:2,3) is an array`, `4.1 is a number`
+		| `matches` | Produces boolean `true` if the data on the left matches the pattern on the right. | `(a:2,3) matches (a: number, number)`
+		| `is a`, `is an` | Similar to `matches`, but requires the right side to be just a type name. | `(a:2,3) is an array`, `4.1 is a number`
 	*/
 	const Datatype = Object.freeze({
 		

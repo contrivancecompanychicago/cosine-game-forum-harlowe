@@ -29,18 +29,17 @@ describe("basic command macros", function() {
 			expect("(print: (dataset: 2,4))").markupToPrint("2,4");
 			expect("(print: (dataset: (dataset:2,4)))").markupToPrint("2,4");
 		});
-		it("can be run with (print:)", function() {
-			expect("(print:(print:'Golly molly'))").markupToPrint("Golly molly");
+		it("can be printed with (print:)", function() {
+			expect("(print:(print:'Golly molly'))").markupToPrint("[A (print:) command]");
 		});
 		it("evaluates to a command object that can't be +'d", function() {
 			expect("(print: (print:1) + (print:1))").markupToError();
 		});
-		it("commands inside (print:) aren't executed until it is executed", function() {
+		it("commands inside (print:) aren't executed", function() {
 			spyOn(window,'open');
 			runPassage("(set: $x to (print:(open-url:'http://example.org')))");
 			expect(window.open).not.toHaveBeenCalled();
-			runPassage("$x");
-			expect(window.open).toHaveBeenCalledWith('http://example.org','');
+			expect("$x").markupToPrint("[A (open-url:) command]");
 		});
 		it("can be (set:) into a variable", function() {
 			var expr = runPassage("(set: $x to (print:'//grault//'))$x").find('tw-expression:last-child');
@@ -78,9 +77,9 @@ describe("basic command macros", function() {
 
 			expect(expr.text()).toBe("Small");
 		});
-		it("can be run with (print:)", function() {
+		it("can be printed with (print:)", function() {
 			createPassage("Red", "grault");
-			expect("(print:(display:'grault'))").markupToPrint("Red");
+			expect("(print:(display:'grault'))").markupToPrint("[A (display:) command]");
 		});
 		it("evaluates to a command object that can't be +'d", function() {
 			expect("(print: (display:'grault') + (display:'grault'))").markupToError();
@@ -145,13 +144,9 @@ describe("basic command macros", function() {
 			expect("$a").markupToPrint("1");
 			waitForGoto(done);
 		});
-		it("can be run with (print:)", function(done) {
+		it("does not run until placed in passage text", function() {
 			createPassage("''Red''", "croak");
-			runPassage("(print:(go-to: 'croak'))");
-			waitForGoto(function() {
-				expect($('tw-passage:last-child').find('b').text()).toBe("Red");
-				done();
-			});
+			expect("(print:(go-to: 'croak'))").markupToPrint("[A (go-to:) command]");
 		});
 		it("evaluates to a command object that can't be +'d", function() {
 			expect("(print: (go-to:'crepax') + (go-to:'crepax'))").markupToError();
@@ -236,7 +231,8 @@ describe("basic command macros", function() {
 		it("can be (set:) into a variable", function() {
 			expect("(set: $x to (reload:))").not.markupToError();
 		});
-		it("can't be used in the first passage", function() {
+		it("can't be used in the first turn", function() {
+			clearState();
 			expect("(reload:)").markupToError();
 		});
 	});
@@ -280,6 +276,7 @@ describe("basic command macros", function() {
 			});
 		});
 		it("errors when run in the first turn", function(){
+			clearState();
 			expect("(undo:)").markupToError();
 		});
 		it("prevents macros after it from running", function(done) {

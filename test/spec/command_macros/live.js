@@ -15,7 +15,7 @@ describe("live macros", function() {
 		it("errors when placed in passage prose while not attached to a hook", function() {
 			expect("(event: when $a > 2)").markupToError();
 		});
-		it("doesn't immediately display the hook", function(done) {
+		it("doesn't immediately display the hook", function() {
 			expect("(event:when $a is 2)[baz]").not.markupToPrint('baz');
 		});
 		it("displays the attached hook only when the lambda's condition becomes true", function(done) {

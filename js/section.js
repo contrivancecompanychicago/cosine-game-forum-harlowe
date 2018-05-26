@@ -243,7 +243,7 @@ define([
 				if (nextValue && typeof nextValue === "object" && typeof nextValue.TwineScript_Attach === "function") {
 					/*
 						This should subtly mutate the command object in-place (which doesn't really matter as it was produced
-						from raw JS just a few lines above) leaving it ready to be TwineScript_Print()ed far below.
+						from raw JS just a few lines above) leaving it ready to be TwineScript_Run() far below.
 					*/
 					result = nextValue.TwineScript_Attach(result);
 				}
@@ -304,8 +304,41 @@ define([
 			expr.append(result.render());
 		}
 		/*
+			If the expression is a Command, run it and, if it returns a ChangeDescriptor,
+			run that against the expr.
+		*/
+		else if (result && typeof result.TwineScript_Run === "function") {
+			result = result.TwineScript_Run();
+			/*
+				TwineScript_Run() can also return TwineErrors that only resulted
+				from running the command (such as running (undo:) on the first turn).
+			*/
+			if (TwineError.containsError(result)) {
+				expr.replaceWith(result.render(expr.attr('title'), expr));
+			}
+			/*
+				If TwineScript_Run returns an object of the form { earlyExit },
+				then that's a signal to cease all further expression evaluation
+				immediately.
+			*/
+			if (result.earlyExit) {
+				return "earlyexit";
+			}
+			if (ChangeDescriptor.isPrototypeOf(result)) {
+				this.renderInto('', expr, result);
+			}
+			/*
+				This should be refactored out soon (May 2018)...
+				The only commands whose Run() would produce a string are
+				links, and all those should be HookCommands.
+			*/
+			if (typeof result === "string") {
+				this.renderInto(result, expr);
+			}
+		}
+		/*
 			Print the expression if it's a string, number, data structure,
-			or is a non-changer command of some kind.
+			or is some other data type without a TwineScript_Run().
 		*/
 		else if (
 				/*
@@ -321,34 +354,21 @@ define([
 				|| Array.isArray(result)
 				|| Colour.isPrototypeOf(result)))
 				//  However, commands will cleanly "detach" without any error resulting.
-				|| (result && result.TwineScript_Print && !ChangerCommand.isPrototypeOf(result))) {
+				|| (result && typeof result.TwineScript_Print === "function" && !ChangerCommand.isPrototypeOf(result))) {
 			/*
 				TwineScript_Print(), when called by printBuiltinValue(), typically emits
 				side-effects. These will occur... now.
 			*/
 			result = printBuiltinValue(result);
-			
-			/*
-				If TwineScript_Print returns an object of the form { earlyExit },
-				then that's a signal to cease all further expression evaluation
-				immediately.
-			*/
-			if (result.earlyExit) {
-				return "earlyexit";
+			if (typeof result !== "string") {
+				Utils.impossible("printBuiltinValue() produced a non-string " + typeof result);
 			}
+
 			/*
-				On rare occasions (specifically, when the passage component
-				of the link syntax produces an error) TwineScript_Print()
-				returns a jQuery of the <tw-error>.
+				Errors (which may be TwineErrors but could also be raw JS errors from try {} blocks)
+				directly replace the element.
 			*/
-			else if (result instanceof $) {
-				expr.append(result);
-			}
-			/*
-				Alternatively (and more commonly), TwineScript_Print() can
-				return an Error object.
-			*/
-			else if (TwineError.containsError(result)) {
+			if (TwineError.containsError(result)) {
 				if (result instanceof Error) {
 					result = TwineError.fromError(result);
 				}

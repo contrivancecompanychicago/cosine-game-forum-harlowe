@@ -39,11 +39,18 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			of the object, as if it were an array. Currently used by HookSets.
 
 		{Function} TwineScript_Print:
-			a function which is used when the given object is printed into the passage.
+			a function which is used when this is printed into the passage,
+			or used in a (print:) command. This does NOT execute Command objects,
+			instead just printing their name.
 		
-		{Function} TwineScript_ToString:
-			returns a string that's used when the object CAN be implicitly
-			coerced to string. This should be used very sparingly.
+		{Function} TwineScript_Run:
+			a function which executes when this is printed into the passage, in place of
+			TwineScript_Print. Should only be present on Command objects. Usually
+			returns a ChangeDescriptor to permute the <tw-expression> the Command came from.
+
+		{Function} TwineScript_Attach:
+			a function used only by certain Command objects, allowing passed-in Changers to be
+			"attached" to it, permuting its internal ChangeDescriptor.
 		
 		{Boolean} TwineScript_Unstorable:
 			a value that, if present and truthy, means the value cannot be stored using
@@ -62,12 +69,6 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			requires the truthy presence of TwineScript_VariableStore. Provides a name
 			for the enclosing scope of the variables inside this store, to be used by
 			Debug Mode's variable listing.
-
-		{Function} toString:
-			if this is present and !== Object.prototype.toString, then this is
-			used by Section to convert this datatype to renderable TwineMarkup code.
-			This is named "toString" so that Array, Function and other objects can be
-			interpreted by Section.
 	*/
 
 	/*

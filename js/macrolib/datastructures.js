@@ -133,7 +133,7 @@ define([
 				TwineScript_TypeName:     "a (set:) operation",
 				TwineScript_ObjectName:   "a (set:) operation",
 				TwineScript_Unstorable: true,
-				TwineScript_Print:        () => debugMessage && TwineNotifier.create(debugMessage).render(),
+				TwineScript_Print:        () => debugMessage && TwineNotifier.create(debugMessage).render().html(),
 			};
 		},
 		[rest(AssignmentRequest)])
@@ -198,7 +198,7 @@ define([
 				TwineScript_TypeName:     "a (put:) operation",
 				TwineScript_ObjectName:   "a (put:) operation",
 				TwineScript_Unstorable: true,
-				TwineScript_Print:        () => debugMessage && TwineNotifier.create(debugMessage).render(),
+				TwineScript_Print:        () => debugMessage && TwineNotifier.create(debugMessage).render().html(),
 			};
 		},
 		[rest(AssignmentRequest)])
@@ -280,7 +280,7 @@ define([
 				TwineScript_TypeName:     "a (move:) operation",
 				TwineScript_ObjectName:   "a (move:) operation",
 				TwineScript_Unstorable: true,
-				TwineScript_Print:        () => debugMessage && TwineNotifier.create(debugMessage).render(),
+				TwineScript_Print:        () => debugMessage && TwineNotifier.create(debugMessage).render().html(),
 			};
 		},
 		[rest(AssignmentRequest)])

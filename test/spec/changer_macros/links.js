@@ -181,6 +181,7 @@ describe("link macros", function() {
 			expect("(link-undo:'s','s','s')").markupToError();
 		});
 		it("errors when run in the first turn", function(){
+			clearState();
 			expect("(link-undo:'x')").markupToError();
 		});
 		it("renders to a <tw-link> element containing the link text", function() {

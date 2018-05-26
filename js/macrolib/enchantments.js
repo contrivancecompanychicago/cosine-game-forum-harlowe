@@ -57,30 +57,27 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 
 		#basics
 	*/
-	Macros.add("enchant",
-		(section, scope, changer) => ({
-			TwineScript_ObjectName: "an (enchant:) command",
-			TwineScript_TypeName:   "an (enchant:) command",
-			TwineScript_Print() {
-				/*
-					First, test the changer to confirm it contains no revision macros.
-				*/
-				const summary = changer.summary();
-				if (summary.includes('newTargets') || summary.includes('target')) {
-					return TwineError.create(
-						"macrocall",
-						"The changer given to (enchant:) can't include a revision command like (replace:) or (append:)."
-					);
-				}
-				
-				const enchantment = Enchantment.create({
-					scope: HookSet.from(scope), changer, section,
-				});
-				section.enchantments.push(enchantment);
-				enchantment.enchantScope();
-				return "";
-			},
-		}),
+	Macros.addCommand("enchant",
+		(scope, changer) => {
+			/*
+				First, test the changer to confirm it contains no revision macros.
+			*/
+			const summary = changer.summary();
+			if (summary.includes('newTargets') || summary.includes('target')) {
+				return TwineError.create(
+					"macrocall",
+					"The changer given to (enchant:) can't include a revision command like (replace:) or (append:)."
+				);
+			}
+		},
+		(section, scope, changer) => {
+			const enchantment = Enchantment.create({
+				scope: HookSet.from(scope), changer, section,
+			});
+			section.enchantments.push(enchantment);
+			enchantment.enchantScope();
+			return "";
+		},
 		[either(HookSet,String), ChangerCommand]
 	);
 
@@ -741,39 +738,37 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 	*/
 	interactionTypes.forEach((interactionType) => {
 		const name = interactionType.name + "-goto";
-		Macros.add(name, (section, selector, passage) => {
-			/*
-				If either of the arguments are the empty string, show an error.
-			*/
-			if (!selector || !passage) {
-				return TwineError.create("datatype", "A string given to this (" + name + ":) macro was empty.");
-			}
-			/*
-				First, of course, check for the passage's existence.
-			*/
-			if (!Passages.has(passage)) {
-				return TwineError.create("macrocall",
-					"I can't (" + name + ":) the passage '" + passage + "' because it doesn't exist."
-				);
-			}
-			/*
-				Now, newEnchantmentMacroFns() is only designed to return functions for use with addChanger().
-				What this kludge does is take the second changer function, whose signature is (descriptor, selector),
-				and then call it in TwineScript_Print() when the command is run, passing in a fake ChangeDescriptor
-				with only a "section" property.
-			*/
-			const [,makeEnchanter] = newEnchantmentMacroFns(Object.assign({}, interactionType.enchantDesc, {
-				goto: passage
-			}), name);
-
-			return ({
-				TwineScript_ObjectName: "a (click-goto:) command",
-				TwineScript_TypeName:   "a (click-goto:) command",
-				TwineScript_Print() {
-					makeEnchanter({section}, HookSet.from(selector));
-					return "";
-				},
-			});
-		}, [either(HookSet,String), String]);
+		Macros.addCommand(name,
+			(selector, passage) => {
+				/*
+					If either of the arguments are the empty string, show an error.
+				*/
+				if (!selector || !passage) {
+					return TwineError.create("datatype", "A string given to this (" + name + ":) macro was empty.");
+				}
+				/*
+					First, of course, check for the passage's existence.
+				*/
+				if (!Passages.has(passage)) {
+					return TwineError.create("macrocall",
+						"I can't (" + name + ":) the passage '" + passage + "' because it doesn't exist."
+					);
+				}
+			},
+			(section, selector, passage) => {
+				/*
+					Now, newEnchantmentMacroFns() is only designed to return functions for use with addChanger().
+					What this kludge does is take the second changer function, whose signature is (descriptor, selector),
+					and then call it in TwineScript_Print() when the command is run, passing in a fake ChangeDescriptor
+					with only a "section" property.
+				*/
+				const [,makeEnchanter] = newEnchantmentMacroFns(Object.assign({}, interactionType.enchantDesc, {
+					goto: passage
+				}), name);
+				makeEnchanter({section}, HookSet.from(selector));
+				return "";
+			},
+			[either(HookSet,String), String]
+		);
 	});
 });
