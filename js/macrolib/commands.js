@@ -12,6 +12,11 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 		Macros that produce commands include (display:), (print:), (go-to:), (save-game:), (load-game:),
 		(link-goto:), and more.
 	*/
+	/*d:
+		HookCommand data
+
+		TBW
+	*/
 	const {Any, rest, optional} = Macros.TypeSignature;
 	const {assign} = Object;
 	

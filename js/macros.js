@@ -270,7 +270,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		if (isHookCommand) {
 			cd = ChangeDescriptor.create();
 		}
-		return Object.assign({
+		const ret = Object.assign({
 				TwineScript_ObjectName: "a (" + firstName + ":) command",
 				TwineScript_TypeName: "a (" + firstName + ":) command",
 				TwineScript_Print: () => "`[A (" + firstName + ":) command]`",
@@ -288,6 +288,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			} : {
 				TwineScript_Run: () => runFn(...args),
 		});
+		return ret;
 	};
 	
 	Macros = {

@@ -57,6 +57,14 @@ describe("basic command macros", function() {
 		it("will error if an infinite regress is created", function() {
 			expect("(set: $x to '$x')(print: $x)").markupToError();
 		});
+		it("can be altered with attached style changers", function(done) {
+			var p = runPassage("(text-rotate: 20)(print: $x)");
+			var expr = p.find('tw-expression:last-child');
+			setTimeout(function() {
+				expect(expr.attr('style')).toMatch(/rotate\(20deg\)/);
+				done();
+			});
+		});
 	});
 	describe("the (display:) macro", function() {
 		it("requires exactly 1 string argument", function() {
@@ -97,6 +105,15 @@ describe("basic command macros", function() {
 		it("will error if an infinite regress is created", function() {
 			createPassage("(display: 'grault')", "grault");
 			expect("(display: 'grault')").markupToError();
+		});
+		it("can be altered with attached style changers", function(done) {
+			createPassage("''Red''", "grault");
+			var p = runPassage("(text-rotate: 20)(display:'grault')");
+			var expr = p.find('tw-expression:last-child');
+			setTimeout(function() {
+				expect(expr.attr('style')).toMatch(/rotate\(20deg\)/);
+				done();
+			});
 		});
 	});
 	describe("the (go-to:) macro", function() {

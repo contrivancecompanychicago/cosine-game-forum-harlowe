@@ -246,6 +246,7 @@ define([
 						from raw JS just a few lines above) leaving it ready to be TwineScript_Run() far below.
 					*/
 					result = nextValue.TwineScript_Attach(result);
+					break;
 				}
 				/*
 					When the attachment can't happen, produce an error mentioning that only certain structures allow changers to attach.
@@ -271,6 +272,9 @@ define([
 				If it's neither hook nor expression, then this evidently isn't connected to
 				a hook at all. Produce an error.
 			*/
+			if (!result.macroName) {
+				Utils.impossible('Section.runExpression', 'changer has no macroName');
+			}
 			const macroCall = (expr.attr('title') || ("(" + result.macroName + ": ...)"));
 			expr.replaceWith(TwineError.create("syntax",
 				"The (" + result.macroName + ":) changer should be stored in a variable or attached to a hook.",
@@ -325,7 +329,7 @@ define([
 				return "earlyexit";
 			}
 			if (ChangeDescriptor.isPrototypeOf(result)) {
-				this.renderInto('', expr, result);
+				this.renderInto('', nextElem, result);
 			}
 			/*
 				This should be refactored out soon (May 2018)...
@@ -333,7 +337,7 @@ define([
 				links, and all those should be HookCommands.
 			*/
 			if (typeof result === "string") {
-				this.renderInto(result, expr);
+				this.renderInto(result, nextElem);
 			}
 		}
 		/*
