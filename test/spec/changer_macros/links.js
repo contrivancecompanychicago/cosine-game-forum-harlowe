@@ -143,7 +143,7 @@ describe("link macros", function() {
 			if (hook) {
 				it("runs the hook when clicked, before going to the passage", function() {
 					createPassage("<p>$foo</p>","mire");
-					var link = runPassage("(link-reveal-goto:'mire')[(set:$foo to 'garply')]").find('tw-link');
+					var link = runPassage("("+name+":'mire')[(set:$foo to 'garply')]").find('tw-link');
 					link.click();
 					expect($('tw-passage p').text()).toBe("garply");
 				});
@@ -151,9 +151,17 @@ describe("link macros", function() {
 			else {
 				it("goes to the passage when clicked", function() {
 					createPassage("<p>garply</p>","mire");
-					var link = runPassage("(link-goto:'mire')").find('tw-link');
+					var link = runPassage("("+name+":'mire')").find('tw-link');
 					link.click();
 					expect($('tw-passage p').text()).toBe("garply");
+				});
+				it("can be altered with attached style changers", function(done) {
+					var p = runPassage("(text-rotate: 20)("+name+":'mire')");
+					var expr = p.find('tw-expression:last-child');
+					setTimeout(function() {
+						expect(expr.attr('style')).toMatch(/rotate\(20deg\)/);
+						done();
+					});
 				});
 			}
 			it("can be focused", function() {
@@ -207,6 +215,15 @@ describe("link macros", function() {
 			runPassage("","grault");
 			var link = runPassage("(link-undo:'mire')").find('tw-link');
 			expect(link.attr("tabindex")).toBe("0");
+		});
+		it("can be altered with attached style changers", function(done) {
+			runPassage("","grault");
+			var p = runPassage("(text-rotate: 20)(link-undo:'mire')");
+			var expr = p.find('tw-expression:last-child');
+			setTimeout(function() {
+				expect(expr.attr('style')).toMatch(/rotate\(20deg\)/);
+				done();
+			});
 		});
 		it("behaves as if clicked when the enter key is pressed while it is focused", function() {
 			runPassage("<p>garply</p>","grault");

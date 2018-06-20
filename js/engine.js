@@ -105,6 +105,7 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 			} = displayOptions;
 
 		transitionOutName = transitionOutName || "instant";
+		transitionInName = transitionInName || "dissolve";
 
 		/*
 			If the story has a <tw-enchantment> around it (which could have been placed)
@@ -319,7 +320,7 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 				as well as this basic, default ChangeDescriptor-like object
 				supplying the transition.
 			*/
-			{ transition: transitionInName || "dissolve" }
+			{ transition: transitionInName }
 		);
 		
 		/*
@@ -343,32 +344,28 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 		/*
 			Moves the game state backward one turn. If there is no previous state, this does nothing.
 		*/
-		goBack() {
-			//TODO: get the stretch value from state
-
+		goBack(displayOptions) {
 			if (State.rewind()) {
-				showPassage(State.passage);
+				showPassage(State.passage, displayOptions);
 			}
 		},
 
 		/*
 			Moves the game state forward one turn, after a previous goBack().
 		*/
-		goForward() {
-			//TODO: get the stretch value from state
-
+		goForward(displayOptions) {
 			if (State.fastForward()) {
-				showPassage(State.passage);
+				showPassage(State.passage, displayOptions);
 			}
 		},
 
 		/*
 			Displays a new passage, advancing the game state forward.
 		*/
-		goToPassage(id, stretch) {
+		goToPassage(id, displayOptions) {
 			// Update the state.
 			State.play(id);
-			showPassage(id, {stretch});
+			showPassage(id, displayOptions);
 		},
 		
 		/*

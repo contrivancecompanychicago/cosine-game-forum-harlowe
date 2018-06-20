@@ -25,14 +25,14 @@ describe("link syntax", function() {
 			var link = runPassage("[[mi''r''e]]").find('tw-link');
 		
 			expect(link.html()).toBe("mi<b>r</b>e");
-			expect(link.attr("passage-name")).toBe("mire");
+			expect(link.parent().data("linkPassageName")).toBe("mire");
 		});
 		it("may contain line breaks", function() {
 			createPassage("","mire");
 			var link = runPassage("[[\nmire\n]]").find('tw-link');
 		
 			expect(link.html()).toBe("<br>mire<br>");
-			expect(link.attr("passage-name")).toBe("mire");
+			expect(link.parent().data("linkPassageName")).toBe("mire");
 		});
 		it("won't be confused with nested hooks", function() {
 			expect(runPassage("|a>[|b>[c]]").find('tw-expression, tw-error').length).toBe(0);
@@ -48,13 +48,13 @@ describe("link syntax", function() {
 			createPassage("",'"do it"');
 			var link = runPassage('[["do it"]]').find('tw-link');
 			expect(link.html()).toBe('"do it"');
-			expect(link.attr("passage-name")).toBe('"do it"');
+			expect(link.parent().data("linkPassageName")).toBe('"do it"');
 		});
 		it("works correctly with single-quotes", function() {
 			createPassage("","'do it'");
 			var link = runPassage("[['do it']]").find('tw-link');
 			expect(link.html()).toBe("'do it'");
-			expect(link.attr("passage-name")).toBe("'do it'");
+			expect(link.parent().data("linkPassageName")).toBe("'do it'");
 		});
 	});
 	describe("proper link syntax", function() {
@@ -78,39 +78,39 @@ describe("link syntax", function() {
 			expect("[[<-out]]").markupToError();
 		});
 		it("links to the passage pointed to by the arrow", function() {
-			createPassage("", "out");
+			createPassage("Foo", "out");
 		
 			var link = runPassage("[[in->out]]").find('tw-link');
 		
 			expect(link.parent().is('tw-expression')).toBe(true);
-			expect(link.attr("passage-name")).toBe("out");
+			expect(link.parent().data("linkPassageName")).toBe("out");
 		
 			link = runPassage("[[out<-in]]").find('tw-link');
 		
 			expect(link.parent().is('tw-expression')).toBe(true);
-			expect(link.attr("passage-name")).toBe("out");
+			expect(link.parent().data("linkPassageName")).toBe("out");
 		});
 		it("uses the rightmost right arrow (or, in its absence, leftmost left arrow) as the separator", function() {
-			createPassage("", "E");
+			createPassage("Foo", "E");
 		
 			var link = runPassage("[[A->B->C->D->E]]").find('tw-link');
 		
 			expect(link.text()).toBe("A->B->C->D");
-			expect(link.attr("passage-name")).toBe("E");
+			expect(link.parent().data("linkPassageName")).toBe("E");
 		
 			link = runPassage("[[E<-D<-C<-B<-A]]").find('tw-link');
 		
 			expect(link.text()).toBe("D<-C<-B<-A");
-			expect(link.attr("passage-name")).toBe("E");
+			expect(link.parent().data("linkPassageName")).toBe("E");
 		
 			link = runPassage("[[A<-B<-C->D->E]]").find('tw-link');
 		
-			expect(link.attr("passage-name")).toBe("E");
+			expect(link.parent().data("linkPassageName")).toBe("E");
 		
-			createPassage("", "C<-D<-E");
+			createPassage("Foo", "C<-D<-E");
 			link = runPassage("[[A->B->C<-D<-E]]").find('tw-link');
 		
-			expect(link.attr("passage-name")).toBe("C<-D<-E");
+			expect(link.parent().data("linkPassageName")).toBe("C<-D<-E");
 		});
 	});
 });

@@ -174,32 +174,98 @@ describe("style changer macros", function() {
 			});
 		});
 	});
-	describe("the (transition:) macro", function() {
-		it("requires exactly 1 string argument", function() {
-			expect("(print:(transition:))").markupToError();
-			expect("(print:(transition:1))").markupToError();
-			expect("(print:(transition:'A','B'))").markupToError();
-		});
-		it("errors unless given a valid transition name", function() {
-			expect("(print:(transition:''))").markupToError();
-			expect("(print:(transition:'garply corge'))").markupToError();
-			["dissolve", "shudder", "pulse"].forEach(function(e) {
-				expect("(print:(transition:'" + e + "'))").not.markupToError();
+	['transition','transition-depart','transition-arrive'].forEach(function(name) {
+		describe("the ("+name+":) macro", function() {
+			it("requires exactly 1 string argument", function() {
+				expect("(print:("+name+":))").markupToError();
+				expect("(print:("+name+":1))").markupToError();
+				expect("(print:("+name+":'A','B'))").markupToError();
 			});
+			it("errors unless given a valid transition name", function() {
+				expect("(print:("+name+":''))").markupToError();
+				expect("(print:("+name+":'garply corge'))").markupToError();
+				["dissolve", "shudder", "pulse"].forEach(function(e) {
+					expect("(print:("+name+":'" + e + "'))").not.markupToError();
+				});
+			});
+			it("errors when placed in passage prose while not attached to a hook", function() {
+				expect("("+name+":'dissolve')").markupToError();
+				expect("("+name+":'dissolve')[]").not.markupToError();
+			});
+			it("has structural equality", function() {
+				expect("(print: ("+name+":'dissolve') is ("+name+":'dissolve'))").markupToPrint("true");
+				expect("(print: ("+name+":'dissolve') is ("+name+":'pulse'))").markupToPrint("false");
+			});
+			var shorthand = name.replace("ransitio","8");
+			it("is aliased to ("+shorthand+":)", function() {
+				expect("(print: ("+shorthand+":'dissolve') is ("+name+":'dissolve'))").markupToPrint("true");
+			});
+			// TODO: Add .css() tests of output.
+
+			if (name !== "transition") {
+				it("changes the passage transitions of (link-goto:)", function(done) {
+					createPassage("foo","grault");
+					var p = runPassage("("+name+":'pulse')(link-goto:'grault')");
+					p.find('tw-link').click();
+					setTimeout(function() {
+						expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
+						done();
+					});
+				});
+				it("changes the passage transitions of (link-undo:)", function(done) {
+					runPassage("foo","grault");
+					var p = runPassage("("+name+":'pulse')(link-undo:'grault')");
+					p.find('tw-link').click();
+					setTimeout(function() {
+						expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
+						done();
+					});
+				});
+				it("changes the passage transitions of ?Link", function(done) {
+					createPassage("foo","grault");
+					var p = runPassage("[[grault]](enchant: ?Link, ("+name+":'pulse'))");
+					p.find('tw-link').click();
+					setTimeout(function() {
+						expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
+						done();
+					});
+				});
+				if (name === "transition-arrive") {
+					describe("works when combined with (transition-depart:)", function() {
+						it("on (link-goto:)", function(done) {
+							createPassage("foo","grault");
+							var p = runPassage("(t8n-depart:'dissolve')+(t8n-arrive:'pulse')(link-goto:'grault')");
+							p.find('tw-link').click();
+							setTimeout(function() {
+								expect($('tw-story tw-transition-container.transition-out[data-t8n="dissolve"]').length).toBe(1);
+								expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
+								done();
+							});
+						});
+						it("on (link-undo:)", function(done) {
+							runPassage("foo","grault");
+							var p = runPassage("(t8n-depart:'dissolve')+(t8n-arrive:'pulse')(link-undo:'garply')");
+							p.find('tw-link').click();
+							setTimeout(function() {
+								expect($('tw-story tw-transition-container.transition-out[data-t8n="dissolve"]').length).toBe(1);
+								expect($('tw-story tw-transition-container.transition-in[data-t8n="pulse"]').length).toBe(1);
+								done();
+							});
+						});
+						it("with (enchant: ?Link)", function(done) {
+							createPassage("foo","grault");
+							var p = runPassage("[[grault]](enchant:?Link, (t8n-depart:'dissolve')+(t8n-arrive:'pulse'))");
+							p.find('tw-link').click();
+							setTimeout(function() {
+								expect($('tw-story tw-transition-container.transition-out[data-t8n="dissolve"]').length).toBe(1);
+								expect($('tw-story tw-transition-container.transition-in[data-t8n="pulse"]').length).toBe(1);
+								done();
+							});
+						});
+					});
+				}
+			}
 		});
-		it("errors when placed in passage prose while not attached to a hook", function() {
-			expect("(transition:'dissolve')").markupToError();
-			expect("(transition:'dissolve')[]").not.markupToError();
-		});
-		it("has structural equality", function() {
-			expect("(print: (transition:'dissolve') is (transition:'dissolve'))").markupToPrint("true");
-			expect("(print: (transition:'dissolve') is (transition:'pulse'))").markupToPrint("false");
-			runPassage("(link:'Garply')+(transition:'shudder')[Grault]")
-		});
-		it("is aliased to (t8n:)", function() {
-			expect("(print: (t8n:'dissolve') is (transition:'dissolve'))").markupToPrint("true");
-		});
-		// TODO: Add .css() tests of output.
 	});
 	describe("the (transition-time:) macro", function() {
 		it("requires exactly 1 number argument", function() {

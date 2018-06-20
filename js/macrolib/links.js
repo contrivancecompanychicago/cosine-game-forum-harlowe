@@ -10,8 +10,8 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 	const {optional} = Macros.TypeSignature;
 	const emptyLinkTextMessages = ["Links can't have empty strings for their displayed text.",
 		"In the link syntax, a link's displayed text is inside the [[ and ]], and on the non-pointy side of the -> or <- arrow if it's there."];
-	const emptyPassageNameMessages = ["Passage links must have a passage name.",
-		"In the link syntax, a link's passage name is inside the [[ and ]], and on the pointy side of the -> or <- arrow if it's there."];
+	//const emptyPassageNameMessages = ["Passage links must have a passage name.",
+	//	"In the link syntax, a link's passage name is inside the [[ and ]], and on the pointy side of the -> or <- arrow if it's there."];
 	const {assign} = Object;
 
 	/*
@@ -32,31 +32,51 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		function clickLinkEvent() {
 			const link = $(this),
 				/*
+					Since there can be a <tw-enchantment> between the parent <tw-expression>
+					that holds the linkPassageName data and this <tw-link> itself,
+					we need to explicitly attempt to reach the <tw-expression>.
+				*/
+				expression = link.closest('tw-expression'),
+				/*
 					This could be a (link:) command. Such links' events
 					are, due to limitations in the ChangeDescriptor format,
 					attached to the <tw-expression> containing it.
 				*/
-				event = link.parent().data('clickEvent');
-			
+				event = expression.data('clickEvent');
+
 			if (event) {
 				event(link);
 				return;
 			}
 			/*
-				If no event was registered, then this must be
-				a passage link...
+				If no event was registered, then this must be a passage link.
 			*/
-			const next = link.attr('passage-name');
+			const next = expression.data('linkPassageName');
+			/*
+				The correct t8nDepart and t8nArrive belongs to the deepest <tw-enchantment>.
+				Iterate through each <tw-enchantment> and update these variables.
+				(A .each() loop is easier when working with a jQuery compared to a .reduce().)
+			*/
+			let transitionOut = expression.data('t8nDepart');
+			let transitionIn = expression.data('t8nArrive');
+			/*
+				$().find() SHOULD return the tw-enchantments in ascending depth order.
+			*/
+			expression.find('tw-enchantment').each((_,e) => {
+				transitionOut = $(e).data('t8nDepart') || transitionOut;
+				transitionIn = $(e).data('t8nArrive') || transitionIn;
+			});
+
 			if (next) {
 				// TODO: stretchtext
-				Engine.goToPassage(next,false);
+				Engine.goToPassage(next, { transitionOut, transitionIn });
 				return;
 			}
 			/*
 				Or, a (link-undo:) link.
 			*/
 			if (link.is('[undo]')) {
-				Engine.goBack();
+				Engine.goBack({ transitionOut, transitionIn });
 				return;
 			}
 		}
@@ -282,22 +302,23 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 				const visited = (State.passageNameVisited(passageName));
 				
 				/*
-					For compatibility reasons, this exposes the destination passage name in the DOM
-					in case user CSS targets it... but this will be removed in a major release
-					(which will return a jQuery with the passage name attached as data).
+					This formerly exposed the passage name on the DOM in a passage-name attr,
+					but as of 2.2.0, it no longer does. (Debug mode can still view the name due to
+					an extra title added to the enclosing <tw-expression> by Renderer).
 				*/
 				source = source || '<tw-link tabindex=0 ' + (visited > 0 ? 'class="visited" ' : '')
-					// Always remember to Utils.escape() any strings that must become raw HTML attributes.
-					+ 'passage-name="' + Utils.escape(passageName)
 					+ '">' + text + '</tw-link>';
-
+				/*
+					Instead, the passage name is stored on the <tw-expression>, to be retrieved by clickEvent() above.
+				*/
+				cd.data.linkPassageName = passageName;
 				return assign(cd, { source });
 			},
 			[String, optional(String)]
-		);
+		)
 
 		/*d:
-			(link-undo: String) -> Command
+			(link-undo: String) -> HookCommand
 
 			Takes a string of link text, and produces a link that, when clicked, undoes the current turn and
 			sends the player back to the previously visited passage. The link appears identical to a typical
@@ -325,27 +346,28 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 
 			#links 6
 		*/
-	Macros.addCommand("link-undo",
-		(text) => {
-			if (!text) {
-				return TwineError.create("macrocall", emptyLinkTextMessages[0]);
-			}
-		},
-		(section, text) => {
-			/*
-				Users of (link-undo:) should always check that (history:) is longer than 1.
-				(This isn't in the checkFn because this check only matters at Run() time).
-			*/
-			if (State.pastLength < 1) {
-				return TwineError.create("macrocall", "I can't use (link-undo:) on the first turn.");
-			}
-			/*
-				Much like (link-goto:), this too reveals its purpose by including an 'undo' attribute,
-				which is used by the "click.passage-link" event handler.
-			*/
-			return '<tw-link tabindex=0 undo>' + text + '</tw-link>';
-		},
-		[String]);
+		("link-undo",
+			(text) => {
+				if (!text) {
+					return TwineError.create("macrocall", emptyLinkTextMessages[0]);
+				}
+			},
+			(cd, section, text) => {
+				/*
+					Users of (link-undo:) should always check that (history:) is longer than 1.
+					(This isn't in the checkFn because this check only matters at Run() time).
+				*/
+				if (State.pastLength < 1) {
+					return TwineError.create("macrocall", "I can't use (link-undo:) on the first turn.");
+				}
+				/*
+					This currently reveals its purpose in the player-readable DOM by including an 'undo' attribute,
+					which is used by the "click.passage-link" event handler.
+				*/
+				return assign(cd, { source: '<tw-link tabindex=0 undo>' + text + '</tw-link>' });
+			},
+			[String]
+		);
 
 	/*d:
 		(link-reveal-goto: String, [String]) -> Changer
@@ -434,9 +456,9 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 				/*
 					Having revealed, we now go-to.
 				*/
-				Engine.goToPassage(passageName);
+				Engine.goToPassage(passageName, { transitionOut: desc.data.t8nDepart, transitionIn: desc.data.t8nArrive });
 			};
 		},
 		[String, optional(String)]
-	)
+	);
 });

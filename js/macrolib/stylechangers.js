@@ -91,7 +91,9 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 	/*
 		A list of valid transition names. Used by (transition:).
 	*/
-	const validT8ns = ["dissolve", "shudder", "pulse"];
+	const validT8ns = ["instant", "dissolve", "shudder", "pulse"];
+	const validT8nsMessage = "Only the following names are recognised (capitalisation and hyphens ignored): "
+		+ validT8ns.join(", ");
 
 	Macros.addChanger
 		/*d:
@@ -454,6 +456,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			
 			Details:
 			At present, the following text strings will produce a particular transition:
+			* "instant" (causes the hook to instantly appear)
 			* "dissolve" (causes the hook to gently fade in)
 			* "shudder" (causes the hook to instantly appear while shaking back and forth)
 			* "pulse" (causes the hook to instantly appear while pulsating rapidly)
@@ -464,7 +467,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(text-style:), (transition-time:)
 
-			#styling
+			#transitions 1
 		*/
 		(["transition", "t8n"],
 			(_, name) => {
@@ -472,9 +475,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				if (validT8ns.indexOf(name) === -1) {
 					return TwineError.create(
 						"macrocall",
-						"'" + name + '\' is not a valid (transition:)',
-						"Only the following names are recognised (capitalisation and hyphens ignored): "
-							+ validT8ns.join(", "));
+						"'" + name + '\' is not a valid (transition:)', validT8nsMessage);
 				}
 				return ChangerCommand.create("transition", [name]);
 			},
@@ -502,7 +503,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(transition:)
 
-			#styling
+			#transitions
 		*/
 		(["transition-time", "t8n-time"],
 			(_, time) => {
@@ -519,6 +520,56 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				return d;
 			},
 			[Number]
+		)
+
+		/*d:
+			(transition-depart: String) -> Changer
+			Also known as: (t8n-depart:)
+			
+			TBW
+
+			#transitions
+		*/
+		(["transition-depart", "t8n-depart"],
+			(_, name) => {
+				name = Utils.insensitiveName(name);
+				if (validT8ns.indexOf(name) === -1) {
+					return TwineError.create(
+						"macrocall",
+						"'" + name + '\' is not a valid transition', validT8nsMessage);
+				}
+				return ChangerCommand.create("transition-depart", [name]);
+			},
+			(d, name) => {
+				d.data.t8nDepart     = name;
+				return d;
+			},
+			[String]
+		)
+
+		/*d:
+			(transition-arrive: String) -> Changer
+			Also known as: (t8n-arrive:)
+			
+			TBW
+
+			#transitions
+		*/
+		(["transition-arrive", "t8n-arrive"],
+			(_, name) => {
+				name = Utils.insensitiveName(name);
+				if (validT8ns.indexOf(name) === -1) {
+					return TwineError.create(
+						"macrocall",
+						"'" + name + '\' is not a valid transition', validT8nsMessage);
+				}
+				return ChangerCommand.create("transition-arrive", [name]);
+			},
+			(d, name) => {
+				d.data.t8nArrive     = name;
+				return d;
+			},
+			[String]
 		)
 		
 		/*d:

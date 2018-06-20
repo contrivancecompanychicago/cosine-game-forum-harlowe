@@ -18,8 +18,14 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
 
 ####Additions
 
+#####Macros
+
+ * Various command macros that print visible elements into the page, such as `(print:)`, `(display:)`, `(link-goto:)`, and standard passage links, have been updated so that you can attach changers to them. These commands are now "HookCommands", in that changers can be "hooked" onto them, just like hooks.
+ * Added `(transition-depart:)` and `(transition-arrive:)` (aliases `(t8n-depart:)` and `(t8n-arrive:)`), macros which allow you to finally change the passage transition used by links, by just attaching them to the front: `(t8n-depart:"dissolve")[[Think it over]]` will create a link that, when clicked, goes to the "Think it over" passage and fades out the current passage using a dissolve transition. These can be used in tandem for a number of interesting effects: `(t8n-depart:"dissolve")(t8n-arrive:"pulse")[[That memory...]]` will work as expected. You can also use these with `(link-goto:)`, `(link-undo:)`, and should work with `(enchant: ?Link)` too.
+ * The "instant" transition has been added, which makes the transitioning entity instantly appear.
  * Added a string-specific shorthand of `(repeated:)` called `(str-repeated:)` (and aliased as `(string-repeated:)`). `(str: ...(repeated: 14, "-+*+"))` is the same as `(str-repeated: 14, "-+*+")`.
  * Added `(reversed:)`, a macro which constructs an array with the given enements in reverse order, and `(str-reversed:)`, a shorthand that reverses a single string's characters. (Prior to now, you could accomplish this with `(folded: _e making _a via (a: _e) + _a, (a:), ...$arr)`, but this offers a far easier formulation.)
+
 
 ###2.1.0 changes:
 
