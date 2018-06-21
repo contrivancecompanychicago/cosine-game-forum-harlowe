@@ -40,7 +40,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 			can be used with `contains` and `is in` to check all their characters - `all of $string is not "w"` is true if the string doesn't
 			contain "w", and `$string contains any of "aeiou"` is true if the string contains those five letters.
 
-			To summarise, here are the operations you can perform on strings.
+			Here is a table listing the aforementioned operations you can perform on strings, as well as a few others.
 
 			| Operator | Function | Example
 			|---
@@ -51,6 +51,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 			| `is in` | Checking if the right string contains the left string, otherwise `false`. | `"ugh" is in "Through"`
 			| `'s` | Obtaining the character or substring at the right numeric position. | `"YO"'s 1st` (is "Y")<br>`"PS"'s (2)` (is "S")<br>`"ear"'s (a: 2,3)` (is "ar")
 			| `of` | Obtaining the character at the left numeric position. | `1st of "YO"` (is "Y")<br>`(2) of "PS"` (is "S")<br>`(a: 2,3) of "ear"` (is "ar")
+			| `matches` | Evaluates to boolean `true` if one side is a string and the other is an identical string or `str` or `string` | `"Contract" matches str`
+			| `is a`, `is an` | Evaluates to boolean `true` if the right side is `string` or `str` and the left side is a string. | `"Contract" is a str`
 		*/
 		/*d:
 			(str: ...[Number or String or Boolean or Array]) -> String
@@ -346,7 +348,11 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 			| `>=` | Evaluates to boolean `true` if the left side is greater than or equal to the right side, otherwise `false`. | `$apples >= $carrots + 5`
 			| `<` | Evaluates to boolean `true` if the left side is less than the right side, otherwise `false`. | `$shoes < $people * 2`
 			| `<=`~ | Evaluates to boolean `true` if the left side is less than or equal to the right side, otherwise `false`. | `65 <= $age`
-			
+			| `is` | Evaluates to boolean `true` if both sides are equal, otherwise `false`. | `$agendaPoints is 2`
+			| `is not` | Evaluates to boolean `true` if both sides are not equal, otherwise `false`. | `$agendaPoints is not 0`
+			| `matches` | Evaluates to boolean `true` if one side is a number and the other is an identical number or `num` or `number` | `$bytes matches $dataUsage`
+			| `is a`, `is an` | Evaluates to boolean `true` if the right side is `num` or `number` and the left side is a number. | `$credits is a num`
+
 			You can only perform these operations (apart from `is`) on two pieces of data if they're both numbers. Adding the
 			string "5" to the number 2 would produce an error, and not the number 7 nor the string "52". You must
 			convert one side or the other using the (num:) or (str:) macros.
@@ -596,6 +602,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 			| `and` | Evaluates to `true` if both sides evaluates to `true`. | `$hasFriends and $hasFamily`
 			| `or` | Evaluates to `true` if either side is `true`. | `$fruit or $vegetable`
 			| `not` | Flips a `true` value to a `false` value, and vice versa. | `not $stabbed`
+			| `matches` | Evaluates to boolean `true` if one side is a boolean and the other is an identical boolean or `boolean` | `boolean matches true`
+			| `is a`, `is an` | Evaluates to boolean `true` if the right side is `boolean` and the left side is a boolean. | `$wiretapped is a boolean`
 			
 			Conditions can quickly become complicated. The best way to keep things straight is to use parentheses to
 			group things.

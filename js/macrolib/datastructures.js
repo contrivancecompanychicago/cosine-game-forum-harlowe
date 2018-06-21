@@ -311,13 +311,17 @@ define([
 			
 			To see if arrays contain certain values, you can use the `contains` and `is in` operators like so: `$array contains 1`
 			is true if it contains the number 1 anywhere, and false if it does not. `1 is in $array` is another way to write that.
-			If you want to check if an array contains some, or all of the values, in another array, you can compare with a special
-			`any` or `all` name on the other array: `$array contains any of (a:2,4,6)`, and `$array contains all of (a:2,4,6)`
-			will check if `$array` contains some, or all, of the numbers 2, 4 and 6.
+			If you want to check if an array contains some, or all of the values, in another array (without needing to be in the
+			same order), you can compare with a special `any` or `all` name on the other array: `$array contains any of (a:2,4,6)`,
+			and `$array contains all of (a:2,4,6)` will check if `$array` contains some, or all, of the numbers 2, 4 and 6.
 
 			(Incidentally, `any` and `all` can also be used with other operators, like `is`, `is not`, `>`, `<`, `>=`, and `<=`,
 			to compare every value in the array with a number or other value. For instance, `all of (a:2,4) >= 2` is true, as is
 			`any of (a:2,4) >= 4`.)
+
+			For a more thorough check of the contents of an array, you can use `matches` and a datatype pattern. For instance,
+			`$array matches (a: num, num)` lets you check that $array contains exactly two numbers, and `$array matches (a: 2,
+			num)` lets you check that $array contains only 2 followed by another number. See the datatype article for more details.
 			
 			Arrays may be joined by adding them together: `(a: 1, 2) + (a: 3, 4)` is the same as `(a: 1, 2, 3, 4)`.
 			You can only join arrays to other arrays. To add a bare value to the front or back of an array, you must
@@ -349,6 +353,8 @@ define([
 			| `...` | When used in a macro call, it separates each value in the right side. | `(a: 0, ...(a:1,2,3,4), 5)` (is `(a:0,1,2,3,4,5)`)
 			| `'s` | Obtains the item at the right numeric position, or the `length`, `any` or `all` values. | `(a:"Y","Z")'s 1st` (is "Y")<br>`(a:4,5)'s (2)` (is 5)<br>`(a:5,5,5)'s length` (is 3)
 			| `of` | Obtains the item at the left numeric position, or the `length`, `any` or `all` values. | `1st of (a:"Y","O")` (is "Y")<br>`(2) of (a:"P","S")` (is "S")<br>`length of (a:5,5,5)` (is 3)
+			| `matches` | Evaluates to boolean `true` if the array on one side matches the pattern on the other. | `(a:2,3) matches (a: num, num)`, `(a: array) matches (a:(a:))`
+			| `is a`, `is an` | Evaluates to boolean `true` if the right side is `array` and the left side is an array. | `(a:2,3) is an array`
 		*/
 		/*d:
 			(a: [...Any]) -> Array
@@ -1223,6 +1229,8 @@ define([
 			| `+` | Joins datamaps, using the right side's value whenever both sides contain the same name. | `(dm:"HP",5) + (dm:"MP",5)`
 			| `'s` | Obtaining the value using the name on the right. | `(dm:"love",155)'s love` (is 155).
 			| `of` | Obtaining the value using the name on the left. | `love of (dm:"love",155)` (is 155).
+			| `matches` | Evaluates to boolean `true` if the datamap on one side matches the pattern on the other. | `(dm:"Love",2,"Fear",4) matches (dm: "Love", num, "Fear", num)`
+			| `is a`, `is an` | Evaluates to boolean `true` if the right side is `dm` or `datamap`, and the left side is a datamap. | `(dm:) is a datamap`
 		*/
 		/*d:
 			(dm: [...Any]) -> Datamap
@@ -1372,6 +1380,8 @@ define([
 			| `+` | Joins datasets. | `(ds:1,2,3) + (ds:1,2,4)` (is `(ds:1,2,3,4)`)
 			| `-` | Subtracts datasets. | `(ds:1,2,3) - (ds:1,3)` (is `(ds:2)`)
 			| `...` | When used in a macro call, it separates each value in the right side.<br>The dataset's values are sorted before they are spread out.| `(a: 0, ...(ds:1,2,3,4), 5)` (is `(a:0,1,2,3,4,5)`)
+			| `matches` | Evaluates to boolean `true` if the dataset on one side matches the pattern on the other. | `(ds:2,3) matches (a: 3, num)`, `(ds: array) matches (ds:(a:))`
+			| `is a`, `is an` | Evaluates to boolean `true` if the right side is `ds` or `dataset` and the left side is a dataset. | `(ds:2,3) is a dataset`
 		*/
 		/*d:
 			(ds: [...Any]) -> Dataset

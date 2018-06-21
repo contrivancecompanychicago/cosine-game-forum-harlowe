@@ -18,6 +18,11 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
 
 ####Additions
 
+#####Datatypes
+
+ * Added `is a` and `is an` operators, which can be used to determine what datatype a variable or piece of data is - `$message is a string` is true if the variable is a string. The datatype names are `number` or `num`, `string` or `str`, `boolean`, `array`, `datamap` or `dm`, `dataset` or `ds`, `command`, `changer`, and `color` or `colour`.
+ * Added a `matches` operator, which functions similarly to `is a`, but can also be used to check if a data structure's shape resembles a pattern - a similar data structure with datatype names as "holes" in it. `(a: 2, 3) matches (a: num, num)` checks that the first array contains exactly two numbers. `(dm: "Faction", str) matches (dm: "Faction", "Slugbikers")` checks that the second datamap contains only one name with a string value. Nested patterns - `(a: (a: num), num, num)` - are also usable.
+
 #####Macros
 
  * Various command macros that print visible elements into the page, such as `(print:)`, `(display:)`, `(link-goto:)`, and standard passage links, have been updated so that you can attach changers to them. These commands are now "HookCommands", in that changers can be "hooked" onto them, just like hooks.
