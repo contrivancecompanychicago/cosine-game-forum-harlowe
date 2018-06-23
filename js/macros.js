@@ -320,7 +320,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			// Return the function to enable "bubble chaining".
 			return add;
 		},
-	
+		
 		/*
 			Takes two functions, and registers them as a live Changer macro.
 			

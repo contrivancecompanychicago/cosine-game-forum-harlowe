@@ -38,11 +38,10 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 				*/
 				expression = link.closest('tw-expression'),
 				/*
-					This could be a (link:) command. Such links' events
-					are, due to limitations in the ChangeDescriptor format,
-					attached to the <tw-expression> containing it.
+					Links' events are, due to limitations in the ChangeDescriptor format,
+					attached to the <tw-hook> or <tw-expression> containing the element.
 				*/
-				event = expression.data('clickEvent');
+				event = link.closest('tw-expression, tw-hook').data('clickEvent');
 
 			if (event) {
 				event(link);

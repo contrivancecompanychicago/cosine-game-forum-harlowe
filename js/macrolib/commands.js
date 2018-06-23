@@ -15,7 +15,7 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 	/*d:
 		HookCommand data
 
-		TBW
+		As you know, certain macros like (display:) and (print:)
 	*/
 	const {Any, rest, optional} = Macros.TypeSignature;
 	const {assign} = Object;
@@ -133,6 +133,139 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			[Any])
 
 		/*d:
+			(go-to: String) -> HookCommand
+			This command stops passage code and sends the player to a new passage.
+			If the passage named by the string does not exist, this produces an error.
+			
+			Example usage:
+			`(go-to: "The Distant Future")`
+			
+			Rationale:
+			There are plenty of occasions where you may want to instantly advance to a new
+			passage without the player's volition. (go-to:) provides access to this ability.
+			
+			(go-to:) can accept any expression which evaluates to
+			a string. You can, for instance, go to a randomly selected passage by combining it with
+			(either:) - `(go-to: (either: "Win", "Lose", "Draw"))`.
+			
+			(go-to:) can be combined with (link:) to accomplish the same thing as (link-goto:):
+			`(link:"Enter the hole")[(go-to:"Falling")]` However, you
+			can include other macros inside the hook to run before the (go-to:), such as (set:),
+			(put:) or (save-game:).
+			
+			Details:
+
+			As this is a HookCommand, you can attach changers like (t8n-depart:) and (t8n-arrive:) to
+			alter the transition animation used when (go-to:) activates. Other kinds of changers
+			won't do anything, though.
+
+			If it is performed, (go-to:) will "halt" the passage and prevent any macros and text
+			after it from running. So, a passage that contains:
+			```
+			(set: $listen to "I love")
+			(go-to: "Train")
+			(set: $listen to it + " you")
+			```
+			will *not* cause `$listen` to become `"I love you"` when it runs.
+			
+			Going to a passage using this macro will count as a new "turn" in the game's passage history,
+			much as if a passage link was clicked. If you want to go back to the previous passage,
+			forgetting the current turn, then you may use (undo:).
+			
+			See also:
+			(link-goto:), (undo:), (loadgame:)
+
+			#links
+		*/
+		("go-to",
+			(name) => {
+				/*
+					First, of course, check for the passage's existence.
+				*/
+				if (!Passages.has(name)) {
+					return TwineError.create("macrocall",
+						"I can't (go-to:) the passage '"
+						+ name
+						+ "' because it doesn't exist."
+					);
+				}
+			},
+			(cd, _, name) => {
+				/*
+					When a passage is being rendered, <tw-story> is detached from the main DOM.
+					If we now call another Engine.goToPassage in here, it will attempt
+					to detach <tw-story> twice, causing a crash.
+					So, the change of passage must be deferred until just after
+					the passage has ceased rendering.
+				*/
+				requestAnimationFrame(()=> Engine.goToPassage(name, { transitionOut: cd.data.t8nDepart, transitionIn: cd.data.t8nArrive }));
+				/*
+					But how do you immediately cease rendering the passage?
+					
+					This object's property name causes Section's runExpression() to
+					cancel expression evaluation at that point. This means that for, say,
+						(goto: "X")(set: $y to 1)
+					the (set:) will not run because it is after the (goto:)
+				*/
+				return assign(cd, { earlyExit: true });
+			},
+			[String])
+
+		/*d:
+			(undo:) -> HookCommand
+			This command stops passage code and "undoes" the current turn, sending the player to the previous visited
+			passage and forgetting any variable changes that occurred in this passage.
+
+			Example usage:
+			`You scurry back whence you came... (live:2s)[(undo:)]` will undo the current turn after 2 seconds.
+
+			Rationale:
+			The (go-to:) macro sends players to different passages instantly. But, it's common to want to
+			send players back to the passage they previously visited, acting as if this turn never happened.
+			(undo:) provides this functionality.
+
+			By default, Harlowe offers a button in its sidebar that lets players undo at any time, going
+			back to the beginning of the game session. However, if you wish to use this macro, and only permit undos
+			in certain passages and occasions, you may remove the button by using (replace:) on the ?sidebar in
+			a header tagged passage.
+
+			Details:
+			As this is a HookCommand, you can attach changers like (t8n-depart:) and (t8n-arrive:) to
+			alter the transition animation used when (undo:) activates. Other kinds of changers
+			won't do anything, though.
+			
+			If this is the first turn of the game session, (undo:) will produce an error. You can check which turn it is
+			by examining the `length` of the (history:) array.
+
+			Just like (go-to:), (undo:) will "halt" the passage and prevent any macros and text
+			after it from running.
+
+			See also:
+			(go-to:), (link-undo:)
+
+			#links
+		*/
+		("undo",
+			() => {},
+			(cd) => {
+				if (State.pastLength < 1) {
+					return TwineError.create("macrocall", "I can't (undo:) on the first turn.");
+				}
+				/*
+					As with the (goto:) macro, the change of passage must be deferred until
+					just after the passage has ceased rendering, to avoid <tw-story> being
+					detached twice.
+				*/
+				requestAnimationFrame(()=> Engine.goBack({ transitionOut: cd.data.t8nDepart, transitionIn: cd.data.t8nArrive }));
+				/*
+					As with the (goto:) macro, earlyExit signals to
+					Section's runExpression() to cease evaluation.
+				*/
+				return assign(cd, { earlyExit: true });
+			},
+			[])
+
+		/*d:
 			(cycling-link: Bind, ...String) -> Command
 
 			A command that, when evaluated, creates a cycling link - a link which does not go anywhere, but changes its own text
@@ -239,130 +372,6 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 				return '';
 			},
 			[rest(HookSet)])
-
-		/*d:
-			(go-to: String) -> Command
-			This command stops passage code and sends the player to a new passage.
-			If the passage named by the string does not exist, this produces an error.
-			
-			Example usage:
-			`(go-to: "The Distant Future")`
-			
-			Rationale:
-			There are plenty of occasions where you may want to instantly advance to a new
-			passage without the player's volition. (go-to:) provides access to this ability.
-			
-			(go-to:) can accept any expression which evaluates to
-			a string. You can, for instance, go to a randomly selected passage by combining it with
-			(either:) - `(go-to: (either: "Win", "Lose", "Draw"))`.
-			
-			(go-to:) can be combined with (link:) to accomplish the same thing as (link-goto:):
-			`(link:"Enter the hole")[(go-to:"Falling")]` However, you
-			can include other macros inside the hook to run before the (go-to:), such as (set:),
-			(put:) or (save-game:).
-			
-			Details:
-			If it is performed, (go-to:) will "halt" the passage and prevent any macros and text
-			after it from running. So, a passage that contains:
-			```
-			(set: $listen to "I love")
-			(go-to: "Train")
-			(set: $listen to it + " you")
-			```
-			will *not* cause `$listen` to become `"I love you"` when it runs.
-			
-			Going to a passage using this macro will count as a new "turn" in the game's passage history,
-			much as if a passage link was clicked. If you want to go back to the previous passage,
-			forgetting the current turn, then you may use (undo:).
-			
-			See also:
-			(link-goto:), (undo:), (loadgame:)
-
-			#links
-		*/
-		("go-to",
-			(name) => {
-				/*
-					First, of course, check for the passage's existence.
-				*/
-				if (!Passages.has(name)) {
-					return TwineError.create("macrocall",
-						"I can't (go-to:) the passage '"
-						+ name
-						+ "' because it doesn't exist."
-					);
-				}
-			},
-			(_, name) => {
-				/*
-					When a passage is being rendered, <tw-story> is detached from the main DOM.
-					If we now call another Engine.goToPassage in here, it will attempt
-					to detach <tw-story> twice, causing a crash.
-					So, the change of passage must be deferred until just after
-					the passage has ceased rendering.
-				*/
-				requestAnimationFrame(()=> Engine.goToPassage(name));
-				/*
-					But how do you immediately cease rendering the passage?
-					
-					This object's property name causes Section's runExpression() to
-					cancel expression evaluation at that point. This means that for, say,
-						(goto: "X")(set: $y to 1)
-					the (set:) will not run because it is after the (goto:)
-				*/
-				return { earlyExit: 1 };
-			},
-			[String])
-
-		/*d:
-			(undo:) -> Command
-			This command stops passage code and "undoes" the current turn, sending the player to the previous visited
-			passage and forgetting any variable changes that occurred in this passage.
-
-			Example usage:
-			`You scurry back whence you came... (live:2s)[(undo:)]` will undo the current turn after 2 seconds.
-
-			Rationale:
-			The (go-to:) macro sends players to different passages instantly. But, it's common to want to
-			send players back to the passage they previously visited, acting as if this turn never happened.
-			(undo:) provides this functionality.
-
-			By default, Harlowe offers a button in its sidebar that lets players undo at any time, going
-			back to the beginning of the game session. However, if you wish to use this macro, and only permit undos
-			in certain passages and occasions, you may remove the button by using (replace:) on the ?sidebar in
-			a header tagged passage.
-
-			Details:
-			If this is the first turn of the game session, (undo:) will produce an error. You can check which turn it is
-			by examining the `length` of the (history:) array.
-
-			Just like (go-to:), (undo:) will "halt" the passage and prevent any macros and text
-			after it from running.
-
-			See also:
-			(go-to:), (link-undo:)
-
-			#links
-		*/
-		("undo",
-			() => {},
-			() => {
-				if (State.pastLength < 1) {
-					return TwineError.create("macrocall", "I can't (undo:) on the first turn.");
-				}
-				/*
-					As with the (goto:) macro, the change of passage must be deferred until
-					just after the passage has ceased rendering, to avoid <tw-story> being
-					detached twice.
-				*/
-				requestAnimationFrame(()=> Engine.goBack());
-				/*
-					As with the (goto:) macro, this returned object signals to
-					Section's runExpression() to cease evaluation.
-				*/
-				return { earlyExit: 1 };
-			},
-			[])
 
 		/*d:
 			(stop:) -> Command

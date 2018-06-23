@@ -224,7 +224,7 @@ define([
 				*/
 			}
 			/*
-				If instead of a +, it's another kind of expression, we attempt to determine if it's a Hook Expression (a (print:) macro or somesuch).
+				If instead of a +, it's another kind of expression, we attempt to determine if it's a HookCommand.
 				If not, then the changer's attempted attachment fails and an error results, and it doesn't matter if the expression
 				is dropped (by us executing its js early) as well.
 			*/
@@ -320,16 +320,16 @@ define([
 			if (TwineError.containsError(result)) {
 				expr.replaceWith(result.render(expr.attr('title'), expr));
 			}
-			/*
-				If TwineScript_Run returns an object of the form { earlyExit },
-				then that's a signal to cease all further expression evaluation
-				immediately.
-			*/
-			if (result.earlyExit) {
-				return "earlyexit";
-			}
 			if (ChangeDescriptor.isPrototypeOf(result)) {
 				this.renderInto('', nextElem, result);
+				/*
+					If TwineScript_Run returns a ChangeDescriptor with earlyExit,
+					then that's a signal to cease all further expression evaluation
+					immediately.
+				*/
+				if (result.earlyExit) {
+					return "earlyexit";
+				}
 			}
 			/*
 				This should be refactored out soon (May 2018)...

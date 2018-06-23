@@ -203,6 +203,22 @@ describe("style changer macros", function() {
 			// TODO: Add .css() tests of output.
 
 			if (name !== "transition") {
+				it("changes the passage transitions of (goto:)", function(done) {
+					createPassage("foo","grault");
+					var p = runPassage("("+name+":'pulse')(goto:'grault')");
+					setTimeout(function() {
+						expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
+						done();
+					});
+				});
+				it("changes the passage transitions of (undo:)", function(done) {
+					runPassage("foo","grault");
+					var p = runPassage("("+name+":'pulse')(undo:)");
+					setTimeout(function() {
+						expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
+						done();
+					});
+				});
 				it("changes the passage transitions of (link-goto:)", function(done) {
 					createPassage("foo","grault");
 					var p = runPassage("("+name+":'pulse')(link-goto:'grault')");
@@ -232,6 +248,24 @@ describe("style changer macros", function() {
 				});
 				if (name === "transition-arrive") {
 					describe("works when combined with (transition-depart:)", function() {
+						it("on (goto:)", function(done) {
+							createPassage("foo","grault");
+							var p = runPassage("(t8n-depart:'dissolve')+(t8n-arrive:'pulse')(goto:'grault')");
+							setTimeout(function() {
+								expect($('tw-story tw-transition-container.transition-out[data-t8n="dissolve"]').length).toBe(1);
+								expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
+								done();
+							});
+						});
+						it("on (undo:)", function(done) {
+							runPassage("foo","grault");
+							var p = runPassage("(t8n-depart:'dissolve')+(t8n-arrive:'pulse')(undo:)");
+							setTimeout(function() {
+								expect($('tw-story tw-transition-container.transition-out[data-t8n="dissolve"]').length).toBe(1);
+								expect($('tw-story tw-transition-container.transition-in[data-t8n="pulse"]').length).toBe(1);
+								done();
+							});
+						});
 						it("on (link-goto:)", function(done) {
 							createPassage("foo","grault");
 							var p = runPassage("(t8n-depart:'dissolve')+(t8n-arrive:'pulse')(link-goto:'grault')");
