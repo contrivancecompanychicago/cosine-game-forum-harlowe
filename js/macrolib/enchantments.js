@@ -397,7 +397,10 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 								has already been verified).
 							*/
 							if (enchantDesc.goto) {
-								Engine.goToPassage(enchantDesc.goto);
+								Engine.goToPassage(enchantDesc.goto, {
+									transitionOut: enchantDesc.transitionOut,
+									transitionIn: enchantDesc.transitionIn,
+								});
 								return;
 							}
 							/*
@@ -722,23 +725,41 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		});
 	});
 	/*d:
-		(click-goto: HookName or String, String) -> Command
+		(click-goto: HookName or String, String) -> HookCommand
 
-		TBW
+		A special shorthand combination of the (click:) and (go-to:) macros, this allows you to make a hook
+		or bit of text into a passage link. `(click-goto: ?1, 'Passage Name')` is equivalent to `(click: ?1)[(goto:'Passage Name')]`
+
+		Example usage:
+		```
+		Time to get in your crimchair, plug in your crimphones, power up your crimrig and your crimgrip - the next page in your crimming career awaits.
+		(click-goto: "crim", "It's short for crime").
+		```
+
+		See also:
+		(link-goto:)
+
+		#links 19
 	*/
 	/*d:
-		(mouseover-goto: HookName or String, String) -> Command
+		(mouseover-goto: HookName or String, String) -> HookCommand
 
-		TBW
+		This is similar to (click-goto:), but uses the (mouseover:) macro's behaviour instead of
+		(click:)'s. For more information, consult the description of (click-goto:).
+
+		#links 20
 	*/
 	/*d:
-		(mouseout-goto: HookName or String, String) -> Command
+		(mouseout-goto: HookName or String, String) -> HookCommand
 
-		TBW
+		This is similar to (click-goto:), but uses the (mouseout:) macro's behaviour instead of
+		(click:)'s. For more information, consult the description of (click-goto:).
+
+		#links 21
 	*/
 	interactionTypes.forEach((interactionType) => {
 		const name = interactionType.name + "-goto";
-		Macros.addCommand(name,
+		Macros.addHookCommand(name,
 			(selector, passage) => {
 				/*
 					If either of the arguments are the empty string, show an error.
@@ -755,7 +776,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 					);
 				}
 			},
-			(section, selector, passage) => {
+			(desc, section, selector, passage) => {
 				/*
 					Now, newEnchantmentMacroFns() is only designed to return functions for use with addChanger().
 					What this kludge does is take the second changer function, whose signature is (descriptor, selector),
@@ -763,10 +784,12 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 					with only a "section" property.
 				*/
 				const [,makeEnchanter] = newEnchantmentMacroFns(Object.assign({}, interactionType.enchantDesc, {
-					goto: passage
+					goto: passage,
+					transitionOut: desc.data.t8nDepart,
+					transitionIn: desc.data.t8nArrive,
 				}), name);
 				makeEnchanter({section}, HookSet.from(selector));
-				return "";
+				return Object.assign(desc, { source: '' });
 			},
 			[either(HookSet,String), String]
 		);

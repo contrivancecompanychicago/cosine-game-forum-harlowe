@@ -30,6 +30,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
  * The "instant" transition has been added, which makes the transitioning entity instantly appear.
  * Added a string-specific shorthand of `(repeated:)` called `(str-repeated:)` (and aliased as `(string-repeated:)`). `(str: ...(repeated: 14, "-+*+"))` is the same as `(str-repeated: 14, "-+*+")`.
  * Added `(reversed:)`, a macro which constructs an array with the given enements in reverse order, and `(str-reversed:)`, a shorthand that reverses a single string's characters. (Prior to now, you could accomplish this with `(folded: _e making _a via (a: _e) + _a, (a:), ...$arr)`, but this offers a far easier formulation.)
+ * Added `(click-goto:)`, `(mouseover-goto:)` and `(mouseout-goto:)`, which are combinations of `(click:)`, `(mouseover:)` and `(mouseout:)` with `(goto:)`, similar to `(link-goto:)`.
 
 
 ###2.1.0 changes:

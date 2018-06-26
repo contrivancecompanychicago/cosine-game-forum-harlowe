@@ -219,13 +219,17 @@ describe("style changer macros", function() {
 						done();
 					});
 				});
-				it("changes the passage transitions of (link-goto:)", function(done) {
-					createPassage("foo","grault");
-					var p = runPassage("("+name+":'pulse')(link-goto:'grault')");
-					p.find('tw-link').click();
-					setTimeout(function() {
-						expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
-						done();
+				['link-goto','link-undo','click-goto','mouseover-goto'].forEach(function(name2) {
+					var interaction = (name2 === 'mouseover-goto') ? "mouseenter" : "click";
+					var arg = (name2.startsWith('link')) ? "'grault'" : "'foo','grault'";
+					it("changes the passage transitions of (" + name2 + ":)", function(done) {
+						runPassage("foo","grault");
+						var p = runPassage("foo("+name+":'pulse')("+name2+":"+arg+")");
+						p.find('tw-link, .enchantment-link')[interaction]();
+						setTimeout(function() {
+							expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
+							done();
+						});
 					});
 				});
 				it("changes the passage transitions of (link-undo:)", function(done) {
@@ -266,24 +270,18 @@ describe("style changer macros", function() {
 								done();
 							});
 						});
-						it("on (link-goto:)", function(done) {
-							createPassage("foo","grault");
-							var p = runPassage("(t8n-depart:'dissolve')+(t8n-arrive:'pulse')(link-goto:'grault')");
-							p.find('tw-link').click();
-							setTimeout(function() {
-								expect($('tw-story tw-transition-container.transition-out[data-t8n="dissolve"]').length).toBe(1);
-								expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
-								done();
-							});
-						});
-						it("on (link-undo:)", function(done) {
-							runPassage("foo","grault");
-							var p = runPassage("(t8n-depart:'dissolve')+(t8n-arrive:'pulse')(link-undo:'garply')");
-							p.find('tw-link').click();
-							setTimeout(function() {
-								expect($('tw-story tw-transition-container.transition-out[data-t8n="dissolve"]').length).toBe(1);
-								expect($('tw-story tw-transition-container.transition-in[data-t8n="pulse"]').length).toBe(1);
-								done();
+						['link-goto','link-undo','click-goto','mouseover-goto'].forEach(function(name2) {
+							var interaction = (name2 === 'mouseover-goto') ? "mouseenter" : "click";
+							var arg = (name2.startsWith('link')) ? "'grault'" : "'foo','grault'";
+							it("on (" + name2 + ":)", function(done) {
+								runPassage("foo","grault");
+								var p = runPassage("foo(t8n-depart:'dissolve')+(t8n-arrive:'pulse')("+name2+":"+arg+")");
+								p.find('tw-link, .enchantment-link')[interaction]();
+								setTimeout(function() {
+									expect($('tw-story tw-transition-container.transition-out[data-t8n="dissolve"]').length).toBe(1);
+									expect($('tw-story tw-transition-container.transition-in[data-t8n="pulse"]').length).toBe(1);
+									done();
+								});
 							});
 						});
 						it("with (enchant: ?Link)", function(done) {

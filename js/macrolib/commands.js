@@ -9,13 +9,22 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 		Most commands are created from macros placed directly in the passage, but, like all forms of
 		data, they can be saved into variables using (set:) and (put:), and stored for later use.
 		
-		Macros that produce commands include (display:), (print:), (go-to:), (save-game:), (load-game:),
-		(link-goto:), and more.
+		Macros that produce commands include (alert:), (save-game:), (load-game:), and more.
 	*/
 	/*d:
 		HookCommand data
 
-		As you know, certain macros like (display:) and (print:)
+		Certain macros like (display:), (print:), (link:) and so on are used to print data or an interactive
+		element into the passage. These elements can be styled like hooks, by attaching changers to the macro.
+		So, they are "hook-like" commands.
+
+		In addition to their visual appearance, you can also change what passage transitions links use,
+		by applying (t8n-depart:) and (t8n-arrive:). (Note that since normal passage links are identical to the
+		(link-goto:) macro, you can also attach changers to passage links.) This is also why (go-to:) and
+		(undo:) are HookCommands, even though they have no visual form.
+
+		Note that HookCommands only have similarities to anonymous hooks: they can't be referred to by (click:) or
+		(replace:) to change them after the fact (unless the (hook:) macro is used to give them a name).
 	*/
 	const {Any, rest, optional} = Macros.TypeSignature;
 	const {assign} = Object;

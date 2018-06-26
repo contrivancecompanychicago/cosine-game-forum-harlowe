@@ -1,7 +1,8 @@
 'use strict';
 
 const fs = require('fs');
-const {unescape, escape} = require('lodash');
+const unescape = require('lodash.unescape');
+const escape = require('lodash.escape');
 
 /*
 	This generates end-user Harlowe macro and syntax documentation (in Markup).

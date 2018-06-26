@@ -8,7 +8,7 @@ requirejs_twinemarkup_flags = baseUrl=js/markup name=markup include=codemirror/m
 
 jshint_flags = --reporter scripts/jshintreporter.js
 
-uglify_flags = -c --comments --screw-ie8 -m -b beautify=false,ascii-only=true
+uglify_flags = -c --comments -m -b beautify=false,ascii-only=true
 
 # This function accepts two comma-separated JS string expressions,
 # and replaces every instance of the former in the stream with the latter.
@@ -62,7 +62,7 @@ build/harlowe-css.css: scss/*.scss
 build/harlowe-min.js: js/*.js js/*/*.js js/*/*/*.js
 	@node_modules/.bin/r.js -o $(requirejs_harlowe_flags) \
 	| babel --presets es2015 \
-	| uglifyjs - $(uglify_flags) \
+	| uglifyjs $(uglify_flags) \
 	> build/harlowe-min.js
 
 # Crudely edit out the final define() call that's added for codemirror/mode.
@@ -75,7 +75,7 @@ build/twinemarkup-min.js: js/markup/*.js js/markup/*/*.js
 	| $(call node_replace, $(unwrap)) \
 	| $(call node_replace, $(validmacros)) \
 	| babel --presets es2015 \
-	| uglifyjs - $(uglify_flags) \
+	| uglifyjs $(uglify_flags) \
 	> build/twinemarkup-min.js
 
 dist/format.js: build/harlowe-min.js build/twinemarkup-min.js css

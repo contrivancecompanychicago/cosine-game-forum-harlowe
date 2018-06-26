@@ -304,7 +304,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 
 		/*d:
 			(live: [Number]) -> Changer
-			When you attach this macro to a hook, the hook becomes "live", which means that it's repeatedly re-run
+			When you attach this changer to a hook, the hook becomes "live", which means that it's repeatedly re-run
 			every certain number of milliseconds, replacing the source inside of the hook with a newly computed version.
 			
 			Example usage:
@@ -323,16 +323,19 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			Certain macros, such as the (link:) macro, allow a hook to be withheld until after an element is
 			interacted with. The (live:) macro is more versatile: it re-renders a hook every specified number of
 			milliseconds. If (if:) or (unless:) macros are inside the hook, they of course will be re-evaluated each time.
-			By using these two kinds of macros, you can make a (live:) macro repeatedly check if an event has occurred, and
-			only change its text at that point.
 			
 			Details:
-			Live hooks will continue to re-render themselves until they encounter and print a (stop:) macro.
+			Live hooks will continue to re-render themselves until they encounter and print a (stop:) macro. (stop:) should be used
+			whenever you don't need to keep the hook "live", to save on processing and passage repainting (which can interfere
+			with clicking, selecting text, and other interactions).
 
-			#live
-		*/
-		/*
-			Yes, the actual implementation of this is in Section, not here.
+			If you want to just display a hook once a certain thing happens (that is, when the condition in an (if:) macro becomes
+			true) and then (stop:), then the (event:) macro may be shorter and easier to use for this.
+
+			See also:
+			(event:)
+
+			#live 1
 		*/
 		("live",
 			(_, delay) => ChangerCommand.create("live", [delay]),
@@ -346,7 +349,36 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		/*d:
 			(event: Lambda) -> Changer
 
-			TBW
+			Hooks that have this changer attached will only be run when the given condition becomes true.
+
+			Example usage:
+			```
+			(event: when time > 5s)[Oops, I forgot the next link: [[Go east]].]
+			```
+
+			Rationale:
+			While the (live:) macro is versatile in providing time-based text updating, one of its common uses - checking if some
+			variable has changed using (if:), and then displaying a hook and stopping the macro with (stop:) - is rather
+			cumbersome. This macro provides that functionality in a shorter form - the example above is equivalent to:
+			```
+			{(live: 0.2s)[
+				(if: time > 5s)[
+					Oops, I forgot the next link: [[Go east]].
+				]
+			]}
+			```
+
+			Details:
+			This macro only takes a "when" lambda, which is like a "where" lambda but with "where" changed to
+			"when" for readability purposes. This lambda doesn't have a temp variable before "when" - it doesn't iterate over anything,
+			except, perhaps, moments in time.
+
+			Because (event:) hooks only run once, the (stop:) macro is unnecessary here.
+
+			See also:
+			(live:)
+
+			#live 2
 		*/
 		("event",
 			(_, event) => ChangerCommand.create("event", [event]),

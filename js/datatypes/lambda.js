@@ -45,7 +45,8 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 
 		An important feature is that you can save lambdas into variables, and reuse them in your story easily. You
 		could, for instance, `(set: $statsReadout to (_stat making _readout via _readout + "|" + _stat's name + ":" + _stat's value))`,
-		and then use $printStats with the (folded:) macro in different places, such as `(folded: $statsReadout, ...(dataentries: $playerStats))` for displaying the player's stats, `(folded: $statsReadout, ...(dataentries: $monsterStats))` for a monster's stats, etc.
+		and then use $printStats with the (folded:) macro in different places, such as `(folded: $statsReadout, ...(dataentries: $playerStats))`
+		for displaying the player's stats, `(folded: $statsReadout, ...(dataentries: $monsterStats))` for a monster's stats, etc.
 
 		Lambdas are named after the lambda calculus, and the "lambda" keyword used in many popular programming languages.
 		They may seem complicated, but as long as you think of them as just a special way of writing a repeating instruction,

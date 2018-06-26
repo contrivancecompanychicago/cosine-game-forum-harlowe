@@ -38,6 +38,8 @@
     "requirejs": "latest",
     "jasmine-core": "2.4",
     "replacestream": "latest",
-    "uglifyjs": "latest"
+    "uglify-js": "2",
+    "lodash.unescape": "latest",
+    "lodash.escape": "latest"
   }
 }
