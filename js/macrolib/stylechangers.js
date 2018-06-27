@@ -535,7 +535,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(transition:)
 
-			#transitions
+			#transitions 2
 		*/
 		(["transition-time", "t8n-time"],
 			(_, time) => {
@@ -558,9 +558,29 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			(transition-depart: String) -> Changer
 			Also known as: (t8n-depart:)
 			
-			TBW
+			A changer that alters passage links, (link-goto:)s, and most every other kind of link, changing which
+			passage fade-out animation the link uses.
+			
+			Example usage:
+			* `(t8n-depart: "dissolve")[[Next morning]]` changes the `[[Next morning]]` link, such
+			that clicking it takes you to the "Next morning" passage with the current passage smoothly fading out
+			instead of instantly disappearing.
+			* `(enchant: ?Link, (t8n-depart: "dissolve"))` causes ALL passage links to use the smooth fade-out. This
+			is best used in a "header" or "footer" tagged passage.
+			
+			Details:
+			This macro accepts the exact same transition names as (transition:).
+			* "instant" (causes the passage to instantly vanish)
+			* "dissolve" (causes the passage to gently fade out)
+			* "shudder" (causes the passage to disappear while shaking back and forth)
+			* "pulse" (causes the passage to disappear while pulsating rapidly)
 
-			#transitions
+			Attaching this macro to a hook that isn't a passage link won't do anything (no error message will be produced).
+
+			See also:
+			(transition-arrive:)
+
+			#transitions 3
 		*/
 		(["transition-depart", "t8n-depart"],
 			(_, name) => {
@@ -583,9 +603,28 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			(transition-arrive: String) -> Changer
 			Also known as: (t8n-arrive:)
 			
-			TBW
+			A changer that alters passage links, (link-goto:)s, and most every other kind of link, changing which
+			passage fade-in animation the link uses.
+			
+			Example usage:
+			* `(t8n-arrive: "instant")[[Next morning]]` changes the `[[Next morning]]` link, such
+			that clicking it takes you to the "Next morning" passage, which instantly pops in instead of slowly fading in as usual.
+			* `(enchant: ?Link, (t8n-arrive: "instant"))` causes ALL passage links to use the instant pop-in. This
+			is best used in a "header" or "footer" tagged passage.
+			
+			Details:
+			This macro accepts the exact same transition names as (transition:).
+			* "instant" (causes the passage to instantly vanish)
+			* "dissolve" (causes the passage to gently fade out)
+			* "shudder" (causes the passage to disappear while shaking back and forth)
+			* "pulse" (causes the passage to disappear while pulsating rapidly)
 
-			#transitions
+			Attaching this macro to a hook that isn't a passage link won't do anything (no error message will be produced).
+
+			See also:
+			(transition-depart:)
+
+			#transitions 4
 		*/
 		(["transition-arrive", "t8n-arrive"],
 			(_, name) => {

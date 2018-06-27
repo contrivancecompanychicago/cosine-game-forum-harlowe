@@ -14,7 +14,8 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
 ####Alterations
 
  * The `(text:)` macro now has another alias, `(str:)`. This alias will now be the preferred name for this macro in the documentation, mainly due to the arrival of other string macros that begin with "str-", and additionally to avoid semantic conflict with the various "text-" changer macros like `(text-style:)`.
- * To more clearly separate the concepts of "printing data" and "running commands" in Harlowe, the `(print:)` macro will no longer run commands passed to it (that is, `(print:(go-to:"Foo"))` and `(go-to:"Foo")` will no longer do the same thing - the former will just print out a descriptive string, as if printing out a changer). Commands can now only be run by placing them directly in the passage (either as plain calls or inside variables).
+ * To more clearly separate the concepts of "printing data" and "running commands" in Harlowe, the `(print:)` macro will no longer run commands passed to it (that is, `(print:(go-to:"Foo"))` and `(go-to:"Foo")` will no longer do the same thing - the former will just print out a descriptive string, as if printing out a changer). Commands can now only be run by placing them directly in the passage (either as plain calls, inside variables, or wrapped in strings that (print:) receives).
+ * Passage links no longer have a `passage-name` attribute indicating which passage they lead to, which the player could inspect using developer tools.
 
 ####Additions
 
@@ -26,12 +27,12 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
 #####Macros
 
  * Various command macros that print visible elements into the page, such as `(print:)`, `(display:)`, `(link-goto:)`, and standard passage links, have been updated so that you can attach changers to them. These commands are now "HookCommands", in that changers can be "hooked" onto them, just like hooks.
- * Added `(transition-depart:)` and `(transition-arrive:)` (aliases `(t8n-depart:)` and `(t8n-arrive:)`), macros which allow you to finally change the passage transition used by links, by just attaching them to the front: `(t8n-depart:"dissolve")[[Think it over]]` will create a link that, when clicked, goes to the "Think it over" passage and fades out the current passage using a dissolve transition. These can be used in tandem for a number of interesting effects: `(t8n-depart:"dissolve")(t8n-arrive:"pulse")[[That memory...]]` will work as expected. You can also use these with `(link-goto:)`, `(link-undo:)`, and should work with `(enchant: ?Link)` too.
- * The "instant" transition has been added, which makes the transitioning entity instantly appear.
+ * Added `(transition-depart:)` and `(transition-arrive:)` (aliases `(t8n-depart:)` and `(t8n-arrive:)`), macros which allow you to finally change the passage transition used by links, by just attaching them to the front: `(t8n-depart:"dissolve")[[Think it over]]` will create a link that, when clicked, goes to the "Think it over" passage and fades out the current passage using a dissolve transition. These can be used in tandem for a number of interesting effects: `(t8n-depart:"dissolve")(t8n-arrive:"pulse")[[That memory...]]` will work as expected. You can also use these with `(link-goto:)`, `(link-undo:)`, and work with `(enchant: ?Link)` too.
+ * The "instant" transition has been added, which makes the transitioning entity instantly appear. (Try placing `(enchant:?Link, (t8n-arrive:"instant"))` in your header passages.)
  * Added a string-specific shorthand of `(repeated:)` called `(str-repeated:)` (and aliased as `(string-repeated:)`). `(str: ...(repeated: 14, "-+*+"))` is the same as `(str-repeated: 14, "-+*+")`.
  * Added `(reversed:)`, a macro which constructs an array with the given enements in reverse order, and `(str-reversed:)`, a shorthand that reverses a single string's characters. (Prior to now, you could accomplish this with `(folded: _e making _a via (a: _e) + _a, (a:), ...$arr)`, but this offers a far easier formulation.)
  * Added `(click-goto:)`, `(mouseover-goto:)` and `(mouseout-goto:)`, which are combinations of `(click:)`, `(mouseover:)` and `(mouseout:)` with `(goto:)`, similar to `(link-goto:)`.
-
+ * Added `(link-reveal-goto:)`, a combination of `(link-reveal:)` and `(go-to:)` that lets you run commands like `(set:)` before going to another passage. An example usage is `(link-reveal-goto: "Link text", "Passage name")[(set: $x to 1)]`.
 
 ###2.1.0 changes:
 

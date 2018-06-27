@@ -371,7 +371,8 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 	/*d:
 		(link-reveal-goto: String, [String]) -> Changer
 		
-		TBW
+		This is a convenient combination of the (link-reveal:) and (go-to:) macros, designed to let you run commands like (set:)
+		just before going to another passage. The first string is the link text, and the second is the passage name.
 		
 		Example usage:
 		 * `(link-reveal-goto: "Study English", "Afternoon 1")[(set:$eng to it + 1)]` will create a link reading "Study English"
@@ -379,13 +380,14 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		 * `(link-reveal-goto: "Fight the King of England", "Death")[(alert:"You asked for it!")]` will create a link reading
 		 "Fight the King of England" which, when clicked, displays an alert using (alert:), and then goes to the passage "Death".
 		
-		Rationale:
-		
-		TBW
-		
 		Details:
 
-		TBW
+		Note that there is already an idiom for checking if a passage was visited earlier in the game: `(history:) contains "Passage name"`
+		checks if the passage named "Passage name" was visited. So, you don't necessarily need to use this macro to record that the player
+		has visited the destination passage.
+
+		Note also that there's no way to "cancel" traveling to the new passage once the link is clicked, unless you include (go-to:),
+		(undo:) or another such macro is inside the hook.
 		
 		See also:
 		(link-reveal:), (link:), (link-goto:), (click:)
@@ -451,11 +453,14 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 					was displayed by the innerSource.
 				*/
 				link.contents().unwrap();
-				desc.section.renderInto(desc.innerSource + "", null, desc);
+				const normalExit = desc.section.renderInto(desc.innerSource + "", null, desc);
 				/*
-					Having revealed, we now go-to.
+					Having revealed, we now go-to, UNLESS an early exit was invoked, which signifies a different (go-to:) was
+					activated.
 				*/
-				Engine.goToPassage(passageName, { transitionOut: desc.data.t8nDepart, transitionIn: desc.data.t8nArrive });
+				if (!normalExit) {
+					Engine.goToPassage(passageName, { transitionOut: desc.data.t8nDepart, transitionIn: desc.data.t8nArrive });
+				}
 			};
 		},
 		[String, optional(String)]

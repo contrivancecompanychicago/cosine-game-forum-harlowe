@@ -2,6 +2,16 @@ Appendix: Summarised history of Harlowe's design
 
 You may have a number of questions about various aspects of Harlowe's design. For posterity, I'd like to use this section to chronicle my motivations for most of Harlowe's major divergences from Twine 1, point out several of its outside inspirations, and describe how several of its own idiosyncracies came to be.
 
+##Twine is not a web programming lesson
+
+One of the major dissatisfactions I had with Twine 1 was that it allegedly aspired to simplicity for the beginner, but truly grappling with it demanded the author understand five entirely different programming languages: TiddlyWiki markup, macro tags, CSS, HTML tags, and Javascript expressions within macros. The latter three were not designed into the Twine platform, but leaked through from the hosting environment (the web platform) as a matter of convenience, filling functionality that Twine was lacking, with its own, largely incompatible, idiosyncracies. While only the top two were strictly necessary for the simplest and most common Twine use-cases, the fact that the latter three demand understanding an entirely different grammar and which isn't documented alongside Twine's own languages.
+
+Some might say that learning these languages provides the author with the benefit of understanding web programming, from which they can embark on more ambitious post-Twine projects. I contend that as a dev tool, Twine's job is absolutely not to be a web programming lesson, and any design decision that made it more useful in teaching web programming languages than its own languages should be held in high suspicion.
+
+One of the languages whose strong presence in Twine I resented was Javascript. Infamous for its beginner-unfriendly idiosyncracies like automatic type conversion and "forgiving" silent failures in place of error messages, this language was nonetheless thinly concealed in Twine 1 beneath some buggy syntactic sugar. Basic services like arithmetic, string concatenation and so forth all deferred to Javascript unfiltered, bringing forth whatever `undefined`s or `NaN`s it chose to return. I knew that beginning Twine users deserved better than this.
+
+For Harlowe, I made it a goal, lofty as it was, to pull down as much basic functionality as I could from the inhospitable peaks of CSS and Javascript to the macro layer - to include a proper programming language with its own operators, error messages and broad macro library that protected the author from CSS and Javascript's jagged edges as much as possible. This goal guided many of my decisions from here on.
+
 ##Macro syntax
 
 Users of the default story format in Twine 1 know that they are "powered by TiddlyWiki", as they proudly proclaim. This reflects their codebase's origin as a fork of [TiddlyWiki](https://classic.tiddlywiki.com/), a single-page-app wiki. (Twee, the command-line predecessor to Twine, is named after TiddlyWiki, and "Twine", the windowed successor, is just a clever portmanteau of "windowed" + "Twee".) Each passage is actually, from the runtime's point of view, a wiki article (a "tiddler"), though by now all of TiddlyWiki's code has been heavily developed beyond recognition. 

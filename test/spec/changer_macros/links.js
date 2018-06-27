@@ -147,6 +147,17 @@ describe("link macros", function() {
 					link.click();
 					expect($('tw-passage p').text()).toBe("garply");
 				});
+				// This probably also tests for contained (load-game:) interaction...
+				it("contained (goto:)s go to that passage instead of the intended passage", function(done) {
+					createPassage("<p>$foo</p>(set:$foo to 'baz')","mire");
+					createPassage("<p>$foo</p>","mere");
+					var link = runPassage("(set:$foo to 'bar')("+name+":'mire')[(goto:'mere')]").find('tw-link');
+					link.click();
+					setTimeout(function() {
+						expect($('tw-passage p').text()).toBe("bar");
+						done();
+					});
+				});
 			}
 			else {
 				it("goes to the passage when clicked", function() {
