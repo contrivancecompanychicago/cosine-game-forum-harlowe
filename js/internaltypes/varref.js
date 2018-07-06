@@ -47,7 +47,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			Sequentials have special sugar string property indices:
 			
 			length: this falls back to JS's length property for Arrays and Strings.
-			1st, 2nd etc.: indices.
+			1st, 2nd etc.: 1-based indices.
 			last: antonym of 1st.
 			2ndlast, 3rdlast: reverse indices.
 			any, all: produce special "determiner" objects used for comparison operations.
@@ -85,10 +85,15 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 					and let Operations.get() do the work of offsetting it after it
 					deals with the astral characters.
 				*/
-				prop = -match[1] + "";
+				prop = -match[1];
 			}
 			else if (typeof prop === "string" && (match = /(\d+)(?:st|[nr]d|th)/i.exec(prop))) {
-				prop = match[1] - 1 + "";
+				/*
+					It's actually important that prop remains a number and not a string:
+					a few operations (such as canSet()) use the type of the props to
+					check if the VarRef's property chain remains legal.
+				*/
+				prop = match[1] - 1;
 			}
 			else if (prop === "last") {
 				prop = -1;
@@ -302,10 +307,14 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			Neither can colours.
 		*/
 		if (Colour.isPrototypeOf(obj)) {
-			return TwineError.create('operation', "I can't modify the components of " + objectName(obj));
+			return TwineError.create('operation', "I can't modify the components of " + objectName(obj) + ".");
 		}
 
 		if (obj instanceof Map) {
+			if(typeof prop !== "string") {
+				return TwineError.create('operation',
+					objectName(obj) + " can only have string data names, not " + objectName(prop) + ".");
+			}
 			return true;
 		}
 		/*

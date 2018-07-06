@@ -37,6 +37,12 @@ describe("link macros", function() {
 			p.find('tw-link').click();
 			expect(p.text()).toBe("Hello");
 		});
+		it("can't be clicked if its text contains an error", function() {
+			var p = runPassage("(link-replace:'(print:2+true)')[B]");
+			expect(p.find('tw-link tw-error').length).toBe(1);
+			p.find('tw-link').click();
+			expect(p.text()).not.toBe("B");
+		});
 	});
 	describe("(link-reveal:)", function() {
 		it("accepts exactly 1 non-empty string", function() {
@@ -132,6 +138,12 @@ describe("link macros", function() {
 				expect(link.tag()).toBe("tw-broken-link");
 				expect(link.html()).toBe("mire");
 			});
+			it("still becomes a <tw-broken-link> if its text contains an error", function() {
+				var link = runPassage("(" + name + ":'(print:2+true)','mire')"+hook).find('tw-broken-link');
+				
+				expect(link.parent().is(hook ? 'tw-hook' : 'tw-expression')).toBe(true);
+				expect(link.tag()).toBe("tw-broken-link");
+			});
 			it("renders markup in the link text, and ignores it for discerning the passage name", function() {
 				createPassage("","mire");
 				var p = runPassage("("+name+":'//glower//','//mire//')"+hook);
@@ -143,7 +155,8 @@ describe("link macros", function() {
 			if (hook) {
 				it("runs the hook when clicked, before going to the passage", function() {
 					createPassage("<p>$foo</p>","mire");
-					var link = runPassage("("+name+":'mire')[(set:$foo to 'garply')]").find('tw-link');
+					var link = runPassage("(set:$foo to 'grault')("+name+":'mire')[(set:$foo to 'garply')]").find('tw-link');
+					expect(link.length).toBe(1);
 					link.click();
 					expect($('tw-passage p').text()).toBe("garply");
 				});
@@ -185,6 +198,13 @@ describe("link macros", function() {
 				var link = runPassage("("+name+":'mire')"+hook).find('tw-link');
 				link.trigger($.Event('keydown', { which: 13 }));
 				expect($('tw-passage p').text()).toBe("garply");
+			});
+			it("can't be clicked if its text contains an error", function() {
+				createPassage("<p>garply</p>","mire");
+				var p = runPassage("(" + name + ":'(print:2+true)','mire')"+hook);
+				expect(p.find('tw-link tw-error').length).toBe(1);
+				p.find('tw-link').click();
+				expect(p.text()).not.toBe("garply");
 			});
 		});
 	});

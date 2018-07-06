@@ -44,6 +44,14 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 				event = link.closest('tw-expression, tw-hook').data('clickEvent');
 
 			if (event) {
+				/*
+					If a link's body contains a <tw-error>, then don't
+					allow it to be clicked anymore, so that (for instance), the error message
+					can be expanded to see the line of additional advice.
+				*/
+				if (link.find('tw-error').length > 0) {
+					return;
+				}
 				event(link);
 				return;
 			}
@@ -198,8 +206,8 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 					if (arr[0] === "link-reveal") {
 						link.contents().unwrap();
 					}
-					desc.source = desc.innerSource;
-					desc.section.renderInto(desc.innerSource + "", null, desc);
+					desc.source = desc.innerSource + "";
+					desc.section.renderInto("", null, desc);
 				};
 			},
 			[String]
@@ -453,12 +461,13 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 					was displayed by the innerSource.
 				*/
 				link.contents().unwrap();
-				const normalExit = desc.section.renderInto(desc.innerSource + "", null, desc);
+				desc.section.renderInto(desc.innerSource + "", null, desc);
 				/*
 					Having revealed, we now go-to, UNLESS an early exit was invoked, which signifies a different (go-to:) was
 					activated.
+					Much as in doExpressions() in section.renderInto(), we can check for an early exit via the DOM.
 				*/
-				if (!normalExit) {
+				if (!desc.target.find('[earlyexit]').length) {
 					Engine.goToPassage(passageName, { transitionOut: desc.data.t8nDepart, transitionIn: desc.data.t8nArrive });
 				}
 			};

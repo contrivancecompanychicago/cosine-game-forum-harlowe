@@ -318,9 +318,17 @@ define([
 				from running the command (such as running (undo:) on the first turn).
 			*/
 			if (TwineError.containsError(result)) {
-				expr.replaceWith(result.render(expr.attr('title'), expr));
+				expr.replaceWith(result.render(expr.attr('title')));
 			}
 			if (ChangeDescriptor.isPrototypeOf(result)) {
+				/*
+					We need to update the ChangeDescriptor to have these fields, so
+					that certain interaction macros that want to reuse it (such as (cycling-link:))
+					can pass it to renderInto().
+				*/
+				result.section = this;
+				result.target = nextElem;
+				
 				this.renderInto('', nextElem, result);
 				/*
 					If TwineScript_Run returns a ChangeDescriptor with earlyExit,
@@ -330,14 +338,6 @@ define([
 				if (result.earlyExit) {
 					return "earlyexit";
 				}
-			}
-			/*
-				This should be refactored out soon (May 2018)...
-				The only commands whose Run() would produce a string are
-				links, and all those should be HookCommands.
-			*/
-			if (typeof result === "string") {
-				this.renderInto(result, nextElem);
 			}
 		}
 		/*
@@ -376,7 +376,7 @@ define([
 				if (result instanceof Error) {
 					result = TwineError.fromError(result);
 				}
-				expr.replaceWith(result.render(expr.attr('title'), expr));
+				expr.replaceWith(result.render(expr.attr('title')));
 			}
 			else {
 				/*
@@ -900,7 +900,7 @@ define([
 									dom.attr('earlyexit', true);
 									return false;
 								}
-								return result;
+								return;
 							}
 						}
 					}

@@ -1,6 +1,6 @@
 "use strict";
-define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltypes/twineerror', 'datatypes/hookset', 'utils/operationutils'],
-(requestAnimationFrame, Macros, {toJSLiteral, unescape}, State, Passages, Engine, TwineError, HookSet, {printBuiltinValue}) => {
+define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltypes/twineerror', 'datatypes/hookset', 'datatypes/varbind', 'utils/operationutils'],
+(requestAnimationFrame, Macros, {toJSLiteral, unescape}, State, Passages, Engine, TwineError, HookSet, VarBind, {printBuiltinValue}) => {
 	
 	/*d:
 		Command data
@@ -26,7 +26,7 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 		Note that HookCommands only have similarities to anonymous hooks: they can't be referred to by (click:) or
 		(replace:) to change them after the fact (unless the (hook:) macro is used to give them a name).
 	*/
-	const {Any, rest, optional} = Macros.TypeSignature;
+	const {Any, rest, either, optional} = Macros.TypeSignature;
 	const {assign} = Object;
 	
 	const hasStorage = !!localStorage
@@ -275,18 +275,20 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			[])
 
 		/*d:
-			(cycling-link: Bind, ...String) -> Command
+			(cycling-link: [Bind], ...String) -> HookCommand
 
 			A command that, when evaluated, creates a cycling link - a link which does not go anywhere, but changes its own text
-			to the next in a looping sequence of strings, and sets the bound variable to match the string value of the text.
+			to the next in a looping sequence of strings, and sets the optional bound variable to match the string value of the text.
 
 			Example usage:
-			`(cycling-link: bind $head's hair, "Black", "Brown", "Blonde", "Red", "White")`
+			* `(cycling-link: bind $head's hair, "Black", "Brown", "Blonde", "Red", "White")` binds the "hair" value in the $head datamap to the
+			current link text.
+			* `(cycling-link: "Mew", "Miao", "Mrr", "Mlem")` has no bound variable.
 
 			Rationale:
-			The cycling link was an interaction idiom popularised in Twine 1 which combined the utility of a dial input element with
-			the discovery and visual consistency of a link: the player can only discover that this is a cycling link by clicking it,
-			and can then only discover the full set of labels by clicking through them. This affords a number of subtle dramatic and humourous
+			The cycling link is an interaction idiom popularised in Twine 1 which combined the utility of a dial input element with
+			the discovery and visual consistency of a link: the player can typically only discover that this is a cycling link by clicking it,
+			and can then discover the full set of labels by clicking through them. This affords a number of subtle dramatic and humourous
 			possibilities, and moreover allows the link to sit comfortably among passage prose without standing out as an interface element.
 
 			The addition of a variable bound to the link, changing to match whichever text the player finally dialed the link to, allows
@@ -294,17 +296,111 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 			other, even though no hooks and (set:)s can be attached to them.
 
 			Details:
-			TBW
+			If one of the strings is empty, such as `(cycling-link: "Two eggs", "One egg", "")`, then upon reaching the empty string, the link
+			will disappear permanently. If the *first* string is empty, an error will be produced (because then the link can never appear at all).
+
+			If attempting to render one string produces an error, such as `(cycling-link: "Goose", "(print: 2 + 'foo')")`, then the error will only appear
+			once the link cycles to that string.
+
+			The bound variable will be set to the first value as soon as the cycling link is displayed - so, even if the player doesn't
+			interact with the link at all, the variable will still have the intended value.
+
+			If you want to include the current value of the bound variable in the link's series of strings, simply refer to it directly after
+			the bind: `(cycling-link: bind $hat, $hat, "Beret", "Poker visor", "Tricorn")` will place $hat's current value in the series,
+			and, as the first value, it will harmlessly overwrite $hat with itself (and thus leave it unchanged). Additionally, if you have
+			an array of strings that you'd like to reuse for the same cycling link in multiple passages, say as
+			`(set: $allHats to (a: "Helmet", "Beret", "Poker visor", "Tricorn"))`, and you'd like each cycling link to start on
+			whatever matching value is currently in $hat, simply first provide $hat as the first value,
+			then follow it with $allHats with $hat removed: `(cycling-link: bind $hat, $hat, ...($allHats - (a:$hat)))`. (Note that this doesn't
+			preserve the order of $allHats relative to $hat, however.)
+
+			If only one string was given to this macro, an error will be produced.
 
 			#input
 		*/
 		("cycling-link",
-			() => {},
-			(cd, _, bind, ...labels) => {
-				// NEED evaluateTwineMarkup() here...
-				return assign(cd, { source: '<tw-link>' + labels[0] + '</tw-link>' });
+			(...labels) => {
+				if (labels[0] === "") {
+					return TwineError.create("macrocall", "The first string in a (cycling-link:) can't be empty.");
+				}
+				if (labels.length <= (VarBind.isPrototypeOf(labels[0]) ? 2 : 1)) {
+					return TwineError.create("macrocall",
+						"I need two or more strings to cycle through, not just '"
+						+ labels[labels.length - 1]
+						+ "'."
+					);
+				}
 			},
-			[String]);
+			(cd, _, ...labels) => {
+				/*
+					Often, all the params are labels. But if the first one is actually the optional VarBind,
+					we need to extract it from the labels array.
+				*/
+				let bind;
+				if (VarBind.isPrototypeOf(labels[0])) {
+					bind = labels.shift();
+				}
+				let index = 0;
+				/*
+					An operation that should be performed when this is initially printed, and
+					every time it is clicked: set the bound variable to match the current label.
+				*/
+				const setBoundVariable = (labelValue) => {
+					const result = bind.varRef.set(labelValue);
+					let error;
+					if ((error = TwineError.containsError(result))) {
+						return error;
+					}
+				};
+
+				cd.data.clickEvent = (link) => {
+					/*
+						Rotate to the next label, cycling around if it's past the end.
+					*/
+					index = (index + 1) % labels.length;
+					let source = (labels[index] === "" ? "" : '<tw-link>' + labels[index] + '</tw-link>');
+					/*
+						If there's a bound variable, set it to the value of the next string.
+						(If it returns an error, let that replace the source.)
+					*/
+					if (bind) {
+						const result = setBoundVariable(labels[index]);
+						if (TwineError.containsError(result)) {
+							/*
+								As this clickEvent occurs when the interface element has already been rendered,
+								we need to explicitly replace the link with the rendered error rather than return
+								the error (to nobody).
+							*/
+							link.replaceWith(result.render(labels[index]));
+							return;
+						}
+					}
+					/*
+						Display the next label, reusing the ChangeDescriptor (and thus the transitions, style changes, etc)
+						that the original run received.
+					*/
+					const cd2 = assign({}, cd, { source, });
+					/*
+						Since cd2's target SHOULD equal link, passing anything as the second argument won't do anything useful
+						(much like how the first argument is overwritten by cd2's source). So, null is given.
+					*/
+					cd.section.renderInto("", null, cd2);
+				};
+				/*
+					As above, the bound variable, if present, is set to the first label. Errors resulting
+					from this operation can be returned immediately.
+				*/
+				let source = '<tw-link>' + labels[0] + '</tw-link>';
+				if (bind) {
+					const result = setBoundVariable(labels[index]);
+					if (TwineError.containsError(result)) {
+						return result;
+					}
+				}
+				assign(cd, { source, append: "replace", });
+				return cd;
+			},
+			[either(VarBind, String), rest(String)]);
 
 	Macros.addCommand
 		/*d:

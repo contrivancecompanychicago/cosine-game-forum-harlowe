@@ -131,7 +131,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 		[
 			["error"],
 			["comma"],
-			["spread"],
+			["spread", "bind"],
 			["to"],
 			["into"],
 			{rightAssociative: ["where", "when", "via"]},

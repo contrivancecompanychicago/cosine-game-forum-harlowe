@@ -225,7 +225,7 @@ describe("style changer macros", function() {
 					it("changes the passage transitions of (" + name2 + ":)", function(done) {
 						runPassage("foo","grault");
 						var p = runPassage("foo("+name+":'pulse')("+name2+":"+arg+")");
-						p.find('tw-link, .enchantment-link')[interaction]();
+						p.find('tw-link, .enchantment-link, .enchantment-mouseover')[interaction]();
 						setTimeout(function() {
 							expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
 							done();
@@ -276,7 +276,7 @@ describe("style changer macros", function() {
 							it("on (" + name2 + ":)", function(done) {
 								runPassage("foo","grault");
 								var p = runPassage("foo(t8n-depart:'dissolve')+(t8n-arrive:'pulse')("+name2+":"+arg+")");
-								p.find('tw-link, .enchantment-link')[interaction]();
+								p.find('tw-link, .enchantment-link, .enchantment-mouseover')[interaction]();
 								setTimeout(function() {
 									expect($('tw-story tw-transition-container.transition-out[data-t8n="dissolve"]').length).toBe(1);
 									expect($('tw-story tw-transition-container.transition-in[data-t8n="pulse"]').length).toBe(1);
