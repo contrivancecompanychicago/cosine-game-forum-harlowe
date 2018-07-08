@@ -556,7 +556,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 			See also:
 			(link:), (link-reveal:), (link-repeat:), (click:), (mouseout:), (replace:), (mouseover-replace:), (hover-style:)
 
-			#links 11
+			#links 12
 		*/
 		{
 			name: "mouseover",
@@ -594,7 +594,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 			See also:
 			(link:), (link-reveal:), (link-repeat:), (click:), (mouseover:), (replace:), (mouseout-replace:), (hover-style:)
 
-			#links 15
+			#links 17
 		*/
 		{
 			name: "mouseout",
@@ -673,7 +673,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		This is similar to (click-replace:), but uses the (mouseover:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-replace:).
 
-		#links 12
+		#links 13
 	*/
 	/*d:
 		(mouseover-append: HookName or String) -> Changer
@@ -681,7 +681,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		This is similar to (click-append:), but uses the (mouseover:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-append:).
 
-		#links 13
+		#links 14
 	*/
 	/*d:
 		(mouseover-prepend: HookName or String) -> Changer
@@ -689,7 +689,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		This is similar to (click-prepend:), but uses the (mouseover:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-prepend:).
 
-		#links 14
+		#links 15
 	*/
 	/*d:
 		(mouseout-replace: HookName or String) -> Changer
@@ -697,7 +697,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		This is similar to (click-replace:), but uses the (mouseout:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-replace:).
 
-		#links 16
+		#links 18
 	*/
 	/*d:
 		(mouseout-append: HookName or String) -> Changer
@@ -705,7 +705,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		This is similar to (click-append:), but uses the (mouseout:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-append:).
 
-		#links 17
+		#links 19
 	*/
 	/*d:
 		(mouseout-prepend: HookName or String) -> Changer
@@ -713,7 +713,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		This is similar to (click-prepend:), but uses the (mouseout:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-prepend:).
 		
-		#links 18
+		#links 20
 	*/
 	revisionTypes.forEach((revisionType) => {
 		interactionTypes.forEach((interactionType) => {
@@ -739,7 +739,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		See also:
 		(link-goto:)
 
-		#links 19
+		#links 11
 	*/
 	/*d:
 		(mouseover-goto: HookName or String, String) -> HookCommand
@@ -747,7 +747,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		This is similar to (click-goto:), but uses the (mouseover:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-goto:).
 
-		#links 20
+		#links 16
 	*/
 	/*d:
 		(mouseout-goto: HookName or String, String) -> HookCommand

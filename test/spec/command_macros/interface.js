@@ -73,6 +73,12 @@ describe("interface macros", function(){
 				p.find('tw-link').click();
 				expect("$foo").markupToPrint('qux');
 			});
+			xit("works with temp variables", function() {
+				var p = runPassage("(cycling-link: bind _foo, 'bar', 'baz', 'qux')(event: _foo is 'qux')[quux]");
+				p.find('tw-link').click();
+				p.find('tw-link').click();
+				expect(p.text()).toBe("quxquux");
+			});
 			it("errors if the bind is invalid", function() {
 				expect("(set:$foo to 1)(cycling-link: bind $foo's 1st, 'bar','baz', 'qux')").markupToError();
 			});
@@ -94,6 +100,36 @@ describe("interface macros", function(){
 				p.find('tw-link').click();
 				expect(p.find('tw-error').length).toBe(1);
 			});
+		});
+	});
+	describe("the (dropdown:) macro", function() {
+		it("accepts one bound variable, and two or more strings", function() {
+			expect("(print:(dropdown:))").markupToError();
+			expect("(print:(dropdown:''))").markupToError();
+			expect("(print:(dropdown:'baz'))").markupToError();
+			expect("(print:(dropdown:2))").markupToError();
+			expect("(print:(dropdown:false))").markupToError();
+			expect("(print:(dropdown:bind $foo))").markupToError();
+			expect("(print:(dropdown:'baz', 'baz'))").markupToError();
+			expect("(print:(dropdown:bind $foo, 'baz'))").markupToError();
+			expect("(print:(dropdown:bind $foo, 'baz', 'qux'))").not.markupToError();
+		});
+		it("creates a <select> element with each string as an <option>", function() {
+			var p = runPassage("(dropdown: bind $foo, 'bar','baz','qux')(event: when $foo is 'qux')[quux]");
+			expect(p.find('select').length).toBe(1);
+			expect(p.find('select option').length).toBe(3);
+		});
+		it("when changed, sets the variable to the string label", function() {
+			var p = runPassage("(dropdown: bind $foo, 'bar','baz', 'qux')");
+			expect("$foo").markupToPrint('bar');
+
+			p = runPassage("(dropdown: bind $foo, 'bar','baz', 'qux')");
+			p.find('select').val('baz').change();
+			expect("$foo").markupToPrint('baz');
+
+			p = runPassage("(dropdown: bind $foo, 'bar','baz', 'qux')");
+			p.find('select').val('qux').change();
+			expect("$foo").markupToPrint('qux');
 		});
 	});
 });

@@ -606,7 +606,7 @@ define([
 	*/
 	function runLiveHook(expr, target, delay = 20, event = undefined) {
 		if (event) {
-			Utils.assertMustHave(event, "when");
+			Utils.assertMustHave(event, ["when"]);
 		}
 		/*
 			Obtain the code of the hook that the (live:) or (event:) changer suppressed.
@@ -628,13 +628,17 @@ define([
 			/*
 				If this is an (event:) command, check the event (which should be a "when" lambda)
 				and if it's not happened yet, wait for the next timeout.
+
+				Note: Lambda.filter() returns the passed-in array with values filtered out based on
+				whether the lambda was false. So, passing in 'true' will return [true] if
+				the lambda was true and [] (an empty array) if not.
 			*/
-			const eventFired = (event && event.filter(this, [undefined]));
+			const eventFired = (event && event.filter(this, [true]));
 			if (TwineError.containsError(eventFired)) {
 				eventFired.render(expr.attr('title')).replaceAll(expr);
 				return;
 			}
-			if (event && !eventFired) {
+			if (event && !eventFired[0]) {
 				setTimeout(recursive, delay);
 				return;
 			}

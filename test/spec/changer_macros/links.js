@@ -92,8 +92,8 @@ describe("link macros", function() {
 			var p = runPassage("(link-repeat:'A')[B(set:$c to 12)]");
 			p.find('tw-link').click();
 			expect(p.text()).toBe("AB");
-			expect("$c").markupToPrint("12");
 			expect(p.find('tw-link').length).toBe(1);
+			expect("$c").markupToPrint("12");
 		});
 		it("the link can be clicked multiple times", function() {
 			var p = runPassage("(set:$c to 0)(link-repeat:'A')[B(set:$c to it + 12)]");

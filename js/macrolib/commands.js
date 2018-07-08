@@ -1,6 +1,6 @@
 "use strict";
-define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltypes/twineerror', 'datatypes/hookset', 'datatypes/varbind', 'utils/operationutils'],
-(requestAnimationFrame, Macros, {toJSLiteral, unescape}, State, Passages, Engine, TwineError, HookSet, VarBind, {printBuiltinValue}) => {
+define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'engine', 'internaltypes/twineerror', 'datatypes/hookset', 'datatypes/varbind', 'utils/operationutils'],
+($, requestAnimationFrame, Macros, {storyElement, toJSLiteral, unescape}, Selectors, State, Passages, Engine, TwineError, HookSet, VarBind, {printBuiltinValue}) => {
 	
 	/*d:
 		Command data
@@ -341,17 +341,6 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 					bind = labels.shift();
 				}
 				let index = 0;
-				/*
-					An operation that should be performed when this is initially printed, and
-					every time it is clicked: set the bound variable to match the current label.
-				*/
-				const setBoundVariable = (labelValue) => {
-					const result = bind.varRef.set(labelValue);
-					let error;
-					if ((error = TwineError.containsError(result))) {
-						return error;
-					}
-				};
 
 				cd.data.clickEvent = (link) => {
 					/*
@@ -364,7 +353,7 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 						(If it returns an error, let that replace the source.)
 					*/
 					if (bind) {
-						const result = setBoundVariable(labels[index]);
+						const result = bind.set(labels[index]);
 						if (TwineError.containsError(result)) {
 							/*
 								As this clickEvent occurs when the interface element has already been rendered,
@@ -392,15 +381,73 @@ define(['requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'engine
 				*/
 				let source = '<tw-link>' + labels[0] + '</tw-link>';
 				if (bind) {
-					const result = setBoundVariable(labels[index]);
+					const result = bind.set(labels[index]);
 					if (TwineError.containsError(result)) {
 						return result;
 					}
 				}
-				assign(cd, { source, append: "replace", });
-				return cd;
+				return assign(cd, { source, append: "replace", });
 			},
 			[either(VarBind, String), rest(String)]);
+
+	/*
+		An onchange event for <select> elements must be registered for the sake of the (dropdown:) macro,
+		which is implemented similar to the link macros - the ChangeDescriptor's data.dropdownEvent indicates
+		what to do when the <select> is interacted with.
+	*/
+	$(() => $(storyElement).on(
+		/*
+			The jQuery event namespace is "dropdown-macro".
+		*/
+		"change.dropdown-macro",
+		"select",
+		function changeDropdownEvent() {
+			const dropdown = $(this),
+				/*
+					Dropdowns' events are, due to limitations in the ChangeDescriptor format,
+					attached to the <tw-hook> or <tw-expression> containing the element.
+				*/
+				event = dropdown.closest('tw-expression, tw-hook').data('dropdownEvent');
+
+			if (event) {
+				event(dropdown);
+			}
+		}
+	));
+	/*d:
+		(dropdown: Bind, ...String) -> HookCommand
+
+		TBW
+	*/
+	Macros.addHookCommand("dropdown",
+		() => {},
+		(cd, _, bind, ...labels) => {
+			let source = '<select>'
+				+ labels.map((label, i) =>
+					'<option' + (i === 0 ? ' selected' : '') + '>' + label + '</option>'
+				).join('\n')
+				+ '</select>';
+
+			cd.data.dropdownEvent = (dropdownMenu) => {
+				const value = dropdownMenu.val();
+				const result = bind.set(value);
+				if (TwineError.containsError(result)) {
+					/*
+						As this clickEvent occurs when the interface element has already been rendered,
+						we need to explicitly replace the link with the rendered error rather than return
+						the error (to nobody).
+					*/
+					dropdownMenu.replaceWith(result.render(value));
+					return;
+				}
+			};
+			const result = bind.set(labels[0]);
+			if (TwineError.containsError(result)) {
+				return result;
+			}
+			return assign(cd, { source, append: "replace", });
+		},
+		[VarBind, String, rest(String)]);
 
 	Macros.addCommand
 		/*d:

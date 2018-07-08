@@ -35,6 +35,17 @@ define(['utils', 'utils/operationutils', 'internaltypes/varref', 'internaltypes/
 		TwineScript_ObjectName: "a bound variable",
 
 		TwineScript_Unstorable: true,
+
+		/*
+			Setting a value in a VarBind is fairly straightforward - simply set the varRef, and then pass up any errors.
+		*/
+		set(value) {
+			const result = this.varRef.set(value);
+			let error;
+			if ((error = TwineError.containsError(result))) {
+				return error;
+			}
+		},
 		
 		/*
 			bind is either "one way" (the DOM element's first provided value is automatically selected and
