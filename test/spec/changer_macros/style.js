@@ -321,7 +321,7 @@ describe("style changer macros", function() {
 		it("is aliased to (t8n-time:)", function() {
 			expect("(print: (t8n-time:2s) is (transition-time:2s))").markupToPrint("true");
 		});
-		// TODO: Add .css() tests of output.
+		// TODO: Add .css() tests of output, including passage links.
 	});
 	describe("the (text-rotate:) macro", function() {
 		it("requires exactly 1 number argument", function() {

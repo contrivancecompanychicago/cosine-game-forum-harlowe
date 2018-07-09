@@ -91,7 +91,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 	/*
 		A list of valid transition names. Used by (transition:).
 	*/
-	const validT8ns = ["instant", "dissolve", "shudder", "pulse"];
+	const validT8ns = ["instant", "dissolve", "rumble", "shudder", "pulse", "flicker", "slideleft", "slideright", "slideup", "slidedown"];
 	const validT8nsMessage = "Only the following names are recognised (capitalisation and hyphens ignored): "
 		+ validT8ns.join(", ");
 
@@ -483,19 +483,26 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			A command that applies a built-in CSS transition to a hook as it appears.
 			
 			Example usage:
-			`(transition: "pulse")[Gleep!]` makes the hook `[Gleep!]` use the "pulse" transition
+			`(t8n: "pulse")[Gleep!]` makes the hook `[Gleep!]` use the "pulse" transition
 			when it appears.
 			
 			Details:
 			At present, the following text strings will produce a particular transition:
 			* "instant" (causes the hook to instantly appear)
 			* "dissolve" (causes the hook to gently fade in)
+			* "flicker" (causes the hook to roughly flicker in - don't use with a long (transition-time:))
 			* "shudder" (causes the hook to instantly appear while shaking back and forth)
+			* "rumble" (causes the hook to instantly appear while shaking up and down)
+			* "slide-right" (causes the hook to slide in from the right)
+			* "slide-left" (causes the hook to slide in from the left)
 			* "pulse" (causes the hook to instantly appear while pulsating rapidly)
 			
 			All transitions are 0.8 seconds long, unless a (transition-time:) command is added
 			to the command.
-			
+
+			You can't combine transitions by adding them together, like you can with (text-style:) -
+			`(t8n:"dissolve")+(t8n:"shudder")` won't make a transition that simultaneously dissolve-fades and shudders.
+
 			See also:
 			(text-style:), (transition-time:)
 
@@ -549,6 +556,13 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			},
 			(d, time) => {
 				d.transitionTime     = time;
+				/*
+					(transition-time:) does a sort of unfortunate double duty: specifying the transition time
+					for hooks AND links. This is bearable because the likelihood of a link needing its own timed
+					transition and a differently-timed passage transition should be low (and can be worked around
+					using wrapper hooks anyway).
+				*/
+				d.data.t8nTime       = time;
 				return d;
 			},
 			[Number]
@@ -572,10 +586,17 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			This macro accepts the exact same transition names as (transition:).
 			* "instant" (causes the passage to instantly vanish)
 			* "dissolve" (causes the passage to gently fade out)
+			* "flicker" (causes the passage to roughly flicker in - don't use with a long (transition-time:)))
 			* "shudder" (causes the passage to disappear while shaking back and forth)
+			* "rumble" (causes the passage to instantly appear while shaking up and down)
+			* "slide-right" (causes the passage to slide in from the right)
+			* "slide-left" (causes the passage to slide in from the left)
 			* "pulse" (causes the passage to disappear while pulsating rapidly)
 
 			Attaching this macro to a hook that isn't a passage link won't do anything (no error message will be produced).
+
+			You can't combine transitions by adding them together, like you can with (text-style:) -
+			`(t8n-depart:"dissolve")+(t8n-depart:"shudder")` won't make a transition that simultaneously dissolve-fades and shudders.
 
 			See also:
 			(transition-arrive:)
@@ -616,10 +637,17 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			This macro accepts the exact same transition names as (transition:).
 			* "instant" (causes the passage to instantly vanish)
 			* "dissolve" (causes the passage to gently fade out)
+			* "flicker" (causes the passage to roughly flicker out - don't use with a long (transition-time:))
 			* "shudder" (causes the passage to disappear while shaking back and forth)
+			* "rumble" (causes the passage to instantly appear while shaking up and down)
+			* "slide-right" (causes the passage to slide in from the right)
+			* "slide-left" (causes the passage to slide in from the left)
 			* "pulse" (causes the passage to disappear while pulsating rapidly)
 
 			Attaching this macro to a hook that isn't a passage link won't do anything (no error message will be produced).
+
+			You can't combine transitions by adding them together, like you can with (text-style:) -
+			`(t8n-depart:"dissolve")+(t8n-depart:"shudder")` won't make a transition that simultaneously dissolve-fades and shudders.
 
 			See also:
 			(transition-depart:)

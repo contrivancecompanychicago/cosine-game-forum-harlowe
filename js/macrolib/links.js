@@ -60,30 +60,32 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			*/
 			const next = expression.data('linkPassageName');
 			/*
-				The correct t8nDepart and t8nArrive belongs to the deepest <tw-enchantment>.
+				The correct t8nDepart, t8nArrive and t8nTime belongs to the deepest <tw-enchantment>.
 				Iterate through each <tw-enchantment> and update these variables.
 				(A .each() loop is easier when working with a jQuery compared to a .reduce().)
 			*/
 			let transitionOut = expression.data('t8nDepart');
 			let transitionIn = expression.data('t8nArrive');
+			let transitionTime = expression.data('t8nTime');
 			/*
 				$().find() SHOULD return the tw-enchantments in ascending depth order.
 			*/
 			expression.find('tw-enchantment').each((_,e) => {
 				transitionOut = $(e).data('t8nDepart') || transitionOut;
 				transitionIn = $(e).data('t8nArrive') || transitionIn;
+				transitionTime = $(e).data('t8nTime') !== undefined ? $(e).data('t8nTime') : transitionTime;
 			});
 
 			if (next) {
 				// TODO: stretchtext
-				Engine.goToPassage(next, { transitionOut, transitionIn });
+				Engine.goToPassage(next, { transitionOut, transitionIn, transitionTime });
 				return;
 			}
 			/*
 				Or, a (link-undo:) link.
 			*/
 			if (link.is('[undo]')) {
-				Engine.goBack({ transitionOut, transitionIn });
+				Engine.goBack({ transitionOut, transitionIn, transitionTime });
 				return;
 			}
 		}

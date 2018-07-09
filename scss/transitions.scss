@@ -14,16 +14,7 @@ $time: 0.8s;
 	@include animation(appear 0ms step-end);
 }
 
-/* Dissolve, fade-in */
-[data-t8n^=fade-in] {
-	&.transition-in {
-		@include animation(appear $time);
-		/*background-color: hsla(120,50%,50%,0.5);*/
-	}
-	&.transition-out {
-		display:none;
-	}
-}
+/* Dissolve */
 [data-t8n^=dissolve] {
 	&.transition-in {
 		@include animation(appear $time);
@@ -33,21 +24,27 @@ $time: 0.8s;
 	}
 }
 
-/* Shudder, shudder-in, shudder-out */
+/* Shudder */
 [data-t8n^=shudder] {
-	@extend [data-t8n^=shudder-in];
-	@extend [data-t8n^=shudder-out];
-}
-[data-t8n^=shudder-in] {
 	&.transition-in {
 		display: inline-block;
 		@include animation(shudder-in $time);
 	}
-}
-[data-t8n^=shudder-out] {
 	&.transition-out {
 		display: inline-block;
-		@include animation(shudder-out $time);
+		@include animation(shudder-in $time reverse);
+	}
+}
+
+/* Rumble */
+[data-t8n^=rumble] {
+	&.transition-in {
+		display: inline-block;
+		@include animation(rumble-in $time);
+	}
+	&.transition-out {
+		display: inline-block;
+		@include animation(rumble-in $time reverse);
 	}
 }
 
@@ -67,6 +64,63 @@ $time: 0.8s;
 	&.transition-out {
 		@include animation(pulse $time reverse);
 		display:inline-block;
+	}
+}
+
+/* Slide */
+/*
+	These can't have the hyphen in their data-t8n name because Utils.insensitiveName() removes it.
+	Also, the transition-outs use the reverse direction of the transition-ins to preserve the semantic
+	meaning of the names.
+*/
+[data-t8n^=slideleft] {
+	&.transition-in {
+		@include animation(slide-left $time);
+		display:inline-block;
+	}
+	&.transition-out {
+		@include animation(slide-right $time reverse);
+		display:inline-block;
+	}
+}
+[data-t8n^=slideright] {
+	&.transition-in {
+		@include animation(slide-right $time);
+		display:inline-block;
+	}
+	&.transition-out {
+		@include animation(slide-left $time reverse);
+		display:inline-block;
+	}
+}
+[data-t8n^=slideup] {
+	&.transition-in {
+		@include animation(slide-up $time);
+		display:inline-block;
+	}
+	&.transition-out {
+		@include animation(slide-down $time reverse);
+		display:inline-block;
+	}
+}
+[data-t8n^=slidedown] {
+	&.transition-in {
+		@include animation(slide-down $time);
+		display:inline-block;
+	}
+	&.transition-out {
+		@include animation(slide-up $time reverse);
+		display:inline-block;
+	}
+}
+
+/* Flicker */
+[data-t8n^=flicker] {
+	&.transition-in {
+		@include animation(flicker $time);
+	}
+	&.transition-out {
+		@include animation(flicker $time reverse);
 	}
 }
 

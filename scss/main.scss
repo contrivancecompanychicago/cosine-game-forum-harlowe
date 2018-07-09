@@ -66,6 +66,11 @@ tw-story {
 	padding: 5% 20%;
 	margin: 0;
 
+	/*
+		This is necessary to make certain CSS animations (mainly slide-left) work with passages.
+	*/
+	overflow: hidden;
+
 	background-color: $background-color;
 	color: $color;
 }

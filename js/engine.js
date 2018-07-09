@@ -80,7 +80,7 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 	function showPassage (name, displayOptions = {}) {
 		// Confirm that the options object only contains
 		// what this function recognises.
-		Utils.assertOnlyHas(displayOptions, ["stretch", "transitionIn", "transitionOut"]);
+		Utils.assertOnlyHas(displayOptions, ["stretch", "transitionIn", "transitionOut", "transitionTime"]);
 
 		const
 			// The passage
@@ -102,6 +102,7 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 				transitionOut: transitionOutName,
 
 				transitionIn: transitionInName,
+				transitionTime,
 			} = displayOptions;
 
 		transitionOutName = transitionOutName || "instant";
@@ -152,7 +153,7 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 			old passage instances.
 		*/
 		if (!stretch && transitionOutName) {
-			transitionOut(oldPassages, transitionOutName);
+			transitionOut(oldPassages, transitionOutName, transitionTime);
 			/*
 				This extra adjustment is separate from the transitionOut method,
 				as it should only apply to the block-level elements that are
@@ -320,7 +321,7 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 				as well as this basic, default ChangeDescriptor-like object
 				supplying the transition.
 			*/
-			{ transition: transitionInName }
+			{ transition: transitionInName, transitionTime }
 		);
 		
 		/*

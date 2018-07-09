@@ -1,17 +1,20 @@
 /*** Animations ***/
 
 @mixin keyframes($animation-name) {
-  @-webkit-keyframes #{$animation-name} {
-    @content;
-  }
-  @keyframes #{$animation-name} {
-    @content;
-  }
+	@-webkit-keyframes #{$animation-name} {
+		@content;
+	}
+	@keyframes #{$animation-name} {
+		@content;
+	}
 }
+
 @mixin transform($transforms) {
 	-webkit-transform: $transforms;
             transform: $transforms;
 }
+
+/* The following are used for (text-style:)s only */
 
 @include keyframes(appear) {
 	0% { opacity: 0 }
@@ -33,6 +36,8 @@
 	50% { @include transform(translateX(0.2em)) }
 }
 
+/* The following are used for (transition:)s only */
+
 @include keyframes(box-flash) {
 	0% { background-color: white; color: white; }
 	to {}
@@ -47,14 +52,52 @@
 	to  { @include transform(scale(1,1)) }
 }
 
-/* Slightly eased-out shudders */
-
 @include keyframes(shudder-in) {
-   0%, to {        @include transform(translateX(0em));    }
-   5%, 25%, 45% {  @include transform(translateX(-1em));   }
-   15%, 35%, 55% { @include transform(translateX(1em));    }
-   65% {           @include transform(translateX(-0.6em)); }
-   75% {           @include transform(translateX(0.6em));  }
-   85% {           @include transform(translateX(-0.2em)); }
-   95% {           @include transform(translateX(0.2em));  }
+	0%, to {        @include transform(translateX(0em));    }
+	5%, 25%, 45% {  @include transform(translateX(-1em));   }
+	15%, 35%, 55% { @include transform(translateX(1em));    }
+	65% {           @include transform(translateX(-0.6em)); }
+	75% {           @include transform(translateX(0.6em));  }
+	85% {           @include transform(translateX(-0.2em)); }
+	95% {           @include transform(translateX(0.2em));  }
 }
+
+@include keyframes(rumble-in) {
+	0%, to {        @include transform(translateY(0em));    }
+	5%, 25%, 45% {  @include transform(translateY(-1em));   }
+	15%, 35%, 55% { @include transform(translateY(1em));    }
+	65% {           @include transform(translateY(-0.6em)); }
+	75% {           @include transform(translateY(0.6em));  }
+	85% {           @include transform(translateY(-0.2em)); }
+	95% {           @include transform(translateY(0.2em));  }
+}
+
+@include keyframes(slide-right) {
+	0% { @include transform(translateX(-100vw)); }
+	to {}
+}
+
+@include keyframes(slide-left) {
+	0% { @include transform(translateX(100vw)); }
+	to {}
+}
+
+@include keyframes(slide-up) {
+	0% { @include transform(translateY(100vh)); }
+	to {}
+}
+
+@include keyframes(slide-down) {
+	0% { @include transform(translateY(-100vh)); }
+	to {}
+}
+
+@include keyframes(flicker) {
+	0%,29%,31%,63%,65%,77%,79%,86%,88%,91%,93% { opacity: 0 }
+	30% { opacity: 0.2 }
+	64% { opacity: 0.4 }
+	78% { opacity: 0.6 }
+	87% { opacity: 0.8 }
+	92%, to { opacity: 1 }
+}
+

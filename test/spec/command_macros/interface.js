@@ -29,10 +29,10 @@ describe("interface macros", function(){
 		});
 		it("works with (transition:)", function() {
 			runPassage("foo","foo");
-			var p = runPassage("(t8n:'pulse')(cycling-link:'bar','baz','qux')");
+			var p = runPassage("(t8n:'slideleft')(cycling-link:'bar','baz','qux')");
 			expect(p.find('tw-link').text()).toBe('bar');
 			p.find('tw-link').click();
-			expect(p.find('tw-transition-container[data-t8n="pulse"]').length).toBe(1);
+			expect(p.find('tw-transition-container[data-t8n="slideleft"]').length).toBe(1);
 		});
 		it("executes each label every time it appears", function() {
 			var p = runPassage("(set:$foo to 'bar')(cycling-link:'(print:$foo)','(set:$foo to \"baz\")qux')");
