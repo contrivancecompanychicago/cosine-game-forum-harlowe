@@ -368,7 +368,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 						Display the next label, reusing the ChangeDescriptor (and thus the transitions, style changes, etc)
 						that the original run received.
 					*/
-					const cd2 = assign({}, cd, { source, });
+					const cd2 = assign({}, cd, { source, transitionDeferred: false, });
 					/*
 						Since cd2's target SHOULD equal link, passing anything as the second argument won't do anything useful
 						(much like how the first argument is overwritten by cd2's source). So, null is given.
@@ -386,7 +386,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 						return result;
 					}
 				}
-				return assign(cd, { source, append: "replace", });
+				return assign(cd, { source, append: "replace", transitionDeferred: true, });
 			},
 			[either(VarBind, String), rest(String)]);
 

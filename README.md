@@ -17,6 +17,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
  * To more clearly separate the concepts of "printing data" and "running commands" in Harlowe, the `(print:)` macro will no longer run commands passed to it (that is, `(print:(go-to:"Foo"))` and `(go-to:"Foo")` will no longer do the same thing - the former will just print out a descriptive string, as if printing out a changer). Commands can now only be run by placing them directly in the passage (either as plain calls, inside variables, or wrapped in strings that (print:) receives).
  * Passage links no longer have a `passage-name` attribute indicating which passage they lead to, which the player could inspect using developer tools.
  * If links' text contains an error message (for instance, in the case of `(link-replace:"(print:2+true"))[]`), then the link can no longer be clicked (so that the error message can be expanded).
+ * Now, a `(transition:)` added to `(link:)`s, `(click:)`s, `(mouseover:)`s and other such macros will no longer cause the links or other elements to use the named transition themselves - instead, it will only be applied to the attached hook when it is made to appear.
 
 ####Additions
 

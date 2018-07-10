@@ -200,6 +200,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 					append method) - the others merely append.
 				*/
 				desc.append = arr[0] === "link" ? "replace" : "append";
+				desc.transitionDeferred = true;
 				desc.data.clickEvent = (link) => {
 					/*
 						Only (link-reveal:) turns the link into plain text:
@@ -209,6 +210,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 						link.contents().unwrap();
 					}
 					desc.source = desc.innerSource + "";
+					desc.transitionDeferred = false;
 					desc.section.renderInto("", null, desc);
 				};
 			},
@@ -321,7 +323,15 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 					Instead, the passage name is stored on the <tw-expression>, to be retrieved by clickEvent() above.
 				*/
 				cd.data.linkPassageName = passageName;
-				return assign(cd, { source });
+				return assign(cd, {
+					source,
+					/*
+						Since this link doesn't reveal any hooks, it doesn't necessarily make sense that it should
+						have transitionDeferred... but for consistency with the other links, it does.
+						(Maybe it should error outright if (t8n:) is attached to it?)
+					*/
+					transitionDeferred: true,
+				});
 			},
 			[String, optional(String)]
 		)
@@ -373,7 +383,10 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 					This currently reveals its purpose in the player-readable DOM by including an 'undo' attribute,
 					which is used by the "click.passage-link" event handler.
 				*/
-				return assign(cd, { source: '<tw-link tabindex=0 undo>' + text + '</tw-link>' });
+				return assign(cd, {
+					source: '<tw-link tabindex=0 undo>' + text + '</tw-link>',
+					transitionDeferred: true,
+				});
 			},
 			[String]
 		);
@@ -455,6 +468,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			const visited = (State.passageNameVisited(passageName));
 			desc.source = '<tw-link tabindex=0 ' + (visited > 0 ? 'class="visited" ' : '') + '>' + text + '</tw-link>';
 			desc.append = "append";
+			desc.transitionDeferred = true;
 			desc.data.clickEvent = (link) => {
 				desc.source = desc.innerSource;
 				/*
@@ -463,6 +477,11 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 					was displayed by the innerSource.
 				*/
 				link.contents().unwrap();
+				/*
+					This technically isn't needed if the goToPassage() call below fires (that is, in normal circumstances),
+					but its absence is observable if an error is displayed, so it might as well be included.
+				*/
+				desc.transitionDeferred = false;
 				desc.section.renderInto(desc.innerSource + "", null, desc);
 				/*
 					Having revealed, we now go-to, UNLESS an early exit was invoked, which signifies a different (go-to:) was

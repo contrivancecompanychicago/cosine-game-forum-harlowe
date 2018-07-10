@@ -28,13 +28,13 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		//                            (Disabled code won't be used until something enables it).
 		enabled:          true,
 		
-		// {jQuery|HookSet}           Where to render the source, if not the hookElement.
+		// {jQuery|HookSet} target    Where to render the source, if not the hookElement.
 		target:           null,
 		
 		// {String} append            Which jQuery method name to append the source to the dest with.
 		append:           "append",
 
-		// {[newTarget]} newTargets   Alternative targets (which are {target,append} objects) to use instead of the original.
+		// {[newTarget]} [newTargets] Alternative targets (which are {target,append} objects) to use instead of the original.
 		newTargets:       null,
 		
 		// {String} [transition]      Which built-in transition to use.
@@ -43,11 +43,16 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		// {Number|Null} [transitionTime]  The duration of the transition, in ms, or null if the default speed should be used.
 		transitionTime:   null,
 
-		// {Object} loopVars          An object of {temp variable : values array} pairs, which the source should loop over.
+		// {Boolean} [transitionDeferred]  Whether or not the transition given above should not be used, but saved for an interaction element
+		//                                 that reuses this ChangeDescriptor, such as a (link:). This replaces the transition with "instant"
+		//                                 but leaves the "transition" value untouched.
+		transitionDeferred: false,
+
+		// {Object} [loopVars]        An object of {temp variable : values array} pairs, which the source should loop over.
 		//                            Used only by (for:)
 		loopVars:         null,
 		
-		// {Array} styles             A set of CSS styles to apply inline to the hook's element.
+		// {Array} [styles]           A set of CSS styles to apply inline to the hook's element.
 		styles:           null,
 		
 		// {Array} [attr]             Array of objects of attributes to apply to the <tw-expression> using $.fn.attr().
@@ -186,7 +191,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		*/
 		render() {
 			const
-				{source, transition, transitionTime, enabled, data, section, newTargets} = this;
+				{source, transition, transitionTime, transitionDeferred, enabled, data, section, newTargets} = this;
 			let
 				{target, append} = this;
 			
@@ -349,9 +354,9 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 			this.update();
 			
 			/*
-				Transition it using this descriptor's given transition.
+				Transition it using this descriptor's given transition, if it wasn't deferred.
 			*/
-			if (transition) {
+			if (transition && !transitionDeferred) {
 				transitionIn(
 					/*
 						There's a slight problem: when we want to replace the

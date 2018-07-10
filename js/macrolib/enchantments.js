@@ -333,6 +333,11 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 					This is unset when the event is finally triggered.
 				*/
 				desc.enabled = false;
+				/*
+					As with links, any transitions on (click:), (mouseover:) or (mouseout:) are applied only to
+					the hook when it eventually appears, not the interaction element.
+				*/
+				desc.transitionDeferred = true;
 				
 				/*
 					If a rerender method was specified, then this is a "combo" macro,
@@ -415,7 +420,14 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 							desc.section.renderInto(
 								desc.source,
 								null,
-								Object.assign({}, desc, { enabled: true })
+								Object.assign({}, desc, {
+									enabled: true,
+									/*
+										Turn transitions back on, so that the target
+										can use them (given that the interaction element did not).
+									*/
+									transitionDeferred: false,
+								})
 							);
 						},
 					},
