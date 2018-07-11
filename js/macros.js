@@ -242,11 +242,11 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 	}
 
 	/*
-		A helper for addCommand() and addHookCommand(), which produces a function that makes
+		A helper for addCommand() which produces a function that makes
 		that macro's Command objects. Currently, Commands do not have a shared prototype,
 		so this function performs their initialisation in its stead.
 	*/
-	const commandMaker = (firstName, checkFn, runFn, isHookCommand) => (...args) => {
+	const commandMaker = (firstName, checkFn, runFn, attachable) => (...args) => {
 		/*
 			The passed-in checkFn should only return a value if the check fails,
 			and that value must be a TwineError. I'm so confident about this that I'm not even
@@ -262,12 +262,12 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			return error;
 		}
 		/*
-			For HookCommands only: this ChangeDescriptor is a private variable of the object,
+			For attachables: this ChangeDescriptor is a private variable of the object,
 			permuted by TwineScript_Attach(), and given to the printFn whenever that's
 			finally called.
 		*/
 		let cd;
-		if (isHookCommand) {
+		if (attachable) {
 			cd = ChangeDescriptor.create();
 		}
 		const ret = Object.assign({
@@ -277,9 +277,9 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			},
 			/*
 				Only assign the TwineScript_Attach() method, and a TwineScript_Run() that
-				passes in the ChangeDescriptor, if this is a HookCommand.
+				passes in the ChangeDescriptor, if this permits attachments.
 			*/
-			isHookCommand ? {
+			attachable ? {
 				TwineScript_Attach: changer => {
 					changer.run(cd);
 					return ret;
@@ -349,39 +349,23 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		/*
 			Takes a function, and produces a Command (a macro that produces an opaque object with
 			TwineScript_ObjectName(), TwineScript_TypeName(), TwineScript_Print() and TwineScript_Run()
-			functions). This is used for basic side-effect operation macros like (alert:) or (savegame:).
-		*/
-		addCommand: function addCommand(name, checkFn, runFn, typeSignature) {
-			/*
-				Since name can be either a single string or an array, this is needed
-				to unwrap it.
-			*/
-			const firstName = [].concat(name)[0];
-			privateAdd(name,
-				readArguments(typeSignatureCheck(name, commandMaker(firstName, checkFn, runFn, false), typeSignature))
-			);
-			// Return the function to enable "bubble chaining".
-			return addCommand;
-		},
-
-		/*
-			Takes a function, and produces a "HookCommand", which is a command that also
-			has a TwineScript_Attach() function, which permutes an internal ChangeDescriptor
-			that the object later passes to its TwineScript_Print() function. This is used
+			functions).
+			If it's attachable, it also has a TwineScript_Attach() function, which permutes an internal
+			ChangeDescriptor that the object later passes to its TwineScript_Print() function. This is used
 			for macros like (link:) which can have changers like (t8n:) attached to
 			them, as if like hooks.
 		*/
-		addHookCommand: function addHookCommand(name, checkFn, runFn, typeSignature) {
+		addCommand: function addCommand(name, checkFn, runFn, typeSignature, attachable = true) {
 			/*
 				Since name can be either a single string or an array, this is needed
 				to unwrap it.
 			*/
 			const firstName = [].concat(name)[0];
 			privateAdd(name,
-				readArguments(typeSignatureCheck(name, commandMaker(firstName, checkFn, runFn, true), typeSignature))
+				readArguments(typeSignatureCheck(name, commandMaker(firstName, checkFn, runFn, attachable), typeSignature))
 			);
 			// Return the function to enable "bubble chaining".
-			return addHookCommand;
+			return addCommand;
 		},
 		
 		/*

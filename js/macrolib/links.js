@@ -223,9 +223,9 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		passage name ((goto:)'s argument) is evaluated alongside (link:)'s argument.
 		It is also what the standard link syntax desugars to.
 	*/
-	Macros.addHookCommand
+	Macros.addCommand
 		/*d:
-			(link-goto: String, [String]) -> HookCommand
+			(link-goto: String, [String]) -> Command
 			
 			Takes a string of link text, and an optional destination passage name, and makes a command to create
 			a link that takes the player to another passage. The link functions identically to a standard link.
@@ -337,7 +337,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		)
 
 		/*d:
-			(link-undo: String) -> HookCommand
+			(link-undo: String) -> Command
 
 			Takes a string of link text, and produces a link that, when clicked, undoes the current turn and
 			sends the player back to the previously visited passage. The link appears identical to a typical

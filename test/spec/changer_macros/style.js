@@ -215,6 +215,10 @@ describe("style changer macros", function() {
 					var p = runPassage("("+name+":'pulse')+(link:'grault')[garply]");
 					expect(p.find('[data-t8n="pulse"]').length).toBe(0);
 				});
+				it("changes the transition of (show:)", function() {
+					var p = runPassage("|foo)[bar](t8n-time:12s)+("+name+":'pulse')(show:?foo)");
+					expect(p.find('[data-t8n="pulse"]').length).toBe(1);
+				});
 				['click','click-replace','click-append','click-prepend',
 				'mouseover','mouseover-replace','mouseover-append','mouseover-prepend'].forEach(function(name2) {
 					var interaction = (name2.startsWith('mouseover')) ? "mouseenter" : "click";

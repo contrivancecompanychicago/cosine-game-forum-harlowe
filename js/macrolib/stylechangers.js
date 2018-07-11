@@ -12,8 +12,13 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		Changer data
 		
 		Changer commands (changers) are similar to ordinary commands, but they only have an effect when they're attached to hooks,
-		and modify the hook in a certain manner. Macros that work like this include (text-style:), (font:), (transition:),
-		(text-rotate:), (hook:), (click:), (link:), and more.
+		passage links and commands, and modify them in some manner. Macros that work like this include (text-style:), (font:),
+		(t8n:), (text-rotate:), (hook:), (click:), (link:), (for:), (if:), and more.
+
+		```
+		(if: $sawDuckHarbinger)[You still remember spying the black duck, harbinger of doom.]
+		(t8n-depart: "dissolve")[[Return to the present]]
+		```
 
 		You can save changer commands into variables, and re-use them many times in your story:
 		```
@@ -28,7 +33,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		Changers can be combined using the `+` operator: `(text-colour: red) + (font: "Courier New")[This text is red Courier New.]`
 		styles the text using both changers at once. These combined changers, too, can be saved in variables or used with (enchant:).
 		```
-		(set: _alertText to (font:"Courier New") + (text-style: "shudder") + (text-colour:"#e74"))
+		(set: _alertText to (font:"Courier New") + (text-style: "shudder")+(text-colour:"#e74"))
 		_alertText[Social alert: no one read the emails you sent yesterday.]
 		_alertText[Arithmetic error: I forgot my seven-times-tables.]
 		```

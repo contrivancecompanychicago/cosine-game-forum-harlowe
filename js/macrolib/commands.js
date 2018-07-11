@@ -8,23 +8,16 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		Commands are special kinds of data which perform an effect when they're placed in the passage.
 		Most commands are created from macros placed directly in the passage, but, like all forms of
 		data, they can be saved into variables using (set:) and (put:), and stored for later use.
-		
-		Macros that produce commands include (alert:), (save-game:), (load-game:), and more.
-	*/
-	/*d:
-		HookCommand data
 
-		Certain macros like (display:), (print:), (link:) and so on are used to print data or an interactive
-		element into the passage. These elements can be styled like hooks, by attaching changers to the macro.
-		So, they are "hook-like" commands.
+		Macros that produce commands include (alert:), (save-game:), (load-game:), and more.
+
+		Commands like (display:), (print:), (link:), (show:) and so on are used to print data or an interactive
+		element into the passage. These elements can be styled like hooks, by attaching changers to the macro,
+		as if it was a hook.
 
 		In addition to their visual appearance, you can also change what passage transitions links use,
 		by applying (t8n-depart:) and (t8n-arrive:). (Note that since normal passage links are identical to the
-		(link-goto:) macro, you can also attach changers to passage links.) This is also why (go-to:) and
-		(undo:) are HookCommands, even though they have no visual form.
-
-		Note that HookCommands only have similarities to anonymous hooks: they can't be referred to by (click:) or
-		(replace:) to change them after the fact (unless the (hook:) macro is used to give them a name).
+		(link-goto:) macro, you can also attach changers to passage links.)
 	*/
 	const {Any, rest, either, optional} = Macros.TypeSignature;
 	const {assign} = Object;
@@ -52,9 +45,9 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		return "(" + text + " " + Engine.options.ifid + ") ";
 	}
 	
-	Macros.addHookCommand
+	Macros.addCommand
 		/*d:
-			(display: String) -> HookCommand
+			(display: String) -> Command
 			
 			This command writes out the contents of the passage with the given string name.
 			If a passage of that name does not exist, this produces an error.
@@ -101,7 +94,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			[String])
 		
 		/*d:
-			(print: Any) -> HookCommand
+			(print: Any) -> Command
 			This command prints out any single argument provided to it, as text.
 			
 			Example usage:
@@ -142,7 +135,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			[Any])
 
 		/*d:
-			(go-to: String) -> HookCommand
+			(go-to: String) -> Command
 			This command stops passage code and sends the player to a new passage.
 			If the passage named by the string does not exist, this produces an error.
 			
@@ -164,7 +157,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			
 			Details:
 
-			As this is a HookCommand, you can attach changers like (t8n-depart:) and (t8n-arrive:) to
+			You can attach changers like (t8n-depart:) and (t8n-arrive:) to this to
 			alter the transition animation used when (go-to:) activates. Other kinds of changers
 			won't do anything, though.
 
@@ -221,7 +214,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			[String])
 
 		/*d:
-			(undo:) -> HookCommand
+			(undo:) -> Command
 			This command stops passage code and "undoes" the current turn, sending the player to the previous visited
 			passage and forgetting any variable changes that occurred in this passage.
 
@@ -239,7 +232,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			a header tagged passage.
 
 			Details:
-			As this is a HookCommand, you can attach changers like (t8n-depart:) and (t8n-arrive:) to
+			You can attach changers like (t8n-depart:) and (t8n-arrive:) to this to
 			alter the transition animation used when (undo:) activates. Other kinds of changers
 			won't do anything, though.
 			
@@ -275,7 +268,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			[])
 
 		/*d:
-			(cycling-link: [Bind], ...String) -> HookCommand
+			(cycling-link: [Bind], ...String) -> Command
 
 			A command that, when evaluated, creates a cycling link - a link which does not go anywhere, but changes its own text
 			to the next in a looping sequence of strings, and sets the optional bound variable to match the string value of the text.
@@ -286,7 +279,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			* `(cycling-link: "Mew", "Miao", "Mrr", "Mlem")` has no bound variable.
 
 			Rationale:
-			The cycling link is an interaction idiom popularised in Twine 1 which combined the utility of a dial input element with
+			The cycling link is an interaction idiom popularised in Twine 1 which combines the utility of a dial input element with
 			the discovery and visual consistency of a link: the player can typically only discover that this is a cycling link by clicking it,
 			and can then discover the full set of labels by clicking through them. This affords a number of subtle dramatic and humourous
 			possibilities, and moreover allows the link to sit comfortably among passage prose without standing out as an interface element.
@@ -415,11 +408,13 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		}
 	));
 	/*d:
-		(dropdown: Bind, ...String) -> HookCommand
+		(dropdown: Bind, ...String) -> Command
 
 		TBW
+
+		#input
 	*/
-	Macros.addHookCommand("dropdown",
+	Macros.addCommand("dropdown",
 		() => {},
 		(cd, _, bind, ...labels) => {
 			let source = '<select>'
@@ -447,9 +442,8 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			}
 			return assign(cd, { source, append: "replace", });
 		},
-		[VarBind, String, rest(String)]);
+		[VarBind, String, rest(String)])
 
-	Macros.addCommand
 		/*d:
 			(show: ...HookName) -> Command
 
@@ -512,16 +506,18 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		*/
 		("show",
 			() => {},
-			(section, ...hooks) => {
+			(cd, section, ...hooks) => {
 				hooks.forEach(hook => hook.forEach(section, elem => {
 					const hiddenSource = elem.data('hiddenSource');
 					if (hiddenSource === undefined) {
 						return TwineError.create("operation",
 							"I can't reveal a hook which is already visible.");
 					}
-					section.renderInto(hiddenSource, elem);
+					section.renderInto("", null,
+						assign({}, cd, { source: hiddenSource, target: elem })
+					);
 				}));
-				return '';
+				return cd;
 			},
 			[rest(HookSet)])
 
@@ -541,6 +537,8 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			Clunky though it looks, this macro serves a single important purpose: inside a (live:)
 			macro's hook, its appearance signals that the macro must stop running. In every other occasion,
 			this macro does nothing.
+
+			This command can't have changers attached - attempting to do so will produce an error.
 			
 			See also:
 			(live:)
@@ -550,7 +548,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		("stop",
 			() => {},
 			() => "",
-			[])
+			[], false)
 
 		/*d:
 			(save-game: String, [String]) -> Boolean
@@ -597,6 +595,8 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			it (because they're using private browsing, their browser's storage is full, or some other reason).
 			Since there's always a possibility of a save failing, you should use (if:) and (else:) with (save-game:)
 			to display an apology message in the event that it returns false (as seen above).
+
+			This command can't have changers attached - attempting to do so will produce an error.
 			
 			See also:
 			(load-game:), (saved-games:)
@@ -654,7 +654,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 					return false;
 				}
 			},
-			[String, optional(String)])
+			[String, optional(String)], false)
 
 		/*d:
 			(load-game: String) -> Command
@@ -677,6 +677,8 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			
 			This macro assumes that the save slot exists and contains a game, which you can check by seeing if
 			`(saved-games:) contains` the slot name before running (load-game:).
+
+			This command can't have changers attached - attempting to do so will produce an error.
 			
 			See also:
 			(save-game:), (saved-games:)
@@ -701,7 +703,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 				requestAnimationFrame(Engine.showPassage.bind(Engine, State.passage, false /* stretchtext value */));
 				return { earlyExit: 1 };
 			},
-			[String])
+			[String], false)
 
 		/*d:
 			(alert: String) -> Command
@@ -721,6 +723,8 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			When the dialog is on-screen, the entire game is essentially "paused" - no further computations are
 			performed until it is dismissed.
 
+			This command can't have changers attached - attempting to do so will produce an error.
+
 			See also:
 			(prompt:), (confirm:)
 
@@ -732,7 +736,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 				window.alert(text);
 				return "";
 			},
-			[String])
+			[String], false)
 
 		/*d:
 			(prompt: String, String) -> String
@@ -753,6 +757,8 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			When the dialog is on-screen, the entire game is essentially "paused" - no further computations are
 			performed until it is dismissed.
 
+			This command can't have changers attached - attempting to do so will produce an error.
+
 			See also:
 			(alert:), (confirm:)
 
@@ -761,7 +767,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		("prompt",
 			() => {},
 			(_, text, value) => window.prompt(text, value) || "",
-			[String, String])
+			[String, String], false)
 
 		/*d:
 			(confirm: String) -> Boolean
@@ -782,6 +788,8 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			When the dialog is on-screen, the entire game is essentially "paused" - no further computations are
 			performed until it is dismissed.
 
+			This command can't have changers attached - attempting to do so will produce an error.
+
 			See also:
 			(alert:), (prompt:)
 
@@ -790,7 +798,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		("confirm",
 			() => {},
 			(_, text) => window.confirm(text),
-			[String])
+			[String], false)
 
 		/*d:
 			(open-url: String) -> Command
@@ -811,6 +819,8 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			hosted at "http://www.example.org/story.html", then `(open-url: "page2.html")` will actually open
 			the URL "http://www.example.org/page2.html".
 
+			This command can't have changers attached - attempting to do so will produce an error.
+
 			See also:
 			(goto-url:)
 
@@ -822,7 +832,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 				window.open(text, '');
 				return "";
 			},
-			[String])
+			[String], false)
 
 		/*d:
 			(reload:) -> Command
@@ -836,6 +846,8 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			Details:
 			If the first passage in the story contains this macro, the story will be caught in a "reload
 			loop", and won't be able to proceed. No error will be reported in this case.
+
+			This command can't have changers attached - attempting to do so will produce an error.
 
 			#url
 		*/
@@ -853,7 +865,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 				*/
 				return { earlyExit: 1 };
 			},
-			[])
+			[], false)
 
 		/*d:
 			(goto-url: String) -> Command
@@ -874,6 +886,8 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			hosted at "http://www.example.org/story.html", then `(open-url: "page2.html")` will actually open
 			the URL "http://www.example.org/page2.html".
 
+			This command can't have changers attached - attempting to do so will produce an error.
+
 			See also:
 			(open-url:)
 
@@ -889,24 +903,21 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 				*/
 				return { earlyExit: 1 };
 			},
-			[String])
+			[String], false);
 
-		/*d:
-			(page-url:) -> String
+	/*d:
+		(page-url:) -> String
 
-			This macro produces the full URL of the story's HTML page, as it is in the player's browser.
+		This macro produces the full URL of the story's HTML page, as it is in the player's browser.
 
-			Example usage:
-			`(if: (page-url:) contains "#cellar")` will be true if the URL contains the `#cellar` hash.
+		Example usage:
+		`(if: (page-url:) contains "#cellar")` will be true if the URL contains the `#cellar` hash.
 
-			Details:
-			This **may** be changed in a future version of Harlowe to return a datamap containing more
-			descriptive values about the URL, instead of a single string.
+		Details:
+		This **may** be changed in a future version of Harlowe to return a datamap containing more
+		descriptive values about the URL, instead of a single string.
 
-			#url
-		*/
-		("page-url", 
-			() => {},
-			() => window.location.href,
-			[]);
+		#url
+	*/
+	Macros.add("page-url", () => window.location.href, []);
 });

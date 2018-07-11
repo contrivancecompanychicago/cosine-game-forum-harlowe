@@ -78,7 +78,8 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 			enchantment.enchantScope();
 			return "";
 		},
-		[either(HookSet,String), ChangerCommand]
+		[either(HookSet,String), ChangerCommand],
+		false // Can't have attachments.
 	);
 
 	/*
@@ -737,7 +738,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		});
 	});
 	/*d:
-		(click-goto: HookName or String, String) -> HookCommand
+		(click-goto: HookName or String, String) -> Command
 
 		A special shorthand combination of the (click:) and (go-to:) macros, this allows you to make a hook
 		or bit of text into a passage link. `(click-goto: ?1, 'Passage Name')` is equivalent to `(click: ?1)[(goto:'Passage Name')]`
@@ -754,7 +755,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		#links 11
 	*/
 	/*d:
-		(mouseover-goto: HookName or String, String) -> HookCommand
+		(mouseover-goto: HookName or String, String) -> Command
 
 		This is similar to (click-goto:), but uses the (mouseover:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-goto:).
@@ -762,7 +763,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		#links 16
 	*/
 	/*d:
-		(mouseout-goto: HookName or String, String) -> HookCommand
+		(mouseout-goto: HookName or String, String) -> Command
 
 		This is similar to (click-goto:), but uses the (mouseout:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-goto:).
@@ -771,7 +772,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 	*/
 	interactionTypes.forEach((interactionType) => {
 		const name = interactionType.name + "-goto";
-		Macros.addHookCommand(name,
+		Macros.addCommand(name,
 			(selector, passage) => {
 				/*
 					If either of the arguments are the empty string, show an error.
