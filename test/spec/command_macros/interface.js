@@ -119,17 +119,22 @@ describe("interface macros", function(){
 			expect(p.find('select').length).toBe(1);
 			expect(p.find('select option').length).toBe(3);
 		});
-		it("when changed, sets the variable to the string label", function() {
+		it("when changed, sets the variable to the string label", function(done) {
 			var p = runPassage("(dropdown: bind $foo, 'bar','baz', 'qux')");
 			expect("$foo").markupToPrint('bar');
 
 			p = runPassage("(dropdown: bind $foo, 'bar','baz', 'qux')");
 			p.find('select').val('baz').change();
-			expect("$foo").markupToPrint('baz');
+			setTimeout(function() {
+				expect("$foo").markupToPrint('baz');
 
-			p = runPassage("(dropdown: bind $foo, 'bar','baz', 'qux')");
-			p.find('select').val('qux').change();
-			expect("$foo").markupToPrint('qux');
+				p = runPassage("(dropdown: bind $foo, 'bar','baz', 'qux')");
+				p.find('select').val('qux').change();
+				setTimeout(function() {
+					expect("$foo").markupToPrint('qux');
+					done();
+				});
+			});
 		});
 	});
 });

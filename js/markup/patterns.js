@@ -290,6 +290,10 @@
 			A
 			```
 
+			Links can be customised by attaching changer macros, like (transition-depart:) or (text-style:). Just
+			place one in front of the link, like so: `(t8n-depart:"dissolve")[[Recall that day]]` - or attach a variable containing
+			one: `$memory[[Recall that day]]`. You can also customise every link in the passage using (enchant:) and ?Link.
+
 			This syntax is not the only way to create links – there are many link macros, such as (link:), which can
 			be used to make more versatile hyperlinks in your story.
 

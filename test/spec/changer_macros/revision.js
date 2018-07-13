@@ -21,10 +21,15 @@ describe("revision macros", function() {
 					expect(p.find('tw-hook[name=foo]').length).toBe(1);
 					expect(p.text()).toBe(append?'coolhot':'hotcool');
 				});
-				xit("does not require the target hook to occur earlier than it", function() {
+				it("cannot affect hooks that have yet to be rendered", function() {
 					var p = runPassage("("+name+":?foo)[hot][cool]<foo|");
 					expect(p.find('tw-hook[name=foo]').length).toBe(1);
-					expect(p.text()).toBe(append?'coolhot':'hotcool');
+					expect(p.text()).toBe('cool');
+				});
+				it("can affect hooks that are after it in the passage", function() {
+					var p = runPassage("(link:'baz')[("+name+":?foo)[hot]][cool]<foo|");
+					p.find('tw-link').click();
+					expect(p.text()).toBe(append ? 'coolhot' : 'hotcool');
 				});
 				it("sequential "+name+"s occur in order", function() {
 					var p = runPassage("[1]<foo|("+name+":?foo)[2]("+name+":?foo)[3]");
@@ -83,9 +88,9 @@ describe("revision macros", function() {
 					var p = runPassage("reded("+name+":'red')[ r]");
 					expect(p.text()).toBe(append?'red red':' rreded');
 				});
-				it("affects occurrences after the macro instance", function() {
+				it("cannot affect occurrences that have yet to be rendered", function() {
 					var p = runPassage("("+name+":'red')[blue]red");
-					expect(p.text()).toBe(append?'redblue':'bluered');
+					expect(p.text()).toBe('red');
 				});
 				it("can target verbatim text", function() {
 					var p = runPassage("`[]`("+name+":'[]')[blue]");
@@ -174,10 +179,15 @@ describe("revision macros", function() {
 				expect(p.find('tw-hook[name=foo]').length).toBe(1);
 				expect(p.text()).toBe('hot');
 			});
-			it("does not require the target hook to occur earlier than it #broken", function() {
+			it("cannot affect hooks that have yet to be rendered", function() {
 				var p = runPassage("(replace:?foo)[hot][cool]<foo|");
 				expect(p.find('tw-hook[name=foo]').length).toBe(1);
-				expect(p.text()).toBe('hotcool'); // ????
+				expect(p.text()).toBe('cool');
+			});
+			it("can affect hooks that are after it in the passage", function() {
+				var p = runPassage("(link:'baz')[(replace:?foo)[hot]][cool]<foo|");
+				p.find('tw-link').click();
+				expect(p.text()).toBe('hot');
 			});
 			it("sequential replacements occur in order", function() {
 				var p = runPassage("[1]<foo|(replace:?foo)[2](replace:?foo)[3]");
@@ -236,9 +246,9 @@ describe("revision macros", function() {
 				var p = runPassage("red(replace:'red')[blue](replace: 'blue')[green]");
 				expect(p.text()).toBe('green');
 			});
-			it("affects occurrences after the macro instance", function() {
+			it("cannot affect occurrences that have yet to be rendered", function() {
 				var p = runPassage("(replace:'red')[blue]red");
-				expect(p.text()).toBe('blue');
+				expect(p.text()).toBe('red');
 			});
 		});
 		describe("given multiple strings", function() {

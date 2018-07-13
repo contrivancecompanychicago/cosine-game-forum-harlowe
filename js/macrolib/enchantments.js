@@ -120,8 +120,8 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 
 				Details:
 				(replace:) lets you specify a target, and a block of text to replace the target with. The attached hook
-				will not be rendered normally - thus, you can essentially place (replace:) commands anywhere in the passage
-				text without interfering much with the passage's visible text.
+				(which specifies the replacement text) will not be rendered normally - thus, you can essentially put
+				(replace:) commands anywhere in the passage text without interfering much with the passage's visible text.
 
 				If the given target is a string, then every instance of the string in the current passage is replaced
 				with a copy of the hook's contents. If the given target is a hook reference, then only named hooks
@@ -129,8 +129,17 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 				you want only specific places in the passage text to change.
 
 				If the target doesn't match any part of the passage, nothing will happen. This is to allow you to
-				place (replace:) commands in `header` tagged passages, if you want them to conditionally affect
+				place (replace:) commands in `footer` tagged passages, if you want them to conditionally affect
 				certain named hooks throughout the entire game, without them interfering with other passages.
+
+				(replace:) (and its variations) cannot affects hooks or text that haven't been printed yet - if the (replace:)
+				runs at the same time that the passage is appearing (as in, it isn't inside a hook that's delayed (live:), (link:), (show:)
+				or similar macros), and a hook or line of text appears after it in the passage, the macro won't replace its contents
+				even if it's a valid target. For example: `(replace: "cool")[hot] cool water` won't work because the (replace:) runs immediately,
+				but `cool water (replace: "cool")[hot]` and `(event: when time > 5)[(replace: "cool")[hot]] cool water` will.
+
+				As a result of the above, putting these in `header` tagged passages instead of `footer` tagged passages won't
+				do much good, as they are printed before the rest of the passage.
 
 				See also:
 				(append:), (prepend:), (show:)
@@ -219,11 +228,13 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 							({target:target2, append}) => is(target1, target2) && e === append
 						))
 						/*
-							Create a newTarget object, which is a {target, append} object that pairs the revision
+							Create a newTarget object, which is a {target, append, [before]} object that pairs the revision
 							method with the target. This allows "(append: ?a) + (prepend:?b)" to work on the same
 							ChangeDescriptor.
+							"before" is needed to ensure that these are consistently scoped to only affect targets
+							before it in the passage.
 						*/
-						.map(target => ({target, append:e}))
+						.map(target => ({target, append:e, before:true}))
 				);
 				return desc;
 			},

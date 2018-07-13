@@ -193,7 +193,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 			const
 				{source, transition, transitionTime, transitionDeferred, enabled, data, section, newTargets} = this;
 			let
-				{target, append} = this;
+				{target, target:oldTarget, append} = this;
 			
 			assertOnlyHas(this, changeDescriptorShape);
 
@@ -238,7 +238,25 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 				so that consumers like Section.renderInto() can modify all of their <tw-expressions>, etc.
 			*/
 			let dom = $();
-			const renderAll = append => target => {
+			const renderAll = (append, before) => target => {
+				/*
+					"before" should only be true if this newTarget was created by (replace:), (append:) or (prepend:).
+					These macros are scoped to only target hooks and text that has already rendered - earlier in the
+					passage or section to this changed hook (i.e. the element in oldTarget).
+				*/
+				if (before
+						/*
+							Of course, we should only prevent targeting elements that *haven't rendered yet*.
+							There isn't a very idiomatic way of determining this, but assuming that it's
+							A: detached from the DOM,
+						*/
+						&& target[0].compareDocumentPosition(document) & 1
+						/*
+							and B: later in the node tree, seems a safe enough assumption.
+						*/
+						&& target[0].compareDocumentPosition(oldTarget[0]) & 2) {
+					return;
+				}
 				/*
 					Generate a new descriptor which has the same properties
 					(rather, delegates to the old one via the prototype chain)
@@ -247,10 +265,10 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 				*/
 				dom = dom.add(this.create({ target, append, newTargets:null }).render());
 			};
-			[].concat(target).forEach(function loop(target, _, __, append_ = append) {
+			[].concat(target).forEach(function loop(target, _, __, append_ = append, before) {
 				// Is it a HookSet,
 				if (HookSet.isPrototypeOf(target)) {
-					target.forEach(section, renderAll(append_));
+					target.forEach(section, renderAll(append_, before));
 				}
 				// a jQuery of <tw-hook> or <tw-expression> elements,
 				else if (target.jquery && target.length > 1) {
@@ -261,9 +279,9 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 					/*
 						the newTarget's "target" property may be a HookSet or jQuery.
 						To handle this, we unwrap the newTarget object and pass its "append"
-						value to a recursive call to "loop"
+						and optional "before" value to a recursive call to "loop"
 					*/
-					loop(target.target, _, __, target.append);
+					loop(target.target, _, __, target.append, target.before);
 				}
 			});
 			/*
