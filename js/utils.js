@@ -79,6 +79,32 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 		},
 
 		/*
+			Returns an array of every permutation of the given sequence.
+		*/
+		permutations(...list) {
+			const {length} = list,
+				result = [[...list]],
+				c = Array(length).fill(0);
+			let i = 1, k, p;
+
+			while (i < length) {
+				if (c[i] < i) {
+					k = i % 2 && c[i];
+					p = list[i];
+					list[i] = list[k];
+					list[k] = p;
+					++c[i];
+					i = 1;
+					result.push([...list]);
+				} else {
+					c[i] = 0;
+					++i;
+				}
+			}
+			return result;
+		},
+
+		/*
 			String utilities
 		*/
 

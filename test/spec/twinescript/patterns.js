@@ -114,8 +114,8 @@ describe("patterns", function() {
 				expect("(print: (dm: " + ['"A"',type1,'"B"',type2,'"C"',"(a:" + type1 + ")"] +
 					") matches (dm:" + ['"A"',value,'"B"',value,'"C"',"(a:" + value + ")"] + "))").markupToPrint("true");
 			});
-			xit("matches the " + type1 + " datatype inside datasets to a " + type1 + " regardless of position", function() {
-				expect("(print: (ds:" + [type1,'"X"',false] + ") matches (ds:" + ['"X"',false,value] + "))").markupToPrint("true");
+			it("matches the " + type1 + " datatype inside datasets to a " + type1 + " regardless of position", function() {
+				expect("(print: (ds:" + [type1,'"Y"',false] + ") matches (ds:" + ['"Y"',false,value] + "))").markupToPrint("true");
 			});
 		});
 	});

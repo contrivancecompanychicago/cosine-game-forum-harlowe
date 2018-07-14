@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($, {impossible, toJSLiteral}, HookSet, TwineError) => {
+define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($, {impossible, permutations, toJSLiteral}, HookSet, TwineError) => {
 	
 	/*
 		First, a quick shortcut to determine whether the
@@ -439,7 +439,12 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 			);
 		}
 		if (l instanceof Set && r instanceof Set) {
-			return matches([...l], [...r]);
+			/*
+				This is a little trickier... we need to see if the right side has any permutation that
+				matches the left side.
+			*/
+			l = [...l];
+			return permutations(...r).some(r => matches(l,r));
 		}
 		/*
 			From here, all the data structures are covered, so we can just invoke is() directly.

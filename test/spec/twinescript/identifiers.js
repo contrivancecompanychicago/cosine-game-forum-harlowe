@@ -38,7 +38,7 @@ describe("identifiers", function () {
 			expect("(set:$red to 'egg')(set:$blue to 'g')(print: $blue is in $red and is in 'go')").markupToPrint("true");
 		});
 		it("isn't recognised inside text", function (){
-			expect("(set:$red to window.xit)(set:$red to window.itx)(set:$red to window.xitx)").not.markupToError();
+			expect("(set:$red to window.sito)(set:$red to window.itx)(set:$red to window.sito)").not.markupToError();
 		});
 	});
 	describe("the 'its' property access syntax", function () {
@@ -55,7 +55,7 @@ describe("identifiers", function () {
 			expect("(set:$red to (a:'Bee'))(set:$red to its 1st's 1st)$red").markupToPrint("B");
 		});
 		it("isn't recognised inside text", function (){
-			expect("(set:$red to window.xits)(set:$red to window.itsx)(set:$red to window.xitsx)").not.markupToError();
+			expect("(set:$red to window.sits)(set:$red to window.itsx)(set:$red to window.sitss)").not.markupToError();
 		});
 	});
 	describe("the computed 'its' property access syntax", function () {
