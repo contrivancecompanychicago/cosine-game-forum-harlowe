@@ -104,7 +104,7 @@ describe("link macros", function() {
 		});
 	});
 	/*
-		Though (link-goto:) and (link-undo:) are not changers, they are similar enough to the above in terms of API.
+		Though (link-goto:), (link-undo:) and (link-show:) are not changers, they are similar enough to the above in terms of API.
 	*/
 	['link-goto', 'link-reveal-goto'].forEach(function(name) {
 		var hook = name === "link-reveal-goto" ? "[]" : "";
@@ -261,6 +261,48 @@ describe("link macros", function() {
 			var link = runPassage("(link-undo:'mire')","corge").find('tw-link');
 			link.trigger($.Event('keydown', { which: 13 }));
 			expect($('tw-passage p').text()).toBe("garply");
+		});
+	});
+	describe("(link-show:)", function() {
+		it("accepts 1 non-empty string and 1 or more hooknames", function() {
+			expect("(link-show:)").markupToError();
+			expect("(link-show:2)").markupToError();
+			expect("(link-show:'')").markupToError();
+			expect("(link-show:'s')").markupToError();
+			expect("(link-show:true)").markupToError();
+			
+			expect("(link-show:'s',?foo)").not.markupToError();
+			expect("(link-show:'s',?foo, ?bar, ?baz, ?qux)").not.markupToError();
+			expect("(link-show:'s',?foo, 's')").markupToError();
+		});
+		it("when clicked, becomes plain text and reveals hidden named hooks", function() {
+			var p = runPassage('|3)[Red](link-show:"A",?3)');
+			expect(p.text()).toBe('A');
+			p.find('tw-link').click();
+			expect(p.text()).toBe('RedA');
+			expect(p.find('tw-link').length).toBe(0);
+		});
+		[
+			['(hidden:)', '(hidden:)'],
+			['(if:)',     '(if:false)'],
+			['(unless:)', '(unless:true)'],
+			['(else-if:)','(if:true)[](else-if:true)'],
+			['(else:)',   '(if:true)[](else:)'],
+			['booleans',  '(set:$x to false)$x'],
+		].forEach(function(arr) {
+			var name = arr[0], code = arr[1];
+			it("when clicked, reveals hooks hidden with " + name, function() {
+				expect(code + '|3>[Red](show:?3)').markupToPrint('Red');
+				var p = runPassage(code + '|3>[Red](link-show:"A",?3)');
+				expect(p.text()).toBe('A');
+				p.find('tw-link').click();
+				expect(p.text()).toBe('RedA');
+			});
+		});
+		it("when clicked, reveals specific same-named hooks", function() {
+			var p = runPassage('|3)[Red]|3)[Blue]|3)[Green](link-show:"A",?3\'s last, ?3\'s 1st)');
+			p.find('tw-link').click();
+			expect(p.text()).toBe('RedGreenA');
 		});
 	});
 });

@@ -19,6 +19,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
  * Passage links no longer have a `passage-name` attribute indicating which passage they lead to, which the player could inspect using developer tools.
  * If links' text contains an error message (for instance, in the case of `(link-replace:"(print:2+true"))[]`), then the link can no longer be clicked (so that the error message can be expanded).
  * Now, a `(transition:)` added to `(link:)`s, `(click:)`s, `(mouseover:)`s and other such macros will no longer cause the links or other elements to use the named transition themselves - instead, it will only be applied to the attached hook when it is made to appear.
+ * `(show:)` will no longer produce an error if it tries to show a hook that's already visible, for consistency with other macros that accept hooknames, like `(click:)`. (Actually, it never did this in the first place, due to a bug.)
 
 ####Additions
 
@@ -43,6 +44,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
  * Added `(reversed:)`, a macro which constructs an array with the given elements in reverse order, and `(str-reversed:)`, a shorthand that reverses a single string's characters. (Prior to now, you could accomplish this with `(folded: _e making _a via (a: _e) + _a, (a:), ...$arr)`, but this offers a far easier formulation.)
  * Added `(click-goto:)`, `(mouseover-goto:)` and `(mouseout-goto:)`, which are combinations of `(click:)`, `(mouseover:)` and `(mouseout:)` with `(goto:)`, similar to `(link-goto:)`.
  * Added `(link-reveal-goto:)`, a combination of `(link-reveal:)` and `(go-to:)` that lets you run commands like `(set:)` before going to another passage. An example usage is `(link-reveal-goto: "Link text", "Passage name")[(set: $x to 1)]`.
+ * Added `(link-show:)`, a link which, when clicked, shows the given hidden hooks, as if by `(show:)`. Just like `(show:)`, it can also have changers attached to it.
 
 ###2.1.0 changes:
 

@@ -497,7 +497,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			(show:) will reveal every hook with the given name. To only reveal a specific hook, you can use the
 			possessive syntax, as usual: `(show: ?shrub's 1st)`.
 
-			If you provide to (show:) a hook which is already visible, an error will be produced.
+			If you provide to (show:) a hook which is already visible, nothing will happen - no error will be produced.
 
 			See also:
 			(hidden:), (replace:)
@@ -510,8 +510,13 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 				hooks.forEach(hook => hook.forEach(section, elem => {
 					const hiddenSource = elem.data('hiddenSource');
 					if (hiddenSource === undefined) {
-						return TwineError.create("operation",
-							"I can't reveal a hook which is already visible.");
+						/*
+							Originally there was an error here, but it wasn't actually working, and I
+							decided that having (show:) silently fail when given already-shown
+							hooks' names provides it with slightly more flexibility in use, comparable to how most
+							hook-selecting macros like (click:) are permissive about the names given.
+						*/
+						return;
 					}
 					section.renderInto("", null,
 						assign({}, cd, { source: hiddenSource, target: elem })

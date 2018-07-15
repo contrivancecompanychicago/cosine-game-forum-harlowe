@@ -219,6 +219,14 @@ describe("style changer macros", function() {
 					var p = runPassage("|foo)[bar](t8n-time:12s)+("+name+":'pulse')(show:?foo)");
 					expect(p.find('[data-t8n="pulse"]').length).toBe(1);
 				});
+				it("changes the passage transitions of (link-show:)", function(done) {
+					var p = runPassage("[bar](foo|("+name+":'pulse')(link-show:'grault',?foo)");
+					p.find('tw-link').click();
+					setTimeout(function() {
+						expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
+						done();
+					});
+				});
 				['click','click-replace','click-append','click-prepend',
 				'mouseover','mouseover-replace','mouseover-append','mouseover-prepend'].forEach(function(name2) {
 					var interaction = (name2.startsWith('mouseover')) ? "mouseenter" : "click";

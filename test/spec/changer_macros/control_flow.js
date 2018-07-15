@@ -124,6 +124,15 @@ describe("control flow macros", function() {
 		});
 	});
 	describe("the (show:) macro", function() {
+		it("accepts 1 or more hooknames", function() {
+			expect("(print:(show:))").markupToError();
+			expect("(print:(show:2))").markupToError();
+			expect("(print:(show:''))").markupToError();
+			expect("(print:(show:'s'))").markupToError();
+			expect("(print:(show:true))").markupToError();
+			expect("(print:(show:?foo))").not.markupToError();
+			expect("(print:(show:?foo, ?bar, ?baz, ?qux))").not.markupToError();
+		});
 		it("reveals hidden named hooks", function() {
 			expect('|3)[Red](show:?3)').markupToPrint('Red');
 			var p = runPassage('|3)[Red](link:"A")[(show:?3)]');
@@ -147,6 +156,16 @@ describe("control flow macros", function() {
 				p.find('tw-link').click();
 				expect(p.text()).toBe('Red');
 			});
+		});
+		it("reveals specific same-named hooks", function() {
+			expect('|3)[Red]|3)[Blue]|3)[Green](show:?3\'s 1st)').markupToPrint('Red');
+			expect('|3)[Red]|3)[Blue]|3)[Green](show:?3\'s 2nd)').markupToPrint('Blue');
+			expect('|3)[Red]|3)[Blue]|3)[Green](show:?3\'s last)').markupToPrint('Green');
+			expect('|3)[Red]|3)[Blue]|3)[Green](show:?3\'s last, ?3\'s 1st)').markupToPrint('RedGreen');
+		});
+		it("does nothing if the hook is already visible", function() {
+			expect('|3>[Red](show:?3)').markupToPrint("Red");
+			expect('|3>[Red]|3)[Blue](show:?3)').markupToPrint("RedBlue");
 		});
 	});
 	describe("in debug mode, the <tw-expression> has the 'false' class when the hook is hidden", function() {

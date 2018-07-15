@@ -1,13 +1,13 @@
 "use strict";
-define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'engine', 'datatypes/changercommand', 'internaltypes/twineerror'],
-($, Macros, Utils, Selectors, State, Passages, Engine, ChangerCommand, TwineError) => {
+define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'engine', 'datatypes/changercommand', 'datatypes/hookset', 'internaltypes/twineerror'],
+($, Macros, Utils, Selectors, State, Passages, Engine, ChangerCommand, HookSet, TwineError) => {
 	/*
 		This module defines the behaviour of links in Harlowe - both
 		the normal passage links, and the (link:) macro's links.
 		But, this does not include (click:) enchantments, which
 		are technically not links (but behave identically).
 	*/
-	const {optional} = Macros.TypeSignature;
+	const {optional,rest} = Macros.TypeSignature;
 	const emptyLinkTextMessages = ["Links can't have empty strings for their displayed text.",
 		"In the link syntax, a link's displayed text is inside the [[ and ]], and on the non-pointy side of the -> or <- arrow if it's there."];
 	//const emptyPassageNameMessages = ["Passage links must have a passage name.",
@@ -357,7 +357,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 
 			Details:
 			As with (undo:), if this command is used on the play session's first turn, an error will be produced (as there
-			is yet nothing to undo at that time.) You can check which turn it is by examining the `length` of the (history:)
+			is yet nothing to undo at that time). You can check which turn it is by examining the `length` of the (history:)
 			array.
 
 			See also:
@@ -389,7 +389,81 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 				});
 			},
 			[String]
+		)
+
+		/*d:
+			(link-show: String, ...HookName) -> Command
+
+			Creates a link that, when clicked, shows the given hidden hooks, running the code within.
+
+			Example usage:
+			`But those little quirks paled before (link-show: "her darker eccentricities.", ?twist)`
+
+			Rationale:
+			As discussed in the documentation for (show:), that macro is intended as a complement to (click-replace:) (or perhaps
+			(click-append:)). While both let you insert text at a location when a link is clicked, they differ in whether they let the
+			author write the initial text or the replacement text at the location when coding the passage.
+
+			Typical (click-append:) usage resembles the following, where the inserted text provides supplementary content to the passage's
+			prose, and is written separately from it:
+
+			```
+			Ah. You remember her eldest well - [a frail, anxious child]<more|. Unlikely to raise too much of a fuss.
+
+			(click-append: ?more)[, constantly frowning, mumbling every word they utter, flinching at the slightest noise]
+			```
+
+			Conversely, typical (show:) usage resembles the following, where the inserted text is a continuation of the passage's prose,
+			and is written together with it:
+
+			```
+			"Look, it's important to comment even the simplest code...|more)[ You might remember what it does now, but not at 4:50 PM on Friday
+			afternoon, when you're about to push to production and a runtime error shows up in it.]"
+
+			You (link-reveal:"struggle to listen.")[(show: ?more)]
+			```
+
+			The (link-show:) macro provides a convenient shorthand for the latter example, letting you write the final line as
+			`You (link-show: "struggle to listen.", ?more)`.
+
+			Details:
+			As with most link macros, providing this with an empty link text string will result in an error.
+
+			As with (show:) and (click:), providing this with a hook which is already visible, or which doesn't even exist,
+			will NOT produce an error, but simply do nothing.
+
+			See also:
+			(show:), (link-reveal:), (click-append:)
+
+			#links 6
+		*/
+		("link-show",
+			(text) => {
+				if (!text) {
+					return TwineError.create("macrocall", emptyLinkTextMessages[0]);
+				}
+			},
+			(cd, section, text, ...hooks) => {
+				cd.data.clickEvent = (link) => {
+					link.contents().unwrap();
+					hooks.forEach(hook => hook.forEach(section, elem => {
+						const hiddenSource = elem.data('hiddenSource');
+						if (hiddenSource === undefined) {
+							return;
+						}
+						section.renderInto("", null,
+							assign({}, cd, { source: hiddenSource, target: elem, transitionDeferred: false })
+						);
+					}));
+				};
+				return assign(cd, {
+					source: '<tw-link tabindex=0>' + text + '</tw-link>',
+					transitionDeferred: true,
+				});
+			},
+			[String,rest(HookSet)]
 		);
+
 
 	/*d:
 		(link-reveal-goto: String, [String]) -> Changer
