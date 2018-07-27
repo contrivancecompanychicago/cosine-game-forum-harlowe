@@ -265,7 +265,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 				*/
 				dom = dom.add(this.create({ target, append, newTargets:null }).render());
 			};
-			[].concat(target).forEach(function loop(target, _, __, append_ = append, before) {
+			[].concat(target).forEach(function loop(target, _, __, append_ = append, before = undefined) {
 				// Is it a HookSet,
 				if (HookSet.isPrototypeOf(target)) {
 					target.forEach(section, renderAll(append_, before));

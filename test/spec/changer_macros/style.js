@@ -36,7 +36,7 @@ describe("style changer macros", function() {
 			expect("(print: (css:'display:inline-block') + (css:'clear:both')"
 				+ " is (css:'display:flex') + (css:'clear:both'))").markupToPrint("false");
 		});
-		it("errors when placed in passage prose while not attached to a hook", function() {
+		it("errors when placed in passage prose while not attached to anything", function() {
 			expect("(css:'color:red')").markupToError();
 			expect("(css:'color:red')[]").not.markupToError();
 		});
@@ -61,7 +61,7 @@ describe("style changer macros", function() {
 			expect("(textstyle:'--b--o--l--d')[]").not.markupToError();
 			expect("(textstyle:'_bOl_-D')[]").not.markupToError();
 		});
-		it("errors when placed in passage prose while not attached to a hook", function() {
+		it("errors when placed in passage prose while not attached to anything", function() {
 			expect("(textstyle:'bold')").markupToError();
 			expect("(textstyle:'bold')[]").not.markupToError();
 		});
@@ -188,7 +188,7 @@ describe("style changer macros", function() {
 					expect("(print:("+name+":'" + e + "'))").not.markupToError();
 				});
 			});
-			it("errors when placed in passage prose while not attached to a hook", function() {
+			it("errors when placed in passage prose while not attached to anything", function() {
 				expect("("+name+":'dissolve')").markupToError();
 				expect("("+name+":'dissolve')[]").not.markupToError();
 			});
@@ -351,7 +351,7 @@ describe("style changer macros", function() {
 			expect("(print:(transition-time:-50ms))").markupToError();
 			expect("(print:(transition-time:50ms))").not.markupToError();
 		});
-		it("errors when placed in passage prose while not attached to a hook", function() {
+		it("errors when placed in passage prose while not attached to anything", function() {
 			expect("(transition-time:2s)").markupToError();
 			expect("(transition-time:2s)[]").not.markupToError();
 		});
@@ -387,7 +387,7 @@ describe("style changer macros", function() {
 			expect("(print:(background:'A'))").not.markupToError();
 			expect("(print:(background:red + white))").not.markupToError();
 		});
-		it("errors when placed in passage prose while not attached to a hook", function() {
+		it("errors when placed in passage prose while not attached to anything", function() {
 			expect("(background:'A')").markupToError();
 			expect("(background:'A')[]").not.markupToError();
 		});
@@ -437,7 +437,7 @@ describe("style changer macros", function() {
 			expect("(align:'<<==')[]").markupToError();
 			expect("(align:'===><==>')[]").markupToError();
 		});
-		it("errors when placed in passage prose while not attached to a hook", function() {
+		it("errors when placed in passage prose while not attached to anything", function() {
 			expect("(align:'==>')").markupToError();
 			expect("(align:'==>')[]").not.markupToError();
 		});

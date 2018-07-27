@@ -206,7 +206,13 @@ define([
 					if (TwineError.containsError(newResult)) {
 						result = TwineError.create("operation",
 							"I can't combine " + objectName(result) + " with " + objectName(nextValue) + ".",
-							"Changers can only be added to other changers."
+							/*
+								Because of the common use-case of attaching changers to commands, and the potential to confuse
+								this with combining changers inline, a special elaboration is given for changer + command.
+							*/
+							typeof nextValue.TwineScript_Run === "function"
+								? "If you want to attach this changer to " + objectName(nextValue) + ", remove the + between them."
+								: "Changers can only be added to other changers."
 						);
 					}
 					else {
@@ -250,11 +256,14 @@ define([
 				}
 				/*
 					When the attachment can't happen, produce an error mentioning that only certain structures allow changers to attach.
+					Again, potential confusion between attaching changers to commands and combining changers necessitates a special error
+					message for this situation.
 				*/
 				else if (ChangerCommand.isPrototypeOf(nextValue)) {
 					expr.replaceWith(TwineError.create("operation",
-						"Changers like (" + result.macroName + ":) need to be combined using + in the passage's text.",
-						"Place the + between the changer macro calls. The + is absent only between a changer and its attached hook or command."
+						"Changers like (" + result.macroName + ":) need to be combined using + between them.",
+						"Place the + between the changer macros, or the variables holding them."
+						+ " The + is absent only between a changer and its attached hook or command."
 					).render(expr.attr('title')));
 					return;
 				}
@@ -327,7 +336,17 @@ define([
 			if (TwineError.containsError(result)) {
 				expr.replaceWith(result.render(expr.attr('title')));
 			}
-			if (ChangeDescriptor.isPrototypeOf(result)) {
+			else if (ChangeDescriptor.isPrototypeOf(result)) {
+				/*
+					Unimplemented behaviour (2018-07-20): live changers can't be attached to commands, only
+					proper hooks.
+				*/
+				if (result.data && result.data.live) {
+					expr.replaceWith(TwineError.create("unimplemented",
+						"I currently can't attach (live:) or (event:) macros to commands - only hooks."
+					).render(expr.attr('title')));
+					return;
+				}
 				/*
 					We need to update the ChangeDescriptor to have these fields, so
 					that certain interaction macros that want to reuse it (such as (cycling-link:))
@@ -345,6 +364,9 @@ define([
 				if (result.earlyExit) {
 					return "earlyexit";
 				}
+			}
+			else {
+				Utils.impossible("Section.runExpression", "TwineScript_Run() returned a non-Changer " + typeof result);
 			}
 		}
 		/*

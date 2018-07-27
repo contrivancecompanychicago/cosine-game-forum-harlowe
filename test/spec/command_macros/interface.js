@@ -119,6 +119,15 @@ describe("interface macros", function(){
 			expect(p.find('select').length).toBe(1);
 			expect(p.find('select option').length).toBe(3);
 		});
+		it("blank strings become horizontal separators", function() {
+			var p = runPassage("(dropdown: bind $foo, 'bar','','qux')");
+			expect(p.find('select option[disabled]').length).toBe(1);
+			expect(p.find('select option[disabled]').text()).toBe('─'.repeat(3));
+		});
+		it("separators are as long as the longest label", function() {
+			var p = runPassage("(dropdown: bind $foo, 'bar','','くりかえす')");
+			expect(p.find('select option[disabled]').text()).toBe('─'.repeat(5));
+		});
 		it("when changed, sets the variable to the string label", function(done) {
 			var p = runPassage("(dropdown: bind $foo, 'bar','baz', 'qux')");
 			expect("$foo").markupToPrint('bar');
@@ -135,6 +144,11 @@ describe("interface macros", function(){
 					done();
 				});
 			});
+		});
+		it("errors if the first or last labels are empty", function() {
+			expect("(dropdown: bind $foo, '','baz','qux')").markupToError();
+			expect("(dropdown: bind $foo, 'foo','baz','')").markupToError();
+			expect("(dropdown: bind $foo, '','baz','')").markupToError();
 		});
 	});
 });

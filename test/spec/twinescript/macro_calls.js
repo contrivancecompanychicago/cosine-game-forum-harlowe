@@ -25,4 +25,23 @@ describe("macro calls", function() {
 	it("can have a trailing , after the final argument", function() {
 		expect("(a:\n 1\n ,\n 1\n, )").markupToPrint("1,1");
 	});
+	describe("changer macro combining", function() {
+		it("consists of a macro, a +, and another macro", function() {
+			expect("(text-style:'bold')+(text-style:'bold')[]").not.markupToError();
+		});
+		it("can be combined with itself any number of times", function() {
+			expect("(text-style:'bold')" + "+(text-style:'bold')".repeat(10) + "[]").not.markupToError();
+		});
+		it("can be combined with variables holding changers", function() {
+			runPassage("(set:$foo to (text-style:'bold'))");
+			expect("(text-style:'bold')+$foo[]").not.markupToError();
+			expect("$foo+(text-style:'bold')[]]").not.markupToError();
+		});
+		it("errors if the right macro is not a changer", function() {
+			expect("(text-style:'bold')+(print:'foo')").markupToError();
+		});
+		it("errors if the + is missing", function() {
+			expect("(text-style:'bold')(text-style:'bold')[]").markupToError();
+		});
+	});
 });

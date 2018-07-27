@@ -410,16 +410,65 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 	/*d:
 		(dropdown: Bind, ...String) -> Command
 
-		TBW
+		A command that, when evaluated, creates a dropdown menu with the given strings as options.
+		When one option is selected, the bound variable is set to match the string value of the text.
+
+		Example usage:
+		* `(dropdown: bind $origin, "Abyssal outer reaches", "Gyre's wake", "The planar interstice")`
+
+		Rationale:
+		Dropdown menus offer a more esoteric, but visually and functionally unique way of presenting the player with
+		a choice from several options. Compared to other list-selection elements like (cycling-links:) or lists of links,
+		dropdowns are best used for a long selection of options which should be displayed all together, but would not otherwise
+		easily fit in the screen in full.
+
+		While dropdowns, whose use in form UI suggests themes of bureaucracy and utility, may appear best used for "character
+		customisation" screens and other non-narrative purposes, that same imagery can also be a good reason to use them within prose
+		itself - for instance, to present an in-story bureaucratic form or machine control panel.
+
+		Details:
+		Note that unlike (cycling-link:), another command that uses bound variables, the bound variable is mandatory here.
+
+		Also note that unlike (cycling-link:), empty strings can be given. These instead create **separator elements**,
+		which are rendered as unselectable horizontal lines that separate groups of options. Having empty strings as the first or
+		last elements, however, will result in an error (as these can't meaningfully separate one group from another).
+
+		The first element in a (dropdown:) will always be the one initially displayed and selected - and thus, the one that is
+		immediately set into the bound variable.
+
+		See also:
+		(cycling-link:)
 
 		#input
 	*/
 	Macros.addCommand("dropdown",
-		() => {},
+		(_, ...labels) => {
+			if (labels[0] === "" || labels[labels.length-1] === "") {
+				return TwineError.create("macrocall", "The first or last strings in a (dropdown:) can't be empty.",
+					"Because empty strings create separators within (dropdown:)s, having them at the start or end doesn't make sense.");
+			}
+			if (labels.length <= 1) {
+				return TwineError.create("macrocall",
+					"I need two or more strings to create a (dropdown:) menu, not just " + labels.length + "."
+				);
+			}
+		},
 		(cd, _, bind, ...labels) => {
+			/*
+				In order to create separators that are long enough, we must find the longest
+				label's length (in code points, *not* UCS2 length) and then make the
+				separators that long.
+			*/
+			const longestLabelLength = Math.max(...labels.map(e=>[...e].length));
 			let source = '<select>'
 				+ labels.map((label, i) =>
-					'<option' + (i === 0 ? ' selected' : '') + '>' + label + '</option>'
+					'<option' + (i === 0 ? ' selected' : '') + (label === "" ? ' disabled' : '') + '>'
+					/*
+						Create the separator using box-drawing "─" characters, which should be
+						visually preferable to plain hyphens.
+					*/
+					+ (label || '─'.repeat(longestLabelLength))
+					+ '</option>'
 				).join('\n')
 				+ '</select>';
 

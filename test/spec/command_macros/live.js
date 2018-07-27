@@ -27,14 +27,8 @@ describe("live macros", function() {
 				done();
 			},20);
 		});
-		xit("works with hook commands", function(done) {
-			var p = runPassage("(event: when $a is 2)(print:$a)(link:'foo')[(set:$a to 2)]");
-			expect(p.text()).toBe("foo");
-			p.find('tw-link').click();
-			setTimeout(function() {
-				expect(p.text()).toBe("2");
-				done();
-			},20);
+		it("currently can't attach to bare commands", function(done) {
+			expect("(event: when $a is 2)(print:$a)(link:'foo')[(set:$a to 2)]").markupToError();
 		});
 		it("only renders the hook once", function(done) {
 			var p = runPassage("(set:$b to 'qux')(event: when $a is 2)[(set:$a to 0)$b](link:'foo')[(set:$a to 2)(link:'bar')[(set:$b to 'baz')(set:$a to 2)quux]]");

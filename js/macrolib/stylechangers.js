@@ -337,6 +337,9 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			If you want to just display a hook once a certain thing happens (that is, when the condition in an (if:) macro becomes
 			true) and then (stop:), then the (event:) macro may be shorter and easier to use for this.
 
+			Currently, you **cannot** attach (live:) to a command (such as in `(live:2s)(link-goto:"?")`). You have to wrap the command
+			in a hook (such as `(live:2s)[(link-goto:"?")]`).
+
 			See also:
 			(event:)
 
@@ -379,6 +382,9 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			except, perhaps, moments in time.
 
 			Because (event:) hooks only run once, the (stop:) macro is unnecessary here.
+
+			Currently, you **cannot** attach (event:) to a command (such as in `(event: when $a is 1)(link-goto:"?")`). You have to wrap the command
+			in a hook (such as `(event:when $a is 1)[(link-goto:"?")]`).
 
 			See also:
 			(live:)
