@@ -11,7 +11,7 @@ describe("temporary variables", function() {
 		runPassage("(set: _a to 1)");
 		expect("(print: _a)").markupToError();
 	});
-	it("forgets temporary variables when leaving hooks passages", function() {
+	it("forgets temporary variables when leaving hooks", function() {
 		expect("|a>[(set: _a to 1)(print:_a)] (print:_a)").markupToError();
 	});
 	it("are correctly shadowed when using hooks", function() {

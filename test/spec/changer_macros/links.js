@@ -25,6 +25,11 @@ describe("link macros", function() {
 			expect(p.text()).toBe("B");
 			expect("$c").markupToPrint("12");
 		});
+		it("works with temp variables", function() {
+			var p = runPassage("(set:_a to 1)(link-replace:'A')[(print:_a)]");
+			p.find('tw-link').click();
+			expect(p.text()).toBe('1');
+		});
 		it("is aliased as (link:)", function() {
 			var p = runPassage("(link:'A')[B(set:$c to 12)]");
 			p.find('tw-link').click();

@@ -365,8 +365,9 @@ define([
 					return "earlyexit";
 				}
 			}
-			else {
-				Utils.impossible("Section.runExpression", "TwineScript_Run() returned a non-Changer " + typeof result);
+			else if (result) {
+				Utils.impossible("Section.runExpression",
+					"TwineScript_Run() returned a non-ChangeDescriptor " + typeof result + ': "' + result + '"');
 			}
 		}
 		/*
@@ -642,6 +643,12 @@ define([
 		*/
 		const source = target.data('hiddenSource') || "";
 		/*
+			Similarly to the other delayed rendering macros like (link:) and (click:),
+			this too must store the current stack tempVariables object, so that it can
+			give the event access to the temp variables visible at render time.
+		*/
+		const [{tempVariables}] = this.stack;
+		/*
 			This closure runs every frame from now on, until
 			the target hook is gone.
 		*/
@@ -662,7 +669,7 @@ define([
 				whether the lambda was false. So, passing in 'true' will return [true] if
 				the lambda was true and [] (an empty array) if not.
 			*/
-			const eventFired = (event && event.filter(this, [true]));
+			const eventFired = (event && event.filter(this, [true], tempVariables));
 			if (TwineError.containsError(eventFired)) {
 				eventFired.render(expr.attr('title')).replaceAll(expr);
 				return;
@@ -707,7 +714,7 @@ define([
 	Section = {
 		/*
 			Creates a new Section which inherits from this one.
-			Note: while all Section use the methods on this Section prototype,
+			Note: while all Sections use the methods on this Section prototype,
 			there isn't really much call for a Section to delegate to its
 			parent Section.
 			
@@ -811,7 +818,7 @@ define([
 		
 		/*
 			Renders the given TwineMarkup code into a given element,
-			transitioning it in. Changer functions can be provided to
+			transitioning it in. A ChangerCommand can be provided to
 			modify the ChangeDescriptor object that controls how the code
 			is rendered.
 			
@@ -819,26 +826,19 @@ define([
 			passage data into a fresh <tw-passage>, but is also used to
 			render TwineMarkup into <tw-expression>s (by runExpression())
 			and <tw-hook>s (by render() and runLiveHook()).
-			
-			@param {String} The TwineMarkup code to render into the target.
-			@param The render destination. Usually a HookSet or jQuery.
-			@param [changers] The changer function(s) to run.
-			@return {Boolean} Whether the ChangeDescriptors enabled the rendering
-				(i.e. no (if:false) macros or such were present).
 		*/
-		renderInto(source, target, ...changers) {
+		renderInto(source, target, changer, tempVariables = null) {
 			/*
 				This is the ChangeDescriptor that defines this rendering.
 			*/
 			const desc = ChangeDescriptor.create({ target, source, section: this});
 			
 			/*
-				Run all the changer functions.
+				Run the changer function, if given, on that descriptor.
 			*/
-			changers.forEach((changer) => {
+			if (changer) {
 				/*
-					If a non-changer object was passed in (such as from
-					specificEnchantmentEvent()), assign its values,
+					If a non-changer object was passed in, assign its values,
 					overwriting the default descriptor's.
 					Honestly, having non-changer descriptor-altering objects
 					is a bit displeasingly rough-n-ready, but it's convenient...
@@ -849,10 +849,10 @@ define([
 				else {
 					changer.run(desc);
 				}
-			});
+			}
 
 			/*
-				The changers may have altered the target - update the target variable to match.
+				The changer may have altered the target - update the target variable to match.
 			*/
 			target = desc.target;
 			
@@ -960,28 +960,35 @@ define([
 				
 				/*
 					After evaluating the expressions, pop the passed-in data stack object (and its scope).
+					Any macros that need to keep the stack object (mainly interaction and deferred rendering macros like
+					(link:) and (event:)) have already stored it for themselves.
 				*/
 				this.stack.shift();
 			};
 
 			/*
-				The temp variable scope of the rendered DOM inherit from the current
-				stack, or, if absent, the base VarScope class.
+				...
 			*/
-			const tempVariables = Object.create(this.stack.length ?  this.stack[0].tempVariables : VarScope);
-			/*
-				For debug mode, the temp variables store needs to also carry the name of its enclosing lexical scope.
-				We derive this from the current target.
+			if (!tempVariables) {
+				/*
+					The temp variable scope of the rendered DOM inherits from the current
+					stack, or, if absent, the base VarScope class.
+				*/
+				tempVariables = Object.create(this.stack.length ?  this.stack[0].tempVariables : VarScope);
+				/*
+					For debug mode, the temp variables store needs to also carry the name of its enclosing lexical scope.
+					We derive this from the current target.
 
-				(The target should always be truthy, but, just in case...)
-			*/
-			const targetTag = target && target.tag();
-			tempVariables.TwineScript_VariableStoreName = (
-				targetTag === Selectors.hook ? (target.attr('name') ? ("?" + target.attr('name')) : "an unnamed hook") :
-				targetTag === Selectors.expression ? ("a " + target.attr('type') + " expression") :
-				targetTag === Selectors.passage ? "this passage" :
-				"an unknown scope"
-			);
+					(The target should always be truthy, but, just in case...)
+				*/
+				const targetTag = target && target.tag();
+				tempVariables.TwineScript_VariableStoreName = (
+					targetTag === Selectors.hook ? (target.attr('name') ? ("?" + target.attr('name')) : "an unnamed hook") :
+					targetTag === Selectors.expression ? ("a " + target.attr('type') + " expression") :
+					targetTag === Selectors.passage ? "this passage" :
+					"an unknown scope"
+				);
+			}
 
 			/*
 				If the descriptor features a loopVar, we must loop - that is, render and execute once for

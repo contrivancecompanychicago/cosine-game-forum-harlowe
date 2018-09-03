@@ -102,7 +102,7 @@ describe("basic command macros", function() {
 		it("produces an error if the passage doesn't exist", function() {
 			expect("(display: 'grault')").markupToError();
 		});
-		xit("will error if an infinite regress is created", function() {
+		it("will error if an infinite regress is created", function() {
 			createPassage("(display: 'grault')", "grault");
 			expect("(display: 'grault')").markupToError();
 		});

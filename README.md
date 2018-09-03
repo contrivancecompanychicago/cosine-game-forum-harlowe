@@ -6,6 +6,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
 
 ####Bugfixes
 
+ * Temp variables finally work correctly with changers that defer a hook until some event occurs, like `(link:)`, `(click:)` and such. Now, you can reference temp variables inside the hook, such as in `(link:"Read")[It reads: _engraving]`, just as you can with other kinds of changers.
  * Fixed a bug where supplying multiple shortened `is` or `is not` comparisons, in a form such as `$a is $b and $c`, would produce an incorrect result.
  * Fixed a bug where the Debug View's (set:) messages were worded incorrectly when setting global variables.
  * A more useful error message is given if you write a link with no passage name (such as `[[Go->]]`).
@@ -18,8 +19,10 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
  * To more clearly separate the concepts of "printing data" and "running commands" in Harlowe, the `(print:)` macro will no longer run commands passed to it (that is, `(print:(go-to:"Foo"))` and `(go-to:"Foo")` will no longer do the same thing - the former will just print out a descriptive string, as if printing out a changer). Commands can now only be run by placing them directly in the passage (either as plain calls, inside variables, or wrapped in strings that (print:) receives).
  * Passage links no longer have a `passage-name` attribute indicating which passage they lead to, which the player could inspect using developer tools.
  * If links' text contains an error message (for instance, in the case of `(link-replace:"(print:2+true"))[]`), then the link can no longer be clicked (so that the error message can be expanded).
+ * Error messages should now explain in slightly more detail what kind of lambda a macro requires (`"a "where ..." lambda"`, for instance).
  * Now, a `(transition:)` added to `(link:)`s, `(click:)`s, `(mouseover:)`s and other such macros will no longer cause the links or other elements to use the named transition themselves - instead, it will only be applied to the attached hook when it is made to appear.
  * `(show:)` will no longer produce an error if it tries to show a hook that's already visible, for consistency with other macros that accept hooknames, like `(click:)`. (Actually, it never did this in the first place, due to a bug.)
+ * The "undo" and "redo" buttons in the story's sidebar are now brighter by default.
 
 ####Additions
 

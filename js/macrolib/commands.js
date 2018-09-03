@@ -324,7 +324,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 					);
 				}
 			},
-			(cd, _, ...labels) => {
+			(cd, section, ...labels) => {
 				/*
 					Often, all the params are labels. But if the first one is actually the optional VarBind,
 					we need to extract it from the labels array.
@@ -335,6 +335,11 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 				}
 				let index = 0;
 
+				/*
+					As this is a deferred rendering macro, the current tempVariables
+					object must be stored for reuse, as the section pops it when normal rendering finishes.
+				*/
+				const [{tempVariables}] = section.stack;
 				cd.data.clickEvent = (link) => {
 					/*
 						Rotate to the next label, cycling around if it's past the end.
@@ -366,7 +371,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 						Since cd2's target SHOULD equal link, passing anything as the second argument won't do anything useful
 						(much like how the first argument is overwritten by cd2's source). So, null is given.
 					*/
-					cd.section.renderInto("", null, cd2);
+					cd.section.renderInto("", null, cd2, tempVariables);
 				};
 				/*
 					As above, the bound variable, if present, is set to the first label. Errors resulting
@@ -414,7 +419,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		When one option is selected, the bound variable is set to match the string value of the text.
 
 		Example usage:
-		* `(dropdown: bind $origin, "Abyssal outer reaches", "Gyre's wake", "The planar interstice")`
+		* `(dropdown: bind _origin, "Abyssal outer reaches", "Gyre's wake", "The planar interstice")`
 
 		Rationale:
 		Dropdown menus offer a more esoteric, but visually and functionally unique way of presenting the player with
@@ -599,11 +604,192 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 
 			#live
 		*/
+		/*
+			The existence of this macro is checked by searching for its <tw-expression> DOM element
+			within a hook.
+		*/
 		("stop",
 			() => {},
-			() => "",
+			() => {},
 			[], false)
 
+		/*d:
+			(load-game: String) -> Command
+			
+			This command attempts to load a saved game from the given slot, ending the current game and replacing it
+			with the loaded one. This causes the passage to change.
+			
+			Example usage:
+			```
+			{(if: $Saves contains "Slot A")[
+			  (link: "Load game")[(load-game:"Slot A")]
+			]}
+			```
+			
+			Details:
+			Just as (save-game:) exists to store the current game session, (load-game:) exists to retrieve a past
+			game session, whenever you want. This command, when given the string name of a slot, will attempt to
+			load the save, completely and instantly replacing the variables and move history with that of the
+			save, and going to the passage where that save was made.
+			
+			This macro assumes that the save slot exists and contains a game, which you can check by seeing if
+			`(saved-games:) contains` the slot name before running (load-game:).
+
+			This command can't have changers attached - attempting to do so will produce an error.
+			
+			See also:
+			(save-game:), (saved-games:)
+			
+			#saving
+		*/
+		("load-game",
+			() => {},
+			(/* no cd because this is attachable:false */ _, slotName) => {
+				const saveData = localStorage.getItem(storagePrefix("Saved Game") + slotName);
+				
+				if (!saveData) {
+					return TwineError.create("saving", "I can't find a save slot named '" + slotName + "'!");
+				}
+				
+				State.deserialise(saveData);
+				/*
+					There's not a strong reason to check for the destination passage existing,
+					because (save-game:) can only be run inside a passage. If this fails,
+					the save itself is drastically incorrect.
+				*/
+				requestAnimationFrame(Engine.showPassage.bind(Engine, State.passage, false /* stretchtext value */));
+			},
+			[String], false)
+
+		/*d:
+			(alert: String) -> Command
+
+			This macro produces a command that, when evaluated, shows a browser pop-up dialog box with the given
+			string displayed, and an "OK" button to dismiss it.
+
+			Example usage:
+			`(alert:"Beyond this point, things get serious. Grab a snack and buckle up.")`
+
+			Details:
+			This is essentially identical to the Javascript `alert()` function in purpose and ability. You
+			can use it to display a special message above the game itself. But, be aware that as the box uses
+			the player's operating system and browser's styling, it may clash visually with the design
+			of your story.
+
+			When the dialog is on-screen, the entire game is essentially "paused" - no further computations are
+			performed until it is dismissed.
+
+			This command can't have changers attached - attempting to do so will produce an error.
+
+			See also:
+			(prompt:), (confirm:)
+
+			#popup
+		*/
+		("alert",
+			() => {},
+			(/* no cd because this is attachable:false */ _, text) => {
+				window.alert(text);
+			},
+			[String], false)
+
+		/*d:
+			(open-url: String) -> Command
+
+			When this macro is evaluated, the player's browser attempts to open a new tab with the given
+			URL. This will usually require confirmation from the player, as most browsers block
+			Javascript programs such as Harlowe from opening tabs by default.
+
+			Example usage:
+			`(open-url: "http://www.example.org/")`
+
+			Details:
+			If the given URL is invalid, no error will be reported - the browser will simply attempt to
+			open it anyway.
+
+			Much like the `<a>` HTML element, the URL is treated as a relative URL if it doesn't start
+			with "http://", "https://", or another such protocol. This means that if your story file is
+			hosted at "http://www.example.org/story.html", then `(open-url: "page2.html")` will actually open
+			the URL "http://www.example.org/page2.html".
+
+			This command can't have changers attached - attempting to do so will produce an error.
+
+			See also:
+			(goto-url:)
+
+			#url
+		*/
+		("open-url",
+			() => {},
+			(/* no cd because this is attachable:false */ _, text) => {
+				window.open(text, '');
+			},
+			[String], false)
+
+		/*d:
+			(reload:) -> Command
+
+			When this command is used, the player's browser will immediately attempt to reload
+			the page, in effect restarting the entire story.
+
+			Example usage:
+			`(click:"Restart")[(reload:)]`
+
+			Details:
+			If the first passage in the story contains this macro, the story will be caught in a "reload
+			loop", and won't be able to proceed. No error will be reported in this case.
+
+			This command can't have changers attached - attempting to do so will produce an error.
+
+			#url
+		*/
+		("reload",
+			() => {},
+			(/* no cd because this is attachable:false */ ) => {
+				if (State.pastLength < 1) {
+					return TwineError.create("infinite", "I mustn't (reload:) the page in the starting passage.");
+				}
+				window.location.reload();
+			},
+			[], false)
+
+		/*d:
+			(goto-url: String) -> Command
+
+			When this command is used, the player's browser will immediately attempt to leave
+			the story's page, and navigate to the given URL in the same tab. If this succeeds, then
+			the story session will "end".
+
+			Example usage:
+			`(goto-url: "http://www.example.org/")`
+
+			Details:
+			If the given URL is invalid, no error will be reported - the browser will simply attempt to
+			open it anyway.
+			
+			Much like the `<a>` HTML element, the URL is treated as a relative URL if it doesn't start
+			with "http://", "https://", or another such protocol. This means that if your story file is
+			hosted at "http://www.example.org/story.html", then `(open-url: "page2.html")` will actually open
+			the URL "http://www.example.org/page2.html".
+
+			This command can't have changers attached - attempting to do so will produce an error.
+
+			See also:
+			(open-url:)
+
+			#url
+		*/
+		("goto-url",
+			() => {},
+			(/* no cd because this is attachable:false */ _, url)=>{
+				window.location.assign(url);
+			},
+			[String], false);
+
+	/*
+		The following couple of macros are not commands, but they are each intrinsically related to some of the macros above.
+	*/
+	Macros.add
 		/*d:
 			(save-game: String, [String]) -> Boolean
 			
@@ -649,8 +835,6 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			it (because they're using private browsing, their browser's storage is full, or some other reason).
 			Since there's always a possibility of a save failing, you should use (if:) and (else:) with (save-game:)
 			to display an apology message in the event that it returns false (as seen above).
-
-			This command can't have changers attached - attempting to do so will produce an error.
 			
 			See also:
 			(load-game:), (saved-games:)
@@ -658,7 +842,6 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			#saving
 		*/
 		("save-game",
-			() => {},
 			(_, slotName, fileName) => {
 				/*
 					The default filename is the empty string.
@@ -708,89 +891,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 					return false;
 				}
 			},
-			[String, optional(String)], false)
-
-		/*d:
-			(load-game: String) -> Command
-			
-			This command attempts to load a saved game from the given slot, ending the current game and replacing it
-			with the loaded one. This causes the passage to change.
-			
-			Example usage:
-			```
-			{(if: $Saves contains "Slot A")[
-			  (link: "Load game")[(load-game:"Slot A")]
-			]}
-			```
-			
-			Details:
-			Just as (save-game:) exists to store the current game session, (load-game:) exists to retrieve a past
-			game session, whenever you want. This command, when given the string name of a slot, will attempt to
-			load the save, completely and instantly replacing the variables and move history with that of the
-			save, and going to the passage where that save was made.
-			
-			This macro assumes that the save slot exists and contains a game, which you can check by seeing if
-			`(saved-games:) contains` the slot name before running (load-game:).
-
-			This command can't have changers attached - attempting to do so will produce an error.
-			
-			See also:
-			(save-game:), (saved-games:)
-			
-			#saving
-		*/
-		("load-game",
-			() => {},
-			(_, slotName) => {
-				const saveData = localStorage.getItem(storagePrefix("Saved Game") + slotName);
-				
-				if (!saveData) {
-					return TwineError.create("saving", "I can't find a save slot named '" + slotName + "'!");
-				}
-				
-				State.deserialise(saveData);
-				/*
-					There's not a strong reason to check for the destination passage existing,
-					because (save-game:) can only be run inside a passage. If this fails,
-					the save itself is drastically incorrect.
-				*/
-				requestAnimationFrame(Engine.showPassage.bind(Engine, State.passage, false /* stretchtext value */));
-				return { earlyExit: 1 };
-			},
-			[String], false)
-
-		/*d:
-			(alert: String) -> Command
-
-			This macro produces a command that, when evaluated, shows a browser pop-up dialog box with the given
-			string displayed, and an "OK" button to dismiss it.
-
-			Example usage:
-			`(alert:"Beyond this point, things get serious. Grab a snack and buckle up.")`
-
-			Details:
-			This is essentially identical to the Javascript `alert()` function in purpose and ability. You
-			can use it to display a special message above the game itself. But, be aware that as the box uses
-			the player's operating system and browser's styling, it may clash visually with the design
-			of your story.
-
-			When the dialog is on-screen, the entire game is essentially "paused" - no further computations are
-			performed until it is dismissed.
-
-			This command can't have changers attached - attempting to do so will produce an error.
-
-			See also:
-			(prompt:), (confirm:)
-
-			#popup
-		*/
-		("alert",
-			() => {},
-			(_, text) => {
-				window.alert(text);
-				return "";
-			},
-			[String], false)
+			[String, optional(String)])
 
 		/*d:
 			(prompt: String, String) -> String
@@ -819,9 +920,8 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			#popup
 		*/
 		("prompt",
-			() => {},
 			(_, text, value) => window.prompt(text, value) || "",
-			[String, String], false)
+			[String, String])
 
 		/*d:
 			(confirm: String) -> Boolean
@@ -850,128 +950,22 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			#popup
 		*/
 		("confirm",
-			() => {},
 			(_, text) => window.confirm(text),
-			[String], false)
+			[String])
 
 		/*d:
-			(open-url: String) -> Command
+			(page-url:) -> String
 
-			When this macro is evaluated, the player's browser attempts to open a new tab with the given
-			URL. This will usually require confirmation from the player, as most browsers block
-			Javascript programs such as Harlowe from opening tabs by default.
+			This macro produces the full URL of the story's HTML page, as it is in the player's browser.
 
 			Example usage:
-			`(open-url: "http://www.example.org/")`
+			`(if: (page-url:) contains "#cellar")` will be true if the URL contains the `#cellar` hash.
 
 			Details:
-			If the given URL is invalid, no error will be reported - the browser will simply attempt to
-			open it anyway.
-
-			Much like the `<a>` HTML element, the URL is treated as a relative URL if it doesn't start
-			with "http://", "https://", or another such protocol. This means that if your story file is
-			hosted at "http://www.example.org/story.html", then `(open-url: "page2.html")` will actually open
-			the URL "http://www.example.org/page2.html".
-
-			This command can't have changers attached - attempting to do so will produce an error.
-
-			See also:
-			(goto-url:)
+			This **may** be changed in a future version of Harlowe to return a datamap containing more
+			descriptive values about the URL, instead of a single string.
 
 			#url
 		*/
-		("open-url",
-			() => {},
-			(_, text) => {
-				window.open(text, '');
-				return "";
-			},
-			[String], false)
-
-		/*d:
-			(reload:) -> Command
-
-			When this command is used, the player's browser will immediately attempt to reload
-			the page, in effect restarting the entire story.
-
-			Example usage:
-			`(click:"Restart")[(reload:)]`
-
-			Details:
-			If the first passage in the story contains this macro, the story will be caught in a "reload
-			loop", and won't be able to proceed. No error will be reported in this case.
-
-			This command can't have changers attached - attempting to do so will produce an error.
-
-			#url
-		*/
-		("reload",
-			() => {},
-			() => {
-				if (State.pastLength < 1) {
-					return TwineError.create("infinite", "I mustn't (reload:) the page in the starting passage.");
-				}
-				window.location.reload();
-				/*
-					This technically doesn't need to be an "early exit" command
-					like (goto:), because reload() halts all execution by itself.
-					But, when proper error-checking is added, this will be necessary.
-				*/
-				return { earlyExit: 1 };
-			},
-			[], false)
-
-		/*d:
-			(goto-url: String) -> Command
-
-			When this command is used, the player's browser will immediately attempt to leave
-			the story's page, and navigate to the given URL in the same tab. If this succeeds, then
-			the story session will "end".
-
-			Example usage:
-			`(goto-url: "http://www.example.org/")`
-
-			Details:
-			If the given URL is invalid, no error will be reported - the browser will simply attempt to
-			open it anyway.
-			
-			Much like the `<a>` HTML element, the URL is treated as a relative URL if it doesn't start
-			with "http://", "https://", or another such protocol. This means that if your story file is
-			hosted at "http://www.example.org/story.html", then `(open-url: "page2.html")` will actually open
-			the URL "http://www.example.org/page2.html".
-
-			This command can't have changers attached - attempting to do so will produce an error.
-
-			See also:
-			(open-url:)
-
-			#url
-		*/
-		("goto-url",
-			() => {},
-			(_, url)=>{
-				window.location.assign(url);
-				/*
-					As with (reload:), this early exit signal will be useful once
-					proper editing is added.
-				*/
-				return { earlyExit: 1 };
-			},
-			[String], false);
-
-	/*d:
-		(page-url:) -> String
-
-		This macro produces the full URL of the story's HTML page, as it is in the player's browser.
-
-		Example usage:
-		`(if: (page-url:) contains "#cellar")` will be true if the URL contains the `#cellar` hash.
-
-		Details:
-		This **may** be changed in a future version of Harlowe to return a datamap containing more
-		descriptive values about the URL, instead of a single string.
-
-		#url
-	*/
-	Macros.add("page-url", () => window.location.href, []);
+		("page-url", () => window.location.href, []);
 });

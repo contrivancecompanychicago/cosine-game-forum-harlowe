@@ -6,8 +6,7 @@ describe("interaction macros", function() {
 		action: 'click',
 		cssClass: 'enchantment-link',
 		eventMethod: 'click',
-	},
-	{
+	},{
 		name: 'mouseover',
 		entity: 'mouseover-region',
 		action: 'mouseover',
@@ -81,6 +80,11 @@ describe("interaction macros", function() {
 						expect(p.text()).toBe("cool");
 						p.find('tw-enchantment')[e.eventMethod]();
 						expect(p.text()).toBe("coolbeans");
+					});
+					it("works with temporary variables", function() {
+						var p = runPassage("(set:_a to 1)[(set:_a to 2)]<bar|("+e.name+":?bar)[(print:_a)]");
+						p.find('tw-enchantment')[e.eventMethod]();
+						expect(p.text()).toBe('1');
 					});
 					it("disenchants the selected hook when the enchantment is " + e.action + "ed", function() {
 						var p = runPassage("[cool]<foo|(" + e.name + ":?foo)[beans]");

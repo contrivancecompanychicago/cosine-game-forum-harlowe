@@ -260,10 +260,14 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 		@return {String}
 	*/
 	function typeName(obj) {
-		/*
-			First, check for the "either" type descriptor.
-		*/
 		if (Object.getPrototypeOf(obj) === Object.prototype && obj.innerType) {
+			/*
+				Some type descriptors have a special name that isn't JUST the innerType's
+				typeName (to my knowledge, just lambdas with specific clauses).
+			*/
+			if (obj.typeName) {
+				return obj.typeName;
+			}
 			if (obj.pattern === "either") {
 				if(!Array.isArray(obj.innerType)) {
 					impossible("typeName",'"either" pattern had non-array inner type');

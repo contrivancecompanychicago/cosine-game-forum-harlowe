@@ -201,6 +201,11 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 				*/
 				desc.append = arr[0] === "link" ? "replace" : "append";
 				desc.transitionDeferred = true;
+				/*
+					As this is a deferred rendering macro, the current tempVariables
+					object must be stored for reuse, as the section pops it when normal rendering finishes.
+				*/
+				const [{tempVariables}] = desc.section.stack;
 				desc.data.clickEvent = (link) => {
 					/*
 						Only (link-reveal:) turns the link into plain text:
@@ -211,7 +216,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 					}
 					desc.source = desc.innerSource + "";
 					desc.transitionDeferred = false;
-					desc.section.renderInto("", null, desc);
+					desc.section.renderInto("", null, desc, tempVariables);
 				};
 			},
 			[String]
@@ -444,6 +449,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 				}
 			},
 			(cd, section, text, ...hooks) => {
+				const [{tempVariables}] = section.stack;
 				cd.data.clickEvent = (link) => {
 					link.contents().unwrap();
 					hooks.forEach(hook => hook.forEach(section, elem => {
@@ -452,7 +458,8 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 							return;
 						}
 						section.renderInto("", null,
-							assign({}, cd, { source: hiddenSource, target: elem, transitionDeferred: false })
+							assign({}, cd, { source: hiddenSource, target: elem, transitionDeferred: false }),
+							tempVariables
 						);
 					}));
 				};
@@ -543,6 +550,11 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			desc.source = '<tw-link tabindex=0 ' + (visited > 0 ? 'class="visited" ' : '') + '>' + text + '</tw-link>';
 			desc.append = "append";
 			desc.transitionDeferred = true;
+			/*
+				As this is a deferred rendering macro, the current tempVariables
+				object must be stored for reuse, as the section pops it when normal rendering finishes.
+			*/
+			const [{tempVariables}] = desc.section.stack;
 			desc.data.clickEvent = (link) => {
 				desc.source = desc.innerSource;
 				/*
@@ -556,7 +568,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 					but its absence is observable if an error is displayed, so it might as well be included.
 				*/
 				desc.transitionDeferred = false;
-				desc.section.renderInto(desc.innerSource + "", null, desc);
+				desc.section.renderInto(desc.innerSource + "", null, desc, tempVariables);
 				/*
 					Having revealed, we now go-to, UNLESS an early exit was invoked, which signifies a different (go-to:) was
 					activated.

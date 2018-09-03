@@ -362,6 +362,11 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 					desc.newTargets = (desc.newTargets || [])
 						.concat({ target: selector, append: enchantDesc.rerender });
 				}
+				/*
+					As these are deferred rendering macros, the current tempVariables
+					object must be stored for reuse, as the section pops it when normal rendering finishes.
+				*/
+				const [{tempVariables}] = desc.section.stack;
 
 				/*
 					This enchantData object is stored in the descriptor's Section's enchantments
@@ -439,7 +444,8 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 										can use them (given that the interaction element did not).
 									*/
 									transitionDeferred: false,
-								})
+								}),
+								tempVariables
 							);
 						},
 					},

@@ -73,11 +73,14 @@ describe("interface macros", function(){
 				p.find('tw-link').click();
 				expect("$foo").markupToPrint('qux');
 			});
-			xit("works with temp variables", function() {
-				var p = runPassage("(cycling-link: bind _foo, 'bar', 'baz', 'qux')(event: _foo is 'qux')[quux]");
+			it("works with temp variables", function(done) {
+				var p = runPassage("(cycling-link: bind _foo, 'bar', 'baz', 'qux')(event: when _foo is 'qux')[quux]");
 				p.find('tw-link').click();
 				p.find('tw-link').click();
-				expect(p.text()).toBe("quxquux");
+				setTimeout(function(){
+					expect(p.text()).toBe("quxquux");
+					done();
+				},20);
 			});
 			it("errors if the bind is invalid", function() {
 				expect("(set:$foo to 1)(cycling-link: bind $foo's 1st, 'bar','baz', 'qux')").markupToError();

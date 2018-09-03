@@ -85,7 +85,12 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 			expects its lambda to have.
 		*/
 		TypeSignature(clauses) {
-			return { pattern: "lambda", innerType: Lambda, clauses };
+			return {
+				pattern: "lambda", innerType: Lambda, clauses,
+				typeName: "a \""
+					+ clauses.split().concat('').join(" ...")
+					+ "\" lambda",
+			};
 		},
 
 		/*
@@ -178,12 +183,13 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 			This needs to have the macro's section passed in so that its JS code can be eval()'d in
 			the correct scope.
 		*/
-		apply(section, {loop:loopArg, 'with':withArg, making:makingArg, fail:failArg, pass:passArg, ignoreVia}) {
+		apply(section, {loop:loopArg, 'with':withArg, making:makingArg, fail:failArg, pass:passArg, ignoreVia, tempVariables}) {
 			/*
-				We run the JS code of this lambda, inserting the arguments by adding them to a "tempVariables"
-				object. The tempVariable references in the code are compiled to VarRefs for tempVariables.
+				We run the JS code of this lambda, inserting the arguments by adding them to a tempVariables
+				object (if one wasn't provided). The temporary variable references in the code are compiled to
+				VarRefs for tempVariables.
 			*/
-			const tempVariables = Object.create(VarScope);
+			tempVariables = tempVariables || Object.create(section.stack[0] || VarScope);
 			[
 				[this.loop, loopArg],
 				[this.with, withArg],
@@ -241,8 +247,10 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 		/*
 			This convenience function is used to run reduce() on macro args using a lambda,
 			which is an operation common to (find:), (all-pass:) and (some-pass:).
+
+			tempVariables is only overridden by certain deferred rendering macros (as of Sep 2018, just (event:)).
 		*/
-		filter(section, args) {
+		filter(section, args, tempVariables = null) {
 			return args.reduce((result, arg) => {
 				/*
 					If an earlier iteration produced an error, don't run any more
@@ -255,7 +263,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 				/*
 					Run the lambda, to determine whether to filter out this element.
 				*/
-				const passedFilter = this.apply(section, {loop:arg, pass:true, fail:false, ignoreVia:true});
+				const passedFilter = this.apply(section, {loop:arg, pass:true, fail:false, ignoreVia:true, tempVariables});
 				if ((error = TwineError.containsError(passedFilter))) {
 					return error;
 				}
