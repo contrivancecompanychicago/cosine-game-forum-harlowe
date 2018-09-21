@@ -57,10 +57,9 @@ describe("lambdas", function() {
 describe("lambda macros", function() {
 	'use strict';
 	describe("the (altered:) macro", function() {
-		it("accepts a 'via' lambda, plus one or more other values", function() {
+		it("accepts a 'via' lambda, plus zero or more other values", function() {
 			expect("(altered:)").markupToError();
 			expect("(altered:1)").markupToError();
-			expect("(altered: _a via _a*2)").markupToError();
 			for(var i = 2; i < 10; i += 1) {
 				expect("(altered: _a via _a*2," + "2,".repeat(i) + ")").not.markupToError();
 			}
@@ -83,6 +82,9 @@ describe("lambda macros", function() {
 		it("if one iteration errors, the result is an error", function() {
 			expect("(altered: _a via _a*2, 1, 2, true, 4)").markupToError();
 		});
+		it("returns an empty array if no other values are given", function() {
+			expect("(print: (altered: _a via _a*2) is (a:))").markupToPrint("true");
+		});
 		it("doesn't affect temporary variables outside it", function() {
 			expect("(set: _a to 1)(altered: _a via _a*2, 5,6) _a").markupToPrint("10,12 1");
 		});
@@ -91,10 +93,9 @@ describe("lambda macros", function() {
 		});
 	});
 	describe("the (find:) macro", function() {
-		it("accepts a 'where' or 'each' lambda returning a boolean, plus one or more other values", function() {
+		it("accepts a 'where' or 'each' lambda returning a boolean, plus zero or more other values", function() {
 			expect("(find:)").markupToError();
 			expect("(find:1)").markupToError();
-			expect("(find:_a where _a*2)").markupToError();
 			for(var i = 2; i < 10; i += 1) {
 				expect("(find: _a where true," + "2,".repeat(i) + ")").not.markupToError();
 			}
@@ -111,15 +112,17 @@ describe("lambda macros", function() {
 		it("if one iteration errors, the result is an error", function() {
 			expect("(find: _a where not _a, true, true, 6, true)").markupToError();
 		});
+		it("returns an empty array if no other values are given", function() {
+			expect("(print: (find: _a where _a*2 > 10) is (a:))").markupToPrint("true");
+		});
 		it("sets the 'it' identifier to the loop value", function() {
 			expect("(print: (find: _a where it > 2, 1,3)'s 1st + 1)").markupToPrint("4");
 		});
 	});
 	describe("the (all-pass:) macro", function() {
-		it("accepts a 'where'  or 'each' lambda, plus one or more other values", function() {
+		it("accepts a 'where'  or 'each' lambda, plus zero or more other values", function() {
 			expect("(all-pass:)").markupToError();
 			expect("(all-pass:1)").markupToError();
-			expect("(all-pass: _a where _a*2)").markupToError();
 			for(var i = 2; i < 10; i += 1) {
 				expect("(all-pass: _a where true," + "2,".repeat(i) + ")").not.markupToError();
 			}
@@ -133,6 +136,9 @@ describe("lambda macros", function() {
 			expect("(print: (all-pass: _a where _a>2, 1,2,3,4,5))").markupToPrint("false");
 			expect("(set: $a to 3)(print: (all-pass: _a where _a < $a, 1,2))").markupToPrint("true");
 		});
+		it("returns true if no other values are given", function() {
+			expect("(print: (all-pass: _a where _a*2 > 10))").markupToPrint("true");
+		});
 		it("if one iteration errors, the result is an error", function() {
 			expect("(all-pass: _a where _a, true, true, 6, true)").markupToError();
 		});
@@ -141,10 +147,9 @@ describe("lambda macros", function() {
 		});
 	});
 	describe("the (some-pass:) macro", function() {
-		it("accepts a 'where' or 'each' lambda, plus one or more other values", function() {
+		it("accepts a 'where' or 'each' lambda, plus zero or more other values", function() {
 			expect("(some-pass:)").markupToError();
 			expect("(some-pass:1)").markupToError();
-			expect("(some-pass: _a where _a*2)").markupToError();
 			for(var i = 2; i < 10; i += 1) {
 				expect("(some-pass: _a where true," + "2,".repeat(i) + ")").not.markupToError();
 			}
@@ -158,6 +163,9 @@ describe("lambda macros", function() {
 			expect("(print: (some-pass: _a where _a>2, 1,2,3,4,5))").markupToPrint("true");
 			expect("(set: $a to 3)(print: (some-pass: _a where _a < $a, 6,2))").markupToPrint("true");
 		});
+		it("returns false if no other values are given", function() {
+			expect("(print: (some-pass: _a where _a*2 > 10))").markupToPrint("false");
+		});
 		it("if one iteration errors, the result is an error", function() {
 			expect("(some-pass: _a where _a, false, false, 6, false)").markupToError();
 		});
@@ -166,10 +174,9 @@ describe("lambda macros", function() {
 		});
 	});
 	describe("the (none-pass:) macro", function() {
-		it("accepts a 'where' or 'each' lambda, plus one or more other values", function() {
+		it("accepts a 'where' or 'each' lambda, plus zero or more other values", function() {
 			expect("(none-pass:)").markupToError();
 			expect("(none-pass:1)").markupToError();
-			expect("(none-pass: _a where _a*2)").markupToError();
 			for(var i = 2; i < 10; i += 1) {
 				expect("(none-pass: _a where true," + "2,".repeat(i) + ")").not.markupToError();
 			}
@@ -182,6 +189,9 @@ describe("lambda macros", function() {
 			expect("(print: (none-pass: _a where _a>12, 3,5,7))").markupToPrint("true");
 			expect("(print: (none-pass: _a where _a>2, 1,2,3,4,5))").markupToPrint("false");
 			expect("(set: $a to 3)(print: (none-pass: _a where _a < $a, 6,2))").markupToPrint("false");
+		});
+		it("returns true if no other values are given", function() {
+			expect("(print: (none-pass: _a where _a*2 > 10))").markupToPrint("true");
 		});
 		it("if one iteration errors, the result is an error", function() {
 			expect("(none-pass: _a where _a, false, false, 6, false)").markupToError();

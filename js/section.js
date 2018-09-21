@@ -847,7 +847,11 @@ define([
 					Object.assign(desc, changer);
 				}
 				else {
-					changer.run(desc);
+					const error = changer.run(desc);
+					if (TwineError.containsError(error)) {
+						error.render(target.attr('title')).replaceAll(target);
+						return false;
+					}
 				}
 			}
 
@@ -864,6 +868,7 @@ define([
 			if (this.stack.length >= 50) {
 				TwineError.create("infinite", "Printing this expression may have trapped me in an infinite loop.")
 					.render(target.attr('title')).replaceAll(target);
+				return false;
 			}
 
 			const renderAndExecute = (desc, stackObject) => {
@@ -1008,6 +1013,12 @@ define([
 				// Find the shortest loopVars array, and iterate that many times ()
 				let i = Math.min(...Object.keys(loopVars).map(name => loopVars[name].length));
 
+				// A gentle debug notification to remind the writer how many loops the (for:) executed,
+				// which is especially helpful if it's 0.
+				if (Engine.options.debug) {
+					TwineNotifier.create(i + " loop" + (i !== 1 ? "s" : "")).render().prependTo(target);
+				}
+
 				/*jshint -W083 */
 				for(; i > 0; i -= 1) {
 					renderAndExecute(desc, {
@@ -1017,6 +1028,7 @@ define([
 						}, Object.create(tempVariables)),
 					});
 				}
+
 			}
 			/*
 				Otherwise, just render and execute once normally.

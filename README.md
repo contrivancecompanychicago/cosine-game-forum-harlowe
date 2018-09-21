@@ -11,6 +11,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
  * Fixed a bug where the Debug View's (set:) messages were worded incorrectly when setting global variables.
  * A more useful error message is given if you write a link with no passage name (such as `[[Go->]]`).
  * Fixed a bug where you could + a changer, a hookname, or a colour to any arbitrary command, like a `(goto:)` command.
+ * Fixed a bug where having a `(for:)` macro's lambda's `where` clause return something other than a boolean, such as in `(for: each _a where 127)[]`, wouldn't produce an error message.
 
 ####Alterations
 
@@ -23,6 +24,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
  * Now, a `(transition:)` added to `(link:)`s, `(click:)`s, `(mouseover:)`s and other such macros will no longer cause the links or other elements to use the named transition themselves - instead, it will only be applied to the attached hook when it is made to appear.
  * `(show:)` will no longer produce an error if it tries to show a hook that's already visible, for consistency with other macros that accept hooknames, like `(click:)`. (Actually, it never did this in the first place, due to a bug.)
  * The "undo" and "redo" buttons in the story's sidebar are now brighter by default.
+ * Various lambda macros that accept multiple values - namely `(for:)`, `(all-pass:)`, `(some-pass:)`, `(none-pass:)`, `(find:)`, and `(altered:)` - no longer error if no values are given after the lambda - for instance, `(for: each _a, ...$arr)[]` now no longer errors if `$arr` contains 0 elements.
 
 ####Additions
 

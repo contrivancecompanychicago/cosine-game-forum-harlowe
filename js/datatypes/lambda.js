@@ -251,12 +251,12 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 			tempVariables is only overridden by certain deferred rendering macros (as of Sep 2018, just (event:)).
 		*/
 		filter(section, args, tempVariables = null) {
-			return args.reduce((result, arg) => {
+			let error;
+			const filtered = args.reduce((result, arg) => {
 				/*
 					If an earlier iteration produced an error, don't run any more
 					computations and just return.
 				*/
-				let error;
 				if ((error = TwineError.containsError(result))) {
 					return error;
 				}
@@ -269,6 +269,14 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 				}
 				return result.concat(passedFilter ? [arg] : []);
 			}, []);
+			/*
+				If an error was returned by one of the reduce() iterations, we need to return only that error,
+				not the array contanining it.
+			*/
+			if ((error = TwineError.containsError(filtered))) {
+				return error;
+			}
+			return filtered;
 		},
 	});
 	return Lambda;

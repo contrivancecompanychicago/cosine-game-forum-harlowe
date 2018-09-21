@@ -39,7 +39,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		```
 	*/
 	const
-		{either, wrapped, rest, optional, Any} = Macros.TypeSignature,
+		{either, wrapped, rest, optional, Any, zeroOrMore} = Macros.TypeSignature,
 		IfTypeSignature = [wrapped(Boolean, "If you gave a number, you may instead want to check that the number is not 0. "
 			+ "If you gave a string, you may instead want to check that the string is not \"\".")];
 
@@ -429,7 +429,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		)
 
 		/*d:
-			(for: Lambda, ...Any) -> Changer
+			(for: Lambda, [...Any]) -> Changer
 			Also known as: (loop:)
 
 			A command that repeats the attached hook, setting a temporary variable to a different value on each repeat.
@@ -447,6 +447,9 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			then give (for:) an "each" lambda that uses the same temp variable.
 
 			Details:
+			If no extra values are given after the lambda (for instance, by using `...` with an empty array), then nothing will happen
+			and the attached hook will not be printed at all.
+
 			Don't make the mistake of believing you can alter an array by trying to (set:) the temp variable in each loop - such
 			as `(for: each _a, ...$arr)[(set: _a to it + 1)]`. This will NOT change $arr - only the temp variable will change (and
 			only until the next loop, where another $arr value will be put into it). If you want to alter an array item-by-item, use
@@ -483,8 +486,15 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				}
 				return ChangerCommand.create("for", [lambda, args]);
 			},
-			(d, lambda, args) => d.loopVars[lambda.loop] = lambda.filter(d.section, args),
-			[Lambda.TypeSignature('where'), rest(Any)]
+			(d, lambda, args) => {
+				const loopVars = lambda.filter(d.section, args);
+				let error;
+				if ((error = TwineError.containsError(loopVars))) {
+					return error;
+				}
+				d.loopVars[lambda.loop] = loopVars || [];
+			},
+			[Lambda.TypeSignature('where'), zeroOrMore(Any)]
 		)
 
 		/*d:

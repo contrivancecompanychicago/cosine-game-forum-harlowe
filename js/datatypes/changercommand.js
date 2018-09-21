@@ -1,5 +1,5 @@
 "use strict";
-define(['utils', 'utils/operationutils', 'internaltypes/changedescriptor'], ({impossible}, {is}, ChangeDescriptor) => {
+define(['utils', 'utils/operationutils', 'internaltypes/changedescriptor', 'internaltypes/twineerror'], ({impossible}, {is}, ChangeDescriptor, TwineError) => {
 	/*
 		A ChangerCommand is a command that is used to alter the way a particular
 		Section renders the value. It does this by mutating a passed-in ChangeDescriptor
@@ -107,7 +107,14 @@ define(['utils', 'utils/operationutils', 'internaltypes/changedescriptor'], ({im
 			/*
 				We need to spread the params array.
 			*/
-			commandRegistry[this.macroName](desc, ...this.params);
+			const result = commandRegistry[this.macroName](desc, ...this.params);
+			/*
+				If this function returns a result, it should just be a ChangeDescriptor. If it's a
+				TwineError, then it needs to be returned and rendered by section.renderInto() immediately.
+			*/
+			if (TwineError.containsError(result)) {
+				return result;
+			}
 			if (this.next) {
 				this.next.run(desc);
 			}

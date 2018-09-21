@@ -177,17 +177,17 @@ describe("control flow macros", function() {
 		});
 	});
 	describe("the (for:) macro", function() {
-		it("accepts a 'where' or 'each' lambda, plus one or more other values", function() {
+		it("accepts a 'where' or 'each' lambda, plus zero or more other values", function() {
 			expect("(for:)[]").markupToError();
 			expect("(for:1)[]").markupToError();
-			expect("(for: _a where _a*2)[]").markupToError();
 			for(var i = 2; i < 10; i += 1) {
 				expect("(for: _a where true," + "2,".repeat(i) + ")[]").not.markupToError();
 			}
-			expect("(for: each _a)[]").markupToError();
+			expect("(for: each _a)[]").not.markupToError();
 			expect("(for: _a via true,2)[]").markupToError();
 			expect("(for:_a with _b where _a is _b,2)[]").markupToError();
 			expect("(for:_a making _b where true,2)[]").markupToError();
+			expect("(for: _a where _a*2, 1)[]").markupToError();
 		});
 		it("errors if the 'where' lambda doesn't name the temp variable", function() {
 			expect("(for: where it > 2, 1,2,3)[]").markupToError();

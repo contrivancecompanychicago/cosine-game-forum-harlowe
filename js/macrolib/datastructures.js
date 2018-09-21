@@ -747,7 +747,7 @@ define([
 
 	Macros.add
 		/*d:
-			(altered: Lambda, ...Any) -> Array
+			(altered: Lambda, [...Any]) -> Array
 
 			This takes a "via" lambda and a sequence of values, and creates a new array with the same values in the same order,
 			but altered via the operation in the lambda's "via" clause.
@@ -769,6 +769,10 @@ define([
 			Of course, if any operation applied to any of the values should cause an error, such as trying to add a string to a number,
 			an error will result.
 
+			An error will NOT appear if you provide no values after the lambda - an empty array will be returned instead.
+			This allows you to write `(altered: $lambda, ...$array)` without checking whether $array contains any values (which
+			you may not be certain of, if it contains the result of a previous (find:)).
+
 			The temp variable, which you can name anything you want, is controlled entirely by the lambda - it doesn't exist
 			outside of it, it won't alter identically-named temp variables outside of it, and you can't manually (set:)
 			it within the lambda.
@@ -785,9 +789,9 @@ define([
 			#data structure
 		*/
 		("altered", (section, lambda, ...args) => args.map(loop => lambda.apply(section, {loop})),
-		[Lambda.TypeSignature('via'), rest(Any)])
+		[Lambda.TypeSignature('via'), zeroOrMore(Any)])
 		/*d:
-			(find: Lambda, ...Any) -> Array
+			(find: Lambda, [...Any]) -> Array
 
 			This searches through the given values, and produces an array of those which match the given search
 			test (which is expressed using a temp variable, the `where` keyword, and a boolean condition).
@@ -814,6 +818,10 @@ define([
 			Details:
 			Of course, if any condition should cause an error, such as checking if a number contains a number, then the error will appear.
 
+			However, an error will NOT appear if you provide no values after the lambda - searching an empty sequence will simply
+			result in an empty array being returned. This allows you to write `(find: $lambda, ...$array)` without checking whether $array contains
+			any values (which you may not be certain of, if it contains the result of a previous (find:)).
+
 			The temp variable, which you can name anything you want, is controlled entirely by the lambda - it doesn't exist
 			outside of it, it won't alter identically-named temp variables outside of it, and you can't manually (set:)
 			it within the lambda.
@@ -833,11 +841,11 @@ define([
 			#data structure
 		*/
 		("find", (section, lambda, ...args) => lambda.filter(section, args),
-		[Lambda.TypeSignature('where'), rest(Any)])
+		[Lambda.TypeSignature('where'), zeroOrMore(Any)])
 		/*d:
-			(all-pass: Lambda, ...Any) -> Boolean
+			(all-pass: Lambda, [...Any]) -> Boolean
 
-			This takes a "where" lambda and a series of values, and evaluates to true if the lambda, when run using each value, always evaluated to true.
+			This takes a "where" lambda and a series of values, and evaluates to true if the lambda, when run using each value, never evaluated to false.
 
 			Example usage:
 			* `(all-pass: _num where _num > 1 and _num < 14, 6, 8, 12, 10, 9)` is true.
@@ -853,6 +861,8 @@ define([
 
 			Details:
 			Of course, if any condition should cause an error, such as checking if a number contains a number, then the error will appear.
+
+			If zero values are given to (all-pass:), then it will return true by default.
 
 			The temp variable, which you can name anything you want, is controlled entirely by the lambda - it doesn't exist
 			outside of it, it won't alter identically-named temp variables outside of it, and you can't manually (set:)
@@ -871,12 +881,13 @@ define([
 			const ret = lambda.filter(section, args);
 			return TwineError.containsError(ret) || ret.length === args.length;
 		},
-		[Lambda.TypeSignature('where'), rest(Any)])
+		[Lambda.TypeSignature('where'), zeroOrMore(Any)])
 		/*d:
 			(some-pass: Lambda, ...Any) -> Boolean
 
-			This is similar to (all-pass:), but produces true if one or more value, when given to the lambda, evaluated to false.
+			This is similar to (all-pass:), but produces true if one or more value, when given to the lambda, evaluated to true.
 			It can be thought of as shorthand for putting `not` in front of (none-pass:).
+			If zero values are given to (all-pass:), then it will return false by default.
 			For more information, consult the description of (all-pass:).
 
 			#data structure
@@ -885,11 +896,12 @@ define([
 			const ret = lambda.filter(section, args);
 			return TwineError.containsError(ret) || ret.length > 0;
 		},
-		[Lambda.TypeSignature('where'), rest(Any)])
+		[Lambda.TypeSignature('where'), zeroOrMore(Any)])
 		/*d:
 			(none-pass: Lambda, ...Any) -> Boolean
 
-			This can be thought of as the opposite of (all-pass:): it produces true if every value, when given to the lambda, evaluated to false.
+			This can be thought of as the opposite of (all-pass:): it produces true if every value, when given to the lambda, never evaluated to true.
+			If zero values are given to (none-pass:), then it will return true by default, just like (all-pass:).
 			For more information, consult the description of (all-pass:).
 
 			#data structure
@@ -898,7 +910,7 @@ define([
 			const ret = lambda.filter(section, args);
 			return TwineError.containsError(ret) || ret.length === 0;
 		},
-		[Lambda.TypeSignature('where'), rest(Any)])
+		[Lambda.TypeSignature('where'), zeroOrMore(Any)])
 		/*d:
 			(folded: Lambda, ...Any) -> Any
 

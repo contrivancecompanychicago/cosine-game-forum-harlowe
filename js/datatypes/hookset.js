@@ -235,7 +235,7 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 	}
 
 	/*
-		Convert a hook names string to a CSS selector.
+		Convert a hook name string to a CSS selector.
 		This includes the "built-in" names that target certain
 		Harlowe elements: ?page, ?passage, ?sidebar, ?link.
 
