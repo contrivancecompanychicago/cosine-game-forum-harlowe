@@ -95,7 +95,12 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 		return NaN;
 	}
 	
-	function rightAssociativeIndexOfType(array, types) {
+	/*
+		In order for a token to be left-associative, the rightmost one of its type
+		needs to be recursively visited first, and the leftmost one deepest.
+		So, the array of tokens must be indexed in reverse.
+	*/
+	function leftAssociativeIndexOfType(array, types) {
 		/*
 			What this does is tricky: it reverses the passed-in array,
 			calls the normal indexOfType, then inverts the returned index
@@ -127,15 +132,17 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			The following is the precedence table for Harlowe tokens,
 			in ascending order of tightness. Each row has identical precedence.
 			Absent token types have the least precedence.
+			Associativity doesn't matter for most operators, as their results aren't
+			chainable with themselves (you can't write "$a to 2 to 2", for instance).
 		*/
 		[
 			["error"],
 			["comma"],
-			["spread", "bind"],
+			{rightAssociative: ["spread", "bind"]},
 			["to"],
 			["into"],
-			{rightAssociative: ["where", "when", "via"]},
-			{rightAssociative: ["with", "making", "each"]},
+			["where", "when", "via"],
+			["with", "making", "each"],
 			["augmentedAssign"],
 			["and", "or"],
 			["is", "isNot"],
@@ -145,26 +152,27 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			["inequality"],
 			["addition", "subtraction"],
 			["multiplication", "division"],
-			["not"],
-			["belongingProperty"],
-			["belongingOperator", "belongingItOperator"],
-			{rightAssociative: ["property"]},
-			{rightAssociative: ["itsProperty"]},
-			["belongingItProperty"],
-			{rightAssociative: ["possessiveOperator", "itsOperator"]},
+			/*
+				"positive" and "negative" are never emitted by the lexer, and are only
+				created by converting "addition" and "subtraction" in compile().
+			*/
+			{rightAssociative: ["not", "positive", "negative"]},
+			{rightAssociative: ["belongingProperty"]},
+			{rightAssociative: ["belongingOperator", "belongingItOperator"]},
+			["property"],
+			["itsProperty"],
+			{rightAssociative: ["belongingItProperty"]},
+			["possessiveOperator", "itsOperator"],
 			["twineLink"],
 			["macro"],
 			["grouping"],
 		][order === "most" ? "reverse" : "valueOf"]().some(types => {
 			let index;
-			/*
-				Right-associative token types are wrapped especially.
-			*/
 			if (types.rightAssociative) {
-				index = rightAssociativeIndexOfType(tokens, types.rightAssociative);
+				index = indexOfType(tokens, types.rightAssociative);
 			}
 			else {
-				index = indexOfType(tokens, types);
+				index = leftAssociativeIndexOfType(tokens, types);
 			}
 			/*
 				Return the token once we find it.
@@ -228,9 +236,13 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				to be returned if the token was just whitespace.
 			{String} elidedComparison: whether or not this is part of an elided comparison
 				inside an "and" or "or" operation, like "3 < 4 and 5".
+			{Boolean} testNeedsRight: used solely by the addition and subtraction operators,
+				for determining if they are really unary + or - operators. Test the left-hand
+				side to see if it needs a right-hand side operand, and if so, return "" instead of
+				the TwineError compiled code.
 		@return {String} String of Javascript code.
 	*/
-	function compile(tokens, {isVarRef, whitespaceError, elidedComparison} = {}) {
+	function compile(tokens, {isVarRef, whitespaceError, elidedComparison, testNeedsRight} = {}) {
 		// Convert tokens to a 1-size array if it's just a single non-array.
 		tokens = [].concat(tokens);
 		/*
@@ -523,8 +535,9 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			*/
 			else if (leftIsComparison && !rightIsComparison) {
 				const
-					[leftSide]            = precedentToken(tokens.slice(0,  i), "least"),
+					leftSide = leftIsComparison,
 					operator = toJSLiteral(compileComparisonOperator(leftSide));
+
 				/*
 					The one operation for which this transformation cannot be allowed is "is not",
 					because of its semantic ambiguity ("a is not b and c") in English.
@@ -595,23 +608,34 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			operation = compileComparisonOperator(token);
 		}
 		else if (type === "addition" || type === "subtraction") {
-			operation = token.text;
 			/*
-				Since +- arithmetic operators can also be unary,
-				we must, in those cases, change the left token to 0 if
-				it doesn't exist.
-				This would ideally be an "implicitLeftZero", but, well...
+				"addition" and "subtraction" have the unfortunate ignomity of being identical in appearance to
+				unary + and -, and lack easy rules for distinguishing when they can and can't follow certain token types.
+				As a result, converting one into the other can, to my knowledge, only be done here, in compilation,
+				instead of the lexer.
+				The test for determining whether this is a unary or binary +/- is to attempt compiling the left side,
+				and if it "fails" (using testNeedsRight to mask the error) or is empty, decide that it is unary.
 			*/
-			left  = compile(tokens.slice(0,  i));
-			/*
-				If only whitespace is to the left of this operator, then...
-			*/
-			if (!left.trim()) {
-				left = "0";
+			const testLeft = compile(tokens.slice(0, i), { testNeedsRight: true }).trim();
+			if (!testLeft) {
+				/*
+					Converting the token to a unary "positive" or "negative" involves the slightly #awkward
+					yet concise step of permuting the token in-place, then redoing this compile() invocation
+					entirely.
+				*/
+				token.type = ({ addition: "positive", subtraction: "negative" }[type]);
+				return compile(tokens, {isVarRef, whitespaceError, elidedComparison, testNeedsRight});
+			}
+			else {
+				operation = token.text;
 			}
 		}
 		else if (type === "multiplication" || type === "division") {
 			operation = token.text;
+		}
+		else if (type === "positive" || type === "negative") {
+			operation = "*";
+			left = (type === "negative" ? "-1" : "1");
 		}
 		else if (type === "not") {
 			midString = " ";
@@ -780,6 +804,18 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				If there is no implicitLeftIt, produce an error message.
 			*/
 			if ((needsLeft && !left) || (needsRight && !right)) {
+				/*
+					testNeedsRight, used only by the "addition" and "subtraction" branches,
+					indicates that this compile() is purely speculative,
+					to determine whether compiling this without a usable right-side would produce
+					an error or nothing. In that case, we return "" instead of the full error.
+				*/
+				if (testNeedsRight && needsRight && !right) {
+					return "";
+				}
+				/*
+					Otherwise, create the error object for end-user examination.
+				*/
 				return "TwineError.create('operation','I need some code to be "
 					+ (needsLeft ? "left " : "")
 					+ (needsLeft && needsRight ? "and " : "")

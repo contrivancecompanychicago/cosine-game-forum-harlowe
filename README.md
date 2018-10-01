@@ -6,9 +6,10 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
 
 ####Bugfixes
 
+ * Fixed a bug where same-precedence arithmetic operators (`+` and `-`, or `/` and `*`) had incorrect associativity (so, `3 - 5 + 2` was interpreted as `3 - (5 + 2)` instead of `(3 - 5) + 2`).
  * Temp variables finally work correctly with changers that defer a hook until some event occurs, like `(link:)`, `(click:)` and such. Now, you can reference temp variables inside the hook, such as in `(link:"Read")[It reads: _engraving]`, just as you can with other kinds of changers.
  * Fixed a bug where supplying multiple shortened `is` or `is not` comparisons, in a form such as `$a is $b and $c`, would produce an incorrect result.
- * Fixed a bug where the Debug View's (set:) messages were worded incorrectly when setting global variables.
+ * Fixed a bug where the Debug View's `(set:)` messages were worded incorrectly when setting global variables.
  * A more useful error message is given if you write a link with no passage name (such as `[[Go->]]`).
  * Fixed a bug where you could + a changer, a hookname, or a colour to any arbitrary command, like a `(goto:)` command.
  * Fixed a bug where having a `(for:)` macro's lambda's `where` clause return something other than a boolean, such as in `(for: each _a where 127)[]`, wouldn't produce an error message.

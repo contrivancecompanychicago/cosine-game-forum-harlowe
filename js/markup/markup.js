@@ -633,18 +633,6 @@
 						value: parseFloat(match[0]),
 					}),
 				},
-				addition: {
-					fn: emptyFn,
-				},
-				subtraction: {
-					fn: emptyFn,
-				},
-				multiplication: {
-					fn: emptyFn,
-				},
-				division: {
-					fn: emptyFn,
-				},
 				inequality: {
 					fn: (match) => ({
 						operator: match[2],

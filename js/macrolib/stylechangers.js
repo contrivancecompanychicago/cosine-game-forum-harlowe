@@ -39,7 +39,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		```
 	*/
 	const
-		{either, wrapped, rest, optional, Any, zeroOrMore} = Macros.TypeSignature,
+		{either, wrapped, optional, Any, zeroOrMore} = Macros.TypeSignature,
 		IfTypeSignature = [wrapped(Boolean, "If you gave a number, you may instead want to check that the number is not 0. "
 			+ "If you gave a string, you may instead want to check that the string is not \"\".")];
 

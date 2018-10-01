@@ -40,10 +40,15 @@ describe("twinescript operators", function () {
 		});
 		it("can be unary", function (){
 			expect("(print: - 5)").markupToPrint("-5");
+			expect("(print: 3 - -5)").markupToPrint("8");
 		});
 		it("has correct precedence", function () {
 			expect("(print: 3 - 5 * 2)").markupToPrint("-7");
 			expect("(print: 5 * 2 - 3)").markupToPrint("7");
+			expect("(print: 3 - 5 + 2)").markupToPrint("0");
+			expect("(print: 3 + 5 - 2)").markupToPrint("6");
+			expect("(print: - 5 - 2)").markupToPrint("-7");
+			expect("(print: - 5 + 2)").markupToPrint("-3");
 		});
 		it("works correctly in the absence of surrounding whitespace", function () {
 			expect("(print: 3-5*2)").markupToPrint("-7");
@@ -90,6 +95,12 @@ describe("twinescript operators", function () {
 	describe("the / operator", function () {
 		it("divides numbers", function (){
 			expect("(print: 15 / 5)").markupToPrint("3");
+		});
+		it("has correct precedence", function () {
+			expect("(print: 3 / 5 + 2)").markupToPrint("2.6");
+			expect("(print: 5 + 2 / 2)").markupToPrint("6");
+			expect("(print: 3 * 5 / 2)").markupToPrint("7.5");
+			expect("(print: 3 / 5 * 2)").markupToPrint("1.2");
 		});
 		it("can't be used on other types", function () {
 			expect("(print: '15' / '2')").markupToError();
@@ -268,6 +279,9 @@ describe("twinescript operators", function () {
 		it("has correct precedence", function () {
 			expect("(print: 2 is 2 and true)").markupToPrint("true");
 		});
+		it("has correct associativity with 'or'", function () {
+			expect("(print: false and false or true)").markupToPrint("true");
+		});
 		it("can't be used on non-booleans", function () {
 			expect("(print: true and 2)").markupToError();
 			expect("(print: true and '2')").markupToError();
@@ -310,7 +324,16 @@ describe("twinescript operators", function () {
 		});
 		it("infers with correct precedence", function () {
 			expect("(print: 2 is 1 + 1 and 2 * 1)").markupToPrint("true");
+			expect("(print: 2 is (a:1)'s (1) + 1 and 2)").markupToPrint("true");
 			expect("(print: 2 is (3 + 1) / 2 and 3 - 1)").markupToPrint("true");
+
+			expect("(print: 1 < 1 + 1 and 2 * 1)").markupToPrint("true");
+			expect("(print: 1 < (a:1)'s (1) + 1 and 2)").markupToPrint("true");
+			expect("(print: 1 < (3 + 1) / 2 and 3 - 1)").markupToPrint("true");
+
+			expect("(print: 1 + 1 and 2 * 1 is 2)").markupToPrint("true");
+			expect("(print: (a:1)'s (1) + 1 and 2 is 2)").markupToPrint("true");
+			expect("(print: (3 + 1) / 2 and 3 - 1 is 2)").markupToPrint("true");
 		});
 		it("doesn't infer elided comparison operators when a boolean is in the elision branch", function () {
 			expect("(print: 2 < 3 and true)").markupToPrint("true");
@@ -368,7 +391,16 @@ describe("twinescript operators", function () {
 		});
 		it("infers with correct precedence", function () {
 			expect("(print: 2 is 1 + 1 or 3 * 1)").markupToPrint("true");
+			expect("(print: 2 is (a:1)'s (1) + 1 or 3)").markupToPrint("true");
 			expect("(print: 2 is (3 + 2) / 2 or 3 - 1)").markupToPrint("true");
+
+			expect("(print: 1 < 1 + 1 or 3 * 1)").markupToPrint("true");
+			expect("(print: 1 < (a:1)'s (1) + 1 or 3)").markupToPrint("true");
+			expect("(print: 1 < (3 + 2) / 2 or 3 - 1)").markupToPrint("true");
+
+			expect("(print: 1 + 1 or 3 * 1 is 2)").markupToPrint("true");
+			expect("(print: (a:1)'s (1) + 1 or 3 is 2)").markupToPrint("true");
+			expect("(print: (3 + 2) / 2 or 3 - 1 is 2)").markupToPrint("true");
 		});
 		it("doesn't infer elided comparison operators when a boolean is in the elision branch", function () {
 			expect("(print: 2 < 3 or false)").markupToPrint("true");
@@ -404,7 +436,7 @@ describe("twinescript operators", function () {
 		});
 		it("can be used as an expression", function (){
 			expect("(print: 2 is '2' is true)").markupToPrint("false");
-			expect("(print: 1 is true is false)").markupToPrint("false");
+			expect("(print: 1 is true is false)").markupToPrint("true");
 		});
 		it("compares arrays by value and order", function (){
 			expect("(print: (a:) is (a:))").markupToPrint("true");
@@ -453,7 +485,7 @@ describe("twinescript operators", function () {
 			expect("(print: 1 is not true)").markupToPrint("true");
 		});
 		it("can be used as an expression", function (){
-			expect("(print: 2 is not '2' is not true)").markupToPrint("true");
+			expect("(print: 2 is not '2' is not true)").markupToPrint("false");
 			expect("(print: true is not true is not false)").markupToPrint("false");
 		});
 		it("compares arrays by value and order", function (){

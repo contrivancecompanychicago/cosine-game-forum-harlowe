@@ -494,6 +494,7 @@ describe("property indexing", function() {
 			expect('(print: ((either:1)) of (a:7))').markupToPrint('7');
 		});
 		it("can be chained", function (){
+			expect('(set: $a to 1)(print: (2) of $a of (1) of (a:(a:"XL")))').markupToPrint('L');
 			expect("(print: 1st of (a:'Red')\'s (2 - 1))").markupToPrint("R");
 			expect("(print: (2 - 1) of (a:'Red')\'s (2 - 1))").markupToPrint("R");
 		});
@@ -507,7 +508,7 @@ describe("property indexing", function() {
 			expect("(print: 1 of (a:6,12))").markupToPrint("6");
 		});
 		it("has lower precedence than the possessive operator", function (){
-			expect("(print: (1) of (a:'Foo','Daa')'s 1st)").markupToPrint("F");
+			expect("(print: (1) of (a:'Foo','Daa')'s 2nd)").markupToPrint("D");
 		});
 		it("can be used with 'it' and 'its'", function (){
 			expect("(set: $a to (a:3,4))(set: $a to (2) of it)$a").markupToPrint("4");

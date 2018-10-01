@@ -1015,9 +1015,9 @@ define([
 
 				// A gentle debug notification to remind the writer how many loops the (for:) executed,
 				// which is especially helpful if it's 0.
-				if (Engine.options.debug) {
+				/*if (Engine.options.debug) {
 					TwineNotifier.create(i + " loop" + (i !== 1 ? "s" : "")).render().prependTo(target);
-				}
+				}*/
 
 				/*jshint -W083 */
 				for(; i > 0; i -= 1) {
