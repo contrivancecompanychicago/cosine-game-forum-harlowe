@@ -407,14 +407,6 @@
 			"^=bold, ^=strong, ^=italic, ^=em, ^=sup, ^=verbatim, ^=strike":
 				intangible,
 
-			// These two rules implement "fake smart quotes", which should
-			// more easily convey strings' boundaries.
-			"^=string":
-				"font-style:italic; display:inline-block; transform: scaleX(-1);",
-
-			"string + ^=string":
-				"transform: none;",
-
 			"^=collapsed":
 				"font-weight:bold; color: hsl(201, 100%, 30%);",
 			
@@ -432,33 +424,27 @@
 			
 			"twineLink:not(.text)":
 				"color: #3333cc;",
+			".theme-dark twineLink:not(.text)":
+				"color: #5555ee;",
 			tag:
 				"color: #4d4d9d;",
 			
 			boolean:
 				"color: #626262;",
 			string:
-				"color: #008282;",
+				"color: #158383;",
 			number:
 				"color: #A15000;",
 			variable:
 				"color: #0076b2;",
 			tempVariable:
-				"color: #1a6e97;",
+				"color: #218abe;",
 			hookRef:
 				"color: #007f54;",
 			"variableOccurrence, hookOccurrence":
 				"background: #9fdfc9 !important;",
 
-			where:
-				"color: #007f00; font-style:italic;",
-			via:
-				"color: #007f00; font-style:italic;",
-			with:
-				"color: #007f00; font-style:italic;",
-			making:
-				"color: #007f00; font-style:italic;",
-			each:
+			"^=where, ^=via, ^=with, ^=making, ^=each, ^=when":
 				"color: #007f00; font-style:italic;",
 			
 			heading:
@@ -466,9 +452,9 @@
 			hr:
 				"display:block; background-image: linear-gradient(0deg, transparent, transparent 45%, silver 45%, transparent 55%, transparent);",
 			align:
-				"display:block; color: hsl(14, 99%, 37%); background-color: hsla(14, 99%, 87%, 0.2);",
+				"display:block; color: hsl(14, 99%, 37%); background-color: hsla(14, 99%, 87%, 0.1);",
 			column:
-				"display:block; color: hsl(204, 99%, 37%); background-color: hsla(204, 99%, 87%, 0.2);",
+				"display:block; color: hsl(204, 99%, 37%); background-color: hsla(204, 99%, 87%, 0.1);",
 			
 			escapedLine:
 				"font-weight:bold; color: hsl(51, 100%, 30%);",
@@ -494,6 +480,7 @@
 					selector = e.split(", ")
 						/*
 							This does a few things:
+							- It leaves the .theme-dark prefix alone.
 							- It converts sequential selectors (separated by a dot).
 							- It adds the cm- CodeMirror prefix to the CSS classes.
 							- It adds the harlowe- storyformat prefix as well.
@@ -501,11 +488,11 @@
 							and the values to a CSS body.
 						*/
 						.map(function map(e) {
+							if (e.indexOf(".theme-dark") === 0) {
+								return e.slice(0,11) + " " + map(e.slice(11).trim());
+							}
 							if (e.indexOf('.') > -1) {
 								return e.split(/\./g).map(map).join('');
-							}
-							if (e.indexOf(" + ") > -1) {
-								return e.split(/ \+ /g).map(map).join(' + ');
 							}
 							// There's no need for $= because that will always be cm-harlowe-root or cm-harlowe-cursor.
 							if (e.indexOf("^=") === 0) {

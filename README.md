@@ -26,6 +26,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
  * `(show:)` will no longer produce an error if it tries to show a hook that's already visible, for consistency with other macros that accept hooknames, like `(click:)`. (Actually, it never did this in the first place, due to a bug.)
  * The "undo" and "redo" buttons in the story's sidebar are now brighter by default.
  * Various lambda macros that accept multiple values - namely `(for:)`, `(all-pass:)`, `(some-pass:)`, `(none-pass:)`, `(find:)`, and `(altered:)` - no longer error if no values are given after the lambda - for instance, `(for: each _a, ...$arr)[]` now no longer errors if `$arr` contains 0 elements.
+ * Syntax highlighting: Tweaked a few colours to be more readable in dark mode, and removed the "smart quote" skewing to signify matching pairs of quote marks (as it was interfering with the cursor position sometimes).
 
 ####Additions
 
