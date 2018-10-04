@@ -34,6 +34,29 @@ describe("enchantment macros", function () {
 				done();
 			},400);
 		});
+		it("enchants (link:) links", function(done) {
+			var p = runPassage("(enchant:?Link,(text-style:'italic')+(color:'#800000'))(link:'foo')[bar]");
+			setTimeout(function() {
+				var enchantment = p.find('tw-link').parent();
+				expect(enchantment.css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+				expect(enchantment.css('font-style')).toMatch(/italic/);
+				p.find('tw-link').click();
+				expect(p.text()).toBe('bar');
+				done();
+			},400);
+		});
+		it("works in 'header' tagged passages", function(done) {
+			createPassage("(enchant: ?Link, (text-style:'italic')+(color:'#800000'))","","header");
+			var p = runPassage("(link:'foo')[bar]");
+			setTimeout(function() {
+				var enchantment = p.find('tw-link').parent();
+				expect(enchantment.css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+				expect(enchantment.css('font-style')).toMatch(/italic/);
+				p.find('tw-link').click();
+				expect(p.text()).toBe('bar');
+				done();
+			},400);
+		});
 	});
 	describe("enchanting ?Page", function() {
 		it("wraps the ?Page in a <tw-enchantment>", function(done) {

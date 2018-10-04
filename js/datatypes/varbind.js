@@ -8,7 +8,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varref', 'internaltypes/
 	*/
 	
 	/*d:
-		Bound Variable data
+		Bind data
 
 		A few macros that produce interactive elements, like (cycling-link:), have the ability to automatically update a variable whenever the
 		player interacts with them. There needs to be a way to specify which variable these will update: simply giving the macro the variable

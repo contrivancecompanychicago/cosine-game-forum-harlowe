@@ -15,7 +15,7 @@ let navElement = "<nav><img src='icon.svg' width=96 height=96></img>";
 */
 const {version} = JSON.parse(fs.readFileSync('package.json'));
 navElement += `<div class=nav_version><p>Harlowe ${version} manual</p>
-<p><a href="/1.html">1.2.4</a> | <b>${version}</b></p>
+<p><a href="/1.html">1.2.4</a> | <a href="/2.html">2.1.0</a> | <b>${version}</b></p>
 </div>`;
 
 let currentCategory;
@@ -76,7 +76,7 @@ outputFile = outputFile.replace(/<code>([^<]+)<\/code>(~?)/g, ({length}, code, n
 		return `<code>${code}</code>`;
 	}
 	function makeCSSClasses(pos) {
-		return root.pathAt(pos + root.start).map(token => 'cm-harlowe-2-' + token.type).join(' ');
+		return root.pathAt(pos + root.start).map(token => 'cm-harlowe-3-' + token.type).join(' ');
 	}
 	code = unescape(code);
 	let ret = '', root, lastPos = 0;

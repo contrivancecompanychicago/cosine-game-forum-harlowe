@@ -1,4 +1,4 @@
-Appendix: Summarised history of Harlowe's design
+Disabled Appendix: Summarised history of Harlowe's design
 
 You may have a number of questions about various aspects of Harlowe's design. For posterity, I'd like to use this section to chronicle my motivations for most of Harlowe's major divergences from Twine 1, point out several of its outside inspirations, and describe how several of its own idiosyncracies came to be.
 
