@@ -6,6 +6,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
 
 ####Bugfixes
 
+ * Fixed a bug where the story crashes on startup if the page's URL contains a hash identifier that doesn't have "stories" in it (such as in `story.html#what`).
  * Fixed a bug where same-precedence arithmetic operators (`+` and `-`, or `/` and `*`) had incorrect associativity (so, `3 - 5 + 2` was interpreted as `3 - (5 + 2)` instead of `(3 - 5) + 2`).
  * Temp variables finally work correctly with changers that defer a hook until some event occurs, like `(link:)`, `(click:)` and such. Now, you can reference temp variables inside the hook, such as in `(link:"Read")[It reads: _engraving]`, just as you can with other kinds of changers.
  * Fixed a bug where supplying multiple shortened `is` or `is not` comparisons, in a form such as `$a is $b and $c`, would produce an incorrect result.
@@ -16,6 +17,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
 
 ####Alterations
 
+ * Now, when playing, the current game session will attempt to preserve itself across browser reloads and back-forward navigation using browser SessionStorage. This means that reloading the page (without closing the window or tab) should also automatically reload the player's position in the story, as if by `(load-game:)`. This does not apply when using `(reload:)`, however, which always returns the story to the beginning.
  * The `(replace:)`, `(append:)` and `(prepend:)` macros now no longer target any hooks or text that haven't been rendered yet - so, `(replace: "cool")[hot] cool water` won't work because the `(replace:)` runs before "cool water" has rendered, but `cool water (replace: "cool")[hot]` and something like `(link: "heat")[(replace: "cool")[hot]] cool water` will. This finally normalises what was formerly very inconsistent behaviour across these three macros - `(replace:)` couldn't target forthcoming hooks but could target later text, and `(append:)` and `(prepend:)` would do the others' behaviour on forthcoming hooks.
  * The `(text:)` macro now has another alias, `(str:)`. This alias will now be the preferred name for this macro in the documentation, mainly due to the arrival of other string macros that begin with "str-", and additionally to avoid semantic conflict with the various "text-" changer macros like `(text-style:)`.
  * To more clearly separate the concepts of "printing data" and "running commands" in Harlowe, the `(print:)` macro will no longer run commands passed to it (that is, `(print:(go-to:"Foo"))` and `(go-to:"Foo")` will no longer do the same thing - the former will just print out a descriptive string, as if printing out a changer). Commands can now only be run by placing them directly in the passage (either as plain calls, inside variables, or wrapped in strings that (print:) receives).

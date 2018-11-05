@@ -7,6 +7,26 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 	*/
 	
 	/*
+		A browser compatibility check for localStorage and sessionStorage.
+	*/
+	const hasStorage = ["localStorage","sessionStorage"].map(name => {
+		return !!window[name]
+			&& (() => {
+				/*
+					This is, to my knowledge, the only surefire way of measuring localStorage's
+					availability - on some browsers, setItem() will throw in Private Browsing mode.
+				*/
+				try {
+					window[name].setItem("test", '1');
+					window[name].removeItem("test");
+					return true;
+				} catch (e) {
+					return false;
+				}
+			})();
+	});
+	
+	/*
 		The root prototype for every Moment's variables collection.
 	*/
 	const SystemVariables = {
@@ -102,18 +122,42 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		load: [],
 	};
 
+	let State;
+
+	/*
+		This enables session storage to preserve the game state across reloads, even when the browser
+		(such as that of a phone) doesn't naturally preserve it using something like FF's bfcache.
+	*/
+	function saveSession() {
+		if (State.hasSessionStorage) {
+			const serialisation = State.serialise();
+			/*
+				Since we're in the middle of navigating to another Moment, just silently disregard errors.
+			*/
+			if (typeof serialisation === "string") {
+				try {
+					sessionStorage.setItem("Saved Session", serialisation);
+				} catch(e) {
+					// Again, silently disregard errors.
+					return;
+				}
+			}
+		}
+	}
+
 	/*
 		A private method to create a new present after altering the state.
 		@param {String} The name of the passage the player is now currently at.
 	*/
 	function newPresent(newPassageName) {
 		present = (timeline[recent] || Moment).create(newPassageName);
+		saveSession();
 	}
 	
 	/*
 		The current game's state.
 	*/
-	const State = Object.assign({
+	State = Object.assign({
 		/*
 			Getters/setters
 		*/
@@ -310,6 +354,9 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			serialiseProblem = undefined;
 			eventHandlers.load.forEach(fn => fn(timeline));
 		},
+
+		hasStorage: hasStorage[0],
+		hasSessionStorage: hasStorage[1],
 	},
 	/*
 		In addition to the above simple methods, two serialisation methods are also present.

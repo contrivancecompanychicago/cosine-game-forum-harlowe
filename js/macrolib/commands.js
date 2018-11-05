@@ -21,21 +21,6 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 	*/
 	const {Any, rest, either, optional} = Macros.TypeSignature;
 	const {assign} = Object;
-	
-	const hasStorage = !!localStorage
-		&& (() => {
-			/*
-				This is, to my knowledge, the only surefire way of measuring localStorage's
-				availability - on some browsers, setItem() will throw in Private Browsing mode.
-			*/
-			try {
-				localStorage.setItem("test", '1');
-				localStorage.removeItem("test");
-				return true;
-			} catch (e) {
-				return false;
-			}
-		})();
 
 	/*
 		As localstorage keys are shared across domains, this prefix, using the current story's IFID,
@@ -736,6 +721,9 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			`(click:"Restart")[(reload:)]`
 
 			Details:
+			Normally, Harlowe stories will attempt to preserve their current game state across browser page reloads.
+			This macro will suppress this behaviour, guaranteeing that the story restarts from the beginning.
+
 			If the first passage in the story contains this macro, the story will be caught in a "reload
 			loop", and won't be able to proceed. No error will be reported in this case.
 
@@ -748,6 +736,9 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			(/* no cd because this is attachable:false */ ) => {
 				if (State.pastLength < 1) {
 					return TwineError.create("infinite", "I mustn't (reload:) the page in the starting passage.");
+				}
+				if (State.hasSessionStorage) {
+					sessionStorage.removeItem("Saved Session");
 				}
 				window.location.reload();
 			},
@@ -824,9 +815,9 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			are likely to play this game - at an exhibition, for instance.
 			
 			Giving the saved game a file name is optional, but allows that name to be displayed by finding it in the
-			$Saves datamap. This can be combined with a (load-game:)(link:) to clue the players into the save's contents:
+			(saved-games:) datamap. This can be combined with a (load-game:)(link:) to clue the players into the save's contents:
 			```
-			(link: "Load game: " + ("Slot 1") of Saves)[
+			(link: "Load game: " + ("Slot 1") of (saved-games:))[
 			  (load-game: "Slot 1")
 			]
 			```
@@ -848,7 +839,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 				*/
 				fileName = fileName || "";
 				
-				if (!hasStorage) {
+				if (!State.hasStorage) {
 					/*
 						If storage isn't available, that's the unfortunate fault of the
 						browser. Return false, signifying that the save failed, and
@@ -863,6 +854,14 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 						the fault of the author, and an error should be given.
 					*/
 					return serialisation;
+				}
+				/*
+					serialise() returns a TwineError if the state can't be serialised, and
+					false if it could but threw. In the latter case, pass the false to
+					the author, in keeping with below.
+				*/
+				else if (serialisation === false) {
+					return false;
 				}
 				/*
 					In case setItem() fails, let's run this in a try block.

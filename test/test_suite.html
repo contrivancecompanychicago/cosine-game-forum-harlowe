@@ -39,7 +39,7 @@ window.createPassage = function(text, name, tags) {
 	Passages.set(name, new Map([
 		["source", text],
 		["name", name],
-		["tags", tags ? [tags] : undefined],
+		["tags", Array.isArray(tags) ? tags : tags ? [tags] : undefined],
 	]));
 };
 window.goToPassage = function(text, name) {
@@ -125,6 +125,10 @@ window.clearState = function() {
 	State.reset();
 	Passages.clear();
 };
+window.deserialiseState = function(str) {
+	State.deserialise(str);
+	Engine.showPassage(State.passage, false /* stretchtext value */);
+}
 window.Engine = Engine;
 </script>
 <script>
@@ -336,6 +340,8 @@ afterAll(function() {
 <script src="spec/command_macros/interface.js"></script>
 <script src="spec/command_macros/live.js"></script>
 <script src="spec/command_macros/saving.js"></script>
+
+<script src="spec/browser/sessions.js"></script>
 
 <tw-story style='visibility:hidden'></tw-story>
 <tw-storydata options="debug" ifid="107370AE-1D5A-4A33-A52C-D1180BA69750" startnode="1">

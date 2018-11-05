@@ -1182,6 +1182,10 @@ define([
 				Iterate over all the localStorage keys using this somewhat clunky do-loop.
 			*/
 			do {
+				// I don't believe any browsers with storage disabled will throw on .key(), but...
+				if (!State.hasStorage) {
+					break;
+				}
 				key = localStorage.key(i);
 				i += 1;
 				const prefix = storagePrefix("Saved Game");
