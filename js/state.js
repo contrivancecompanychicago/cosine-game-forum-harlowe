@@ -10,20 +10,22 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		A browser compatibility check for localStorage and sessionStorage.
 	*/
 	const hasStorage = ["localStorage","sessionStorage"].map(name => {
-		return !!window[name]
-			&& (() => {
-				/*
-					This is, to my knowledge, the only surefire way of measuring localStorage's
-					availability - on some browsers, setItem() will throw in Private Browsing mode.
-				*/
-				try {
+		/*
+			This is, to my knowledge, the only surefire way of measuring localStorage's
+			availability.
+			* On some browsers, window.localStorage will throw when run in an <iframe sandbox>
+			* On some browsers, setItem() will throw in Private Browsing mode.
+		*/
+		try {
+			return !!window[name]
+				&& (() => {
 					window[name].setItem("test", '1');
 					window[name].removeItem("test");
 					return true;
-				} catch (e) {
-					return false;
-				}
-			})();
+				})();
+		} catch (e) {
+			return false;
+		}
 	});
 	
 	/*
