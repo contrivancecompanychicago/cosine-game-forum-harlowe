@@ -374,7 +374,7 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 			using the above is() algorithm rather than by JS's typical by-reference
 			comparison.
 		*/
-		if (container) {
+		if (container || container === "") {
 			if (typeof container === "string") {
 				return container.includes(obj);
 			}

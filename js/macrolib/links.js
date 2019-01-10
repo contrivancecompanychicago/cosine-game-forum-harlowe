@@ -486,7 +486,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		
 		Details:
 
-		Note that there is already an idiom for checking if a passage was visited earlier in the game: `(history:) contains "Passage name"`
+		Note that there is already an idiom for checking if a passage was visited earlier in the game: `(history: ) contains "Passage name"`
 		checks if the passage named "Passage name" was visited. So, you don't necessarily need to use this macro to record that the player
 		has visited the destination passage.
 

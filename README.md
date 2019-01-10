@@ -14,6 +14,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
  * A more useful error message is given if you write a link with no passage name (such as `[[Go->]]`).
  * Fixed a bug where you could + a changer, a hookname, or a colour to any arbitrary command, like a `(goto:)` command.
  * Fixed a bug where having a `(for:)` macro's lambda's `where` clause return something other than a boolean, such as in `(for: each _a where 127)[]`, wouldn't produce an error message.
+ * Fixed a bug where `contains` would wrongly error if used to check if an empty string `""` contained anything.
 
 ####Alterations
 

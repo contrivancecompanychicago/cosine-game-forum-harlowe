@@ -763,7 +763,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		Example usage:
 		```
 		Time to get in your crimchair, plug in your crimphones, power up your crimrig and your crimgrip - the next page in your crimming career awaits.
-		(click-goto: "crim", "It's short for crime").
+		(click-goto: "crim", "Explanation Passage").
 		```
 
 		See also:

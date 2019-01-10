@@ -521,19 +521,23 @@ describe("twinescript operators", function () {
 			expect("(print: 'Bee' contains 'Be')").markupToPrint("true");
 			expect("(print: 'Bee' contains 'Bee')").markupToPrint("true");
 			expect("(print: 'Bee' contains 'eeB')").markupToPrint("false");
+			expect("(print: '' contains 'Be')").markupToPrint("false");
 		});
 		it("checks for elements in arrays", function (){
 			expect("(print: (a:'Bee') contains 'Bee')").markupToPrint("true");
 			expect("(print: (a: 2) contains 2)").markupToPrint("true");
 			expect("(print: (a:'Bee') contains 'eeB')").markupToPrint("false");
+			expect("(print: (a:) contains 'eeB')").markupToPrint("false");
 		});
 		it("checks for keys in datamaps", function (){
 			expect("(print: (datamap:'Bee',1) contains 'Bee')").markupToPrint("true");
 			expect("(print: (datamap:'Bee',1) contains 1)").markupToPrint("false");
+			expect("(print: (datamap:) contains 'Bee')").markupToPrint("false");
 		});
 		it("checks for elements in datasets", function (){
 			expect("(print: (dataset:'Bee','Boo') contains 'Bee')").markupToPrint("true");
 			expect("(print: (dataset:'Bee','Boo') contains 'ooB')").markupToPrint("false");
+			expect("(print: (dataset:) contains 'ooB')").markupToPrint("false");
 		});
 		it("can be used as an expression", function (){
 			expect("(print: 'Bee' contains 'Be' is true)").markupToPrint("true");

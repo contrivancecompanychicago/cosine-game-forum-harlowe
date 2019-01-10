@@ -4,7 +4,7 @@ define(['jquery'], ($) => {
 		Colour data
 
 		Colours are special data values which can be provided to certain styling macros, such as (background:)
-		or (text-colour:). You can use built=in named colour values, or create other colours using the
+		or (text-colour:). You can use built-in named colour values, or create other colours using the
 		(rgb:) or (hsl:) macros.
 
 		The built-in values consist of the following:
