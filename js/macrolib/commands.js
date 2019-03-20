@@ -67,7 +67,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 					This and the next check must be made now, because the Passages
 					datamap could've been tinkered with since this was created.
 				*/
-				if (!Passages.has(name)) {
+				if (!Passages.hasValid(name)) {
 					return TwineError.create("macrocall",
 						"I can't (display:) the passage '"
 						+ name
@@ -169,7 +169,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 				/*
 					First, of course, check for the passage's existence.
 				*/
-				if (!Passages.has(name)) {
+				if (!Passages.hasValid(name)) {
 					return TwineError.create("macrocall",
 						"I can't (go-to:) the passage '"
 						+ name
@@ -618,10 +618,22 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			save, and going to the passage where that save was made.
 			
 			This macro assumes that the save slot exists and contains a game, which you can check by seeing if
-			`(saved-games:) contains` the slot name before running (load-game:).
+			`(saved-games: ) contains` the slot name before running (load-game:).
 
 			This command can't have changers attached - attempting to do so will produce an error.
-			
+
+			In the event that the saved data exists, but contains an error - for instance, if it refers to a passage
+			which doesn't exist in this story, which could happen if one version of the story is used to save it, and
+			another is used to open it - then a polite dialog box will appear asking the reader whether or not the data
+			should be deleted. An example of such a dialog is below.
+			<blockquote>
+			Sorry to interrupt... The story tried to load saved data, but there was a problem.
+			The data refers to a passage named 'example', but it isn't in this story.<br><br>
+			That data might have been saved from a different version of this story. Should I delete it?<br>
+			(Type 'delete' and choose OK to delete it.)<br><br>
+			Either way, the story will now continue without loading the data.
+			</blockquote>
+
 			See also:
 			(save-game:), (saved-games:)
 			
@@ -636,12 +648,25 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 					return TwineError.create("saving", "I can't find a save slot named '" + slotName + "'!");
 				}
 				
-				State.deserialise(saveData);
 				/*
-					There's not a strong reason to check for the destination passage existing,
-					because (save-game:) can only be run inside a passage. If this fails,
-					the save itself is drastically incorrect.
+					If this returns false, the save itself is drastically incorrect.
 				*/
+				const result = State.deserialise(saveData);
+				if (result instanceof Error) {
+					/*
+						Since this could be an issue with multiple versions of the same story,
+						showing a TwineError, a developer-facing error, seems incorrect. So, instead
+						a simple confirm() is shown, offering to delete the data.
+					*/
+					if ("delete" === (window.prompt("Sorry to interrupt... The story tried to load saved data, but there was a problem.\n"
+						+ result.message
+						+ "\n\nThat data might have been saved from a different version of this story. Should I delete it?"
+						+ "\n(Type 'delete' and choose OK to delete it.)"
+						+ "\n\nEither way, the story will now continue without loading the data.", '') || '').trim().toLowerCase()) {
+						localStorage.removeItem(storagePrefix("Saved Game") + slotName);
+					}
+					return;
+				}
 				requestAnimationFrame(Engine.showPassage.bind(Engine, State.passage, false /* stretchtext value */));
 			},
 			[String], false)

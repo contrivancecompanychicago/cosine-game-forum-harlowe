@@ -59,6 +59,14 @@ define(['jquery', 'utils', 'utils/selectors'], ($, {unescape}, Selectors) => {
 			});
 			return ret.sort((left, right) => left.get('name') > right.get('name'));
 		},
+
+		/*
+			This provides more data-checking than the built-in "has()".
+		*/
+		hasValid(name) {
+			const passageData = this.get(name);
+			return passageData && (passageData instanceof Map) && passageData.has('source');
+		},
 		
 		create: Passage,
 	});

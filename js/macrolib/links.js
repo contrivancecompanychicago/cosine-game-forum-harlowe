@@ -303,7 +303,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 				/*
 					Check that the passage is indeed available.
 				*/
-				if (!Passages.has(passageName)) {
+				if (!Passages.hasValid(passageName)) {
 					/*
 						Since the passage isn't available, create a broken link.
 						TODO: Maybe this should be an error as well??
@@ -531,7 +531,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 				As explained above, we create the broken link now, and dispose of
 				whatever the contained hook had.
 			*/
-			if (!Passages.has(passageName)) {
+			if (!Passages.hasValid(passageName)) {
 				desc.source = '<tw-broken-link passage-name="' + Utils.escape(passageName) + '">'
 					+ text + '</tw-broken-link>';
 				return;

@@ -132,7 +132,7 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 			Early exit: the wrong passage name was supplied.
 			Author error must never propagate to this method - it should have been caught earlier.
 		*/
-		if (!passageData || !(passageData instanceof Map) || !passageData.has('source')) {
+		if (!Passages.hasValid(name)) {
 			impossible("Engine.showPassage", "There's no passage with the name \""+name+"\"!");
 		}
 		

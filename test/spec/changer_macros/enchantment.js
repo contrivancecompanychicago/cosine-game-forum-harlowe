@@ -57,6 +57,16 @@ describe("enchantment macros", function () {
 				done();
 			},400);
 		});
+		it("works with (link-reveal:) links", function(done) {
+			var p = runPassage("(enchant: ?link, (text-colour: '#800000'))(link-reveal: \"foo\")[bar]");
+			setTimeout(function() {
+				var enchantment = p.find('tw-link').parent();
+				expect(enchantment.css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+				p.find('tw-link').click();
+				expect(p.text()).toBe('foobar');
+				done();
+			},400);
+		});
 	});
 	describe("enchanting ?Page", function() {
 		it("wraps the ?Page in a <tw-enchantment>", function(done) {

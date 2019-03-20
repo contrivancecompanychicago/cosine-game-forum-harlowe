@@ -491,26 +491,29 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		
 		/*
 			Deserialise the string and replace the current history.
-			@method deserialise
+			Since an error with save data isn't necessarily an author error, the errors returned
+			by this function aren't TwineErrors.
 		*/
 		function deserialise(str) {
 			let newTimeline,
 				lastVariables = SystemVariables;
+			const genericError = "The save data is unintelligible.";
 			
 			try {
 				newTimeline = JSON.parse(str, reviver);
 			}
 			catch(e) {
-				return false;
+				return Error(genericError);
 			}
 			/*
 				Verify that the timeline is an array.
 			*/
 			if (!Array.isArray(newTimeline)) {
-				return false;
+				return Error(genericError);
 			}
 			
-			if ((newTimeline = newTimeline.map((moment) => {
+			let momentError;
+			if ((momentError = (newTimeline = newTimeline.map((moment) => {
 				/*
 					Here, we do some brief verification that the moments in the array are
 					objects with "passage" and "variables" keys.
@@ -518,7 +521,14 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				if (typeof moment !== "object"
 						|| !moment.hasOwnProperty("passage")
 						|| !moment.hasOwnProperty("variables")) {
-					return false;
+					return Error(genericError);
+				}
+				/*
+					Check that the passage name in this moment corresponds to a real passage.
+					As this is the most likely issue with invalid save data, this gets a precise message.
+				*/
+				if (!Passages.hasValid(moment.passage)) {
+					return Error("The data refers to a passage named '" + moment.passage + "', but it isn't in this story.");
 				}
 				/*
 					Recreate the variables prototype chain. This doesn't use setPrototypeOf() due to
@@ -531,13 +541,14 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 					Re-establish the moment objects' prototype link to Moment.
 				*/
 				return Object.assign(Object.create(Moment), moment);
-			})).includes(false)) {
-				return false;
+			})).find(e => e instanceof Error))) {
+				return momentError;
 			}
 			timeline = newTimeline;
 			eventHandlers.load.forEach(fn => fn(timeline));
 			recent = timeline.length - 1;
 			newPresent(timeline[recent].passage);
+			return true;
 		}
 		return {
 			serialise: serialise,

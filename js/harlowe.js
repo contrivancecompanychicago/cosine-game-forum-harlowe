@@ -145,17 +145,15 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'util
 			$(document.head).append('<style data-title="Story stylesheet ' + (i + 1) + '">' + $(this).html());
 		});
 		
-		// Load the sessionStorage if it's present
-		const sessionData = State.hasSessionStorage && sessionStorage.getItem("Saved Session");
+		// Load the sessionStorage if it's present (and we're not testing)
+		const sessionData = !Engine.options.debug && State.hasSessionStorage && sessionStorage.getItem("Saved Session");
 		if (sessionData) {
-			try {
-				State.deserialise(sessionData);
+			// If deserialisation fails (i.e. it returned an Error instead of true),
+			// it means the sessionData is invalid. Just ignore it - it's only temporary data.
+			if (State.deserialise(sessionData) === true) {
 				// This is copied from (load-game:).
 				Engine.showPassage(State.passage, false /* stretchtext value */);
 				return;
-			} catch(e) {
-				// Currently, failing to deserialise session storage is a silent error,
-				// owing to how temporary sessions are.
 			}
 		}
 

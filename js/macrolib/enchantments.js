@@ -800,7 +800,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 				/*
 					First, of course, check for the passage's existence.
 				*/
-				if (!Passages.has(passage)) {
+				if (!Passages.hasValid(passage)) {
 					return TwineError.create("macrocall",
 						"I can't (" + name + ":) the passage '" + passage + "' because it doesn't exist."
 					);

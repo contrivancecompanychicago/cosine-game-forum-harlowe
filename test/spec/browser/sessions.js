@@ -31,6 +31,8 @@ describe("browser sessions", function() {
 		}, 20);
 	});
 
+	// Currently I can't test whether invalid sessionStorage data results in being silently ignored in harlowe.js.
+
 	afterAll(function() {
 		sessionStorage.clear();
 	});

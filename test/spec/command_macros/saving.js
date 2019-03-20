@@ -140,6 +140,16 @@ describe("save macros", function() {
 				}, 20);
 			});
 		});
+		it("produces a user-friendly prompt() for deletion if the save data is invalid", function() {
+			runPassage("uno", "uno");
+			runPassage("dos", "dos");
+			runPassage("(savegame:'1')", "tres");
+			runPassage("quatro", "quatro");
+			deletePassage('dos');
+			spyOn(window,'prompt');
+			expect("(loadgame:'1')").not.markupToError();
+			expect(window.prompt.calls.count()).toBe(1);
+		});
 	});
 });
 

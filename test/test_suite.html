@@ -53,6 +53,9 @@ window.runPassage = function(text, name, tags) {
 	
 	return $('tw-passage:last-of-type > tw-transition-container, tw-passage > tw-hook');
 };
+window.deletePassage = function(name) {
+	Passages.delete(name);
+};
 
 var combinations = new Set(function recur(prefix, arr) {
 	var ret = [];
