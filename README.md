@@ -2,6 +2,16 @@
 
 Rough documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
+###3.0.1 changes:
+
+####Bugfixes
+
+ * Fixed a bug where the SessionStorage state-preserving system introduced in 3.0.0 would interfere with the "Test story starting here" feature in the Twine editor.
+
+####Alterations:
+
+ * If the `(loadgame:)` macro encounters an error while loading save data (such as, a passage it refers to no longer exists in this version of the story) then a polite dialog box (a simple JavaScript `prompt()`) will appear suggesting that the save data might be outdated, and asking the reader whether or not the save data should be deleted.
+
 ###3.0.0 changes:
 
 ####Bugfixes
@@ -19,7 +29,6 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
 ####Alterations
 
  * Now, when playing, the current game session will attempt to preserve itself across browser reloads and back-forward navigation using browser SessionStorage. This means that reloading the page (without closing the window or tab) should also automatically reload the player's position in the story, as if by `(load-game:)`. This does not apply when using `(reload:)`, however, which always returns the story to the beginning. If an error occurs while loading this data (such as, a passage it refers to no longer exists in this version of the story) then it will be silently ignored.
- * If the `(loadgame:)` macro encounters an error while loading save data (such as, a passage it refers to no longer exists in this version of the story) then a polite dialog box (a simple JavaScript `prompt()`) will appear suggesting that the save data might be outdated, and asking the reader whether or not the save data should be deleted.
  * The `(replace:)`, `(append:)` and `(prepend:)` macros now no longer target any hooks or text that haven't been rendered yet - so, `(replace: "cool")[hot] cool water` won't work because the `(replace:)` runs before "cool water" has rendered, but `cool water (replace: "cool")[hot]` and something like `(link: "heat")[(replace: "cool")[hot]] cool water` will. This finally normalises what was formerly very inconsistent behaviour across these three macros - `(replace:)` couldn't target forthcoming hooks but could target later text, and `(append:)` and `(prepend:)` would do the others' behaviour on forthcoming hooks.
  * The `(text:)` macro now has another alias, `(str:)`. This alias will now be the preferred name for this macro in the documentation, mainly due to the arrival of other string macros that begin with "str-", and additionally to avoid semantic conflict with the various "text-" changer macros like `(text-style:)`.
  * To more clearly separate the concepts of "printing data" and "running commands" in Harlowe, the `(print:)` macro will no longer run commands passed to it (that is, `(print:(go-to:"Foo"))` and `(go-to:"Foo")` will no longer do the same thing - the former will just print out a descriptive string, as if printing out a changer). Commands can now only be run by placing them directly in the passage (either as plain calls, inside variables, or wrapped in strings that (print:) receives).
