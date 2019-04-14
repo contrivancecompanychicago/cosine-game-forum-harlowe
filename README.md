@@ -2,6 +2,12 @@
 
 Rough documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
+###3.0.2 changes:
+
+###Bugfixes
+
+ * Fixed the (str:) macro alias added in 3.0.0 mysteriously not actually having been added.
+
 ###3.0.1 changes:
 
 ####Bugfixes

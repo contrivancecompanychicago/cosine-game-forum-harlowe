@@ -41,6 +41,9 @@ describe("primitive value macros", function() {
 		it("is aliased as (string:)", function() {
 			expect("(string: 2)").markupToPrint("2");
 		});
+		it("is aliased as (str:)", function() {
+			expect("(str: 2)").markupToPrint("2");
+		});
 	});
 	describe("the (random:) macro", function() {
 		it("accepts 1 or 2 whole numbers", function() {

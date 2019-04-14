@@ -89,7 +89,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 
 			#string
 		*/
-		(["text", "string"],
+		(["text", "string", "str"],
 			/*
 				Since only primitives (and arrays) are passed into this, and we use
 				JS's default toString() for primitives, we don't need
