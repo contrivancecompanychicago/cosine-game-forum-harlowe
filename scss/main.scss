@@ -198,7 +198,7 @@ select {
 	&:not([disabled]) {
 		color: inherit;
 	}
-	background-color: inherit;
+	background-color: transparent;
 	font:inherit;
 	border-style:solid;
 	padding: 2px;

@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils', 'utils/selectors'], ($, {unescape}, Selectors) => {
+define(['jquery', 'utils', 'utils/selectors'], ($, {unescape,onStartup}, Selectors) => {
 	/*
 		Passages
 		A userland registry of Passage objects.
@@ -75,7 +75,7 @@ define(['jquery', 'utils', 'utils/selectors'], ($, {unescape}, Selectors) => {
 		Unfortunately, the DOM isn't visible until the page is loaded, so we can't
 		read every <tw-passagedata> from the <tw-storydata> HTML and store them in Passages until then.
 	*/
-	$(() => {
+	onStartup(() => {
 		Array.from($(Selectors.storyData + " > " + Selectors.passageData)).forEach(e => {
 			e = $(e);
 			Passages.set(e.attr('name'), new Passage(e));

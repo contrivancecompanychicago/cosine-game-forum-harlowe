@@ -47,7 +47,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		The (hover-style:) macro uses these jQuery events to add and remove the
 		hover styles when hovering occurs.
 	*/
-	$(() => $(Utils.storyElement).on(
+	Utils.onStartup(() => $(Utils.storyElement).on(
 		/*
 			The jQuery event namespace is "hover-macro".
 		*/

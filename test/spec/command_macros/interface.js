@@ -138,6 +138,7 @@ describe("interface macros", function(){
 			p = runPassage("(dropdown: bind $foo, 'bar','baz', 'qux')");
 			p.find('select').val('baz').change();
 			setTimeout(function() {
+				expect(p.text()).toBe('barbazqux');
 				expect("$foo").markupToPrint('baz');
 
 				p = runPassage("(dropdown: bind $foo, 'bar','baz', 'qux')");
@@ -148,10 +149,44 @@ describe("interface macros", function(){
 				});
 			});
 		});
+		it("works with (link-replace:)", function(done) {
+			var p = runPassage("(dropdown: bind $bar, '1', '2', '3')|baz>[$bar](link-repeat:'foo')[(replace: ?baz)[$bar]]");
+			p.find('select').val('2').change();
+			p.find('tw-link').click();
+			setTimeout(function() {
+				expect(p.text()).toBe("1232foo");
+				done();
+			},300);
+		});
 		it("errors if the first or last labels are empty", function() {
 			expect("(dropdown: bind $foo, '','baz','qux')").markupToError();
 			expect("(dropdown: bind $foo, 'foo','baz','')").markupToError();
 			expect("(dropdown: bind $foo, '','baz','')").markupToError();
+		});
+		it("has the correct text colour", function(done) {
+			var p = runPassage("(dropdown: bind $foo, 'bar','','くりかえす')");
+			setTimeout(function() {
+				expect(p.find('select').css('color')).toMatch(/(?:#FFF(?:FFF)?|rgb\(\s*255,\s*255,\s*255\s*\))/);
+				p = runPassage("(enchant: ?passage, (background:'#0000FF')+(text-color:'#800000'))(dropdown: bind $foo, 'bar','','くりかえす')");
+				setTimeout(function() {
+					expect(p.find('select').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+					done();
+				});
+			});
+		});
+		it("has the correct background colour", function(done) {
+			var p = runPassage("(enchant: ?passage, (background:'#0000FF')+(text-color:'#800000'))(dropdown: bind $foo, 'bar','','くりかえす')");
+			setTimeout(function() {
+				expect(p.find('select').css('background-color')).toMatch(/transparent/);
+				done();
+			});
+		});
+		it("has the correct font", function(done) {
+			var p = runPassage("(enchant: ?passage, (font:'fantasy'))(dropdown: bind $foo, 'bar','','くりかえす')");
+			setTimeout(function() {
+				expect(p.find('select').css('font-family')).toBe('fantasy');
+				done();
+			});
 		});
 	});
 });

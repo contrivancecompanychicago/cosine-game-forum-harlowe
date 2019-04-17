@@ -22,10 +22,10 @@ require.config({
 		'jqueryplugins',
 	],
 });
-require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'utils/selectors', 'macros',
+require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'utils', 'utils/selectors', 'macros',
 	'macrolib/values', 'macrolib/commands', 'macrolib/datastructures', 'macrolib/stylechangers', 'macrolib/enchantments', 'macrolib/links',
 	'repl'],
-		($, DebugMode, Renderer, State, Engine, Passages, Selectors) => {
+		($, DebugMode, Renderer, State, Engine, Passages, Utils, Selectors) => {
 	/*
 		Harlowe, the default story format for Twine 2.
 		
@@ -90,7 +90,7 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'util
 	/*
 		This is the main function which starts up the entire program.
 	*/
-	$(() => {
+	Utils.onStartup(() => {
 		const header = $(Selectors.storyData);
 
 		if (header.length === 0) {

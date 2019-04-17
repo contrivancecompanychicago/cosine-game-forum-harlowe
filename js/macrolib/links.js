@@ -23,7 +23,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		is "attached" via a jQuery .data() key, and must be called
 		from this <tw-story> handler.
 	*/
-	$(() => $(Utils.storyElement).on(
+	Utils.onStartup(() => $(Utils.storyElement).on(
 		/*
 			The jQuery event namespace is "passage-link".
 		*/

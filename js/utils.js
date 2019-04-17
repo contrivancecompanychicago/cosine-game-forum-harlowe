@@ -55,7 +55,13 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 
 	let
 		//A binding for the cached <tw-story> reference (see below).
-		storyElement;
+		storyElement,
+		/*
+			An array of functions to run only after page load. This is set to null
+			once page load has completed, causing onStartup() to just run the passed function
+			immediately.
+		*/
+		startupCallbacks = [];
 
 	/*
 		A static class with helper methods used throughout Harlowe.
@@ -518,6 +524,17 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 		},
 
 		/*
+			Other modules which need to run startup initialisers involving the <tw-story> element
+			can register them with Utils, so that they're run only on starting up.
+		*/
+		onStartup(fn) {
+			if (startupCallbacks) {
+				startupCallbacks.push(fn);
+			}
+			else fn();
+		},
+
+		/*
 			Constants
 		*/
 
@@ -527,6 +544,7 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 		get storyElement() {
 			return storyElement;
 		},
+
 	};
 	
 	/*
@@ -534,7 +552,14 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 		used even when it is disconnected from the DOM (which occurs when a new
 		passage is being rendered into it).
 	*/
-	$(()=> storyElement = $(Selectors.story));
+	$(() => {
+		storyElement = $(Selectors.story);
+		// Run all the callbacks registered in startupCallbacks by other modules.
+		startupCallbacks.forEach(e => e());
+		// Release startupCallbacks, causing onStartup() to no longer register functions,
+		// instead just calling them immediately.
+		startupCallbacks = null;
+	});
 
 	return Object.freeze(Utils);
 });

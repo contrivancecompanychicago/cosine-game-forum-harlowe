@@ -2,11 +2,13 @@
 
 Rough documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
-###3.0.2 changes:
+###3.0.2 changes (unreleased):
 
 ###Bugfixes
 
- * Fixed the (str:) macro alias added in 3.0.0 mysteriously not actually having been added.
+ * Fixed a startup bug that potentially caused `(dropdown:)` menus to stop affecting their bound variables for the rest of the game.
+ * Now, `(alert:)`, `(prompt:)` and `(confirm:)` produce errors if they are used in a browser tha doesn't support Javascript's `prompt()`, `alert()` or `confirm()` functions, instead of crashing the page.
+ * Fixed the `(str:)` macro alias added in 3.0.0 mysteriously not actually having been added.
 
 ###3.0.1 changes:
 

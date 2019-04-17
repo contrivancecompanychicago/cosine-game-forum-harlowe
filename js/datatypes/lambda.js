@@ -30,7 +30,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 
 		* "when" lambdas are a variant of "where" used exclusively by (event:), and are used to specify a live event when a hook should
 		be shown. The lambda `when $fuel > 8` tells (event:) to show the attached hook when `$fuel` is increased (due to an interaction macro
-		like (click-repeat:), a (live:) macro, or anything else). This really shouln't be called a "lambda", but you can perhaps think of it in
+		like (link-repeat:), a (live:) macro, or anything else). This really shouln't be called a "lambda", but you can perhaps think of it in
 		terms of it filtering moments in time that pass or fail the condition.
 
 		Lambdas use temp variables as "placeholders" for the actual values. For instance, in `(find: _num where _num > 2, 5,6,0)`,

@@ -284,7 +284,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 			is "attached" via a jQuery .data() key, and must be called
 			from this <tw-story> handler.
 		*/
-		$(() => {
+		Utils.onStartup(() => {
 			Utils.storyElement.on(
 				/*
 					Put this event in the "enchantment" jQuery event
@@ -469,7 +469,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 	/*
 		A separate click event needs to be defined for .enchantment-clickblock, which is explained below.
 	*/
-	$(() => {
+	Utils.onStartup(() => {
 		Utils.storyElement.on(
 			/*
 				Put this event in the "enchantment" jQuery event namespace, alongside the other enchantment events.

@@ -1,6 +1,6 @@
 "use strict";
 define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'engine', 'internaltypes/twineerror', 'datatypes/hookset', 'datatypes/varbind', 'utils/operationutils'],
-($, requestAnimationFrame, Macros, {storyElement, toJSLiteral, unescape}, Selectors, State, Passages, Engine, TwineError, HookSet, VarBind, {printBuiltinValue}) => {
+($, requestAnimationFrame, Macros, Utils, Selectors, State, Passages, Engine, TwineError, HookSet, VarBind, {printBuiltinValue}) => {
 	
 	/*d:
 		Command data
@@ -75,7 +75,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 					);
 				}
 			},
-			(cd, _, name) => assign(cd, { source: unescape(Passages.get(name).get('source')) }),
+			(cd, _, name) => assign(cd, { source: Utils.unescape(Passages.get(name).get('source')) }),
 			[String])
 		
 		/*d:
@@ -378,7 +378,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		which is implemented similar to the link macros - the ChangeDescriptor's data.dropdownEvent indicates
 		what to do when the <select> is interacted with.
 	*/
-	$(() => $(storyElement).on(
+	Utils.onStartup(() => $(Utils.storyElement).on(
 		/*
 			The jQuery event namespace is "dropdown-macro".
 		*/
@@ -686,6 +686,12 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			the player's operating system and browser's styling, it may clash visually with the design
 			of your story.
 
+			On recent versions of <a href="https://electronjs.org/">Electron</a>, the browser-like
+			program used to run hard-coded HTML files as native apps,
+			the Javascript `alert()` function **may not be usable**, thus causing this command to produce an error.
+			Thus, you may not be able to run a Harlowe game in Electron using this macro. Future versions of Harlowe
+			may remove this restriction.
+
 			When the dialog is on-screen, the entire game is essentially "paused" - no further computations are
 			performed until it is dismissed.
 
@@ -697,7 +703,11 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			#popup
 		*/
 		("alert",
-			() => {},
+			() => {
+				if (typeof window.alert !== "function") {
+					return TwineError.create("unimplemented","The (alert:) macro doesn't seem to work in this browser. Sorry.");
+				}
+			},
 			(/* no cd because this is attachable:false */ _, text) => {
 				window.alert(text);
 			},
@@ -933,6 +943,12 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			But, be aware that as the box uses the player's operating system and browser's styling, it
 			may clash visually with the design of your story.
 
+			On recent versions of <a href="https://electronjs.org/">Electron</a>, the browser-like program
+			used to run hard-coded HTML files as native apps,
+			the Javascript `prompt()` function **may not be usable**, thus causing this command to produce an error.
+			Thus, you may not be able to run a Harlowe game in Electron using this macro. Future versions of Harlowe
+			may remove this restriction.
+
 			When the dialog is on-screen, the entire game is essentially "paused" - no further computations are
 			performed until it is dismissed.
 
@@ -944,7 +960,12 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			#popup
 		*/
 		("prompt",
-			(_, text, value) => window.prompt(text, value) || "",
+			(_, text, value) => {
+				if (typeof window.prompt !== "function") {
+					return TwineError.create("unimplemented","The (prompt:) macro doesn't seem to work in this browser. Sorry.");
+				}
+				return window.prompt(text, value) || "";
+			},
 			[String, String])
 
 		/*d:
@@ -963,6 +984,12 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			But, be aware that as the box uses the player's operating system and browser's styling, it
 			may clash visually with the design of your story.
 
+			On recent versions of <a href="https://electronjs.org/">Electron</a>, the browser-like program
+			used to run hard-coded HTML files as native apps,
+			the Javascript `confirm()` function **may not be usable**, thus causing this command to produce an error.
+			Thus, you may not be able to run a Harlowe game in Electron using this macro. Future versions of Harlowe
+			may remove this restriction.
+
 			When the dialog is on-screen, the entire game is essentially "paused" - no further computations are
 			performed until it is dismissed.
 
@@ -974,7 +1001,12 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			#popup
 		*/
 		("confirm",
-			(_, text) => window.confirm(text),
+			(_, text) => {
+				if (typeof window.confirm !== "function") {
+					return TwineError.create("unimplemented","The (confirm:) macro doesn't seem to work in this browser. Sorry.");
+				}
+				return window.confirm(text);
+			},
 			[String])
 
 		/*d:
