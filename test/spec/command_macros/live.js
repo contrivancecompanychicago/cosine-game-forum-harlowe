@@ -27,7 +27,25 @@ describe("live macros", function() {
 				done();
 			},20);
 		});
-		it("currently can't attach to bare commands", function(done) {
+		xit("works with temp variables in the hook", function(done) {
+			var p = runPassage("(link:'foo')[(set:$a to 2, _b to 'bar')](event: when $a is 2)[_b]");
+			expect(p.text()).toBe("foo");
+			p.find('tw-link').click();
+			setTimeout(function() {
+				expect(p.text()).toBe("bar");
+				done();
+			},20);
+		});
+		it("works with temp variables in the lambda", function(done) {
+			var p = runPassage("(event: when _a is 2)[bar](link:'foo')[(set:_a to 2)]");
+			expect(p.text()).toBe("foo");
+			p.find('tw-link').click();
+			setTimeout(function() {
+				expect(p.text()).toBe("bar");
+				done();
+			},20);
+		});
+		it("currently can't attach to bare commands", function() {
 			expect("(event: when $a is 2)(print:$a)(link:'foo')[(set:$a to 2)]").markupToError();
 		});
 		it("only renders the hook once", function(done) {

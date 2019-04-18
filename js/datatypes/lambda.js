@@ -9,7 +9,9 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 		letter is A". You want to write a "function" for how the search is to be conducted.
 
 		Lambdas are user-created functions that let you tell certain macros, like (find:), (altered:) and (folded:),
-		precisely how to search, alter, or combine the data provided to them.
+		precisely how to search, alter, or combine the data provided to them. The easiest way to think of them is
+		as *search terms*, such as those you'd type into a search engine - terms like `(ulysses or odysseus) -joyce`
+		- but lambdas can do significantly more than just search.
 
 		There are several types of lambdas.
 

@@ -918,7 +918,7 @@ define([
 			sequence to the lambda, akin to folding a long strip of paper into a single square.
 
 			Example usage:
-			* `(folded: _enemy making _allHP via _allHP + _enemy's hp, ...$enemies)` will first set _sum to $enemies's 1st's hp, then add the remaining hp values in $enemies to it.
+			* `(folded: _enemy making _allHP via _allHP + _enemy's hp, ...$enemies)` will first set _allHP to $enemies's 1st's hp, then add the remaining hp values in $enemies to it.
 			* `(folded: _name making _allNames via _allNames + "/" + _name, ...(history: ))` will create a string of every passage name in the (history:) array,
 			separated by a forward slash.
 
@@ -1071,14 +1071,20 @@ define([
 		[Map])
 		
 		/*d:
-			(history:) -> Array
+			(history: [Lambda]) -> Array
 
 			This returns an array containing the string names of all of the passages
-			the player has visited up to now, in the order that the player visited them.
+			the player has visited up to now, in the order that the player visited them. An optional lambda
+			can filter the passages, by checking the (passage:) datamap of each.
 
 			Example usage:
-			`(history:) contains "Cellar"` is true if the player has visited a passage called
+			* `(history:) contains "Cellar"` is true if the player has visited a passage called
 			"Cellar" at some point.
+			* `(history: where "Intermission" is not in its name)` is an array of visited passage names,
+			but not including passages whose name contans "Intermission" anywhere in it.
+			* `(history: where its tags contains "Forest") is (a:)` is true if the player visited no passages
+			with the "Forest" tag (because then the returned array would be empty, the same as (a:)),
+			and false if they have.
 
 			Rationale:
 			Often, you may find yourself using "flag" variables to keep track of whether
@@ -1086,18 +1092,43 @@ define([
 			data structure operators such as the `contains` operator, to obviate this necessity.
 
 			Details:
-			This includes duplicate names if the player has visited a passage more than once, or visited
+			The array includes duplicate names if the player has visited a passage more than once, or visited
 			the same passage two or more turns in a row.
 
 			This does *not* include the name of the current passage the player is visiting.
 
+			This macro can optionally be given a lambda, which is used to only include passage names from the
+			returned array if they match the lambda. Note that even though this produces an array of strings,
+			the variable in the lambda is always a **datamap** -
+			the same datamap as would be returned by (passage:) for that passage name. That datamap contains
+			these values:
+
+			| Name | Value |
+			|---
+			| source | The source markup of the passage, exactly as you entered it in the Twine editor |
+			| name | The string name of this passage. |
+			| tags | An array of strings, which are the tags you gave to this passage. |
+
+			So, you can think of `(history: where its tags contains "Forest")` as a shorthand for
+			`(find: _name where (passage: _name)'s tags contains "Forest", ...(history:))`,
+			which takes the normal (history:) array, and finds only those names for passages whose tags contain "Forest".
+
 			See also:
-			(passage:), (savedgames:)
+			(passage:), (savedgames:), (passages:)
 
 			#game state
 		*/
-		("history", () => State.pastPassageNames(),
-		[])
+		("history", (section, lambda) => {
+			if (!lambda) {
+				return State.pastPassageNames();
+			}
+			const passages = lambda.filter(section, State.pastPassageNames().map(p => Passages.get(p)));
+			if (TwineError.containsError(passages)) {
+				return passages;
+			}
+			return passages.map(dm => dm.get('name'));
+		},
+		[optional(Lambda.TypeSignature('where'))])
 		
 		/*d:
 			(passage: [String]) -> Datamap
@@ -1128,7 +1159,7 @@ define([
 			than `(display: "Cellar")`.
 
 			See also:
-			(history:), (savedgames:)
+			(history:), (savedgames:), (passages:)
 
 			#game state
 		*/
@@ -1136,7 +1167,43 @@ define([
 			clone(Passages.get(passageName || State.passage))
 				|| TwineError.create('macrocall', "There's no passage named '" + passageName + "' in this story."),
 		[optional(String)])
-		
+
+		/*d:
+			(passages: [Lambda]) -> Array
+
+			This returns an array containing datamaps of information for the passages in the story, sorted by
+			passage name, and using the optional search test to only include certain types of passages.
+
+			Example usage:
+			`(passages: where its name contains "Fight")` produces an array of datamaps for passages in the story that
+			contain "Fight" in their name.
+
+			Rationale:
+			TBW
+
+			Details:
+			The datamap for each passage resembles that returned by (passage:). It contains the following names and values.
+
+			| Name | Value |
+			|---
+			| source | The source markup of the passage, exactly as you entered it in the Twine editor |
+			| name | The string name of this passage. |
+			| tags | An array of strings, which are the tags you gave to this passage. |
+
+			TBW
+
+			See also:
+			(passage:), (history:)
+
+			#game state
+		*/
+		("passages", (section, lambda) => {
+			const sort = NaturalSort("en"),
+				values = [...Passages.values()];
+			return (lambda ? lambda.filter(section, values) : values).sort((a,b) => sort(a.get('name'), b.get('name')));
+		},
+		[optional(Lambda.TypeSignature('where'))])
+
 		/*d:
 			(saved-games:) -> Datamap
 			

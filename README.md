@@ -2,9 +2,20 @@
 
 Rough documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
+###3.1.0 changes (unreleased):
+
+####Alterations
+
+ * Now, `(history:)` can be given an optional "where" lambda to provide only passage names whose passages match the lambda. The lambda is given the same passage datamaps which are returned by `(passage:)`. `(history: where its tags contains "Forest")` is essentially a shorthand for `(find: where (passage: it)'s tags contains "Forest", ...(history:))`.
+
+####Additions
+
+ * Added a `visits` identifier, to join `it` and `time`, which equals the number of times the current passage was visited, including this time. The purpose of this identifier is to make it easier to replicate the Twine 1 `<<once>>` macro, which only displayed text on the first visit to a passage, and whose absence is a long-standing weakness in Harlowe. Previously, it could be replicated using the rather cumbersome `(if: (passage:)'s name is not in (history:))`, but now, it can be replicated using `(if: visits is 1)`, which expresses the intent much better and approaches the original's brevity. Furthermore, it makes it much easier to specify hooks to display on third, fourth, or even-numbered visits, using `(if: visits is 3)`, `(if: visits % 2 is 0)` and so forth. The reason this is an identifier and not a macro (like `(passage:)`) is because I want identifiers to be used for small, "volatile" information that's specific only to the current context, such as `it` and `time`. (`(history:)`, in retrospect, could have been an identifier.)
+ * Added a `(passages:)` macro, which returns an array containing the `(passage:)` datamaps for every passage in the game, but also can be given a "where" lambda to filter that array.
+
 ###3.0.2 changes (unreleased):
 
-###Bugfixes
+####Bugfixes
 
  * Fixed a startup bug that potentially caused `(dropdown:)` menus to stop affecting their bound variables for the rest of the game.
  * Now, `(alert:)`, `(prompt:)` and `(confirm:)` produce errors if they are used in a browser tha doesn't support Javascript's `prompt()`, `alert()` or `confirm()` functions, instead of crashing the page.
@@ -424,9 +435,9 @@ Harlowe is a story format file, called `format.js`, which is used by Twine 2. Th
 
 Use these commands to build Harlowe:
 
-* `make`: As the JS files can be run directly in a browser without compilation (as is used by the test suite), this only lints the JS source files and builds the CSS file.
+* `make`: As the JS files can be run directly in a browser without compilation (as is used by the test suite), this only lints the JS source files and builds the CSS file using `make css`.
 * `make jshint`: Lints the JS source files.
-* `make css`: Builds the CSS file, `build/harlowe-css.css`, from the Sass sources. This is an intermediate build product whose contents are included in the final `format.js` file.
+* `make css`: Builds the CSS file, `build/harlowe-css.css`, from the Sass sources. This is an intermediate build product whose contents are included in the final `format.js` file. **You need Ruby Sass installed, via the command `gem install sass`, prior to using this.** This is because node-sass doesn't work on my computer for some reason.
 * `make docs`: Builds the official documentation file, `dist/harloweDocs.html`, deriving macro and markup definitions from specially-marked comments in the JS files.
 * `make format`: Builds the Harlowe `format.js` file.
 * `make all`: Builds the Harlowe `format.js` file, the documentation, and an example file, `dist/exampleOutput.html`, which is a standalone game that displays "Success!" when run, to confirm that the story format is capable of being bundled by Twine 2 correctly.

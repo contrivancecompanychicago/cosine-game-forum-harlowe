@@ -368,11 +368,11 @@
 		belongingOperator = "of" + wb,
 		
 		/*
-			Identifiers: either "it" or "time".
+			Identifiers: either "it", "time", "visit" or "visits".
 			"it" is a bit of a problem because its possessive is "its", not "it's",
 			so we can't use a derivation similar to property.
 		*/
-		identifier          = either("it","time") + wb,
+		identifier          = either("it","time","visits?") + wb,
 		
 		itsProperty         = "its" + mws + "(" + validPropertyName + ")",
 		

@@ -109,4 +109,25 @@ describe("identifiers", function () {
 			expect("(set:$red to window.xtime)(set:$red to window.timex)(set:$red to window.xtimex)").not.markupToError();
 		});
 	});
+	describe("the 'visits' identifier", function () {
+		it("refers to the number of times this passage was visited, including the current time", function (){
+			["foo","bar","baz","foo","bar","foo","baz"].forEach(function(e) {
+				runPassage("", e);
+			});
+			expect(runPassage("(print: visits)","foo").text()).markupToPrint("4");
+			expect(runPassage("(print: visits + 1)","baz").text()).markupToPrint("4");
+			expect(runPassage("(print: visits is 1)","qux").text()).markupToPrint("true");
+		});
+		xit("works inside displayed passages, but only refers to the outer passage", function () {});
+		it("is case-insensitive", function () {
+			expect("(print: viSiTs)(print: VISITs)(print: VISITs)").not.markupToError();
+		});
+		it("can also be written as 'visit'", function () {
+			expect("(print: viSiT)(print: VISIT)(print: vISIT)").not.markupToError();
+			expect(runPassage("(print: visit is 1)","qux").text()).markupToPrint("true");
+		});
+		xit("can't be used in an 'into' operation", function () {});
+		xit("can't be used as the subject of a 'to' operation", function () {});
+		xit("isn't recognised inside text", function () {});
+	});
 });

@@ -39,7 +39,7 @@ window.createPassage = function(text, name, tags) {
 	Passages.set(name, new Map([
 		["source", text],
 		["name", name],
-		["tags", Array.isArray(tags) ? tags : tags ? [tags] : undefined],
+		["tags", Array.isArray(tags) ? tags : tags ? [tags] : []],
 	]));
 };
 window.goToPassage = function(text, name) {

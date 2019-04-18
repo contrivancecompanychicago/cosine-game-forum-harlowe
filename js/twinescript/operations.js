@@ -237,7 +237,26 @@ define([
 				*/
 				get time() {
 					return (Date.now() - section.timestamp);
-				}
+				},
+				/*d:
+					visits keyword
+					Also known as: visit
+
+					This keyword (which can alternatively be written as "visit") evaluates to the number of times
+					the current passage has been visited this game, including the current visit. So, it will always be at
+					least 1. Its main purpose is to be used in (if:) macros, such as `(if: visits is 1)`, or `(if: visits > 4)`.
+
+					`visits` used in (display:) macros will still produce the number of times the host passage was visited,
+					not the contained passage. So, you can't use it to determine how many times the (display:)ed passage
+					has been (display:)ed.
+				*/
+				get visits() {
+					return State.pastPassageNames().filter(name => name === State.passage).length + 1;
+				},
+
+				get visit() {
+					return ret.Identifiers.visits;
+				},
 			};
 			
 			return ret;
