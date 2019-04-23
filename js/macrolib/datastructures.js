@@ -1029,9 +1029,7 @@ define([
 				We first need to sort values by their keys (thus necessitating using .entries())
 				then extracting just the values.
 			*/
-			Array.from(map.entries()).sort(
-				(a,b) => ([a[0],b[0]].sort(NaturalSort("en"))[0] === a[0] ? -1 : 1)
-			).map(
+			Array.from(map.entries()).sort(NaturalSort("en", e => e[0])).map(
 				e => clone(e[1])
 			),
 		[Map])

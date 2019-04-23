@@ -4,9 +4,14 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
 
 ###3.1.0 changes (unreleased):
 
+####Bugfixes
+
+ * Fixed a bug where header and footer tagged passages were not being transcluded in alphabetical order (instead using passage creation order) on recent versions of Chrome.
+
 ####Alterations
 
  * Now, `(history:)` can be given an optional "where" lambda to provide only passage names whose passages match the lambda. The lambda is given the same passage datamaps which are returned by `(passage:)`. `(history: where its tags contains "Forest")` is essentially a shorthand for `(find: where (passage: it)'s tags contains "Forest", ...(history:))`.
+ * The debug view colours for various macros have been updated to recognise more macro names.
 
 ####Additions
 

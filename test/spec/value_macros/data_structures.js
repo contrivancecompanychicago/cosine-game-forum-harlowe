@@ -210,6 +210,7 @@ describe("data structure macros", function () {
 		});
 		it("returns an array of the items, sorted in natural-sort order", function() {
 			expect("(sorted:'D1','E','e','É','D11','D2','F',1,' 1',2)").markupToPrint("1, 1,2,D1,D2,D11,e,E,É,F");
+			expect("(sorted:'Foo', 'Bar', 'Baz', 'foo', 'bar', 'baz')").markupToPrint("bar,Bar,baz,Baz,foo,Foo");
 		});
 		it("doesn't coerce the types", function() {
 			expect("(print: (sorted:2,11,1)'s 2nd + 3)").markupToPrint("5");

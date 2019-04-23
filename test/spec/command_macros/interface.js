@@ -177,7 +177,7 @@ describe("interface macros", function(){
 		it("has the correct background colour", function(done) {
 			var p = runPassage("(enchant: ?passage, (background:'#0000FF')+(text-color:'#800000'))(dropdown: bind $foo, 'bar','','くりかえす')");
 			setTimeout(function() {
-				expect(p.find('select').css('background-color')).toMatch(/transparent/);
+				expect(p.find('select').css('background-color')).toMatch(/transparent|^\w+a\(.+?,\s*0\s*\)$/);
 				done();
 			});
 		});

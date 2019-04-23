@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils', 'utils/selectors'], ($, {unescape,onStartup}, Selectors) => {
+define(['jquery', 'utils/naturalsort', 'utils', 'utils/selectors'], ($, NaturalSort, {unescape,onStartup}, Selectors) => {
 	/*
 		Passages
 		A userland registry of Passage objects.
@@ -47,6 +47,7 @@ define(['jquery', 'utils', 'utils/selectors'], ($, {unescape,onStartup}, Selecto
 			This method retrieves passages which have a given tag.
 		*/
 		getTagged(tag) {
+			const tagSorter = NaturalSort('en', p => p.get('name'));
 			const ret = [];
 			this.forEach((v) => {
 				/*
@@ -57,7 +58,7 @@ define(['jquery', 'utils', 'utils/selectors'], ($, {unescape,onStartup}, Selecto
 					ret.push(v);
 				}
 			});
-			return ret.sort((left, right) => left.get('name') > right.get('name'));
+			return ret.sort(tagSorter);
 		},
 
 		/*

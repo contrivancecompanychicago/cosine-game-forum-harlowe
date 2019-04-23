@@ -23,9 +23,11 @@ describe("setup passages", function() {
 				expect(p.text()).toBe("Geewow");
 			});
 			it("tagged passages run in alphabetical order", function() {
-				createPassage("(set: $red to 'A')","header1",[header]);
+				createPassage("(set: $red to it + 'D')","header4",[header]);
 				createPassage("(set: $red to $red + 'B')","header2",[header]);
-				expect("$red").markupToPrint("AB");
+				createPassage("(set: $red to it + 'C')","header3",[header]);
+				createPassage("(set: $red to 'A')","header1",[header]);
+				expect("$red").markupToPrint("ABCD");
 			});
 			it("affects hooks inside the passage", function() {
 				createPassage("(click: ?red)[]","header",[header]);
@@ -61,10 +63,12 @@ describe("setup passages", function() {
 				expect(p.text()).toBe("Geewow");
 			});
 			it("tagged passages run in alphabetical order", function() {
-				createPassage("(set: $red to 'A')","footer1",[footer]);
+				createPassage("(set: $red to it + 'D')","footer4",[footer]);
 				createPassage("(set: $red to $red + 'B')","footer2",[footer]);
+				createPassage("(set: $red to it + 'C')","footer3",[footer]);
+				createPassage("(set: $red to 'A')","footer1",[footer]);
 				runPassage('');
-				expect("$red").markupToPrint("AB");
+				expect("$red").markupToPrint("ABCD");
 			});
 			it("affects hooks inside the passage", function() {
 				createPassage("(click: ?red)[]","footer",[footer]);

@@ -1,23 +1,22 @@
 /*!
  * Natural Sort algorithm for Javascript - Version 0.7 - Released under MIT license
  * Author: Jim Palmer (based on chunking idea from Dave Koelle)
+ * http://www.overset.com/2008/09/01/javascript-natural-sort-algorithm-with-unicode-support/
  * Expanded by Leon Arnott to use Intl.Collator, 2015.
+ * Expanded by Leon Arnott to take a string-obtaining helper function, 2019.
  */
 "use strict";
 define([], function() {
-	return function NaturalSort(locale) {
+	const llc = `to${typeof String.prototype.toLocaleLowerCase === "function" ? "Locale" : ""}LowerCase`;
+	return function NaturalSort(locale, helper = String) {
 		return function naturalSort(a, b) {
 			var re = /(^-?[0-9]+(\.?[0-9]*)[df]?e?[0-9]?$|^0x[0-9a-f]+$|[0-9]+)/gi,
-				sre = /(^[ ]*|[ ]*$)/g,
 				dre = /(^([\w ]+,?[\w ]+)?[\w ]+,?[\w ]+\d+:\d+(:\d+)?[\w ]?|^\d{1,4}[\/\-]\d{1,4}[\/\-]\d{1,4}|^\w+, \w+ \d+, \d{4})/,
 				hre = /^0x[0-9a-f]+$/i,
 				ore = /^0/,
-				i = function(s) {
-					return naturalSort.insensitive && ('' + s).toLowerCase() || '' + s;
-				},
 				// convert all to strings strip whitespace
-				x = i(a).replace(sre, '') || '',
-				y = i(b).replace(sre, '') || '',
+				x = helper(a).trim(),
+				y = helper(b).trim(),
 				// chunk/tokenize
 				xN = x.replace(re, '\0$1\0').replace(/\0$/, '').replace(/^\0/, '').split('\0'),
 				yN = y.replace(re, '\0$1\0').replace(/\0$/, '').replace(/^\0/, '').split('\0'),
