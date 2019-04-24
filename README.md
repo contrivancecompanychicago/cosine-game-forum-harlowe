@@ -7,6 +7,8 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
 ####Bugfixes
 
  * Fixed a bug where header and footer tagged passages were not being transcluded in alphabetical order (instead using passage creation order) on recent versions of Chrome.
+   * Additionally, header and footer tagged passages are now sorted in the "natural sort" order used by `(sorted:)`, so that, for instance, a header passage named "10" appears after a header passage named "2".
+ * Fixed a long-standing bug where `(append:)` and `(prepend:)`, when given multiple target hooks or strings, wouldn't perform the appends or prepends in a single pass - `A(append:"A","B")[B]` would produce `ABB` instead of `AB`, against intuition.
 
 ####Alterations
 

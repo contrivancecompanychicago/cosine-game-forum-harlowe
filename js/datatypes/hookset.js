@@ -326,16 +326,6 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 	}
 
 	/*
-		After calling hooks(), we must remove the <tw-pseudo-hook> elements
-		and normalize the text nodes that were split up as a result of the selection.
-	*/
-	function cleanupPseudoHooks({dom}) {
-		Utils.$('tw-pseudo-hook', dom).contents().unwrap().parent().each(function() {
-			this.normalize();
-		});
-	}
-
-	/*
 		This is used exclusively by TwineScript_is() to provide a crude string serialisation
 		of all of a HookSet's relevant distinguishing properties, order-insensitive, which can
 		be compared using ===. This takes advantage of the fact that all of these properties
@@ -360,8 +350,8 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 			An Array forEach-styled iteration function. The given function is
 			called on every <tw-hook> in the section DOM
 			
-			This is currently just used by Section.renderInto, to iterate over each
-			word and render it individually.
+			This is currently just used by ChangeDescriptor.render and Enchantment.enchantScope,
+			to iterate over each word and render it individually.
 			
 			@param {Section} The section the hooks should target.
 			@param {Function} The callback, which is passed the following:
@@ -370,9 +360,34 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 		forEach(section, fn) {
 			const ret = hooks.call(this, section).each(function(i) {
 				fn($(this), i);
+			})
+			.each(function() {
+				HookSet.cleanupPseudoHook($(this));
 			});
-			cleanupPseudoHooks.call(this, section);
 			return ret;
+		},
+
+		/*
+			Provides all of the hooks selected by this HookSet.
+			Note that this potentially PERMUTES the section's DOM, by creating <tw-pseudo-hook> element
+			wrappers around certain words, and splitting text nodes as such. So, cleanupPseudoHooks() needs
+			to be called with the same section after this is consumed.
+		*/
+		hooks(section) {
+			return hooks.call(this, section);
+		},
+
+		/*
+			After calling hooks(), we must remove the <tw-pseudo-hook> elements
+			and normalize the text nodes that were split up as a result of the selection.
+
+			Note that this doesn't care if the passed-in <tw-pseudo-hook> was selected by
+			this HookSet. Thus, this is more of a static class method than an instance method.
+		*/
+		cleanupPseudoHook(elem) {
+			elem.filter('tw-pseudo-hook').contents().unwrap().parent().each(function() {
+				this.normalize();
+			});
 		},
 		
 		/*

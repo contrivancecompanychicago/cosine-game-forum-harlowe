@@ -467,6 +467,10 @@ describe("twinescript operators", function () {
 			expect("(print: ?red's 1st + ?blue's 2nd is ?red's 1st + ?blue's 2nd)").markupToPrint("true");
 			expect("(print: ?red + ?blue is ?blue + ?red)").markupToPrint("true");
 		});
+		xit("errors when used to compare non-datatypes with datatypes, due to similarity with 'is a'", function (){
+			expect("(print: 2 is num)").markupToError();
+			expect("(print: 'red' is str)").markupToError();
+		});
 		it("won't be matched from within text", function (){
 			expect("(print: typeof xxisxx)").markupToPrint("undefined");
 		});

@@ -34,7 +34,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		// {String} append            Which jQuery method name to append the source to the dest with.
 		append:           "append",
 
-		// {[newTarget]} [newTargets] Alternative targets (which are {target,append} objects) to use instead of the original.
+		// [newTargets]               Alternative targets (which are {target,append} objects) to use instead of the original.
 		newTargets:       null,
 		
 		// {String} [transition]      Which built-in transition to use.
@@ -238,52 +238,63 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 				so that consumers like Section.renderInto() can modify all of their <tw-expressions>, etc.
 			*/
 			let dom = $();
-			const renderAll = (append, before) => target => {
-				/*
-					"before" should only be true if this newTarget was created by (replace:), (append:) or (prepend:).
-					These macros are scoped to only target hooks and text that has already rendered - earlier in the
-					passage or section to this changed hook (i.e. the element in oldTarget).
-				*/
-				if (before
+			[].concat(target)
+				// If the target is a jQuery, it's either just a normal ChangeDescriptor targeting a single hook, or
+				// a recursive call of the below collection rendering loop. If so, don't keep recursing.
+				.filter(target => !(target.jquery))
+				// Henceforth, all elements in this array are either HookSets, or NewTarget objects (containing HookSets).
+				// Convert both of these types to the same type of object: a pair of { elements, append };
+				.map(target => {
+					let append_ = append, before;
+					// Is it a newTarget object? If so, unwrap it to access the HookSet within,
+					// as well as its "append" and "before" constraints.
+					if (target.target && target.append) {
+						({append:append_, before} = target);
+						target = target.target;
+					}
+					return {
+						elements: target.hooks(section)
+							.filter(function() {
+								/*
+									"before" should only be true if this newTarget was created by
+									(replace:), (append:) or (prepend:).
+									These macros are scoped to only target hooks and text that
+									has already rendered - earlier in the passage or section to
+									this changed hook (i.e. the element in oldTarget).
+								*/
+								return !(before
+									/*
+										Of course, we should only prevent targeting elements that *haven't rendered yet*.
+										There isn't a very idiomatic way of determining this, but assuming that it's
+										A: detached from the DOM,
+									*/
+									&& this.compareDocumentPosition(document) & 1
+									/*
+										and B: later in the node tree, seems a safe enough assumption.
+									*/
+									&& this.compareDocumentPosition(oldTarget[0]) & 2);
+							}),
+						append:append_,
+					};
+				},[])
+				// Now, iterate over all of them.
+				.forEach(({elements, append}) => {
+					elements.each((_,elem) => {
+						elem = $(elem);
 						/*
-							Of course, we should only prevent targeting elements that *haven't rendered yet*.
-							There isn't a very idiomatic way of determining this, but assuming that it's
-							A: detached from the DOM,
+							Generate a new descriptor which has the same properties
+							(rather, delegates to the old one via the prototype chain)
+							but has just this hook/word as its target.
+							Then, render using that descriptor.
 						*/
-						&& target[0].compareDocumentPosition(document) & 1
+						dom = dom.add(this.create({ target: elem, append, newTargets:null }).render());
 						/*
-							and B: later in the node tree, seems a safe enough assumption.
+							The above call to .hooks() potentially created <tw-pseudo-hook> elements. These must be
+							removed as soon as possible.
 						*/
-						&& target[0].compareDocumentPosition(oldTarget[0]) & 2) {
-					return;
-				}
-				/*
-					Generate a new descriptor which has the same properties
-					(rather, delegates to the old one via the prototype chain)
-					but has just this hook/word as its target.
-					Then, render using that descriptor.
-				*/
-				dom = dom.add(this.create({ target, append, newTargets:null }).render());
-			};
-			[].concat(target).forEach(function loop(target, _, __, append_ = append, before = undefined) {
-				// Is it a HookSet,
-				if (HookSet.isPrototypeOf(target)) {
-					target.forEach(section, renderAll(append_, before));
-				}
-				// a jQuery of <tw-hook> or <tw-expression> elements,
-				else if (target.jquery && target.length > 1) {
-					Array.from(target).map($).forEach(renderAll(append_));
-				}
-				// or a newTarget object?
-				else if (target.target && target.append) {
-					/*
-						the newTarget's "target" property may be a HookSet or jQuery.
-						To handle this, we unwrap the newTarget object and pass its "append"
-						and optional "before" value to a recursive call to "loop"
-					*/
-					loop(target.target, _, __, target.append, target.before);
-				}
-			});
+						HookSet.cleanupPseudoHook(elem);
+					});
+				});
 			/*
 				Return the compiled DOM, or return an empty set if the target is a collection
 				and the above loop didn't produce anything.

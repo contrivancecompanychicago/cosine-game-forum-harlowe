@@ -113,15 +113,21 @@ describe("revision macros", function() {
 					var p = runPassage("12$s[0]");
 					expect(p.text()).toBe(append?'1020':'0102');
 				});
+				it("when composed, only affects occurrences in a single pass", function() {
+					var p = runPassage("reded("+name+":'blue')+("+name+":'red')[blue r]");
+					expect(p.text()).toBe(append?'redblue red':'blue rreded');
+					p = runPassage("reded("+name+":'red')+("+name+":'blue')[blue r]");
+					expect(p.text()).toBe(append?'redblue red':'blue rreded');
+				});
 			});
 			describe("given multiple strings", function() {
 				it(name+"s to every found string in the passage", function() {
 					var p = runPassage("good bad("+name+":'good','bad')[lands]");
 					expect(p.text()).toBe(append?'goodlands badlands':'landsgood landsbad');
 				});
-				xit("only affects occurrences in a single pass", function() {
+				it("only affects occurrences in a single pass", function() {
 					var p = runPassage("reded("+name+":'red','blue')[blue r]");
-					expect(p.text()).toBe(append?'redblue red':' blue rreded');
+					expect(p.text()).toBe(append?'redblue red':'blue rreded');
 				});
 				it("recomputes the source within each target, in document position order", function() {
 					var p = runPassage("(set:$a to 0)ABC("+name+":'A','C','B')[(set:$a to it + 1)$a]");

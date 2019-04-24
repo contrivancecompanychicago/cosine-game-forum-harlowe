@@ -7,7 +7,6 @@
  */
 "use strict";
 define([], function() {
-	const llc = `to${typeof String.prototype.toLocaleLowerCase === "function" ? "Locale" : ""}LowerCase`;
 	return function NaturalSort(locale, helper = String) {
 		return function naturalSort(a, b) {
 			var re = /(^-?[0-9]+(\.?[0-9]*)[df]?e?[0-9]?$|^0x[0-9a-f]+$|[0-9]+)/gi,
