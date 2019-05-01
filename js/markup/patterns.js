@@ -482,7 +482,7 @@
 		/*d:
 			HTML markup
 
-			If you are familiar with them, HTML tags (like `<img>`) and HTML elements (like `&sect;`) can be inserted
+			If you are familiar with them, HTML tags (like `<img>`) and HTML escapes (like `&sect;`) can be inserted
 			straight into your passage text. They are treated very naively - they essentially pass through Harlowe's
 			markup-to-HTML conversion process untouched.
 
@@ -504,7 +504,8 @@
 			containing passage code is rendered.
 
 			You can also include a `<style>` tag containing CSS code. The CSS should affect the entire page
-			until the element is removed from the DOM.
+			until the element is removed from the DOM. You could use this in a "header" tagged passage, inside an (if:) hook,
+			to make the CSS apply to every passage where the (if:) condition is fulfilled.
 
 			Finally, you can also include HTML comments `<!-- Comment -->` in your code, if you wish to leave
 			reminder messages or explanations about the passage's code to yourself.

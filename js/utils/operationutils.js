@@ -37,6 +37,12 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 			impossible('isValidDatamapName','called with non-Map');
 		}
 		/*
+			This really shouldn't be possible, but, well...
+		*/
+		if (TwineError.containsError(name)) {
+			return name;
+		}
+		/*
 			The computed variable property syntax means that basically
 			any value can be used as a property key. Currently, we only allow strings
 			and numbers to be used.

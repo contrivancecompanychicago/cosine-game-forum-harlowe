@@ -244,7 +244,11 @@ define([
 
 					This keyword (which can alternatively be written as "visit") evaluates to the number of times
 					the current passage has been visited this game, including the current visit. So, it will always be at
-					least 1. Its main purpose is to be used in (if:) macros, such as `(if: visits is 1)`, or `(if: visits > 4)`.
+					least 1.
+
+					Its main purpose is to be used in (if:) macros, such as `(if: visits is 1)`, or `(if: visits > 4)`. If you
+					use one particular formulation a lot in your story, such as `(if: visits is 1)`, you can (set:) the (if:)
+					into a variable using `(set: $first to (if:visits is 1))` and then use $first in its place.
 
 					`visits` used in (display:) macros will still produce the number of times the host passage was visited,
 					not the contained passage. So, you can't use it to determine how many times the (display:)ed passage

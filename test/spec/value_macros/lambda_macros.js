@@ -145,6 +145,18 @@ describe("lambda macros", function() {
 		it("iteration does not stop once a false value is produced", function() {
 			expect("(all-pass: _a where _a, true, false, 6, true)").markupToError();
 		});
+		it("works with variables outside the lambda", function() {
+			expect('(set: $foo to "foo")'
+				+'(set: $corge to (dm: "foo", (dm: "qux", (a:1,2,3,4,5))))'
+				+'(set: $bar to (all-pass: _baz where "qux" of $foo of $corge contains _baz, 3,4,5))'
+				+'(print: $bar)').markupToPrint('true');
+		});
+		it("works with temp variables outside the lambda", function() {
+			expect('(set: _foo to "foo")'
+				+'(set: $corge to (dm: "foo", (dm: "qux", (a:1,2,3,4,5))))'
+				+'(set: $bar to (all-pass: _baz where "qux" of _foo of $corge contains _baz, 3,4,5))'
+				+'(print: $bar)').markupToPrint('true');
+		});
 	});
 	describe("the (some-pass:) macro", function() {
 		it("accepts a 'where' or 'each' lambda, plus zero or more other values", function() {

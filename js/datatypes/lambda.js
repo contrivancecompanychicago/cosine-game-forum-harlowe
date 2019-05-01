@@ -191,7 +191,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 				object (if one wasn't provided). The temporary variable references in the code are compiled to
 				VarRefs for tempVariables.
 			*/
-			tempVariables = tempVariables || Object.create(section.stack[0] || VarScope);
+			tempVariables = tempVariables || Object.create(section.stack.length ? section.stack[0].tempVariables : VarScope);
 			[
 				[this.loop, loopArg],
 				[this.with, withArg],

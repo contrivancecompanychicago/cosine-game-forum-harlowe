@@ -242,7 +242,12 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 	function objectOrMapGet(obj, prop) {
 		if (obj === undefined) {
 			return obj;
-		} else if (obj instanceof Map) {
+		} else if (obj instanceof Map
+				/*
+					This should only be wrapped errors from wrapError(),
+					such as in "_foo of $corge" where _foo doesn't exist.
+				*/
+				|| obj.varref) {
 			return obj.get(prop);
 		} else {
 			if (isSequential(obj)) {
