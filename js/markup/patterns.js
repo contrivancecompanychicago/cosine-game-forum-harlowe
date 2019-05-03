@@ -515,7 +515,10 @@
 		tag:         "<\\/?" + tag.name + tag.attrs + ">",
 		tagPeek:                                      "<",
 		
-		scriptStyleTag: "<(" + either("script","style")
+		/*
+			<textarea> elements also have the exemption from their contents being interpreted as Harlowe code.
+		*/
+		scriptStyleTag: "<(" + either("script","style","textarea")
 			+ ")" + tag.attrs + ">"
 			+ "[^]*?" + "<\\/\\1>",
 		scriptStyleTagOpener:  "<",

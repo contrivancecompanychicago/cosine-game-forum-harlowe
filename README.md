@@ -15,13 +15,15 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
 
  * Now, `(history:)` can be given an optional "where" lambda to provide only passage names whose passages match the lambda. The lambda is given the same passage datamaps which are returned by `(passage:)`. `(history: where its tags contains "Forest")` is essentially a shorthand for `(find: where (passage: it)'s tags contains "Forest", ...(history:))`.
  * The debug view colours for various macros have been updated to recognise more macro names.
+ * Raw `<textarea>` tags will no longer have their contained text converted to HTML elements as if it was Harlowe syntax.
+ * The default CSS for `<pre>` elements now has a smaller `line-height`.
 
 ####Additions
 
  * Added a `visits` identifier, to join `it` and `time`, which equals the number of times the current passage was visited, including this time. The purpose of this identifier is to make it easier to replicate the Twine 1 `<<once>>` macro, which only displayed text on the first visit to a passage, and whose absence is a long-standing weakness in Harlowe. Previously, it could be replicated using the rather cumbersome `(if: (passage:)'s name is not in (history:))`, but now, it can be replicated using `(if: visits is 1)`, which expresses the intent much better and approaches the original's brevity. Furthermore, it makes it much easier to specify hooks to display on third, fourth, or even-numbered visits, using `(if: visits is 3)`, `(if: visits % 2 is 0)` and so forth. The reason this is an identifier and not a macro (like `(passage:)`) is because I want identifiers to be used for small, "volatile" information that's specific only to the current context, such as `it` and `time`. (`(history:)`, in retrospect, could have been an identifier.)
  * Added a `(passages:)` macro, which returns an array containing the `(passage:)` datamaps for every passage in the game, but also can be given a "where" lambda to filter that array.
 
-###3.0.2 changes (unreleased):
+###3.0.2 changes:
 
 ####Bugfixes
 

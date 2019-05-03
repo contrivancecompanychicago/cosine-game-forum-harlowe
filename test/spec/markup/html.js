@@ -52,6 +52,10 @@ describe("HTML in twinemarkup", function() {
 			expect(runPassage("Hey!<script>window.foo = 1;</script>").find('script').length).toBe(1);
 			expect(window.foo).toBe(1);
 		});
+		it("can be used without escaping their contents", function() {
+			expect(runPassage("<script>window.foo = \"**bar**\";</script>").find('script').length).toBe(1);
+			expect(window.foo).toBe("**bar**");
+		});
 		it("can have src attributes", function(done) {
 			runPassage('<script src="data:text/javascript;plain,window.foo=1//"></script>');
 			setTimeout(function() {
@@ -66,6 +70,11 @@ describe("HTML in twinemarkup", function() {
 	describe("<style> tags", function() {
 		it("can be used without escaping their contents", function() {
 			expect(runPassage("<style>b { box-sizing: content-box; }</style><b>Hey</b>").find('b').css('box-sizing')).toBe('content-box');
+		});
+	});
+	describe("<textarea> tags", function() {
+		it("can be used without escaping their contents", function() {
+			expect(runPassage("<textarea>**bar**</textarea>").find('textarea').text()).toBe('**bar**');
 		});
 	});
 
