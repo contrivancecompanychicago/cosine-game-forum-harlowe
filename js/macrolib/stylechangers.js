@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
-($, Macros, Utils, Selectors, Colour, ChangerCommand, Lambda, ChangeDescriptor, TwineError) => {
+define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'datatypes/gradient', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
+($, Macros, Utils, Selectors, Colour, Gradient, ChangerCommand, Lambda, ChangeDescriptor, TwineError) => {
 
 	/*
 		Built-in hook style changer macros.
@@ -814,7 +814,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 
 			Example usage:
 			`(colour: red + white)[Pink]` combines the built-in red and white colours to make pink.
-			`(colour: "#696969")[Gray]` uses a CSS-style colour to style the text gray.
+			`(colour: #696969)[Gray]` uses a CSS-style colour to style the text gray.
 
 			Details:
 			This macro only affects the text colour. To change the text background, call upon
@@ -884,16 +884,20 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			[Number]
 		)
 		/*d:
-			(background: Colour or String) -> Changer
+			(background: Colour or String or Gradient) -> Changer
 
 			This styling command alters the background colour or background image
-			of the attached hook. Supplying a colour, or a string contanining a CSS
-			hexadecimal colour (such as `#A6A612`) will set the background to a flat colour.
-			Other strings will be interpreted as an image URL, and the background will be
-			set to it.
+			of the attached hook. Supplying a gradient (produced by (gradient:)) will set the
+			background to that gradient. Supplying a colour (produced by (rgb:) or (hsl:),
+			a built-in colour value like `red`, or a bare colour value like #FA9138) will set
+			the background to a flat colour. CSS strings that resemble HTML hex colours (like "#FA9138") will
+			also provide flat colour. Other strings will be interpreted as an image URL,
+			and the background will be set to it.
 
 			Example usage:
 			* `(background: red + white)[Pink background]`
+			* `(background: (gradient: 0, 0,red, 1,black))[Red-black gradient background]`
+			* `(background: #663399)[Purple background]`
 			* `(background: "#663399")[Purple background]`
 			* `(background: "marble.png")[Marble texture background]`
 
@@ -903,7 +907,9 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			colour or the image. For instance `(background:red) + (background:white)` will simply
 			produce the equivalent `(background:white)`. However, `(background:red) + (background:"mottled.png")`
 			will work as intended if the background image contains transparency, allowing the background
-			colour to appear through it.
+			colour to appear through it. Note that gradients count as background images, not colours - you can
+			combine gradients whose colours are partially transparent with flat colours, such as
+			`(background: (gradient: 90, 0, (hsla:0,0,0,0.5), 1, (hsla:0,0,0,0))) + (background: red)`
 
 			Currently, supplying other CSS colour names (such as `burlywood`) is not
 			permitted - they will be interpreted as image URLs regardless.
@@ -921,6 +927,10 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				if (Colour.isPrototypeOf(value)) {
 					value = value.toRGBAString(value);
 				}
+				//Convert TwineScript gradients into CSS linear-gradients.
+				else if (Gradient.isPrototypeOf(value)) {
+					value = value.toLinearGradientString(value);
+				}
 				return ChangerCommand.create("background", [value]);
 			},
 			(d, value) => {
@@ -930,6 +940,9 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				*/
 				if (Colour.isHexString(value) || Colour.isCSS3Function(value)) {
 					property = {"background-color": value};
+				}
+				else if (value.startsWith('linear-gradient(')) {
+					property = {"background-image": value};
 				}
 				else {
 					/*
@@ -950,7 +963,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 					{ display() { return Utils.childrenProbablyInline($(this)) ? "initial" : "block"; } });
 				return d;
 			},
-			[either(String,Colour)]
+			[either(String,Colour,Gradient)]
 		)
 		
 		/*d:

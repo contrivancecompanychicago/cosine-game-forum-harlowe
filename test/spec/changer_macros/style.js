@@ -380,12 +380,14 @@ describe("style changer macros", function() {
 		});
 	});
 	describe("the (background:) macro", function() {
-		it("requires 1 string argument or 1 colour argument", function() {
+		it("requires 1 string argument, 1 colour argument or 1 gradient argument", function() {
 			expect("(print:(background:))").markupToError();
 			expect("(print:(background:1))").markupToError();
 			expect("(print:(background:'A','B'))").markupToError();
 			expect("(print:(background:'A'))").not.markupToError();
 			expect("(print:(background:red + white))").not.markupToError();
+			expect("(print:(background:(gradient:45,0,red,1,white)))").not.markupToError();
+			expect("(print:(background:(gradient:45,0,red,1,white),'B'))").markupToError();
 		});
 		it("errors when placed in passage prose while not attached to anything", function() {
 			expect("(background:'A')").markupToError();
@@ -409,6 +411,13 @@ describe("style changer macros", function() {
 			var p = runPassage("(background:'#800000')[Hey]").find('tw-hook');
 			setTimeout(function() {
 				expect(p.attr('style')).toMatch(/background-color:\s*(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+				done();
+			});
+		});
+		it("given a gradient, applies it as the background-image property", function(done) {
+			var p = runPassage("(background:(gradient:45,0,(rgb:0,255,0),1,(rgb:0,0,0)))[Hey]").find('tw-hook');
+			setTimeout(function() {
+				expect(p).toHaveBackgroundGradient(45, [{stop:0,colour:"#00FF00"},{stop:1,colour:"#000000"}]);
 				done();
 			});
 		});

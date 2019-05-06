@@ -1,6 +1,6 @@
 "use strict";
-define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'datatypes/hookset', 'datatypes/colour'],
-(State, TwineError, {impossible}, {isObject, isSequential, objectName, typeName, clone, numericIndex, isValidDatamapName}, HookSet, Colour) => {
+define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'datatypes/hookset', 'datatypes/colour', 'datatypes/gradient'],
+(State, TwineError, {impossible}, {isObject, isSequential, objectName, typeName, clone, numericIndex, isValidDatamapName}, HookSet, Colour, Gradient) => {
 	/*
 		VarRefs are essentially objects pairing a chain of properties
 		with an initial variable reference - "$red's blue's gold" would be
@@ -256,6 +256,9 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			if (prop === "any" || prop === "all") {
 				return createDeterminer(obj,prop);
 			}
+			if (obj.TwineScript_GetProperty) {
+				return obj.TwineScript_GetProperty(prop);
+			}
 			if (obj.TwineScript_GetElement && Number.isFinite(+prop)) {
 				return obj.TwineScript_GetElement(prop);
 			} else {
@@ -309,9 +312,9 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				'You should use an (array:) if you need to modify the data inside this dataset.');
 		}
 		/*
-			Neither can colours.
+			Neither can colours or gradients.
 		*/
-		if (Colour.isPrototypeOf(obj)) {
+		if (Colour.isPrototypeOf(obj) || Gradient.isPrototypeOf(obj)) {
 			return TwineError.create('operation', "I can't modify the components of " + objectName(obj) + ".");
 		}
 

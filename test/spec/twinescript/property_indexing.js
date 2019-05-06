@@ -221,6 +221,31 @@ describe("property indexing", function() {
 				expect("(set:red's r to 2)").markupToError();
 			});
 		});
+		describe("for gradients", function() {
+			it("'angle' produces the gradient's angle", function() {
+				expect("(print:(gradient:12,0,black,1,white)'s angle)").markupToPrint("12");
+				expect("(print:(gradient:102,0,black,1,white)'s angle)").markupToPrint("102");
+				expect("(print:(gradient:345,0,black,1,white)'s angle)").markupToPrint("345");
+			});
+			it("'stops' returns a sorted array of stops", function() {
+				expect("(print: (gradient:0,0.7,black,0.2,white)\'s stops\'s length)").markupToPrint("2");
+				expect("(print: (gradient:0,0.7,black,0.2,white)\'s stops\'s 1st's percent)").markupToPrint("0.2");
+				expect("(print: (gradient:0,0.2,black,0.7,white)\'s stops\'s last's percent)").markupToPrint("0.7");
+				expect("(print: (gradient:0,0.7,black,0.2,white)\'s stops\'s last's colour is black)").markupToPrint("true");
+			});
+			it("no other values are present", function() {
+				expect("(print:(gradient:0,0,black,1,white)'s create)").markupToError();
+			});
+			it("cannot be assigned to", function() {
+				expect("(set:(gradient:0,0,black,1,white)'s angle to 2)").markupToError();
+				expect("(set:(gradient:0,0,black,1,white)'s stops to (a:))").markupToError();
+			});
+			it("deep-modifying stops produces an error", function() {
+				expect(
+					"(set:$foo to (gradient:0,0,black,1,white))(set:$foo's stops's 1st's colour to blue)"
+				).markupToError();
+			});
+		});
 	});
 	describe("belonging indices", function() {
 		it("can be used with strings", function() {
@@ -436,16 +461,42 @@ describe("property indexing", function() {
 			});
 			it("no other values are present", function() {
 				expect("(print:red's 'create')").markupToError();
-				expect("(print:red's 'toHexString')").markupToError();
+				expect("(print:red's 'toRGBAString')").markupToError();
 			});
 			it("cannot be assigned to", function() {
 				expect('(set:red\'s "r" to 2)').markupToError();
+			});
+		});
+		describe("for gradients", function() {
+			it("'angle' produces the gradient's angle", function() {
+				expect("(print:(gradient:12,0,black,1,white)'s 'angle')").markupToPrint("12");
+				expect("(print:(gradient:102,0,black,1,white)'s 'angle')").markupToPrint("102");
+				expect("(print:(gradient:345,0,black,1,white)'s 'angle')").markupToPrint("345");
+			});
+			it("'stops' returns a sorted array of stops", function() {
+				expect("(print: (gradient:0,0.7,black,0.2,white)'s ('stops')'s length)").markupToPrint("2");
+				expect("(print: (gradient:0,0.7,black,0.2,white)'s ('stops')'s (1)'s 'percent')").markupToPrint("0.2");
+				expect("(print: (gradient:0,0.2,black,0.7,white)\'s ('stops')'s (-1)'s 'percent')").markupToPrint("0.7");
+				expect("(print: (gradient:0,0.7,black,0.2,white)\'s ('stops')'s (-1)'s 'colour' is black)").markupToPrint("true");
+			});
+			it("no other values are present", function() {
+				expect("(print:(gradient:0,0,black,1,white)'s 'create')").markupToError();
+			});
+			it("cannot be assigned to", function() {
+				expect("(set:(gradient:0,0,black,1,white)'s 'angle' to 2)").markupToError();
+				expect("(set:(gradient:0,0,black,1,white)'s 'stops' to (a:))").markupToError();
+			});
+			it("deep-modifying stops produces an error", function() {
+				expect(
+					"(set:$foo to (gradient:0,0,black,1,white))(set:$foo's ('stops')'s (1)'s 'colour' to blue)"
+				).markupToError();
 			});
 		});
 		describe("for hook references", function() {
 			it("must have numbers in range on the right side", function (){
 				expect("|a>[1]|a>[1](replace: ?a's (1))[2]").markupToPrint('21');
 				expect("|a>[]|a>[](print: ?a's 'length')").markupToError();
+				expect("|a>[]|a>[](print: ?a's 'selector')").markupToError();
 				expect("|a>[1]|a>[1](replace: ?a's '1')[2]").markupToError();
 				expect("|a>[1]|a>[1](replace: ?a's ('13''s 1st))[2]").markupToError();
 				expect("|a>[1]|a>[1](replace: ?a's 0)[2]").markupToError();

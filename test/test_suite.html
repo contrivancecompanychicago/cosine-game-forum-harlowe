@@ -271,6 +271,30 @@ beforeEach(function() {
 				};
 			}
 		}),
+		toHaveBackgroundGradient: Object.bind(Object,{
+			compare: function(a,degree,stops) {
+				var pass = a.jquery && (a.attr('style') + '').match(new RegExp(
+						"background(?:-image)?:\\s*linear-gradient\\(" + degree + "deg,"
+							+ stops.reduce(function(str, stop) {
+								var colour = stop.colour.replace(/(\(|\))/g, "\\$1");
+								return str + "\\s*(?:" + colour + hexToRGBA(colour) + ")\\s+" + (stop.stop*100) + "%\\s*,"
+							}, '').slice(0,-1)
+							+ "\\)", "i"));
+
+				var message = "linear-gradient(" + degree + "deg," + stops.reduce(function(str, stop) {
+					return str + stop.colour + " " + (stop.stop*100) + "%, "
+				}, '').slice(0,-2) + ")";
+
+				return {
+					pass: !!pass,
+					message: !pass
+						? "Expected element style '" + a.attr('style')
+							+ "' to contain a background-image of " + message
+						: "Expected element style '" + a.attr('style')
+							+ "' not to contain a background-image of " + message
+				};
+			}
+		}),
 	});
 });
 

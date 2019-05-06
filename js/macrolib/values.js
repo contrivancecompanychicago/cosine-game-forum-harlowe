@@ -1,13 +1,13 @@
 "use strict";
-define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internaltypes/twineerror'],
-(Macros, {realWhitespace, anyRealLetter}, {subset, objectName}, Colour, TwineError) => {
+define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatypes/gradient', 'internaltypes/twineerror'],
+(Macros, {realWhitespace, anyRealLetter}, {subset, objectName, clone}, Colour, Gradient, TwineError) => {
 	/*
 		Built-in value macros.
 		These macros manipulate the primitive values - boolean, string, number.
 	*/
 	
 	const
-		{rest, zeroOrMore,
+		{rest, zeroOrMore, either,
 		/* Any is a value, not a method. */
 		Any} = Macros.TypeSignature;
 	
@@ -500,8 +500,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 
 			Giving saturation or lightness values higher than 1 or lower than 0 will cause an error. However,
 			you can give any kind of hue number to (hsl:), and it will automatically round it to fit the 0-359
-			degree range. This allows you to cycle through hues easily by providing a steadily increasing variable or
-			a counter, such as `(hsl: time / 100, 1, 0.5)`.
+			degree range - so, a value of 380 will become 20. This allows you to cycle through hues easily by
+			providing a steadily increasing variable or a counter, such as `(hsl: time / 100, 1, 0.5)`.
 
 			See also:
 			(rgb:), (rgba:), (hsla:)
@@ -517,7 +517,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 				return TwineError.create("macrocall", "Lightness" + errorMsg + objectName(l) + ".");
 			}
 			/*
-				Unlike S and L, H is silently rounded and truncated to the 0..360 range. This allows increasing counters
+				Unlike S and L, H is silently rounded and truncated to the 0..359 range. This allows increasing counters
 				to be given directly to the (hsl:) macro, to cycle through the hues continuously.
 				Round is used because, as the user's hue range is effectively continuous, nothing is lost by using it.
 			*/
@@ -572,6 +572,171 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'internal
 			return Colour.create({h, s, l, a});
 		},
 		[Number, Number, Number, Number])
+
+		/*d:
+			(gradient: Number, ...Number, Colour) -> Gradient
+
+			When given a degree angle, followed by any number of number-colour pairs called "colour stops", this macro produces
+			a gradient that fades between those colours in the direction of the angle.
+
+			Example usage:
+			```
+			(set: $desertChrome to (gradient: 0, 0, #e6a860, 0.49, black, 0.5, white, 1, blue))
+			(background: $desertChrome)(text-color:white)[Sunshine Desert]
+			```
+			The above example produces <span style="color:#fff;background-image: linear-gradient(0deg, rgb(230, 168, 96) 0%,
+				rgb(0, 0, 0) 49%, rgb(255, 255, 255) 50%, rgb(25, 127, 230) 100%); display: initial;">Sunshine Desert</span>
+
+			Rationale:
+			An easy way to add a subtle sense of depth, texture, direction or variety to elements in Harlowe, without having
+			to create and import background images from outside of Twine, is to use this macro to generate a gradient, a
+			dynamically-generated background which can be used with (background:).
+
+			A gradient consists of a series of flat colours. One of those colours will be used on one side of the element,
+			one on the other, and the space in between will smoothly fade between them. You can supply additional colours
+			that the gradient will smoothly fade to in between the start and end colours, too.
+
+			To specify where exactly these intermediate colour fades will occur on the element, the colours are paired with
+			a percentage number - 0 being one side of the element, 1 being the other, 0.5 being exactly in-between. This pairing
+			is called a "colour stop".
+			
+			Consider this (gradient:) call, with six colour stops.
+			`(gradient:90,  0,#bf3f3f,  0.2,#a5bf3f,  0.4,#3fbf72,  0.6,#3f72bf, 0.8,#a53fbf, 1,#bf3f3f)`
+
+			The six colour stops are `0,#bf3f3f` <span style="width:1em;height:1em;display:inline-block;background:#bf3f3f"></span>,
+			`0.2,#a5bf3f` <span style="width:1em;height:1em;display:inline-block;background:#a5bf3f"></span>,
+			`0.4,#3fbf72` <span style="width:1em;height:1em;display:inline-block;background:#3fbf72"></span>,
+			`0.6,#3f72bf` <span style="width:1em;height:1em;display:inline-block;background:#3f72bf"></span>,
+			`0.8,#a53fbf` <span style="width:1em;height:1em;display:inline-block;background:#a53fbf"></span>,
+			and `1,#bf3f3f` <span style="width:1em;height:1em;display:inline-block;background:#bf3f3f"></span>.
+			This corresponds to the following gradient, which for documentation purposes has its colour stops marked:
+			<div style="position:relative">
+			<div style="position:absolute;left:0%;width:1px;background-color:black;color:white;height:64px;">0,<br>#bf3f3f</div>
+			<div style="position:absolute;left:20%;width:1px;background-color:black;color:white;height:64px;">0.2,<br>#a5bf3f</div>
+			<div style="position:absolute;left:40%;width:1px;background-color:black;color:white;height:64px;">0.4,<br>#3fbf72</div>
+			<div style="position:absolute;left:60%;width:1px;background-color:black;color:white;height:64px;">0.6,<br>#3f72bf</div>
+			<div style="position:absolute;left:80%;width:1px;background-color:black;color:white;height:64px;">0.8,<br>#a53fbf</div>
+			<div style="position:absolute;left:100%;width:1px;background-color:black;height:64px;">1,<br>#bf3f3f</div>
+			<div style="background:linear-gradient(90deg, rgba(191, 63, 63, 1) 0%, rgba(165, 191, 63, 1) 20%,
+				rgba(63, 191, 114, 1) 40%, rgba(63, 114, 191, 1) 60%, rgba(165, 63, 191, 1) 80%,
+				rgba(191, 63, 63, 1) 100%); height:64px;"></div>
+			</div>
+			(gradient:)'s first argument is a degree angle, which can be used to rotate the gradient's direction, changing
+			where the first and last colours are placed in the element. Changing the degree angle in the above example from 90 degrees
+			to 0 changes it from a horizontal gradient to a vertical gradient, using the same colours and stops:
+			<div style="background:linear-gradient(0deg, rgba(191, 63, 63, 1) 0%, rgba(165, 191, 63, 1) 20%,
+				rgba(63, 191, 114, 1) 40%, rgba(63, 114, 191, 1) 60%, rgba(165, 63, 191, 1) 80%,
+				rgba(191, 63, 63, 1) 100%); height:64px;"></div>
+			</div>
+			Any angle can be given to (gradient:), including diagonal values like 40 or 66.
+
+			Details:
+			An error will be produced if you give colour-stop percentages that aren't between 0 and 1, or give less than 2 colour-stops. However,
+			any number of degrees given to (gradient:), even below 0 or above 359, will automatically be rounded to fit the 0-359
+			degree range - so, a value of 380 will become 20.
+
+			You do not necessarily need to supply colour-stops at positions 0 and 1 - instead, the nearest colour-stop to those positions will be extended
+			to the edge of the gradient. Furthermore, you don't need to supply colour-stops in ascending order - they will be reordered by Harlowe if they are not.
+
+			Gradients in Harlowe are implemented using CSS `linear-gradient`s, and have the same limitations in output and browser support.
+			Note, however, that the order of values for a colour stop is reversed from that of the CSS syntax (numbers go first, then colours).
+			This is to help ensure that the initial degree number is not confused for a colour-stop percentage. Additionally, CSS
+			linear-gradient "colour hints", which are used to adjust the midpoints between colour stops, are currently not supported by this macro.
+
+			#colour 4
+		*/
+		(["gradient"], (_, degree, ...args) => {
+			/*
+				First, check that the degree angle is correct.
+			*/
+			if (typeof degree !== "number") {
+				return TwineError.create(
+					"datatype",
+					"(gradient:)'s first argument should be a number of degrees, not " + objectName(degree) + "."
+				);
+			}
+			/*
+				Just like with (hsl:), we silently rounded and truncate degrees to the 0..359 range.
+			*/
+			degree = Math.round(degree) % 360;
+			if (degree < 0) {
+				degree += 360;
+			}
+			/*
+				Next, check that there are enough colour-stops.
+			*/
+			if (args.length < 4) {
+				return TwineError.create(
+					"datatype",
+					"(gradient:) must be given at least 2 colour-stop pairs of numbers and colours."
+				);
+			}
+			/*
+				This takes the flat arguments "array" and assembles the pairs array with every two values,
+				type-checking and propagating errors throughout.
+				During each odd iteration, the stop is the value. Then, the colour is the value.
+			*/
+			let stop;
+			const pairs = [];
+			const status = args.reduce((status, colour) => {
+				/*
+					Propagate earlier iterations' errors.
+				*/
+				if (TwineError.containsError(status)) {
+					return status;
+				}
+				if (stop === undefined) {
+					stop = colour;
+				}
+				/*
+					Colour-stop type-checking must be done here.
+				*/
+				else if (typeof stop !== "number" || stop < 0 || stop > 1) {
+					if (Colour.isPrototypeOf(stop)) {
+						return TwineError.create(
+							"datatype",
+							"(gradient:) colour-stops should be pairs of numbers and colours, not colours and numbers."
+						);
+					}
+					return TwineError.create(
+						"datatype",
+						"(gradient:) colour-stop percents should be fractional numbers between 0 and 1, not " + objectName(stop) + "."
+					);
+				}
+				else if (!Colour.isPrototypeOf(colour)) {
+					if (typeof colour === "string" && colour.startsWith('#')) {
+						return TwineError.create(
+							"datatype",
+							"HTML hex colours should be given to (gradient:) as bare colour values like #808080, not strings like \"" + colour + "\"."
+						);
+					}
+					return TwineError.create(
+						"datatype",
+						"(gradient:) colours should be built-in colours, HTML hex colours, or colours produced by (rgb:),"
+						+ " (rgba:), (hsl:) or (hsla:), not " + objectName(stop) + "."
+					);
+				}
+				else {
+					pairs.push({stop, colour:clone(colour)});
+					stop = undefined;
+				}
+				return status;
+			}, true);
+			/*
+				Return an error if one was raised during iteration.
+			*/
+			if (TwineError.containsError(status)) {
+				return status;
+			}
+			/*
+				If there's an odd number of arguments, that means a stop has not been given a colour.
+			*/
+			if (stop !== undefined) {
+				return TwineError.create("macrocall", "This gradient has a colour-stop percent without a colour.");
+			}
+			return Gradient.create(degree, pairs);
+		},
+		[Number, rest(either(Number, Colour))])
 
 		;
 		/*d:

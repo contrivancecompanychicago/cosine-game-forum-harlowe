@@ -195,9 +195,9 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 						/*jshint -W083 */
 						return TwineError.create('datatype',
 							name + "'s " + nth(ind + 1) + " value (a lambda) should have "
-							+ andList(["where","making","via","with"].filter(e => type.clauses.includes(e)).map(e => "a '" + e + "' clause"))
+							+ andList(["where","when","making","via","with"].filter(e => type.clauses.includes(e)).map(e => "a '" + e + "' clause"))
 							+ ", not "
-							+ andList(["where","making","via","with"].filter(e => e in arg).map(e => "a '" + e + "' clause"))
+							+ andList(["where","when","making","via","with"].filter(e => e in arg).map(e => "a '" + e + "' clause"))
 							+ ".");
 					}
 

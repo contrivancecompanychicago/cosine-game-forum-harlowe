@@ -53,6 +53,9 @@ define(['jquery'], ($) => {
 		do not transfer one-to-one between representations! For instance, the hue of a gray is essentially irrelevant, so grays
 		will usually have a `h` value equal to 0, even if you provided a different hue to (hsl:). Furthermore, colours with a
 		lightness of 1 are always white, so their saturation and hue are irrelevant.
+
+		Colours, when used in passage prose or given to (print:), produce a square swatch containing the colour. This is a `<tw-colour>`
+		element, but otherwise has no other features or capabilities and is intended solely for debugging purposes.
 	*/
 	const
 		/*
@@ -232,19 +235,15 @@ define(['jquery'], ($) => {
 		},
 
 		/*
-			These getters provide h, s and l values as alternatives to this colour's
-			r, g and b values. These are accessible in user macros.
+			This, in addition to exposing r, g and b values, provides h, s and l values as alternatives.
 		*/
-		get h() {
-			return RGBToHSL(this).h;
-		},
-
-		get s() {
-			return RGBToHSL(this).s;
-		},
-
-		get l() {
-			return RGBToHSL(this).l;
+		TwineScript_GetProperty(prop) {
+			if (prop === "h" || prop === "s" || prop === "l") {
+				return RGBToHSL(this)[prop];
+			}
+			if (prop === "r" || prop === "g" || prop === "b") {
+				return this[prop];
+			}
 		},
 
 		/*

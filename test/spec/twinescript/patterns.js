@@ -1,6 +1,6 @@
 describe("patterns", function() {
 	'use strict';
-	var datatypes = ["array", "boolean", "changer", "colour",
+	var datatypes = ["array", "boolean", "changer", "colour", "gradient",
 		"color", "command", "dm", "datamap", "ds", "dataset",
 		"number", "num", "string", "str"];
 
@@ -11,7 +11,8 @@ describe("patterns", function() {
 		['true',"boolean"],
 		['(dm:)',"datamap","dm"],
 		['(ds:)','dataset',"ds"],
-		['red','colour','color']
+		['red','colour','color'],
+		['(gradient:90,0,red,1,white)','gradient']
 	];
 	describe("datatypes", function() {
 		it("are keywords matching permitted storable values", function() {

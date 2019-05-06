@@ -2,7 +2,8 @@
 define([
 	'datatypes/changercommand',
 	'datatypes/colour',
-], (Changer, Colour) => {
+	'datatypes/gradient',
+], (Changer, Colour, Gradient) => {
 	/*
 		A Pattern is the fundamental primitive in pattern-matching in Harlowe. A single Datatype
 		is a pattern, and any data structure containing a Datatype is itself useful as a pattern.
@@ -31,6 +32,7 @@ define([
 		| `command` | Commands
 		| `changer` | Changers
 		| `color`, `colour` | Colours
+		| `gradient` | Gradients
 
 		Note that data that can't be stored in a variable doesn't have a corresponding datatype name, because you won't need to compare things to it.
 
@@ -74,6 +76,7 @@ define([
 				: obj instanceof Map ? "datamap"
 				: obj instanceof Set ? "dataset"
 				: Colour.isPrototypeOf(obj) ? "colour"
+				: Gradient.isPrototypeOf(obj) ? "gradient"
 				// Lambdas, AssignmentRequests and DataType are not included because they're not meant to be pattern-matched.
 				: typeof obj === "string" ? "string"
 				: typeof obj === "number" ? "number"

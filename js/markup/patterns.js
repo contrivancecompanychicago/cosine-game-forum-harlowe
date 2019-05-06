@@ -902,7 +902,7 @@
 
 		// Data types
 		datatype: either(
-			"array", "boolean", "changer", "colour",
+			"array", "boolean", "changer", "colour", "gradient",
 			"color", "command", "dm", "datamap", "ds", "dataset",
 			"number", "num", "string", "str"
 		),

@@ -22,6 +22,11 @@ describe("twinescript operators", function () {
 			expect("(print: (ds:1) + (ds:2))").markupToPrint("1,2");
 			expect("(print: (ds:1,4,3) + (ds:2,3,4))").markupToPrint("1,2,3,4");
 		});
+		it("can be used to blend colours", function () {
+			expect(runPassage("(print: (rgb:0,255,0) + (rgb:0,0,0))").find('tw-colour')).toHaveBackgroundColour("#009900");
+			expect(runPassage("(print: (rgb:51,51,51) + (rgb:34,170,34))").find('tw-colour')).toHaveBackgroundColour("#338533");
+			expect(runPassage("(print: (rgba:0,255,0,0.8) + (rgba:0,0,0,0.5))").find('tw-colour')).toHaveBackgroundColour("rgba(0,153,0,0.65)");
+		});
 		it("compares objects by value when concatenating datasets", function() {
 			runPassage("(set: $a to (a:))(set:$ds to (ds:))"
 				+ "(set:$ds to it + (ds:$a))");
@@ -466,6 +471,23 @@ describe("twinescript operators", function () {
 			expect("(print: ?red's (a:1,3,5) is ?red's (a:1,2,3,5))").markupToPrint("false");
 			expect("(print: ?red's 1st + ?blue's 2nd is ?red's 1st + ?blue's 2nd)").markupToPrint("true");
 			expect("(print: ?red + ?blue is ?blue + ?red)").markupToPrint("true");
+		});
+		it("compares colours by value", function (){
+			expect("(print: (rgb:40,80,40) is (rgb:40,80,40))").markupToPrint("true");
+			expect("(print: (rgba:40,80,40,0.3) is (rgba:40,80,40,0.3))").markupToPrint("true");
+			expect("(print: (rgb:40,81,40) is (rgb:40,80,40))").markupToPrint("false");
+			expect("(print: (rgba:40,80,40,0.4) is (rgba:40,80,40,0.3))").markupToPrint("false");
+		});
+		it("compares changers by value", function (){
+			["(text-style:'blur')", "(text-rotate:20)", "(if:true)", "(t8n-time:2s)", "(hook:'foo')", "(css:'height:2em')", "(align:'==>')"].forEach(function(e) {
+				expect("(print: " + e + " is " + e + ")").markupToPrint("true");
+				expect("(print: " + e + " is (align:'<=='))").markupToPrint("false");
+			});
+		});
+		xit("compares binds by value", function (){
+			expect("(print: bind $foo is bind $foo)").markupToPrint("true");
+			expect("(print: bind $foo's 2nd is bind $foo's 2nd)").markupToPrint("true");
+			expect("(print: bind $foo's 1st is bind $foo's 2nd)").markupToPrint("false");
 		});
 		xit("errors when used to compare non-datatypes with datatypes, due to similarity with 'is a'", function (){
 			expect("(print: 2 is num)").markupToError();
