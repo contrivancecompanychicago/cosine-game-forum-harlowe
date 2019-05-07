@@ -538,6 +538,9 @@ describe("property indexing", function() {
 			expect('(set:$a to 2)(set: $a\'s "1" to 1)').markupToError();
 			expect('(set:$a to -0.1)(set: $a\'s "1" to 1)').markupToError();
 		});
+		xit("can be combined with normal indices", function() {
+			expect("(print: (gradient:0,0.7,black,0.2,white)'s stops's 1st's 'percent')").markupToPrint("0.2");
+		});
 	});
 	describe("the belonging operator", function() {
 		it("performs property accesses with full expressions", function() {

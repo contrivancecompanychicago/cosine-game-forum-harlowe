@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutils', 'engine'],
-($, Utils, State, VarRef, {objectName, typeName}, Engine) => () => {
+define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutils', 'engine', 'passages'],
+($, Utils, State, VarRef, {objectName, typeName}, Engine, Passages) => () => {
 	/*
 		Debug Mode
 
@@ -10,7 +10,13 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 
 		This module exports a single function which, when run, performs all of the Debug Mode setup.
 	*/
-	const debugElement = $("<tw-debugger><div class='variables'></div>Turns: <select disabled></select><button class='show-invisibles'>Debug View</button><button class='show-variables enabled'>0 Variables</button></tw-debugger>");
+	const debugElement = $(`<tw-debugger>
+		<div class='panel panel-variables'></div>
+		<div class='panel panel-source' hidden></div>
+		<div class='tabs'>
+		<button class='tab tab-variables enabled'>0 Variables</button> <button class='tab tab-source'>Source</button>
+		</div>
+		Turns: <select class='turns' disabled></select><button class='show-invisibles'>Debug View</button></tw-debugger>`);
 
 	/*
 		Set up the showInvisibles button, which toggles debug mode CSS (showing <tw-expression> elements and such)
@@ -22,20 +28,26 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 		showInvisibles.toggleClass('enabled');
 	});
 	/*
-		Additionally, set up the showVariables button, which hides and shows the variable pane (which is visible initially).
+		Additionally, set up the tabs and panes.
 	*/
-	const showVariables = debugElement.find('.show-variables');
-	const variablesTable = debugElement.find('.variables');
-	showVariables.click(() => {
-		variablesTable[showVariables.is('.enabled') ? "attr" : "removeAttr"]("hidden",'');
-		showVariables.toggleClass('enabled');
+	['variables', 'source',].forEach((name)=> {
+		const tab   = debugElement.find('.tab-'   + name);
+		const panel = debugElement.find('.panel-' + name);
+		tab.click(() => {
+			tab.toggleClass('enabled');
+			debugElement.find('.tab:not(.tab-' + name + ')').removeClass('enabled');
+			debugElement.find('.panel').attr('hidden','');
+			if (tab.is('.enabled')) {
+				panel.removeAttr("hidden");
+			}
+		});
 	});
 
 	/*
 		Set up the turn dropdown, which provides a menu of turns in the state and permits the user
 		to travel to any of them at will.
 	*/
-	const turnsDropdown = debugElement.find('select');
+	const turnsDropdown = debugElement.find('.turns');
 	turnsDropdown.change(({target:{value}}) => {
 		/*
 			Work out whether to travel back or forward by subtracting the
@@ -82,6 +94,13 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 					+ "</option>")
 				.val(i);
 		}
+		else {
+			/*
+				Select the new <option>.
+			*/
+			turnsDropdown.find('[selected]').removeAttr('selected');
+			turnsDropdown.val(i);
+		}
 	})
 	/*
 		'back' is fired when undoing a move. This removes the final turn from the menu.
@@ -122,13 +141,21 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 		);
 	});
 
+	const variablesTable = debugElement.find('.panel-variables');
+	/*
+		Update the number of variables on the showVariables button.
+	*/
+	function updateVariablesTabName() {
+		const children = variablesTable.children();
+		debugElement.find('.tab-variables').text(`${children.length} Variable${children.length !== 1 ? 's' : ''}`);
+	}
 	/*
 		Here, we set up the variables table.
 
 		This function is responsible for creating the inner DOM structure of the
 		variablesTable and updating it, one row at a time.
 	*/
-	function update(name, value, tempScope) {
+	function updateVariables(name, value, tempScope) {
 		/*
 			First, obtain the row which needs to be updated. If it doesn't exist,
 			create it below.
@@ -157,11 +184,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 			(tempScope ? ("<span class='temporary-variable-scope'>" + tempScope + "</span>") : "") +
 			"</span><span class='variable-value'>" + objectName(value) + "</span>"
 		);
-		/*
-			Update the number of variables on the showVariables button.
-		*/
-		const children = variablesTable.children();
-		showVariables.text(`${children.length} Variable${children.length !== 1 ? 's' : ''}`);
+		updateVariablesTabName();
 	}
 	/*
 		This function, called as a State event handler, synchronises the variablesTable
@@ -170,6 +193,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 	function refresh() {
 		const updated = [];
 		/*
+			Refresh the variables pane.
 			For performance purposes, we try to avoid removing and re-creating
 			unchanged variables. So, we first loop through each variable-row and
 			check if its value needs to be updated or removed.
@@ -192,11 +216,12 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 				*/
 				updated.push(name);
 				if (objectName(State.variables[name]) !== value) {
-					update(name, State.variables[name]);
+					updateVariables(name, State.variables[name]);
 				}
 			}
 			else {
 				e.remove();
+				updateVariablesTabName();
 			}
 			/*
 				Since refresh() is called when the turn begins, no temporary variables should be
@@ -210,9 +235,13 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 		*/
 		for (let name in State.variables) {
 			if (!name.startsWith('TwineScript') && !updated.includes(name)) {
-				update(name, State.variables[name]);
+				updateVariables(name, State.variables[name]);
 			}
 		}
+		/*
+			Refresh the source pane.
+		*/
+		debugElement.find('.panel-source').text(Passages.get(State.passage).get('source'));
 	}
 	/*
 		Having defined those functions, we register them as event handlers now.
@@ -221,7 +250,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 
 	VarRef.on('set', (obj, name, value) => {
 		if (obj === State.variables || obj.TwineScript_VariableStore) {
-			update(name, value, obj === State.variables ? "" : obj.TwineScript_VariableStoreName);
+			updateVariables(name, value, obj === State.variables ? "" : obj.TwineScript_VariableStoreName);
 		}
 	})
 	/*

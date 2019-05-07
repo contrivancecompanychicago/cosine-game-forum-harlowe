@@ -1,6 +1,6 @@
 #Harlowe - the default [Twine 2](https://bitbucket.org/klembot/twinejs) story format.
 
-Rough documentation is at http://twine2.neocities.org/. See below for compilation instructions.
+Documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
 ###3.1.0 changes (unreleased):
 
@@ -11,6 +11,8 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
  * Fixed a long-standing bug where `(append:)` and `(prepend:)`, when given multiple target hooks or strings, wouldn't perform the appends or prepends in a single pass - `A(append:"A","B")[B]` would produce `ABB` instead of `AB`, against intuition.
  * Fixed a bug where using an external temp variable as a property inside a lambda (such as `_foo` in `where _foo of $bar contains it`) wouldn't work.
  * Fixed a bug where the error message for giving `(event:)` the wrong type of lambda was incorrectly worded.
+ * Fixed a bug where using the sidebar's "redo" button wouldn't cause the debug panel's "Turns" dropdown to update.
+ * Fixed a bug where the debug mode's variables button's label sometimes had the wrong number on it.
 
 ####Alterations
 
@@ -24,6 +26,7 @@ Rough documentation is at http://twine2.neocities.org/. See below for compilatio
  * Added a `visits` identifier, to join `it` and `time`, which equals the number of times the current passage was visited, including this time. The purpose of this identifier is to make it easier to replicate the Twine 1 `<<once>>` macro, which only displayed text on the first visit to a passage, and whose absence is a long-standing weakness in Harlowe. Previously, it could be replicated using the rather cumbersome `(if: (passage:)'s name is not in (history:))`, but now, it can be replicated using `(if: visits is 1)`, which expresses the intent much better and approaches the original's brevity. Furthermore, it makes it much easier to specify hooks to display on third, fourth, or even-numbered visits, using `(if: visits is 3)`, `(if: visits % 2 is 0)` and so forth. The reason this is an identifier and not a macro (like `(passage:)`) is because I want identifiers to be used for small, "volatile" information that's specific only to the current context, such as `it` and `time`. (`(history:)`, in retrospect, could have been an identifier.)
  * Added a `(passages:)` macro, which returns an array containing the `(passage:)` datamaps for every passage in the game, but also can be given a "where" lambda to filter that array.
  * Added a gradient data type, a `(gradient:)` macro, and a `gradient` datatype name. This can be used to quickly create special images called gradients, which are smooth linear fades between various colours. These are implemented using CSS `linear-gradient`s, and the `(gradient:)` macro has similar syntax to it. Currently, these can only be used with `(background:)`.
+ * Added a new togglale pane to the debug mode panel, "Source", which displays the current passage's source code. This is designed to supplement the "debug view" option, which shows the passage's current state, by letting you compare it to the original code. This pane currently has no syntax highlighting, such as that used in the Twine editor.
 
 ###3.0.2 changes:
 

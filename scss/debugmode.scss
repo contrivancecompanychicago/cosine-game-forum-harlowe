@@ -254,7 +254,7 @@ tw-debugger {
 	z-index: $zindex;
 	min-width: 10em;
 	min-height: 1em;
-	padding: 1em;
+	padding: 0em 1em 1em 1em;
 
 	// Font
 	font-size: 1.25em;
@@ -285,7 +285,7 @@ tw-debugger {
 			box-shadow: inset #ddd 3px 5px 0.5em;
 		}
 	}
-	.variables {
+	.panel {
 		@include flexbox;
 		@include flex-direction(column);
 
@@ -303,6 +303,7 @@ tw-debugger {
 		// Design
 		background:$background;
 		border:inherit;
+		border-bottom: solid #999 $borderwidth;
 		border-top-left-radius: $borderradius;
 		border-bottom-left-radius: $borderradius;
 
@@ -314,35 +315,47 @@ tw-debugger {
 			display:none;
 		}
 
-		.variable-row {
-			@include flexbox;
-			@include flex-direction(row);
-			flex-shrink: 0;
-			&:nth-child(2n) {
-				background:#EEE;
-			}
+	}
+	.variable-row {
+		@include flexbox;
+		@include flex-direction(row);
+		flex-shrink: 0;
+		&:nth-child(2n) {
+			background:#EEE;
 		}
-		.variable-name {
-			display:inline-block;
-			width:50%;
+	}
+	.variable-name {
+		display:inline-block;
+		width:50%;
+		&::before {
+			content: "$";
+		}
+		&.temporary::before {
+			content: "_";
+		}
+		.temporary-variable-scope {
+			opacity:0.8;
+			font-size:0.75em;
 			&::before {
-				content: "$";
-			}
-			&.temporary::before {
-				content: "_";
-			}
-			.temporary-variable-scope {
-				opacity:0.8;
-				font-size:0.75em;
-				&::before {
-					content: " in ";
-				}
+				content: " in ";
 			}
 		}
-		.variable-value {
-			display:inline-block;
-			width:50%;
-		}
+	}
+	.variable-value {
+		display:inline-block;
+		width:50%;
+	}
+	.panel-source {
+		font-family:monospace;
+		overflow-x:scroll;
+		white-space:pre;
+	}
+	.tabs {
+		padding-bottom: 0.5em;
+	}
+	.tab {
+		border-radius: 0px 0px 0.5em 0.5em;
+		border-top: none;
 	}
 }
 
