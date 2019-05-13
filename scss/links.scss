@@ -9,8 +9,8 @@ tw-link, .link, tw-icon, .enchantment-clickblock {
 }
 
 @mixin enchantable-color {
-	tw-enchantment[style^="color"] &:not(:hover),
-	tw-enchantment[style*=" color"] &:not(:hover) {
+	tw-passage tw-enchantment[style^="color"] &:not(:hover),
+	tw-passage tw-enchantment[style*=" color"] &:not(:hover) {
 		color: inherit;
 	}
 }

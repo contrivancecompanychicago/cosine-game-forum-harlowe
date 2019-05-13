@@ -60,7 +60,7 @@ describe("hooks", function () {
 		it("consist of a macro, then a hook", function (){
 			expect("(if:true)[foo]").markupToPrint("foo");
 		});
-		it("will error if the macro doesn't produce a command or boolean", function (){
+		it("will error if the macro doesn't produce a changer or boolean", function (){
 			expect("(either:'A')[Hey]").markupToError();
 			expect("(either:1)[Hey]").markupToError();
 			expect("(a:)[Hey]").markupToError();
@@ -105,7 +105,7 @@ describe("hooks", function () {
 		it("consist of a variable, then a hook", function (){
 			expect("$foo[foo]").markupToPrint("foo");
 		});
-		it("will error if the variable doesn't contain a changer command or boolean", function (){
+		it("will error if the variable doesn't contain a changer or boolean", function (){
 			runPassage('(set: $str to "A")'
 				+ '(set: $num to 2)'
 				+ '(set: $arr to (a:))'
@@ -117,7 +117,7 @@ describe("hooks", function () {
 			expect("$dm[Hey]").markupToError();
 			expect("$ds[Hey]").markupToError();
 		});
-		it("may have any amount of whitespace between the macro and the hook", function (){
+		it("may have any amount of whitespace between the variable and the hook", function (){
 			expect("$foo [foo]").markupToPrint("foo");
 			expect("$foo\n[foo]").markupToPrint("foo");
 			expect("$foo \n \n [foo]").markupToPrint("foo");

@@ -389,7 +389,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(live:)
 
-			#live 2
+			#live 3
 		*/
 		("event",
 			(_, event) => ChangerCommand.create("event", [event]),
@@ -398,6 +398,81 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				d.data.live = {event};
 			},
 			Lambda.TypeSignature('when')
+		)
+
+		/*d:
+			(more:) -> Changer
+
+			Hooks that have this changer attached will only be run once no other forward-progress elements - links, (mouseover:) or (mouseout:) elements -
+			are remaining in the passage, and will reveal "more" prose.
+
+			Example usage:
+			```
+			(link:"Look at the duck.")[The duck drifts on the lake's surface.]
+			(link:"Look at the clouds.")[Seems like rain, which is bad news for just one of you.]
+			(more:)[You've looked at the duck, and the clouds.]
+			```
+
+			Rationale:
+			It's common to use hook-revealing macros like (link:) to provide elaboration on a scene, which the player can encounter in any order
+			they wish. You may want to require each of these elaborations and details be visited by the player, only displaying the link to
+			the next passage (or further story-setting material) after they have all been explored. You could implement this using a temporary variable
+			which is (set:) by each (link:) hook, and a (when:) macro that checks when it's at a certain value - but this macro, (more:), provides a much easier
+			alternative.
+
+			Details:
+			The complete list of elements considered to be "forward-progress" elements is as follows:
+			* Links created by (link:), (link-repeat:), (link-reveal:), (link-goto:), (link-reveal-goto:), and (link-show:).
+			* Passage links (which are the same as (link-goto:) links).
+			* Links created by (click:), (click-replace:), (click-append:), (click-prepend:), and (click-goto:).
+			* Mouseover areas created by (mouseover:), (mouseover-replace:), (mouseover-append:), (mouseover-prepend:), and (mouseover-goto:).
+			* Mouseout areas created by (mouseout:), (mouseout-replace:), (mouseout-append:), (mouseout-prepend:), and (mouseout-goto:).
+
+			Note that as of Harlowe 3.1.0, this does not consider (link-undo:) macros to be forward-progress elements, and the hook will appear
+			even if (link-undo:)s exist in the passage.
+
+			This will also not consider (event:) or (live:) macros to be forward-progress elements, even if they seem guaranteed to display their hooks
+			eventually. The (more:) hook will appear regardless of how many of these there are.
+
+			If multiple (more:) elements are in the passage, they will appear in the order they appear. This may cause earlier ones to reveal
+			links inside their hooks, and thus "block" the subsequent ones from revealing. In the case of
+			`(more:)[You see [[an exit]] ahead.] (more:)[But you hear chuckling behind you...]`, the first (more:) hook will reveal
+			a passage link, thus causing the second hook to not be revealed.
+
+			See also:
+			(show:), (link-show:)
+
+			#live 4
+		*/
+		("more",
+			() => ChangerCommand.create("more"),
+			d => {
+				d.enabled = false;
+				d.data.live = {
+					/*
+						In order to implement (more:), I decided to leverage the existing implementation for (event:).
+						As such, the following is a fake "when" Lambda, complete with fake "when" property, which is passed to
+						runLiveHook() in section.js, as if it was created by Lambda.create().
+					*/
+					event: {
+						when: true,
+						filter: section => {
+							return section.dom.find('tw-enchantment, tw-link')
+								.filter((_,e) =>
+									$(e).data('enchantmentEvent') ||
+									/*
+										Currently, <tw-link>s' parent <tw-hook>s have the clickEvent on them,
+										which makes sense in the context of changeDescriptors (the link is created by
+										replacing the <tw-hook>'s contents with the <tw-link> and giving the hook the
+										clickEvent) but does feel a little #awkward.
+									*/
+									$(e).parent().data('clickEvent'))
+								.length ? [] : [true];
+						},
+					},
+				};
+			},
+			null
 		)
 
 		/*d:

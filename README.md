@@ -19,10 +19,12 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Now, `(history:)` can be given an optional "where" lambda to provide only passage names whose passages match the lambda. The lambda is given the same passage datamaps which are returned by `(passage:)`. `(history: where its tags contains "Forest")` is essentially a shorthand for `(find: where (passage: it)'s tags contains "Forest", ...(history:))`.
  * The debug view colours for various macros have been updated to recognise more macro names.
  * Raw `<textarea>` tags will no longer have their contained text converted to HTML elements as if it was Harlowe syntax.
+ * Now, using `(enchant:)` to enchant the `(text-colour:)` of ?Page or ?Passage will no longer override the text-colour of links - only by enchanting the enclosing hooks, or the ?Link hook, can change their non-hover colour.
  * The default CSS for `<pre>` elements now has a smaller `line-height`.
 
 ####Additions
 
+ * Added `(more:)`, a macro loosely inspired by the Ink language's "gather" structure. This will defer running the hook until no other "revealing" elements (links, `(mouseover:)` or `(mouseout:)` elements) remain in the passage, whereupon it will run and display even "more" prose. Its main purpose is to be used alongside `(link:)`, as a shortcut for putting `(show:)` inside it - `(link:"Duck")[It swims on the lake.(show:?next)] |next)[It dives underwater.]` can be rewritten as `(link:"Duck")[It swims on the lake.] (more:)[It dives underwater.]`.
  * Added a `visits` identifier, to join `it` and `time`, which equals the number of times the current passage was visited, including this time. The purpose of this identifier is to make it easier to replicate the Twine 1 `<<once>>` macro, which only displayed text on the first visit to a passage, and whose absence is a long-standing weakness in Harlowe. Previously, it could be replicated using the rather cumbersome `(if: (passage:)'s name is not in (history:))`, but now, it can be replicated using `(if: visits is 1)`, which expresses the intent much better and approaches the original's brevity. Furthermore, it makes it much easier to specify hooks to display on third, fourth, or even-numbered visits, using `(if: visits is 3)`, `(if: visits % 2 is 0)` and so forth. The reason this is an identifier and not a macro (like `(passage:)`) is because I want identifiers to be used for small, "volatile" information that's specific only to the current context, such as `it` and `time`. (`(history:)`, in retrospect, could have been an identifier.)
  * Added a `(passages:)` macro, which returns an array containing the `(passage:)` datamaps for every passage in the game, but also can be given a "where" lambda to filter that array.
  * Added a gradient data type, a `(gradient:)` macro, and a `gradient` datatype name. This can be used to quickly create special images called gradients, which are smooth linear fades between various colours. These are implemented using CSS `linear-gradient`s, and the `(gradient:)` macro has similar syntax to it. Currently, these can only be used with `(background:)`.
@@ -33,7 +35,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 ####Bugfixes
 
  * Fixed a startup bug that potentially caused `(dropdown:)` menus to stop affecting their bound variables for the rest of the game.
- * Now, `(alert:)`, `(prompt:)` and `(confirm:)` produce errors if they are used in a browser tha doesn't support Javascript's `prompt()`, `alert()` or `confirm()` functions, instead of crashing the page.
+ * Now, `(alert:)`, `(prompt:)` and `(confirm:)` produce errors if they are used in a browser that doesn't support Javascript's `prompt()`, `alert()` or `confirm()` functions, instead of crashing the page.
  * Fixed the `(str:)` macro alias added in 3.0.0 mysteriously not actually having been added.
 
 ###3.0.1 changes:
@@ -81,7 +83,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
  * Added `is a` and `is an` operators, which can be used to determine what datatype a variable or piece of data is - `$message is a string` is true if the variable is a string. The datatype names are `number` or `num`, `string` or `str`, `boolean`, `array`, `datamap` or `dm`, `dataset` or `ds`, `command`, `changer`, and `color` or `colour`.
  * Added a `matches` operator, which functions similarly to `is a`, but can also be used to check if a data structure's shape resembles a pattern - a similar data structure with datatype names as "holes" in it. `(a: 2, 3) matches (a: num, num)` checks that the first array contains exactly two numbers. `(dm: "Faction", str) matches (dm: "Faction", "Slugbikers")` checks that the second datamap contains only one name with a string value. Nested patterns - `(a: (a: num), num, num)` - are also usable.
- * Added a `bind` operator, which is used to "bind" variables to certain interaction macros, like (cycling-link:), described below.
+ * Added a `bind` operator, which is used to "bind" variables to certain interaction macros, like `(cycling-link:)`, described below.
 
 #####Macros
 

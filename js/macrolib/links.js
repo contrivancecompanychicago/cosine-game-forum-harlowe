@@ -116,7 +116,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			This creates a link which is visually indistinguishable from normal passage links.
 			
 			See also:
-			(link-reveal:), (link-repeat:), (link-goto:), (click:)
+			(link-reveal:), (link-repeat:), (link-goto:), (click:), (more:)
 
 			#links 1
 		*/
@@ -145,7 +145,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			when the link is demoted to text.
 			
 			See also:
-			(link:), (link-repeat:), (link-goto:), (click:)
+			(link:), (link-repeat:), (link-goto:), (click:), (more:)
 
 			#links 2
 		*/
@@ -438,7 +438,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			will NOT produce an error, but simply do nothing.
 
 			See also:
-			(show:), (link-reveal:), (click-append:)
+			(show:), (link-reveal:), (click-append:), (more:)
 
 			#links 6
 		*/

@@ -538,8 +538,11 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 
 			If you provide to (show:) a hook which is already visible, nothing will happen - no error will be produced.
 
+			If you wish to reveal a hook after a number of other links have been clicked and removed, such as those created
+			by (link-reveal:) or (click:), you may find the (more:) macro to be convenient.
+
 			See also:
-			(hidden:), (replace:)
+			(hidden:), (replace:), (more:)
 
 			#showing and hiding
 		*/
@@ -587,7 +590,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			See also:
 			(live:)
 
-			#live
+			#live 2
 		*/
 		/*
 			The existence of this macro is checked by searching for its <tw-expression> DOM element

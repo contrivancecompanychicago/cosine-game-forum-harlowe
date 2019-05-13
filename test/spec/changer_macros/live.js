@@ -15,8 +15,12 @@ describe("live macros", function() {
 		it("errors when placed in passage prose while not attached to a hook", function() {
 			expect("(event: when $a > 2)").markupToError();
 		});
-		it("doesn't immediately display the hook", function() {
-			expect("(event:when $a is 2)[baz]").not.markupToPrint('baz');
+		it("doesn't immediately display the hook", function(done) {
+			var p = runPassage("(event:when $a is 2)[baz]");
+			setTimeout(function() {
+				expect(p.text()).not.toBe('baz');
+				done();
+			},20);
 		});
 		it("displays the attached hook only when the lambda's condition becomes true", function(done) {
 			var p = runPassage("(event: when $a is 2)[bar](link:'foo')[(set:$a to 2)]");
@@ -56,6 +60,52 @@ describe("live macros", function() {
 				p.find('tw-link').click();
 				setTimeout(function() {
 					expect(p.text()).toBe("quxquux");
+					done();
+				},20);
+			},20);
+		});
+	});
+	describe("the (more:) macro", function() {
+		it("takes no arguments", function() {
+			expect("(more:)[]").not.markupToError();
+			expect("(more:when visits is 2)[]").markupToError();
+		});
+		it("errors when placed in passage prose while not attached to a hook", function() {
+			expect("(more:)").markupToError();
+		});
+		[['link','(link-reveal:"foo")','tw-link','click'],
+		['(link-show:)','(link-show:"foo",?bar)','tw-link','click'],
+		['passage link', '(link-reveal:"f")[(replace:?a)[oo]][[[oo->test]]]<a|','tw-link','click'],
+		['click enchantment','foo(click:"foo")','tw-enchantment','click'],
+		['mouseover enchantment','foo(mouseover:"foo")', 'tw-enchantment', 'mouseover']].forEach(function(e) {
+			var name = e[0], code = e[1], el = e[2], event = e[3];
+			it("doesn't immediately display the hook if " + name + "s are in the passage", function(done) {
+				var p = runPassage(code+"[](more:)[bar]");
+				setTimeout(function() {
+					expect(p.text()).toBe("foo");
+					done();
+				},20);
+			});
+			it("displays the hook once all " + name + "s are gone", function(done) {
+				var p = runPassage(code+"[](more:)[bar]");
+				expect(p.text()).toBe("foo");
+				p.find(el).first()[event]();
+				setTimeout(function() {
+					expect(p.text()).toBe("foobar");
+					done();
+				},20);
+			});
+		});
+		it("multiple (more:) hooks will appear in order and may block one another", function(done) {
+			var p = runPassage("(link:'foo')[](more:)[qux](more:)[(link:'bar')[]]");
+			p.find('tw-link').click();
+			setTimeout(function() {
+				expect(p.text()).toBe("quxbar");
+				
+				p = runPassage("(link:'foo')[](more:)[(link:'bar')[]](more:)[qux]");
+				p.find('tw-link').click();
+				setTimeout(function() {
+					expect(p.text()).toBe("bar");
 					done();
 				},20);
 			},20);

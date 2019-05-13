@@ -142,7 +142,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 				do much good, as they are printed before the rest of the passage.
 
 				See also:
-				(append:), (prepend:), (show:)
+				(append:), (prepend:), (show:), (more:)
 
 				#revision
 			*/
@@ -163,7 +163,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 				text or amending it with an extra sentence or word, changing or revealing a deeper meaning.
 
 				See also:
-				(replace:), (prepend:)
+				(replace:), (prepend:), (show:), (more:)
 
 				#revision
 			*/
@@ -185,7 +185,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 				preceding sentences or words to a text to change or reveal a deeper meaning.
 
 				See also:
-				(replace:), (append:)
+				(replace:), (append:), (show:), (more:)
 
 				#revision
 			*/
