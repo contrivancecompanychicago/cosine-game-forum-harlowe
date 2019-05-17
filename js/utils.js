@@ -350,6 +350,12 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 		*/
 
 		transitionOut(el, transIndex, transitionTime) {
+			/*
+				Quick early exit.
+			*/
+			if (el.length === 0) {
+				return;
+			}
 			const childrenInline = Utils.childrenProbablyInline(el),
 				/*
 					If the element is not a tw-hook or tw-passage, we must
@@ -406,6 +412,12 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 		*/
 
 		transitionIn(el, transIndex, transitionTime) {
+			/*
+				Quick early exit.
+			*/
+			if (el.length === 0) {
+				return;
+			}
 			const childrenInline = Utils.childrenProbablyInline(el),
 				/*
 					If the element is not a tw-hook or tw-passage, we must

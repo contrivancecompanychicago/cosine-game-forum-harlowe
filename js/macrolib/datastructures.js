@@ -353,7 +353,7 @@ define([
 			| `...` | When used in a macro call, it separates each value in the right side. | `(a: 0, ...(a:1,2,3,4), 5)` (is `(a:0,1,2,3,4,5)`)
 			| `'s` | Obtains the item at the right numeric position, or the `length`, `any` or `all` values. | `(a:"Y","Z")'s 1st` (is "Y")<br>`(a:4,5)'s (2)` (is 5)<br>`(a:5,5,5)'s length` (is 3)
 			| `of` | Obtains the item at the left numeric position, or the `length`, `any` or `all` values. | `1st of (a:"Y","O")` (is "Y")<br>`(2) of (a:"P","S")` (is "S")<br>`length of (a:5,5,5)` (is 3)
-			| `matches` | Evaluates to boolean `true` if the array on one side matches the pattern on the other. | `(a:2,3) matches (a: num, num)`, `(a: array) matches (a:(a:))`
+			| `matches` | Evaluates to boolean `true` if the array on one side matches the pattern on the other. | `(a:2,3) matches (a: num, num)`, `(a: array) matches (a:(a: ))`
 			| `is a`, `is an` | Evaluates to boolean `true` if the right side is `array` and the left side is an array. | `(a:2,3) is an array`
 		*/
 		/*d:

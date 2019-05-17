@@ -693,7 +693,8 @@
 			for instance, change the (text-colour:) or (font:) of all the text, or apply complex (css:) to it.
 			* `?Sidebar` selects the passage's sidebar containing undo/redo icons (`<tw-sidebar>`). You can style it with styling macros, or use
 			(replace:) or (append:) to insert your own text into it.
-			* `?Link` selects all of the links (passage links, and those created by (link:) and other macros) in the passage.
+			* `?Link` selects all of the links (passage links, and those created by (link:) and other macros) in the passage. This is similar to the
+			`links` data value for HookName data.
 
 			(Note that, as mentioned above, if you use these names for your own hooks, such as by creating a named hook like `|passage>[]`,
 			then they will, of course, be included in the selections of these names.)

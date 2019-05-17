@@ -34,14 +34,14 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			present on Datatype data. Note that this reverses "is a"'s arguments so
 			that the right side has its TwineScript_isTypeOf method called.
 		
-		{Function} TwineScript_GetElement:
-			a function that, if present, is used to obtain integer-indexed elements
-			of the object, as if it were an array. Currently used by HookSets.
-
 		{Function} TwineScript_GetProperty:
-			a function that, if present, is used to obtain string-indexed elements
-			of the object, as if it were an object. Currently used by Gradients,
-			which have properties that produce data structures (not just numbers and strings).
+			a function that, if present, is used to obtain indexed elements
+			of the object, as if it were an object or array. Currently used by HookSets, Gradients
+			and Colours.
+
+		{Array} TwineScript_Properties:
+			an array of property names, which should comprise the only property names
+			recognised by the object. Currently used by HookSets, Gradients and Colours.
 
 		{Function} TwineScript_Print:
 			a function which is used when this is printed into the passage,

@@ -43,6 +43,7 @@ define([], () => {
 				return this.stops.map(stop => new Map([["percent",stop.stop], ["colour", stop.colour.TwineScript_Clone()]]));
 			}
 		},
+		TwineScript_Properties: ["angle","stops"],
 
 		TwineScript_is(other) {
 			return other.angle === this.angle

@@ -27,20 +27,98 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 		In earlier Harlowe versions, it was possible to also use hook names with (set:), (put:) and (move:) to modify the
 		text of the hooks, but macros such as (replace:) should be used to accomplish this instead.
 
+		If a hook name does not apply to a single hook in the given passage (for instance, if you type `?rde` instead of
+		`?red`) then no error will be produced. This is to allow macros such as (click:) to be placed in the `header` or `footer`
+		passages, and thus easily affect hooks in every passage, even if individual passages lack the given hook name. Of course, it
+		means that you'll have to be extra careful while typing the hook name, as misspellings will not be easily identified
+		by Harlowe itself.
+
+		Built in hook names:
+
+		There are four special built-in hook names, ?Page, ?Passage, ?Sidebar and ?Link, which, in addition to selecting named hooks,
+		also affect parts of the page.
+
+		* `?Page` selects the page element (to be precise, the `<tw-story>` element) and using it with the (background:) macro lets you
+		change the background of the entire page.
+		* `?Passage` affects just the element that contains the current passage's text (to be precise, the `<tw-passage>` element) and lets you,
+		for instance, change the (text-colour:) or (font:) of all the text, or apply complex (css:) to it.
+		* `?Sidebar` selects the passage's sidebar containing undo/redo icons (`<tw-sidebar>`). You can style it with styling macros, or use
+		(replace:) or (append:) to insert your own text into it.
+		* `?Link` selects all of the links (passage links, and those created by (link:) and other macros) in the passage.
+
+		Data names:
+
 		If you only want some of the hooks with the given name to be affected, you can treat the hook name as a sort of read-only
 		array: access its `1st` element (such as by `?red's 1st`) to only affect the first such named hook in the passage, access
 		the `last` to affect the last, and so forth. (Even specifying an array of positions, like `?red's (a:1,3,5)`, will work.)
 		Unlike arrays, though, you can't access their `length`, nor can you spread them with `...`.
 
-		If you need to, you cal also add hook names together to affect both at the same time: `(click: ?red + ?blue's 1st)` will
-		affect all hooks tagged `<red|`, as well as the first hook tagged `<blue|`.
+		Moreover, a few special data names exist.
+		* `chars` (as in `?title's chars`) selects each individual character inside the hook,
+		as if it was in its own hook. This can be used for a variety of text effects - using (enchant:) with `?hook's chars's 1st` can be used to
+		give a hook a styled "drop-cap" without having to explicitly style the leading character.
+		* `links` (as in `?body's links`) is similar in use to `?link`, but only selects links within the hook.
 
-		Note: if a hook name does not apply to a single hook in the given passage (for instance, if you type `?rde` instead of
-		`?red`) then no error will be produced. This is to allow macros such as (click:) to be placed in the `header` or `footer`
-		passages, and thus easily affect hooks in every passage, even if individual passages lack the given hook name. Of course, it
-		means that you'll have to be extra careful while typing the hook name, as misspellings will not be easily identified
-		by Harlowe itself.
+		**Warning:** using `chars` with (enchant:) may cause text-to-speech assistive programs to fail to read the enchanted
+		passage correctly. If this would be unacceptable for you or your story, refrain from using `chars` with (enchant:).
+
+		| Data name | Example | Meaning
+		|---
+		| `1st`,`2nd`,`last`, etc. | `?hook's last`, `1st of ?hook` | Only one hook with the given name, at a certain position in the passage relative to the rest (first with its name, last with its name, etc).
+		| `chars` | `?title's chars`, `chars of ?scream` | Each individual character within the hook, as if the characters were hooks in themselves.
+		| `links` | `?body's links`, `links of ?aside` | Each link inside the hook.
+
+		Operators:
+
+		Unlike most forms of data, only one operator can be used with hook names.
+
+		| Operator | Purpose | Example
+		|---
+		| `+` | Creates a hook name that, when given to macros, causes both of the added hooks to be affected by that macro. | `(click: ?red + ?blue's 1st)` affects all hooks tagged `<red|`, as well as the first hook tagged `<blue|`.
 	*/
+
+	/*
+		A specific, simpler case for selecting substrings in text nodes: selecting
+		every character individually (as well as full runs of whitespace).
+	*/
+	const realWhitespace = new RegExp(Utils.realWhitespace + "+");
+	function textNodeToChars(node) {
+		const chars = [...node.textContent];
+		/*
+			If it only has 1 character in it, don't enter the loop.
+		*/
+		if (chars.length === 1) {
+			return [node];
+		}
+		/*
+			Convert the textContent to an array of code points...
+		*/
+		return chars
+			/*
+			 ...but leaving runs of whitespace as-is.
+			*/
+			.reduce((a,e) => {
+				if (e.match(realWhitespace) && a[a.length-1].match(realWhitespace)) {
+					a[a.length-1] += e;
+				}
+				else {
+					a.push(e);
+				}
+				return a;
+			},[])
+			.reduce((a,char) => {
+				/*
+					A gentle reminder: Text#splitText() returns the remainder of the split,
+					leaving the split-off part as the mutated original node. So, this counterinuitive
+					method body is the result.
+				*/
+				const orig = node;
+				if (char.length < node.textContent.length) {
+					node = node.splitText(char.length);
+				}
+				return a.concat(orig);
+			},[]);
+	}
 
 	/*
 		Retrieves a substring from a text node by slicing it into (at most 3) parts,
@@ -217,21 +295,21 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 	}
 
 	/*
-		Given a search string, this wraps all identified text nodes inside the given DOM
-		inside the given HTML tag. Currently only used to create <tw-pseudo-hook> elements.
+		Given a search string, this gathers all text nodes matching the string.
+		Note this may permute the DOM by splitting text nodes that are a superstring
+		of the search string.
 
-		@param {String} searchString The passage text to wrap
+		@param {String} searchString The passage text
 		@param {jQuery} dom The DOM in which to search
-		@param {String} htmlTag The HTML tag to wrap around
-		@return {jQuery} A jQuery set holding the created HTML wrapper tags.
+		@return {jQuery} A jQuery set holding the nodes.
 	*/
-	function wrapTextNodes(searchString, dom, htmlTag) {
+	function getTextNodes(searchString, dom) {
 		const nodes = findTextInNodes(dom.textNodes(), searchString);
 		let ret = $();
 		nodes.forEach((e) => {
-			ret = ret.add($(e).wrapAll(htmlTag));
+			ret = ret.add(e);
 		});
-		return ret.parent();
+		return ret;
 	}
 
 	/*
@@ -288,21 +366,39 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 			if (Array.isArray(index)) {
 				return index.reduce((a,i) => a.add(elements.get(i)), $());
 			}
+			// TODO: "3n+1th" selectors
+			else if (typeof index === "string") {
+				/*
+					"?hook's chars" selects the individual characters inside ?hook. Notice that
+					textNodeToChars() splits up Text nodes whenever it's called, as with getTextNodes().
+				*/
+				if (index === "chars") {
+					let ret = $();
+					elements.textNodes().forEach(t => textNodeToChars(t).forEach(t => ret = ret.add(t)));
+					return ret;
+				}
+				/*
+					"?hook's links" selects links within the ?hook.
+					This selector should be in keeping with ?Link, above.
+				*/
+				if (index === "links") {
+					return elements.find('tw-link, .enchantment-link');
+				}
+			}
 			// Luckily, negatives indices work fine with $().get().
 			return $(elements.get(index));
 		};
 		if (this.selector) {
 			let ownElements;
 			/*
-				If this is a pseudo-hook (search string) selector, we must create the
-				temporary <tw-pseudo-hook> elements around the selection.
+				If this is a pseudo-hook (search string) selector, we must gather text nodes.
 			*/
 			if (!this.selector.match("^" + Patterns.hookRef + "$")) {
 				/*
-					Note that wrapTextNodes currently won't target text directly inside <tw-story>,
+					Note that getTextNodes currently won't target text directly inside <tw-story>,
 					<tw-sidebar> and other <tw-passage>s.
 				*/
-				ownElements = wrapTextNodes(this.selector, dom, '<tw-pseudo-hook>');
+				ownElements = getTextNodes(this.selector, dom);
 			}
 			else {
 				ownElements = dom.add(dom.parentsUntil(Utils.storyElement.parent()))
@@ -360,34 +456,15 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 		forEach(section, fn) {
 			const ret = hooks.call(this, section).each(function(i) {
 				fn($(this), i);
-			})
-			.each(function() {
-				HookSet.cleanupPseudoHook($(this));
 			});
 			return ret;
 		},
 
 		/*
 			Provides all of the hooks selected by this HookSet.
-			Note that this potentially PERMUTES the section's DOM, by creating <tw-pseudo-hook> element
-			wrappers around certain words, and splitting text nodes as such. So, cleanupPseudoHooks() needs
-			to be called with the same section after this is consumed.
 		*/
 		hooks(section) {
 			return hooks.call(this, section);
-		},
-
-		/*
-			After calling hooks(), we must remove the <tw-pseudo-hook> elements
-			and normalize the text nodes that were split up as a result of the selection.
-
-			Note that this doesn't care if the passed-in <tw-pseudo-hook> was selected by
-			this HookSet. Thus, this is more of a static class method than an instance method.
-		*/
-		cleanupPseudoHook(elem) {
-			elem.filter('tw-pseudo-hook').contents().unwrap().parent().each(function() {
-				this.normalize();
-			});
 		},
 		
 		/*
@@ -441,9 +518,11 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 			Note that index may actually be an array of indices, as created by "?a's (a:1,2,4)".
 			The order of this array must be preserved, so that "?a's (a:2,4)'s 2nd" works correctly.
 		*/
-		TwineScript_GetElement(index) {
-			return HookSet.create(undefined, this, [index], undefined);
+		TwineScript_GetProperty(prop) {
+			return HookSet.create(undefined, this, [prop], undefined);
 		},
+
+		TwineScript_Properties: ['chars','links'],
 
 		// As of 19-08-2016, HookSets no longer have a length property, because calculating it requires
 		// passing in a section, and it doesn't make much sense to ever do so.

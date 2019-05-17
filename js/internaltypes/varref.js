@@ -1,6 +1,6 @@
 "use strict";
 define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'datatypes/hookset', 'datatypes/colour', 'datatypes/gradient'],
-(State, TwineError, {impossible}, {isObject, isSequential, objectName, typeName, clone, numericIndex, isValidDatamapName}, HookSet, Colour, Gradient) => {
+(State, TwineError, {impossible, andList}, {isObject, isSequential, objectName, typeName, clone, numericIndex, isValidDatamapName}, HookSet, Colour, Gradient) => {
 	/*
 		VarRefs are essentially objects pairing a chain of properties
 		with an initial variable reference - "$red's blue's gold" would be
@@ -54,6 +54,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		*/
 		if (isSequential(obj)) {
 			let match;
+			const youCanOnlyAccess = "You can only access position strings/numbers ('4th', 'last', '2ndlast', (2), etc.), ";
 			/*
 				Number properties are treated differently from strings by sequentials:
 				the number 1 is treated the same as the string "1st", and so forth.
@@ -98,11 +99,17 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			else if (prop === "last") {
 				prop = -1;
 			}
-			else if (!["length","any","all"].includes(prop) || HookSet.isPrototypeOf(obj)) {
-				return TwineError.create("property",
-					"You can only access position strings/numbers ('4th', 'last', '2ndlast', (2), etc.)"
-					+ (HookSet.isPrototypeOf(obj) ? "" : ", 'length', 'any' and 'all'") + " of "
-					+ objectName(obj) + ", not " + objectName(prop) + ".");
+			/*
+				HookSets should be the only sequential with additional string properties.
+			*/
+			else if (HookSet.isPrototypeOf(obj) && !HookSet.TwineScript_Properties.includes(prop)) {
+				return TwineError.create("property", youCanOnlyAccess
+					+ andList(HookSet.TwineScript_Properties.map(p => "'" + p + "'"))
+					+ " of " + objectName(obj) + ", not " + objectName(prop) + ".");
+			}
+			else if (!["length","any","all"].includes(prop) && !HookSet.isPrototypeOf(obj)) {
+				return TwineError.create("property", youCanOnlyAccess + "'length', 'any' and 'all'"
+					+ " of " + objectName(obj) + ", not " + objectName(prop) + ".");
 			}
 		}
 		/*
@@ -111,7 +118,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		*/
 		else if (obj instanceof Set) {
 			if (!["length","any","all"].includes(prop)) {
-				return TwineError.create("property", "You can only get the 'length', 'any' and 'all' of a "
+				return TwineError.create("property", "You can only get the 'length', 'any' and 'all' of "
 					+ objectName(obj)
 					+ ".",
 					"To check contained values, use the 'contains' operator.");
@@ -123,6 +130,14 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			if (prop === "length") {
 				prop = "size";
 			}
+		}
+		/*
+			This should catch Colours and Gradients.
+		*/
+		else if (Array.isArray(obj.TwineScript_Properties) && !obj.TwineScript_Properties.includes(prop)) {
+			return TwineError.create("property",
+				"You can only get the " + andList(obj.TwineScript_Properties.map(p => "'" + p + "'"))
+				+ " of " + objectName(obj) + ", not " + objectName(prop) + ".");
 		}
 		/*
 			Numbers and booleans cannot have properties accessed.
@@ -213,10 +228,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		to be compared succinctly.
 	*/
 	function createDeterminer(obj, prop) {
-		const name = {
-			any: "'any' value of ",
-			all: "'all' values of ",
-		}[prop];
+		const name = `'${prop}' value${prop === "any" ? '' : 's'} of `;
 
 		return {
 			determiner: prop,
@@ -250,7 +262,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				|| obj.varref) {
 			return obj.get(prop);
 		} else {
-			if (isSequential(obj)) {
+			if (isSequential(obj) && Number.isFinite(prop)) {
 				prop = convertNegativeProp(obj,prop);
 			}
 			if (prop === "any" || prop === "all") {
@@ -259,13 +271,12 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			if (obj.TwineScript_GetProperty) {
 				return obj.TwineScript_GetProperty(prop);
 			}
-			if (obj.TwineScript_GetElement && Number.isFinite(+prop)) {
-				return obj.TwineScript_GetElement(prop);
-			} else {
-				const ret = obj[prop];
-				if (typeof ret !== "function") {
-					return ret;
-				}
+			/*
+				This shouldn't be accessible to user-authored code... but I might as well leave it.
+			*/
+			const ret = obj[prop];
+			if (typeof ret !== "function") {
+				return ret;
 			}
 		}
 	}
@@ -465,10 +476,10 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			*/
 			if (HookSet.isPrototypeOf(obj)) {
 				/*
-					HookSet's implementation of TwineScript_GetElement supports
+					HookSet's implementation of TwineScript_GetProperty supports
 					arrays of properties being passed in.
 				*/
-				return obj.TwineScript_GetElement(prop);
+				return obj.TwineScript_GetProperty(prop);
 			}
 			return (prop.map(e => get(obj, e,
 					/*

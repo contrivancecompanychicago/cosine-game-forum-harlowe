@@ -196,11 +196,42 @@ describe("property indexing", function() {
 			expect('(set:$a to 2)(set: $a\'s a to 1)').markupToError();
 			expect('(set:$a to -0.1)(set: $a\'s a to 1)').markupToError();
 		});
-		it("cannot be used with hook references", function() {
-			expect('|a>[]|a>[](print: ?a\'s length)').markupToError();
-			expect('|a>[]|a>[](print: ?a\'s thing)').markupToError();
-			expect('|a>[]|a>[](set: ?a\'s thing to 4)').markupToError();
-			expect('|a>[]|a>[](set: ?a\'s length to 4)').markupToError();
+		describe("for hook references", function() {
+			describe("'chars'", function() {
+				it("selects all of the chars in a hook", function() {
+					expect('|a>[foo𐌎arbaz](replace: ?a\'s chars)[1]').markupToPrint("111111111");
+					expect('|a>[foobarbaz](replace: ?a\'s chars\'s 1st)[F]').markupToPrint("Foobarbaz");
+					expect('|a>[foo[𐌎ar]<b|baz](enchant: ?a\'s chars,(text-style:"outline"))(enchant: ?b\'s chars\'s 1st,(background:blue))').not.markupToError();
+					expect('|a>[foo](replace: ?a\'s chars\'s 1st\'s chars\'s chars\'s chars)[1]').markupToPrint("1oo");
+				});
+				it("works with (hover-style:)", function(done) {
+					var a = runPassage('|a>[foobarbaz](enchant: ?a\'s chars,(hover-style:(background:white)))').find('tw-hook tw-enchantment:nth-child(4)');
+					a.mouseenter();
+					setTimeout(function() {
+						expect(a).toHaveBackgroundColour("#ffffff");
+						done();
+					},20);
+				});
+				it("works with bidi text", function() {
+					// The ! should appear to the left in the rendered passage.
+					expect('|a>["ٱٹ!‏"](enchant: ?a\'s chars, (background:green))').markupToPrint('"ٱٹ!‏"');
+				});
+			});
+			describe("'links'", function() {
+				it("selects all of the links in a hook", function() {
+					createPassage("qux","qux");
+					expect('|a>[foo[[qux<-bar]]baz](replace: ?a\'s links)[1]').markupToPrint("foo1baz");
+					expect('|a>[foobarbaz](replace: ?a\'s links)[1]').markupToPrint("foobarbaz");
+					expect('|a>[[[foo->qux]]bar[[qux<-baz]]](replace: ?a\'s links\'s 1st)[F]').markupToPrint("Fbarbaz");
+					expect('|a>[foobarbaz](replace: ?a\'s links)[1]').markupToPrint("foobarbaz");
+				});
+			});
+			it("no other indices can be used", function() {
+				expect('|a>[]|a>[](print: ?a\'s length)').markupToError();
+				expect('|a>[]|a>[](print: ?a\'s thing)').markupToError();
+				expect('|a>[]|a>[](set: ?a\'s thing to 4)').markupToError();
+				expect('|a>[]|a>[](set: ?a\'s length to 4)').markupToError();
+			});
 		});
 		describe("for colours", function() {
 			it("'r', 'g', 'b' etc. produce the colour's RGB components in the range 0 to 255", function() {

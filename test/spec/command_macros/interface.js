@@ -34,6 +34,34 @@ describe("interface macros", function(){
 			p.find('tw-link').click();
 			expect(p.find('tw-transition-container[data-t8n="slideleft"]').length).toBe(1);
 		});
+		it("works with string enchantment", function(done) {
+			var p = runPassage("(cycling-link:'foobar','bazfoo','fooqux')(enchant:'foo',(background:white))");
+			setTimeout(function() {
+				expect(p.find('tw-link').text()).toBe('foobar');
+				expect(p.find('tw-enchantment').text()).toBe('foo');
+				expect(p.find('tw-enchantment')).toHaveBackgroundColour('#ffffff');
+				p.find('tw-link').click();
+				setTimeout(function() {
+					expect(p.find('tw-enchantment')).toHaveBackgroundColour('#ffffff');
+					expect(p.find('tw-enchantment').text()).toBe('foo');
+					done();
+				}, 20);
+			}, 20);
+		});
+		it("works with string replacement", function(done) {
+			var p = runPassage("(cycling-link:bind $bar,'foobar','bazfoo','fooqux')(replace:'foo')[qux]");
+			setTimeout(function() {
+				expect(p.find('tw-link').text()).toBe('quxbar');
+				expect("$bar").markupToPrint('foobar');
+				p = runPassage("(cycling-link:bind $bar,'foobar','bazfoo','fooqux')(replace:'foo')[qux]");
+				p.find('tw-link').click();
+				setTimeout(function() {
+					expect(p.find('tw-link').text()).toBe('bazfoo');
+					expect("$bar").markupToPrint('bazfoo');
+					done();
+				}, 20);
+			}, 20);
+		});
 		it("executes each label every time it appears", function() {
 			var p = runPassage("(set:$foo to 'bar')(cycling-link:'(print:$foo)','(set:$foo to \"baz\")qux')");
 			expect(p.find('tw-link').text()).toBe('bar');
@@ -157,6 +185,32 @@ describe("interface macros", function(){
 				expect(p.text()).toBe("1232foo");
 				done();
 			},300);
+		});
+		it("isn't interfered with by string enchantment", function(done) {
+			var p = runPassage("(dropdown:bind $bar,'foobar','bazfoo','fooqux')(enchant:'foo',(background:white))");
+			setTimeout(function() {
+				expect(p.find('select').val()).toBe('foobar');
+				p.find('select').val('bazfoo').change();
+				setTimeout(function() {
+					expect(p.find('select').val()).toBe('bazfoo');
+					done();
+				}, 20);
+			}, 20);
+		});
+		it("works with string replacement", function(done) {
+			var p = runPassage("(dropdown:bind $bar,'foobar','bazfoo','fooqux')(replace:'foo')[qux]");
+			setTimeout(function() {
+				expect(p.find('select').val()).toBe('quxbar');
+				// This differs from (cycling-link:)
+				expect("$bar").markupToPrint('foobar');
+				p = runPassage("(dropdown:bind $bar,'foobar','bazfoo','fooqux')(replace:'foo')[qux]");
+				p.find('select').val('bazqux').change();
+				setTimeout(function() {
+					expect(p.find('select').val()).toBe('bazqux');
+					expect("$bar").markupToPrint('bazqux');
+					done();
+				}, 20);
+			}, 20);
 		});
 		it("errors if the first or last labels are empty", function() {
 			expect("(dropdown: bind $foo, '','baz','qux')").markupToError();

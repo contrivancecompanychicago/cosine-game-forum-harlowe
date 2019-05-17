@@ -245,6 +245,7 @@ define(['jquery'], ($) => {
 				return this[prop];
 			}
 		},
+		TwineScript_Properties: ['h','s','l','r','g','b'],
 
 		/*
 			This constructor accepts an object containing r, g and b numeric properties,

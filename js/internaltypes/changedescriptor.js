@@ -288,11 +288,6 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 							Then, render using that descriptor.
 						*/
 						dom = dom.add(this.create({ target: elem, append, newTargets:null }).render());
-						/*
-							The above call to .hooks() potentially created <tw-pseudo-hook> elements. These must be
-							removed as soon as possible.
-						*/
-						HookSet.cleanupPseudoHook(elem);
 					});
 				});
 			/*
@@ -318,8 +313,17 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 					(though "prepend" will work too).
 				*/
 				if (append === "replace") {
-					target.empty();
-					append = "append";
+					/*
+						There's one exception to the above, however - if the target is a text node
+						(such as in (enchant:?hook's chars)) then replaceWith is fine.
+					*/
+					if (target[0] instanceof Text) {
+						append = "replaceWith";
+					}
+					else {
+						target.empty();
+						append = "append";
+					}
 				}
 				/*
 					If I wished to add a variant of (replace:) that did remove the entire
@@ -328,6 +332,18 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 				else {
 					impossible("Section.render", "The target doesn't have a '" + append + "' method.");
 					return $();
+				}
+			}
+			/*
+				Two more tweaks to the jQuery method name are needed for text nodes,
+				in addition to the above.
+			*/
+			if (target[0] instanceof Text) {
+				if (append === "append") {
+					append = "after";
+				}
+				if (append === "prepend") {
+					append = "before";
 				}
 			}
 			/*

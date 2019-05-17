@@ -292,6 +292,10 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			then follow it with $allHats with $hat removed: `(cycling-link: bind $hat, $hat, ...($allHats - (a:$hat)))`. (Note that this doesn't
 			preserve the order of $allHats relative to $hat, however.)
 
+			If you use (replace:) to alter the text inside a (cycling-link:), such as `(cycling-link: bind $tattoo, "Star", "Feather")(replace:"Star")[Claw]`,
+			then the link's text will be changed, but the value assigned to the bound variable will *not* - $tattoo will still be "Star", and clicking the
+			link twice will return the link's text to "Star". This differs from (dropdown:)'s behaviour in this situation.
+
 			If only one string was given to this macro, an error will be produced.
 
 			#input
@@ -425,6 +429,10 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 
 		The first element in a (dropdown:) will always be the one initially displayed and selected - and thus, the one that is
 		immediately set into the bound variable.
+
+		If you use (replace:) to alter the text inside a (dropdown:), such as `(dropdown: bind $tattoo, "Star", "Feather")(replace:"Star")[Claw]`,
+		then the option text and the value assigned to the bound variable will change - but *only* when the player next interacts with the dropdown.
+		$tattoo will be "Star" until a new option is selected, whereupon it will become either "Claw" or "Feather" depending on which was picked.
 
 		See also:
 		(cycling-link:)

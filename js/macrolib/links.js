@@ -413,19 +413,19 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			prose, and is written separately from it:
 
 			```
-			Ah. You remember her eldest well - [a frail, anxious child]<more|. Unlikely to raise too much of a fuss.
+			Ah. You remember her eldest well - [a frail, anxious child]<extra|. Unlikely to raise too much of a fuss.
 
-			(click-append: ?more)[, constantly frowning, mumbling every word they utter, flinching at the slightest noise]
+			(click-append: ?extra)[, constantly frowning, mumbling every word they utter, flinching at the slightest noise]
 			```
 
 			Conversely, typical (show:) usage resembles the following, where the inserted text is a continuation of the passage's prose,
 			and is written together with it:
 
 			```
-			"Look, it's important to comment even the simplest code...|more)[ You might remember what it does now, but not at 4:50 PM on Friday
+			"Look, it's important to comment even the simplest code...|extra)[ You might remember what it does now, but not at 4:50 PM on Friday
 			afternoon, when you're about to push to production and a runtime error shows up in it.]"
 
-			You (link-reveal:"struggle to listen.")[(show: ?more)]
+			You (link-reveal:"struggle to listen.")[(show: ?extra)]
 			```
 
 			The (link-show:) macro provides a convenient shorthand for the latter example, letting you write the final line as
