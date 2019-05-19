@@ -24,6 +24,10 @@ define([], () => {
 		TwineScript_TypeName:   "a gradient",
 		TwineScript_ObjectName: "a gradient",
 
+		TwineScript_DebugName() {
+			return "a gradient " + this.TwineScript_Print();
+		},
+
 		/*
 			TODO: Permit gradients to be added together.
 		"TwineScript_+"(other) {

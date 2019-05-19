@@ -327,19 +327,22 @@ tw-debugger {
 	.variable-name {
 		display:inline-block;
 		width:50%;
+	}
+	.temporary-variable-scope {
+		opacity:0.8;
+		font-size:0.75em;
 		&::before {
-			content: "$";
+			content: " in ";
 		}
-		&.temporary::before {
-			content: "_";
-		}
-		.temporary-variable-scope {
-			opacity:0.8;
-			font-size:0.75em;
-			&::before {
-				content: " in ";
-			}
-		}
+	}
+	.global::before {
+		content: "$";
+	}
+	.temporary::before {
+		content: "_";
+	}
+	.variable-path {
+		opacity:0.4;
 	}
 	.variable-value {
 		display:inline-block;

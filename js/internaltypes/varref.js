@@ -403,7 +403,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 
 	/*
 		As with the two above, delete() has this helper method
-		which performs the actual deletoon based on object type.
+		which performs the actual deletion based on object type.
 	*/
 	function objectOrMapDelete(obj, prop) {
 		const origProp = prop;

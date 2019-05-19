@@ -56,6 +56,7 @@ define([
 		datatype: true,
 		
 		TwineScript_TypeName: "a datatype",
+		// TwineScript_ObjectName is assigned in create().
 
 		TwineScript_Print() {
 			return "`[" + this.TwineScript_ObjectName + "]`";

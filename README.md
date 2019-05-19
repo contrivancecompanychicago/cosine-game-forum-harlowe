@@ -32,6 +32,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a `(passages:)` macro, which returns an array containing the `(passage:)` datamaps for every passage in the game, but also can be given a "where" lambda to filter that array.
  * Added a gradient data type, a `(gradient:)` macro, and a `gradient` datatype name. This can be used to quickly create special images called gradients, which are smooth linear fades between various colours. These are implemented using CSS `linear-gradient`s, and the `(gradient:)` macro has similar syntax to it. Currently, these can only be used with `(background:)`.
  * Added a new togglale pane to the debug mode panel, "Source", which displays the current passage's source code. This is designed to supplement the "debug view" option, which shows the passage's current state, by letting you compare it to the original code. This pane currently has no syntax highlighting, such as that used in the Twine editor.
+ * The debug mode variables pane now lists the contents of datamaps, arrays and datasets, as separate rows.
+ * Colours in the variables pane now have a colour swatch in their listing.
 
 ###3.0.2 changes:
 

@@ -62,7 +62,7 @@ describe("save macros", function() {
 			retrieveStoredState(storagePrefix('Saved Game') + "1");
 		});
 		it("stores lots of data", function() {
-			Array(1000).join().split(',').forEach(function(_, e) {
+			Array(200).join().split(',').forEach(function(_, e) {
 				runPassage("(set:$V" + e + " to " + e + ")","P"+e);
 			});
 			expect("(savegame:'1','Filename')").not.markupToError();

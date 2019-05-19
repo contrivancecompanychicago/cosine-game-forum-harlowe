@@ -1,6 +1,6 @@
 "use strict";
 define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutils', 'engine', 'passages'],
-($, Utils, State, VarRef, {objectName, typeName}, Engine, Passages) => () => {
+($, Utils, State, VarRef, {objectName, typeName, is}, Engine, Passages) => () => {
 	/*
 		Debug Mode
 
@@ -155,36 +155,76 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 		This function is responsible for creating the inner DOM structure of the
 		variablesTable and updating it, one row at a time.
 	*/
-	function updateVariables(name, value, tempScope) {
+	function updateVariables(name, path, value, tempScope) {
 		/*
-			First, obtain the row which needs to be updated. If it doesn't exist,
+			Obtain the row which needs to be updated. If it doesn't exist,
 			create it below.
 		*/
-		let row = variablesTable.children('[data-name="' + name + '"]');
+		let row = variablesTable.children('[data-name="' + Utils.escape(name + '') + '"][data-path="' + Utils.escape(path + '') + '"]');
 		/*
-			objectName() is re-used here as a human, though inexact, object
-			description string.
+			The debug name used defers to the TwineScript_DebugName if it exists,
+			and falls back to the objectName if not. Note that the TwineScript_DebugName can contain HTML structures
+			(such as a <tw-colour> for colours) but the objectName could contain user-inputted data, so only the latter is escaped.
 		*/
-		const val = objectName(value);
+		const val = value.TwineScript_DebugName ? value.TwineScript_DebugName() : Utils.escape(objectName(value));
 		if (!row.length) {
 			/*
 				To provide easy comparisons for the refresh() method below,
 				store the name and value of the row as data attributes of its element.
 			*/
-			row = $('<div class="variable-row" data-name="' + name
+			row = $('<div class="variable-row" data-name="' + Utils.escape(name + '')
+				+ '" data-path="' + Utils.escape(path + '')
 				+ '" data-value="' + val +'"></div>').appendTo(variablesTable);
-			// TODO: Sort the variablesTable
+		}
+		/*
+			Single variables, like $peas, should be displayed with no trail, as "peas".
+			Deep object properties, like $arr's 1st's 1st, should be displayed with a trail
+			consisting of "arr's 1st's", and the name changed to "1st".
+			(Note that the prefix of $ or _ is added using CSS ::before.)
+		*/
+		let trail = '';
+		if (path.length) {
+			trail = path.reduce((a,e) => a + e + "'s ", '');
 		}
 		/*
 			Create the <span>s for the variable's name and value.
 		*/
 		row.empty().append(
-			"<span class='variable-name " + (tempScope ? "temporary" : "") +
-			"'>" + name +
-			(tempScope ? ("<span class='temporary-variable-scope'>" + tempScope + "</span>") : "") +
-			"</span><span class='variable-value'>" + objectName(value) + "</span>"
-		);
+			"<span class='variable-name " + (trail ? '' : tempScope ? "temporary" : "global") + "'>"
+			+ (trail ? "<span class='variable-path " + (tempScope ? "temporary" : "global") + "'>" + Utils.escape(trail) + "</span> " : '')
+			+ Utils.escape(name + '')
+			+ (tempScope ? ("<span class='temporary-variable-scope'>" + tempScope + "</span>") : "") +
+			"</span><span class='variable-value'>" + val + "</span>"
+		)
+		/*
+			Data structure entries are indented by their depth in the structure, to a maximum of 5 levels deep.
+		*/
+		.css('padding-left',Math.min(5,path.length)+'em')
+		/*
+			This append should cause the variablesTable to always sort data structure contents after the structure itself.
+		*/
+		.appendTo(variablesTable);
+
 		updateVariablesTabName();
+
+		/*
+			To display each entry inside an array, map or set, directly below the
+			row for their container structure, a simple recursive call to updateVariables()
+			should be sufficient.
+		*/
+		if (Array.isArray(value)) {
+			value.forEach((elem,i) => updateVariables(Utils.nth(i+1), path.concat(name), elem, tempScope));
+		}
+		else if (value instanceof Map) {
+			[...value].forEach(([key,elem]) => updateVariables(key, path.concat(name), elem, tempScope));
+		}
+		else if (value instanceof Set) {
+			/*
+				Sets don't have keys. So, using "???" for every entry is what we're forced to do
+				to keep this display consistent with the others.
+			*/
+			[...value].forEach((elem) => updateVariables("???", path.concat(name), elem, tempScope));
+		}
 	}
 	/*
 		This function, called as a State event handler, synchronises the variablesTable
@@ -201,8 +241,15 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 		variablesTable.children().each((_,e) => {
 			e = $(e);
 			const name = e.attr('data-name'),
+				path = e.attr('data-path'),
 				value  = e.attr('data-value');
-
+			/*
+				Skip rows with a path, because those are recursively refreshed when their containing
+				structure is refreshed.
+			*/
+			if (path) {
+				return;
+			}
 			/*
 				"TwineScript" values, of course, must not be displayed.
 			*/
@@ -215,8 +262,8 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 					update it. Either way, add it to the "updated" list.
 				*/
 				updated.push(name);
-				if (objectName(State.variables[name]) !== value) {
-					updateVariables(name, State.variables[name]);
+				if (!is(State.variables[name],value)) {
+					updateVariables(name, [], State.variables[name]);
 				}
 			}
 			else {
@@ -235,7 +282,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 		*/
 		for (let name in State.variables) {
 			if (!name.startsWith('TwineScript') && !updated.includes(name)) {
-				updateVariables(name, State.variables[name]);
+				updateVariables(name, [], State.variables[name]);
 			}
 		}
 		/*
@@ -248,9 +295,16 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 	*/
 	State.on('forward', refresh).on('back', refresh);
 
+	State.on('load', () => $('.panel-variables').empty());
+
 	VarRef.on('set', (obj, name, value) => {
+		/*
+			For a deep data structure (set:), VarRef.on will fire set callbacks for every object in the
+			chain: $a's b's c's d to 1 will produce 'set' callbacks for c, b, a and State.variables.
+			We only care about State.variables, the root.
+		*/
 		if (obj === State.variables || obj.TwineScript_VariableStore) {
-			updateVariables(name, value, obj === State.variables ? "" : obj.TwineScript_VariableStoreName);
+			updateVariables(name, [], value, obj === State.variables ? "" : obj.TwineScript_VariableStoreName);
 		}
 	})
 	/*

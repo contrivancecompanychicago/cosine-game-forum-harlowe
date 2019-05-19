@@ -293,8 +293,8 @@ describe("data structure macros", function () {
 			}
 		});
 		it("can't reference a string key and a number key which are similar, either", function() {
-			expect("(print: (datamap:25, 'foo')'s '25'))").markupToError();
-			expect("(print: (datamap:'25', 'foo')'s 25))").markupToError();
+			expect("(print: (datamap:25, 'foo')'s '25')").markupToError();
+			expect("(print: (datamap:'25', 'foo')'s 25)").markupToError();
 		});
 		it("can't use two identical keys in the same macro call", function() {
 			expect("(datamap:1,(a:),1,(a:))").markupToError();

@@ -150,7 +150,6 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 
 		/*
 			A quick method for turning a number into an "nth" string.
-			Used exclusively for error messages.
 		*/
 		nth(num) {
 			const lastDigit = (+num + '').slice(-1);

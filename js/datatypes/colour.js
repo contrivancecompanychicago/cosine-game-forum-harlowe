@@ -186,6 +186,10 @@ define(['jquery'], ($) => {
 	const Colour = Object.freeze({
 		TwineScript_TypeName:   "a colour",
 		TwineScript_ObjectName: "a colour",
+
+		TwineScript_DebugName() {
+			return "a colour " + this.TwineScript_Print();
+		},
 		
 		/*
 			Colours can be blended by addition.
