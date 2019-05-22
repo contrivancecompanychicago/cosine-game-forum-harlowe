@@ -30,7 +30,7 @@ define(['jquery'], ($) => {
 			descendent text nodes.
 			This returns a sorted Array, not a jQuery.
 		*/
-		textNodes() {
+		textNodes(selector = '*') {
 			/*
 				Base case: this collection contains a single text node.
 			*/
@@ -41,7 +41,7 @@ define(['jquery'], ($) => {
 				First, create an array containing all descendent and contents nodes
 				which are text nodes.
 			*/
-			return Array.from(this.add(this.contents().add(this.find('*').contents())).filter(function() {
+			return Array.from(this.add(this.contents().add(this.find(selector).contents())).filter(function() {
 				return this instanceof Text;
 			}))
 			/*

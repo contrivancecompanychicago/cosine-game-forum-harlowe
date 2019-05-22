@@ -1,6 +1,6 @@
 "use strict";
 define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutils', 'engine', 'passages'],
-($, Utils, State, VarRef, {objectName, typeName, is}, Engine, Passages) => () => {
+($, Utils, State, VarRef, {objectName, typeName, is, isObject}, Engine, Passages) => () => {
 	/*
 		Debug Mode
 
@@ -166,7 +166,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 			and falls back to the objectName if not. Note that the TwineScript_DebugName can contain HTML structures
 			(such as a <tw-colour> for colours) but the objectName could contain user-inputted data, so only the latter is escaped.
 		*/
-		const val = value.TwineScript_DebugName ? value.TwineScript_DebugName() : Utils.escape(objectName(value));
+		const val = isObject(value) && value.TwineScript_DebugName ? value.TwineScript_DebugName() : Utils.escape(objectName(value));
 		if (!row.length) {
 			/*
 				To provide easy comparisons for the refresh() method below,

@@ -288,6 +288,11 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 							Then, render using that descriptor.
 						*/
 						dom = dom.add(this.create({ target: elem, append, newTargets:null }).render());
+						/*
+							The above call to .hooks() potentially created <tw-pseudo-hook> elements. If this is one
+							of them, remove it.
+						*/
+						elem.filter('tw-pseudo-hook').contents().unwrap();
 					});
 				});
 			/*

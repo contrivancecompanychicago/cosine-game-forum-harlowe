@@ -57,6 +57,8 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 		* `chars` (as in `?title's chars`) selects each individual character inside the hook,
 		as if it was in its own hook. This can be used for a variety of text effects - using (enchant:) with `?hook's chars's 1st` can be used to
 		give a hook a styled "drop-cap" without having to explicitly style the leading character.
+		* `lines` (as in `?passage's lines`) selects individual lines of text within a hook. A line is any run of text or code between line breaks
+		(or the passage's start and end) - a word-wrapped paragraph of prose is thus considered a single "line" as a result.
 		* `links` (as in `?body's links`) is similar in use to `?link`, but only selects links within the hook.
 
 		**Warning:** using `chars` with (enchant:) may cause text-to-speech assistive programs to fail to read the enchanted
@@ -295,7 +297,8 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 	}
 
 	/*
-		Given a search string, this gathers all text nodes matching the string.
+		Given a search string, this wraps all identified text nodes inside the given DOM
+		with <tw-pseudo-hook> elements.
 		Note this may permute the DOM by splitting text nodes that are a superstring
 		of the search string.
 
@@ -303,11 +306,11 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 		@param {jQuery} dom The DOM in which to search
 		@return {jQuery} A jQuery set holding the nodes.
 	*/
-	function getTextNodes(searchString, dom) {
+	function wrapTextNodes(searchString, dom) {
 		const nodes = findTextInNodes(dom.textNodes(), searchString);
 		let ret = $();
 		nodes.forEach((e) => {
-			ret = ret.add(e);
+			ret = ret.add($(e).wrapAll('<tw-pseudo-hook>').parent());
 		});
 		return ret;
 	}
@@ -370,7 +373,7 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 			else if (typeof index === "string") {
 				/*
 					"?hook's chars" selects the individual characters inside ?hook. Notice that
-					textNodeToChars() splits up Text nodes whenever it's called, as with getTextNodes().
+					textNodeToChars() splits up Text nodes whenever it's called, as with wrapTextNodes().
 				*/
 				if (index === "chars") {
 					let ret = $();
@@ -384,6 +387,27 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 				if (index === "links") {
 					return elements.find('tw-link, .enchantment-link');
 				}
+				if (index === "lines") {
+					/*
+						"Lines" excludes the sidebar, so that the "undo" and "redo" links aren't included.
+					*/
+					const brs = elements.findAndFilter('br:not(tw-sidebar *)').get();
+					/*
+						Place all of the elements into the current collection. When one is found that's after
+						the current <br>, create a new collection.
+					*/
+					const lines = [$()];
+					let ret = $();
+					elements.textNodes(":not(tw-sidebar):not(tw-sidebar *)").forEach(node => {
+						if (node.compareDocumentPosition(brs[0]) & 2) {
+							brs.shift();
+							lines.push($());
+						}
+						lines[lines.length-1] = lines[lines.length-1].add(node);
+					});
+					lines.forEach(e => ret = ret.add(e.wrapAll('<tw-pseudo-hook>').parent()));
+					return ret;
+				}
 			}
 			// Luckily, negatives indices work fine with $().get().
 			return $(elements.get(index));
@@ -395,10 +419,10 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 			*/
 			if (!this.selector.match("^" + Patterns.hookRef + "$")) {
 				/*
-					Note that getTextNodes currently won't target text directly inside <tw-story>,
+					Note that wrapTextNodes currently won't target text directly inside <tw-story>,
 					<tw-sidebar> and other <tw-passage>s.
 				*/
-				ownElements = getTextNodes(this.selector, dom);
+				ownElements = wrapTextNodes(this.selector, dom);
 			}
 			else {
 				ownElements = dom.add(dom.parentsUntil(Utils.storyElement.parent()))
@@ -457,6 +481,13 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 			const ret = hooks.call(this, section).each(function(i) {
 				fn($(this), i);
 			});
+			/*
+				After calling hooks(), we must remove the <tw-pseudo-hook> elements.
+				We don't normalize() the text nodes because that may rejoin various split chars
+				that are also being operated on.
+				Note that this needs .contents(), not .children(), because only the former grabs text nodes.
+			*/
+			section.dom.findAndFilter('tw-pseudo-hook').contents().unwrap();
 			return ret;
 		},
 
@@ -522,7 +553,10 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 			return HookSet.create(undefined, this, [prop], undefined);
 		},
 
-		TwineScript_Properties: ['chars','links'],
+		/*
+			This single array determines the legal property names for HookSets.
+		*/
+		TwineScript_Properties: ['chars','links','lines'],
 
 		// As of 19-08-2016, HookSets no longer have a length property, because calculating it requires
 		// passing in a section, and it doesn't make much sense to ever do so.

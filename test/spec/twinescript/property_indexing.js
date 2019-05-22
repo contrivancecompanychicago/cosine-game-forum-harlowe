@@ -216,6 +216,9 @@ describe("property indexing", function() {
 					// The ! should appear to the left in the rendered passage.
 					expect('|a>["ٱٹ!‏"](enchant: ?a\'s chars, (background:green))').markupToPrint('"ٱٹ!‏"');
 				});
+				it("doesn't create <tw-pseudo-hook>s", function() {
+					expect(runPassage('foo\n[bar]<a|\n(enchant:?passage\'s chars\'s 1st, (text-colour:#333))').find('tw-pseudo-hook').length).toBe(0);
+				});
 			});
 			describe("'links'", function() {
 				it("selects all of the links in a hook", function() {
@@ -224,6 +227,34 @@ describe("property indexing", function() {
 					expect('|a>[foobarbaz](replace: ?a\'s links)[1]').markupToPrint("foobarbaz");
 					expect('|a>[[[foo->qux]]bar[[qux<-baz]]](replace: ?a\'s links\'s 1st)[F]').markupToPrint("Fbarbaz");
 					expect('|a>[foobarbaz](replace: ?a\'s links)[1]').markupToPrint("foobarbaz");
+				});
+				it("doesn't create <tw-pseudo-hook>s", function() {
+					expect(runPassage('foo\n[[bar]]\n(enchant:?passage\'s links\'s 1st, (text-colour:#333))').find('tw-pseudo-hook').length).toBe(0);
+				});
+			});
+			describe("'lines'", function() {
+				it("selects all of the lines in a hook", function(done) {
+					expect('foo\nbar\nbaz\n(replace: ?passage\'s lines)[1]').markupToPrint("1\n1\n1\n");
+					expect('foo\nbar\nbaz\n(replace: ?passage\'s lines\'s 2nd)[1]').markupToPrint("foo\n1\nbaz\n");
+					expect('foo\n[bar\nbaz]<1|qux\n(replace: ?passage\'s lines\'s 2nd)[1]').markupToPrint("foo\n1\nbazqux\n");
+					expect('foo\n[bar\nbaz]<1|qux\n(replace: ?passage\'s lines\'s 3nd)[1]').markupToPrint("foo\nbar\n1\n");
+
+					var a = runPassage('foo\nbar\n(enchant:?passage\'s lines, (text-colour:#333))').find('tw-enchantment');
+					setTimeout(function(){
+						expect(a).toHaveColour("#333333");
+						done();
+					},20);
+				});
+				it("works with (hover-style:)", function(done) {
+					var a = runPassage('|a>[foo\nbar\nbaz](enchant: ?a\'s lines,(hover-style:(background:white)))').find('tw-hook tw-enchantment');
+					a.mouseenter();
+					setTimeout(function() {
+						expect(a).toHaveBackgroundColour("#ffffff");
+						done();
+					},20);
+				});
+				it("doesn't create <tw-pseudo-hook>s", function() {
+					expect(runPassage('foo\nbar\n(enchant:?passage\'s lines\'s 1st, (text-colour:#333))').find('tw-pseudo-hook').length).toBe(0);
 				});
 			});
 			it("no other indices can be used", function() {

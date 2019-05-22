@@ -100,6 +100,12 @@ describe("revision macros", function() {
 					var p = runPassage("`[]`("+name+":'[]')[blue]");
 					expect(p.text()).toBe(append?'[]blue':'blue[]');
 				});
+				it("can target text spanning hierarchies", function() {
+					var p = runPassage("re//de//d("+name+":'red')[ r]");
+					expect(p.text()).toBe(append?'red red':' rreded');
+					var p = runPassage("//re//ded("+name+":'red')[ r]");
+					expect(p.text()).toBe(append?'red red':' rreded');
+				});
 				it("sequential "+name+"s occur one by one", function() {
 					var p = runPassage("red("+name+":'red')[blue]("+name+": 'blue')[green]");
 					expect(p.text()).toBe(append?'redbluegreen':'greenbluered');
@@ -255,6 +261,12 @@ describe("revision macros", function() {
 			it("can replace verbatim text", function() {
 				var p = runPassage("`[]`(replace:'[]')[blue]");
 				expect(p.text()).toBe('blue');
+			});
+			it("can target text spanning hierarchies", function() {
+				var p = runPassage("re//de//d(replace:'red')[blue]");
+				expect(p.text()).toBe('blueed');
+				var p = runPassage("//re//ded(replace:'red')[blue]");
+				expect(p.text()).toBe('blueed');
 			});
 			it("sequential replacements occur one by one", function() {
 				var p = runPassage("red(replace:'red')[blue](replace: 'blue')[green]");
