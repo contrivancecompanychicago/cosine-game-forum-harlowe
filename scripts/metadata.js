@@ -184,12 +184,22 @@ const
 	Keyword = new Defs({
 		defName: "Special keywords",
 		defCode: "keyword",
-		regExp: /^\s*([\w]+) keyword\n/,
+		regExp: /^\s*([\w]+) -> ([\w]+)\n/,
 
-		definition({input, 0:title, 1:name}) {
+		navLink(def) {
+			return `<li><a href="#${def.anchor}">${def.name}</a>
+				<span class='nav_macro_return_type'>${def.returnType}</span>${
+					def.aka.length ? `<div class='nav_macro_aka'>${def.aka.join(', ')}</div>`
+					: ''
+				}</li>`;
+		},
+
+		definition({input, 0:title, 1:name, 2:returnType}) {
 			const slugName =  name.replace(/\s/g,'-').toLowerCase();
 			let text = input.trim().replace(title, "\n<h2 class='def_title keyword_title' id=keyword_" + slugName + ">"
-				+ "<a class='heading_link' href=#keyword_" + slugName + "></a>" + title + "</h2>\n");
+				+ "<a class='heading_link' href=#keyword_" + slugName + "></a>"
+				+ name + " keyword</h2>\n\n"
+				+ "<h3>" + name + " <span class=macro_returntype>&rarr;</span> <i>" + returnType + "</i></h3>\n");
 
 			text = processTextTerms(
 				text,
@@ -197,7 +207,9 @@ const
 				{typeNames: true, macroNames:true}
 			);
 
-			this.defs[title] = { text, anchor: "keyword_" + slugName, name };
+			const aka = ((macroAliases.exec(text) || [''])[0].match(/\w+$/) || []) || [];
+
+			this.defs[title] = { text, anchor: "keyword_" + slugName, name, returnType, aka };
 		},
 	}),
 

@@ -15,7 +15,7 @@ define([
 	*/
 	let Operations,
 		/*d:
-			it keyword
+			it -> Any
 
 			This keyword is a shorthand for the closest leftmost value in an expression. It lets you write
 			`(if: $candles < 2 and it > 5)` instead of `(if: $candles < 2 and $candles > 5)`, or `(set: $candles to it + 3)`
@@ -213,7 +213,7 @@ define([
 				},
 				
 				/*d:
-					time keyword
+					time -> Number
 
 					This keyword evaluates to the number of milliseconds passed since the passage
 					was displayed. Its main purpose is to be used alongside changers
@@ -239,7 +239,8 @@ define([
 					return (Date.now() - section.timestamp);
 				},
 				/*d:
-					visits keyword
+					visits -> Number
+
 					Also known as: visit
 
 					This keyword (which can alternatively be written as "visit") evaluates to the number of times

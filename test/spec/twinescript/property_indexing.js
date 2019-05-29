@@ -408,6 +408,7 @@ describe("property indexing", function() {
 			describe("with an array key", function() {
 				it("evaluates to an array of keyed properties", function() {
 					expect('(print: (datamap:"A",1,"B",2)\'s (a:"A","B"))').markupToPrint('1,2');
+					expect('(print: (datamap:"A",1,"B",2)\'s (a:"A","B") is an array)').markupToPrint('true');
 				});
 				it("can be chained", function() {
 					expect('(print: (datamap:"A",1,"B",2)\'s (a:"A","B")\'s 1st)').markupToPrint('1');
@@ -439,6 +440,7 @@ describe("property indexing", function() {
 			describe("with an array key", function() {
 				it("evaluates to an array of positional properties", function() {
 					expect('(print: (a:"Red","Blue")\'s (a:1,2))').markupToPrint('Red,Blue');
+					expect('(print: (a:"Red","Blue")\'s (a:1,2) is an array)').markupToPrint('true');
 				});
 				it("can be chained", function() {
 					expect('(print: (a:"Red","Blue")\'s (a:1,2)\'s 1st)').markupToPrint('Red');

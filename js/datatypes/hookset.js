@@ -69,6 +69,7 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 		| `1st`,`2nd`,`last`, etc. | `?hook's last`, `1st of ?hook` | Only one hook with the given name, at a certain position in the passage relative to the rest (first with its name, last with its name, etc).
 		| `chars` | `?title's chars`, `chars of ?scream` | Each individual character within the hook, as if the characters were hooks in themselves.
 		| `links` | `?body's links`, `links of ?aside` | Each link inside the hook.
+		| `lines` | `?passage's lines`, `lines of ?passage` | Each span of continuous text, separated by line breaks, inside the passage.
 
 		Operators:
 
