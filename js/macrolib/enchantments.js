@@ -507,7 +507,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		/*d:
 			(click: HookName or String) -> Changer
 
-			Produces a command which, when attached to a hook, hides it and enchants the specified target, such that
+			Produces a changer which, when attached to a hook, hides it and enchants the specified target, such that
 			it visually resembles a link, and that clicking it causes the attached hook to be revealed.
 
 			Example usage:

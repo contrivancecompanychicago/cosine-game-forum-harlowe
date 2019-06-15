@@ -139,7 +139,7 @@ describe("style changer macros", function() {
 							((e === "blink") ? "fade-in-out" :
 							e) + "\\b"));
 						expect(style).toMatch(new RegExp("animation(?:\\-timing\\-function)?:.*?\\s" +
-							(e === "blink" ? "steps\\(\\s*1,\\s*end\\s*\\)" :
+							(e === "blink" ? "steps\\(\\s*1(?:,\\s*end)?\\s*\\)" :
 							e === "fade-in-out" ? "ease-in-out" :
 							"linear")));
 						done();

@@ -1,6 +1,6 @@
 "use strict";
 define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'datatypes/hookset', 'datatypes/colour', 'datatypes/gradient'],
-(State, TwineError, {impossible, andList}, {isObject, isSequential, objectName, typeName, clone, numericIndex, isValidDatamapName}, HookSet, Colour, Gradient) => {
+(State, TwineError, {impossible, andList}, {isObject, isSequential, objectName, typeName, clone, numericIndex, isValidDatamapName, subset}, HookSet, Colour, Gradient) => {
 	/*
 		VarRefs are essentially objects pairing a chain of properties
 		with an initial variable reference - "$red's blue's gold" would be
@@ -50,11 +50,13 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			1st, 2nd etc.: 1-based indices.
 			last: antonym of 1st.
 			2ndlast, 3rdlast: reverse indices.
+			1stTo2ndlast, 3rdlastToLast: slices.
 			any, all: produce special "determiner" objects used for comparison operations.
 		*/
 		if (isSequential(obj)) {
 			let match;
-			const youCanOnlyAccess = "You can only access position strings/numbers ('4th', 'last', '2ndlast', (2), etc.), ";
+			const youCanOnlyAccess = "You can only access position strings/numbers ('4th', 'last', '2ndlast', (2), etc.) or slices ('1stTo2ndlast', '3rdTo5th'), ";
+			
 			/*
 				Number properties are treated differently from strings by sequentials:
 				the number 1 is treated the same as the string "1st", and so forth.
@@ -79,22 +81,46 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				Note that this glibly allows "1rd" or "2st".
 				There's no real problem with this.
 			*/
-			else if (typeof prop === "string" && (match = /(\d+)(?:st|[nr]d|th)last/i.exec(prop))) {
+			else if (typeof prop === "string" && (match = /^(\d+)(?:st|[nr]d|th)last$/i.exec(prop))) {
+				// TODO: error for "0th"
 				/*
 					obj.length cannot be trusted here: if it's an astral-plane
 					string, then it will be incorrect. So, just pass a negative index
-					and let Operations.get() do the work of offsetting it after it
+					and let get() do the work of offsetting it after it
 					deals with the astral characters.
 				*/
 				prop = -match[1];
 			}
-			else if (typeof prop === "string" && (match = /(\d+)(?:st|[nr]d|th)/i.exec(prop))) {
+			else if (typeof prop === "string" && (match = /^(\d+)(?:st|[nr]d|th)$/i.exec(prop))) {
+				// TODO: error for "0thlast"
 				/*
 					It's actually important that prop remains a number and not a string:
 					a few operations (such as canSet()) use the type of the props to
 					check if the VarRef's property chain remains legal.
 				*/
 				prop = match[1] - 1;
+			}
+			/*
+				In addition to "1st", "2ndlast" and such, "1stTo2ndlast" can also be used.
+				These produce an array of properties identical to that produced by putting
+				(range:) in property index position.
+			*/
+			else if (typeof prop === "string" &&
+					(match = /^(?:(\d+)(?:st|[nr]d|th)(last)?|last)to(?:(\d+)(?:st|[nr]d|th)(last)?|last)$/i.exec(prop))) {
+				/*
+					Convenient fact: when "lastto1st" is supplied, match becomes [undefined, undefined, 1, undefined].
+					The defaults here mean that "last" becomes (first = 0, firstNeg = undefined), which becomes -1.
+				*/
+				let [,first = 0,firstNeg,last = 0,lastNeg] = match;
+				first = (firstNeg ? -first : first - 1);
+				last = (lastNeg ? -last : last - 1);
+
+				/*
+					Because the range could cross from 0 to negative (such as in the case of 1stTo2ndlast), and because
+					obj might be a HookSet whose length can't be immediately computed, we must defer the computation
+					of the actual positions to get(), using this crude object.
+				*/
+				prop = { last, first };
 			}
 			else if (prop === "last") {
 				prop = -1;
@@ -467,12 +493,35 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 	*/
 	function get(obj, prop, originalProp) {
 		/*
-			If prop is an array (that is, a slice), retrieve every value for each
+			{first, last} properties are slices (continuous subsets) created by the "?a's 2ndlasttolast" accesses.
+			This syntax should only be usable with sequentials (as determined by isSequential()).
+		*/
+		if (prop && typeof prop === "object" && "last" in prop && "first" in prop) {
+			/*
+				Because HookSets aren't data structures and have no resolvable length,
+				the {first, last} object must be passed in as-is.
+			*/
+			if (HookSet.isPrototypeOf(obj)) {
+				return obj.TwineScript_GetProperty(prop);
+			}
+			/*
+				All other sequentials are either arrays or strings, and
+				can be handled with OperationUtils.subset().
+			*/
+			const {first,last} = prop;
+			/*
+				subset() only accepts 1-indexed indices, due to being used primarily by (subarray:).
+				With some #awkward embarrassment, the indices must be converted back.
+			*/
+			return subset(obj, first + (first >= 0), last + (last >= 0));
+		}
+		/*
+			If prop is an array (that is, a discrete subset), retrieve every value for each
 			property key. This allows, for instance, getting a subarray by passing a range.
 		*/
 		if (Array.isArray(prop)) {
 			/*
-				HookSets, when sliced, produce another HookSet rather than an array.
+				HookSets, when subsetted, produce another HookSet rather than an array.
 			*/
 			if (HookSet.isPrototypeOf(obj)) {
 				/*
@@ -489,7 +538,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 					e
 				)))
 				/*
-					Strings, when sliced, produce another string rather than an array.
+					Strings, when subsetted, produce another string rather than an array.
 				*/
 				[typeof obj === "string" ? "join" : "valueOf"]("");
 		}

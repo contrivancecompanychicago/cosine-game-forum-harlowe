@@ -477,6 +477,15 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 			);
 		}
 		/*
+			As mentioned elsewhere in Operations, JavaScript's irksome UCS-2 encoding for strings
+			means that, in order to treat astral plane characters as 1 character in 1 position,
+			they must be converted to and from arrays whenever indexing or .slice() is performed.
+		*/
+		const isString = typeof sequence === "string";
+		if (isString) {
+			sequence = Array.from(sequence);
+		}
+		/*
 			To simplify things, convert negative indices into positive ones.
 		*/
 		if (a < 0) {
@@ -490,16 +499,11 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 			and support them.
 		*/
 		if (a > b) {
-			return subset(sequence, b, a);
-		}
-		/*
-			As mentioned elsewhere in Operations, JavaScript's irksome UCS-2 encoding for strings
-			means that, in order to treat astral plane characters as 1 character in 1 position,
-			they must be converted to and from arrays whenever indexing or .slice() is performed.
-		*/
-		const isString = typeof sequence === "string";
-		if (isString) {
-			sequence = Array.from(sequence);
+			/*
+				For this recursive call, the original string (if string it was) need to be passed in, not the
+				array-of-chars that was produced above.
+			*/
+			return subset(arguments[0], b, a);
 		}
 		/*
 			As the positive indices are 1-indexed, we shall subtract 1 from a if a is positive.
@@ -581,6 +585,29 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 		}
 	}
 	
+	/*
+		This produces an inclusive range, for the (range:) macro and anything else that needs a similar range.
+	*/
+	function range(a, b) {
+		/*
+			Descending ranges are supported.
+		*/
+		if (a > b) {
+			return range(b, a);
+		}
+		/*
+			This differs from Python: the base case returns just [a],
+			instead of an empty array. The rationale is that since it is
+			inclusive, a can serve as both start and end term just fine.
+		*/
+		const ret = [a];
+		b -= a;
+		while(b-- > 0) {
+			ret.push(++a);
+		}
+		return ret;
+	}
+	
 	const OperationUtils = Object.freeze({
 		isObject,
 		singleTypeCheck,
@@ -595,6 +622,7 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 		isA,
 		matches,
 		subset,
+		range,
 		printBuiltinValue,
 		/*
 			Used to determine if a property name is an array index.

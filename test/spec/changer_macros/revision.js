@@ -103,7 +103,7 @@ describe("revision macros", function() {
 				it("can target text spanning hierarchies", function() {
 					var p = runPassage("re//de//d("+name+":'red')[ r]");
 					expect(p.text()).toBe(append?'red red':' rreded');
-					var p = runPassage("//re//ded("+name+":'red')[ r]");
+					p = runPassage("//re//ded("+name+":'red')[ r]");
 					expect(p.text()).toBe(append?'red red':' rreded');
 				});
 				it("sequential "+name+"s occur one by one", function() {
@@ -265,7 +265,7 @@ describe("revision macros", function() {
 			it("can target text spanning hierarchies", function() {
 				var p = runPassage("re//de//d(replace:'red')[blue]");
 				expect(p.text()).toBe('blueed');
-				var p = runPassage("//re//ded(replace:'red')[blue]");
+				p = runPassage("//re//ded(replace:'red')[blue]");
 				expect(p.text()).toBe('blueed');
 			});
 			it("sequential replacements occur one by one", function() {

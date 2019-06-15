@@ -11,7 +11,7 @@ define([
 	'datatypes/assignmentrequest',
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier'],
-($, NaturalSort, Macros, {objectName, typeName, subset, collectionType, isValidDatamapName, is, unique, clone}, State, Engine, Passages, Lambda, AssignmentRequest, TwineError, TwineNotifier) => {
+($, NaturalSort, Macros, {objectName, typeName, subset, collectionType, isValidDatamapName, is, unique, clone, range}, State, Engine, Passages, Lambda, AssignmentRequest, TwineError, TwineNotifier) => {
 	
 	const {optional, rest, either, zeroOrMore, Any}   = Macros.TypeSignature;
 	
@@ -306,8 +306,9 @@ define([
 			You can refer to and extract data at certain positions inside arrays using `1st`, `2nd`, `3rd`, and so forth:
 			`$array's 1st`, also written as `1st of $array`, refers to the value in the first position. Additionally, you can
 			use `last` to refer to the last position, `2ndlast` to refer to the second-last, and so forth. Arrays also have
-			a `length` number: `$array's length` tells you how many values are in it. If you don't know the exact position
-			to remove an item from, you can use an expression, in brackers, after it: `$array's ($pos - 3)`.
+			a `length` number: `$array's length` tells you how many values are in it. If you can't determine the exact position
+			to remove an item from (because it's dependent on a variable), you can use an expression, in brackers,
+			after it: `$array's ($pos - 3)`.
 			
 			To see if arrays contain certain values, you can use the `contains` and `is in` operators like so: `$array contains 1`
 			is true if it contains the number 1 anywhere, and false if it does not. `1 is in $array` is another way to write that.
@@ -328,9 +329,14 @@ define([
 			put it into an otherwise empty array using the (a:) macro: `$myArray + (a:5)` will make an array that's just
 			$myArray with 5 added on the end, and `(a:0) + $myArray` is $myArray with 0 at the start.
 
-			You can make a subarray by providing a range (an array of numbers, such as
-			those created with (range:)) as a reference - `$arr's (a:1,2)` produces an array with only the first 2 values of $arr.
-			Additionally, you can subtract items from arrays (that is, create a copy of an array with certain values removed) using
+			You can make a subarray (another array containing only certain positioned values from the first array) by
+			providing an array of numbers as a data name, to indicate which positions to include - `$arr's (a:1,3)`
+			produces an array with only the first and third values of $arr. Negative values indicate positions counted from the array's
+			end - `$arr's (a:-4,-2)` is the same as `(a: $arr's 4thlast, $arr's 2ndlast)`.  If you want to make a subarray consisting
+			of a large number of consecutive fixed positions, special data names can be used - `$array's 1stto3rd` indicates the
+			"1st to 3rd" positions, and is the same as `$array's (a:1,2,3)`. `$array's 3rdlasttolast` is the same as `$array's (a:-3,-2,-1)`.
+			
+			You can subtract items from arrays (that is, create a copy of an array with certain values removed) using
 			the `-` operator: `(a:"B","C") - (a:"B")` produces `(a:"C")`. Note that multiple copies of a value in an array will all
 			be removed by doing this: `(a:"B","B","B","C") - (a:"B")` also produces `(a:"C")`.
 			
@@ -355,6 +361,16 @@ define([
 			| `of` | Obtains the item at the left numeric position, or the `length`, `any` or `all` values. | `1st of (a:"Y","O")` (is "Y")<br>`(2) of (a:"P","S")` (is "S")<br>`length of (a:5,5,5)` (is 3)
 			| `matches` | Evaluates to boolean `true` if the array on one side matches the pattern on the other. | `(a:2,3) matches (a: num, num)`, `(a: array) matches (a:(a: ))`
 			| `is a`, `is an` | Evaluates to boolean `true` if the right side is `array` and the left side is an array. | `(a:2,3) is an array`
+			
+			And, here are the data names that can be used with arrays.
+
+			| Data name | Example | Meaning
+			|---
+			| `1st`,`2nd`,`last`, etc. | `(a:1,2)'s last`, `1st of (a:1,2)` | A single value at the given position in the array.
+			| `1stto3rd`, `4thlastto2ndlast` etc. | `(a:1,2,3,4,5)'s 2ndto5th` | A subarray containing only the values between the given positions (such as the first, second and third for `1stto3rd`).
+			| `length` | `(a:'G','H')'s length` | The length (number of data values) in the array.
+			| `any`, `all` | `all of (a:1,2) < 3` | Usable only with comparison operators, these allow all or any of the values to be quickly compared.
+			| Arrays of numbers, such as `(a:3,5)` | `$array's (a:1,-1)` | A subarray containing just the data values at the given positions in the array.
 		*/
 		/*d:
 			(a: [...Any]) -> Array
@@ -415,26 +431,7 @@ define([
 
 			#data structure
 		*/
-		("range", function range(_, a, b) {
-			/*
-				For now, let's assume descending ranges are intended,
-				and support them.
-			*/
-			if (a > b) {
-				return range(_, b, a);
-			}
-			/*
-				This differs from Python: the base case returns just [a],
-				instead of an empty array. The rationale is that since it is
-				inclusive, a can serve as both start and end term just fine.
-			*/
-			const ret = [a];
-			b -= a;
-			while(b-- > 0) {
-				ret.push(++a);
-			}
-			return ret;
-		},
+		("range", (_, a, b) => range(a,b),
 		[parseInt, parseInt])
 		
 		/*d:
@@ -444,13 +441,16 @@ define([
 			whose positions are between the two numbers, inclusively.
 			
 			Example usage:
-			`(subarray: $a, 3, 4)` is the same as `$a's (a:3,4)`
+			`(subarray: $a, 3, 7)` is the same as `$a's (a:3,4,5,6,7)` or `$a's 3rdto7th`
 			
 			Rationale:
 			
 			You can obtain subarrays of arrays without this macro, by using the `'s` or `of` syntax along
-			with an array of positions. For instance, `$a's (range:4,12)` obtains a subarray of $a containing
-			its 4th through 12th values. But, for compatibility with previous Harlowe versions which did not
+			with either a specified range of consecutive positions, or an array of arbitrary position numbers.
+			For instance, `$a's 4thto12th` obtains a subarray of $a containing
+			its 4th through 12th values, and `$a's (a:1,3,5)` obtains a subarray of $a
+			containing just its 1st, 3rd and 5th positions.
+			But, for compatibility with previous Harlowe versions which did not
 			feature this syntax, this macro also exists.
 			
 			Details:

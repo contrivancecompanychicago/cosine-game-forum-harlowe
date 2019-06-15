@@ -13,6 +13,10 @@ describe("property indexing", function() {
 				expect('(print: "𐌎ed"\'s 3RD)').markupToPrint("d");
 				expect('(print: "𐌎ed"\'S 2nd)').markupToPrint("e");
 			});
+			it("can't be substrings", function() {
+				expect('(print: "𐌎ed"\'s 1stt)').markupToError();
+				expect('(print: "𐌎ed"\'s my2nd)').markupToError();
+			});
 			it("ignores the exact ordinal used", function() {
 				expect('(print: "𐌎ed"\'s 1th)').markupToPrint("𐌎");
 				expect('(print: "𐌎ed"\'s 2rd)').markupToPrint("e");
@@ -22,6 +26,13 @@ describe("property indexing", function() {
 				expect('(print: "𐌎ed"\'s 3rdlast)').markupToPrint("𐌎");
 				expect('(print: "𐌎ed"\'s 2ndlast)').markupToPrint("e");
 				expect('(print: "𐌎ed"\'s last)').markupToPrint("d");
+			});
+			it("'1stto2ndlast', '2ndlastto5th', etc. accesses a continuous subset", function() {
+				expect('(print: "𐌎ed"\'s 1stto2ndlast)').markupToPrint("𐌎e");
+				expect('(print: "𐌎ed"\'s 1stto2nd)').markupToPrint("𐌎e");
+				expect('(print: "𐌎ed"\'s 3rdlastto2nd)').markupToPrint("𐌎e");
+				expect('(print: "𐌎ed"\'s lastto3rdlast)').markupToPrint("𐌎ed");
+				expect('(print: "𐌎ed"\'s lasttolast)').markupToPrint("d");
 			});
 			it("'length' accesses the string's length", function() {
 				expect('(print: "𐌎ed"\'s length)').markupToPrint("3");
@@ -63,6 +74,13 @@ describe("property indexing", function() {
 				expect('(print: (a:"R","e","d")\'s 3rdlast)').markupToPrint("R");
 				expect('(print: (a:"R","e","d")\'s 2ndlast)').markupToPrint("e");
 				expect('(print: (a:"R","e","d")\'s last)').markupToPrint("d");
+			});
+			it("'1stto2ndlast', '2ndlastto5th', etc. accesses a continuous subset", function() {
+				expect('(print: (a:"R","e","d")\'s 1stto2ndlast)').markupToPrint("R,e");
+				expect('(print: (a:"R","e","d")\'s 1stto2nd)').markupToPrint("R,e");
+				expect('(print: (a:"R","e","d")\'s 3rdlastto2nd)').markupToPrint("R,e");
+				expect('(print: (a:"R","e","d")\'s lastto1st)').markupToPrint("R,e,d");
+				expect('(print: (a:"R","e","d")\'s 1stto1st)').markupToPrint("R");
 			});
 			it("'length' accesses the array's length", function() {
 				expect('(print: (a:1,1,1)\'s length)').markupToPrint("3");
@@ -130,9 +148,16 @@ describe("property indexing", function() {
 			it("'1st', '2nd', etc. produce hook references of just the hook at that position", function() {
 				expect('|a>[1]|a>[1]|a>[1]|a>[1](replace: ?a\'s 3rd)[2]').markupToPrint("1121");
 			});
+			it("'1stto2ndlast', '2ndlastto5th', etc. produce a continuous subset", function() {
+				expect('|a>[1]|a>[1]|a>[1]|a>[1](replace: ?a\'s 1stto2ndlast)[2]').markupToPrint("2221");
+				expect('|a>[1]|a>[1]|a>[1]|a>[1](replace: ?a\'s 2ndto3rd)[2]').markupToPrint("1221");
+				expect('|a>[1]|a>[1]|a>[1]|a>[1](replace: ?a\'s lastto2nd)[2]').markupToPrint("1222");
+				expect('|a>[1]|a>[1]|a>[1]|a>[1](replace: ?a\'s 2ndlastto3rdlast)[2]').markupToPrint("1221");
+			});
 			it("indexed hook references can be concatenated", function() {
 				expect('|a>[1]|a>[1]|a>[1]|a>[1](replace: ?a\'s 2nd + ?a\'s 4th)[2]').markupToPrint("1212");
 				expect('|a>[1]|a>[1]|b>[1]|a>[1](replace: ?a\'s 2nd + ?b)[2]').markupToPrint("1221");
+				expect('|a>[1]|a>[1]|b>[1]|a>[1](replace: ?a\'s 1stto2nd + ?b)[2]').markupToPrint("2221");
 			});
 			it("cannot be assigned to", function() {
 				expect("|a>[](set:$a's 1st to (a:1,2))").markupToError();
@@ -583,6 +608,11 @@ describe("property indexing", function() {
 					expect("|a>[1]|a>[1]|a>[1]|a>[1](replace: ?a's (a:1,4))[2]").markupToPrint('2112');
 					expect("|a>[1]|a>[1]|a>[1]|a>[1](replace: ?a's (a:1,3))[2]").markupToPrint('2121');
 					expect("|a>[1]|a>[1]|a>[1]|a>[1](replace: ?a's (a:1,3))[2]").markupToPrint('2121');
+				});
+				it("works with negative indices", function() {
+					expect("|a>[1]|a>[1]|a>[1]|a>[1](replace: ?a's (a:-1,-2))[2]").markupToPrint('1122');
+					expect("|a>[1]|a>[1]|a>[1]|a>[1](replace: ?a's (a:1,-2))[2]").markupToPrint('2121');
+					expect("|a>[1]|a>[1]|a>[1]|a>[1](replace: ?a's (a:-1,1))[2]").markupToPrint('2112');
 				});
 				it("can be chained", function() {
 					expect("|a>[1]|a>[1]|a>[1]|a>[1](replace: ?a's (a:1,4)'s 2nd)[2]").markupToPrint('1112');

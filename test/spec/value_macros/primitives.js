@@ -97,18 +97,18 @@ describe("primitive value macros", function() {
 			expect("(substring:)").markupToError();
 			expect("(substring: '1')").markupToError();
 			expect("(substring: 'red', 1.1, 2)").markupToError();
-			expect("(substring: 'red', 1, 2)").markupToPrint('re');
+			expect("(substring: '𐌎ed', 1, 2)").markupToPrint('𐌎e');
 		});
 		it("returns the substring specified by the two 1-indexed start and end indices", function() {
-			expect("(substring: 'garply', 2, 4)").markupToPrint("arp");
+			expect("(substring: 'ga𐌎ply', 2, 4)").markupToPrint("a𐌎p");
 		});
 		it("reverses the indices if the second exceeds the first", function() {
 			expect("(substring: 'garply', 4, 2)").markupToPrint("arp");
 		});
 		it("accepts negative indices", function() {
-			expect("(substring: 'garply', 2, -1)").markupToPrint("arply");
-			expect("(substring: 'garply', -2, 1)").markupToPrint("garpl");
-			expect("(substring: 'garply', -1, -3)").markupToPrint("ply");
+			expect("(substring: 'ga𐌎ply', 2, -1)").markupToPrint("a𐌎ply");
+			expect("(substring: 'ga𐌎ply', -2, 1)").markupToPrint("ga𐌎pl");
+			expect("(substring: 'ga𐌎ply', -1, -3)").markupToPrint("ply");
 		});
 		it("refuses zero and NaN indices", function() {
 			expect("(substring: 'garply', 0, 2)").markupToError();

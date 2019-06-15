@@ -253,7 +253,8 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 						target = target.target;
 					}
 					return {
-						elements: target.hooks(section)
+						// The following is the only call to HookSet.hooks() in Harlowe.
+						elements: target.hooks(section, oldTarget)
 							.filter(function() {
 								/*
 									"before" should only be true if this newTarget was created by

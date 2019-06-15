@@ -49,8 +49,9 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 		Data names:
 
 		If you only want some of the hooks with the given name to be affected, you can treat the hook name as a sort of read-only
-		array: access its `1st` element (such as by `?red's 1st`) to only affect the first such named hook in the passage, access
-		the `last` to affect the last, and so forth. (Even specifying an array of positions, like `?red's (a:1,3,5)`, will work.)
+		array: specify just its `1st` element (such as by `?red's 1st`) to only affect the first such named hook in the passage, access
+		the `last` to affect the last, and so forth. You can also specify multiple elements, using syntax like `1stto3rd`, to affect all of
+		the elements between and including those positions. Even specifying an array of arbitrary positions, like `?red's (a:1,3,7)`, will work.
 		Unlike arrays, though, you can't access their `length`, nor can you spread them with `...`.
 
 		Moreover, a few special data names exist.
@@ -67,6 +68,7 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 		| Data name | Example | Meaning
 		|---
 		| `1st`,`2nd`,`last`, etc. | `?hook's last`, `1st of ?hook` | Only one hook with the given name, at a certain position in the passage relative to the rest (first with its name, last with its name, etc).
+		| `1stto3rd`, `4thlastto2ndlast` etc. | `?hook's 2ndto5th` | Only hooks with this name, at a certain sequence of positions (such as the first, second and third for `1stto3rd`) relative to the rest.
 		| `chars` | `?title's chars`, `chars of ?scream` | Each individual character within the hook, as if the characters were hooks in themselves.
 		| `links` | `?body's links`, `links of ?aside` | Each link inside the hook.
 		| `lines` | `?passage's lines`, `lines of ?passage` | Each span of continuous text, separated by line breaks, inside the passage.
@@ -77,7 +79,7 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 
 		| Operator | Purpose | Example
 		|---
-		| `+` | Creates a hook name that, when given to macros, causes both of the added hooks to be affected by that macro. | `(click: ?red + ?blue's 1st)` affects all hooks tagged `<red|`, as well as the first hook tagged `<blue|`.
+		| `+` | Creates a hook name that, when given to macros, causes both of the added hooks to be affected by that macro. | `(click: ?red + ?blue's 1st)` affects all hooks tagged `red`, as well as the first hook tagged `blue`.
 	*/
 
 	/*
@@ -367,8 +369,28 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 			(or array of indexes).
 		*/
 		const reducer = (elements, index) => {
+			/*
+				The index is an array in cases like "?a's (a:1,2,4)".
+			*/
 			if (Array.isArray(index)) {
+				// Yes, jQuery's .get() can handle negative indices.
 				return index.reduce((a,i) => a.add(elements.get(i)), $());
+			}
+			/*
+				The index is an object in cases like "?a's 12thto3rdlast".
+			*/
+			else if (index && typeof index === "object" && "first" in index && "last" in index) {
+				let {first, last} = index;
+				const {length} = elements;
+				if (first < 0) { first += length; }
+				if (last < 0) { last += length; }
+				
+				let ret = $(elements.get(first));
+				while (first !== last) {
+					first += Math.sign(last - first);
+					ret = ret.add(elements.get(first));
+				}
+				return ret;
 			}
 			// TODO: "3n+1th" selectors
 			else if (typeof index === "string") {
@@ -547,8 +569,10 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 			Accessing 1st, 2nd, etc. for a HookSet will produce only the nth document-order
 			element for that hookset.
 
-			Note that index may actually be an array of indices, as created by "?a's (a:1,2,4)".
-			The order of this array must be preserved, so that "?a's (a:2,4)'s 2nd" works correctly.
+			Note that the index may actually be one of the following data types instead of a single index:
+			* An array of indices, as created by "?a's (a:1,2,4)". The order of this array must be preserved,
+			so that "?a's (a:2,4)'s 2nd" works correctly.
+			* A {first: Number, last:Number} object. This is created by "?a's 1stTo2ndlast" and such.
 		*/
 		TwineScript_GetProperty(prop) {
 			return HookSet.create(undefined, this, [prop], undefined);

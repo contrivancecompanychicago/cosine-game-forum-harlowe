@@ -15,7 +15,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 		/*d:
 			String data
 			
-			A string is just a block of text - a bunch of text characters strung together.
+			A string is just a run of text - a sequence of text characters strung together.
 			
 			When making a story, you'll mostly work with strings that you intend to insert into
 			the passage source. If a string contains markup, then the markup will be processed when it's
@@ -31,9 +31,10 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			
 			Strings are similar to arrays, in that their individual characters can be accessed: `"ABC"'s 1st` evaluates to "A",
 			`"Gosh"'s 2ndlast` evaluates to "s", and `"Exeunt"'s last` evaluates to "t". They, too, have a "length":
-			`"Marathon"'s length` is 8. If you don't know the exact position of a character, you can use an expression,
-			in brackers, after it: `$string's ($pos - 3)`. And, you can access a substring by providing an array of positions
-			in place of a single position: `"Dog"'s (a: 2,3)` is "og".
+			`"Marathon"'s length` is 8. If you can't determine the exact position of a character, you can use an expression,
+			in brackets, after it: `$string's ($pos - 3)`. You can create a substring by providing an array of positions
+			in place of a single position: `"Dogs"'s (a: 2,4)` is "os". And, you can create a substring of consecutive positions by
+			specifying just the start and end position as a data name: `"Ducks"'s 1stto3rd` is "Duc", and `"Rags"'s 2ndlasttolast` is "gs".
 
 			Also, you can use the `contains` and `is in` operators to see if a certain string is contained within another: `"mother"
 			contains "moth"` is true, as is `"a" is in "a"`. Again, like arrays, strings have special `any` and `all` data names which
@@ -53,6 +54,17 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			| `of` | Obtaining the character at the left numeric position. | `1st of "YO"` (is "Y")<br>`(2) of "PS"` (is "S")<br>`(a: 2,3) of "ear"` (is "ar")
 			| `matches` | Evaluates to boolean `true` if one side is a string and the other is an identical string or `str` or `string` | `"Contract" matches str`
 			| `is a`, `is an` | Evaluates to boolean `true` if the right side is `string` or `str` and the left side is a string. | `"Contract" is a str`
+			
+			And, here are the data names that can be used with strings.
+
+			| Data name | Example | Meaning
+			|---
+			| `1st`,`2nd`,`last`, etc. | `$str's last`, `1st of $str` | A single character at the given position in the string.
+			| `1stto3rd`, `4thlastto2ndlast` etc. | `"aeiou"'s 2ndto5th` | A substring containing only the characters between the given positions (such as the first, second and third for `1stto3rd`).
+			| `length` | `"Penny"'s length` | The length (number of characters) in the string.
+			| `any`, `all` | `all of "aeiou" is not "y"` | Usable only with comparison operators, these allow all or any of the characters to be quickly compared.
+			| Arrays of numbers, such as `(a:3,5)` | `$str's (a:1,-1)` | A substring containing just the characters at the given positions in the string.
+
 		*/
 		/*d:
 			(str: ...[Number or String or Boolean or Array]) -> String
@@ -105,12 +117,14 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			This macro produces a substring of the given string, cut from two inclusive number positions.
 			
 			Example usage:
-			`(substring: "growl", 3, 5)` is the same as `"growl"'s (a:3,4,5)`
+			`(substring: "growl", 3, 5)` is the same as `"growl"'s 3rdto5th` or `"growl"'s (a:3,4,5)`
 
 			Rationale:
 			You can obtain substrings of strings without this macro, by using the `'s` or `of` syntax along
-			with an array of positions. For instance, `$str's (range:4,12)` obtains a substring of $str containing
-			its 4th through 12th characters. But, for compatibility with previous Harlowe versions which did not
+			with either a specified range of consecutive positions, or an array of arbitrary position numbers.
+			For instance, `$str's 4thto12th` obtains a substring of $str containing
+			its 4th through 12th characters, and `$a's (a:1,3,5)` obtains a substring of just the 1st, 3rd and 5th characters of $a.
+			But, for compatibility with previous Harlowe versions which did not
 			feature this syntax, this macro also exists.
 			
 			Details:
