@@ -249,7 +249,11 @@ define([
 
 					Its main purpose is to be used in (if:) macros, such as `(if: visits is 1)`, or `(if: visits > 4)`. If you
 					use one particular formulation a lot in your story, such as `(if: visits is 1)`, you can (set:) the (if:)
-					into a variable using `(set: $first to (if:visits is 1))` and then use $first in its place.
+					into a variable using `(set: $first to (if:visits is 1))` and then use $first in its place, such as in
+					`$first[You've discovered a new island.]`.
+
+					Similarly, it is also useful with the (cond:) and (nth:) macros - the latter letting you simply use `visit`
+					as its first value to vary the results based on the number of times the passage is visited.
 
 					`visits` used in (display:) macros will still produce the number of times the host passage was visited,
 					not the contained passage. So, you can't use it to determine how many times the (display:)ed passage

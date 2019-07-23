@@ -8,7 +8,7 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 	const {escape, impossible, passageSelector, transitionOut} = Utils;
 	
 	/*
-		Engine is a singleton class responsible for rendering passages to the DOM.
+		Engine is a singleton class, responsible for rendering passages to the DOM.
 	*/
 	let Engine;
 	

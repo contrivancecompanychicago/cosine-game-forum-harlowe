@@ -244,6 +244,7 @@ $zindex: 999999;
 $borderwidth: 2px;
 $borderradius: 0.5em;
 $background: white;
+$color: black;
 
 tw-debugger {
 	// Dimensions and position
@@ -259,6 +260,7 @@ tw-debugger {
 	// Font
 	font-size: 1.25em;
 	font-family: sans-serif;
+	color: $color;
 
 	// Design
 	border: {

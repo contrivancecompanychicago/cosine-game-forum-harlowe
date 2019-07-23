@@ -423,7 +423,7 @@ define([
 			Details:
 			Certain kinds of macros, like (either:) or (dataset:), accept sequences of values. You can
 			use (range:) with these in conjunction with the `...` spreading operator:
-			`(dataset: ...(range:2,6))` is equivalent to `(dataset: 2,4,5,6,7)`, and
+			`(dataset: ...(range:2,6))` is equivalent to `(dataset: 2,3,4,5,6,7)`, and
 			`(either: ...(range:1,5))` is equivalent to `(random: 1,5)`.
 			
 			See also:
@@ -1139,7 +1139,9 @@ define([
 
 			Rationale:
 			There are times when you wish to examine the data of the story as it is running - for instance, checking what
-			tag a certain passage has, and performing some special behaviour as a result. This macro provides that functionality.
+			tag a certain passage has, and performing some special behaviour as a result. In particular, checking what data the
+			current passage has can be very useful in a `header` tagged passage, or in a (display:)ed passage. This macro, as
+			well as its counterpart (passages:), provides that functionality.
 
 			Details:
 			The datamap contains the following names and values.
@@ -1154,16 +1156,20 @@ define([
 			the current passage, while inside of it, may lead to an infinite regress.
 
 			Interestingly, the construction `(print: (passage: "Cellar")'s source)` is essentially identical in function (albeit longer to write)
-			than `(display: "Cellar")`.
+			to `(display: "Cellar")`.
 
 			See also:
-			(history:), (savedgames:), (passages:)
+			(history:), (passages:)
 
 			#game state
 		*/
-		("passage", (_, passageName) =>
-			clone(Passages.get(passageName || State.passage))
-				|| TwineError.create('macrocall', "There's no passage named '" + passageName + "' in this story."),
+		("passage", (_, passageName) => {
+			if (TwineError.containsError(passageName)) {
+				return passageName;
+			}
+			return clone(Passages.get(passageName || State.passage))
+				|| TwineError.create('macrocall', "There's no passage named '" + passageName + "' in this story.");
+		},
 		[optional(String)])
 
 		/*d:
@@ -1177,28 +1183,42 @@ define([
 			contain "Fight" in their name.
 
 			Rationale:
-			TBW
+			There are times when you wish to examine the data of the story as it is running - for instance, checking which
+			of the story's passages has a certain tag, or a certain word in its source. While you could manually write an array of
+			such passages' names yourself and include them as an array, it is usually easier to use this macro (or the (passage:) macro)
+			to produce such an array automatically.
 
 			Details:
-			The datamap for each passage resembles that returned by (passage:). It contains the following names and values.
+			The datamaps for each passage resemble those returned by (passage:). They contain the following names and values.
 
 			| Name | Value |
 			|---
+			| name | The string name of the passage. |
 			| source | The source markup of the passage, exactly as you entered it in the Twine editor |
-			| name | The string name of this passage. |
-			| tags | An array of strings, which are the tags you gave to this passage. |
+			| tags | An array of strings, which are the tags you gave to the passage. |
 
-			TBW
+			If no passage matches the lambda, then the array will be empty.
+
+			If you wish to take the array of passages and reduce them to just their names, the (altered:) macro can be
+			used. For instance, `(altered: via its name, ...(passages:))` produces an array of every passage's name.
 
 			See also:
-			(passage:), (history:)
+			(history:), (passage:)
 
 			#game state
 		*/
 		("passages", (section, lambda) => {
+			if (TwineError.containsError(lambda)) {
+				return lambda;
+			}
 			const sort = NaturalSort("en"),
 				values = [...Passages.values()];
-			return (lambda ? lambda.filter(section, values) : values).sort((a,b) => sort(a.get('name'), b.get('name')));
+			const result = (lambda ? lambda.filter(section, values) : values);
+			const err = TwineError.containsError(result);
+			if (err) {
+				return err;
+			}
+			return result.sort((a,b) => sort(a.get('name'), b.get('name')));
 		},
 		[optional(Lambda.TypeSignature('where'))])
 

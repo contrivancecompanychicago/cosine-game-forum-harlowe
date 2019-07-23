@@ -555,7 +555,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			(_, lambda, ...args) => {
 				if (!lambda.loop) {
 					return TwineError.create(
-						"macrocall",
+						"datatype",
 						"The lambda provided to (for:) must refer to a temp variable, not just 'it'."
 					);
 				}
@@ -609,7 +609,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				name = Utils.insensitiveName(name);
 				if (validT8ns.indexOf(name) === -1) {
 					return TwineError.create(
-						"macrocall",
+						"datatype",
 						"'" + name + '\' is not a valid (transition:)', validT8nsMessage);
 				}
 				return ChangerCommand.create("transition", [name]);
@@ -644,7 +644,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			(_, time) => {
 				if (time <= 0) {
 					return TwineError.create(
-						"macrocall",
+						"datatype",
 						"(transition-time:) should be a positive number of (milli)seconds, not " + time
 					);
 				}
@@ -704,7 +704,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				name = Utils.insensitiveName(name);
 				if (validT8ns.indexOf(name) === -1) {
 					return TwineError.create(
-						"macrocall",
+						"datatype",
 						"'" + name + '\' is not a valid transition', validT8nsMessage);
 				}
 				return ChangerCommand.create("transition-depart", [name]);
@@ -755,7 +755,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				name = Utils.insensitiveName(name);
 				if (validT8ns.indexOf(name) === -1) {
 					return TwineError.create(
-						"macrocall",
+						"datatype",
 						"'" + name + '\' is not a valid transition', validT8nsMessage);
 				}
 				return ChangerCommand.create("transition-arrive", [name]);
@@ -1226,7 +1226,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 						
 						if (!(styleName in styleTagNames)) {
 							return TwineError.create(
-								"macrocall",
+								"datatype",
 								"'" + styleName + '\' is not a valid (text-style:)',
 								"Only the following names are recognised (capitalisation and hyphens ignored): "
 									+ Object.keys(styleTagNames).join(", "));
@@ -1305,7 +1305,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 					if (!(test.every(e => e === "styles" || e === "attr") &&
 							desc.attr.every(elem => Object.keys(elem) + '' === "style"))) {
 						return TwineError.create(
-							"macrocall",
+							"datatype",
 							"The changer given to (hover-style:) must only change the hook's style."
 						);
 					}

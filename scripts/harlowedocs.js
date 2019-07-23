@@ -107,8 +107,8 @@ outputFile = outputFile.replace(/<code>([^<]+)<\/code>(~?)/g, ({length}, code, n
 */
 outputFile = `<!doctype html><title>Harlowe ${version} manual</title><meta charset=utf8><style>
 /* Normalisation CSS */
-html { font-size:110%; font-weight:lighter; }
-body { font-family:Georgia, "Times New Roman", Times, serif; line-height:1.5; margin:0 25vw 4em 25vw;}
+html { font-size:110%; font-weight:lighter; background:white; }
+body { font-family:Georgia, "Times New Roman", Times, serif; line-height:1.5; margin:0 25vw 4em 25vw; color:black; }
 p { margin-top:1em; }
 strong,b { font-weight: bold; }
 a { color:#3B8BBA; }

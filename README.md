@@ -13,6 +13,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where the error message for giving `(event:)` the wrong type of lambda was incorrectly worded.
  * Fixed a bug where using the sidebar's "redo" button wouldn't cause the debug panel's "Turns" dropdown to update.
  * Fixed a bug where the debug mode's variables button's label sometimes had the wrong number on it.
+ * Fixed a bug where an error given to the spread `...` syntax, such as `(a: ...(a:2/0))`, wouldn't be displayed, instead producing an unrelated error.
+ * Fixed a bug where an error in the passage name given to `(passage:)`, such as `(passage: (str:1/0))`, wouldn't be displayed, instead producing an unrelated error.
  * Fixed a long-standing bug in `(substring:)` where negative indices wouldn't work correctly if the string contained any Unicode "astral plane" characters (any characters not in the Basic Multilingual Plane).
 
 ####Alterations
@@ -25,15 +27,25 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 ####Additions
 
+#####Coding
+
+ * Added a `visits` identifier (aliased as `visit`) to join `it` and `time`. It equals the number of times the current passage was visited, including this visit. The purpose of this identifier is to make it easier to replicate the Twine 1 `<<once>>` macro, which only displayed text on the first visit to a passage, and whose absence was a long-standing weakness in Harlowe. Previously, it could be replicated using the rather cumbersome `(if: (passage:)'s name is not in (history:))`, but now, it can be replicated using `(if: visits is 1)`, which expresses the intent much better and approaches the original's brevity. Furthermore, it makes it much easier to specify hooks to display on third, fourth, or even-numbered visits, using `(if: visits is 3)`, `(if: visits % 2 is 0)` and so forth. The reason this is an identifier and not a macro (like `(passage:)`) is because I want identifiers to be used for small, "volatile" information that's specific only to the current context, such as `it` and `time`. (`(history:)`, in retrospect, could have been an identifier.)
  * Added the special hookname properties, "chars", "lines", and "links", which can be used to select special kinds of structures inside hooks.
    * `?hook's chars` selects each individual character within a hook, as if they were wrapped in hooks themselves. This is meant to revive the memorable `.char`-selecting CSS functionality in Twine 1, and can, in particular, be used with `(enchant:)` and `(hover-style:)`.
    * `?hook's lines` selects individual lines of text within a hook. A line is any run of text or code between line breaks (or the passage's start and end) - a word-wrapped paragraph of prose is considered a single "line" as a result.
    * `?hook's links` selects hyperlinks, similar to `?Link`, but only within the given hook.
  * Now, you can create consecutive subsets of arrays, strings and hooknames by writing two positions, such as `1st` and `3rd`, and joining them together with `to`, and using that as a data name - `$arr's 1stto3rd` is the same as `$arr's (a:1,2,3)`, and `"Jelly"'s 3rdlasttolast` is "lly". This is a more readable alternative to using arrays of positions. Note that, as with `2nd` etc., these are case-insensitive, so you can write these using the capitalisation `3rdlastToLast` if you wish. (Note that this isn't intended to replace subsets whose ranges are defined by variables, such as in `$a's (range:$p1, $p2)`.)
+
+#####Macros
+
+ * Added `(cond:)`, a macro similar to (if:) but which conditionally chooses between two data values, rather than hooks. `(cond: visits is 1, "Strange", "Familiar")` is "Strange" on the first visit and "Familiar" afterward. Since it's not a changer, you can use it in expressions within other macros freely. Additionally, you can add further conditions - `(cond: $gender is "masc", "god", $gender is "femme", "goddess", $gender is "pan", "goddex", "deity")` - to choose among several values precisely.
+ * Added `(nth:)`, a macro that takes a sequence of values and chooses one at a given position, similar to the `'s` or `of` indexing syntax for arrays. `(nth: 2, $mary, $edith, $gwen)` is the same as `(a: $mary, $edith, $gwen)'s 2nd`. It serves as a more readable alternative to the indexing syntax in certain situations, such as using it with `visit` in cases like `(nth: visit, "hissing", "whirring", "clanking")`.
  * Added `(more:)`, a macro loosely inspired by the Ink language's "gather" structure. This will defer running the hook until no other "revealing" elements (links, `(mouseover:)` or `(mouseout:)` elements) remain in the passage, whereupon it will run and display even "more" prose. Its main purpose is to be used alongside `(link:)`, as a shortcut for putting `(show:)` inside it - `(link:"Duck")[It swims on the lake.(show:?next)] |next)[It dives underwater.]` can be rewritten as `(link:"Duck")[It swims on the lake.] (more:)[It dives underwater.]`.
- * Added a `visits` identifier, to join `it` and `time`, which equals the number of times the current passage was visited, including this time. The purpose of this identifier is to make it easier to replicate the Twine 1 `<<once>>` macro, which only displayed text on the first visit to a passage, and whose absence is a long-standing weakness in Harlowe. Previously, it could be replicated using the rather cumbersome `(if: (passage:)'s name is not in (history:))`, but now, it can be replicated using `(if: visits is 1)`, which expresses the intent much better and approaches the original's brevity. Furthermore, it makes it much easier to specify hooks to display on third, fourth, or even-numbered visits, using `(if: visits is 3)`, `(if: visits % 2 is 0)` and so forth. The reason this is an identifier and not a macro (like `(passage:)`) is because I want identifiers to be used for small, "volatile" information that's specific only to the current context, such as `it` and `time`. (`(history:)`, in retrospect, could have been an identifier.)
  * Added a `(passages:)` macro, which returns an array containing the `(passage:)` datamaps for every passage in the game, but also can be given a "where" lambda to filter that array.
  * Added a gradient data type, a `(gradient:)` macro, and a `gradient` datatype name. This can be used to quickly create special images called gradients, which are smooth linear fades between various colours. These are implemented using CSS `linear-gradient`s, and the `(gradient:)` macro has similar syntax to it. Currently, these can only be used with `(background:)`.
+
+#####Debug Mode
+
  * Added a new togglale pane to the debug mode panel, "Source", which displays the current passage's source code. This is designed to supplement the "debug view" option, which shows the passage's current state, by letting you compare it to the original code. This pane currently has no syntax highlighting, such as that used in the Twine editor.
  * The debug mode variables pane now lists the contents of datamaps, arrays and datasets, as separate rows.
  * Colours in the variables pane now have a colour swatch in their listing.
@@ -61,6 +73,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 ####Bugfixes
 
  * Fixed a bug where the story crashes on startup if the page's URL contains a hash identifier that doesn't have "stories" in it (such as in `story.html#what`).
+ * Fixed a bug where the story crashes on startup if, for some reason, localStorage exists but cannot be accessed.
  * Fixed a bug where same-precedence arithmetic operators (`+` and `-`, or `/` and `*`) had incorrect associativity (so, `3 - 5 + 2` was interpreted as `3 - (5 + 2)` instead of `(3 - 5) + 2`).
  * Temp variables finally work correctly with changers that defer a hook until some event occurs, like `(link:)`, `(click:)` and such. Now, you can reference temp variables inside the hook, such as in `(link:"Read")[It reads: _engraving]`, just as you can with other kinds of changers.
  * Fixed a bug where supplying multiple shortened `is` or `is not` comparisons, in a form such as `$a is $b and $c`, would produce an incorrect result.

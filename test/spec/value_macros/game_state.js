@@ -29,6 +29,9 @@ describe("game state macros", function() {
 				+ "(set: $a's foobaz to 1)"
 				+ "(print: $b contains 'foobaz')").markupToPrint("false");
 		});
+		it("proliferates errors", function (){
+			expect("(passage: (str:2/0))").markupToError();
+		});
 	});
 	describe("the (history:) macro", function() {
 		it("accepts 0 or 1 'where' lambdas", function() {
@@ -67,8 +70,30 @@ describe("game state macros", function() {
 			createPassage("corge","baz");
 			createPassage("quux","qux");
 			// Each of these expect()s creates a "test" passage to run the code in.
+			expect("(print: (altered: _p via _p's name, ...(passages:)))").markupToPrint("bar,baz,foo,qux,test");
 			expect("(print: (altered: _p via _p's name, ...(passages: each _p where _p's name is not 'test')))").markupToPrint("bar,baz,foo,qux");
 			expect("(print: (altered: _p via _p's source, ...(passages: each _p where _p's name is not 'test')))").markupToPrint("grault,corge,garply,quux");
+		});
+		it("when given a lambda, filters the array using the lambda", function() {
+			createPassage("Fern","The Kitchen");
+			createPassage("Ferns","The Garden");
+			createPassage("","The Hall");
+			expect("(print: (altered: _p via _p's name, ...(passages: _p where _p's source contains 'Fern' and _p's name is not 'test')))")
+				.markupToPrint("The Garden,The Kitchen");
+		});
+		it("passage datamaps have tags", function (){
+			createPassage("","The Kitchen", ["area"]);
+			createPassage("","The Aviary", ["place"]);
+			expect("(print: (passages: where its name is 'The Kitchen')'s 1st's tags contains 'area')").markupToPrint("true");
+			expect("(print: (passages: where its name is 'The Kitchen')'s 1st's tags contains 'place')").markupToPrint("false");
+			expect("(print: (passages: where its name is 'The Aviary')'s 1st's tags contains 'place')").markupToPrint("true");
+		});
+		it("returns an empty array if no passage matched the lambda", function() {
+			expect("(print: (altered: _p via _p's name, ...(passages: each _p where _p's name is 'foo')))").markupToPrint("");
+			expect("(print: (passages: where its name is 'foo')'s length)").markupToPrint("0");
+		});
+		it("proliferates errors", function (){
+			expect("(passages: where its name is (str:2/0))").markupToError();
 		});
 		//TODO: More tests
 	});

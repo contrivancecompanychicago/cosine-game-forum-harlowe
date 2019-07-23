@@ -1,6 +1,6 @@
 "use strict";
 define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatypes/gradient', 'internaltypes/twineerror'],
-(Macros, {realWhitespace, anyRealLetter}, {subset, objectName, clone}, Colour, Gradient, TwineError) => {
+(Macros, {realWhitespace, nth, anyRealLetter}, {subset, objectName, clone}, Colour, Gradient, TwineError) => {
 	/*
 		Built-in value macros.
 		These macros manipulate the primitive values - boolean, string, number.
@@ -752,6 +752,79 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 		},
 		[Number, rest(either(Number, Colour))])
 
+		/*d:
+			(cond: Boolean, Any, ...Any) -> Any
+
+			When given a sequence of booleans (the "conditions") paired with values, this provides the first value that was
+			paired with a `true` condition. This can give you one value or another based on a quick check.
+
+			Examples:
+			* `(set: $status to (cond: $cash >= 300, "stable", $cash >= 200, "lean", $cash >= 100, "skint", "broke"))`
+			* `Your (cond: $wonTheRace, "gasps of triumph", "wheezes of defeat") drown out all other noise.`
+
+			Rationale:
+			While the (if:), (else:) and (else-if:) macros allow blocks of passage prose to be conditionally displayed and code to be
+			conditionally run, there are plenty of situations where you'd prefer to succinctly select values inside macro
+			calls, or select from multiple values, without needing to write multiple (else-if:)s or (set:)s for each possibility.
+			The (cond:) macro (short for "condition") offers such utility.
+
+			In situations where you would write something like this,
+			```
+			(if: not $lostTheSword)[(set: $weapon to "a holy sword")]
+			(else: )[(set:$weapon to "an unholy swear-word")]
+			```
+			you could instead simply write this.
+			```
+			(set: $weapon to (cond: not $lostTheSword, "a holy sword", "an unholy swear-word"))
+			```
+
+			Details:
+			This macro is intended to resemble the "cond" function in Lisp, as well as the "ternary" operator in numerous other
+			programming languages.
+
+			If only one value was given to (cond:), then that value will be returned as-is.
+
+			Except for the last, every odd value given to (cond:) must be a boolean, or an error will occur.
+
+			See also:
+			(if:), (dm:), (nth:)
+
+			#basics 12
+		*/
+		("cond", (_, ...args) => {
+			for(let i = 0; i < args.length; i += 2) {
+				const boolean = args[i];
+				/*
+					If this is the final value, use it.
+					Additionally, if there is an error here, propagate it.
+				*/
+				if (i === args.length-1 || TwineError.containsError(boolean)) {
+					return boolean;
+				}
+				/*
+					If this isn't a Boolean, then produce an error.
+				*/
+				if (typeof boolean !== "boolean") {
+					return TwineError.create("datatype",
+						"(cond:)'s " + nth(i + 1) + " value is " + objectName(boolean) +
+							", but should be a boolean."
+					);
+				}
+				/*
+					The actual logic of this macro: return the value if its matching boolean is true.
+				*/
+				if (boolean) {
+					return args[i + 1];
+				}
+			}
+			/*
+				If control flow reaches here, then there weren't enough values to match with booleans.
+			*/
+			return TwineError.create("macrocall",
+				"An odd number of values must be given to (cond:), not " + (args.length),
+				"(cond:) must be given one or more pairs of booleans and values, as well as one final value."
+			);
+		}, [Boolean, Any, rest(Any)])
 		;
 		/*d:
 			Boolean data
@@ -1092,8 +1165,10 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			one of them randomly.
 			
 			Example usage:
-			`A (either: "slimy", "goopy", "slippery") puddle` will randomly be "A slimy puddle", "A goopy puddle"
+			* `A (either: "slimy", "goopy", "slippery") puddle` will randomly be "A slimy puddle", "A goopy puddle"
 			or "A slippery puddle".
+			* `(go-to: (either: "Void 2", "Void 3", "Void 4"))` will send the player to one of three random passages.
+			* `(text-colour:(either: red, yellow, green))` will create a (text-colour:) changer using one of the three colours.
 			
 			Rationale:
 			There are plenty of occasions where you might want random elements in your story: a few random adjectives
@@ -1108,13 +1183,62 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 
 			If you want to pick two or more values randomly, you may want to use the (shuffled:) macro, and extract a subarray
 			from its result.
+
+			If you want to pick a value more reliably - for instance, to pick a value randomly, but keep using that same value
+			in subsequent visits to the passage - you may want to store an (either:) result in a variable using (set:) in an earlier passage,
+			and use that whenever you want to use the result.
 			
 			See also:
-			(random:), (shuffled:)
+			(nth:), (random:), (shuffled:), (cond:)
 
-			#basics
+			#basics 11
 		*/
 		either: [(...args) => args[~~(Math.random() * args.length)], rest(Any)],
+
+		/*d:
+			(nth: Number, ...Any) -> Any
+
+			Given a positive whole number and a sequence of values, this selects the nth value in the sequence, where n is the number. If n is
+			larger than the number of items in the sequence, the selection loops around to the start.
+
+			Example usage:
+			`(nth: visit, "Hi!", "Hello again!", "Oh, it's you!", "Hey!")` will display a different salutation, in sequence,
+			on the first, second, third and fourth visits, then return to "Hi!" on the fifth visit, and so on.
+
+			Rationale:
+			This macro is designed to be used in passage prose, letting you quickly display one of a varying range of phrases or sentences based
+			on a certain value. In addition to being useful with story variables, it's useful with the `visit` identifier, allowing you to
+			vary the text shown on each subsequent visit to a passage, with more consistent variation than if you were using (either:).
+
+			However, you can use (nth:) with any kind of value, not just strings. For instance, `(text-colour: (nth: $wounds, white, yellow, red))`
+			will produce a (text-colour:) changer that differs in colour based on the number in $wounds (up to 3).
+
+			Details:
+			You can, of course, access a specific value in a sequence using the (a:) macro and the `'s` or `of` syntax - `(a: 1,2,3)'s ($n)`
+			is functionally very similar to `(nth: $n, 1, 2, 3)`, and other uses of the (nth:) macro. (nth:), however, allows the given value to
+			exceed the bounds of the sequence - `(nth: 4, 1, 2, 3)` would produce 1, whereas `(a: 1,2,3)'s 4th` would produce an error.
+
+			If you wish to use (nth:) to display very large blocks of prose, you may wish to simply put that prose in hooks, and use (if:) to selectively display
+			one, such as by writing `(if: visits is 3)`.
+
+			If you don't want the "looping" to occur - if you want to only return the final value if the number exceeds the sequence - you can combine
+			this macro with (min:). `(nth: (min: 3, visit), "", "", "")`
+
+			See also:
+			(cond:), (if:), (either:)
+
+			#basics 13
+		*/
+		nth: [(index, ...args) => {
+			if (index <= 0) {
+				return TwineError.create(
+					"datatype",
+					"(nth:)'s first value should be a positive whole number, not " + index
+				);
+			}
+			return args[(index-1) % args.length];
+		},
+		[parseInt, rest(Any)]],
 		
 		/*
 			This method takes all of the above and registers them

@@ -452,4 +452,4 @@ paths.forEach(function(path) {
 	});
 });
 // Order of this object determines the overall document order.
-module.exports = {Introduction, Markup, Macro, Type, Keyword, PassageTag, Changes, Appendix};
+module.exports = {Introduction, Markup, Macro, Keyword, PassageTag, Type, Changes, Appendix};

@@ -26,7 +26,7 @@ else {
 	}
 	// Testing the raw ES6 source
 	else {
-		require.config({baseUrl: "../js/", scriptType: "application/javascript;version=1.8"});
+		require.config({baseUrl: "../js/"});
 		require(["markup/lexer","markup/patterns","markup/markup","harlowe"]);
 	}
 }

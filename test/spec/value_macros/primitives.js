@@ -67,6 +67,49 @@ describe("primitive value macros", function() {
 			}
 		});
 	});
+	describe("the (cond:) macro", function() {
+		it("accepts pairs of booleans and values, as well as one final value", function() {
+			expect("(cond:)").markupToError();
+			expect("(cond:true)").markupToError();
+			["0.1", "'X'", "true"].forEach(function(e) {
+				for(var i = 1; i < 10; i += 1) {
+					expect("(cond:" + ("false,"+e+",").repeat(i).slice(0,-1) + ")").markupToError();
+					expect("(cond:" + ("false,"+e+",").repeat(i) + ",0)").not.markupToError();
+				}
+			});
+		});
+		it("returns the first value whose paired boolean is true, or the final value if none are true", function() {
+			expect("(cond:false,2,false,3,true,4,5)").markupToPrint('4');
+			expect("(cond:false,2,false,3,false,4,5)").markupToPrint('5');
+			expect("(cond:true,2,true,3,true,4,5)").markupToPrint('2');
+			expect("(cond:false,2,3)").markupToPrint('3');
+			expect("(cond:true,2,3)").markupToPrint('2');
+		});
+	});
+	describe("the (nth:) macro", function() {
+		it("accepts a positive integer, plus one or more other values", function() {
+			expect("(nth: 1)").markupToError();
+			expect("(nth: true, 1)").markupToError();
+			expect("(nth: 1.5, 1)").markupToError();
+			expect("(nth: -1, 1)").markupToError();
+			["1", "'X'", "true"].forEach(function(e) {
+				for(var i = 2; i < 10; i += 1) {
+					expect("(nth: 1," + (e+",").repeat(i) + ")").not.markupToError();
+				}
+			});
+		});
+		it("returns the nth value in the sequence, looping when it exceeds the number of values", function() {
+			expect("(nth: 1, 'foo', 'bar', 'baz', 'qux')").markupToPrint('foo');
+			expect("(nth: 2, 'foo', 'bar', 'baz', 'qux')").markupToPrint('bar');
+			expect("(nth: 3, 'foo', 'bar', 'baz', 'qux')").markupToPrint('baz');
+			expect("(nth: 5, 'foo', 'bar', 'baz', 'qux', 'garply')").markupToPrint('garply');
+		});
+		it("loops when it exceeds the number of values given", function() {
+			expect("(nth: 5, 'foo', 'bar', 'baz', 'qux')").markupToPrint('foo');
+			expect("(nth: 9, 'foo', 'bar', 'baz', 'qux')").markupToPrint('foo');
+			expect("(nth: 11, 'foo', 'bar', 'baz', 'qux')").markupToPrint('baz');
+		});
+	});
 	describe("the maths macros", function() {
 		[
 			["min","(min: 2, -5, 2, 7, 0.1)",       "-5"],

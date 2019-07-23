@@ -26,6 +26,10 @@ describe("lambdas", function() {
 		expect("(print: _a making (_a + 1))").markupToError();
 		expect("(print: _a with (_a + 1))").markupToError();
 	});
+	it("'where' and 'when' work with 'and'", function() {
+		expect("(print: where $a > 4 and $b > 3)").not.markupToError();
+		expect("(print: when $a > 4 and $b > 3)").not.markupToError();
+	});
 	it("'when' cannot have any other clauses", function() {
 		expect("(print: when $a > 2 where $a > 4)").markupToError();
 		expect("(print: when $a > 2 via $a + 1)").markupToError();
@@ -108,6 +112,7 @@ describe("lambda macros", function() {
 			expect("(print: (find: _a where _a>2, 1,3)'s 1st + 1)").markupToPrint("4");
 			expect("(find: _a where _a>2, 1,2,3,4,5)").markupToPrint("3,4,5");
 			expect("(set: $a to 3)(find: _a where _a < $a, 1,2,3)").markupToPrint("1,2");
+			expect("(set: $a to 3)(set:$b to 2)(find: _a where _a < $a and _a <= $b, 1,2,3,4)").markupToPrint("1,2");
 		});
 		it("if one iteration errors, the result is an error", function() {
 			expect("(find: _a where not _a, true, true, 6, true)").markupToError();

@@ -27,6 +27,13 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 				if (el && el.spreader === true) {
 					const {value} = el;
 					/*
+						TwineErrors, obviously, can't be spread.
+					*/
+					const error = TwineError.containsError(value);
+					if (error) {
+						return error;
+					}
+					/*
 						Currently, the full gamut of spreadable
 						JS objects isn't available - only arrays, sets, and strings.
 					*/

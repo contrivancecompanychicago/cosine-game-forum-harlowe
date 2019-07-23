@@ -266,7 +266,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			Rationale:
 			The cycling link is an interaction idiom popularised in Twine 1 which combines the utility of a dial input element with
 			the discovery and visual consistency of a link: the player can typically only discover that this is a cycling link by clicking it,
-			and can then discover the full set of labels by clicking through them. This affords a number of subtle dramatic and humourous
+			and can then discover the full set of labels by clicking through them. This allows a variety of subtle dramatic and humourous
 			possibilities, and moreover allows the link to sit comfortably among passage prose without standing out as an interface element.
 
 			The addition of a variable bound to the link, changing to match whichever text the player finally dialed the link to, allows
