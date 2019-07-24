@@ -372,7 +372,7 @@
 			"it" is a bit of a problem because its possessive is "its", not "it's",
 			so we can't use a derivation similar to property.
 		*/
-		identifier          = either("it","time","visits?") + wb,
+		identifier          = either("it","time","visits?", "exits?") + wb,
 		
 		itsProperty         = "its" + mws + "(" + validPropertyName + ")",
 		

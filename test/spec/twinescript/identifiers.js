@@ -108,6 +108,9 @@ describe("identifiers", function () {
 		it("isn't recognised inside text", function (){
 			expect("(set:$red to window.xtime)(set:$red to window.timex)(set:$red to window.xtimex)").not.markupToError();
 		});
+		it("isn't recognised inside 'exit'", function (){
+			expect("(print:exit)").not.markupToError();
+		});
 	});
 	describe("the 'visits' identifier", function () {
 		it("refers to the number of times this passage was visited, including the current time", function (){
@@ -129,5 +132,27 @@ describe("identifiers", function () {
 		xit("can't be used in an 'into' operation", function () {});
 		xit("can't be used as the subject of a 'to' operation", function () {});
 		xit("isn't recognised inside text", function () {});
+	});
+	describe("the 'exits' identifier", function () {
+		[['link','(link-reveal:"foo")'],
+		['(link-show:)','(link-show:"foo",?bar)'],
+		['passage link', '[[foo->grault]]'],
+		['click enchantment','foo(click:"foo")','foo1'],
+		['mouseover enchantment','foo(mouseover:"foo")', 'foo1']].forEach(function(e) {
+			var name = e[0], code = e[1];
+			it("counts the number of " + name + "s in the passage", function() {
+				createPassage("", "grault");
+				expect(code+"[](print:exits)").markupToPrint("foo1");
+				expect(code+"[]"+code.replace(/foo/g,'bar')+"[](print:exits)").markupToPrint("foobar2");
+				expect(code+"[]"+code.replace(/foo/g,'bar')+"[]"+code.replace(/foo/g,'baz')+"[](print:exits)").markupToPrint("foobarbaz3");
+			});
+		});
+		it("is case-insensitive", function () {
+			expect("(print: exitS)(print: EXIts)(print: exITS)").not.markupToError();
+		});
+		it("can also be written as 'exit'", function () {
+			expect("(print: EXit)(print: EXIT)(print: exit)").not.markupToError();
+			expect(runPassage("[[qux]](print: exit is 1)","qux").text()).markupToPrint("quxtrue");
+		});
 	});
 });

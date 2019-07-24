@@ -1,11 +1,12 @@
 "use strict";
 define([
+	'jquery',
 	'state',
 	'datatypes/assignmentrequest',
 	'utils/operationutils',
 	'internaltypes/twineerror',
 ],
-(State, AssignmentRequest, {isObject, collectionType, is, isA, clone, unique, contains, matches, typeName, objectName}, TwineError) => {
+($, State, AssignmentRequest, {isObject, collectionType, is, isA, clone, unique, contains, matches, typeName, objectName}, TwineError) => {
 	/*
 		Operation objects are a table of operations which TwineScript proxies
 		for/sugars over JavaScript. These include basic fixes like the elimination
@@ -265,6 +266,56 @@ define([
 
 				get visit() {
 					return ret.Identifiers.visits;
+				},
+
+				/*d:
+					exits -> Number
+
+					Also known as: exit
+					
+					This keyword (which can alternatively be written as "exit") evaluates to the number of currently available "exits"
+					in a passage - the number of link, mouseover, and mouseout elements that are active on the page, which could lead to new content and progress.
+
+					This keyword is designed to be used with (live:) and (event:) - you can make a hook only
+					be revealed when a certain number of exits are available, with `(event: when exits < 3)` and similar. The (more:) macro is a shorthand
+					form for `(event: when exits is 0)`.
+
+					The complete list of elements considered to be "exit" elements is as follows:
+					* Links created by (link:), (link-repeat:), (link-reveal:), (link-goto:), (link-reveal-goto:), and (link-show:).
+					* Passage links (which are the same as (link-goto:) links).
+					* Links created by (click:), (click-replace:), (click-append:), (click-prepend:), and (click-goto:).
+					* Mouseover areas created by (mouseover:), (mouseover-replace:), (mouseover-append:), (mouseover-prepend:), and (mouseover-goto:).
+					* Mouseout areas created by (mouseout:), (mouseout-replace:), (mouseout-append:), (mouseout-prepend:), and (mouseout-goto:).
+
+					Do note the following, however:
+					* Multiple passage links that lead to the same passage (such as `[[A->Dead]] [[B->Dead]] [[C->Dead]]`) are all counted separately.
+					* As of Harlowe 3.1.0, this does not consider (link-undo:) macros to be exits, as they tend to only undo game progress.
+					* This will also not consider (event:) or (live:) macros to be exits, even if they are guaranteed to display their hooks
+					eventually.
+					* As with macros like (replace:), the `exits` keyword can't see forward to forthcoming elements, unless they've
+					already appeared. For instance, the (print:) in `(print:exits is 1) [[Retreat->Hall]]` will show `false`, because the link after it
+					hasn't appeared in the passage yet, but the (print:) in `(live:20s)[(print:exits is 1)] [[Retreat->Hall]]`
+					will show `true`.
+
+					Finally, the "undo" and "redo" links in the sidebar will not be counted, either.
+				*/
+				get exits() {
+					return section.dom.find('tw-enchantment, tw-link')
+						.filter((_,e) =>
+							$(e).data('enchantmentEvent') ||
+							$(e).parent().data('linkPassageName')  ||
+							/*
+								Currently, (link:) <tw-link>s' parent <tw-hook>s have the clickEvent on them,
+								which makes sense in the context of changeDescriptors (the link is created by
+								replacing the <tw-hook>'s contents with the <tw-link> and giving the hook the
+								clickEvent) but does feel a little #awkward.
+							*/
+							$(e).parent().data('clickEvent'))
+						.length;
+				},
+
+				get exit() {
+					return ret.Identifiers.exits;
 				},
 			};
 			

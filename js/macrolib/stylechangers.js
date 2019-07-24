@@ -403,8 +403,8 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		/*d:
 			(more:) -> Changer
 
-			Hooks that have this changer attached will only be run once no other forward-progress elements - links, (mouseover:) or (mouseout:) elements -
-			are remaining in the passage, and will reveal "more" prose.
+			Hooks that have this changer attached will only be run once no other exits - links, (mouseover:) or (mouseout:) elements - are remaining
+			in the passage, and will reveal "more" prose.
 
 			Example usage:
 			```
@@ -416,23 +416,12 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			Rationale:
 			It's common to use hook-revealing macros like (link:) to provide elaboration on a scene, which the player can encounter in any order
 			they wish. You may want to require each of these elaborations and details be visited by the player, only displaying the link to
-			the next passage (or further story-setting material) after they have all been explored. You could implement this using a temporary variable
-			which is (set:) by each (link:) hook, and a (when:) macro that checks when it's at a certain value - but this macro, (more:), provides a much easier
-			alternative.
+			the next passage (or further story-setting material) after they have all been explored. You could implement this using `(event: when exits is 0)`,
+			but this macro, (more:), provides a shorter and more readable alternative.
 
 			Details:
-			The complete list of elements considered to be "forward-progress" elements is as follows:
-			* Links created by (link:), (link-repeat:), (link-reveal:), (link-goto:), (link-reveal-goto:), and (link-show:).
-			* Passage links (which are the same as (link-goto:) links).
-			* Links created by (click:), (click-replace:), (click-append:), (click-prepend:), and (click-goto:).
-			* Mouseover areas created by (mouseover:), (mouseover-replace:), (mouseover-append:), (mouseover-prepend:), and (mouseover-goto:).
-			* Mouseout areas created by (mouseout:), (mouseout-replace:), (mouseout-append:), (mouseout-prepend:), and (mouseout-goto:).
-
-			Note that as of Harlowe 3.1.0, this does not consider (link-undo:) macros to be forward-progress elements, and the hook will appear
-			even if (link-undo:)s exist in the passage.
-
-			This will also not consider (event:) or (live:) macros to be forward-progress elements, even if they seem guaranteed to display their hooks
-			eventually. The (more:) hook will appear regardless of how many of these there are.
+			This is functionally identical to `(event: when exits is 0)`. For more information on what is and is not considered an "exit", see the article
+			for the "exits" keyword.
 
 			If multiple (more:) elements are in the passage, they will appear in the order they appear. This may cause earlier ones to reveal
 			links inside their hooks, and thus "block" the subsequent ones from revealing. In the case of
@@ -457,17 +446,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 					event: {
 						when: true,
 						filter: section => {
-							return section.dom.find('tw-enchantment, tw-link')
-								.filter((_,e) =>
-									$(e).data('enchantmentEvent') ||
-									/*
-										Currently, <tw-link>s' parent <tw-hook>s have the clickEvent on them,
-										which makes sense in the context of changeDescriptors (the link is created by
-										replacing the <tw-hook>'s contents with the <tw-link> and giving the hook the
-										clickEvent) but does feel a little #awkward.
-									*/
-									$(e).parent().data('clickEvent'))
-								.length ? [] : [true];
+							return section.eval("Operations").Identifiers.exits !== 0 ? [] : [true];
 						},
 					},
 				};
