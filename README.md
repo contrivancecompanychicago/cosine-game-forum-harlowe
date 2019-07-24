@@ -19,6 +19,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 ####Alterations
 
+ * `(rgba:)` and `(rgb:)`, as well as `(hsla:)` and `(hsl:)` have been merged - the "a" version is now the alias of the other, and the fourth "alpha" value is optional for both. This should have no effect on existing code that uses these macros.
  * Now, `(history:)` can be given an optional "where" lambda to provide only passage names whose passages match the lambda. The lambda is given the same passage datamaps which are returned by `(passage:)`. `(history: where its tags contains "Forest")` is essentially a shorthand for `(find: where (passage: it)'s tags contains "Forest", ...(history:))`.
  * The debug view colours for various macros have been updated to recognise more macro names.
  * Raw `<textarea>` tags will no longer have their contained text converted to HTML elements as if it was Harlowe syntax.

@@ -7,7 +7,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 	*/
 	
 	const
-		{rest, zeroOrMore, either,
+		{rest, zeroOrMore, either, optional,
 		/* Any is a value, not a method. */
 		Any} = Macros.TypeSignature;
 	
@@ -412,14 +412,21 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 		[String])
 
 		/*d:
-			(rgb: Number, Number, Number) -> Colour
+			(rgb: Number, Number, Number, [Number]) -> Colour
+			Also known as: (rgba:)
 
 			This macro creates a colour using the three red (r), green (g) and blue (b) values
-			provided, whose values are whole numbers between 0 and 255.
+			provided, whose values are whole numbers between 0 and 255, and, optionally,
+			the transparency (alpha, or a) percentage, which is a fractional value between 0
+			(fully transparent) and 1 (fully visible).
+
+			Anything drawn with a partially transparent colour will itself be partially transparent. You
+			can then layer such elements to produce a few interesting visual effects.
 
 			Example usage:
 			* `(rgb: 255, 0, 47)` produces a colour with 255 red, 0 blue and 47 green.
 			* `(rgb: 90, 0, 0)'s r` produces the number 90.
+			* `(rgb: 178, 229, 178, 0.6)` produces a 40% transparent faint green.
 
 			Rationale:
 
@@ -435,48 +442,14 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Giving values higher than 255 or lower than 0, or with a fractional part,
 			will cause an error.
 
-			See also:
-			(rgba:), (hsl:), (hsla:)
-
-			#colour
-		*/
-		("rgb", (_, ...values) => {
-			for (let val, i = 0; i < values.length; i += 1) {
-				val = values[i];
-				if (val < 0 || val > 255) {
-					return TwineError.create("macrocall",
-						"RGB values must be whole numbers between 0 and 255, not " + objectName(val) + ".");
-				}
-			}
-			return Colour.create({r: values[0], g: values[1], b: values[2]});
-		},
-		[parseInt, parseInt, parseInt])
-
-		/*d:
-			(rgba: Number, Number, Number, Number) -> Colour
-
-			A special version of (rgb:), this macro allows you to supply not just the red (r),
-			green (g) and blue (b) values, but also the transparency (alpha, or a) percentage, which
-			is a fractional value between 0 (fully transparent) and 1 (fully visible).
-
-			Anything drawn with a partially transparent colour will itself be partially transparent. You
-			can then layer such elements to produce a few interesting visual effects.
-
-			Example usage:
-			`(rgba: 178, 229, 178, 0.6)` produces a 40% transparent faint green.
-
-			Details:
-
-			This macro takes the same range of numbers as the CSS `rgba()` function.
-
 			Giving alpha percentages higher than 1 or lower than 0 will cause an error.
 
 			See also:
-			(rgb:), (hsl:), (hsla:)
+			(hsl:), (gradient:)
 
 			#colour
 		*/
-		("rgba", (_, ...values) => {
+		(["rgb","rgba"], (_, ...values) => {
 			for (let val, i = 0; i < 3; i += 1) {
 				val = values[i];
 				if (val < 0 || val > 255) {
@@ -490,17 +463,24 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			}
 			return Colour.create({r: values[0], g: values[1], b: values[2], a: values[3]});
 		},
-		[parseInt, parseInt, parseInt, Number])
+		[parseInt, parseInt, parseInt, optional(Number)])
 
 		/*d:
-			(hsl: Number, Number, Number) -> Colour
+			(hsl: Number, Number, [Number]) -> Colour
+			Also known as: (hsla:)
 
 			This macro creates a colour using the given hue (h) angle in degrees, as well as the given
-			saturation (s) and lightness (l) percentages.
+			saturation (s) and lightness (l) percentages, and, optionally, the transparency
+			(alpha, or a) percentage, which is a fractional value between 0 (fully transparent)
+			and 1 (fully visible).
+
+			Anything drawn with a partially transparent colour will itself be partially transparent. You
+			can then layer such elements to produce a few interesting visual effects.
 
 			Example usage:
 			* `(hsl: 120, 0.8, 0.5)` produces a colour with 120 degree hue, 80% saturation and 50% lightness.
 			* `(hsl: 28, 1, 0.4)'s h` produces the number 28.
+			* `(hsl: 120, 0.5, 0.8, 0.6)` produces a 40% transparent faint green.
 
 			Rationale:
 
@@ -510,65 +490,21 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 
 			Details:
 
-			This macro takes the same range of numbers as the CSS `hsl()` function.
+			This macro takes the same range of numbers as the CSS `hsla()` function.
 
 			Giving saturation or lightness values higher than 1 or lower than 0 will cause an error. However,
 			you can give any kind of hue number to (hsl:), and it will automatically round it to fit the 0-359
 			degree range - so, a value of 380 will become 20. This allows you to cycle through hues easily by
 			providing a steadily increasing variable or a counter, such as `(hsl: time / 100, 1, 0.5)`.
 
-			See also:
-			(rgb:), (rgba:), (hsla:)
-
-			#colour
-		*/
-		("hsl", (_, h, s, l) => {
-			const errorMsg = " values must be numbers between 0 and 1 inclusive, not ";
-			if (s < 0 || s > 1) {
-				return TwineError.create("macrocall", "Saturation" + errorMsg + objectName(s) + ".");
-			}
-			if (l < 0 || l > 1) {
-				return TwineError.create("macrocall", "Lightness" + errorMsg + objectName(l) + ".");
-			}
-			/*
-				Unlike S and L, H is silently rounded and truncated to the 0..359 range. This allows increasing counters
-				to be given directly to the (hsl:) macro, to cycle through the hues continuously.
-				Round is used because, as the user's hue range is effectively continuous, nothing is lost by using it.
-			*/
-			h = Math.round(h) % 360;
-			if (h < 0) {
-				h += 360;
-			}
-			return Colour.create({h, s, l});
-		},
-		[Number, Number, Number])
-
-		/*d:
-			(hsla: Number, Number, Number, Number) -> Colour
-
-			A special version of (hsl:), this macro allows you to supply not just the hue (h) angle in
-			degrees, saturation (s) and lightness (l) percentages, but also the transparency
-			(alpha, or a) percentage, which is a fractional value between 0 (fully transparent)
-			and 1 (fully visible).
-
-			Anything drawn with a partially transparent colour will itself be partially transparent. You
-			can then layer such elements to produce a few interesting visual effects.
-
-			Example usage:
-			`(hsla: 120, 0.5, 0.8, 0.6)` produces a 40% transparent faint green.
-
-			Details:
-
-			This macro takes the same range of numbers as the CSS `rgba()` function.
-
 			Giving alpha percentages higher than 1 or lower than 0 will cause an error.
 
 			See also:
-			(rgb:), (rgba:), (hsl:)
+			(rgb:), (gradient:)
 
 			#colour
 		*/
-		("hsla", (_, h, s, l, a) => {
+		(["hsl","hsla"], (_, h, s, l, a) => {
 			const errorMsg = " values must be numbers between 0 and 1 inclusive, not ";
 			if (s < 0 || s > 1) {
 				return TwineError.create("macrocall", "Saturation" + errorMsg + objectName(s) + ".");
@@ -579,13 +515,18 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			if (a < 0 || a > 1) {
 				return TwineError.create("macrocall", "Alpha" + errorMsg + objectName(l) + ".");
 			}
+			/*
+				Unlike S and L, H is silently rounded and truncated to the 0..359 range. This allows increasing counters
+				to be given directly to the (hsl:) macro, to cycle through the hues continuously.
+				Round is used because, as the user's hue range is effectively continuous, nothing is lost by using it.
+			*/
 			h = Math.round(h) % 360;
 			if (h < 0) {
 				h += 360;
 			}
 			return Colour.create({h, s, l, a});
 		},
-		[Number, Number, Number, Number])
+		[Number, Number, Number, optional(Number)])
 
 		/*d:
 			(gradient: Number, ...Number, Colour) -> Gradient
@@ -1223,6 +1164,10 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 
 			If you don't want the "looping" to occur - if you want to only return the final value if the number exceeds the sequence - you can combine
 			this macro with (min:). `(nth: (min: 3, visit), "", "", "")`
+
+			You may be tempted to combine this macro with (shuffled:), as in `(nth: visit, ...(shuffled: "A", "B", "C"))` - however, this will NOT
+			behave any differently from just using (either:) - each visit, the (shuffled:) macro will shuffle the sequence in a different way, so you
+			can't guarantee that different values will be shown.
 
 			See also:
 			(cond:), (if:), (either:)
