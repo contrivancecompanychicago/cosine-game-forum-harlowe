@@ -21,6 +21,15 @@ define(['jquery', 'utils'], ($, {impossible, escape}) => {
 		javascript:    "This error message was reported by your browser's Javascript engine. "
 			+ "I don't understand it either, but it usually means that an expression was badly written.",
 	},
+
+	/*
+		If other modules need certain events should occur when an error is rendered, such handlers can
+		be registered here. Currently, only the "error" event handler is used, by Debug Mode.
+	*/
+	eventHandlers = {
+		error: [],
+		warning: [],
+	},
 	
 	TwineError = {
 		/*
@@ -138,9 +147,30 @@ define(['jquery', 'utils'], ($, {impossible, escape}) => {
 				such as (link-reveal-goto:).
 			*/
 			errorElement.data('TwineError', this);
-			
+
+			/*
+				Fire any event handlers that were registered.
+			*/
+			eventHandlers.error.forEach(f => f(this, titleText));
+
 			return errorElement;
 		},
+
+		/*
+			This is used only by Debug Mode - it lets event handlers be registered and called when different Errors are rendered.
+			Each function is passed the TwineError object itself.
+		*/
+		on(name, fn) {
+			if (!(name in eventHandlers)) {
+				impossible('TwineError.on', 'invalid event name');
+				return;
+			}
+			if (typeof fn === "function" && !eventHandlers[name].includes(fn)) {
+				eventHandlers[name].push(fn);
+			}
+			return TwineError;
+		},
+
 	};
 	return TwineError;
 });

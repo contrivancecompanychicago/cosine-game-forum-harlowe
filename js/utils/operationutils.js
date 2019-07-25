@@ -282,7 +282,7 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 				return obj.innerType.map(typeName).join(" or ");
 			}
 			else if (obj.pattern === "optional") {
-				return "(an optional) " + typeName(obj.innerType);
+				return "(optional) " + typeName(obj.innerType);
 			}
 			return typeName(obj.innerType);
 		}

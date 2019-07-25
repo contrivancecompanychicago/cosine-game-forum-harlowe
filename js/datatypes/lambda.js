@@ -57,7 +57,8 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 	const Lambda = Object.freeze({
 		lambda: true,
 		TwineScript_TypeName:   "a lambda",
-		TwineScript_ObjectName() {
+
+		get TwineScript_ObjectName() {
 			return "a \""
 				+ (("making" in this) ? "making ... " : "")
 				+ (("with" in this) ? "with ... " : "")
@@ -216,7 +217,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 			else {
 				section.eval("Operations").initialiseIt(
 					TwineError.create("operation",
-						"I can't use 'it', or an implied 'it', in " + this.TwineScript_ObjectName()
+						"I can't use 'it', or an implied 'it', in " + this.TwineScript_ObjectName
 					)
 				);
 			}

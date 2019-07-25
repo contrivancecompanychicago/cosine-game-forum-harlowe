@@ -16,6 +16,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where an error given to the spread `...` syntax, such as `(a: ...(a:2/0))`, wouldn't be displayed, instead producing an unrelated error.
  * Fixed a bug where an error in the passage name given to `(passage:)`, such as `(passage: (str:1/0))`, wouldn't be displayed, instead producing an unrelated error.
  * Fixed a long-standing bug in `(substring:)` where negative indices wouldn't work correctly if the string contained any Unicode "astral plane" characters (any characters not in the Basic Multilingual Plane).
+ * Fixed a bug where lambdas weren't being printed correctly (for example, as `a "via ... " lambda`) in certain error messages.
 
 ####Alterations
 
@@ -48,7 +49,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 #####Debug Mode
 
- * Added a new togglale pane to the debug mode panel, "Source", which displays the current passage's source code. This is designed to supplement the "debug view" option, which shows the passage's current state, by letting you compare it to the original code. This pane currently has no syntax highlighting, such as that used in the Twine editor.
+ * Added a new toggleale pane to the debug mode panel, "Source", which displays the current passage's source code. This is designed to supplement the "debug view" option, which shows the passage's current state, by letting you compare it to the original code. This pane currently has no syntax highlighting, such as that used in the Twine editor.
+ * Added another toggleable pane, "Errors", which displays a record of every error that has been displayed in the story, so far, up to a limit of 500. This should be of assistance when dealing with errors inside `(live:)` hooks, or other hooks whose content appears and disappears abruptly.
  * The debug mode variables pane now lists the contents of datamaps, arrays and datasets, as separate rows.
  * Colours in the variables pane now have a colour swatch in their listing.
 

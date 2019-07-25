@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutils', 'engine', 'passages'],
-($, Utils, State, VarRef, {objectName, typeName, is, isObject}, Engine, Passages) => () => {
+define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'engine', 'passages'],
+($, Utils, State, VarRef, TwineError, {objectName, typeName, is, isObject}, Engine, Passages) => () => {
 	/*
 		Debug Mode
 
@@ -12,9 +12,10 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 	*/
 	const debugElement = $(`<tw-debugger>
 		<div class='panel panel-variables'></div>
+		<div class='panel panel-errors' hidden><table></table></div>
 		<div class='panel panel-source' hidden></div>
 		<div class='tabs'>
-		<button class='tab tab-variables enabled'>0 Variables</button> <button class='tab tab-source'>Source</button>
+		<button class='tab tab-variables enabled'>0 Variables</button> <button class='tab tab-source'>Source</button> <button class='tab tab-errors'>0 Errors</button>
 		</div>
 		Turns: <select class='turns' disabled></select><button class='show-invisibles'>Debug View</button></tw-debugger>`);
 
@@ -30,7 +31,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 	/*
 		Additionally, set up the tabs and panes.
 	*/
-	['variables', 'source',].forEach((name)=> {
+	['variables', 'source', 'errors'].forEach((name)=> {
 		const tab   = debugElement.find('.tab-'   + name);
 		const panel = debugElement.find('.panel-' + name);
 		tab.click(() => {
@@ -315,6 +316,31 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'utils/operationutil
 		if (obj === State.variables) {
 			variablesTable.find('[data-name="' + name + '"]:not(.temporary)').remove();
 		}
+	});
+
+	TwineError.on('error', (error, code) => {
+		/*
+			To ensure functional column widths, the .panel-errors pane contains a <table>.
+		*/
+		const row = $('<tr class="error-row">'
+			+ '<td class="error-passage">' + State.passage + '</td>'
+			+ '<td class="error-message">' + error.message + '</td>'
+			+ '</tr>');
+		/*
+			Give the .error-message element the same mouseover title as the original rendered errors.
+		*/
+		row.find('.error-message').attr('title', code);
+		/*
+			Emergency: if 500+ errors would be present in the table, remove the top one so that the error DOM
+			doesn't become too overloaded. Then, insert the row.
+		*/
+		const table = debugElement.find('.panel-errors table');
+		const childRowCount = table.children().length + 1;
+		if (childRowCount > 500) {
+			table.children(':first-child').remove();
+		}
+		table.append(row);
+		debugElement.find('.tab-errors').text(`${childRowCount} Error${childRowCount !== 1 ? 's' : ''}`);
 	});
 
 	/*
