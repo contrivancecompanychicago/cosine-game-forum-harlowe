@@ -78,6 +78,7 @@ define([
 			See also:
 			(push:), (move:)
 
+			Added in: 1.0.0
 			#basics 1
 		*/
 		("set", (_, ...assignmentRequests) => {
@@ -165,6 +166,7 @@ define([
 			See also:
 			(set:), (move:)
 
+			Added in: 1.0.0
 			#basics 2
 		*/
 		("put", (_, ...assignmentRequests) => {
@@ -230,6 +232,7 @@ define([
 			See also:
 			(push:), (set:)
 
+			Added in: 1.0.0
 			#basics 3
 		*/
 		("move", (_, ...assignmentRequests) => {
@@ -401,6 +404,7 @@ define([
 			See also:
 			(dm:), (ds:)
 			
+			Added in: 1.0.0
 			#data structure 1
 		*/
 		(["a", "array"], (_, ...args) => args, zeroOrMore(Any))
@@ -429,6 +433,7 @@ define([
 			See also:
 			(a:)
 
+			Added in: 1.0.0
 			#data structure
 		*/
 		("range", (_, a, b) => range(a,b),
@@ -466,6 +471,7 @@ define([
 			See also:
 			(substring:), (rotated:)
 			
+			Added in: 1.0.0
 			#deprecated
 		*/
 		("subarray", (_, array, a, b) => subset(array, a, b),
@@ -494,6 +500,7 @@ define([
 			See also:
 			(a:), (shuffled:), (rotated:), (str-reversed:)
 			
+			Added in: 3.0.0
 			#data structure
 		*/
 		("reversed", (_, ...args) => args.reverse().map(clone), zeroOrMore(Any))
@@ -528,6 +535,7 @@ define([
 			See also:
 			(a:), (either:), (rotated:)
 			
+			Added in: 1.1.0
 			#data structure
 		*/
 		("shuffled", (_, ...args) =>
@@ -581,6 +589,7 @@ define([
 			See also:
 			(a:), (shuffled:), (rotated:)
 			
+			Added in: 1.1.0
 			#data structure
 		*/
 		// Note that since this only accepts primitives, clone() is unnecessary.
@@ -624,6 +633,7 @@ define([
 			See also:
 			(sorted:)
 			
+			Added in: 1.1.0
 			#data structure
 		*/
 		("rotated", (_, number, ...array) => {
@@ -678,6 +688,7 @@ define([
 			See also:
 			(a:), (range:), (str-repeated:)
 			
+			Added in: 2.0.0
 			#data structure
 		*/
 		("repeated", (_, number, ...array) => {
@@ -724,6 +735,7 @@ define([
 			See also:
 			(a:), (rotated:), (repeated:)
 			
+			Added in: 2.0.0
 			#data structure
 		*/
 		("interlaced", (_, ...arrays) => {
@@ -786,6 +798,7 @@ define([
 			See also:
 			(for:), (folded:)
 
+			Added in: 2.0.0
 			#data structure
 		*/
 		("altered", (section, lambda, ...args) => args.map(loop => lambda.apply(section, {loop})),
@@ -838,6 +851,7 @@ define([
 			See also:
 			(sorted:), (all-pass:), (some-pass:), (none-pass:)
 
+			Added in: 2.0.0
 			#data structure
 		*/
 		("find", (section, lambda, ...args) => lambda.filter(section, args),
@@ -875,6 +889,7 @@ define([
 			See also:
 			(sorted:), (count:), (find:), (some-pass:), (none-pass:)
 
+			Added in: 2.0.0
 			#data structure
 		*/
 		("all-pass", (section, lambda, ...args) => {
@@ -890,6 +905,7 @@ define([
 			If zero values are given to (all-pass:), then it will return false by default.
 			For more information, consult the description of (all-pass:).
 
+			Added in: 2.0.0
 			#data structure
 		*/
 		("some-pass", (section, lambda, ...args) => {
@@ -904,6 +920,7 @@ define([
 			If zero values are given to (none-pass:), then it will return true by default, just like (all-pass:).
 			For more information, consult the description of (all-pass:).
 
+			Added in: 2.0.0
 			#data structure
 		*/
 		("none-pass", (section, lambda, ...args) => {
@@ -965,6 +982,7 @@ define([
 			See also:
 			(for:), (altered:)
 
+			Added in: 2.0.0
 			#data structure
 		*/
 		("folded", (section, lambda, ...args) => {
@@ -997,7 +1015,8 @@ define([
 			
 			See also:
 			(datavalues:), (dataentries:)
-			
+
+			Added in: 1.1.0
 			#data structure
 		*/
 		("datanames", (_, map) =>  Array.from(map.keys()).sort(NaturalSort("en")),
@@ -1021,7 +1040,8 @@ define([
 			
 			See also:
 			(datanames:), (dataentries:)
-			
+
+			Added in: 1.1.0
 			#data structure
 		*/
 		("datavalues", (_, map) =>
@@ -1055,6 +1075,7 @@ define([
 			See also:
 			(datanames:), (datavalues:)
 			
+			Added in: 2.0.0
 			#data structure
 		*/
 		("dataentries", (_, map) =>
@@ -1114,6 +1135,7 @@ define([
 			See also:
 			(passage:), (savedgames:), (passages:)
 
+			Added in: 1.0.0
 			#game state
 		*/
 		("history", (section, lambda) => {
@@ -1161,6 +1183,7 @@ define([
 			See also:
 			(history:), (passages:)
 
+			Added in: 1.1.0
 			#game state
 		*/
 		("passage", (_, passageName) => {
@@ -1205,6 +1228,7 @@ define([
 			See also:
 			(history:), (passage:)
 
+			Added in: 3.1.0
 			#game state
 		*/
 		("passages", (section, lambda) => {
@@ -1246,6 +1270,7 @@ define([
 			See also:
 			(save-game:), (load-game:)
 
+			Added in: 1.0.0
 			#saving
 		*/
 		("savedgames", () => {
@@ -1381,6 +1406,7 @@ define([
 			See also:
 			(a:), (ds:)
 
+			Added in: 1.0.0
 			#data structure 2
 		*/
 		(["datamap","dm"], (_, ...args) => {
@@ -1505,6 +1531,7 @@ define([
 			See also:
 			(dm:), (a:)
 			
+			Added in: 1.0.0
 			#data structure 3
 		*/
 		(["dataset","ds"], (_, ...args) => new Set(args.filter(unique).map(clone)), zeroOrMore(Any))
@@ -1545,6 +1572,7 @@ define([
 			See also:
 			(datanames:), (datavalues:)
 
+			Added in: 1.0.0
 			#data structure
 		*/
 		("count", function count(_, collection, ...values) {

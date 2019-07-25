@@ -143,6 +143,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(unless:), (else-if:), (else:), (hidden:)
 
+			Added in: 1.0.0
 			#basics 6
 		*/
 		("if",
@@ -158,6 +159,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			
 			For more information, see the documentation of (if:).
 
+			Added in: 1.0.0
 			#basics 7
 		*/
 		("unless",
@@ -213,6 +215,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(if:), (unless:), (else:), (hidden:)
 
+			Added in: 1.0.0
 			#basics 8
 		*/
 		("elseif", (section, expr) => {
@@ -263,6 +266,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(if:), (unless:), (else-if:), (hidden:)
 
+			Added in: 1.0.0
 			#basics 9
 		*/
 		("else", (section) => {
@@ -299,6 +303,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(if:), (hook:), (show:)
 
+			Added in: 2.0.0
 			#showing and hiding
 		*/
 		("hidden",
@@ -343,6 +348,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(event:)
 
+			Added in: 1.0.0
 			#live 1
 		*/
 		("live",
@@ -389,6 +395,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(live:)
 
+			Added in: 3.0.0
 			#live 3
 		*/
 		("event",
@@ -431,6 +438,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(show:), (link-show:)
 
+			Added in: 3.1.0
 			#live 4
 		*/
 		("more",
@@ -474,6 +482,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(hidden:)
 
+			Added in: 1.0.0
 			#styling
 		*/
 		("hook",
@@ -528,6 +537,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(find:), (folded:), (if:)
 
+			Added in: 2.0.0
 			#basics 10
 		*/
 		(["for", "loop"],
@@ -581,6 +591,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(text-style:), (transition-time:)
 
+			Added in: 1.0.0
 			#transitions 1
 		*/
 		(["transition", "t8n"],
@@ -617,6 +628,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(transition:)
 
+			Added in: 1.0.0
 			#transitions 2
 		*/
 		(["transition-time", "t8n-time"],
@@ -676,6 +688,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(transition-arrive:)
 
+			Added in: 3.0.0
 			#transitions 3
 		*/
 		(["transition-depart", "t8n-depart"],
@@ -727,6 +740,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(transition-depart:)
 
+			Added in: 3.0.0
 			#transitions 4
 		*/
 		(["transition-arrive", "t8n-arrive"],
@@ -765,6 +779,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(text-style:)
 
+			Added in: 1.0.0
 			#styling
 		*/
 		("font",
@@ -790,6 +805,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			Hooks affected by this command will take up their own lines in the passage, regardless of
 			their placement in the story prose. This allows them to be aligned in the specified manner.
 
+			Added in: 1.1.0
 			#styling
 		*/
 		("align",
@@ -877,6 +893,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(background:)
 
+			Added in: 1.0.0
 			#styling
 		*/
 		(["text-colour", "text-color", "color", "colour"],
@@ -921,6 +938,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(text-style:)
 
+			Added in: 1.0.0
 			#styling
 		*/
 		("text-rotate",
@@ -973,6 +991,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(colour:)
 
+			Added in: 1.0.0
 			#styling
 		*/
 		("background",
@@ -1074,7 +1093,8 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 
 			See also:
 			(css:)
-			
+
+			Added in: 1.0.0
 			#styling
 		*/
 		/*
@@ -1265,6 +1285,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(mouseover:), (mouseout:)
 
+			Added in: 2.0.0
 			#styling
 		*/
 		("hover-style",
@@ -1324,6 +1345,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			See also:
 			(text-style:)
 
+			Added in: 2.0.0
 			#styling
 		*/
 		("css",

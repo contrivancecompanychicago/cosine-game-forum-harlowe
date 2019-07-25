@@ -38,6 +38,8 @@ define([
 			using the `its` variant - `(print: $red is 'egg' and its length is 3)` or `(set:$red to its 1st)`. Much like the `'s`
 			operator, you can use computed values with `its` - `(if: $red's length is 3 and its $position is $value)` will work as
 			expected.
+
+			Added in: 1.0.0
 		*/
 		/*
 			The "it" keyword is bound to whatever the last left-hand-side value
@@ -227,6 +229,8 @@ define([
 					`time` used in (display:) macros will still produce the time of the host passage, not the
 					contained passage. So, you can't use it to determine how long the (display:)ed passage
 					has been present in the host passage.
+
+					Added in: 1.0.0
 				*/
 				/*
 					The "time" keyword binds to the number of milliseconds since the passage
@@ -259,6 +263,8 @@ define([
 					`visits` used in (display:) macros will still produce the number of times the host passage was visited,
 					not the contained passage. So, you can't use it to determine how many times the (display:)ed passage
 					has been (display:)ed.
+
+					Added in: 3.1.0
 				*/
 				get visits() {
 					return State.pastPassageNames().filter(name => name === State.passage).length + 1;
@@ -298,6 +304,8 @@ define([
 					will show `true`.
 
 					Finally, the "undo" and "redo" links in the sidebar will not be counted, either.
+
+					Added in: 3.1.0
 				*/
 				get exits() {
 					return section.dom.find('tw-enchantment, tw-link')

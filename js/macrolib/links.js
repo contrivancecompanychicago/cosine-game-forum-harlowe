@@ -118,6 +118,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			See also:
 			(link-reveal:), (link-repeat:), (link-goto:), (click:), (more:)
 
+			Added in: 1.0.0
 			#links 1
 		*/
 		["link", "link-replace"],
@@ -147,6 +148,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			See also:
 			(link:), (link-repeat:), (link-goto:), (click:), (more:)
 
+			Added in: 1.2.0
 			#links 2
 		*/
 		["link-reveal"],
@@ -175,6 +177,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			See also:
 			(link-reveal:), (link:), (link-goto:), (click:)
 			
+			Added in: 1.2.0
 			#links 3
 		*/
 		["link-repeat"]
@@ -260,6 +263,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			See also:
 			(link:), (link-reveal:), (link-repeat:), (link-undo:), (goto:)
 
+			Added in: 1.0.0
 			#links 4
 		*/
 		(["link-goto"],
@@ -368,6 +372,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			See also:
 			(undo:), (link-goto:)
 
+			Added in: 2.0.0
 			#links 6
 		*/
 		("link-undo",
@@ -440,6 +445,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			See also:
 			(show:), (link-reveal:), (click-append:), (more:)
 
+			Added in: 3.0.0
 			#links 6
 		*/
 		("link-show",
@@ -496,6 +502,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		See also:
 		(link-reveal:), (link:), (link-goto:), (click:)
 		
+		Added in: 3.0.0
 		#links 5
 	*/
 	Macros.addChanger(["link-reveal-goto"],

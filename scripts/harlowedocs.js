@@ -143,6 +143,7 @@ nav img { display:block; margin: 0 auto;}
 @media screen and (max-width: 1600px) { .nav_macro_return_type { font-size:80% } }
 .nav_macro_aka { opacity: 0.75; font-size:90%; color:#3B8BBA; margin-left: 0.5em; font-style: italic; }
 .nav_macro_aka::before { content: "also known as "; opacity: 0.75; }
+aside { font-style:italic; font-size:80%; }
 
 /* Code blocks */
 code { background:#FFF; border:1px solid #888; color:#000; display:block; padding:12px; overflow-x: scroll; }

@@ -58,6 +58,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			useful in that state, but you can use that variable in place of that command,
 			such as writing `$var` in place of `(display: "Yggdrasil")`.
 
+			Added in: 1.0.0
 			#basics 5
 		*/
 		("display",
@@ -106,6 +107,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			See also:
 			(str:), (display:)
 
+			Added in: 1.0.0
 			#basics 4
 		*/
 		("print",
@@ -162,6 +164,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			See also:
 			(link-goto:), (undo:), (loadgame:)
 
+			Added in: 1.0.0
 			#links
 		*/
 		("go-to",
@@ -230,6 +233,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			See also:
 			(go-to:), (link-undo:)
 
+			Added in: 2.0.0
 			#links
 		*/
 		("undo",
@@ -298,6 +302,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 
 			If only one string was given to this macro, an error will be produced.
 
+			Added in: 3.0.0
 			#input
 		*/
 		("cycling-link",
@@ -437,6 +442,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		See also:
 		(cycling-link:)
 
+		Added in: 3.0.0
 		#input
 	*/
 	Macros.addCommand("dropdown",
@@ -552,6 +558,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			See also:
 			(hidden:), (replace:), (more:)
 
+			Added in: 2.0.0
 			#showing and hiding
 		*/
 		("show",
@@ -598,6 +605,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			See also:
 			(live:)
 
+			Added in: 1.0.0
 			#live 2
 		*/
 		/*
@@ -648,6 +656,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			See also:
 			(save-game:), (saved-games:)
 			
+			Added in: 1.0.0
 			#saving
 		*/
 		("load-game",
@@ -711,6 +720,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			See also:
 			(prompt:), (confirm:)
 
+			Added in: 1.0.0
 			#popup
 		*/
 		("alert",
@@ -748,6 +758,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			See also:
 			(goto-url:)
 
+			Added in: 1.0.0
 			#url
 		*/
 		("open-url",
@@ -775,6 +786,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 
 			This command can't have changers attached - attempting to do so will produce an error.
 
+			Added in: 1.0.0
 			#url
 		*/
 		("reload",
@@ -814,6 +826,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			See also:
 			(open-url:)
 
+			Added in: 1.0.0
 			#url
 		*/
 		("goto-url",
@@ -876,6 +889,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			See also:
 			(load-game:), (saved-games:)
 
+			Added in: 1.0.0
 			#saving
 		*/
 		("save-game",
@@ -968,6 +982,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			See also:
 			(alert:), (confirm:)
 
+			Added in: 1.0.0
 			#popup
 		*/
 		("prompt",
@@ -1009,6 +1024,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			See also:
 			(alert:), (prompt:)
 
+			Added in: 1.0.0
 			#popup
 		*/
 		("confirm",
@@ -1032,6 +1048,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			This **may** be changed in a future version of Harlowe to return a datamap containing more
 			descriptive values about the URL, instead of a single string.
 
+			Added in: 1.0.0
 			#url
 		*/
 		("page-url", () => window.location.href, []);

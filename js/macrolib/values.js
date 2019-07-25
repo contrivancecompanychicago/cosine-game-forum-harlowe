@@ -99,6 +99,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			See also:
 			(num:)
 
+			Added in: 1.0.0
 			#string
 		*/
 		(["text", "string", "str"],
@@ -139,6 +140,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			See also:
 			(subarray:)
 
+			Added in: 1.0.0
 			#deprecated
 		*/
 		("substring", (_, string, a, b) => subset(string, a, b),
@@ -159,6 +161,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			See also:
 			(uppercase:), (lowerfirst:), (upperfirst:)
 
+			Added in: 2.0.0
 			#string
 		*/
 		("lowercase", (_, string) => string.toLowerCase(),
@@ -179,6 +182,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			See also:
 			(lowercase:), (upperfirst:), (lowerfirst:)
 
+			Added in: 2.0.0
 			#string
 		*/
 		("uppercase", (_, string) => string.toUpperCase(),
@@ -203,6 +207,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			See also:
 			(uppercase:), (lowercase:), (upperfirst:)
 
+			Added in: 2.0.0
 			#string
 		*/
 		("lowerfirst", (_, string) =>
@@ -234,6 +239,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			See also:
 			(uppercase:), (lowercase:), (lowerfirst:)
 
+			Added in: 2.0.0
 			#string
 		*/
 		("upperfirst", (_, string) =>
@@ -272,6 +278,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			See also:
 			(startcase:)
 
+			Added in: 2.0.0
 			#string
 		*/
 		("words", (_, string) => string.split(new RegExp(realWhitespace + "+")).filter(Boolean),
@@ -295,7 +302,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			
 			See also:
 			(repeated:)
-			
+
+			Added in: 3.0.0
 			#string
 		*/
 		(["str-repeated", "string-repeated"], (_, number, string) => {
@@ -332,7 +340,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			
 			See also:
 			(reversed:)
-			
+
+			Added in: 3.0.0
 			#string
 		*/
 		(["str-reversed", "string-reversed"], (_, string) => [...string].reverse().join(''), [String])
@@ -396,6 +405,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			See also:
 			(str:)
 
+			Added in: 1.0.0
 			#number
 		*/
 		(["num", "number"], (_, expr) => {
@@ -447,6 +457,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			See also:
 			(hsl:), (gradient:)
 
+			Added in: 2.0.0
 			#colour
 		*/
 		(["rgb","rgba"], (_, ...values) => {
@@ -502,6 +513,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			See also:
 			(rgb:), (gradient:)
 
+			Added in: 2.0.0
 			#colour
 		*/
 		(["hsl","hsla"], (_, h, s, l, a) => {
@@ -598,6 +610,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			This is to help ensure that the initial degree number is not confused for a colour-stop percentage. Additionally, CSS
 			linear-gradient "colour hints", which are used to adjust the midpoints between colour stops, are currently not supported by this macro.
 
+			Added in: 3.1.0
 			#colour 4
 		*/
 		(["gradient"], (_, degree, ...args) => {
@@ -730,6 +743,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			See also:
 			(if:), (dm:), (nth:)
 
+			Added in: 3.1.0
 			#basics 12
 		*/
 		("cond", (_, ...args) => {
@@ -831,6 +845,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Example usage:
 			`Today is a (weekday:).`
 
+			Added in: 1.0.0
 			#date and time
 		*/
 		weekday: [() => ['Sun', 'Mon', 'Tues', 'Wednes', 'Thurs', 'Fri', 'Satur'][new Date().getDay()] + "day",
@@ -845,7 +860,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 
 			Example usage:
 			`Today is day (monthday:).`
-			
+
+			Added in: 1.0.0
 			#date and time
 		*/
 		monthday: [() => new Date().getDate(),
@@ -859,7 +875,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 
 			Example usage:
 			`The time is (current-time:).`
-			
+
+			Added in: 1.0.0
 			#date and time
 		*/
 		currenttime: [() => {
@@ -880,7 +897,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 
 			Example usage:
 			`Right now, it's (current-date:).`
-			
+
+			Added in: 1.0.0
 			#date and time
 		*/
 		currentdate: [() => {
@@ -896,6 +914,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Example usage:
 			`(min: 2, -5, 2, 7, 0.1)` produces -5.
 
+			Added in: 1.0.0
 			#maths
 		*/
 		min: [Math.min, rest(Number)],
@@ -907,6 +926,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Example usage:
 			`(max: 2, -5, 2, 7, 0.1)` produces 7.
 
+			Added in: 1.0.0
 			#maths
 		*/
 		max: [Math.max, rest(Number)],
@@ -918,6 +938,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Example usage:
 			`(abs: -4)` produces 4.
 
+			Added in: 1.0.0
 			#maths
 		*/
 		abs: [Math.abs, Number],
@@ -930,6 +951,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Example usage:
 			`(sign: -4)` produces -1.
 
+			Added in: 1.0.0
 			#maths
 		*/
 		sign: [Math.sign, Number],
@@ -941,6 +963,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Example usage:
 			`(sin: 3.14159265 / 2)` produces 1.
 
+			Added in: 1.0.0
 			#maths
 		*/
 		sin:    [Math.sin, Number],
@@ -963,6 +986,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Example usage:
 			`(tan: 3.14159265 / 4)` produces approximately 1.
 
+			Added in: 1.0.0
 			#maths
 		*/
 		tan:    [Math.tan, Number],
@@ -975,6 +999,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Example usage:
 			`(floor: 1.99)` produces 1.
 
+			Added in: 1.0.0
 			#number
 		*/
 		floor:  [Math.floor, Number],
@@ -1000,6 +1025,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Example usage:
 			`(ceil: 1.1)` produces 2.
 
+			Added in: 1.0.0
 			#number
 		*/
 		ceil:   [Math.ceil, Number],
@@ -1024,6 +1050,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Example usage:
 			`(exp: 6)` produces approximately 403.
 
+			Added in: 1.0.0
 			#maths
 		*/
 		exp:    [Math.exp, Number],
@@ -1035,6 +1062,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Example usage:
 			`(sqrt: 25)` produces 5.
 
+			Added in: 1.0.0
 			#maths
 		*/
 		sqrt:   [mathFilter(Math.sqrt), Number],
@@ -1046,6 +1074,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Example usage:
 			`(log: (exp:5))` produces 5.
 
+			Added in: 1.0.0
 			#maths
 		*/
 		log:    [mathFilter(Math.log), Number],
@@ -1057,6 +1086,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Example usage:
 			`(log10: 100)` produces 2.
 
+			Added in: 1.0.0
 			#maths
 		*/
 		log10:  [mathFilter(Math.log10), Number],
@@ -1068,6 +1098,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Example usage:
 			`(log2: 256)` produces 8.
 
+			Added in: 1.0.0
 			#maths
 		*/
 		log2:   [mathFilter(Math.log2), Number],
@@ -1084,6 +1115,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			See also:
 			(either:), (shuffled:)
 
+			Added in: 1.0.0
 			#number
 		*/
 		random: [(a, b) => {
@@ -1132,6 +1164,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			See also:
 			(nth:), (random:), (shuffled:), (cond:)
 
+			Added in: 1.0.0
 			#basics 11
 		*/
 		either: [(...args) => args[~~(Math.random() * args.length)], rest(Any)],
@@ -1172,6 +1205,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			See also:
 			(cond:), (if:), (either:)
 
+			Added in: 3.1.0
 			#basics 13
 		*/
 		nth: [(index, ...args) => {

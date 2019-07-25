@@ -8,7 +8,7 @@ const fs = require('fs');
 const
 	macroEmpty = /\(([\w\-\d]+):\)(?!`)/g,
 	macroAliases = /Also known as: [^\n]+/,
-	categoryTag = /\n\s+#([a-z][a-z ]*[a-z])(?: (\d+))?/g,
+	categoryTag = /\s+#([a-z][a-z ]*[a-z])(?: (\d+))?/g,
 	/*
 		This matches a mixed-case type name, optionally plural, but not whenever
 		it seems to be part of a macro name.
@@ -408,10 +408,13 @@ function processTextTerms(text, name, allow) {
 		*/
 		.replace(/\n([A-Z][\w\?\s\d]+:)\n/g,"\n####$1\n")
 		/*
+			Convert "Added in" lines to italics
+		*/
+		.replace(/\n\s+(Added in: [^\n]+)/g, "\n<aside>$1</aside>")
+		/*
 			Reinsert the heading
 		*/
 		.replace('\ufeff', headingMatch[0])
-
 	return text;
 }
 

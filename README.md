@@ -40,7 +40,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 #####Macros
 
- * Added `(cond:)`, a macro similar to (if:) but which conditionally chooses between two data values, rather than hooks. `(cond: visits is 1, "Strange", "Familiar")` is "Strange" on the first visit and "Familiar" afterward. Since it's not a changer, you can use it in expressions within other macros freely. Additionally, you can add further conditions - `(cond: $gender is "masc", "god", $gender is "femme", "goddess", $gender is "pan", "goddex", "deity")` - to choose among several values precisely.
+ * Added `(cond:)`, a macro similar to `(if:)` but which conditionally chooses between two data values, rather than hooks. `(cond: visits is 1, "Strange", "Familiar")` is "Strange" on the first visit and "Familiar" afterward. Since it's not a changer, you can use it in expressions within other macros freely. Additionally, you can add further conditions - `(cond: $gender is "masc", "god", $gender is "femme", "goddess", $gender is "pan", "goddex", "deity")` - to choose among several values precisely.
  * Added `(nth:)`, a macro that takes a sequence of values and chooses one at a given position, similar to the `'s` or `of` indexing syntax for arrays. `(nth: 2, $mary, $edith, $gwen)` is the same as `(a: $mary, $edith, $gwen)'s 2nd`. It serves as a more readable alternative to the indexing syntax in certain situations, such as using it with `visit` in cases like `(nth: visit, "hissing", "whirring", "clanking")`.
  * Added `(more:)`, a convenient shorthand for `(event: when exits is 0)`. When there are no more exits, it will run and display even "more" prose. Loosely inspired by the Ink language's "gather" syntax, its main purpose is to be used alongside `(link:)`, as a shortcut for putting `(show:)` inside it - `(link:"Duck")[It swims on the lake.(show:?next)] |next)[It dives underwater.]` can be rewritten as `(link:"Duck")[It swims on the lake.] (more:)[It dives underwater.]`.
  * Added a `(passages:)` macro, which returns an array containing the `(passage:)` datamaps for every passage in the game, but also can be given a "where" lambda to filter that array.
@@ -124,6 +124,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added `(click-goto:)`, `(mouseover-goto:)` and `(mouseout-goto:)`, which are combinations of `(click:)`, `(mouseover:)` and `(mouseout:)` with `(goto:)`, similar to `(link-goto:)`.
  * Added `(link-reveal-goto:)`, a combination of `(link-reveal:)` and `(go-to:)` that lets you run commands like `(set:)` before going to another passage. An example usage is `(link-reveal-goto: "Link text", "Passage name")[(set: $x to 1)]`.
  * Added `(link-show:)`, a link which, when clicked, shows the given hidden hooks, as if by `(show:)`. Just like `(show:)`, it can also have changers attached to it.
+ * Added `(event:)`, a changer similar to `(live:)` which live-renders the hook only once, and only when the given lambda, which is run every 20ms, produces true. It accepts a "when" lambda, which is just a version of "where" that's grammaticaly appropriate for `(event:)`.
 
 ###2.1.0 changes:
 
@@ -380,7 +381,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a `(goto:)` crash caused by having a `(goto:)` in plain passage source instead of inside a hook.
  * Optimised the TwineMarkup lexer a bit, improving passage render times.
  * Now, the style changer commands do not wrap arbitrary HTML around the hooks' elements, but by altering the `<tw-hook>`'s style attribute. This produces flatter DOM trees (admittedly not that big a deal) and has made several macros' behaviour more flexible (for instance, (text-style:"shadow") now properly uses the colour of the text instead of defaulting to black).
- * Now, during every `(set:)` operation on a TwineScript collection such as a datamap or array, the entire collection is cloned and reassigned to that particular moment's variables. Thus, the collection can be rolled back when the undo button is pressed.
+ * Now, during every `(set:)` operation on a Harlowe collection such as a datamap or array, the entire collection is cloned and reassigned to that particular moment's variables. Thus, the collection can be rolled back when the undo button is pressed.
  * Fixed some bugs where "its" would sometimes be incorrectly parsed as "it" plus the text "s".
  * Fixed a bug where enchantment event handlers (such as those for `(click:)`) could potentially fail to load.
  * Fixed a bug where the verbatim syntax (backticks) didn't preserve spaces at the front and end of it.
@@ -391,7 +392,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
     * Now, whitespace between multiple invisible elements, like `(set:)` macro calls, should be removed outright and not allowed to accumulate.
     * It can be safely nested inside itself.
     * It will also no longer collapse whitespace inside macros' strings, or HTML tags' attributes.
- * TwineScript strings are now Unicode-aware. Due to JavaScript's use of UCS-2 for string indexing, Unicode astral plane characters (used for most non-Latin scripts) are represented as 2 characters instead of a single character. This issue is now fixed in TwineScript: strings with Unicode astral characters will now have correct indexing, length, and `(substring:)` behaviour.
+ * Harlowe strings are now Unicode-aware. Due to JavaScript's use of UCS-2 for string indexing, Unicode astral plane characters (used for most non-Latin scripts) are represented as 2 characters instead of a single character. This issue is now fixed in Harlowe: strings with Unicode astral characters will now have correct indexing, length, and `(substring:)` behaviour.
  * Positional property indices are now case-insensitive - `1ST` is the same as `1st`.
  * `(if:)` now only works when given a boolean - if you had written `(if: $var)` and `$var` is a number or string, you must write `$var is not 0` or `$var's length > 0` instead.
  * `(text:)` now only works on strings, numbers, booleans and arrays, because the other datatypes cannot meaningfully be transformed into text.
@@ -413,7 +414,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
     * Using this syntax, you can supply numbers as 1-indexed indices to arrays and strings. So, `"Red"'s $i`, where `$i` is 1, would be the same as `"Red"'s 1st`. Note, however, that if `$i` was the string `"1st"`, it would also work too - but not if it was just the string `"1"`.
  * Links and buttons in compiled stories should now be accessible via the keyboard's Tab and Enter keys. `<tw-link>`, `<tw-icon>` and other clickable elements now have a tabindex attribute, and Harlowe sets up an event handler that allows them to behave as if clicked when the Enter key is pressed.
  * Added 'error explanations', curt sentences which crudely explain the type of error it is, which are visible as fold-downs on each error message.
- * TwineScript now supports single trailing commas in macro calls. `(a: 1, 2,)` is treated the same as `(a: 1,2)`. This is in keeping with JS, which allows trailing commas in array and object literals (but not calls, currently).
+ * Harlowe now supports single trailing commas in macro calls. `(a: 1, 2,)` is treated the same as `(a: 1,2)`. This is in keeping with JS, which allows trailing commas in array and object literals (but not calls, currently).
  * Added `of` property indexing as a counterpart to possessive(`x's y`) indexing.
     * Now, you can alternatively write `last of $a` instead of `$a's last`, or `passages of $style` instead of `$style's passages`. This is intended to provide a little more flexibility in phrasing/naming collection variables - although whether it succeeds is in question.
     * This syntax should also work with computed indexing (`(1 + 2) of $a`) and `it` indexing (`1st of it`).
@@ -463,7 +464,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 * Characters in rendered passages are no longer individually wrapped in `<tw-char>` elements, due to it breaking RTL text. This means CSS that styles individual characters currently cannot be used.
 * Eliminated the ability to use property reference outside of macros - you can no longer do `$var's 1st`, etc. in plain passage text, without wrapping a `(print:)` around it.
 * You can no longer attach text named properties to arrays using property syntax (e.g. `(set: $a's Garply to "grault")`). Only `1st`, `2ndlast`, etc. are allowed.
-* Altered `is`, `is in` and `contains` to use compare-by-value. Now, instead of using JS's compare-by-reference semantics, TwineScript compares containers by value - that is, by checking if their contents are identical. This brings them into alignment with the copy-by-value semantics used by `(set:)` and such.
+* Altered `is`, `is in` and `contains` to use compare-by-value. Now, instead of using JS's compare-by-reference semantics, Harlowe compares containers by value - that is, by checking if their contents are identical. This brings them into alignment with the copy-by-value semantics used by `(set:)` and such.
 
 ####New Features
 

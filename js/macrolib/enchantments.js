@@ -55,6 +55,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		See also:
 		(click:)
 
+		Added in: 2.0.0
 		#basics
 	*/
 	Macros.addCommand("enchant",
@@ -144,6 +145,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 				See also:
 				(append:), (prepend:), (show:), (more:)
 
+				Added in: 1.0.0
 				#revision
 			*/
 			"replace",
@@ -165,6 +167,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 				See also:
 				(replace:), (prepend:), (show:), (more:)
 
+				Added in: 1.0.0
 				#revision
 			*/
 			"append",
@@ -187,6 +190,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 				See also:
 				(replace:), (append:), (show:), (more:)
 
+				Added in: 1.0.0
 				#revision
 			*/
 			"prepend"
@@ -549,6 +553,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 			See also:
 			(link:), (link-reveal:), (link-repeat:), (mouseover:), (mouseout:), (replace:), (click-replace:)
 
+			Added in: 1.0.0
 			#links 7
 		*/
 		{
@@ -586,6 +591,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 			See also:
 			(link:), (link-reveal:), (link-repeat:), (click:), (mouseout:), (replace:), (mouseover-replace:), (hover-style:)
 
+			Added in: 1.0.0
 			#links 12
 		*/
 		{
@@ -624,6 +630,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 			See also:
 			(link:), (link-reveal:), (link-repeat:), (click:), (mouseover:), (replace:), (mouseout-replace:), (hover-style:)
 
+			Added in: 1.0.0
 			#links 17
 		*/
 		{
@@ -659,6 +666,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		See also:
 		(click-prepend:), (click-append:)
 
+		Added in: 1.0.0
 		#links 8
 	*/
 	/*d:
@@ -677,6 +685,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		See also:
 		(click-replace:), (click-prepend:)
 
+		Added in: 1.0.0
 		#links 9
 	*/
 	/*d:
@@ -695,6 +704,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		See also:
 		(click-replace:), (click-append:)
 
+		Added in: 1.0.0
 		#links 10
 	*/
 	/*d:
@@ -703,6 +713,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		This is similar to (click-replace:), but uses the (mouseover:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-replace:).
 
+		Added in: 1.0.0
 		#links 13
 	*/
 	/*d:
@@ -711,6 +722,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		This is similar to (click-append:), but uses the (mouseover:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-append:).
 
+		Added in: 1.0.0
 		#links 14
 	*/
 	/*d:
@@ -719,6 +731,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		This is similar to (click-prepend:), but uses the (mouseover:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-prepend:).
 
+		Added in: 1.0.0
 		#links 15
 	*/
 	/*d:
@@ -727,6 +740,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		This is similar to (click-replace:), but uses the (mouseout:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-replace:).
 
+		Added in: 1.0.0
 		#links 18
 	*/
 	/*d:
@@ -735,6 +749,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		This is similar to (click-append:), but uses the (mouseout:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-append:).
 
+		Added in: 1.0.0
 		#links 19
 	*/
 	/*d:
@@ -742,7 +757,8 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 
 		This is similar to (click-prepend:), but uses the (mouseout:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-prepend:).
-		
+
+		Added in: 1.0.0
 		#links 20
 	*/
 	revisionTypes.forEach((revisionType) => {
@@ -769,6 +785,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		See also:
 		(link-goto:)
 
+		Added in: 3.0.0
 		#links 11
 	*/
 	/*d:
@@ -777,6 +794,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		This is similar to (click-goto:), but uses the (mouseover:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-goto:).
 
+		Added in: 3.0.0
 		#links 16
 	*/
 	/*d:
@@ -785,6 +803,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		This is similar to (click-goto:), but uses the (mouseout:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-goto:).
 
+		Added in: 3.0.0
 		#links 21
 	*/
 	interactionTypes.forEach((interactionType) => {
