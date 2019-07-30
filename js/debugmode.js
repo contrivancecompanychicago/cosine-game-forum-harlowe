@@ -15,7 +15,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		<div class='panel panel-errors' hidden><table></table></div>
 		<div class='panel panel-source' hidden></div>
 		<div class='tabs'>
-		<button class='tab tab-variables enabled'>0 Variables</button> <button class='tab tab-source'>Source</button> <button class='tab tab-errors'>0 Errors</button>
+		<button class='tab tab-variables enabled'>0 Variables</button> <button class='tab tab-errors'>0 Errors</button> <button class='tab tab-source'>Source</button>
 		</div>
 		Turns: <select class='turns' disabled></select><button class='show-invisibles'>Debug View</button></tw-debugger>`);
 

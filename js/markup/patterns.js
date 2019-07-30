@@ -728,10 +728,9 @@
 			#coding 5
 		*/
 
-		hookAppendedFront:  "\\[",
+		hookAppendedFront:  "\\[" + notBefore("=+"),
 		hookPrependedFront:
-			hookTagFront + "\\[",
-
+			hookTagFront + "\\[" + notBefore("=+"),
 
 		/*d:
 			Hook markup
@@ -772,11 +771,47 @@
 
 			#coding 3
 		*/
-		hookFront: "\\[",
+		hookFront: "\\[" + notBefore("=+"),
 		hookBack:  "\\]" + notBefore(hookTagBack),
 		
 		hookAppendedBack:
 			"\\]" + hookTagBack,
+
+		/*d:
+			Unclosed hook markup
+
+			This is a special version of the hook markup - an open bracket `[`, followed by any number of `=` marks, that has no matching
+			closing bracket. When it is placed in a passage, it indicates that all the prose that follows, until the end of the hook
+			that contains it or the end of the passage, is part of a single hook.
+
+			Its main purpose is to let you easily deploy hook changers that apply to the remaining text of the passage, without having
+			to place and keep track of closing brackets at the end. For instance, the (click:) macro can be used with the ?page hook name
+			to prompt the reader to click anywhere on the page to reveal the rest of the passage. The unclosed hook markup lets you use
+			it as many times as you want, without needing to balance a number of closing brackets at the end of the passage.
+
+			```
+			(click: ?page)[==
+			This text won't appear until the page is clicked once.
+			(click: ?page)[==
+			This text won't appear until the page is clicked twice.
+			(click: ?page)[==
+			This text won't appear until the page is clicked three times.
+			```
+
+			Other changer macros, such as (link:), (more:), (event:), and (transition:), also work well with this markup.
+
+			Also, unclosed hooks can be named, and marked as hidden, just like other hooks.
+			```
+			|1>[=
+			The rest of this passage is in a hook named "1".
+			|2)[=
+			This part is also in a hidden hook named "2".
+			```
+
+			#coding 6
+		*/
+		unclosedHook: "\\[=+",
+		unclosedHookPrepended: hookTagFront + "\\[=+",
 		
 		passageLink:
 			passageLink.main

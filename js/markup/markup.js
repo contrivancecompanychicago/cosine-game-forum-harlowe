@@ -356,6 +356,18 @@
 				}),
 			},
 			
+			unclosedHook: {
+				fn: emptyFn,
+			},
+
+			unclosedHookPrepended: {
+				fn: (match) => ({
+					type: "unclosedHook",
+					name: match[1],
+					hidden: match[2] === ")",
+				}),
+			},
+
 			verbatimOpener: {
 				fn(match) {
 					var number = match[0].length,

@@ -308,6 +308,20 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 							+'</tw-hook>';
 						break;
 					}
+					case "unclosedHook": {
+						out += '<tw-hook '
+							+ (token.hidden ? 'hidden ' : '')
+							+ (token.name ? 'name="' + insensitiveName(token.name) + '"' : '')
+							+ 'source="' + escape(
+								/*
+									Crank forward to the end of this run of text, un-parsing all of the hard-parsed tokens.
+									Sadly, this is the easiest way to implement the unclosed hook, despite how
+									#awkward it is performance-wise.
+								*/
+								tokens.slice(i + 1, len).map(t => t.text).join('')
+							) + '"></tw-hook>';
+						return out;
+					}
 					case "verbatim": {
 						out += wrapHTMLTag(escape(token.innerText)
 							/*

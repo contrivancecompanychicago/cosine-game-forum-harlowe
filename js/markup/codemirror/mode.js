@@ -368,6 +368,8 @@
 			// This space prevents the selector from matching hookRef as well.
 			"^=hook , ^=hook-":
 				"font-weight:bold;",
+
+			unclosedHook: warmHookBG(0.05) + "font-weight:bold;",
 			
 			//TODO: whitespace within collapsed
 			"error:not([class*='cm-harlowe-3-string'])":

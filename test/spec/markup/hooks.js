@@ -168,4 +168,36 @@ describe("hooks", function () {
 			expect("(set:$a to true)$a[foo](hook|").markupToPrint("");
 		});
 	});
+	describe("unclosed hooks", function () {
+		it("consist of [ followed by any number of =", function (){
+			[1,2,3,5,9].forEach(function(i) {
+				runPassage("foo[" + ("=".repeat(i)) + "bar");
+				expect($('tw-passage').find('tw-hook').text()).toBe("bar");
+			});
+		});
+		it("all text following it, until the end of the containing hook, is enclosed in the hook", function (){
+			runPassage("foo[==bar");
+			expect($('tw-passage').find('tw-hook').text()).toBe("bar");
+			runPassage("foo[[==bar]baz");
+			expect($('tw-passage').find('tw-hook > tw-hook').text()).toBe("bar");
+			runPassage("[foo[==bar]baz");
+			expect($('tw-passage').find('tw-hook > tw-hook').text()).toBe("bar");
+		});
+		it("work with changers", function (){
+			expect("[foo(if:false)[==bar]baz").markupToPrint("foobaz");
+		});
+		it("work with the named hook syntax", function (){
+			runPassage("foo|grault>[==barbaz");
+			expect($('tw-passage').find('tw-hook').attr('name')).toBe('grault');
+			expect("foo[|grault>[==barbaz](replace:?grault)[qux]").markupToPrint("fooqux");
+		});
+		it("work with the hidden named hook syntax", function (){
+			expect("foo|foo)[==barbaz").markupToPrint("foo");
+			expect("foo[|foo)[==bar]baz").markupToPrint("foobaz");
+		});
+		it("<tw-hook> elements have no name attributes", function (){
+			runPassage("[==foo");
+			expect($('tw-passage').find('tw-hook').is('[name]')).toBe(false);
+		});
+	});
 });

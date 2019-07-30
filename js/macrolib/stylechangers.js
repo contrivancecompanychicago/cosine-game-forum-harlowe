@@ -140,8 +140,11 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			By storing a boolean inside `$isAWizard`, it can be used repeatedly throughout the story to
 			hide or show hooks as you please.
 
+			if you want to conditionally display very short strings, or small values inside a macro call, you may want
+			to use the shorter (cond:) macro instead.
+
 			See also:
-			(unless:), (else-if:), (else:), (hidden:)
+			(unless:), (else-if:), (else:), (cond:), (show:)
 
 			Added in: 1.0.0
 			#basics 6
@@ -179,11 +182,11 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			```
 			Your stomach makes {
 			(if: $size is 'giant')[
-			    an intimidating rumble!
+			    an intimidating rumble! You'll have to eat plenty of trees.
 			](else-if: $size is 'big')[
-			    a loud growl
+			    a loud growl. You're hungry for some shrubs.
 			](else:​)[
-			    a faint gurgle
+			    a faint gurgle. You hope to scavenge some leaves.
 			]}.
 			```
 			
@@ -212,8 +215,11 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			If you attach (else-if:) to a named hook, and the (else-if:) hides the hook, you can reveal the hook later
 			in the passage by using the (show:) macro to target the hook.
 
+			if you want to conditionally display very short strings, or small values inside a macro call, you may want to use
+			the shorter (cond:) macro instead.
+
 			See also:
-			(if:), (unless:), (else:), (hidden:)
+			(if:), (unless:), (else:), (cond:), (show:)
 
 			Added in: 1.0.0
 			#basics 8
@@ -264,7 +270,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			in the passage by using the (show:) macro to target the hook.
 
 			See also:
-			(if:), (unless:), (else-if:), (hidden:)
+			(if:), (unless:), (else-if:), (cond:), (show:)
 
 			Added in: 1.0.0
 			#basics 9
@@ -367,7 +373,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 
 			Example usage:
 			```
-			(event: when time > 5s)[Oops, I forgot the next link: [[Go east]].]
+			(event: when time > 5s)[==Oops, I forgot the next link: [[Go east]].
 			```
 
 			Rationale:

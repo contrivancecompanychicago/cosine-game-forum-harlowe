@@ -99,8 +99,10 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			Makes a changer to create a special link that can be used to show a hook.
 			
 			Example usage:
-			`(link: "Stake")[The dracula crumbles to dust.]` will create a link reading "Stake"
+			* `(link: "Stake")[The dracula crumbles to dust.]` will create a link reading "Stake"
 			which, when clicked, disappears and shows "The dracula crumbles to dust."
+			* `(link: "Click to continue")[==` will create a link that, using the unclosed hook syntax,
+			defers the display of the remainder of the passage until it is clicked.
 			
 			Rationale:
 			

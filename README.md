@@ -47,6 +47,10 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a `(passages:)` macro, which returns an array containing the `(passage:)` datamaps for every passage in the game, but also can be given a "where" lambda to filter that array.
  * Added a gradient data type, a `(gradient:)` macro, and a `gradient` datatype name. This can be used to quickly create special images called gradients, which are smooth linear fades between various colours. These are implemented using CSS `linear-gradient`s, and the `(gradient:)` macro has similar syntax to it. Currently, these can only be used with `(background:)`.
 
+#####Markup
+
+ * Added "unclosed hook" markup: `[==` (`[` followed by any number of `=`, similar to the aligner markup) is an opening bracket that automatically closes when the passage or enclosing hook ends, so you don't need to include the closing bracket yourself. This is inspired by the `<<continue>>` custom macro I wrote for Twine 1 (not to be confused with SugarCube's macro of the same name), and is designed for convenient use with changers that you may want to apply to the entire remainder of the passage, such as `(link:)`, `(event:)`, `(t8n:)` and such. `(link: "Next.")[==` replicates the behaviour of `<<continue "Next.">>` easily.
+
 #####Debug Mode
 
  * Added a new toggleale pane to the debug mode panel, "Source", which displays the current passage's source code. This is designed to supplement the "debug view" option, which shows the passage's current state, by letting you compare it to the original code. This pane currently has no syntax highlighting, such as that used in the Twine editor.

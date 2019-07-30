@@ -10,4 +10,4 @@ Harlowe 3.0, while not as major an upgrade as 2.0, offers a few new features tha
 * New transitions are available: "instant", "rumble", "slide-up", "slide-down", "slide-left", "slide-right" and "flicker".
 * New `is a` and `matches` operators are available to compare data structures' similarity, or to check the <a href="#type_datatype">datatype</a> of variables.
 
-For a complete list of changes and outlines of how to use the above features, consult the <a href="#changes_3.0.0-changes">change log</a> section.
+For a complete list of changes and outlines of how to use the above features, consult the <a href="#changes_3.0.2-changes">change log</a> section.
