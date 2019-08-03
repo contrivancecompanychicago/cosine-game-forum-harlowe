@@ -136,15 +136,35 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 				*/
 				if (Array.isArray(this.styles) && this.styles.length > 0) {
 					/*
-						Some styles depend on the pre-existing CSS to calculate their values
-						(for instance, "blurrier" converts the dominant text colour into a
-						text shadow colour, changing the text itself to transparent.)
-						If the user has complicated story CSS, it's not possible
-						to determine what colour should be used for such a hook
-						until it's connected to the DOM. So, now this .css call is deferred
-						for 1 frame, which should (._.) be enough time for it to become attached.
+						Some styles can be applied right away - these are string properties
+						of the styles objects (for instance, "condense" is {"letter-spacing": "-0.08em"}).
+						Others depend on the pre-existing CSS to calculate their values (for instance,
+						"blurrier" converts the dominant text colour into a text shadow colour,
+						changing the text itself to transparent.) These must be applied afterward,
+						as they depend on probing the current styles with .css().
 					*/
-					setTimeout(() => elem.css(Object.assign(...[{}].concat(this.styles))));
+					const [independent, dependent] = this.styles.reduce((a, style) => {
+						/*
+							Dependent styles are function properties of the styles objects,
+							and this loop sifts through to separate them from independent styles.
+						*/
+						Object.keys(style).forEach(k => {
+							const v = style[k];
+							a[+(typeof v === "function")][k] = v;
+						});
+						return a;
+					}, [{},{}]);
+					/*
+						Now, the independent CSS can be applied immediately.
+					*/
+					elem.css(independent);
+					/*
+						If the user has complicated story CSS, it's not possible
+						to determine the computed CSS of an element until it's connected to the
+						DOM. So, now this .css call is deferred for 1 frame, which should
+						(._.) be enough time for it to become attached.
+					*/
+					setTimeout(() => elem.css(dependent));
 				}
 				/*
 					If HTML attributes were included in the changeDescriptor, apply them now.

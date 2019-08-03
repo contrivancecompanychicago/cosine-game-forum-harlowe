@@ -1110,9 +1110,11 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		(...(() => {
 				var
 					/*
-						This is a shorthand used for the definitions below.
+						This is a shorthand used for the definitions below. As a function, it is treated as a dependent
+						attribute (dependent on the element's previous text-colour) so it will be applied at the same time
+						as the actual dependent attribute (text-shadow, which uses the existing text-colour to colour the shadow).
 					*/
-					colourTransparent =  { color: "transparent", },
+					colourTransparent =  { color: () => "transparent", },
 					/*
 						These map style names, as input by the author as this macro's first argument,
 						to CSS attributes that implement the styles. These are all hand-coded.

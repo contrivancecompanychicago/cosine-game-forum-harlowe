@@ -72,7 +72,17 @@ describe("style changer macros", function() {
 						.find('tw-hook');
 					setTimeout(function() {
 						expect(hook).toHaveTextShadowColour(dominantTextColour);
-						done();
+						hook = runPassage("(text-color:#f00)+(text-style:'" + e + "')[Goobar]")
+							.find('tw-hook');
+						setTimeout(function() {
+							expect(hook).toHaveTextShadowColour('#ff0000');
+							hook = runPassage("(text-style:'" + e + "')+(text-color:#f00)[Goobar]")
+								.find('tw-hook');
+							setTimeout(function() {
+								expect(hook).toHaveTextShadowColour('#ff0000');
+								done();
+							});
+						});
 					});
 				});
 				it("correctly discerns the dominant text colour of outer hooks", function(done) {
