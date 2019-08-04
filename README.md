@@ -17,7 +17,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where an error in the passage name given to `(passage:)`, such as `(passage: (str:1/0))`, wouldn't be displayed, instead producing an unrelated error.
  * Fixed a long-standing bug in `(substring:)` where negative indices wouldn't work correctly if the string contained any Unicode "astral plane" characters (any characters not in the Basic Multilingual Plane).
  * Fixed a bug where lambdas weren't being printed correctly (for example, as `a "via ... " lambda`) in certain error messages.
- * Fixed a bug where certain `(text-style:)` changers, specifically 'outline', 'shadow', 'blur', 'blurrier', 'emboss' and 'smear', often didn't work when added to `(text-color:)` changers.
+ * Fixed a bug where certain `(text-style:)` changers, specifically 'outline', 'shadow', 'blur', 'blurrier', 'emboss' and 'smear', often didn't work when added to `(text-color:)` changers, and vice-versa.
+ * Fixed a bug where using `(show:)` to reveal a hidden hook more than once (that is, to reveal a hook already revealed) would cause its code and prose to be run and shown more than once, behaving similarly to `(link-repeat:)`.
 
 ####Alterations
 

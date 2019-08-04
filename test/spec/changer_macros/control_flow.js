@@ -167,6 +167,10 @@ describe("control flow macros", function() {
 			expect('|3>[Red](show:?3)').markupToPrint("Red");
 			expect('|3>[Red]|3)[Blue](show:?3)').markupToPrint("RedBlue");
 		});
+		it("can't reveal a hook twice", function() {
+			expect('|3)[Red](show:?3)(show:?3)').markupToPrint("Red");
+			expect('(set:$r to 10)|3)[(set:$r to it+10)$r](show:?3)(show:?3)(show:?3)').markupToPrint("20");
+		});
 	});
 	describe("in debug mode, the <tw-expression> has the 'false' class when the hook is hidden", function() {
 		it("by (if:)", function() {

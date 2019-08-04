@@ -578,6 +578,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 					section.renderInto("", null,
 						assign({}, cd, { source: hiddenSource, target: elem })
 					);
+					elem.removeData('hiddenSource');
 				}));
 				return cd;
 			},
