@@ -27,6 +27,34 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 	}
 
 	/*
+		Only a few macros are control flow blockers - their names are hardcoded here.
+	*/
+	const blockerMacros = [];
+	/*
+		To extract control flow blockers in an expression, this performs a depth-first search
+		(much as how statement execution is a depth-first walk over the parse tree).
+	*/
+	function findBlockers(token) {
+		const blockers = [];
+		for (let i = 0; i < token.children.length; i += 1) {
+			blockers.push(...findBlockers(token.children[i]));
+		}
+		const firstChild = token.firstChild();
+		/*
+			Control flow blockers are macros whose name matches one of the aforelisted
+			blocker macros.
+		*/
+		if (token.type === "macro" && firstChild && firstChild.type === "macroName"
+				&& blockerMacros.includes(insensitiveName(
+					// Slice off the trailing :, which is included in macroName tokens.
+					firstChild.text.slice(0,-1)
+				))) {
+			blockers.push(token);
+		}
+		return blockers;
+	}
+
+	/*
 		Text constant used by align().
 		The string "text-align: " is selected by the debugmode CSS, so the one space
 		must be present.
@@ -342,10 +370,26 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 					case "variable":
 					case "tempVariable":
 					case "macro": {
+						/*
+							Only macro expressions may contain control flow blockers; these are extracted
+							and compiled separately from the parent expression.
+						*/
+						const blockers = token.type === "macro" ? findBlockers(token) : [];
+						const compiledBlockers = blockers.map(Compiler);
+						/*
+							When the blockers' execution completes, the values produced by them are stored by the passage.
+							The original blockers' positions in the expression are permuted in-place to become "blockedValue"
+							tokens, which retrieve the stored values.
+							Yes, in-place mutation of the input token tree is an #awkward compromise, I know...
+						*/
+						blockers.forEach(b => b.type = 'blockedValue');
+
 						out += '<tw-expression type="' + token.type + '" name="' + escape(token.name || token.text) + '"'
 							// Debug mode: show the macro name as a title.
 							+ (Renderer.options.debug ? ' title="' + escape(token.text) + '"' : '')
-							+ ' js="' + escape(Compiler(token)) + '">'
+							+ (blockers.length ? ' blockers="' + escape(JSON.stringify(compiledBlockers)) + '"' : '')
+							+ ' js="' + escape(Compiler(token)) + '"'
+							+ '>'
 							+ '</tw-expression>';
 						break;
 					}
@@ -361,6 +405,5 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 			return out;
 		}
 	};
-	
 	return Object.freeze(Renderer);
 });

@@ -28,7 +28,7 @@ describe("enchantment macros", function () {
 		});
 		it("can override properties that <tw-link> inherits from CSS", function(done) {
 			createPassage("","bar");
-			runPassage("(enchant:?Link,(text-style:'blur')+(color:'#800000'))[[Next->bar]]");
+			runPassage("(enchant:?Link,(text-style:'mirror')+(color:'#800000'))[[Next->bar]]");
 			setTimeout(function() {
 				expect($('tw-link').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
 				done();

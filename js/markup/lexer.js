@@ -79,6 +79,13 @@
 		},
 		
 		/*
+			A shortcut to the first element in the children array.
+		*/
+		firstChild() {
+			return this.children ? this.children[0] || null : null;
+		},
+
+		/*
 			A shortcut to the last element in the children array.
 		*/
 		lastChild() {

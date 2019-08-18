@@ -28,7 +28,7 @@ define(['jquery'], ($) => {
 		(These colours were chosen to be visually pleasing when used as both background colours and text colours, without
 		the glaring intensity that certain HTML colours, like pure #f00 red, are known to exhibit.)
 
-		In addition to these values, and the (rgb:) macro, you can also use HTML hex #xxxxxx and #xxx notation to specify
+		In addition to these values, and the (rgb:) macro, you can also use HTML hex notation to specify
 		colours, such as `#691212` or `#a4e`. (Note that these are *not* strings, but bare values - `(background: #a4e)`
 		is valid, as is `(background:navy)`.) Of course, HTML hex notation is notoriously hard to read and write, so this
 		isn't recommended.

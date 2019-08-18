@@ -732,6 +732,14 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				+ toJSLiteral(token.passage) + "])";
 			needsLeft = needsRight = false;
 		}
+		/*
+			"blockedValue" tokens aren't created by the TwineMarkup tokeniser, but made from permuted macro
+			tokens by Renderer.
+		*/
+		else if (type === "blockedValue") {
+			midString = "section.blockedValue()";
+			needsLeft = needsRight = false;
+		}
 		else if (type === "macro") {
 			/*
 				The first child token in a macro is always the method name.

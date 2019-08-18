@@ -192,10 +192,8 @@ define([
 		*/
 		create(section) {
 			/*
-				The only varying state that an Operations instance would have
-				compared to the prototype is this "section" argument, which
-				as it turns out is only used to enable the "time" identifier.
-				Hrmmm... #awkward
+				The only varying state that an Operations instance would have,
+				compared to the prototype, is this "section" argument.
 			*/
 			
 			const ret = Object.create(this);

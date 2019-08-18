@@ -710,7 +710,7 @@ define([
 		
 		setTimeout(recursive, delay);
 	}
-	
+
 	Section = {
 		/*
 			Creates a new Section which inherits from this one.
@@ -750,6 +750,8 @@ define([
 					Its objects currently are allowed to possess:
 					- lastHookShown: Boolean
 					- tempVariables: VarScope
+					- dom: jQuery
+					- desc: ChangeDescriptor
 					
 					render() pushes a new object to this stack before
 					running expressions, and pops it off again afterward.
@@ -871,79 +873,7 @@ define([
 				return false;
 			}
 
-			const renderAndExecute = (desc, stackObject) => {
-				/*
-					Run the changer, and get all the newly rendered elements.
-				*/
-				const dom = desc.render();
-				
-				/*
-					Put the passed-in object on the data stack.
-				*/
-				this.stack.unshift(stackObject);
-				
-				/*
-					This provides (sigh) a reference to this object usable by the
-					inner doExpressions function, below.
-				*/
-				const section = this;
-
-				/*
-					Execute the expressions immediately.
-				*/
-				
-				dom.findAndFilter(Selectors.hook + ',' + Selectors.expression)
-						.each(function doExpressions() {
-					const expr = $(this);
-					
-					switch(expr.tag()) {
-						case Selectors.hook:
-						{
-							/*
-								First, hidden hooks should not be rendered, and instead stash
-								their source as "hiddenSource" data for macros to activate
-								later.
-							*/
-							if (expr.attr('hidden')) {
-								expr.removeAttr('hidden');
-								expr.data('hiddenSource', expr.popAttr('source'));
-							}
-							/*
-								Now we can render visible hooks.
-								Note that hook rendering may be triggered early by attached
-								expressions, so a hook lacking a 'source' attr may have
-								already been rendered.
-							*/
-							if (expr.attr('source')) {
-								section.renderInto(expr.popAttr('source'), expr);
-							}
-							/*
-								If the hook's render contained an earlyexit
-								expression (see below), halt here also.
-							*/
-							if (expr.find('[earlyexit]').length) {
-								return false;
-							}
-							break;
-						}
-						case Selectors.expression:
-						{
-							if (expr.attr('js')) {
-								/*
-									If this returns false, then the entire .each() loop
-									will terminate, thus halting expression evaluation.
-								*/
-								const result = runExpression.call(section, expr);
-								if (result === "earlyexit") {
-									dom.attr('earlyexit', true);
-									return false;
-								}
-								return;
-							}
-						}
-					}
-				});
-
+			const createStackFrame = (desc, tempVariables) => {
 				/*
 					Special case for hooks inside existing collapsing syntax:
 					their whitespace must collapse as well.
@@ -954,25 +884,15 @@ define([
 					{(replace:?1)[  H  ]} will always collapse the affixed hook regardless of
 					where the ?1 hook is.
 				*/
-				if (dom.length && target instanceof $ && target.is(Selectors.hook)
-						&& target.parents('tw-collapsed').length > 0) {
-					collapse(dom);
-				}
-				
-				dom.findAndFilter(Selectors.collapsed).each(function() {
-					collapse($(this));
-				});
-				
-				/*
-					After evaluating the expressions, pop the passed-in data stack object (and its scope).
-					Any macros that need to keep the stack object (mainly interaction and deferred rendering macros like
-					(link:) and (event:)) have already stored it for themselves.
-				*/
-				this.stack.shift();
+				let collapses = (target instanceof $ && target.is(Selectors.hook)
+							&& target.parents('tw-collapsed').length > 0);
+
+				this.stack.unshift({desc, tempVariables, collapses});
 			};
 
 			/*
-				...
+				If no temp variables store was created for the child stack frames of this render, create one now.
+				Rather than a proper constructor, it is currently initialised in here.
 			*/
 			if (!tempVariables) {
 				/*
@@ -1004,8 +924,8 @@ define([
 					b: [5,6],
 				},
 				the created tempVariables objects should be these two:
-				{ a: 1, b: 5 },
 				{ a: 2, b: 6 }.
+				{ a: 1, b: 5 },
 			*/
 			if (Object.keys(desc.loopVars).length) {
 				// Copy the loopVars, to avoid permuting the descriptor.
@@ -1020,21 +940,29 @@ define([
 				}*/
 
 				/*jshint -W083 */
-				for(; i > 0; i -= 1) {
-					renderAndExecute(desc, {
-						tempVariables: Object.keys(loopVars).reduce((a,name) => {
-							a[name] = loopVars[name].shift();
-							return a;
-						}, Object.create(tempVariables)),
-					});
+				if (i) {
+					for(i -= 1; i >= 0; i -= 1) {
+						createStackFrame(desc,
+							Object.keys(loopVars).reduce((a,name) => {
+								/*
+									Successive execute() calls pop these stack frames in reverse order; hence, we must
+									put them on in reverse order, too, using i's descending count.
+								*/
+								a[name] = loopVars[name][i];
+								return a;
+							}, Object.create(tempVariables))
+						);
+					}
+					// Only execute() if at least one stack frame was created.
+					this.execute();
 				}
-
 			}
 			/*
 				Otherwise, just render and execute once normally.
 			*/
 			else {
-				renderAndExecute(desc, { tempVariables });
+				createStackFrame( desc, tempVariables );
+				this.execute();
 			}
 			
 			/*
@@ -1053,6 +981,122 @@ define([
 			*/
 			return desc.enabled;
 		},
+
+		/*
+			This runs a single flow of execution throughout a freshly rendered DOM,
+			replacing <tw-expression> and <tw-hook> elements that have laten [source]
+			or [js] attributes with their renderings. It should be run whenever renderInto()
+			creates new DOM elements, and whenever a blocker finishes and calls unblock().
+		*/
+		execute() {
+			let [{desc, dom, collapses}] = this.stack;
+
+			if (desc && !dom) {
+				/*
+					Run the changeDescriptor, and get all the newly rendered elements.
+				*/
+				dom = desc.render();
+
+				this.stack[0].dom = dom;
+				this.stack[0].desc = undefined;
+			}
+			/*
+				This provides (sigh) a reference to this object usable by the
+				inner function, below.
+			*/
+			const section = this;
+
+			/*
+				Execute the expressions immediately.
+			*/
+			
+			dom.findAndFilter(Selectors.hook + ',' + Selectors.expression)
+					.each(function() {
+				const expr = $(this);
+				
+				switch(expr.tag()) {
+					case Selectors.hook:
+					{
+						/*
+							First, hidden hooks should not be rendered, and instead stash
+							their source as "hiddenSource" data for macros to activate
+							later.
+						*/
+						if (expr.attr('hidden')) {
+							expr.removeAttr('hidden');
+							expr.data('hiddenSource', expr.popAttr('source'));
+						}
+						/*
+							Now we can render visible hooks.
+							Note that hook rendering may be triggered early by attached
+							expressions, so a hook lacking a 'source' attr may have
+							already been rendered.
+						*/
+						if (expr.attr('source')) {
+							section.renderInto(expr.popAttr('source'), expr);
+						}
+						/*
+							If the hook's render contained an earlyexit
+							expression (see below), halt here also.
+						*/
+						if (expr.find('[earlyexit],[blocked]').length) {
+							return false;
+						}
+						break;
+					}
+					case Selectors.expression:
+					{
+						/*
+							Control flow blockers are sub-expressions which, when evaluated, block control flow
+							until some signal, such as user input, is provided, whereupon control
+							flow proceeds as usual.
+
+							Because there are no other side-effect-on-evaluation expressions in Harlowe (as other state-changers
+							like (loadgame:) are Commands, which only perform effects in passage prose), we can safely
+							extract and run the blockers' code separately from the parent expression with peace of mind.
+						*/
+						if (expr.attr('blockers')) {
+							const blockers = JSON.parse(expr.popAttr('blockers'));
+							expr.data('blockers', blockers);
+						}
+						if (expr.data('blockers')) {
+							//TODO
+						}
+						if (expr.attr('js')) {
+							/*
+								If this returns false, then the entire .each() loop
+								will terminate, thus halting expression evaluation.
+							*/
+							const result = runExpression.call(section, expr);
+							if (result === "earlyexit") {
+								expr.attr('earlyexit', true);
+								return false;
+							}
+							return;
+						}
+					}
+				}
+			});
+
+			if (dom.length && collapses) {
+				collapse(dom);
+			}
+			
+			dom.findAndFilter(Selectors.collapsed).each(function() {
+				collapse($(this));
+			});
+			
+			/*
+				After evaluating the expressions, pop the passed-in data stack object (and its scope).
+				Any macros that need to keep the stack object (mainly interaction and deferred rendering macros like
+				(link:) and (event:)) have already stored it for themselves.
+			*/
+			this.stack.shift();
+
+			if (this.stack.length && this.stack[0] && this.stack[0].desc) {
+				this.execute();
+			}
+		},
 		
 		/*
 			Updates all enchantments in the section. Should be called after every
@@ -1070,7 +1114,28 @@ define([
 				e.enchantScope();
 			});
 		},
-		
+
+		/*
+			Every control flow blocker macro needs to call
+			section.unblock() with its return value when finished.
+		*/
+		unblock(value) {
+			this.stack[0].blockedValues = (this.stack[0].blockedValues || []).concat(value);
+			this.execute();
+		},
+
+		/*
+			Renderer permutes control flow blocker tokens into blockedValue tokens, which are compiled into
+			blockedValue() calls. After the control flow blockers' code is run, the blockedValues array has been populated
+			with the results of the blockers, and each call places them back into the parent expression.
+		*/
+		blockedValue() {
+			if (!this.blockedValues.length) {
+				Utils.impossible('Section.blockedValue', 'blockedValues is empty');
+			}
+			return this.blockedValues.shift();
+		},
+
 	};
 	
 	return Object.preventExtensions(Section);

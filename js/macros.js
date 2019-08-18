@@ -105,15 +105,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		if (typeSignature.length > 0) {
 			signatureInfo = "The " + name + " macro must only be given "
 				// Join [A,B,C] into "A, B, and C".
-				+ typeSignature.map(typeName).reduce(
-					/*
-						This somewhat convoluted line only prints:
-						* a separating comma if there are multiple items,
-						* "and" if this is the final item.
-					*/
-					(a,e,i,arr) => a + (i === 0 ? "" : i < arr.length-1 ? ", " : ", and ") + e,
-					''
-				)
+				+ andList(typeSignature.map(typeName))
 				+ (typeSignature.length > 1 ? ", in that order" : ".");
 		} else {
 			signatureInfo = "The macro must not be given any data - just write " + name + ".";
@@ -364,6 +356,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		*/
 		addCommand: function addCommand(name, checkFn, runFn, typeSignature, attachable = true) {
 			/*
+				Commands need a canonical name for their TwineScript_Print() methods.
 				Since name can be either a single string or an array, this is needed
 				to unwrap it.
 			*/
@@ -421,7 +414,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		/*
 			Runs a macro.
 			
-			In TwineScript.compile(), the myriad arguments given to a macro invocation are
+			In compile(), the myriad arguments given to a macro invocation are
 			converted to 2 parameters to runMacro:
 			
 			@param {String} The macro's name.
