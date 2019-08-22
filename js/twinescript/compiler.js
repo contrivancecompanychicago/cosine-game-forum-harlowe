@@ -321,6 +321,13 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 					+ ")";
 			}
 			/*
+				"blockedValue" tokens aren't created by the TwineMarkup tokeniser, but made from permuted macro
+				tokens by Renderer.
+			*/
+			else if (token.type === "blockedValue") {
+				return "section.blockedValue()";
+			}
+			/*
 				Root tokens are usually never passed in, but let's
 				harmlessly handle them anyway.
 			*/
@@ -730,14 +737,6 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			midString = 'Macros.run("link-goto", [section,'
 				+ toJSLiteral(token.innerText) + ","
 				+ toJSLiteral(token.passage) + "])";
-			needsLeft = needsRight = false;
-		}
-		/*
-			"blockedValue" tokens aren't created by the TwineMarkup tokeniser, but made from permuted macro
-			tokens by Renderer.
-		*/
-		else if (type === "blockedValue") {
-			midString = "section.blockedValue()";
 			needsLeft = needsRight = false;
 		}
 		else if (type === "macro") {

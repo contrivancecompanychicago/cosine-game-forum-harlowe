@@ -752,6 +752,9 @@ define([
 					- tempVariables: VarScope
 					- dom: jQuery
 					- desc: ChangeDescriptor
+					- collapses: Boolean
+					- blocked: Boolean
+					- blockedValues: Array
 					
 					render() pushes a new object to this stack before
 					running expressions, and pops it off again afterward.
@@ -762,7 +765,12 @@ define([
 					such as (click:)) are tracked here to ensure that post-hoc permutations
 					of this enchantment's DOM are also enchanted correctly.
 				*/
-				enchantments: []
+				enchantments: [],
+				/*
+					When a section's execution becomes blocked, certain callbacks that need to run only
+					once the section becomes unblocked (such as (event:) events) are registered here.
+				*/
+				unblockCallbacks: [],
 			});
 			
 			/*
@@ -770,6 +778,14 @@ define([
 			*/
 			ret = Environ(ret);
 			return ret;
+		},
+
+		/*
+			This is an alias for the top of the expression stack, used mainly to access the "blocked"
+			and "blockedValues" properties.
+		*/
+		get stackTop() {
+			return this.stack[0];
 		},
 		
 		/*
@@ -899,7 +915,7 @@ define([
 					The temp variable scope of the rendered DOM inherits from the current
 					stack, or, if absent, the base VarScope class.
 				*/
-				tempVariables = Object.create(this.stack.length ?  this.stack[0].tempVariables : VarScope);
+				tempVariables = Object.create(this.stack.length ?  this.stackTop.tempVariables : VarScope);
 				/*
 					For debug mode, the temp variables store needs to also carry the name of its enclosing lexical scope.
 					We derive this from the current target.
@@ -931,7 +947,7 @@ define([
 				// Copy the loopVars, to avoid permuting the descriptor.
 				const loopVars = Object.assign({}, desc.loopVars);
 				// Find the shortest loopVars array, and iterate that many times ()
-				let i = Math.min(...Object.keys(loopVars).map(name => loopVars[name].length));
+				let len = Math.min(...Object.keys(loopVars).map(name => loopVars[name].length));
 
 				// A gentle debug notification to remind the writer how many loops the (for:) executed,
 				// which is especially helpful if it's 0.
@@ -940,8 +956,8 @@ define([
 				}*/
 
 				/*jshint -W083 */
-				if (i) {
-					for(i -= 1; i >= 0; i -= 1) {
+				if (len) {
+					for(let i = len - 1; i >= 0; i -= 1) {
 						createStackFrame(desc,
 							Object.keys(loopVars).reduce((a,name) => {
 								/*
@@ -953,8 +969,13 @@ define([
 							}, Object.create(tempVariables))
 						);
 					}
-					// Only execute() if at least one stack frame was created.
-					this.execute();
+					/*
+						Having populated the stack frame with each individual loop variable, it's now time to
+						run them, checking after each iteration to see if a flow control block was caused.
+					*/
+					for (let i = len - 1; i >= 0 && !this.stackTop.blocked; i -= 1) {
+						this.execute();
+					}
 				}
 			}
 			/*
@@ -997,8 +1018,8 @@ define([
 				*/
 				dom = desc.render();
 
-				this.stack[0].dom = dom;
-				this.stack[0].desc = undefined;
+				this.stackTop.dom = dom;
+				this.stackTop.desc = undefined;
 			}
 			/*
 				This provides (sigh) a reference to this object usable by the
@@ -1009,7 +1030,6 @@ define([
 			/*
 				Execute the expressions immediately.
 			*/
-			
 			dom.findAndFilter(Selectors.hook + ',' + Selectors.expression)
 					.each(function() {
 				const expr = $(this);
@@ -1035,13 +1055,6 @@ define([
 						if (expr.attr('source')) {
 							section.renderInto(expr.popAttr('source'), expr);
 						}
-						/*
-							If the hook's render contained an earlyexit
-							expression (see below), halt here also.
-						*/
-						if (expr.find('[earlyexit],[blocked]').length) {
-							return false;
-						}
 						break;
 					}
 					case Selectors.expression:
@@ -1049,35 +1062,80 @@ define([
 						/*
 							Control flow blockers are sub-expressions which, when evaluated, block control flow
 							until some signal, such as user input, is provided, whereupon control
-							flow proceeds as usual.
+							flow proceeds as usual. These have been extracted from the main expressions by Renderer,
+							and are run separately before the main expression.
 
 							Because there are no other side-effect-on-evaluation expressions in Harlowe (as other state-changers
 							like (loadgame:) are Commands, which only perform effects in passage prose), we can safely
 							extract and run the blockers' code separately from the parent expression with peace of mind.
 						*/
 						if (expr.attr('blockers')) {
-							const blockers = JSON.parse(expr.popAttr('blockers'));
-							expr.data('blockers', blockers);
+							/*
+								Convert the blockers attribute into a JS array, so that each blocker code string
+								can be cleanly shift()ed from it after the previous was unblocked.
+							*/
+							let blockers = [];
+							try {
+								blockers = JSON.parse(expr.popAttr('blockers'));
+								/*
+									Reinsert the blockers array as element data.
+								*/
+								expr.data('blockers', blockers);
+							} catch(e) {
+								Utils.impossible('Section.execute', 'JSON.parse blockers failed.');
+							}
 						}
+						/*
+							Blocker expressions are identified by having 'blockers' data, which should persist across
+							however many executions it takes for the passage to become unblocked.
+						*/
 						if (expr.data('blockers')) {
-							//TODO
+							const blockers = expr.data('blockers');
+							if (blockers.length) {
+								/*
+									The first blocker can now be taken out and run, which
+									blocks this section and ends execution.
+								*/
+								section.stackTop.blocked = true;
+								section.eval(blockers.shift());
+								return false;
+							}
+							else {
+								expr.removeData('blockers');
+							}
 						}
 						if (expr.attr('js')) {
 							/*
-								If this returns false, then the entire .each() loop
-								will terminate, thus halting expression evaluation.
+								Early exits (caused by (goto:)) are also a form of flow blocking, albeit one which
+								won't get unblocked, as nothing will call section.unblock().
 							*/
 							const result = runExpression.call(section, expr);
 							if (result === "earlyexit") {
-								expr.attr('earlyexit', true);
-								return false;
+								section.stackTop.blocked = true;
 							}
-							return;
 						}
+					}
+					/*
+						This is used to halt the loop if a hook contained a blocker - the call to renderInto()
+						would've created another stack frame, which, being blocked, hasn't been removed yet.
+					*/
+					if (section.stackTop.blocked) {
+						return false;
 					}
 				}
 			});
 
+			/*
+				If the section was blocked, then don't shift() the stack frame, but leave it until it's unblocked.
+			*/
+			if (section.stackTop.blocked) {
+				return;
+			}
+
+			/*
+				The collapsing syntax's effects are applied here, after all the expressions and sub-hooks have been
+				fully rendered.
+			*/
 			if (dom.length && collapses) {
 				collapse(dom);
 			}
@@ -1092,10 +1150,6 @@ define([
 				(link:) and (event:)) have already stored it for themselves.
 			*/
 			this.stack.shift();
-
-			if (this.stack.length && this.stack[0] && this.stack[0].desc) {
-				this.execute();
-			}
 		},
 		
 		/*
@@ -1120,8 +1174,39 @@ define([
 			section.unblock() with its return value when finished.
 		*/
 		unblock(value) {
-			this.stack[0].blockedValues = (this.stack[0].blockedValues || []).concat(value);
-			this.execute();
+			if (!this.stack.length) {
+				Utils.impossible('Section.unblock', 'stack is empty');
+			}
+			this.stackTop.blocked = false;
+			/*
+				The value passed in is stored in the stack's blockedValues array, where it should
+				be retrieved by other blockers, or the main expression, calling blockedValue().
+			*/
+			this.stackTop.blockedValues = (this.stackTop.blockedValues || []).concat(value);
+
+			while (this.stack.length && !this.stackTop.blocked) {
+				this.execute();
+			}
+			/*
+				If the section became fully unblocked, it is time to run the "when unblocked"
+				callbacks.
+			*/
+			if (!this.stack.length) {
+				this.unblockCallbacks.forEach(e => e());
+				this.unblockCallbacks = [];
+			}
+		},
+
+		/*
+			Callbacks that need to be run ONLY when the section is unblocked (such as (live:) events, interaction
+			element events, and (goto:)) are registered here. Or, if it's already unblocked, they're run immediately.
+		*/
+		whenUnblocked(fn) {
+			if (!this.stack.length || !this.stackTop.blocked) {
+				fn();
+				return;
+			}
+			this.unblockCallbacks = this.unblockCallbacks.concat(fn);
 		},
 
 		/*
@@ -1130,10 +1215,14 @@ define([
 			with the results of the blockers, and each call places them back into the parent expression.
 		*/
 		blockedValue() {
-			if (!this.blockedValues.length) {
-				Utils.impossible('Section.blockedValue', 'blockedValues is empty');
+			const {stackTop} = this;
+			if (!stackTop) {
+				Utils.impossible('Section.blockedValue', 'stack is empty');
 			}
-			return this.blockedValues.shift();
+			if (!stackTop.blockedValues || !stackTop.blockedValues.length) {
+				Utils.impossible('Section.blockedValue', 'blockedValues is missing or empty');
+			}
+			return stackTop.blockedValues.shift();
 		},
 
 	};

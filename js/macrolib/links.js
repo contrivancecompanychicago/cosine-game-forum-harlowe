@@ -579,13 +579,11 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 				desc.transitionDeferred = false;
 				desc.section.renderInto(desc.innerSource + "", null, desc, tempVariables);
 				/*
-					Having revealed, we now go-to, UNLESS an early exit was invoked, which signifies a different (go-to:) was
-					activated.
+					Having revealed, we now go-to, UNLESS the section was blocked, which either signifies
+					a blocking macro like (prompt:) is active, or a different (go-to:) was activated.
 					Much as in doExpressions() in section.renderInto(), we can check for an early exit via the DOM.
 				*/
-				if (!desc.target.find('[earlyexit]').length) {
-					Engine.goToPassage(passageName, { transitionOut: desc.data.t8nDepart, transitionIn: desc.data.t8nArrive });
-				}
+				desc.section.whenUnblocked(() => Engine.goToPassage(passageName, { transitionOut: desc.data.t8nDepart, transitionIn: desc.data.t8nArrive }) );
 			};
 		},
 		[String, optional(String)]

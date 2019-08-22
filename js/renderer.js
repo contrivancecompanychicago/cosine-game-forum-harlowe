@@ -375,14 +375,16 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 							and compiled separately from the parent expression.
 						*/
 						const blockers = token.type === "macro" ? findBlockers(token) : [];
-						const compiledBlockers = blockers.map(Compiler);
-						/*
-							When the blockers' execution completes, the values produced by them are stored by the passage.
-							The original blockers' positions in the expression are permuted in-place to become "blockedValue"
-							tokens, which retrieve the stored values.
-							Yes, in-place mutation of the input token tree is an #awkward compromise, I know...
-						*/
-						blockers.forEach(b => b.type = 'blockedValue');
+						const compiledBlockers = blockers.map(b => {
+							const ret = Compiler(b);
+							/*
+								When the blockers' execution completes, the values produced by them are stored by the passage.
+								The original blockers' positions in the expression are (temporarily!) permuted in-place to become "blockedValue"
+								tokens, which retrieve the stored values.
+							*/
+							b.type = 'blockedValue';
+							return ret;
+						});
 
 						out += '<tw-expression type="' + token.type + '" name="' + escape(token.name || token.text) + '"'
 							// Debug mode: show the macro name as a title.
@@ -391,6 +393,11 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 							+ ' js="' + escape(Compiler(token)) + '"'
 							+ '>'
 							+ '</tw-expression>';
+						/*
+							"Purely temporary local mutation, externally invisible, is synonymous with no mutation." - an inspiring proverb.
+							Since all the blockers were "macro" tokens, changing them back from "blockedValue" tokens is trivial.
+						*/
+						blockers.forEach(b => b.type = 'macro');
 						break;
 					}
 					/*
