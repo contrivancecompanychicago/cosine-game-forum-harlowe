@@ -140,15 +140,22 @@ describe("save macros", function() {
 				}, 20);
 			});
 		});
-		it("produces a user-friendly prompt() for deletion if the save data is invalid", function() {
+		it("produces a user-friendly prompt for deletion if the save data is invalid", function(done) {
 			runPassage("uno", "uno");
 			runPassage("dos", "dos");
 			runPassage("(savegame:'1')", "tres");
 			runPassage("quatro", "quatro");
 			deletePassage('dos');
-			spyOn(window,'prompt');
-			expect("(loadgame:'1')").not.markupToError();
-			expect(window.prompt.calls.count()).toBe(1);
+			var p = runPassage("(loadgame:'1')");
+			expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(1);
+			expect($("tw-dialog").find('tw-link').first().text()).toBe("OK");
+			expect($("tw-dialog").find('tw-link').last().text()).toBe("Cancel");
+			$("tw-dialog").find('tw-link').first().click();
+			setTimeout(function() {
+				expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(0);
+				done();
+			},40);
+			//TODO: Test that the save data is actually deleted.
 		});
 	});
 });

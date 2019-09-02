@@ -171,6 +171,10 @@ describe("control flow macros", function() {
 			expect('|3)[Red](show:?3)(show:?3)').markupToPrint("Red");
 			expect('(set:$r to 10)|3)[(set:$r to it+10)$r](show:?3)(show:?3)(show:?3)').markupToPrint("20");
 		});
+		it("works when saved in another passage", function() {
+			runPassage("(set:$foo to (show:?3))");
+			expect('|3)[Red]$foo').markupToPrint("Red");
+		});
 	});
 	describe("in debug mode, the <tw-expression> has the 'false' class when the hook is hidden", function() {
 		it("by (if:)", function() {

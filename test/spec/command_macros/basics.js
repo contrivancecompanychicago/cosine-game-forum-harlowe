@@ -195,23 +195,123 @@ describe("basic command macros", function() {
 			expect("(alert:1)").markupToError();
 			expect("(alert:'e','f')").markupToError();
 		});
-		it("produces a command which calls window.alert", function() {
-			spyOn(window,'alert');
+		it("produces a command which creates a dialog with a backdrop, the given string, and an 'OK' close link", function(done) {
 			runPassage("(alert:'Gooball')");
-			expect(window.alert).toHaveBeenCalledWith('Gooball');
+			expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(1);
+			expect($("tw-dialog").contents().first().text()).toBe("Gooball");
+			expect($("tw-dialog").find('tw-link').text()).toBe("OK");
+			$("tw-dialog").find('tw-link').click();
+			setTimeout(function() {
+				expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(0);
+				done();
+			},20);
 		});
 		it("evaluates to a command object that can't be +'d", function() {
 			expect("(print: (alert:'a') + (alert:'b'))").markupToError();
 		});
 		it("can be (set:) into a variable", function() {
-			spyOn(window,'alert');
 			runPassage("(set: $x to (alert:'Gooball'))");
-			expect(window.alert).not.toHaveBeenCalled();
+			expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(0);
 			runPassage("$x");
-			expect(window.alert).toHaveBeenCalledWith('Gooball');
+			expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(1);
 		});
 	});
 
+	['prompt','confirm'].forEach(function(name, confirm) {
+		describe("the (" + name + ":) macro", function() {
+			var args = "'Gooball'" + (confirm ? "" : ",'foo'");
+			if(confirm) {
+				it("requires exactly 1 string argument", function() {
+					expect("(confirm:)").markupToError();
+					expect("(confirm:1)").markupToError();
+					expect("(confirm:'e')").not.markupToError();
+					expect("(confirm:'e','f')").markupToError();
+				});
+			} else {
+				it("requires exactly 2 string arguments", function() {
+					expect("(prompt:)").markupToError();
+					expect("(prompt:1)").markupToError();
+					expect("(prompt:'e')").markupToError();
+					expect("(prompt:'e','f')").not.markupToError();
+				});
+			}
+			it("produces a command which creates a dialog with a backdrop, the given string, an 'OK' close link, and a 'Cancel' close link", function(done) {
+				runPassage("("+name+":" + args + ")");
+				expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(1);
+				expect($("tw-dialog").contents().first().text()).toBe("Gooball");
+				expect($("tw-dialog").find('tw-link').first().text()).toBe("OK");
+				expect($("tw-dialog").find('tw-link').last().text()).toBe("Cancel");
+				$("tw-dialog").find('tw-link').click();
+				setTimeout(function() {
+					expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(0);
+					done();
+				},20);
+			});
+			it("blocks control flow execution when the dialog is present", function(done) {
+				var p = runPassage("|a>[foo]("+name+":"+args+")(replace:?a)[bar]");
+				expect(p.text()).toBe("foo");
+				$("tw-backdrop").remove();
+
+				p = runPassage("(set:$foo to (either:("+name+":"+args+"), ("+name+":"+args+")))(set:$qux to 2)");
+				$("tw-dialog").find('tw-link').first().click();
+				setTimeout(function() {
+					$("tw-dialog").find('tw-link').first().click();
+					setTimeout(function() {
+						expect("(print:$qux)").markupToPrint("2");
+						done();
+					},60);
+				},20);
+			});
+			it("doesn't block control flow if it errors", function() {
+				var p = runPassage("|a>[foo]("+name+":)(replace:?a)[bar]");
+				expect(p.find('tw-hook').text()).toBe("foo");
+				$("tw-backdrop").remove();
+			});
+			it("blocks link interaction when the dialog is present", function(done) {
+				var p = runPassage("(link:'foo')[bar]("+name+":"+args+")");
+				expect(p.text()).toBe("foo");
+				p.find('tw-link').click();
+				setTimeout(function() {
+					expect(p.text()).toBe("foo");
+
+					p = runPassage("foo(click:'foo')[baz]("+name+":"+args+")");
+					expect(p.text()).toBe("foo");
+					p.find('tw-enchantment').click();
+					setTimeout(function() {
+						expect(p.text()).toBe("foo");
+						done();
+					},20);
+				},20);
+			});
+			it("blocks mouseover interaction when the dialog is present", function(done) {
+				var p = runPassage("foo(mouseover:'foo')[bar]("+name+":"+args+")");
+				expect(p.text()).toBe("foo");
+				p.find('tw-link').mouseenter();
+				setTimeout(function() {
+					expect(p.text()).toBe("foo");
+					done();
+				},20);
+			});
+			if(confirm) {
+				it("when 'OK' is clicked, evaluates to true", function(done) {
+					runPassage("(set:$foo to (confirm:'Gooball'))");
+					$("tw-dialog").find('tw-link').first().click();
+					setTimeout(function() {
+						expect("(print:$foo)").markupToPrint('true');
+						done();
+					},20);
+				});
+				it("when 'Cancel' is clicked, evaluates to false", function(done) {
+					runPassage("(set:$foo to (confirm:'Gooball'))");
+					$("tw-dialog").find('tw-link').last().click();
+					setTimeout(function() {
+						expect("(print:$foo)").markupToPrint('false');
+						done();
+					},20);
+				});
+			}
+		});
+	});
 	describe("the (open-url:) macro", function() {
 		it("requires exactly 1 string argument", function() {
 			expect("(open-url:)").markupToError();

@@ -6,6 +6,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 ####Bugfixes
 
+ * `(alert:)`, `(confirm:)` and `(prompt:)` no longer error when playing in certain browser environments, including testing within the desktop Twine app itself. (For more details, see "Alterations".)
  * Fixed a bug where header and footer tagged passages were not being transcluded in alphabetical order (instead using passage creation order) on recent versions of Chrome.
    * Additionally, header and footer tagged passages are now sorted in the "natural sort" order used by `(sorted:)`, so that, for instance, a header passage named "10" appears after a header passage named "2".
  * Fixed a long-standing bug where `(append:)` and `(prepend:)`, when given multiple target hooks or strings, wouldn't perform the appends or prepends in a single pass - `A(append:"A","B")[B]` would produce `ABB` instead of `AB`, against intuition.
@@ -19,9 +20,11 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where lambdas weren't being printed correctly (for example, as `a "via ... " lambda`) in certain error messages.
  * Fixed a bug where certain `(text-style:)` changers, specifically 'outline', 'shadow', 'blur', 'blurrier', 'emboss' and 'smear', often didn't work when added to `(text-color:)` changers, and vice-versa.
  * Fixed a bug where using `(show:)` to reveal a hidden hook more than once (that is, to reveal a hook already revealed) would cause its code and prose to be run and shown more than once, behaving similarly to `(link-repeat:)`.
+ * Fixed a limitation where certain commands (including `(show:)`, `(cycling-link:)`, `(enchant:)`, `(click-goto:)`, `(mouseover-goto:)`, `(mouseout-goto:)` and `(link-show:)`) wouldn't correctly interact with temp. variables or hook names after being `(set:)` into a variable in one passage and then used in another (although there's not very much utility in doing this).
 
 ####Alterations
 
+ * `(alert:)`, `(confirm:)` and `(prompt:)` have been reimplemented from the ground up as pure HTML dialogs, instead of using the browser built-in `alert()`, `confirm()` and `prompt()` Javascript functions. This brings a few big changes: they now, by default, follow the colour scheme of Harlowe (black text on white, with links for buttons), can be affected by user CSS, and should appear and behave the same on every platform. However, they should still have the *exact same semantics* as their former versions: passage rendering and code execution should still halt while the dialogs are on-screen, links, `(mouseover:)` and `(mouseout:)` elements should not be interactable while they're on-screen, `(live:)` and `(event:)` macros shouldn't fire when they're on-screen, and `(confirm:)` and `(prompt:)` should still display their dialogs at evaluation time (i.e. when a macro expression containing them is rendered). Do report any bugs or behaviour that doesn't correspond to this description.
  * `(rgba:)` and `(rgb:)`, as well as `(hsla:)` and `(hsl:)` have been merged - the "a" version is now the alias of the other, and the fourth "alpha" value is optional for both. This should have no effect on existing code that uses these macros.
  * Now, `(history:)` can be given an optional "where" lambda to provide only passage names whose passages match the lambda. The lambda is given the same passage datamaps which are returned by `(passage:)`. `(history: where its tags contains "Forest")` is essentially a shorthand for `(find: where (passage: it)'s tags contains "Forest", ...(history:))`.
  * The debug view colours for various macros have been updated to recognise more macro names.

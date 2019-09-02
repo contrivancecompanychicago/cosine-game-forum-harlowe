@@ -17,5 +17,7 @@ define([], () => {
 		storyData   : "tw-storydata",
 		passageData : "tw-passagedata",
 		collapsed   : "tw-collapsed",
+		backdrop    : "tw-backdrop",
+		dialog      : "tw-dialog",
 	});
 });

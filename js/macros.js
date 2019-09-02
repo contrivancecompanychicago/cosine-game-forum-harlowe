@@ -247,28 +247,30 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 	*/
 	const commandMaker = (firstName, checkFn, runFn, attachable) => (...args) => {
 		/*
+			Slice off the original "section" argument, which SHOULD be the first element in args,
+			because TwineScript_Run() brings in its own argument, and it should thus be unneeded for the
+			checkFn.
+		*/
+		args = args.slice(1);
+		/*
 			The passed-in checkFn should only return a value if the check fails,
 			and that value must be a TwineError. I'm so confident about this that I'm not even
 			going to add a TwineError.containsError() call here.
 		*/
-		/*
-			Since the mandatory "section" argument SHOULD be unnecessary for checkFns (which
-			evaluate the validity of input in a vacuum, given a Command can be stored and used
-			across multiple passages), it gets sliced off.
-		*/
-		const error = checkFn(...args.slice(1));
+		const error = checkFn(...args);
 		if (error) {
 			return error;
 		}
 		/*
 			For attachables: this ChangeDescriptor is a private variable of the object,
-			permuted by TwineScript_Attach(), and given to the printFn whenever that's
+			permuted by TwineScript_Attach(), and given to the runFn whenever that's
 			finally called.
+			This SHOULD not cause a problem where reusing a command in a variable multiple times
+			causes the descriptor to be permuted multiple times, provided those are written
+			sensibly and don't use existing values of the descriptor. ._.
 		*/
-		let cd;
-		if (attachable) {
-			cd = ChangeDescriptor.create();
-		}
+		let cd = ChangeDescriptor.create();
+
 		const ret = Object.assign({
 				TwineScript_ObjectName: "a (" + firstName + ":) command",
 				TwineScript_TypeName: "a (" + firstName + ":) command",
@@ -283,9 +285,9 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 					changer.run(cd);
 					return ret;
 				},
-				TwineScript_Run: () => runFn(cd, ...args),
+				TwineScript_Run: section => runFn(cd, section, ...args),
 			} : {
-				TwineScript_Run: () => runFn(...args),
+				TwineScript_Run: section => runFn(section, ...args),
 		});
 		return ret;
 	};

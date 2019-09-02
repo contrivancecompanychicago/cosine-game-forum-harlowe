@@ -405,6 +405,13 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 							: {},
 					data: {
 						enchantmentEvent() {
+							/*
+								First, don't do anything if control flow in the section is currently blocked
+								(which means the click/mouseover input should be dropped).
+							*/
+							if (desc.section.stackTop && desc.section.stackTop.blocked) {
+								return;
+							}
 							if (enchantDesc.once) {
 								/*
 									Remove this enchantment from the Section's list.

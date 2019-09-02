@@ -41,7 +41,16 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 					Links' events are, due to limitations in the ChangeDescriptor format,
 					attached to the <tw-hook> or <tw-expression> containing the element.
 				*/
-				event = link.closest('tw-expression, tw-hook').data('clickEvent');
+				closest = link.closest('tw-expression, tw-hook'),
+				event = closest.data('clickEvent'),
+				/*
+					But first of all, don't do anything if control flow in any section is currently blocked
+					(which means the click input should be dropped).
+				*/
+				section = closest.data('section');
+			if (section && section.stackTop && section.stackTop.blocked) {
+				return;
+			}
 
 			if (event) {
 				/*
@@ -211,6 +220,11 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 					object must be stored for reuse, as the section pops it when normal rendering finishes.
 				*/
 				const [{tempVariables}] = desc.section.stack;
+				/*
+					All links need to store their section as jQuery data, so that clickLinkEvent can
+					check if the section is blocked (thus preventing clicks).
+				*/
+				desc.data.section = desc.section;
 				desc.data.clickEvent = (link) => {
 					/*
 						Only (link-reveal:) turns the link into plain text:
@@ -334,6 +348,11 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 					Instead, the passage name is stored on the <tw-expression>, to be retrieved by clickEvent() above.
 				*/
 				cd.data.linkPassageName = passageName;
+				/*
+					All links need to store their section as jQuery data, so that clickLinkEvent can
+					check if the section is blocked (thus preventing clicks).
+				*/
+				cd.data.section = section;
 				return assign(cd, {
 					source,
 					/*
@@ -391,6 +410,11 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 				if (State.pastLength < 1) {
 					return TwineError.create("macrocall", "I can't use (link-undo:) on the first turn.");
 				}
+				/*
+					All links need to store their section as jQuery data, so that clickLinkEvent can
+					check if the section is blocked (thus preventing clicks).
+				*/
+				cd.data.section = section;
 				/*
 					This currently reveals its purpose in the player-readable DOM by including an 'undo' attribute,
 					which is used by the "click.passage-link" event handler.
@@ -458,6 +482,11 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			},
 			(cd, section, text, ...hooks) => {
 				const [{tempVariables}] = section.stack;
+				/*
+					All links need to store their section as jQuery data, so that clickLinkEvent can
+					check if the section is blocked (thus preventing clicks).
+				*/
+				cd.data.section = section;
 				cd.data.clickEvent = (link) => {
 					link.contents().unwrap();
 					hooks.forEach(hook => hook.forEach(section, elem => {
@@ -564,6 +593,11 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 				object must be stored for reuse, as the section pops it when normal rendering finishes.
 			*/
 			const [{tempVariables}] = desc.section.stack;
+			/*
+				All links need to store their section as jQuery data, so that clickLinkEvent can
+				check if the section is blocked (thus preventing clicks).
+			*/
+			desc.data.section = desc.section;
 			desc.data.clickEvent = (link) => {
 				desc.source = desc.innerSource;
 				/*

@@ -328,7 +328,7 @@ define([
 			run that against the expr.
 		*/
 		else if (result && typeof result.TwineScript_Run === "function") {
-			result = result.TwineScript_Run();
+			result = result.TwineScript_Run(this);
 			/*
 				TwineScript_Run() can also return TwineErrors that only resulted
 				from running the command (such as running (undo:) on the first turn).
@@ -356,14 +356,15 @@ define([
 				result.target = nextElem;
 				
 				this.renderInto('', nextElem, result);
-				/*
-					If TwineScript_Run returns a ChangeDescriptor with earlyExit,
-					then that's a signal to cease all further expression evaluation
-					immediately.
-				*/
-				if (result.earlyExit) {
-					return "earlyexit";
-				}
+			}
+			/*
+				If TwineScript_Run returns the string "blocked",
+				then block control flow. This is usually caused by dialog macros like (alert:) or (confirm:),
+				or interruption macros like (goto:).
+			*/
+			else if (result === "blocked") {
+				this.stackTop.blocked = true;
+				return;
 			}
 			else if (result) {
 				Utils.impossible("Section.runExpression",
@@ -649,10 +650,11 @@ define([
 		*/
 		const [{tempVariables}] = this.stack;
 		/*
-			This closure runs every frame from now on, until
+			This closure runs every frame (that the section is unblocked) from now on, until
 			the target hook is gone.
+			The use of .bind() here is to save reinitialising the inner function on every call.
 		*/
-		const recursive = (() => {
+		const recursive = this.whenUnblocked.bind(this, () => {
 			/*
 				We must do an inDOM check here in case a different (live:) macro
 				(or a (goto:) macro) caused this to leave the DOM between
@@ -1097,7 +1099,16 @@ define([
 									blocks this section and ends execution.
 								*/
 								section.stackTop.blocked = true;
-								section.eval(blockers.shift());
+								let error = section.eval(blockers.shift());
+								/*
+									If the blocker's code resulted in an error (such as a basic type signature error),
+									this is the first occasion it'd become known. Display that error, if it is given,
+									and unblock this section.
+								*/
+								if (TwineError.containsError(error)) {
+									section.stackTop.blocked = false;
+									expr.removeData('blockers').replaceWith(error.render(expr.attr('title'), expr));
+								}
 								return false;
 							}
 							else {
@@ -1105,14 +1116,7 @@ define([
 							}
 						}
 						if (expr.attr('js')) {
-							/*
-								Early exits (caused by (goto:)) are also a form of flow blocking, albeit one which
-								won't get unblocked, as nothing will call section.unblock().
-							*/
-							const result = runExpression.call(section, expr);
-							if (result === "earlyexit") {
-								section.stackTop.blocked = true;
-							}
+							runExpression.call(section, expr);
 						}
 					}
 					/*
@@ -1170,8 +1174,7 @@ define([
 		},
 
 		/*
-			Every control flow blocker macro needs to call
-			section.unblock() with its return value when finished.
+			Every control flow blocker macro needs to call section.unblock() with its return value (if any) when finished.
 		*/
 		unblock(value) {
 			if (!this.stack.length) {
@@ -1181,9 +1184,11 @@ define([
 			/*
 				The value passed in is stored in the stack's blockedValues array, where it should
 				be retrieved by other blockers, or the main expression, calling blockedValue().
+				Only in rare circumstances (currently, just the (alert:) command) will no blocked value be passed in.
 			*/
-			this.stackTop.blockedValues = (this.stackTop.blockedValues || []).concat(value);
-
+			if (value !== undefined) {
+				this.stackTop.blockedValues = (this.stackTop.blockedValues || []).concat(value);
+			}
 			while (this.stack.length && !this.stackTop.blocked) {
 				this.execute();
 			}
@@ -1192,8 +1197,22 @@ define([
 				callbacks.
 			*/
 			if (!this.stack.length) {
-				this.unblockCallbacks.forEach(e => e());
-				this.unblockCallbacks = [];
+				/*
+					This is a "while" loop that uses .shift(), so that the state of
+					this.unblockCallbacks remains valid after each iteration, in case another
+					blockage occurs.
+				*/
+				while(this.unblockCallbacks.length > 0) {
+					const callback = this.unblockCallbacks.shift();
+					callback();
+					/*
+						If the callback caused the section to suddenly become blocked again, stop
+						processing the callbacks.
+					*/
+					if (this.stackTop.blocked) {
+						return;
+					}
+				}
 			}
 		},
 

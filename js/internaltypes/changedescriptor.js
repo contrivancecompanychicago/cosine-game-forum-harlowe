@@ -69,10 +69,6 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		//                            Used by enchantment macros to determine where to register
 		//                            their enchantments to.
 		section:          null,
-
-		// {Boolean} [earlyExit]      A boolean that specifies further <tw-expression>s in this section shouldn't be executed,
-		//                            because this is a (goto:) command or something like that.
-		earlyExit:        false,
 		
 		/*
 			This method produces a short list of properties this descriptor has, which were altered by the changers

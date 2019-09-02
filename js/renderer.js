@@ -29,7 +29,7 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 	/*
 		Only a few macros are control flow blockers - their names are hardcoded here.
 	*/
-	const blockerMacros = [];
+	const blockerMacros = ['prompt','confirm'];
 	/*
 		To extract control flow blockers in an expression, this performs a depth-first search
 		(much as how statement execution is a depth-first walk over the parse tree).

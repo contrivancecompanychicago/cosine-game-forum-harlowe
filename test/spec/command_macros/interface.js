@@ -110,6 +110,10 @@ describe("interface macros", function(){
 					done();
 				},20);
 			});
+			it("works when saved in another passage", function() {
+				runPassage("(set:_bar to 'qux')(set:$foo to (cycling-link:'_bar','foo'))");
+				expect('(set:_bar to "baz")$foo').markupToPrint("baz");
+			});
 			it("errors if the bind is invalid", function() {
 				expect("(set:$foo to 1)(cycling-link: bind $foo's 1st, 'bar','baz', 'qux')").markupToError();
 			});
