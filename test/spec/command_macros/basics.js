@@ -239,23 +239,35 @@ describe("basic command macros", function() {
 				runPassage("("+name+":" + args + ")");
 				expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(1);
 				expect($("tw-dialog").contents().first().text()).toBe("Gooball");
-				expect($("tw-dialog").find('tw-link').first().text()).toBe("OK");
-				expect($("tw-dialog").find('tw-link').last().text()).toBe("Cancel");
-				$("tw-dialog").find('tw-link').click();
+				expect($("tw-dialog tw-link").first().text()).toBe("OK");
+				expect($("tw-dialog tw-link").last().text()).toBe("Cancel");
+				$("tw-dialog tw-link").click();
 				setTimeout(function() {
 					expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(0);
 					done();
 				},20);
 			});
+			if(!confirm) {
+				it("evaluates to the text area's contents when 'OK' is clicked", function(done) {
+					var p = runPassage("(prompt:'','Baz')");
+					expect($("tw-dialog input[type=text]").val()).toBe('Baz');
+					$("tw-dialog input[type=text]").val('Qux');
+					$("tw-dialog tw-link").first().click();
+					setTimeout(function() {
+						expect(p.text()).toBe("Qux");
+						done();
+					},20);
+				});
+			}
 			it("blocks control flow execution when the dialog is present", function(done) {
 				var p = runPassage("|a>[foo]("+name+":"+args+")(replace:?a)[bar]");
 				expect(p.text()).toBe("foo");
 				$("tw-backdrop").remove();
 
 				p = runPassage("(set:$foo to (either:("+name+":"+args+"), ("+name+":"+args+")))(set:$qux to 2)");
-				$("tw-dialog").find('tw-link').first().click();
+				$("tw-dialog tw-link").first().click();
 				setTimeout(function() {
-					$("tw-dialog").find('tw-link').first().click();
+					$("tw-dialog tw-link").first().click();
 					setTimeout(function() {
 						expect("(print:$qux)").markupToPrint("2");
 						done();

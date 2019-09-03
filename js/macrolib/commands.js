@@ -1,6 +1,6 @@
 "use strict";
 define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'renderer', 'engine', 'internaltypes/twineerror', 'datatypes/hookset', 'datatypes/varbind', 'utils/operationutils'],
-($, requestAnimationFrame, Macros, Utils, Selectors, State, Passages, {exec}, Engine, TwineError, HookSet, VarBind, {printBuiltinValue}) => {
+($, requestAnimationFrame, Macros, Utils, Selectors, State, Passages, Renderer, Engine, TwineError, HookSet, VarBind, {printBuiltinValue}) => {
 	
 	/*d:
 		Command data
@@ -42,8 +42,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			raw HTML elements end up with "false" [data-raw] attributes as a result. However, this isn't
 			enough of an issue to want to counteract.
 		*/
-		const ret = $(exec("<tw-backdrop><tw-dialog>"
-			+ text
+		const ret = $(Renderer.exec("<tw-backdrop><tw-dialog>"
 			+ "\n"
 			/*
 				The inputPrompt denotes that it should have a text input element, and provide
@@ -62,6 +61,11 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 				"|||=\n<tw-link tabindex=0>OK</tw-link>\n=|\n<tw-link tabindex=0>Cancel</tw-link>"
 				: "\n<tw-link tabindex=0>OK</tw-link>")
 			+ "</tw-dialog></tw-backdrop>"));
+		/*
+			The user-provided text is rendered separately from the rest of the dialog, so that injection bugs, such as
+			inserting closing </tw-dialog> tags, are harder to bring about.
+		*/
+		ret.find('tw-dialog').prepend(Renderer.exec(text));
 
 		/*
 			The passed-in inputPrompt string, if non-empty, is used as the input element's initial value.
@@ -756,7 +760,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			`(alert:"Beyond this point, things get serious. Grab a snack and buckle up.")`
 
 			Details:
-			The dialog that is produced is implmented entirely in HTML. User CSS stylesheets can be used to
+			The dialog that is produced is implemented entirely in HTML. User CSS stylesheets can be used to
 			style it, and (enchant:) macros that affect ?Link can affect the dialog links.
 
 			In Harlowe versions prior to 3.1.0, this macro used the built-in `alert()` function of the browser, but to
@@ -766,7 +770,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			no further computations are performed, links can't be clicked, and (live:) and (event:) macros
 			shouldn't fire.
 
-			This command can't have changers attached - attempting to do so will produce an error.
+			This macro can't have changers attached - attempting to do so will produce an error.
 
 			See also:
 			(prompt:), (confirm:)
@@ -1004,14 +1008,15 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			(prompt: String, String) -> String
 
 			When this macro is evaluated, a browser pop-up dialog box is shown with the first string displayed,
-			a text entry box containing the second string (as a default value), and an "OK" button to submit.
-			When it is submitted, it evaluates to the string in the text entry box.
+			a text entry box containing the second string (as a default value), an "OK" link and a "Cancel" link.
+			If "OK" is clicked, it evaluates to the string in the text entry box. If "Cancel" is clicked, it evaluates to
+			the default value regardless of the entry box's contents.
 
 			Example usage:
 			`(set: $name to (prompt: "Your name, please:", "Frances Spayne"))`
 
 			Details:
-			The dialog that is produced is implmented entirely in HTML. User CSS stylesheets can be used to
+			The dialog that is produced is implemented entirely in HTML. User CSS stylesheets can be used to
 			style it, and (enchant:) macros that affect ?Link can affect the dialog links.
 
 			In Harlowe versions prior to 3.1.0, this macro used the built-in `prompt()` function of the browser, but to
@@ -1020,8 +1025,6 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			When the dialog is on-screen, the entire game is essentially "paused" - until it is dismissed,
 			no further computations are performed, links can't be clicked, and (live:) and (event:) macros
 			shouldn't fire.
-
-			This command can't have changers attached - attempting to do so will produce an error.
 
 			See also:
 			(alert:), (confirm:)
@@ -1032,7 +1035,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		("prompt",
 			(section, text, value) => {
 				const d = dialogElement(text, value, () => {
-					section.unblock("");
+					section.unblock(value);
 				}, () => {
 					section.unblock(d.find('input').last().val());
 				});
@@ -1051,7 +1054,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			`(set: $makeCake to (confirm: "Transform your best friend into a cake?"))`
 
 			Details:
-			The dialog that is produced is implmented entirely in HTML. User CSS stylesheets can be used to
+			The dialog that is produced is implemented entirely in HTML. User CSS stylesheets can be used to
 			style it, and (enchant:) macros that affect ?Link can affect the dialog links.
 
 			In Harlowe versions prior to 3.1.0, this macro used the built-in `confirm()` function of the browser, but to
@@ -1060,8 +1063,6 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			When the dialog is on-screen, the entire game is essentially "paused" - until it is dismissed,
 			no further computations are performed, links can't be clicked, and (live:) and (event:) macros
 			shouldn't fire.
-
-			This command can't have changers attached - attempting to do so will produce an error.
 
 			See also:
 			(alert:), (prompt:)
@@ -1091,4 +1092,10 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			#url
 		*/
 		("page-url", () => window.location.href, []);
+	/*
+		The two macros which block control flow during evaluation, (prompt:) and (confirm:), need to be registered with
+		Renderer, to ensure they are executed before the rest of the expression containing them.
+	*/
+	Renderer.options.blockerMacros.push("prompt","confirm");
+
 });

@@ -373,9 +373,9 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 			Displays a new passage WITHOUT changing the game state.
 			Used exclusively by state-loading routines.
 		*/
-		showPassage: showPassage,
+		showPassage,
 		
-		options: options,
+		options,
 	};
 	
 	return Object.freeze(Engine);

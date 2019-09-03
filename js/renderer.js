@@ -27,10 +27,6 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 	}
 
 	/*
-		Only a few macros are control flow blockers - their names are hardcoded here.
-	*/
-	const blockerMacros = ['prompt','confirm'];
-	/*
 		To extract control flow blockers in an expression, this performs a depth-first search
 		(much as how statement execution is a depth-first walk over the parse tree).
 	*/
@@ -45,7 +41,7 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 			blocker macros.
 		*/
 		if (token.type === "macro" && firstChild && firstChild.type === "macroName"
-				&& blockerMacros.includes(insensitiveName(
+				&& Renderer.options.blockerMacros.includes(insensitiveName(
 					// Slice off the trailing :, which is included in macroName tokens.
 					firstChild.text.slice(0,-1)
 				))) {
@@ -67,10 +63,16 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 	Renderer = {
 		
 		/*
-			Renderer accepts the same story options that Harlowe does.
-			Currently it only makes use of { debug }.
+			Renderer accepts the same story options that Harlowe does, as well as one more.
+			Currently it only makes use of { debug, blockerMacros }.
 		*/
-		options: {},
+		options: {
+			/*
+				Flow control blockers are macro tokens which have specific names, stored here.
+				This is currently permuted by Macrolib, which registers two such names.
+			*/
+			blockerMacros: [],
+		},
 		
 		/*
 			A composition of TwineMarkup.lex and Renderer.render,
