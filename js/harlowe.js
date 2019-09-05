@@ -22,10 +22,10 @@ require.config({
 		'jqueryplugins',
 	],
 });
-require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'utils', 'utils/selectors', 'macros',
+require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'utils', 'utils/selectors', 'utils/dialog', 'macros',
 	'macrolib/values', 'macrolib/commands', 'macrolib/datastructures', 'macrolib/stylechangers', 'macrolib/enchantments', 'macrolib/links',
 	'repl'],
-		($, DebugMode, Renderer, State, Engine, Passages, Utils, Selectors) => {
+		($, DebugMode, Renderer, State, Engine, Passages, Utils, Selectors, Dialog) => {
 	/*
 		Harlowe, the default story format for Twine 2.
 		
@@ -33,7 +33,7 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'util
 	*/
 	
 	// Used to execute custom scripts outside of main()'s scope.
-	function _eval(text) {
+	function __HarloweEval(text) {
 		return eval(text + '');
 	}
 	
@@ -62,25 +62,52 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'util
 		installHandlers = null;
 	};
 
+
+	/*
+		This function pretty-prints JS errors using Harlowe markup, for display in the two error dialogs below.
+	*/
+	function printJSError(error) {
+		let ret = (error.name + ": " + error.message);
+		if (error.stack) {
+			const stack = error.stack.split('\n');
+			/*
+				Exclude the part of the error stack that follows "__HarloweEval" (the name of the eval wrapper function above)
+				as these contain Harlowe engine code rather than user script code.
+			*/
+			const index = stack.findIndex(line => line.includes("__HarloweEval"));
+			/*
+				Print the full stack, removing URL references (in brackets) such as those in Chrome stacks.
+			*/
+			ret += ("\n" + stack.slice(0, index).join('\n').replace(/\([^\)]+\)/g,''));
+		}
+		/*
+			The stack is shown in monospace, in a limited-size frame that shouldn't push the OK link off the dialog box.
+		*/
+		return "<div style='font-family:monospace;overflow-y:scroll;max-height:30vh'>```" + ret + "```</div>";
+	}
+
 	/*
 		When an uncaught error occurs, then display an alert box once, notifying the author.
 		This installs a window.onerror method, but we must be careful not to clobber any existing
 		onerror method.
 	*/
 	((oldOnError) => {
-		window.onerror = function (message, _, __, ___, error) {
+		window.onerror = function (message, _, __, ___, e) {
 			/*
-				This convoluted line retrieves the error stack, if it exists, and pretty-prints it with
-				URL references (in brackets) removed. If it doesn't exist, the message is used instead.
-			*/
-			const stack = (error && error.stack && ("\n" + error.stack.replace(/\([^\)]+\)/g,'') + "\n")) || ("(" + message + ")\n");
-			alert("Sorry to interrupt, but this page's code has got itself in a mess. "
-				+ stack
-				+ "(This is probably due to a bug in the Harlowe game engine.)");
-			/*
-				Having produced that once-off message, we now restore the page's previous onerror, and invoke it.
+				First, to ensure this function only fires once, we restore the previous onError function.
 			*/
 			window.onerror = oldOnError;
+			/*
+				This dialog, and the one further down, doesn't - can't - block passage control flow, so it can appear over other dialogs and lets
+				the passage animate beneath it. This is just a slightly awkward inconsistency for a dialog box that shouldn't appear in normal situations.
+				Additionally, this is affixed to the parent of the <tw-story> so that it isn't easily removed without being seen by the player.
+			*/
+			Utils.storyElement.parent().append(Dialog("Sorry to interrupt, but this page's code has got itself in a mess.\n\n"
+				+ printJSError(e)
+				+ "\n(This is probably due to a bug in the Harlowe game engine.)", undefined, () => {}));
+			/*
+				Having produced that once-off message, we now invoke the previous onError function.
+			*/
 			if (typeof oldOnError === "function") {
 				oldOnError(...arguments);
 			}
@@ -98,7 +125,6 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'util
 		}
 
 		// Load options from attribute into story object
-
 		const options = header.attr('options');
 
 		if (options) {
@@ -124,22 +150,23 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'util
 		startPassage = $(Selectors.passageData + "[pid=" + startPassage + "]").attr('name');
 
 		// Init game engine
-
 		installHandlers();
 		
 		// Execute the custom scripts
-		
+		let scriptError = false;
 		$(Selectors.script).each(function(i) {
 			try {
-				_eval($(this).html());
+				__HarloweEval($(this).html());
 			} catch (e) {
-				// TODO: Something more graceful - an 'error passage', perhaps?
-				alert("There is a problem with this story's script (#" + (i + 1) + "):\n\n" + e.message);
+				// Only show the first script error, leaving the rest suppressed.
+				if (!scriptError) {
+					scriptError = true;
+					Utils.storyElement.parent().append(Dialog("There is a problem with this story's " + Utils.nth(i + 1) + " script:\n\n" + printJSError(e), undefined, () => {}));
+				}
 			}
 		});
 		
 		// Apply the stylesheets
-		
 		$(Selectors.stylesheet).each(function(i) {
 			// In the future, pre-processing may occur.
 			$(document.head).append('<style data-title="Story stylesheet ' + (i + 1) + '">' + $(this).html());
@@ -157,7 +184,7 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'util
 			}
 		}
 
-		// Show first passage!
+		// Show the first passage!
 		Engine.goToPassage(startPassage);
 	});
 });

@@ -11,9 +11,12 @@ tw-dialog {
 	top: auto;
 	border: $color solid 2px;
 	padding: 2em;
+	color: $color;
 	background-color: $background-color;
 	display:block;
 	max-width: 50vw;
+	max-height: 75vh;
+	overflow: hidden;
 
 	input[type=text] {
 		font-size: inherit;

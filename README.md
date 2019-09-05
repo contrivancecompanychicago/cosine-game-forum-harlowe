@@ -1,4 +1,4 @@
-#Harlowe - the default [Twine 2](https://bitbucket.org/klembot/twinejs) story format.
+#Harlowe - the default [Twine 2](https://github.com/klembot/twinejs) story format.
 
 Documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
@@ -6,7 +6,9 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 ####Bugfixes
 
- * `(alert:)`, `(confirm:)` and `(prompt:)` no longer error when playing in certain browser environments, including testing within the desktop Twine app itself. (For more details, see "Alterations".)
+ * Fixed a bug where the CSS that makes sequences of consecutive line breaks cumulatively smaller in height was incorrectly being applied to non-consecutive `<br>`s that only had plain text between them - for instance, single line breaks separating words or phrases with no other formatting, or line breaks in the verbatim markup.
+ * `(alert:)`, `(confirm:)` and `(prompt:)` no longer error when playing in certain browser environments, including testing within certain versions of the desktop Twine app itself. (For more details, see "Alterations".)
+   * Additionally, user script error messages (and Harlowe crash messages) should now successfully appear in those environments as well.
  * Fixed a bug where header and footer tagged passages were not being transcluded in alphabetical order (instead using passage creation order) on recent versions of Chrome.
    * Additionally, header and footer tagged passages are now sorted in the "natural sort" order used by `(sorted:)`, so that, for instance, a header passage named "10" appears after a header passage named "2".
  * Fixed a long-standing bug where `(append:)` and `(prepend:)`, when given multiple target hooks or strings, wouldn't perform the appends or prepends in a single pass - `A(append:"A","B")[B]` would produce `ABB` instead of `AB`, against intuition.
@@ -32,6 +34,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Raw `<textarea>` tags will no longer have their contained text converted to HTML elements as if it was Harlowe syntax.
  * Now, using `(enchant:)` to enchant the `(text-colour:)` of ?Page or ?Passage will no longer override the text-colour of links - only by enchanting the enclosing hooks, or the ?Link hook, can change their non-hover colour.
  * The default CSS for `<pre>` elements now has a smaller `line-height`.
+ * When a Javascript error in a story's user script is thrown, the stack trace in the resulting dialog is now more concise, no longer printing Harlowe engine stack frames.
 
 ####Additions
 
@@ -55,7 +58,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 #####Markup
 
- * Added "unclosed hook" markup: `[==` (`[` followed by any number of `=`, similar to the aligner markup) is an opening bracket that automatically closes when the passage or enclosing hook ends, so you don't need to include the closing bracket yourself. This is inspired by the `<<continue>>` custom macro I wrote for Twine 1 (not to be confused with SugarCube's macro of the same name), and is designed for convenient use with changers that you may want to apply to the entire remainder of the passage, such as `(link:)`, `(event:)`, `(t8n:)` and such. `(link: "Next.")[==` replicates the behaviour of `<<continue "Next.">>` easily.
+ * Added "unclosed hook" markup: `[==` (`[` followed by any number of `=`, similar to the aligner markup) is an opening bracket that automatically closes when the passage or enclosing hook ends, so you don't need to include the closing bracket yourself. This is inspired by the `<<continue>>` custom macro I wrote for Twine 1 (not to be confused with SugarCube's macro of the same name), and is designed for convenient use with changers that you may want to apply to the entire remainder of the passage, such as `(link:)`, `(event:)`, `(t8n:)` and such. `(link: "Next.")[=` replicates the behaviour of `<<continue "Next.">>` easily.
 
 #####Debug Mode
 

@@ -262,6 +262,22 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 						*/
 						if (!HTMLTableStack.length || /td|th/.test(HTMLTableStack[0])) {
 							out += '<br>';
+							/*
+								This causes consecutive line breaks to consume less height than they normally would.
+								The CSS code for [data-cons] is in main.scss
+							*/
+							let lookahead = tokens[i + 1];
+							while (lookahead && (lookahead.type === "br" || (lookahead.type === "tag" && /^<br\b/i.test(lookahead.text)))) {
+								out += "<br data-cons "
+									/*
+										Preserving the [data-raw] attribute is necessary for the collapsing syntax's collapse code.
+										Non-raw <br>s are collapsed by it.
+									*/
+									+ (lookahead.type === "tag" ? "data-raw" : "")
+									+ ">";
+								i += 1;
+								lookahead = tokens[i + 1];
+							}
 						}
 						break;
 					}
