@@ -32,8 +32,14 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 	*/
 	function findBlockers(token) {
 		const blockers = [];
-		for (let i = 0; i < token.children.length; i += 1) {
-			blockers.push(...findBlockers(token.children[i]));
+		/*
+			String tokens have children so that the syntax highlighting can see into them somewhat, but
+			their contained "blockers" should be ignored.
+		*/
+		if (token.type !== "string") {
+			for (let i = 0; i < token.children.length; i += 1) {
+				blockers.push(...findBlockers(token.children[i]));
+			}
 		}
 		const firstChild = token.firstChild();
 		/*

@@ -157,6 +157,32 @@ describe("link macros", function() {
 				p = runPassage("("+name+":'//mire//')"+hook);
 				expect(p.find('i').text()).toBe("mire");
 			});
+			it("won't interpret the passage name as markup if it exactly matches an existing passage", function() {
+				createPassage("","*foo_bar*");
+				var p = runPassage("("+name+":'*foo_bar*')"+hook);
+				
+				expect(p.find('tw-link').html()).toBe("<tw-verbatim>*foo_bar*</tw-verbatim>");
+				if (!hook) {
+					expect(p.find('tw-expression').data("linkPassageName")).toBe("*foo_bar*");
+				}
+
+				createPassage("","`````````baz`````````");
+				p = runPassage("("+name+":'`````````baz`````````')"+hook);
+				expect(p.find('tw-link').html()).toBe("<tw-verbatim>`````````baz`````````</tw-verbatim>");
+				if (!hook) {
+					expect(p.find('tw-expression').data("linkPassageName")).toBe("`````````baz`````````");
+				}
+			});
+			it("will interpret the passage name as markup if the link is broken", function() {
+				var link = runPassage("[[mi''r''e]]").find('tw-broken-link');
+			
+				expect(link.html()).toBe("mi<b>r</b>e");
+			});
+			it("can't have commands, changers or blockers in the passage name", function() {
+				expect("("+name+":'(text-style:\"bold\")')"+hook).markupToError();
+				expect("("+name+":'(print:\"foo\")')"+hook).markupToError();
+				expect("("+name+":'(prompt:\"foo\",\"\")')"+hook).markupToError();
+			});
 			if (hook) {
 				it("runs the hook when clicked, before going to the passage", function() {
 					createPassage("<p>$foo</p>","mire");

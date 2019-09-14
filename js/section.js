@@ -159,6 +159,21 @@ define([
 		let result = this.eval(expr.popAttr('js') || '');
 
 		/*
+			If this stack frame is being rendered in "evaluate only" mode (i.e. it's inside a link's passage name or somesuch)
+			then it's only being rendered to quickly check what the resulting DOM looks like. As such, changers or commands which
+			alter game state should not be run, and an error should be produced.
+		*/
+		if (this.stackTop.evaluateOnly && result && (ChangerCommand.isPrototypeOf(result) || typeof result.TwineScript_Run === "function")) {
+			result = TwineError.create("syntax",
+				"I can't work out what this "
+				+ (this.stackTop.evaluateOnly)
+				+ " should evaluate to, because it contains a "
+				+ (ChangerCommand.isPrototypeOf(result)) ? "changer" : "command.",
+				"Please rewrite this without putting changers or commands here."
+			);
+		}
+
+		/*
 			Consecutive changer expressions, separated with "+" and followed by a hook,
 			will "chain up" into a single command, which is then applied to that hook.
 
@@ -395,10 +410,6 @@ define([
 				side-effects. These will occur... now.
 			*/
 			result = printBuiltinValue(result);
-			if (typeof result !== "string") {
-				Utils.impossible("printBuiltinValue() produced a non-string " + typeof result);
-			}
-
 			/*
 				Errors (which may be TwineErrors but could also be raw JS errors from try {} blocks)
 				directly replace the element.
@@ -408,6 +419,9 @@ define([
 					result = TwineError.fromError(result);
 				}
 				expr.replaceWith(result.render(expr.attr('title')));
+			}
+			else if (typeof result !== "string") {
+				Utils.impossible("printBuiltinValue() produced a non-string " + typeof result);
 			}
 			else {
 				/*
@@ -750,13 +764,14 @@ define([
 					evaluated. It is used by macros such as "display" and "if" to
 					keep track of prior evaluations - e.g. display loops, (else:).
 					Its objects currently are allowed to possess:
-					- lastHookShown: Boolean
 					- tempVariables: VarScope
-					- dom: jQuery
 					- desc: ChangeDescriptor
-					- collapses: Boolean
-					- blocked: Boolean
-					- blockedValues: Array
+					- collapses: Boolean (used by collapsing markup)
+					- lastHookShown: Boolean (used by (else:) and (elseif:))
+					- dom: jQuery (used by blockers)
+					- blocked: Boolean (used by blockers)
+					- blockedValues: Array (used by blockers)
+					- evaluateOnly: String (used by evaluateTwineMarkup())
 					
 					render() pushes a new object to this stack before
 					running expressions, and pops it off again afterward.
@@ -801,13 +816,10 @@ define([
 		
 		/*
 			This function allows an expression of TwineMarkup to be evaluated as data, and
-			determine the text within it.
-			This is currently only used by runLink, to determine the link's passage name.
-
-			@param {String} expr
-			@return {String|jQuery} text, or a <tw-error> element.
+			determine the content within it.
+			This is currently only used by (link-goto:), to determine the link's passage name.
 		*/
-		evaluateTwineMarkup(expr) {
+		evaluateTwineMarkup(expr, evalName) {
 			/*
 				The expression is rendered into this loose DOM element, which
 				is then discarded after returning. Hopefully no leaks
@@ -821,19 +833,30 @@ define([
 			
 				No changers, etc. are capable of being applied here.
 			*/
-			this.renderInto(expr, p);
+			this.stack.unshift({
+				desc: ChangeDescriptor.create({ target: p, source: expr, section: this}),
+				tempVariables: this.stackTop.tempVariables,
+				/*
+					This special string (containing the reason we're evaluating this markup)
+					causes all command and changer values in the markup to become errors,
+					and suppress all blockers. This forcibly prevents [[(set: $a to it+1)Beans]] from being
+					written.
+				*/
+				evaluateOnly: evalName,
+			});
+			this.execute();
 			
 			/*
 				But first!! Pull out any errors that were generated.
 				We return the plain <tw-error> elements in order to save re-creating
 				them later in the pipeline, even though it makes the type signature of
-				this function somewhat #awkward.
+				this function {String|jQuery} somewhat #awkward.
 			*/
 			let errors;
 			if ((errors = p.find('tw-error')).length > 0) {
 				return errors;
 			}
-			return p.text();
+			return p;
 		},
 		
 		/*
@@ -905,7 +928,7 @@ define([
 				let collapses = (target instanceof $ && target.is(Selectors.hook)
 							&& target.parents('tw-collapsed').length > 0);
 
-				this.stack.unshift({desc, tempVariables, collapses});
+				this.stack.unshift({desc, tempVariables, collapses, evaluateOnly: this.stackTop && this.stackTop.evaluateOnly });
 			};
 
 			/*
@@ -954,7 +977,7 @@ define([
 				// A gentle debug notification to remind the writer how many loops the (for:) executed,
 				// which is especially helpful if it's 0.
 				/*if (Engine.options.debug) {
-					TwineNotifier.create(i + " loop" + (i !== 1 ? "s" : "")).render().prependTo(target);
+					TwineNotifier.create(len + " loop" + (len !== 1 ? "s" : "")).render().prependTo(target);
 				}*/
 
 				/*jshint -W083 */
@@ -1007,16 +1030,21 @@ define([
 
 		/*
 			This runs a single flow of execution throughout a freshly rendered DOM,
-			replacing <tw-expression> and <tw-hook> elements that have laten [source]
+			replacing <tw-expression> and <tw-hook> elements that have latent [source]
 			or [js] attributes with their renderings. It should be run whenever renderInto()
 			creates new DOM elements, and whenever a blocker finishes and calls unblock().
 		*/
 		execute() {
-			let [{desc, dom, collapses}] = this.stack;
+			let [{desc, dom, collapses, evaluateOnly}] = this.stack;
 
 			if (desc && !dom) {
 				/*
 					Run the changeDescriptor, and get all the newly rendered elements.
+					Then, remove the desc from the stack frame and use the DOM from now on
+					(which won't be very long unless a blocker appears).
+					The reason the desc is stored in the stack at all is because of (for:) macros -
+					it puts multiple frames on the stack at once, and it's memory-efficient to have
+					a single descriptor for each of them rather than a pre-rendered DOM.
 				*/
 				dom = desc.render();
 
@@ -1072,6 +1100,15 @@ define([
 							extract and run the blockers' code separately from the parent expression with peace of mind.
 						*/
 						if (expr.attr('blockers')) {
+							if (evaluateOnly) {
+								expr.removeAttr('blockers').removeAttr('js').replaceWith(
+									TwineError.create("syntax",
+										"I can't use a macro like (prompt:) or (confirm:) in " + evaluateOnly + ".",
+										"Please rewrite this without putting such macros here."
+									).render(expr.attr('title'), expr)
+								);
+								return;
+							}
 							/*
 								Convert the blockers attribute into a JS array, so that each blocker code string
 								can be cleanly shift()ed from it after the previous was unblocked.

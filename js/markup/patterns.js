@@ -277,18 +277,16 @@
 
 			The interior of a link (the text between `[[` and `]]`) may contain any character except `]`. If additional
 			`->`s or `<-`s appear, the rightmost right arrow or leftmost left arrow is regarded as the canonical separator.
+			* `[[A->B->C->D->E]]` has a link text of "A->B->C->D" and a passage name of "E"
+			* `[[A<-B<-C<-D<-E]]` has a link text of "B<-C<-D<-E" and a passage name of "A".
 
-			```
-			[[A->B->C->D->E]] has a link text of
-			A->B->C->D
-			and a passage name of
-			E
+			If the passage name of a link does not exactly match that of an existing passage, but it does if you render the
+			markup in or around it, then Harlowe will use that name. So, you can put markup inside the link, as well as variables
+			or value macros like (either:).
+			* `[[//Seagulls!//]]` will link to the passage named "//Seagulls!//" if it exists, or the passage named "Seagulls!" if that exists.
+			* `[[Shelly?->$shellyPlace]]` is a link that goes to the passage whose name is in the variable `$shellyPlace`.
 
-			[[A<-B<-C<-D<-E]] has a link text of
-			B<-C<-D<-E
-			and a passage name of
-			A
-			```
+			However, you can't put commands or changers in the passage name. `[[Really, now.->(print:$explain)]]` will cause an error.
 
 			Links can be customised by attaching changer macros, like (transition-depart:) or (text-style:). Just
 			place one in front of the link, like so: `(t8n-depart:"dissolve")[[Recall that day]]` - or attach a variable containing

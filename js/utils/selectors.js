@@ -19,5 +19,6 @@ define([], () => {
 		collapsed   : "tw-collapsed",
 		backdrop    : "tw-backdrop",
 		dialog      : "tw-dialog",
+		error       : "tw-error",
 	});
 });

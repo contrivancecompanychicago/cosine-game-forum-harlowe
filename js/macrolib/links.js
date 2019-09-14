@@ -99,6 +99,68 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			}
 		}
 	));
+
+	/*
+		The mechanics of determining the passage name of a (link-goto:) or (link-reveal-goto:)
+		link are slightly nontrivial.
+		If there is an existing passage whose name is an exact match of the passage string,
+		and the passage string is also the link text, then print the link text verbatim.
+		Otherwise, if there is a passage whose name matches the text() resulting from rendering
+		the link (such as "$name") then use that. Otherwise, the link is broken.
+	*/
+	function passageNameParse(section, text, passage) {
+		passage = passage || text;
+		/*
+			As of Harlowe 3.1.0, if a passage exists with the unevaluated passage name of the link (for
+			instance, "**Balcony**") then that's used instead of evaluating the link.
+		*/
+		const exactMatch = Passages.hasValid(text) && text === passage;
+
+		/*
+			The string representing the passage name is evaluated as TwineMarkup here -
+			the link syntax accepts TwineMarkup in both link and passage position
+			(e.g. [[**Go outside**]], [[$characterName->$nextLocation]]), and the text
+			content of the evaluated TwineMarkup is regarded as the passage name,
+			even though it is never printed.
+			
+			One concern is that of evaluation order: the passage name is always evaluated
+			before the link text, as coded here. But, considering the TwineMarkup parser
+			already discards the ordering of link text and passage name in the link
+			syntax ([[a->b]] vs [[b<-a]]) then this can't be helped, and probably doesn't matter.
+		*/
+		let passageNameRender = section.evaluateTwineMarkup(Utils.unescape(passage), "a link's passage name");
+
+		let error;
+		if (exactMatch) {
+			/*
+				If there is an exact match, then the passage name, if it is also the text,
+				should be rendered verbatim. To do this, first we check if rendering it caused HTML elements to
+				appear (.children()), and, if so, verbatim markup is wrapped around the name.
+			*/
+			let verbatimGuard = (passageNameRender.children().length > 0)
+				? "`".repeat((passage.match(/`+/) || []).reduce((a,e) => Math.max(a, e.length + 1), 1))
+				: "";
+			/*
+				The \0 is a small kludge to prevent verbatim guards from merging with graves at the start or end
+				of the text, causing them to become unbalanced. Browsers rendering these strings should discard them.
+			*/
+			text = verbatimGuard + "\0".repeat(!!verbatimGuard) + text + "\0".repeat(!!verbatimGuard) + verbatimGuard;
+		}
+		else {
+			/*
+				If a <tw-error> was returned by evaluateTwineMarkup, replace the link with it.
+			*/
+			if (passageNameRender.findAndFilter('tw-error').length) {
+				/*
+					Yes, this takes rendered <tw-error>s and extracts the original TwineError
+					from them, only to render it again later. Alas, that is how it must be.
+				*/
+				error = passageNameRender.findAndFilter('tw-error').data('TwineError');
+			}
+			passage = passageNameRender.text();
+		}
+		return { text, passage, error };
+	}
 	
 	[
 		/*d:
@@ -263,10 +325,9 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			This macro serves as an alternative to the standard link syntax (`[[Link text->Destination]]`), but has a couple of
 			slight differences.
 
-			* The link syntax lets you supply a fixed text string for the link, and an expression for the destination
-			passage's name. However, it does not provide any other means of computing the link. (link-goto:) also
-			allows the link text to be any expression - so, something like `(link-goto: "Move " + $name + "to the cellar", "Cellar")`
-			can be written.
+			* The link syntax lets you supply a fixed text string for the link, and a markup expression for the destination
+			passage's name. (link-goto:) also allows the link text to be any expression - so, something like
+			`(link-goto: "Move " + $name + "to the cellar", "Cellar")` can be written.
 
 			* The resulting command from this macro, like all commands, can be saved and used elsewhere.
 			If you have a complicated link you need to use in several passages, you could (set:) it to a variable and use that variable
@@ -286,68 +347,47 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			/*
 				Return a new (link-goto:) object.
 			*/
-			(text, passage) => {
+			(text) => {
 				if (!text) {
 					return TwineError.create("macrocall", ...emptyLinkTextMessages);
-				}
-				if (!passage) {
-					passage = text;
 				}
 			},
 			(cd, section, text, passage) => {
 				/*
-					The string representing the passage name is evaluated as TwineMarkup here -
-					the link syntax accepts TwineMarkup in both link and passage position
-					(e.g. [[**Go outside**]], [[$characterName->$nextLocation]]), and the text
-					content of the evaluated TwineMarkup is regarded as the passage name,
-					even though it is never printed.
-					
-					One concern is that of evaluation order: the passage name is always evaluated
-					before the link text, as coded here. But, considering the TwineMarkup parser
-					already discards the ordering of link text and passage name in the link
-					syntax ([[a->b]] vs [[b<-a]]) then this can't be helped, and probably doesn't matter.
 				*/
-				const passageName = section.evaluateTwineMarkup(Utils.unescape(passage || text));
-				
-				let source;
-				/*
-					If a <tw-error> was returned by evaluateTwineMarkup, replace the link with it.
-				*/
-				if (passageName instanceof $) {
-					/*
-						section.runExpression() is able to accept jQuery objects
-						being returned from TwineScript_Print().
-					*/
-					source = passageName;
+				let error;
+				({text, passage, error} = passageNameParse(section, text, passage));
+				if (error) {
+					return error;
 				}
+
+				let source;
 				/*
 					Check that the passage is indeed available.
 				*/
-				if (!Passages.hasValid(passageName)) {
+				if (!Passages.hasValid(passage)) {
 					/*
 						Since the passage isn't available, create a broken link.
-						TODO: Maybe this should be an error as well??
 					*/
-					source = '<tw-broken-link passage-name="' + Utils.escape(passageName) + '">'
+					source = '<tw-broken-link passage-name="' + Utils.escape(passage) + '">'
 						+ text + '</tw-broken-link>';
 				}
-				/*
-					Previously visited passages may be styled differently compared
-					to unvisited passages.
-				*/
-				const visited = (State.passageNameVisited(passageName));
-				
 				/*
 					This formerly exposed the passage name on the DOM in a passage-name attr,
 					but as of 2.2.0, it no longer does. (Debug mode can still view the name due to
 					an extra title added to the enclosing <tw-expression> by Renderer).
 				*/
-				source = source || '<tw-link tabindex=0 ' + (visited > 0 ? 'class="visited" ' : '')
-					+ '">' + text + '</tw-link>';
+				source = source || '<tw-link tabindex=0 '
+					/*
+						Previously visited passages may be styled differently compared
+						to unvisited passages.
+					*/
+					+ (State.passageNameVisited(passage) > 0 ? 'class="visited" ' : '')
+					+ '>' + text + '</tw-link>';
 				/*
 					Instead, the passage name is stored on the <tw-expression>, to be retrieved by clickEvent() above.
 				*/
-				cd.data.linkPassageName = passageName;
+				cd.data.linkPassageName = passage;
 				/*
 					All links need to store their section as jQuery data, so that clickLinkEvent can
 					check if the section is blocked (thus preventing clicks).
@@ -541,28 +581,19 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			if (!text) {
 				return TwineError.create("macrocall", ...emptyLinkTextMessages);
 			}
-			if (!passage) {
-				passage = text;
+			/*
+				Being a variant of (link-goto:), this uses the same rules for passage name computation.
+			*/
+			let error;
+			({text, passage, error} = passageNameParse(section, text, passage));
+			if (error) {
+				return error;
 			}
 			/*
-				Being a variant of (link-goto:), this uses the same rules for passage name computation
-				from TwineMarkup, as described in that macro.
+				Because this is a desugaring of the link syntax, like (link-goto:), we should create
+				a broken link only when the changer is attached.
 			*/
-			const passageName = section.evaluateTwineMarkup(Utils.unescape(passage || text));
-			/*
-				If TwineMarkup rendering produced an error, return it.
-				<tw-error> elements have the original TwineError object stashed on them, which we
-				can retrieve now.
-			*/
-			if (passageName instanceof $) {
-				return passageName.data('TwineError');
-			}
-			/*
-				We could check for the passage's existence here, but because this is a desugaring of
-				the link syntax, like (link-goto:), we should create a broken link instead, when
-				the changer is attached.
-			*/
-			return ChangerCommand.create("link-reveal-goto", [text || passage, passageName]);
+			return ChangerCommand.create("link-reveal-goto", [text, passage]);
 		},
 		(desc, text, passageName) => {
 			/*
