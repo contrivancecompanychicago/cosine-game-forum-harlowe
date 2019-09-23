@@ -2,7 +2,7 @@
 
 Documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
-###3.1.0 changes (unreleased):
+###3.1.0 changes:
 
 ####Bugfixes
 
