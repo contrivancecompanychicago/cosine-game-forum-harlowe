@@ -23,7 +23,7 @@ define([
 	/*
 		Section objects represent a block of Twine source rendered into the DOM.
 		It contains its own DOM, a reference to any enclosing Section,
-		and methods and properties related to invoking TwineScript code within it.
+		and methods and properties related to invoking code within it.
 		
 		The big deal of having multiple Section objects (and the name Section itself
 		as compared to "passage" or "screen") is that multiple simultaneous passages'
@@ -772,6 +772,7 @@ define([
 					- blocked: Boolean (used by blockers)
 					- blockedValues: Array (used by blockers)
 					- evaluateOnly: String (used by evaluateTwineMarkup())
+					- finalIter: Boolean (used for infinite loop checks)
 					
 					render() pushes a new object to this stack before
 					running expressions, and pops it off again afterward.
@@ -843,6 +844,7 @@ define([
 					written.
 				*/
 				evaluateOnly: evalName,
+				finalIter: true,
 			});
 			this.execute();
 			
@@ -906,15 +908,24 @@ define([
 			/*
 				Infinite regress can occur from a couple of causes: (display:) loops, or evaluation loops
 				caused by something as simple as (set: $x to "$x")$x.
-				So here's a rudimentary check: bail if the stack length has now proceeded over 50 levels deep.
+				So: bail if the stack length has now proceeded over 50 levels deep, ignoring extra iterations of the same for-loop.
 			*/
 			if (this.stack.length >= 50) {
-				TwineError.create("infinite", "Printing this expression may have trapped me in an infinite loop.")
-					.render(target.attr('title')).replaceAll(target);
-				return false;
+				const depth = this.stack.reduce((a, {finalIter}) =>
+					/*
+						Ignore all iteration stack frames except for the final iteration. This permits (for:) (which
+						needs all its stack frames put on at once due to some implementation kerfuffle involving flow blockers)
+						to loop over 50+ elements without being a false positive.
+					*/
+					a + !!finalIter, 0);
+				if (depth >= 50) {
+					TwineError.create("infinite", "Printing this expression may have trapped me in an infinite loop.")
+						.render(target.attr('title')).replaceAll(target);
+					return false;
+				}
 			}
 
-			const createStackFrame = (desc, tempVariables) => {
+			const createStackFrame = (desc, tempVariables, finalIter) => {
 				/*
 					Special case for hooks inside existing collapsing syntax:
 					their whitespace must collapse as well.
@@ -928,7 +939,7 @@ define([
 				let collapses = (target instanceof $ && target.is(Selectors.hook)
 							&& target.parents('tw-collapsed').length > 0);
 
-				this.stack.unshift({desc, tempVariables, collapses, evaluateOnly: this.stackTop && this.stackTop.evaluateOnly });
+				this.stack.unshift({desc, finalIter, tempVariables, collapses, evaluateOnly: this.stackTop && this.stackTop.evaluateOnly });
 			};
 
 			/*
@@ -983,6 +994,10 @@ define([
 				/*jshint -W083 */
 				if (len) {
 					for(let i = len - 1; i >= 0; i -= 1) {
+						/*
+							All the stack frames need to be placed on the stack at once so that blocked flow (from (alert:))
+							can resume seamlessly by just continuing to read from the stack.
+						*/
 						createStackFrame(desc,
 							Object.keys(loopVars).reduce((a,name) => {
 								/*
@@ -991,7 +1006,7 @@ define([
 								*/
 								a[name] = loopVars[name][i];
 								return a;
-							}, Object.create(tempVariables))
+							}, Object.create(tempVariables), i === len - 1)
 						);
 					}
 					/*
@@ -1007,7 +1022,7 @@ define([
 				Otherwise, just render and execute once normally.
 			*/
 			else {
-				createStackFrame( desc, tempVariables );
+				createStackFrame( desc, tempVariables, true);
 				this.execute();
 			}
 			

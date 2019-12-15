@@ -121,7 +121,13 @@ describe("identifiers", function () {
 			expect(runPassage("(print: visits + 1)","baz").text()).markupToPrint("4");
 			expect(runPassage("(print: visits is 1)","qux").text()).markupToPrint("true");
 		});
-		xit("works inside displayed passages, but only refers to the outer passage", function () {});
+		it("works inside displayed passages, but only refers to the outer passage", function () {
+			createPassage("(print:visits)", "grault");
+			goToPassage('grault');
+			goToPassage('grault');
+			goToPassage('grault');
+			expect("(display:'grault')").markupToPrint("1");
+		});
 		it("is case-insensitive", function () {
 			expect("(print: viSiTs)(print: VISITs)(print: VISITs)").not.markupToError();
 		});
@@ -129,9 +135,15 @@ describe("identifiers", function () {
 			expect("(print: viSiT)(print: VISIT)(print: vISIT)").not.markupToError();
 			expect(runPassage("(print: visit is 1)","qux").text()).markupToPrint("true");
 		});
-		xit("can't be used in an 'into' operation", function () {});
-		xit("can't be used as the subject of a 'to' operation", function () {});
-		xit("isn't recognised inside text", function () {});
+		it("can't be used in an 'into' operation", function () {
+			expect("(put: 2 into visits)").markupToError();
+		});
+		it("can't be used as the subject of a 'to' operation", function () {
+			expect("(set: visits to 2)").markupToError();
+		});
+		it("isn't recognised inside text", function () {
+			expect("How many visits has it been?").markupToPrint("How many visits has it been?");
+		});
 	});
 	describe("the 'exits' identifier", function () {
 		[['link','(link-reveal:"foo")'],

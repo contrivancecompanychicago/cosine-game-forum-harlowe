@@ -2,6 +2,17 @@
 
 Documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
+###3.1.1 changes (unreleased):
+
+####Bugfixes
+
+ * Fixed a bug where `(for:)` would emit infinite loop errors if 50 or more elements were given to it.
+
+###Alterations
+
+ * Now, the text input box in `(prompt:)` is auto-focused when the dialog appears, allowing the player to type into it without having to click it.
+ * Now, pressing Return or Enter in a `(prompt:)` text input box should submit the text, as if "OK" was clicked.
+
 ###3.1.0 changes:
 
 ####Bugfixes

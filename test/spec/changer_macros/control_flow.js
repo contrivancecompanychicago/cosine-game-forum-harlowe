@@ -229,5 +229,15 @@ describe("control flow macros", function() {
 			expect("(set: $a to (for: each _a, 1,2) + (for: each _b, 4,5,6))$a[_a _b ]").markupToPrint("1 4 2 5 ");
 			expect("(set: $a to (for: _a where _a > 3, 1,2) + (for: each _b, 4,5,6))$a[_a _b ]").markupToPrint("");
 		});
+		it("can loop over 50 times", function() {
+			expect("(for: each _b, ...(range: 1,50))[x]").markupToPrint("x".repeat('50'));
+			expect("(for: each _b, ...(range: 1,50))[_b]").markupToPrint(Array.from(Array(50)).reduce(function(a,_,i) { return ""+a+(i+1); }, ''));
+		});
+		it("will still error if an iteration causes an infinite loop", function() {
+			createPassage("(for: each _b, ...(range: 1,50))[(if:_b is 15)[(display:'qux')]]", "qux");
+			expect("(display:'qux')").markupToError();
+			createPassage("(for: each _b, ...(range: 1,50))[(if:_b is 50)[(display:'quux')]]", "quux");
+			expect("(display:'quux')").markupToError();
+		});
 	});
 });

@@ -41,7 +41,14 @@ define(['jquery', 'renderer'], function($, Renderer) {
 			The passed-in inputPrompt string, if non-empty, is used as the input element's initial value.
 		*/
 		if (inputPrompt) {
-			ret.find('input').last().val(inputPrompt);
+			ret.find('input').last().val(inputPrompt)
+				// Pressing Enter should submit the given string.
+				.on('keypress', ({which}) => {
+					if (which === 13) {
+						ret.remove();
+						confirmCallback ? confirmCallback(): cancelCallback();
+					}
+				});
 		}
 
 		/*

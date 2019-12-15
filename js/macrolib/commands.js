@@ -687,6 +687,8 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 							section.unblock();
 						});
 					Utils.storyElement.append(d);
+					// Regrettably, this arbitrary timeout seems to be the only reliable way to focus the <input>.
+					setTimeout(() => d.find('input').last().focus(), 100);
 					return "blocked";
 				}
 				requestAnimationFrame(Engine.showPassage.bind(Engine, State.passage, false /* stretchtext value */));
@@ -983,6 +985,8 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 					section.unblock(d.find('input').last().val());
 				});
 				Utils.storyElement.append(d);
+				// Regrettably, this arbitrary timeout seems to be the only reliable way to focus the <input>.
+				setTimeout(() => d.find('input').last().focus(), 100);
 			},
 			[String, String])
 
