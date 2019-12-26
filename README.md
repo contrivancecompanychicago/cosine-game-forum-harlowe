@@ -2,16 +2,21 @@
 
 Documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
-###3.1.1 changes (unreleased):
+###3.2.0 changes (unreleased):
 
 ####Bugfixes
 
+ * Fixed a long-standing bug where `(click: ?Passage)` and `(click: ?Sidebar)` just flat-out didn't work at all.
+ * Fixed a bug where the default CSS for `(click: ?Page)` (a blue border around the page) wasn't visible. (Now, an `::after` pseudo-element is created for the enchantment, so that the border displays above all the page content.)
+ * Now, `(mouseover:)` and `(mouseout:)` should work correctly with ?Page, ?Passage, and ?Sidebar.
  * Fixed a bug where `(for:)` would emit infinite loop errors if 50 or more elements were given to it.
 
 ###Alterations
 
+ * The behaviour for multiple `(click:)` macros affecting the same hook (such as in `|A>[B] (click: ?A)[1] (click: ?A)[2]`) has changed to be slightly more intuitive: formerly, as you clicked the hook, the last `(click:)` would activate first (so, `[2]` then `[1]`). Now, they activate from first to last. This also applies to `(mouseover:)` and `(mouseout:)`.
  * Now, the text input box in `(prompt:)` is auto-focused when the dialog appears, allowing the player to type into it without having to click it.
  * Now, pressing Return or Enter in a `(prompt:)` text input box should submit the text, as if "OK" was clicked.
+ * The default CSS for `(mouseover:)` and `(mouseout:)` (a dotted gray border and translucent cyan border, respectively) has been brightened slightly to be more visible.
 
 ###3.1.0 changes:
 

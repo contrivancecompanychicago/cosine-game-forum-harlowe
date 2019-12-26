@@ -24,6 +24,18 @@ describe("interaction macros", function() {
 		action: 'mouseover',
 		cssClass: 'enchantment-mouseover',
 		eventMethod: 'mouseenter',
+	},{
+		name: 'mouseout',
+		entity: 'mouseout-region',
+		action: 'mouseout',
+		cssClass: 'enchantment-mouseout',
+		eventMethod: 'mouseleave',
+	},{
+		name: 'mouseout-goto',
+		entity: 'mouseout-region',
+		action: 'mouseout',
+		cssClass: 'enchantment-mouseout',
+		eventMethod: 'mouseleave',
 	}].forEach(function(e) {
 		var goTo = e.name.includes('goto');
 		var hooksetCall = "(" + e.name + ":?foo" + (goTo ? ",'garply')" : ')[]');
@@ -100,6 +112,18 @@ describe("interaction macros", function() {
 						p.find('tw-enchantment').first()[e.eventMethod]();
 						expect(p.text()).toBe("coolbeanslake");
 					});
+					it("multiple enchantments are triggered in order", function() {
+						var p = runPassage(
+							"[]<foo|(" + e.name + ":?foo)[1]"
+							+ "(" + e.name + ":?foo)[2]"
+							+ "(" + e.name + ":?foo)[3]");
+						$('tw-hook')[e.eventMethod]();
+						expect(p.text()).toBe("1");
+						$('tw-hook')[e.eventMethod]();
+						expect(p.text()).toBe("12");
+						$('tw-hook')[e.eventMethod]();
+						expect(p.text()).toBe("123");
+					});
 				}
 				else {
 					it("goes to the given passage when the enchantment is " + e.action + "ed", function(done) {
@@ -117,56 +141,54 @@ describe("interaction macros", function() {
 					expect(p.length).toBe(1);
 					expect(p.hasClass(e.cssClass)).toBe(true);
 				});
-				if (e.name.startsWith("click")) {
+				if (e.action === "click") {
 					it("gives affected hooks a tabindex", function() {
 						var p = runPassage("[cool]<foo|" + hooksetCall).find('tw-enchantment');
 						expect(p.attr('tabindex')).toBe('0');
 					});
-					describe("with ?Page", function() {
-						var pageCall = goTo ? "(click-goto:?Page,'garply')" : "(click:?Page)[1]";
-						it("enchants the <tw-story> element with the 'enchantment-clickblock' class", function() {
-							runPassage(pageCall);
-							var e = $('tw-story').parent('tw-enchantment.enchantment-clickblock');
-							expect(e.length).toBe(1);
+				}
+				[['?Page','tw-story'],['?Passage','tw-passage'],['?Sidebar','tw-sidebar']].forEach(function(f) {
+					var name = f[0], elem = f[1];
+					describe("with "+name, function() {
+						var pageCall = goTo ? "(" + e.name + ":"+name+",'garply')" : "(" + e.name + ":"+name+")[1]";
+						it("enchants the <"+elem+"> element with the 'enchantment-"+e.action+"block' class", function() {
+							runPassage(pageCall+"garply");
+							var g = $(elem).parent('tw-enchantment.enchantment-'+e.action+'block');
+							expect(g.length).toBe(1);
 						});
 						it("does this even when targeting other hooks", function() {
-							var p = runPassage("[cool]<page|" + pageCall);
+							var p = runPassage("[cool]<" + name.replace("?",'') + "|" + pageCall);
 							expect(p.find('tw-enchantment').length).toBe(1);
-							var e = $('tw-story').parent('tw-enchantment.enchantment-clickblock');
-							expect(e.length).toBe(1);
+							var g = $(elem).parent('tw-enchantment.enchantment-'+e.action+'block');
+							expect(g.length).toBe(1);
 						});
-						it("enchants the <tw-story> with a box-shadow", function() {
-							runPassage(pageCall);
-							var e = $('tw-story').parent();
-							// We can't expect to get more precise than this, unfortunately.
-							expect(e.css('box-shadow')).toMatch("inset");
-							expect(e.css('display')).toBe('block');
-						});
+						// Since the box-shadow is on a pseudo-element, we can't test its CSS.
 						if (!goTo) {
 							it("multiple enchantments are triggered in order", function() {
 								var p = runPassage(
-									"(click:?Page)[1]"
-									+ "(click:?Page)[2]"
-									+ "(click:?Page)[3]");
-								$('tw-story').click();
+									"(" + e.name + ":"+name+")[1]"
+									+ "(" + e.name + ":"+name+")[2]"
+									+ "(" + e.name + ":"+name+")[3]");
+								$(elem)[e.eventMethod]();
 								expect(p.text()).toBe("1");
-								$('tw-story').click();
+								$(elem)[e.eventMethod]();
 								expect(p.text()).toBe("12");
-								$('tw-story').click();
+								$(elem)[e.eventMethod]();
 								expect(p.text()).toBe("123");
 							});
 						}
-						it("gives it a tabindex", function() {
-							runPassage(pageCall);
-							var p = $('tw-story').parent('tw-enchantment.enchantment-clickblock');
-							expect(p.attr('tabindex')).toBe('0');
-						});
+						if (e.action === "click") {
+							it("gives it a tabindex", function() {
+								runPassage(pageCall);
+								var p = $(elem).parent('tw-enchantment.enchantment-clickblock');
+								expect(p.attr('tabindex')).toBe('0');
+							});
+						}
 					});
-					// TODO: with ?Sidebar and ?Passage
-				}
+				});
 			});
 			describe("given multiple hooks", function() {
-				it("enchants each selected hook as a link", function() {
+				it("enchants each selected hook as an interaction element", function() {
 					var p = runPassage("[very]<foo|[cool]<foo|" + hooksetCall).find('tw-enchantment');
 					expect(p.length).toBe(2);
 					p = runPassage(hooksetCall + "[very]<foo|[cool]<foo|").find('tw-enchantment');

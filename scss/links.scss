@@ -47,32 +47,58 @@ tw-broken-link {
 }
 
 .enchantment-mouseover {
-	border-bottom: 1px dashed #666;
+	border-bottom: 1px dashed #999;
+}
+.enchantment-mouseoverblock {
+	border: 1px dashed #999;
+	display:block;
 }
 
-.enchantment-mouseout {
-	border: hsla(200,50%,50%,0.25) 1px solid;
+.enchantment-mouseout, .enchantment-mouseoutblock {
+	border: hsla(200,50%,50%,0.6) 1px solid;
 	&:hover {
 		background-color: hsla(200,50%,50%,0.25);
 		border: transparent 1px solid;
 		border-radius: 0.2em;
 	}
+	.enchantment-mouseoutblock {
+		display:block;
+	}
 }
 
 .enchantment-clickblock {
-	// If no colour is specified, box-shadow uses 'color'.
-	// Might as well use vmax because % doesn't work for box-shadow.
-	box-shadow: inset 0 0 0 0.5vmax;
+	width:100%;
+	height:100%;
 	// This should always house a block element (<tw-story>).
 	display: block;
-	// 'box-shadow-color' doesn't exist, so we must overload 'color'.
-	color: hsla(225, 73%, 57%,0.5); // $linkcolour at 0.5 opacity
-
-	transition: color 0.2s ease-in-out;
-	&:hover {
+	// We need the clickblock frame to always be above the contents. So, this large pseudo-element is necessary.
+	&::after {
+		content:"";
+		width:100%;
+		height:100%;
+		top:0;
+		left:0;
+		display: block;
+		// Because * has "position:relative" in main.css, this line is enough.
+		position:absolute;
+		// May not be necessary, but just in case...
+		pointer-events:none;
+		// If no colour is specified, box-shadow uses 'color'.
+		// Might as well use vmax because % doesn't work for box-shadow.
+		box-shadow: 0 0 0 0.5vmax;
+		// 'box-shadow-color' doesn't exist (can't be animated), so we must overload 'color'.
+		color: hsla(225, 73%, 57%,0.5); // $linkcolour at 0.5 opacity
+		transition: color 0.2s ease-in-out;
+	}
+	// SCSS needs these to be separate for some reason?
+	&:hover::after {
 		color: hsla(195, 100%, 50%, 0.5); // $hovercolour at 0.5 opacity
 	}
-	&:active {
+	&:active::after {
 		color: hsla(7, 71%, 55%, 0.5); // $activecolour at 0.5 opacity
+	}
+	// <tw-story> has an inset box, unlike <tw-passage> et al.
+	body > &::after {
+		box-shadow: inset 0 0 0 0.5vmax;
 	}
 }

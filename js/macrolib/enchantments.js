@@ -289,23 +289,34 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 			from this <tw-story> handler.
 		*/
 		Utils.onStartup(() => {
+
+			const classList = enchantDesc.classList.replace(/ /g, ".");
+			const blockClassList = enchantDesc.blockClassList ? enchantDesc.blockClassList.replace(/ /g, ".") : '';
+			const selector = "." + classList + (blockClassList ? ",." + blockClassList : '');
+
 			Utils.storyElement.on(
 				/*
 					Put this event in the "enchantment" jQuery event
 					namespace, solely for personal tidiness.
 				*/
 				enchantDesc.event + ".enchantment",
-			
-				// This converts a HTML class attribute into a CSS selector
-				"." + enchantDesc.classList.replace(/ /g, "."),
-			
+				selector,
 				function generalEnchantmentEvent() {
-					const enchantment = $(this),
-						/*
-							Run the actual event handler.
-						*/
-						event = enchantment.data('enchantmentEvent');
-				
+					/*
+						When multiple <tw-enchantment>s wrap the same element, they wrap it outward-to-inward
+						first-to-last. So, we should execute the outermost enchantment first, as it is first
+						in the passage code order.
+					*/
+					const enchantment = $(Array.from($(this).parents(selector).add(this))
+						// compareDocumentPosition mask 8 means "contains".
+						.sort((left, right) => (left.compareDocumentPosition(right)) & 8 ? 1 : -1)
+						[0]
+					);
+					/*
+						Run the actual event handler.
+					*/
+					const event = enchantment.data('enchantmentEvent');
+
 					if (event) {
 						event(enchantment);
 					}
@@ -478,38 +489,6 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 	}
 
 	/*
-		A separate click event needs to be defined for .enchantment-clickblock, which is explained below.
-	*/
-	Utils.onStartup(() => {
-		Utils.storyElement.on(
-			/*
-				Put this event in the "enchantment" jQuery event namespace, alongside the other enchantment events.
-			*/
-			"click.enchantment",
-			/*
-				Sadly, there's no way to narrow this callback to just <tw-story> elements inside
-				<tw-enchantment>s, as the selector argument to .on() precludes targeting the
-				element itself.
-			*/
-			function() {
-				/*
-					Multiple enchantments would create multiple nested <tw-enchantment> elements.
-					We must go through all of them and execute at will.
-				*/
-				Array.from($(this).parents('.enchantment-clickblock'))
-					// compareDocumentPosition mask 8 means "contains".
-					.sort((left, right) => (left.compareDocumentPosition(right)) & 8 ? 1 : -1)
-					.forEach(e => {
-						const event = $(e).data('enchantmentEvent');
-						if (event) {
-							event();
-						}
-					});
-			}
-		);
-	});
-
-	/*
 		Interaction macros produce ChangerCommands that defer their attached
 		hook's rendering, and enchantment a target hook, waiting for the
 		target to be interacted with and then performing the deferred rendering.
@@ -545,10 +524,10 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 			Additionally, if a (click:) macro is removed from the passage, then its targets will lose the link styling and no longer be
 			affected by the macro.
 
-			Targeting ?Page or ?Passage:
+			Targeting ?Page, ?Passage or ?Sidebar:
 
-			When a (click:) command is targeting the ?Page or ?Passage, instead of transforming the entire passage text into
-			a link, something else will occur: a blue link-coloured border will surround the page, and
+			When a (click:) command is targeting the ?Page, ?Passage or ?Sidebar, instead of transforming the entire passage text into
+			a link, something else will occur: a blue link-coloured border will surround the area, and
 			the mouse cursor (on desktop browsers) will resemble a hand no matter what it's hovering over.
 
 			Clicking a link when a (click:) is targeting the ?Page or ?Passage will cause both the link and the (click:) to
@@ -577,8 +556,8 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 			(mouseover: HookName or String) -> Changer
 
 			A variation of (click:) that, instead of showing the hook when the target is clicked, shows it
-			when the mouse pointer merely hovers over it. The target is also styled differently, to denote this
-			hovering functionality.
+			when the mouse pointer merely hovers over it. The target is also styled differently (with a dotted underline),
+			to denote this hovering functionality.
 
 			Rationale:
 
@@ -594,7 +573,15 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 
 			This macro is not recommended for use in games or stories intended for use on touch devices, as
 			the concept of "hovering" over an element doesn't really make sense with that input method.
-			
+
+			Targeting ?Page, ?Passage or ?Sidebar:
+
+			When a (mouseover:) command is targeting the ?Passage or ?Sidebar, a dotted border will surround the area, and the hook will
+			run when the pointer hovers over that area, as expected.
+
+			While you can also target ?Page with this macro, the result won't be that interesting: if the mouse pointer is anywhere
+			on the page, it will immediately run.
+
 			See also:
 			(link:), (link-reveal:), (link-repeat:), (click:), (mouseout:), (replace:), (mouseover-replace:), (hover-style:)
 
@@ -607,15 +594,16 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 				event    : "mouseenter",
 				once     : true,
 				rerender : "",
-				classList: "enchantment-mouseover"
+				classList: "enchantment-mouseover",
+				blockClassList: "enchantment-mouseoverblock"
 			}
 		},
 		/*d:
 			(mouseout: HookName or String) -> Changer
 
 			A variation of (click:) that, instead of showing the hook when the target is clicked, shows it
-			when the mouse pointer moves over it, and then leaves. The target is also styled differently, to denote this
-			hovering functionality.
+			when the mouse pointer moves over it, and then leaves. The target is also styled differently (a translucent cyan frame),
+			to denote this hovering functionality.
 
 			Rationale:
 
@@ -633,6 +621,14 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 
 			This macro is not recommended for use in games or stories intended for use on touch devices, as
 			the concept of "hovering" over an element doesn't really make sense with that input method.
+
+			Targeting ?Page, ?Passage or ?Sidebar:
+
+			When a (mouseover:) command is targeting the ?Passage or ?Sidebar, a solid border will surround the area. When the mouse pointer enters it,
+			the area will turn translucent cyan until the pointer leaves, whereupon the hook will run, as expected.
+
+			While you can also target ?Page with this macro, the result won't be that interesting: the macro will only run when the pointer
+			leaves the page altogether, such as by proceeding to another browser tab. Additionally, the translucent cyan background won't be present.
 			
 			See also:
 			(link:), (link-reveal:), (link-repeat:), (click:), (mouseover:), (replace:), (mouseout-replace:), (hover-style:)
@@ -646,12 +642,53 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 				event    : "mouseleave",
 				once     : true,
 				rerender : "",
-				classList: "enchantment-mouseout"
+				classList: "enchantment-mouseout",
+				blockClassList: "enchantment-mouseoutblock"
 			}
 		}
 	];
 	
 	interactionTypes.forEach((e) => Macros.addChanger(e.name, ...newEnchantmentMacroFns(e.enchantDesc, e.name)));
+
+	/*
+		A separate click event needs to be defined for an .enchantment-clickblock wrapping <tw-story>, which is explained below.
+	*/
+	Utils.onStartup(() => {
+		interactionTypes.forEach(({enchantDesc}) => {
+			if (enchantDesc.blockClassList) {
+				Utils.storyElement.on(
+					/*
+						Put this event in the "enchantment" jQuery event namespace, alongside the other enchantment events.
+					*/
+					enchantDesc.event + ".enchantment",
+					/*
+						Since this event is on <tw-story>, it can't select its parent in a selector. So, that parent
+						must be selected in the function.
+					*/
+					function() {
+						/*
+							When multiple <tw-enchantment>s wrap the same element, they wrap it outward-to-inward
+							first-to-last. So, we should execute the outermost enchantment first, as it is first
+							in the passage code order.
+						*/
+						const enchantment = $(Array.from($(this).parents('.' + enchantDesc.blockClassList.replace(/ /g, ".")))
+							// compareDocumentPosition mask 8 means "contains".
+							.sort((left, right) => (left.compareDocumentPosition(right)) & 8 ? 1 : -1)
+							[0]
+						);
+						/*
+							Run the actual event handler.
+						*/
+						const event = enchantment.data('enchantmentEvent');
+
+						if (event) {
+							event(enchantment);
+						}
+					}
+				);
+			}
+		});
+	});
 	
 	/*
 		Combos are shorthands for interaction and revision macros that target the same hook:

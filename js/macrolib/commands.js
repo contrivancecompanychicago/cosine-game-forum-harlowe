@@ -509,6 +509,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			a (live:) macro, or anywhere else.
 
 			Using (show:) vs (replace:):
+
 			There are different reasons for using hidden hooks and (show:) instead of (replace:). For your stories,
 			think about whether the prose being revealed is part of the "main" text of the passage, or is just an aside.
 			In neatly-coded stories, the main text should appear early in a passage's code, as the focus of the
