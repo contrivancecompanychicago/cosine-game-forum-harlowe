@@ -489,14 +489,16 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 			To simplify things, convert negative indices into positive ones.
 		*/
 		if (a < 0) {
-			a = sequence.length + a + 1;
+			/*
+				If the negative index overshoots the end, clamp it to the start instead of making an error.
+			*/
+			a = Math.max(0, sequence.length + a + 1);
 		}
 		if (b < 0) {
-			b = sequence.length + b + 1;
+			b = Math.max(0, sequence.length + b + 1);
 		}
 		/*
-			For now, let's assume descending ranges are intended,
-			and support them.
+			For now, let's assume descending ranges are intended, and support them.
 		*/
 		if (a > b) {
 			/*

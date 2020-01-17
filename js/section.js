@@ -789,6 +789,13 @@ define([
 					once the section becomes unblocked (such as (event:) events) are registered here.
 				*/
 				unblockCallbacks: [],
+				/*
+					This string is used by storylet metadata macros like (storylet: when visits is 0),
+					which, when run via speculation by (open-storylets:), need "visits" to mean visits of
+					their containing passage, and not the currently visited passage. And, when run normally,
+					they need to return an unstorable object instead of their lambda's result.
+				*/
+				speculativePassage: undefined,
 			});
 			
 			/*

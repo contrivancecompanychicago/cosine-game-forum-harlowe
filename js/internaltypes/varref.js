@@ -579,6 +579,11 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 					"There isn't a temp variable named _" + originalProp + " in this place.",
 					"Temp variables only exist inside the same passage and hook in which they're (set:).");
 			}
+			if (Array.isArray(obj) && typeof prop === "number") {
+				return TwineError.create("property", "This array of " + (obj.length+1) + " elements doesn't have a "
+				+ propertyDebugName(originalProp)
+				+ " element.");
+			}
 			return TwineError.create("property", "I can't find a "
 				// Use the original non-compiled property key in the error message.
 				+ propertyDebugName(originalProp)

@@ -6,17 +6,23 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 ####Bugfixes
 
+ * Fixed a long-standing bug where continuous ranges for arrays, such as `(a: 1,2)'s 4thlasttolast`, wouldn't work correctly. (What that example should do is provide the entire array.)
  * Fixed a long-standing bug where `(click: ?Passage)` and `(click: ?Sidebar)` just flat-out didn't work at all.
  * Fixed a bug where the default CSS for `(click: ?Page)` (a blue border around the page) wasn't visible. (Now, an `::after` pseudo-element is created for the enchantment, so that the border displays above all the page content.)
  * Now, `(mouseover:)` and `(mouseout:)` should work correctly with ?Page, ?Passage, and ?Sidebar.
  * Fixed a bug where `(for:)` would emit infinite loop errors if 50 or more elements were given to it.
 
-###Alterations
+####Alterations
 
  * The behaviour for multiple `(click:)` macros affecting the same hook (such as in `|A>[B] (click: ?A)[1] (click: ?A)[2]`) has changed to be slightly more intuitive: formerly, as you clicked the hook, the last `(click:)` would activate first (so, `[2]` then `[1]`). Now, they activate from first to last. This also applies to `(mouseover:)` and `(mouseout:)`.
  * Now, the text input box in `(prompt:)` is auto-focused when the dialog appears, allowing the player to type into it without having to click it.
  * Now, pressing Return or Enter in a `(prompt:)` text input box should submit the text, as if "OK" was clicked.
  * The default CSS for `(mouseover:)` and `(mouseout:)` (a dotted gray border and translucent cyan border, respectively) has been brightened slightly to be more visible.
+ * Reworded the error message produced by trying to get an array element that's outside the array's length (such as `(a: 1,2)'s 5th`).
+
+####Additions
+
+ * Added some new macros, `(storylet:)` and `(open-storylets:)`, to support "storylets", an alternative way to link between groups of passages that's preferable for writing non-linear "episodic" interactive fiction. Instead of writing direct links between each episode, you instead write a requirement at the start of each episode, specifying (using a 'when' lambda) when would be the best time to let the player visit the passages. An example is `(storylet: when $season is "spring")`. Then, when you want the player to go to an episode, you use macros like `(open-storylets:)` to get a list of which storylet passages are available right now, and create links or other structures from there.
 
 ###3.1.0 changes:
 

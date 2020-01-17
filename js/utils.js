@@ -111,6 +111,24 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 		},
 
 		/*
+			The following is an in-place Fisher–Yates shuffle.
+		*/
+		shuffled(...list) {
+			return list.reduce((a,e,ind) => {
+				// Obtain a random number from 0 to ind inclusive.
+				const j = (Math.random()*(ind+1)) | 0;
+				if (j === ind) {
+					a.push(e);
+				}
+				else {
+					a.push(a[j]);
+					a[j] = e;
+				}
+				return a;
+			},[]);
+		},
+
+		/*
 			String utilities
 		*/
 

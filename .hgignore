@@ -4,5 +4,4 @@ node_modules/*
 dist/*
 build/*
 *.bat
-\.DS_Store
-
+.sass-cache*

@@ -57,12 +57,18 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 	}
 
 	/*
-		Text constant used by align().
+		Text constant used by align.
 		The string "text-align: " is selected by the debugmode CSS, so the one space
 		must be present.
 	*/
 	const center = "text-align: center; max-width:50%; ";
-	
+	/*
+		For a tiny bit of efficiency, the quick regexp used in preprocess() is stored here.
+		This uses Patterns rather than Lexer's rules because those compiled RegExps for macroFront
+		and macroName can't be combined into a single RegExp.
+	*/
+	const macroRegExp = RegExp(TwineMarkup.Patterns.macroFront + TwineMarkup.Patterns.macroName, 'ig');
+
 	/*
 		The public Renderer object.
 	*/
@@ -70,14 +76,91 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 		
 		/*
 			Renderer accepts the same story options that Harlowe does, as well as one more.
-			Currently it only makes use of { debug, blockerMacros }.
+			Currently it uses { debug, blockerMacros, metadataMacros }.
 		*/
 		options: {
+			debug: false,
 			/*
 				Flow control blockers are macro tokens which have specific names, stored here.
 				This is currently permuted by Macrolib, which registers two such names.
 			*/
 			blockerMacros: [],
+			/*
+				Metadata macros contain lambdas and other data, which is extracted from the passage
+				code and attached to the passage map itself during startup.
+			*/
+			metadataMacros: [],
+		},
+
+		/*
+			When the game starts, each passage is scanned for metadata macros using this method. An object
+			holding one macro call for each metadata macro name is returned.
+		*/
+		preprocess(src) {
+			const {metadataMacros} = Renderer.options;
+			/*
+				Since lexing all the passages at bootup is potentially rather expensive, these quick and hacky RegExp tests are
+				used to check whether preprocessing is necessary.
+			*/
+			if (!(
+				/*
+					This does a quick RegExp query for metadata macros, instead of lexing the entire source.
+				*/
+				(src.match(macroRegExp) || []).some(e => metadataMacros.some(f => insensitiveName(e.slice(1,-1)) === f ))
+			)) {
+				return {};
+			}
+			/*
+				For each macro:
+				if it's a metadata macro outside macro scope, get its lambda
+				if it's a metadata macro inside macro scope, error
+				if it's a non-metadata macro after a metadata macro outside macro scope, error
+			*/
+			let afterNonMetadataMacro = false;
+			const metadata = {};
+			TwineMarkup.lex(src).children.forEach(function outsideMacroFn(token) {
+				if (token.type === "macro") {
+					if (metadataMacros.some(f => token.name === f)) {
+						/*
+							If an error was already reported for this metadata name, don't replace it.
+						*/
+						if (TwineError.isPrototypeOf(metadata[token.name])) {
+							return metadata;
+						}
+						/*
+							MEtadata macros can't appear after non-metadata macros.
+						*/
+						if (afterNonMetadataMacro) {
+							metadata[token.name] = TwineError.create("syntax", 'The (' + token.name + ":) macro can't appear after non-metadata macros.");
+							return metadata;
+						}
+						/*
+							Having two metadata macros of the same kind is an error. If there was already a match, produce a TwineError about it
+							and store it in that slot.
+						*/
+						if (metadata[token.name]) {
+							metadata[token.name] = TwineError.create("syntax", 'There is more than one (' + token.name + ":) macro.");
+							return metadata;
+						}
+						/*
+							The matching macros are compiled into JS, which is later executed using
+							section.eval(), where the section has a speculativePassage.
+						*/
+						metadata[token.name] = Compiler(token);
+					}
+					else {
+						afterNonMetadataMacro = true;
+					}
+					token.children.forEach(function nestedMacroFn(token) {
+						if (token.type === "macro" && metadataMacros.some(f => token.name === f)) {
+							metadata[token.name] = TwineError.create("syntax", 'The (' + token.name + ":) macro can't be inside another macro.");
+						}
+						else token.children.forEach(nestedMacroFn);
+					});
+				}
+				else token.children.forEach(outsideMacroFn);
+			});
+			return metadata;
 		},
 		
 		/*
@@ -410,7 +493,7 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 							return ret;
 						});
 
-						out += '<tw-expression type="' + token.type + '" name="' + escape(token.name || token.text) + '"'
+						out += '<tw-expression type="' + token.type + '" name="' + escape(/* name is used exclusively by (else:) */ token.name || token.text) + '"'
 							// Debug mode: show the macro name as a title.
 							+ (Renderer.options.debug ? ' title="' + escape(token.text) + '"' : '')
 							+ (blockers.length ? ' blockers="' + escape(JSON.stringify(compiledBlockers)) + '"' : '')

@@ -239,9 +239,9 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			{Boolean} isVarRef: whether or not this value should be compiled to a VarRef
 			{String} [whitespaceError]: if isVarRef is true and this is given, this is used as an error
 				to be returned if the token was just whitespace.
-			{String} elidedComparison: whether or not this is part of an elided comparison
+			{String} [elidedComparison]: whether or not this is part of an elided comparison
 				inside an "and" or "or" operation, like "3 < 4 and 5".
-			{Boolean} testNeedsRight: used solely by the addition and subtraction operators,
+			{Boolean} [testNeedsRight]: used solely by the addition and subtraction operators,
 				for determining if they are really unary + or - operators. Test the left-hand
 				side to see if it needs a right-hand side operand, and if so, return "" instead of
 				the TwineError compiled code.

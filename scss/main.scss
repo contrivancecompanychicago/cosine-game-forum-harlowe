@@ -152,6 +152,7 @@ tw-error {
 	padding: 0.2em;
 	font-size: 1rem;
 	cursor: help;
+	white-space:pre-wrap;
 	&.error {
 		background-color: hsla(312, 72%, 55%, 0.4); // A demure pink
 		color:$color;

@@ -36,11 +36,7 @@ else {
 <script src="../node_modules/jasmine-core/lib/jasmine-core/boot.js"></script>
 <script role="script" type="text/twine-javascript">
 window.createPassage = function(text, name, tags) {
-	Passages.set(name, new Map([
-		["source", text],
-		["name", name],
-		["tags", Array.isArray(tags) ? tags : tags ? [tags] : []],
-	]));
+	Passages.set(name, Passages.create($('<div name="' + name + '" tags="' + (Array.isArray(tags) ? tags : tags ? [tags] : []).join(' ') + '">').text(text)));
 };
 window.goToPassage = function(text, name) {
 	Engine.goToPassage(text, name);
@@ -366,6 +362,7 @@ afterAll(function() {
 
 <script src="spec/command_macros/basics.js"></script>
 <script src="spec/command_macros/interface.js"></script>
+<script src="spec/command_macros/metadata.js"></script>
 <script src="spec/command_macros/saving.js"></script>
 
 <script src="spec/browser/sessions.js"></script>

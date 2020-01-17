@@ -1,6 +1,7 @@
 "use strict";
 define([
 	'jquery',
+	'utils',
 	'utils/naturalsort',
 	'macros',
 	'utils/operationutils',
@@ -11,7 +12,7 @@ define([
 	'datatypes/assignmentrequest',
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier'],
-($, NaturalSort, Macros, {objectName, typeName, subset, collectionType, isValidDatamapName, is, unique, clone, range}, State, Engine, Passages, Lambda, AssignmentRequest, TwineError, TwineNotifier) => {
+($, {shuffled}, NaturalSort, Macros, {objectName, typeName, subset, collectionType, isValidDatamapName, is, unique, clone, range}, State, Engine, Passages, Lambda, AssignmentRequest, TwineError, TwineNotifier) => {
 	
 	const {optional, rest, either, zeroOrMore, Any}   = Macros.TypeSignature;
 	
@@ -369,8 +370,8 @@ define([
 
 			| Data name | Example | Meaning
 			|---
-			| `1st`,`2nd`,`last`, etc. | `(a:1,2)'s last`, `1st of (a:1,2)` | A single value at the given position in the array.
-			| `1stto3rd`, `4thlastto2ndlast` etc. | `(a:1,2,3,4,5)'s 2ndto5th` | A subarray containing only the values between the given positions (such as the first, second and third for `1stto3rd`).
+			| `1st`,`2nd`,`last`, etc. | `(a:1,2)'s last`, `1st of (a:1,2)` | A single value at the given position in the array. This causes an error if it's past the bounds of the array,
+			| `1stto3rd`, `4thlastto2ndlast` etc. | `(a:1,2,3,4,5)'s 2ndto5th` | A subarray containing only the values between the given positions (such as the first, second and third for `1stto3rd`). This does NOT cause an error if it passes the bounds of the array - so `(a:1,2,3)'s 2ndto5th` is `(a:2,3)`.
 			| `length` | `(a:'G','H')'s length` | The length (number of data values) in the array.
 			| `any`, `all` | `all of (a:1,2) < 3` | Usable only with comparison operators, these allow all or any of the values to be quickly compared.
 			| Arrays of numbers, such as `(a:3,5)` | `$array's (a:1,-1)` | A subarray containing just the data values at the given positions in the array.
@@ -538,20 +539,7 @@ define([
 			Added in: 1.1.0
 			#data structure
 		*/
-		("shuffled", (_, ...args) =>
-			// The following is an in-place Fisher–Yates shuffle.
-			args.reduce((a,e,ind) => {
-				// Obtain a random number from 0 to ind inclusive.
-				const j = (Math.random()*(ind+1)) | 0;
-				if (j === ind) {
-					a.push(e);
-				}
-				else {
-					a.push(a[j]);
-					a[j] = e;
-				}
-				return a;
-			},[]).map(clone),
+		("shuffled", (_, ...args) => shuffled(...args).map(clone),
 		[Any, rest(Any)])
 		
 		/*d:
@@ -1236,8 +1224,57 @@ define([
 				return lambda;
 			}
 			const sort = NaturalSort("en"),
-				values = [...Passages.values()];
+				values = [...Passages.values()].map(e => clone(e));
 			const result = (lambda ? lambda.filter(section, values) : values);
+			const err = TwineError.containsError(result);
+			if (err) {
+				return err;
+			}
+			return result.sort((a,b) => sort(a.get('name'), b.get('name')));
+		},
+		[optional(Lambda.TypeSignature('where'))])
+
+		/*d:
+			(open-storylets:) -> Array
+			
+			Checks all of the (storylet:) macros in every passage, and provides an array of datamaps for every passage whose (storylet:) lambda returned true, sorted by passage name.
+			
+			Example usage:
+			* `(for: each _p, ...(open-storylets:)'s 1stTo5th)[(link-goto: _p's name) - ]` creates passage links for the first five open storylets.
+			* `(link-goto: "Off to the next job!", (either: ...(open-storylets:))'s name)` creates a single link that goes to a random open storylet.
+
+			Rationale:
+			For a greater explanation of what storylets are (essentially, disconnected sets of passages that can be procedurally visited when author-specified requirements are met),
+			see the (storylet:) macro's description. This macro is used to create links or listings of storylets which are currently "open" to the player, in combination with other
+			macros such as (for:), (link-goto:) and such.
+
+			Details:
+			The passages returned are datamaps identical to those returned by (passage:). They contain the following names and values.
+
+			| Name | Value |
+			|---
+			| name | The string name of the passage. |
+			| source | The source markup of the passage, exactly as you entered it in the Twine editor |
+			| tags | An array of strings, which are the tags you gave to the passage. |
+
+			As with all arrays, the (open-storylets:) array can be filtered using (filtered:), to, for instance, only contain passages with a certain tag.
+
+			If no passages' storylet requirements are currently met, the array will be empty.
+
+			If any passage's (storylet:) macro produces an error (such as by dividing a number by 0), it will be displayed when the (open-storylets:) macro is run.
+
+			See also:
+			(storylet:), (passages:)
+
+			Added in: 3.2.0
+			#storylet
+		*/
+		("open-storylets", (section, lambda) => {
+			if (TwineError.containsError(lambda)) {
+				return lambda;
+			}
+			const sort = NaturalSort("en"),
+				result = Passages.getStorylets(section, lambda);
 			const err = TwineError.containsError(result);
 			if (err) {
 				return err;
@@ -1356,7 +1393,7 @@ define([
 			| `'s` | Obtaining the value using the name on the right. | `(dm:"love",155)'s love` (is 155).
 			| `of` | Obtaining the value using the name on the left. | `love of (dm:"love",155)` (is 155).
 			| `matches` | Evaluates to boolean `true` if the datamap on one side matches the pattern on the other. | `(dm:"Love",2,"Fear",4) matches (dm: "Love", num, "Fear", num)`
-			| `is a`, `is an` | Evaluates to boolean `true` if the right side is `dm` or `datamap`, and the left side is a datamap. | `(dm:) is a datamap`
+			| `is a`, `is an` | Evaluates to boolean `true` if the right side is `dm` or `datamap`, and the left side is a datamap. | `(dm:'a',1) is a datamap`
 		*/
 		/*d:
 			(dm: [...Any]) -> Datamap
@@ -1497,7 +1534,6 @@ define([
 			array, if that is what best suits it, will cause an error to occur instead of allowing
 			this unintended operation to continue.
 
-
 			| Operator | Purpose | Example
 			|---
 			| `is` | Evaluates to boolean `true` if both sides contain equal items, otherwise `false`. | `(ds:1,2) is (ds 2,1)` (is true)
@@ -1507,7 +1543,7 @@ define([
 			| `+` | Joins datasets. | `(ds:1,2,3) + (ds:1,2,4)` (is `(ds:1,2,3,4)`)
 			| `-` | Subtracts datasets. | `(ds:1,2,3) - (ds:1,3)` (is `(ds:2)`)
 			| `...` | When used in a macro call, it separates each value in the right side.<br>The dataset's values are sorted before they are spread out.| `(a: 0, ...(ds:1,2,3,4), 5)` (is `(a:0,1,2,3,4,5)`)
-			| `matches` | Evaluates to boolean `true` if the dataset on one side matches the pattern on the other. | `(ds:2,3) matches (a: 3, num)`, `(ds: array) matches (ds:(a:))`
+			| `matches` | Evaluates to boolean `true` if the dataset on one side matches the pattern on the other. | `(ds:2,3) matches (a: 3, num)`, `(ds: array) matches (ds:(a: ))`
 			| `is a`, `is an` | Evaluates to boolean `true` if the right side is `ds` or `dataset` and the left side is a dataset. | `(ds:2,3) is a dataset`
 		*/
 		/*d:

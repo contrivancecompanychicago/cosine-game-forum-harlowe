@@ -41,15 +41,16 @@ define([
 		*/
 		Operations;
 		
-		section.eval = function(...args) {
+		/*
+			The arguments in this function aren't named, to keep the scope clean.
+		*/
+		section.eval = function() {
 			try {
 				/*
 					This specifically has to be a "direct eval()" - calling eval() "indirectly"
 					makes it run in global scope.
 				*/
-				return eval(
-					args.join('')
-				);
+				return eval(arguments[0]);
 			} catch(e) {
 				/*
 					This returns the Javascript error object verbatim

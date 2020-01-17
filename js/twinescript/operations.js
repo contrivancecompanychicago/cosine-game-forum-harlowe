@@ -247,8 +247,9 @@ define([
 					Also known as: visit
 
 					This keyword (which can alternatively be written as "visit") evaluates to the number of times
-					the current passage has been visited this game, including the current visit. So, it will always be at
-					least 1.
+					the current passage has been visited this game, including the current visit. In (storylet:) macros,
+					when Harlowe decides whether this passage is available to (open-storylets:), this will often be 0, but when
+					actually visiting the passage, it will be at least 1.
 
 					Its main purpose is to be used in (if:) macros, such as `(if: visits is 1)`, or `(if: visits > 4)`. If you
 					use one particular formulation a lot in your story, such as `(if: visits is 1)`, you can (set:) the (if:)
@@ -265,7 +266,9 @@ define([
 					Added in: 3.1.0
 				*/
 				get visits() {
-					return State.pastPassageNames().filter(name => name === State.passage).length + 1;
+					return State.pastPassageNames().filter(name => name === (section.speculativePassage || State.passage)).length
+						// Only add 1 (counting the current visit) if the speculativePassage is falsy or equals State.passage (i.e. we're at that passage now).
+						+ (!section.speculativePassage || section.speculativePassage === State.passage);
 				},
 
 				get visit() {
@@ -300,12 +303,19 @@ define([
 					already appeared. For instance, the (print:) in `(print:exits is 1) [[Retreat->Hall]]` will show `false`, because the link after it
 					hasn't appeared in the passage yet, but the (print:) in `(live:20s)[(print:exits is 1)] [[Retreat->Hall]]`
 					will show `true`.
+					* This can't be used in a (storylet:)'s lambda, because those lambdas are only checked when you're outside the passage.
 
 					Finally, the "undo" and "redo" links in the sidebar will not be counted, either.
 
 					Added in: 3.1.0
 				*/
 				get exits() {
+					/*
+						This can't be used during storylet speculation
+					*/
+					if (section.speculativePassage) {
+						return TwineError.create("operation", "'exit' and 'exits' can't be used in metadata macros like (storylet:).");
+					}
 					return section.dom.find('tw-enchantment, tw-link')
 						.filter((_,e) =>
 							$(e).data('enchantmentEvent') ||

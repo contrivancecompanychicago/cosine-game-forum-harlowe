@@ -27,12 +27,22 @@ describe("property indexing", function() {
 				expect('(print: "𐌎ed"\'s 2ndlast)').markupToPrint("e");
 				expect('(print: "𐌎ed"\'s last)').markupToPrint("d");
 			});
+			it("overshot indexes error", function() {
+				expect('(print: "𐌎ed"\'s 9th)').markupToError();
+				expect('(print: "𐌎ed"\'s 5thlast)').markupToError();
+			});
 			it("'1stto2ndlast', '2ndlastto5th', etc. accesses a continuous subset", function() {
 				expect('(print: "𐌎ed"\'s 1stto2ndlast)').markupToPrint("𐌎e");
 				expect('(print: "𐌎ed"\'s 1stto2nd)').markupToPrint("𐌎e");
 				expect('(print: "𐌎ed"\'s 3rdlastto2nd)').markupToPrint("𐌎e");
 				expect('(print: "𐌎ed"\'s lastto3rdlast)').markupToPrint("𐌎ed");
 				expect('(print: "𐌎ed"\'s lasttolast)').markupToPrint("d");
+			});
+			it("continuous subsets do not error if they overshoot", function() {
+				expect('(print: "𐌎ed"\'s 1stto5th)').markupToPrint("𐌎ed");
+				expect('(print: "𐌎ed"\'s 1stto10th)').markupToPrint("𐌎ed");
+				expect('(print: "𐌎ed"\'s 5thlasttolast)').markupToPrint("𐌎ed");
+				expect('(print: "𐌎ed"\'s 10thlasttolast)').markupToPrint("𐌎ed");
 			});
 			it("'length' accesses the string's length", function() {
 				expect('(print: "𐌎ed"\'s length)').markupToPrint("3");
@@ -75,12 +85,22 @@ describe("property indexing", function() {
 				expect('(print: (a:"R","e","d")\'s 2ndlast)').markupToPrint("e");
 				expect('(print: (a:"R","e","d")\'s last)').markupToPrint("d");
 			});
+			it("overshot indexes error", function() {
+				expect('(print: (a:"R","e","d")\'s 9th)').markupToError();
+				expect('(print: (a:"R","e","d")\'s 5thlast)').markupToError();
+			});
 			it("'1stto2ndlast', '2ndlastto5th', etc. accesses a continuous subset", function() {
 				expect('(print: (a:"R","e","d")\'s 1stto2ndlast)').markupToPrint("R,e");
 				expect('(print: (a:"R","e","d")\'s 1stto2nd)').markupToPrint("R,e");
 				expect('(print: (a:"R","e","d")\'s 3rdlastto2nd)').markupToPrint("R,e");
 				expect('(print: (a:"R","e","d")\'s lastto1st)').markupToPrint("R,e,d");
 				expect('(print: (a:"R","e","d")\'s 1stto1st)').markupToPrint("R");
+			});
+			it("continuous subsets do not error if they pass bounds", function() {
+				expect('(print: (a:"R","e","d")\'s 1stto5th)').markupToPrint("R,e,d");
+				expect('(print: (a:"R","e","d")\'s 1stto10th)').markupToPrint("R,e,d");
+				expect('(print: (a:"R","e","d")\'s 5thlasttolast)').markupToPrint("R,e,d");
+				expect('(print: (a:"R","e","d")\'s 10thlasttolast)').markupToPrint("R,e,d");
 			});
 			it("'length' accesses the array's length", function() {
 				expect('(print: (a:1,1,1)\'s length)').markupToPrint("3");

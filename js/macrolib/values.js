@@ -59,8 +59,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 
 			| Data name | Example | Meaning
 			|---
-			| `1st`,`2nd`,`last`, etc. | `$str's last`, `1st of $str` | A single character at the given position in the string.
-			| `1stto3rd`, `4thlastto2ndlast` etc. | `"aeiou"'s 2ndto5th` | A substring containing only the characters between the given positions (such as the first, second and third for `1stto3rd`).
+			| `1st`,`2nd`,`last`, etc. | `$str's last`, `1st of $str` | A single character at the given position in the string. This causes an error if it passes the bounds of the string, such as `"elder"'s 8th`.
+			| `1stto3rd`, `4thlastto2ndlast` etc. | `"aeiou"'s 2ndto5th` | A substring containing only the characters between the given positions (such as the first, second and third for `1stto3rd`). This does NOT cause an error if it passes the bounds of the string - so `"Power"'s 3rdto9th` is `"wer"`.
 			| `length` | `"Penny"'s length` | The length (number of characters) in the string.
 			| `any`, `all` | `all of "aeiou" is not "y"` | Usable only with comparison operators, these allow all or any of the characters to be quickly compared.
 			| Arrays of numbers, such as `(a:3,5)` | `$str's (a:1,-1)` | A substring containing just the characters at the given positions in the string.

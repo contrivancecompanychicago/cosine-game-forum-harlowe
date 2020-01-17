@@ -23,8 +23,8 @@ require.config({
 	],
 });
 require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'utils', 'utils/selectors', 'utils/dialog', 'macros',
-	'macrolib/values', 'macrolib/commands', 'macrolib/datastructures', 'macrolib/stylechangers', 'macrolib/enchantments', 'macrolib/links',
-	'repl'],
+	'macrolib/values', 'macrolib/commands', 'macrolib/datastructures', 'macrolib/stylechangers', 'macrolib/enchantments', 'macrolib/metadata',
+	'macrolib/links', 'repl'],
 		($, DebugMode, Renderer, State, Engine, Passages, Utils, Selectors, Dialog) => {
 	/*
 		Harlowe, the default story format for Twine 2.
@@ -102,9 +102,11 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'util
 				the passage animate beneath it. This is just a slightly awkward inconsistency for a dialog box that shouldn't appear in normal situations.
 				Additionally, this is affixed to the parent of the <tw-story> so that it isn't easily removed without being seen by the player.
 			*/
-			Utils.storyElement.parent().append(Dialog("Sorry to interrupt, but this page's code has got itself in a mess.\n\n"
-				+ printJSError(e)
-				+ "\n(This is probably due to a bug in the Harlowe game engine.)", undefined, () => {}));
+			Utils.storyElement.parent().append(Dialog({
+				message: "Sorry to interrupt, but this page's code has got itself in a mess.\n\n"
+					+ printJSError(e)
+					+ "\n(This is probably due to a bug in the Harlowe game engine.)"
+			}));
 			/*
 				Having produced that once-off message, we now invoke the previous onError function.
 			*/
