@@ -128,7 +128,7 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 							return metadata;
 						}
 						/*
-							MEtadata macros can't appear after non-metadata macros.
+							Metadata macros can't appear after non-metadata macros.
 						*/
 						if (afterNonMetadataMacro) {
 							metadata[token.name] = TwineError.create("syntax", 'The (' + token.name + ":) macro can't appear after non-metadata macros.");
@@ -147,6 +147,12 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 							section.eval(), where the section has a speculativePassage.
 						*/
 						metadata[token.name] = Compiler(token);
+						/*
+							For debug mode and error message display, the original source code of the macros needs to be returned and stored with them.
+							Of course, we could simply re-read the source from the passage itself, but that would be a bit of a waste of cognition
+							when we've got it available right here.
+						*/
+						metadata[token.name + " source"] = token.text;
 					}
 					else {
 						afterNonMetadataMacro = true;
@@ -493,8 +499,9 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 							return ret;
 						});
 
-						out += '<tw-expression type="' + token.type + '" name="' + escape(/* name is used exclusively by (else:) */ token.name || token.text) + '"'
+						out += '<tw-expression type="' + token.type + '" name="' + escape(token.name || token.text) + '"'
 							// Debug mode: show the macro name as a title.
+							//TODO: enable this for all modes, and have Section remove it
 							+ (Renderer.options.debug ? ' title="' + escape(token.text) + '"' : '')
 							+ (blockers.length ? ' blockers="' + escape(JSON.stringify(compiledBlockers)) + '"' : '')
 							+ ' js="' + escape(Compiler(token)) + '"'

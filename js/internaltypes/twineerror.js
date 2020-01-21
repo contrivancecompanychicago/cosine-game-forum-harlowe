@@ -54,6 +54,13 @@ define(['jquery', 'utils'], ($, {impossible, escape}) => {
 				type,
 				message,
 				explanation,
+				/*
+					This is used to provide alternative source code for the error, rather
+					than the source of the <tw-expression> or <tw-macro> element. Currently
+					only used for storylet errors (which involve code running outside its
+					original passage).
+				*/
+				source: undefined,
 			});
 		},
 		
@@ -104,9 +111,9 @@ define(['jquery', 'utils'], ($, {impossible, escape}) => {
 		
 		render(titleText) {
 			/*
-				Default the titleText value. It may be undefined if, for instance, debug mode is off.
+				The title text defaults to the error's Harlowe source code.
 			*/
-			titleText = titleText || "";
+			titleText = titleText || this.source || "";
 			const errorElement = $("<tw-error class='"
 					+ (this.type === "javascript" ? "javascript ": "")
 					+ (this.warning ? "warning" : "error")

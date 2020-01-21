@@ -16,8 +16,9 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/selectors', 'markup', 're
 		const source = unescape(elem.html());
 		/*
 			Metadata macros (such as (storylet:)) need to be extracted and applied to the passage datamap itself.
+			The source is exclusively used by error messages and Debug Mode.
 		*/
-		const {storylet} = Renderer.preprocess(source);
+		const {storylet, "storylet source": storyletSource} = Renderer.preprocess(source);
 
 		return assign(new Map([
 			/*
@@ -46,6 +47,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/selectors', 'markup', 're
 				it should be a clone created by clone(), which would lack this own-property.
 			*/
 			storyletCode: storylet,
+			storyletSource,
 		});
 	}
 	
@@ -111,6 +113,11 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/selectors', 'markup', 're
 							Alter the error's message to report the name of the passage from which it originated.
 						*/
 						available.message = "There's an error in the storylet passage \"" + p.get('name') + "\":\n" + available.message;
+						/*
+							The original source code of the lambda is used as the error's source, instead of that of
+							the (open-storylets:) macro call.
+						*/
+						available.source = p.storyletSource;
 						return available;
 					}
 					if (available) {
@@ -118,6 +125,13 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/selectors', 'markup', 're
 					}
 				}
 			}, undefined) || ret;
+		},
+
+		/*
+			A quick getter that provides every passage with storylet code.
+		*/
+		allStorylets() {
+			return [...Passages.values()].filter(e => e.storyletCode);
 		},
 
 		/*

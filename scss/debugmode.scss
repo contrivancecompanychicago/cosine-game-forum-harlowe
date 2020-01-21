@@ -329,30 +329,26 @@ tw-debugger {
 		&:nth-child(2n) {
 			background:#EEE;
 		}
-	}
-	.variable-name {
-		display:inline-block;
-		width:50%;
-	}
-	.temporary-variable-scope {
-		opacity:0.8;
-		font-size:0.75em;
-		&::before {
-			content: " in ";
+		.variable-name, .variable-value {
+			display:inline-block;
+			width:50%;
 		}
-	}
-	.global::before {
-		content: "$";
-	}
-	.temporary::before {
-		content: "_";
-	}
-	.variable-path {
-		opacity:0.4;
-	}
-	.variable-value {
-		display:inline-block;
-		width:50%;
+		.variable-path {
+			opacity:0.4;
+		}
+		.temporary-variable-scope {
+			opacity:0.8;
+			font-size:0.75em;
+			&::before {
+				content: " in ";
+			}
+		}
+		.global::before {
+			content: "$";
+		}
+		.temporary::before {
+			content: "_";
+		}
 	}
 	.error-row {
 		background-color: hsla(312, 72%, 65%, 0.3);
@@ -364,6 +360,33 @@ tw-debugger {
 		}
 		.error-message {
 			cursor: help;
+		}
+	}
+	.storylet-row {
+		@include flexbox;
+		@include flex-direction(row);
+		flex-shrink: 0;
+		background-color: hsla(160, 42%, 85%, 0.3);
+		&:nth-child(2n) {
+			background-color: hsla(160, 42%, 65%, 0.3);
+		}
+		&.storylet-closed {
+			font-style: italic;
+			opacity: 0.4;
+			background-color: hsla(160, 0%, 85%, 0.3);
+			&:nth-child(2n) {
+				background-color: hsla(160, 0%, 65%, 0.3);
+			}
+		}
+		&.storylet-error {
+			background-color: hsla(312, 72%, 65%, 0.3);
+			&:nth-child(2n) {
+				background-color: hsla(312, 72%, 75%, 0.3);
+			}
+		}
+		.storylet-name, .storylet-value {
+			display:inline-block;
+			width:50%;
 		}
 	}
 	.panel-source {

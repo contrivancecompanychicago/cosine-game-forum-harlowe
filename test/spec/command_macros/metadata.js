@@ -20,15 +20,20 @@ describe("metadata macros", function() {
 		});
 	});
 	describe("the (open-storylets:) macro", function() {
+		afterEach(function() {
+			createStoryletsDebugTable();
+		});
 		it("returns a sorted array of passages with (storylet:) in their prose, whose lambda returns true", function() {
 			createPassage("**foobarbaz(storylet: when  true is true)**", "grault");
 			createPassage("|a>[(storylet: when  $a is 1)]", "garply");
 			createPassage("(storylet: when  true is false)", "corge");
-			createPassage("(storylet: when  $a is 2)", "quux");
+			createPassage("(storylet: when  $a is > 1)", "quux");
+			createStoryletsDebugTable();
 			runPassage("(set: $a to 1)");
 			expect("(for: each _a, ...(open-storylets:))[(print:_a's name) ]").markupToPrint("garply grault ");
 			runPassage("(set: $a to 2)");
 			expect("(for: each _a, ...(open-storylets:))[(print:_a's name) ]").markupToPrint("grault quux ");
+			runPassage("(link-repeat:'garply')[(set:$a to 'a')]\n(link-repeat:'quux')[(set:$a to 2)]");
 		});
 		it("errors when a passage's (storylet:) appeared after a non-metadata macro", function() {
 			createPassage("(set: $b to 1)(storylet: when $b is 1)", "grault");

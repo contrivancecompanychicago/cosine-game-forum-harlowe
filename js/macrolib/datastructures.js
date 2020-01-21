@@ -1450,10 +1450,8 @@ define([
 			let key;
 			const map = new Map();
 			/*
-				This takes the flat arguments "array" and runs
-				map.set() with every two values.
-				During each odd iteration, the element is the key.
-				Then, the element is the value.
+				This takes the flat arguments "array" and runs map.set() with every two values.
+				During each odd iteration, the element is the key. Then, the element is the value.
 			*/
 			const status = args.reduce((status, element) => {
 				let error;

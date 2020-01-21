@@ -52,6 +52,24 @@ window.runPassage = function(text, name, tags) {
 window.deletePassage = function(name) {
 	Passages.delete(name);
 };
+/*
+	This should be synchronised with debugmode.js
+*/
+window.createStoryletsDebugTable = function() {
+	var storyletsTable = $('.panel-storylets');
+	storyletsTable.empty();
+	Passages.allStorylets().forEach(function(map) {
+		var name = map.get('name');
+		var val = map.storyletSource;
+		var row = $('<div class="storylet-row" data-name="' + Utils.escape(name + '')
+			+ '" data-open="false"></div>')
+			.append(
+				"<span class='storylet-name'>" + Utils.escape(name + '')
+				+ "</span><span class='storylet-lambda'>" + val + "</span>"
+			)
+			.appendTo(storyletsTable);
+	});
+}
 
 var combinations = new Set(function recur(prefix, arr) {
 	var ret = [];

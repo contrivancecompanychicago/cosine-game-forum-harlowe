@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'engine', 'passages'],
-($, Utils, State, VarRef, TwineError, {objectName, typeName, is, isObject}, Engine, Passages) => () => {
+define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'engine', 'passages', 'section'],
+($, Utils, State, VarRef, TwineError, {objectName, typeName, is, isObject}, Engine, Passages, Section) => () => {
 	/*
 		Debug Mode
 
@@ -14,8 +14,10 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		<div class='panel panel-variables'></div>
 		<div class='panel panel-errors' hidden><table></table></div>
 		<div class='panel panel-source' hidden></div>
+		<div class='panel panel-storylets' hidden></div>
 		<div class='tabs'>
 		<button class='tab tab-variables enabled'>0 Variables</button> <button class='tab tab-errors'>0 Errors</button> <button class='tab tab-source'>Source</button>
+		<button class='tab tab-storylets' hidden>0 Storylets</button>
 		</div>
 		Turns: <select class='turns' disabled></select><button class='show-invisibles'>Debug View</button></tw-debugger>`);
 
@@ -31,7 +33,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 	/*
 		Additionally, set up the tabs and panes.
 	*/
-	['variables', 'source', 'errors'].forEach((name)=> {
+	['variables', 'source', 'errors', 'storylets'].forEach((name)=> {
 		const tab   = debugElement.find('.tab-'   + name);
 		const panel = debugElement.find('.panel-' + name);
 		tab.click(() => {
@@ -227,9 +229,77 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			[...value].forEach((elem) => updateVariables("???", path.concat(name), elem, tempScope));
 		}
 	}
+
+	const storyletsTable = debugElement.find('.panel-storylets');
+	/*
+		 A Section must be passed to Passages.getStorylets() in refresh(), so we need to generate one.
+		 This is created at startup and cached here;
+	*/
+	const storyletSection = Section.create(Utils.storyElement);
+	/*
+		Unlike variables, storylet rows don't need to be added or removed (instead just having their
+		data-open value changed) so we can create them all just once, here.
+	*/
+	Passages.allStorylets().forEach(map => {
+		const name = Utils.escape(map.get('name') + '');
+		$('<div class="storylet-row storylet-closed" data-name="' + name
+			+ '"></div>')
+			/*
+				Create the <span>s for the storylet's name and lambda.
+			*/
+			.append(
+				"<span class='storylet-name'>" + name
+				+ "</span><span class='storylet-lambda'>" + map.storyletSource + "</span>"
+			)
+			.appendTo(storyletsTable);
+	});
+	/*
+		Unlike variables, storylet rows don't need to be added or removed, so this code is much simpler.
+	*/
+	function updateStorylets() {
+		let children = storyletsTable.children();
+		if (!children.length) {
+			return;
+		}
+		/*
+			Get a list of just the currently active storylets, using the cached dummy section from above.
+			This can also produce a TwineError if one of the storylet lambdas erred.
+		*/
+		const storylets = Passages.getStorylets(storyletSection);
+		let open = 0;
+		const error = TwineError.containsError(storylets);
+		/*
+			The list is then used to re-colour each storylet row based on its inclusion or absence.
+		*/
+		children.each((_,e) => {
+			e = $(e);
+			/*
+				If the list was indeed an error, simply close and mark every storylet row,
+				because storylet-listing macros currently won't work.
+			*/
+			if (error) {
+				e.addClass('storylet-closed storylet-error');
+				return;
+			}
+			const name = e.attr('data-name');
+			const isOpen = storylets.some(map => map.get('name') === name);
+			/*
+				Alter the class to match its open state, and take a tally of open storylets for use by the tab's text.
+			*/
+			e[isOpen ? 'removeClass' : 'addClass']('storylet-closed').removeClass('storylet-error');
+			open += isOpen;
+		});
+		debugElement.find('.tab-storylets').text(`${open} Storylet${open !== 1 ? 's' : ''}`)
+			/*
+				Only reveal the Storylet tab on the UI when the first storylet refresh has occurred,
+				as it's not useful for most stories.
+			*/
+			.removeAttr('hidden');
+	}
+
 	/*
 		This function, called as a State event handler, synchronises the variablesTable
-		with the entire variable state at the present.
+		and storyletsTable with the entire variable state at the present.
 	*/
 	function refresh() {
 		const updated = [];
@@ -286,6 +356,9 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 				updateVariables(name, [], State.variables[name]);
 			}
 		}
+
+		updateStorylets();
+
 		/*
 			Refresh the source pane.
 		*/
@@ -306,6 +379,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		*/
 		if (obj === State.variables || obj.TwineScript_VariableStore) {
 			updateVariables(name, [], value, obj === State.variables ? "" : obj.TwineScript_VariableStoreName);
+			updateStorylets();
 		}
 	})
 	/*
