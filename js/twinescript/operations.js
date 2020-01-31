@@ -239,6 +239,12 @@ define([
 					hook's. I believe that the passage is what's called for here.
 				*/
 				get time() {
+					/*
+						This can't be used during storylet speculation, for obvious reasons.
+					*/
+					if (section.stackTop && section.stackTop.evaluateOnly) {
+						return TwineError.create("operation", "'time' can't be used in " + section.stackTop.evaluateOnly + ".");
+					}
 					return (Date.now() - section.timestamp);
 				},
 				/*d:
@@ -266,9 +272,10 @@ define([
 					Added in: 3.1.0
 				*/
 				get visits() {
-					return State.pastPassageNames().filter(name => name === (section.speculativePassage || State.passage)).length
-						// Only add 1 (counting the current visit) if the speculativePassage is falsy or equals State.passage (i.e. we're at that passage now).
-						+ (!section.speculativePassage || section.speculativePassage === State.passage);
+					const {stackTop:{speculativePassage}} = section;
+					return State.pastPassageNames().filter(name => name === (speculativePassage || State.passage)).length
+						// Only add 1 (counting the current visit) if this isn't speculation, or the speculative passage equals State.passage (i.e. we're at that passage now).
+						+ (!speculativePassage || speculativePassage === State.passage);
 				},
 
 				get visit() {
@@ -311,10 +318,10 @@ define([
 				*/
 				get exits() {
 					/*
-						This can't be used during storylet speculation
+						This can't be used during storylet speculation, for obvious reasons.
 					*/
-					if (section.speculativePassage) {
-						return TwineError.create("operation", "'exit' and 'exits' can't be used in metadata macros like (storylet:).");
+					if (section.stackTop && section.stackTop.evaluateOnly) {
+						return TwineError.create("operation", "'exit' and 'exits' can't be used in " + section.stackTop.evaluateOnly + ".");
 					}
 					return section.dom.find('tw-enchantment, tw-link')
 						.filter((_,e) =>

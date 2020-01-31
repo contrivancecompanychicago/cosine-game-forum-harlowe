@@ -11,7 +11,7 @@ define(['utils', 'engine', 'markup', 'twinescript/compiler', 'twinescript/enviro
 			  var r = Compiler(TwineMarkup.lex("(print:" + a + ")"));
 			  console.log(r);
 			  var result = Environ({}).eval(r);
-			  return result.TwineScript_Print ? result.TwineScript_Print() : result;
+			  return result.TwineScript_Run ? result.TwineScript_Run().source : result;
 			};
 			window.LEX = function(a) {
 			  var r = TwineMarkup.lex(a);

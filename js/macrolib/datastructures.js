@@ -802,7 +802,7 @@ define([
 			* `(find: _person where _person is not "Alice", ...$people)` produces a subset of $people not containing the string `"Alice"`.
 			* `(find: _item where _item's 1st is "A", "Thorn", "Apple", "Cryptid", "Anchor")` produces `(a: "Apple", "Anchor")`.
 			* `(find: _num where (_num >= 12) and (it % 2 is 0), 9, 10, 11, 12, 13, 14, 15, 16)` produces `(a: 12, 14, 16)`.
-			* `(find: _val where _val + 2, 9, 10, 11)` produces an error, because `_item + 2` isn't a boolean.
+			* `(find: _val where _val + 2, 9, 10, 11)` produces an error, because `_val + 2` isn't a boolean.
 			* `1st of (find: _room where _room's objs contains "Egg", ...$rooms)` finds the first datamap in $rooms whose "objs" contains the string `"Egg"`.
 
 			Rationale:
@@ -1048,9 +1048,9 @@ define([
 			is a datamap that only has "name" and "value" data. The pairs are ordered by their name.
 			
 			Example usage:
-			* `(datapairs: (dm:'B',24, 'A',25))` produces the following array:
+			* `(dataentries: (dm:'B',24, 'A',25))` produces the following array:
 			`(a: (dm: "name", "A", "value", 25), (dm: "name", "B", "value", 24))`
-			* `(altered: _entry via _entry's name + ":" + _entry's value, ...(datapairs: $m))` creates
+			* `(altered: _entry via _entry's name + ":" + _entry's value, ...(dataentries: $m))` creates
 			an array of strings from the $m datamap's names and values.
 			
 			Rationale:
@@ -1162,6 +1162,9 @@ define([
 			| name | The string name of this passage. |
 			| tags | An array of strings, which are the tags you gave to this passage. |
 
+			However, if the passage contained a (metadata:) macro call, then the data provided to that macro call will be added to that
+			passage's datamap. So, you can have any amount of author-defined data in it as well.
+
 			The "source" value, like all strings, can be printed using (print:). Be warned that printing the source of
 			the current passage, while inside of it, may lead to an infinite regress.
 
@@ -1169,7 +1172,7 @@ define([
 			to `(display: "Cellar")`.
 
 			See also:
-			(history:), (passages:)
+			(history:), (passages:), (metadata:)
 
 			Added in: 1.1.0
 			#game state
@@ -1196,11 +1199,11 @@ define([
 			Rationale:
 			There are times when you wish to examine the data of the story as it is running - for instance, checking which
 			of the story's passages has a certain tag, or a certain word in its source. While you could manually write an array of
-			such passages' names yourself and include them as an array, it is usually easier to use this macro (or the (passage:) macro)
+			such passages' data yourself and include them as an array, it is usually easier to use this macro (or the (passage:) macro)
 			to produce such an array automatically.
 
 			Details:
-			The datamaps for each passage resemble those returned by (passage:). They contain the following names and values.
+			The datamaps for each passage resemble those returned by (passage:). They initially contain the following names and values.
 
 			| Name | Value |
 			|---
@@ -1208,13 +1211,16 @@ define([
 			| source | The source markup of the passage, exactly as you entered it in the Twine editor |
 			| tags | An array of strings, which are the tags you gave to the passage. |
 
+			However, if the passage contained a (metadata:) macro call, then the data provided to that macro call will be added to that
+			passage's datamap. So, you can have any amount of author-defined data in it as well.
+
 			If no passage matches the lambda, then the array will be empty.
 
 			If you wish to take the array of passages and reduce them to just their names, the (altered:) macro can be
 			used. For instance, `(altered: via its name, ...(passages:))` produces an array of every passage's name.
 
 			See also:
-			(history:), (passage:)
+			(history:), (passage:), (metadata:)
 
 			Added in: 3.1.0
 			#game state
@@ -1270,12 +1276,18 @@ define([
 			#storylet
 		*/
 		("open-storylets", (section, lambda) => {
+			/*
+				To avoid (open-storylets:) entering into an infinite loop, it can't be used inside metadata lambdas.
+			*/
+			if (section.stackTop.evaluateOnly) {
+				return TwineError.create("macrocall", "(open-storylets:) can't be used in " + section.stackTop.evaluateOnly + ".");
+			}
 			if (TwineError.containsError(lambda)) {
 				return lambda;
 			}
 			const sort = NaturalSort("en"),
-				result = Passages.getStorylets(section, lambda);
-			const err = TwineError.containsError(result);
+				result = Passages.getStorylets(section, lambda),
+				err = TwineError.containsError(result);
 			if (err) {
 				return err;
 			}

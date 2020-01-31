@@ -144,7 +144,7 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 						}
 						/*
 							The matching macros are compiled into JS, which is later executed using
-							section.eval(), where the section has a speculativePassage.
+							section.eval(), where the section has a stack.speculativePassage.
 						*/
 						metadata[token.name] = Compiler(token);
 						/*
@@ -152,7 +152,7 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 							Of course, we could simply re-read the source from the passage itself, but that would be a bit of a waste of cognition
 							when we've got it available right here.
 						*/
-						metadata[token.name + " source"] = token.text;
+						metadata[token.name + "Source"] = token.text;
 					}
 					else {
 						afterNonMetadataMacro = true;

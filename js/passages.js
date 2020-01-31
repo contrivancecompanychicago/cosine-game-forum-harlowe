@@ -18,7 +18,10 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/selectors', 'markup', 're
 			Metadata macros (such as (storylet:)) need to be extracted and applied to the passage datamap itself.
 			The source is exclusively used by error messages and Debug Mode.
 		*/
-		const {storylet, "storylet source": storyletSource} = Renderer.preprocess(source);
+		const {
+			storylet, storyletSource,
+			metadata, metadataSource,
+		} = Renderer.preprocess(source);
 
 		return assign(new Map([
 			/*
@@ -48,6 +51,8 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/selectors', 'markup', 're
 			*/
 			storyletCode: storylet,
 			storyletSource,
+			metadataCode: metadata,
+			metadataSource,
 		});
 	}
 	
@@ -98,16 +103,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/selectors', 'markup', 're
 					if (TwineError.containsError(p.storyletCode)) {
 						return p.storyletCode;
 					}
-					/*
-						Yes, this is #awkward, having to mutate a property of speculativePassage to alter eval()...
-						but metadata macros like (storylet:) need it to know in what context they're being executed.
-					*/
-					section.speculativePassage = p.get('name');
-					/*
-						A currently unaddressed quirk is that the temp variables of the section are visible in this eval() call.
-					*/
-					const available = section.eval(p.storyletCode);
-					section.speculativePassage = undefined;
+					const available = section.speculate(p.storyletCode, p.get('name'), "a (storylet:) macro");
 					if (TwineError.containsError(available)) {
 						/*
 							Alter the error's message to report the name of the passage from which it originated.
@@ -132,6 +128,45 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/selectors', 'markup', 're
 		*/
 		allStorylets() {
 			return [...Passages.values()].filter(e => e.storyletCode);
+		},
+
+		/*
+			This function finally executes the story's (metadata:) macros and installs the results on the Passages datamap.
+			This should only ever be run once by Harlowe.js in an onStartup call, and passed a fully synthetic section.
+			Obviously, it needs to run after all of the Passages have been created.
+			Worryingly, the ONLY thing that enforces this is that Passages's Utils.onStartup() call happens before Harlowe's
+			because Harlowe requires Passages, and Utils.onStartup uses a FIFO stack for the callbacks passed to it.
+		*/
+		loadMetadata(section) {
+			const errors = [];
+			/*
+				This array stores all of the TwineErrors that resulted from attempting to execute the (metadata:) macros, which
+				are then returned as the function's only output.
+			*/
+			Passages.forEach(p => {
+				if (p.metadataCode) {
+					/*
+						The storylet code is already an error in one situation: when the passage had multiple (storylet:) macro calls in it,
+						forcing Renderer to create this error rather than return one call's code.
+					*/
+					if (TwineError.containsError(p.metadataCode)) {
+						errors.push(p.metadataCode);
+					}
+					const metadata = section.speculate(p.metadataCode, p.get('name'), "a (metadata:) macro");
+					if (TwineError.containsError(metadata)) {
+						/*
+							As in getStorylets, the error's message is altered to list the passage name of origin, although
+							tweaked to account for the leading description in the metadata error dialog.
+						*/
+						metadata.message = "In \"" + p.get('name') + "\":\n" + metadata.message;
+						metadata.source = p.metadataSource;
+						errors.push(metadata);
+						return;
+					}
+					metadata.forEach((v,k) => p.set(k,v));
+				}
+			});
+			return errors;
 		},
 
 		/*

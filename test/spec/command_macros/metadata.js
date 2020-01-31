@@ -55,15 +55,34 @@ describe("metadata macros", function() {
 			createPassage("(storylet: where $a is true)", "grault");
 			expect("(set: $c to (open-storylets:))").markupToError();
 		});
-		it("when evaluating (storylet:) lambdas, 'visits' refers to the containing passage itself", function() {
-			createPassage("(storylet: when visits > 3)", "grault");
-			createPassage("(storylet: when visits is 1)", "garply");
-			goToPassage('grault');
-			expect("(for: each _a, ...(open-storylets:))[(print:_a's name) ]").markupToPrint("");
-			goToPassage('grault');
-			goToPassage('grault');
-			goToPassage('grault');
-			expect("(for: each _a, ...(open-storylets:))[(print:_a's name) ]").markupToPrint("grault ");
+		describe("when evaluating (storylet:) lambdas", function() {
+			it("'visits' refers to the containing passage itself", function() {
+				createPassage("(storylet: when visits > 3)", "grault");
+				createPassage("(storylet: when visits is 1)", "garply");
+				goToPassage('grault');
+				expect("(for: each _a, ...(open-storylets:))[(print:_a's name) ]").markupToPrint("");
+				goToPassage('grault');
+				goToPassage('grault');
+				goToPassage('grault');
+				expect("(for: each _a, ...(open-storylets:))[(print:_a's name) ]").markupToPrint("grault ");
+			});
+			it("temp variables can't be referenced", function() {
+				createPassage("(storylet: when _b is 1)", "grault");
+				expect("(set: _b to 1)(set: $a to (open-storylets:))").markupToError();
+			});
+			it("'exits' can't be referenced", function() {
+				createPassage("(storylet: when exits is 1)", "grault");
+				expect("(set: _b to 1)(set: $a to (open-storylets:))").markupToError();
+			});
+		});
+	});
+	describe("the (metadata:) macro", function() {
+		it("displays nothing in passages when run", function() {
+			expect("(metadata: 'foo', 1, 'bar', 2)").markupToPrint('');
+		});
+		it("adds the given values to that passage's (passage:) datamap", function() {
+			createPassage("(metadata: 'foo', 12, 'bar', 24)", "grault");
+			expect("(print: 'foo' of (passage:'grault'))").markupToPrint("12");
 		});
 	});
 });

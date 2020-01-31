@@ -22,10 +22,10 @@ require.config({
 		'jqueryplugins',
 	],
 });
-require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'utils', 'utils/selectors', 'utils/dialog', 'macros',
+require(['jquery', 'debugmode', 'renderer', 'state', 'section', 'engine', 'passages', 'utils', 'utils/selectors', 'utils/dialog', 'macros',
 	'macrolib/values', 'macrolib/commands', 'macrolib/datastructures', 'macrolib/stylechangers', 'macrolib/enchantments', 'macrolib/metadata',
 	'macrolib/links', 'repl'],
-		($, DebugMode, Renderer, State, Engine, Passages, Utils, Selectors, Dialog) => {
+		($, DebugMode, Renderer, State, Section, Engine, Passages, Utils, Selectors, Dialog) => {
 	/*
 		Harlowe, the default story format for Twine 2.
 		
@@ -163,7 +163,9 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'util
 				// Only show the first script error, leaving the rest suppressed.
 				if (!scriptError) {
 					scriptError = true;
-					Utils.storyElement.parent().append(Dialog("There is a problem with this story's " + Utils.nth(i + 1) + " script:\n\n" + printJSError(e), undefined, () => {}));
+					Utils.storyElement.parent().append(Dialog({
+						message:"There is a problem with this story's " + Utils.nth(i + 1) + " script:\n\n" + printJSError(e),
+					}));
 				}
 			}
 		});
@@ -173,6 +175,18 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'engine', 'passages', 'util
 			// In the future, pre-processing may occur.
 			$(document.head).append('<style data-title="Story stylesheet ' + (i + 1) + '">' + $(this).html());
 		});
+
+		// Set up the passage metadata
+		// (Yes, it's #awkward that Section.create needs a false dom like <p> to operate...)
+		const metadataErrors = Passages.loadMetadata(Section.create($('<p>')));
+		if (metadataErrors.length) {
+			const dialog = Dialog({
+				message: "These errors occurred when running the `(metadata:)` macro calls in this story's passages:<p></p>",
+			});
+			// Because these TwineErrors have their 'source' property modified to list their actual source, render() doesn't need an argument.
+			metadataErrors.forEach(error => dialog.find('p').append(error.render('')));
+			Utils.storyElement.parent().append(dialog);
+		}
 		
 		// Load the sessionStorage if it's present (and we're not testing)
 		const sessionData = !Engine.options.debug && State.hasSessionStorage && sessionStorage.getItem("Saved Session");

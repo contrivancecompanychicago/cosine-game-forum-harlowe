@@ -789,13 +789,6 @@ define([
 					once the section becomes unblocked (such as (event:) events) are registered here.
 				*/
 				unblockCallbacks: [],
-				/*
-					This string is used by storylet metadata macros like (storylet: when visits is 0),
-					which, when run via speculation by (open-storylets:), need "visits" to mean visits of
-					their containing passage, and not the currently visited passage. And, when run normally,
-					they need to return an unstorable object instead of their lambda's result.
-				*/
-				speculativePassage: undefined,
 			});
 			
 			/*
@@ -814,9 +807,8 @@ define([
 		},
 		
 		/*
-			A quick check to see if this section's DOM is connected to the
-			story's DOM.
-			Currently only used by recursiveSensor().
+			A quick check to see if this section's DOM is connected to the story's DOM.
+			Currently only used by runLiveHook().
 		*/
 		inDOM() {
 			return $(Utils.storyElement).find(this.dom).length > 0;
@@ -867,6 +859,39 @@ define([
 			}
 			return p;
 		},
+
+		/*
+			This is a counterpart to evaluateTwineMarkup(): instead of taking markup and executing it as HTML,
+			this takes macro arguments and evaluates them in this section's context, in a separate stack frame which
+			is discarded afterward (hence that it is "speculative" execution). As you can tell, this is
+			used for (storylet:) and (metadata:) execution during startup and when running (open-storylets:).
+		*/
+		speculate(code, speculativePassage, evalName) {
+			this.stack.unshift({
+				/*
+					As with evaluateTwineMarkup(), above, these two are used to suppress command, blocker and changer values, which
+					should not appear in any code which needs to be evaluated speculatively.
+				*/
+				evaluateOnly: evalName,
+				finalIter: true,
+				/*
+					A new tempVariables frame is created, solely to have a different TwineScript_VariableStoreName, so that
+					errors occurring during evaluation have the correct name for this context.
+				*/
+				tempVariables: Object.assign(Object.create(VarScope), { TwineScript_VariableStoreName: evalName }),
+				/*
+					This string is used by storylet metadata macros like (storylet: when visits is 0),
+					which, when run via speculation by (open-storylets:), need "visits" to mean visits of
+					their containing passage, and not the currently visited passage. And, when run normally,
+					they need to return an unstorable object instead of their lambda's result.
+				*/
+				speculativePassage,
+			});
+			const ret = this.eval(code);
+			this.stack.shift();
+			return ret;
+		},
+
 		
 		/*
 			Renders the given TwineMarkup code into a given element,
@@ -945,7 +970,6 @@ define([
 				*/
 				let collapses = (target instanceof $ && target.is(Selectors.hook)
 							&& target.parents('tw-collapsed').length > 0);
-
 				this.stack.unshift({desc, finalIter, tempVariables, collapses, evaluateOnly: this.stackTop && this.stackTop.evaluateOnly });
 			};
 

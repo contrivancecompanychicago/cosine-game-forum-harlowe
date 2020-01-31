@@ -192,14 +192,19 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 				object (if one wasn't provided). The temporary variable references in the code are compiled to
 				VarRefs for tempVariables.
 			*/
-			tempVariables = tempVariables || Object.create(section.stack.length ? section.stack[0].tempVariables : VarScope);
+			tempVariables = tempVariables || Object.create(section.stack.length ? section.stackTop.tempVariables : VarScope);
 			[
 				[this.loop, loopArg],
 				[this.with, withArg],
 				[this.making, makingArg],
 			].forEach(([name, arg]) => name && (tempVariables[name] = arg));
 
-			section.stack.unshift(Object.assign(Object.create(null), {tempVariables}));
+			/*
+				The stackTop, if it exists, may have a speculativePassage or something
+				else that alters the semantics of identifiers inside the lambda (like 'visits'), and so
+				instead, the lambda's stack inherits those values from it.
+			*/
+			section.stack.unshift(Object.assign(Object.create(section.stackTop || null), {tempVariables}));
 
 			/*
 				If this lambda has no "making" or "with" clauses (and isn't a "when" lambda), then the "it"
