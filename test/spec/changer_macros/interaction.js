@@ -184,6 +184,30 @@ describe("interaction macros", function() {
 								expect(p.attr('tabindex')).toBe('0');
 							});
 						}
+						if (name === "?Page" && goTo) {
+							it("doesn't trigger when arriving on the page by the same input method", function(done) {
+								createPassage("''foo''","baz");
+								createPassage("(" + e.name + ":"+name+",'baz')''grault''","corge");
+								var p = runPassage("(" + e.name + ":"+name+",'corge')");
+								p[e.eventMethod]();
+								setTimeout(function() {
+									expect($('tw-passage:last-child').find('b').text()).toBe("grault");
+									done();
+								},20);
+							});
+							if (e.eventMethod === "click") {
+								it("doesn't trigger when arriving on the page via undo", function(done) {
+									createPassage("''foo''","baz");
+									runPassage("(" + e.name + ":"+name+",'baz')''grault''","corge");
+									runPassage("")
+									$('tw-sidebar .undo')[e.eventMethod]();
+									setTimeout(function() {
+										expect($('tw-passage:last-child').find('b').text()).toBe("grault");
+										done();
+									},20);
+								});
+							}
+						}
 					});
 				});
 			});

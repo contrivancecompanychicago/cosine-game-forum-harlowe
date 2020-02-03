@@ -45,8 +45,8 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 		}
 		// Apart from the Permalink, the sidebar buttons consist of Undo (Back) and Redo (Forward) buttons.
 		const
-			back = $('<tw-icon tabindex=0 class="undo" title="Undo">&#8630;</tw-icon>').click(() => Engine.goBack()),
-			fwd  = $('<tw-icon tabindex=0 class="redo" title="Redo">&#8631;</tw-icon>').click(() => Engine.goForward());
+			back = $('<tw-icon tabindex=0 class="undo" title="Undo">&#8630;</tw-icon>').click((e) => { e.stopPropagation(); Engine.goBack(); }),
+			fwd  = $('<tw-icon tabindex=0 class="redo" title="Redo">&#8631;</tw-icon>').click((e) => { e.stopPropagation(); Engine.goForward(); });
 
 		if (State.pastLength <= 0) {
 			back.css("visibility", "hidden");

@@ -6,11 +6,12 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 ####Bugfixes
 
- * Fixed a long-standing bug where continuous ranges for arrays, such as `(a: 1,2)'s 4thlasttolast`, wouldn't work correctly. (What that example should do is provide the entire array.)
+ * Fixed a long-standing bug where continuous ranges for arrays, such as `(a: 1,2)'s 4thlasttolast`, wouldn't work correctly. (What that example should do is provide the entire array, as is consistent with Python.)
  * Fixed a long-standing bug where `(click: ?Passage)` and `(click: ?Sidebar)` just flat-out didn't work at all.
  * Fixed a bug where the default CSS for `(click: ?Page)` (a blue border around the page) wasn't visible. (Now, an `::after` pseudo-element is created for the enchantment, so that the border displays above all the page content.)
  * Now, `(mouseover:)` and `(mouseout:)` should work correctly with ?Page, ?Passage, and ?Sidebar.
  * Fixed a bug where `(for:)` would emit infinite loop errors if 50 or more elements were given to it.
+ * Fixed a long-standing bug where clicking the sidebar "undo" and "redo" icons would cause `(click:?Page)` in the preceding or following passages to automatically fire, even though you didn't actually click them.
 
 ####Alterations
 
