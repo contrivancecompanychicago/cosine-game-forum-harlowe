@@ -65,7 +65,7 @@ define(['macros','renderer', 'utils/operationutils', 'datatypes/lambda', 'intern
 						TwineScript_Unstorable:   true,
 						TwineScript_Print:        String,
 					}
-					// Being a "when" lambda, there is no "it" object to iterate over.
+					// Being a "when" lambda, there is no "it" object to iterate over, or a "pos".
 					: lambda.apply(section, {fail:false, pass:true});
 			},
 			[Lambda.TypeSignature('when')]

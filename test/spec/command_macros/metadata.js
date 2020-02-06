@@ -74,6 +74,14 @@ describe("metadata macros", function() {
 				createPassage("(storylet: when exits is 1)", "grault");
 				expect("(set: _b to 1)(set: $a to (open-storylets:))").markupToError();
 			});
+			it("'time' can't be referenced", function() {
+				createPassage("(storylet: when time is 1)", "grault");
+				expect("(set: _b to 1)(set: $a to (open-storylets:))").markupToError();
+			});
+			it("flow control blockers can't be used", function() {
+				createPassage("(storylet: when (prompt: 'foo', 'bar') is 'baz')", "grault");
+				expect("(set: _b to 1)(set: $a to (open-storylets:))").markupToError();
+			});
 		});
 	});
 	describe("the (metadata:) macro", function() {

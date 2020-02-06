@@ -125,11 +125,9 @@ define([
 						TwineScript errors are handled by TwineScript, not JS,
 						so don't throw this error, please.
 					*/
+				const msg = objectName(left) + " isn't the same type of data as " + objectName(right);
 				return TwineError.create("operation",
-					// BUG: This isn't capitalised.
-					objectName(left)
-					+ " isn't the same type of data as "
-					+ objectName(right)
+					msg[0].toUpperCase() + msg.slice(1)
 				);
 			}
 			return fn(left, right);
@@ -340,6 +338,38 @@ define([
 				get exit() {
 					return ret.Identifiers.exits;
 				},
+
+				/*d:
+					pos -> Number
+
+					Used exclusively in lambdas, this keyword evaluates to the position of the current data value that this lambda is processing.
+
+					Consider a macro that uses lambdas, such as (altered:) - you give it a lambda, and then one or more data values, such as
+					in `(altered: via it + (str:pos), "A","B","C")`. When the lambda is processing "A", the pos identifier is 1, for "B" it's 2, and for
+					"C" it's 3. This can be used for a number of purposes. You can attach an ascending number to each data value, as in that example.
+					You can make only odd-numbered values be altered by using `(cond: pos % 2 is 0, it, it + (str:pos))`. You can make every third value
+					be followed by a comma, by using `(cond: pos % 3 is 2, it, it + ',')`.
+
+					Note that this only corresponds to the position of the values when given to the macro - if you use the `...` operator to spread arrays'
+					values into a macro, such as `(find: where it is > pos, ...$array1, ...$array2, ...$array3)`, then values from $array2 and $array3 will not
+					have a pos that corresponds to their placement inside those arrays, but rather relative to all of the values, including those in $array1.
+
+					Make sure you do NOT write this as `its pos` - the pos is not a data value of the data itself! If `it` was `(dm:'HP',20,'XP',12)`, `its pos`
+					would cause an error, as there is no "pos" value in that datamap.
+
+					Using this anywhere other than a lambda, or using it in a 'when' lambda (which doesn't operate over a sequence of values), will cause an error.
+
+					Added in: 3.1.0
+				*/
+				get pos() {
+					if (!section.stackTop || section.stackTop.evaluateOnly || !section.stackTop.lambdaPos) {
+						return TwineError.create("operation", "'pos' can only be used in lambdas that aren't 'when' lambdas.");
+					}
+					/*
+						This really, really should never be a non-number, but just in case...
+					*/
+					return +section.stackTop.lambdaPos || 1;
+				}
 			};
 			
 			return ret;
@@ -478,6 +508,10 @@ define([
 		isNot: comparisonOp((l,r) => !Operations.is(l,r)),
 		contains: comparisonOp(contains),
 		isIn: comparisonOp((l,r) => contains(r,l)),
+		isNotIn: comparisonOp((l,r) => {
+			const ret = contains(r,l);
+			return TwineError.containsError(ret) ? ret : !ret;
+		}),
 
 		isA: comparisonOp(isA),
 		isNotA: comparisonOp((l,r) => !isA(l,r)),

@@ -982,6 +982,17 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		*/
 		("prompt",
 			(section, message, defaultValue) => {
+				/*
+					Since (prompt:) and (confirm:) create dialogs as soon as they're evaluated, we need this extra check,
+					in addition to the one in Section for expressions, to ensure that this isn't being used in a pure
+					evaluation context, such as a link's text, or a (storylet:) macro.
+				*/
+				if (section.stackTop && section.stackTop.evaluateOnly) {
+					return TwineError.create("macrocall",
+						"I can't use a macro like (prompt:) or (confirm:) in " + section.stackTop.evaluateOnly + ".",
+						"Please rewrite this without putting such macros here."
+					);
+				}
 				const d = Dialog({
 					message,
 					defaultValue,
@@ -1027,6 +1038,15 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		*/
 		("confirm",
 			(section, message) => {
+				/*
+					As with (prompt:), we need an extra check here.
+				*/
+				if (section.stackTop && section.stackTop.evaluateOnly) {
+					return TwineError.create("macrocall",
+						"I can't use a macro like (prompt:) or (confirm:) in " + section.stackTop.evaluateOnly + ".",
+						"Please rewrite this without putting such macros here."
+					);
+				}
 				Utils.storyElement.append(Dialog({
 					message, defaultValue: false, cancelCallback: () => section.unblock(false), confirmCallback: () => section.unblock(true)
 				}));

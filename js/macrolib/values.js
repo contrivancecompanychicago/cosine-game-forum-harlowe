@@ -40,6 +40,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			contains "moth"` is true, as is `"a" is in "a"`. Again, like arrays, strings have special `any` and `all` data names which
 			can be used with `contains` and `is in` to check all their characters - `all of $string is not "w"` is true if the string doesn't
 			contain "w", and `$string contains any of "aeiou"` is true if the string contains those five letters.
+			The opposite of the `is in` operator is `is not in` - `"w" is not in $string` is another way to phrase the above.
 
 			Here is a table listing the aforementioned operations you can perform on strings, as well as a few others.
 
@@ -50,6 +51,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			| `is not` | Evaluates to boolean `true` if both sides are not equal, otherwise `false`. | `$friends is not $enemies`<br>`all of "Gadsby" is not "e"`
 			| `contains` | Evaluates to boolean `true` if the left side contains the right side, otherwise `false`. | `"Fear" contains "ear"`
 			| `is in` | Checking if the right string contains the left string, otherwise `false`. | `"ugh" is in "Through"`
+			| `is not in` | Evaluates to `true` if the right string does not contain the left string. | `"Blood" is not in "Stone`
 			| `'s` | Obtaining the character or substring at the right numeric position. | `"YO"'s 1st` (is "Y")<br>`"PS"'s (2)` (is "S")<br>`"ear"'s (a: 2,3)` (is "ar")
 			| `of` | Obtaining the character at the left numeric position. | `1st of "YO"` (is "Y")<br>`(2) of "PS"` (is "S")<br>`(a: 2,3) of "ear"` (is "ar")
 			| `matches` | Evaluates to boolean `true` if one side is a string and the other is an identical string or `str` or `string` | `"Contract" matches str`

@@ -370,7 +370,7 @@
 			"it" is a bit of a problem because its possessive is "its", not "it's",
 			so we can't use a derivation similar to property.
 		*/
-		identifier          = either("it","time","visits?", "exits?") + wb,
+		identifier          = either("it","time","visits?", "exits?","pos") + wb,
 		
 		itsProperty         = "its" + mws + "(" + validPropertyName + ")",
 		
@@ -965,7 +965,7 @@
 		*/
 		
 		is:        "is" + notBefore(mws + "not" + wb, mws + "an?" + wb, mws + "in" + wb, mws + "<", mws + ">") + wb,
-		isNot:     "is" + mws + "not" + notBefore(mws + "a" + wb) + wb,
+		isNot:     "is" + mws + "not" + notBefore(mws + either("a","in") + wb) + wb,
 		isA:       "is" + mws + "an?" + wb,
 		isNotA:    "is" + mws + "not" + mws + "an?" + wb,
 		matches:   "matches" + mws,
@@ -979,6 +979,7 @@
 		
 		isIn:       "is" + mws + "in" + wb,
 		contains:   "contains" + wb,
+		isNotIn:    "is" + mws + "not" + mws + "in" + wb,
 		
 		addition:          escape("+")      + notBefore("="),
 		subtraction:       escape("-")      + notBefore("="),

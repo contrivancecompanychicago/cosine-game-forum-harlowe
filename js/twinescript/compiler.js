@@ -151,7 +151,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			["augmentedAssign"],
 			["and", "or"],
 			["is", "isNot"],
-			["contains", "isIn"],
+			["contains", "isIn", "isNotIn"],
 			["isA", "isNotA"],
 			["matches"],
 			["inequality"],
@@ -229,6 +229,11 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			untypifies: "isNotA",
 		}[type]) || type;
 	}
+
+	/*
+		A helper that shows which types of operator tokens are comparisons.
+	*/
+	const comparisonOpTypes = ['inequality','is','isNot','isIn','contains','isNotIn','isA','typifies','isNotA','untypifies','matches'];
 	
 	/*
 		This takes an array from TwineMarkup, rooted at an expression,
@@ -512,7 +517,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				if (!token) {
 					return;
 				}
-				if (['inequality','is','isNot','isIn','contains','isA','typifies','isNotA','untypifies','matches'].includes(token.type)) {
+				if (comparisonOpTypes.includes(token.type)) {
 					return token;
 				}
 				if (['and','or'].includes(token.type)) {
@@ -614,8 +619,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 		/*
 			The following are the comparison operators.
 		*/
-		else if (type === "is" || type === "isNot" || type === "contains" || type === "isIn" || type === "inequality"
-				|| type === "isA" || type === "typifies" || type === "isNotA" || type === "untypifies" || type === "matches") {
+		else if (comparisonOpTypes.includes(type)) {
 			implicitLeftIt = true;
 			operation = compileComparisonOperator(token);
 		}

@@ -167,4 +167,19 @@ describe("identifiers", function () {
 			expect(runPassage("[[qux]](print: exit is 1)","qux").text()).markupToPrint("quxtrue");
 		});
 	});
+	describe("the 'pos' identifier", function () {
+		it("can only appear in lambdas that aren't 'when' lambdas", function (done) {
+			expect("(find:where pos is 2, 1)").not.markupToError();
+			expect("(print:pos)").markupToError();
+			var p = runPassage("(event:when pos is 2)[baz]");
+			setTimeout(function() {
+				expect(p.find('tw-error:not(.javascript)').length).toBe(1);
+				done();
+			},20);
+		});
+		it("equals the 1-indexed position of the data passed to the lambda", function () {
+			expect("(altered:via pos,0,0,0,0,0,0)").markupToPrint("1,2,3,4,5,6");
+			expect("(altered:_item via pos + _item,0,3,0,3,0,-3)").markupToPrint("1,5,3,7,5,3");
+		});
+	});
 });

@@ -168,7 +168,7 @@ define([
 				"I can't work out what this "
 				+ (this.stackTop.evaluateOnly)
 				+ " should evaluate to, because it contains a "
-				+ (ChangerCommand.isPrototypeOf(result)) ? "changer" : "command.",
+				+ ((ChangerCommand.isPrototypeOf(result)) ? "changer." : "command."),
 				"Please rewrite this without putting changers or commands here."
 			);
 		}
@@ -773,6 +773,7 @@ define([
 					- blockedValues: Array (used by blockers)
 					- evaluateOnly: String (used by evaluateTwineMarkup())
 					- finalIter: Boolean (used for infinite loop checks)
+					- lambdaPos: Number (only used by lambdas and the "pos" identifier)
 					
 					render() pushes a new object to this stack before
 					running expressions, and pops it off again afterward.

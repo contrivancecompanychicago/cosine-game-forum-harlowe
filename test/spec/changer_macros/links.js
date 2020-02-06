@@ -19,6 +19,10 @@ describe("link macros", function() {
 			expect(link.parent().is('tw-hook')).toBe(true);
 			expect(link.tag()).toBe("tw-link");
 		});
+		it("can render hooks in the markup in the link text", function() {
+			var p = runPassage("(link-replace:'//(color:#668899)[foo]//')[]");
+			expect(p.find('tw-link tw-hook')).toHaveColour("#668899");
+		});
 		it("when clicked, reveals the hook and removes itself", function() {
 			var p = runPassage("(link-replace:'A')[B(set:$c to 12)]");
 			p.find('tw-link').click();
@@ -156,6 +160,11 @@ describe("link macros", function() {
 
 				p = runPassage("("+name+":'//mire//')"+hook);
 				expect(p.find('i').text()).toBe("mire");
+			});
+			it("can render hooks in the markup in the link text", function() {
+				createPassage("","mire");
+				var p = runPassage("("+name+":'//(color:#668899)[foo]//','//mire//')"+hook);
+				expect(p.find('tw-link tw-hook')).toHaveColour("#668899");
 			});
 			it("won't interpret the passage name as markup if it exactly matches an existing passage", function() {
 				createPassage("","*foo_bar*");

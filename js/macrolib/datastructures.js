@@ -316,6 +316,7 @@ define([
 			
 			To see if arrays contain certain values, you can use the `contains` and `is in` operators like so: `$array contains 1`
 			is true if it contains the number 1 anywhere, and false if it does not. `1 is in $array` is another way to write that.
+			The `is not in` operator is the opposite of `is in`, and is used to check that values aren't in arrays.
 			If you want to check if an array contains some, or all of the values, in another array (without needing to be in the
 			same order), you can compare with a special `any` or `all` name on the other array: `$array contains any of (a:2,4,6)`,
 			and `$array contains all of (a:2,4,6)` will check if `$array` contains some, or all, of the numbers 2, 4 and 6.
@@ -358,6 +359,7 @@ define([
 			| `is not` | Evaluates to `true` if both sides differ in items or ordering. | `(a:4,5) is not (a:5,4)` (is true)
 			| `contains` | Evaluates to `true` if the left side contains the right side. | `(a:"Ape") contains "Ape"`<br>`(a:(a:99)) contains (a:99)`<br>`(a:1,2) contains any of (a:2,3)`<br>`(a:1,2) contains all of (a:2,1)`
 			| `is in` | Evaluates to `true` if the right side contains the left side. | `"Ape" is in (a:"Ape")`<br>`(a:99) is in (a:(a:99))`<br>`any of (a:2,3) is in (a:1,2)`<br>`all of (a:2,1) is in (a:1,2)`
+			| `is not in` | Evaluates to `true` if the right side does not contain the left side. | `"Blood" is not in (a:"Sweat","Tears")`<br>`(a:98) is not in (a:(a:99))`<br>`any of (a:3,2) is not in (a:1,2)`
 			| `+` | Joins arrays. | `(a:1,2) + (a:1,2)` (is `(a:1,2,1,2)`)
 			| `-` | Subtracts arrays, producing an array containing every value in the left side but not the right. | `(a:1,1,2,3,4,5) - (a:1,2)` (is `(a:3,4,5)`)
 			| `...` | When used in a macro call, it separates each value in the right side. | `(a: 0, ...(a:1,2,3,4), 5)` (is `(a:0,1,2,3,4,5)`)
@@ -789,7 +791,7 @@ define([
 			Added in: 2.0.0
 			#data structure
 		*/
-		("altered", (section, lambda, ...args) => args.map(loop => lambda.apply(section, {loop})),
+		("altered", (section, lambda, ...args) => args.map((loop, pos) => lambda.apply(section, {loop, pos:pos+1})),
 		[Lambda.TypeSignature('via'), zeroOrMore(Any)])
 		/*d:
 			(find: Lambda, [...Any]) -> Array
@@ -979,7 +981,7 @@ define([
 				args = lambda.filter(section, args);
 			}
 			return TwineError.containsError(args) || args
-				.reduce((making,loop) => lambda.apply(section,{making,loop}));
+				.reduce((making,loop,pos) => lambda.apply(section,{making,loop,pos:pos+1}));
 		},
 		[either(Lambda.TypeSignature('where via making'), Lambda.TypeSignature('via making')), rest(Any)])
 		;
@@ -1241,13 +1243,14 @@ define([
 		[optional(Lambda.TypeSignature('where'))])
 
 		/*d:
-			(open-storylets:) -> Array
+			(open-storylets: [Lambda]) -> Array
 			
 			Checks all of the (storylet:) macros in every passage, and provides an array of datamaps for every passage whose (storylet:) lambda returned true, sorted by passage name.
+			If a lambda was provided, the storylets are then filtered using it as a search test.
 			
 			Example usage:
 			* `(for: each _p, ...(open-storylets:)'s 1stTo5th)[(link-goto: _p's name) - ]` creates passage links for the first five open storylets.
-			* `(link-goto: "Off to the next job!", (either: ...(open-storylets:))'s name)` creates a single link that goes to a random open storylet.
+			* `(link-goto: "Off to the next job!", (either: ...(open-storylets: where 'night' is not in its tags))'s name)` creates a single link that goes to a random open storylet.
 
 			Rationale:
 			For a greater explanation of what storylets are (essentially, disconnected sets of passages that can be procedurally visited when author-specified requirements are met),
@@ -1266,6 +1269,8 @@ define([
 			As with all arrays, the (open-storylets:) array can be filtered using (filtered:), to, for instance, only contain passages with a certain tag.
 
 			If no passages' storylet requirements are currently met, the array will be empty.
+
+			If no passage matches the search lambda given to (open-storylets:), the array will be empty.
 
 			If any passage's (storylet:) macro produces an error (such as by dividing a number by 0), it will be displayed when the (open-storylets:) macro is run.
 
@@ -1401,6 +1406,7 @@ define([
 			| `is not` | Evaluates to `true` if both sides differ in items or ordering. | `(dm:"HP",5) is not (dm:"HP",4)` (is true)<br>`(dm:"HP",5) is not (dm:"MP",5)` (is true)
 			| `contains` | Evaluates to `true` if the left side contains the name on the right.<br>(To check that a datamap contains a value, try using `contains` with (datavalues:)) | `(dm:"HP",5) contains "HP"` (is true)<br>`(dm:"HP",5) contains 5` (is false)
 			| `is in` | Evaluates to `true` if the right side contains the name on the left. | `"HP" is in (dm:"HP",5)` (is true)
+			| `is not in` | Evaluates to `true` if the right side does not contain the name on the left. | `"XP" is not in (dm:"HP",5)` (is true)
 			| `+` | Joins datamaps, using the right side's value whenever both sides contain the same name. | `(dm:"HP",5) + (dm:"MP",5)`
 			| `'s` | Obtaining the value using the name on the right. | `(dm:"love",155)'s love` (is 155).
 			| `of` | Obtaining the value using the name on the left. | `love of (dm:"love",155)` (is 155).
@@ -1651,7 +1657,7 @@ define([
 							objectName(collection)
 							+ " can't contain  "
 							+ objectName(value)
-							+ " because it isn't a string."
+							+ " because it isn't also a string."
 						);
 					}
 					/*

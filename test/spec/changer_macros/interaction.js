@@ -199,7 +199,7 @@ describe("interaction macros", function() {
 								it("doesn't trigger when arriving on the page via undo", function(done) {
 									createPassage("''foo''","baz");
 									runPassage("(" + e.name + ":"+name+",'baz')''grault''","corge");
-									runPassage("")
+									runPassage("");
 									$('tw-sidebar .undo')[e.eventMethod]();
 									setTimeout(function() {
 										expect($('tw-passage:last-child').find('b').text()).toBe("grault");

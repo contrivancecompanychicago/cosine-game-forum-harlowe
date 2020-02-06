@@ -45,6 +45,9 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 		`_num where _num > 2` can be rewritten as`_num where it > 2`. Not only that, but you can even save on naming the temporary
 		variable at all, by just using `where` (or `via` or `making`) without the name and only using `it` to refer to the variable: `where it > 2`.
 
+		Additionally, the "pos" identifier can be used inside a lambda - it evaluates to the position of the data value (from those passed into
+		the macro) that the lambda is currently processing. `(altered: via it + (str:pos), "A", "B", "C", "A")` produces `(a:"A1","B2","C3","A4")`.
+
 		An important feature is that you can save lambdas into variables, and reuse them in your story easily. You
 		could, for instance, `(set: $statsReadout to (_stat making _readout via _readout + "|" + _stat's name + ":" + _stat's value))`,
 		and then use $printStats with the (folded:) macro in different places, such as `(folded: $statsReadout, ...(dataentries: $playerStats))`
@@ -186,7 +189,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 			This needs to have the macro's section passed in so that its JS code can be eval()'d in
 			the correct scope.
 		*/
-		apply(section, {loop:loopArg, 'with':withArg, making:makingArg, fail:failArg, pass:passArg, ignoreVia, tempVariables}) {
+		apply(section, {loop:loopArg, pos:lambdaPos /*This must be 1-indexed*/, 'with':withArg, making:makingArg, fail:failArg, pass:passArg, ignoreVia, tempVariables}) {
 			/*
 				We run the JS code of this lambda, inserting the arguments by adding them to a tempVariables
 				object (if one wasn't provided). The temporary variable references in the code are compiled to
@@ -204,8 +207,15 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 				else that alters the semantics of identifiers inside the lambda (like 'visits'), and so
 				instead, the lambda's stack inherits those values from it.
 			*/
-			section.stack.unshift(Object.assign(Object.create(section.stackTop || null), {tempVariables}));
+			section.stack.unshift(Object.assign(Object.create(section.stackTop || null), {
+				tempVariables,
+				/*
+					"pos" is not used for "when" lambdas.
+				*/
+				lambdaPos: !this.when ? lambdaPos : undefined,
+			}));
 
+			const Operations = section.eval("Operations");
 			/*
 				If this lambda has no "making" or "with" clauses (and isn't a "when" lambda), then the "it"
 				keyword is set to the loop arg. Note that this doesn't require the presence of
@@ -213,14 +223,14 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 				clause using "it".
 			*/
 			if (loopArg && !this.with && !this.making && !this.when) {
-				section.eval("Operations").initialiseIt(loopArg);
+				Operations.initialiseIt(loopArg);
 			}
 			/*
 				Otherwise, stuff the "it" value with a special error message that should propagate up
 				if "it" is ever used inside this macro.
 			*/
 			else {
-				section.eval("Operations").initialiseIt(
+				Operations.initialiseIt(
 					TwineError.create("operation",
 						"I can't use 'it', or an implied 'it', in " + this.TwineScript_ObjectName
 					)
@@ -260,7 +270,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 		*/
 		filter(section, args, tempVariables = null) {
 			let error;
-			const filtered = args.reduce((result, arg) => {
+			const filtered = args.reduce((result, arg, pos) => {
 				/*
 					If an earlier iteration produced an error, don't run any more
 					computations and just return.
@@ -271,7 +281,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 				/*
 					Run the lambda, to determine whether to filter out this element.
 				*/
-				const passedFilter = this.apply(section, {loop:arg, pass:true, fail:false, ignoreVia:true, tempVariables});
+				const passedFilter = this.apply(section, {loop:arg, pos:pos+1, pass:true, fail:false, ignoreVia:true, tempVariables});
 				if ((error = TwineError.containsError(passedFilter))) {
 					return error;
 				}

@@ -596,60 +596,59 @@ describe("twinescript operators", function () {
 			expect("(put: $a contains $a into $b)(print:$b)").markupToPrint("true");
 		});
 	});
-	describe("the 'is in' operator", function () {
-		it("errors when used on non-string primitives", function() {
-			expect("(print: 1 is in 1)").markupToError();
-			expect("(print: true is in true)").markupToError();
-			expect("(set: $a to 0)(print: $a is in 1)").markupToError();
-			expect("(set: $a to true)(print: $a is in true)").markupToError();
-		});
-		it("checks for substrings in strings", function (){
-			expect("(print: 'Be' is in 'Bee')").markupToPrint("true");
-			expect("(print: 'Bee' is in 'Bee')").markupToPrint("true");
-			expect("(print: 'Bee' is in 'eeB')").markupToPrint("false");
-		});
-		it("checks for elements in arrays", function (){
-			expect("(print: 'Bee' is in (a:'Bee'))").markupToPrint("true");
-			expect("(print: 2 is in (a: 2))").markupToPrint("true");
-			expect("(print: 'eeB' is in (a:'Bee'))").markupToPrint("false");
-		});
-		it("checks for keys in datamaps", function (){
-			expect("(print: (datamap:'Bee',1) contains 'Bee')").markupToPrint("true");
-			expect("(print: (datamap:'Bee',1) contains 1)").markupToPrint("false");
-		});
-		it("checks for elements in datasets", function (){
-			expect("(print: 'Bee' is in (dataset:'Bee','Boo'))").markupToPrint("true");
-			expect("(print: 'ooB' is in (dataset:'Bee','Boo'))").markupToPrint("false");
-		});
-		it("can be used as an expression", function (){
-			expect("(print: true is 'Be' is in 'Bee')").markupToPrint("true");
-			expect("(print: false is 'Bee' is in 'eeB')").markupToPrint("true");
-		});
-		it("compares nested arrays by value", function (){
-			expect("(print: (a:) is in (a:(a:)))").markupToPrint("true");
-			expect("(print: (a:2,3,4) is in (a:(a:2,3,4)))").markupToPrint("true");
-		});
-		it("compares nested datamaps by value", function (){
-			expect("(print: (datamap:) is in (a:(datamap:)))").markupToPrint("true");
-			expect("(print: (datamap:'b',4,'a',2) is in (a:(datamap:'a',2,'b',4)))").markupToPrint("true");
-		});
-		it("compares nested datasets by value", function (){
-			expect("(print: (dataset:) is in (a:(dataset:)))").markupToPrint("true");
-			expect("(print: (dataset:2,3,4) is in (a:(dataset:2,3,4)))").markupToPrint("true");
-		});
-		it("won't be matched from within text", function (){
-			expect("(print: typeof xxis in Object)").markupToPrint("false");
-		});
-		it("has correct order of operations with 'to' and 'into'", function (){
-			expect("(set: $a to 'a' is in 'b')(print:$a)").markupToPrint("false");
-			expect("(put: 'a' is in 'b' into $a)(print:$a)").markupToPrint("false");
-			expect("(set: $a to 'b' contains 'bc')(print:$a)").markupToPrint("false");
-			expect("(put: 'b' is in 'bc' into $a)(print:$a)").markupToPrint("true");
-		});
-		it("can compare variables as the subject of 'to' and 'into'", function (){
-			runPassage("(set:$a to 'a')");
-			expect("(set: $b to $a is in $a)(print:$b)").markupToPrint("true");
-			expect("(put: $a is in $a into $b)(print:$b)").markupToPrint("true");
+	['is in','is not in'].forEach(function(name, not) {
+		describe("the '" + name + "' operator", function () {
+			it("errors when used on non-string primitives", function() {
+				expect("(print: 1 " + name + " 1)").markupToError();
+				expect("(print: true " + name + " true)").markupToError();
+				expect("(set: $a to 0)(print: $a " + name + " 1)").markupToError();
+				expect("(set: $a to true)(print: $a " + name + " true)").markupToError();
+			});
+			it("checks for substrings in strings", function (){
+				expect("(print: 'Be' " + name + " 'Bee')").markupToPrint(!not + '');
+				expect("(print: 'Bee' " + name + " 'Bee')").markupToPrint(!not + '');
+				expect("(print: 'Bee' " + name + " 'eeB')").markupToPrint(!!not + '');
+			});
+			it("checks for elements in arrays", function (){
+				expect("(print: 'Bee' " + name + " (a:'Bee'))").markupToPrint(!not + '');
+				expect("(print: 2 " + name + " (a: 2))").markupToPrint(!not + '');
+				expect("(print: 'eeB' " + name + " (a:'Bee'))").markupToPrint(!!not + '');
+			});
+			it("checks for keys in datamaps", function (){
+				expect("(print: 'Bee' " + name + " (datamap:'Bee',1))").markupToPrint(!not + '');
+				expect("(print: 1 " + name + " (datamap:'Bee',1))").markupToPrint(!!not + '');
+			});
+			it("checks for elements in datasets", function (){
+				expect("(print: 'Bee' " + name + " (dataset:'Bee','Boo'))").markupToPrint(!not + '');
+				expect("(print: 'ooB' " + name + " (dataset:'Bee','Boo'))").markupToPrint(!!not + '');
+			});
+			it("can be used as an expression", function (){
+				expect("(print: true is 'Be' " + name + " 'Bee')").markupToPrint(!not + '');
+				expect("(print: false is 'Bee' " + name + " 'eeB')").markupToPrint(!not + '');
+			});
+			it("compares nested arrays by value", function (){
+				expect("(print: (a:) " + name + " (a:(a:)))").markupToPrint(!not + '');
+				expect("(print: (a:2,3,4) " + name + " (a:(a:2,3,4)))").markupToPrint(!not + '');
+			});
+			it("compares nested datamaps by value", function (){
+				expect("(print: (datamap:) " + name + " (a:(datamap:)))").markupToPrint(!not + '');
+				expect("(print: (datamap:'b',4,'a',2) " + name + " (a:(datamap:'a',2,'b',4)))").markupToPrint(!not + '');
+			});
+			it("compares nested datasets by value", function (){
+				expect("(print: (dataset:) " + name + " (a:(dataset:)))").markupToPrint(!not + '');
+				expect("(print: (dataset:2,3,4) " + name + " (a:(dataset:2,3,4)))").markupToPrint(!not + '');
+			});
+			it("has correct order of operations with 'to' and 'into'", function (){
+				expect("(set: $a to 'a' " + name + " 'b')(print:$a)").markupToPrint(!!not + '');
+				expect("(put: 'a' " + name + " 'b' into $a)(print:$a)").markupToPrint(!!not + '');
+				expect("(set: $a to 'b' " + name + " 'bc')(print:$a)").markupToPrint(!not + '');
+				expect("(put: 'b' " + name + " 'bc' into $a)(print:$a)").markupToPrint(!not + '');
+			});
+			it("can compare variables as the subject of 'to' and 'into'", function (){
+				runPassage("(set:$a to 'a')");
+				expect("(set: $b to $a " + name + " $a)(print:$b)").markupToPrint(!not + '');
+				expect("(put: $a " + name + " $a into $b)(print:$b)").markupToPrint(!not + '');
+			});
 		});
 	});
 	describe("the '...' operator", function () {
