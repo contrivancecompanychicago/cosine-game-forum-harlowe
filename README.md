@@ -20,6 +20,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Now, pressing Return or Enter in a `(prompt:)` text input box should submit the text, as if "OK" was clicked.
  * The default CSS for `(mouseover:)` and `(mouseout:)` (a dotted gray border and translucent cyan border, respectively) has been brightened slightly to be more visible.
  * Reworded the error message produced by trying to get an array element that's outside the array's length (such as `(a: 1,2)'s 5th`).
+ * Removed unused, undocumented CSS for the following (also unused) elements: `<tw-outline>`, `<tw-shadow>`, `<tw-emboss>`, `<tw-condense>`, `<tw-expand>`, `<tw-blur>`, `<tw-blurrier>`, `<tw-smear>`, `<tw-mirror>`, `<tw-upside-down>`, `<tw-fade-in-out>`, `<tw-rumble>`, `<tw-shudder>`, and `<tw-shudder-in>`. The CSS applied to these was mostly functionally identical to their corresponding `(textstyle:)` styling.
 
 ####Additions
 
@@ -28,6 +29,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a `(metadata:)` macro, which, when placed in a passage, adds values to the `(passage:)` datamap for that passage, allowing you to store any arbitrary data on it for your own use. This takes the same values as `(dm:)` - string names and data values in alternation.
  * Added the `pos` identifier, which is used in lambdas to provide the position of the data value (from those passed into the macro) that the lambda is currently processing. `(altered: via it + pos, 0,0,5,0,0)` equals `(a:1,2,8,4,5)`.
  * Added a debug mode panel listing which storylet passages are currently available, and their 'where' lambdas. This panel is only visible if you have `(storylet:)` macros in your story.
+ * Added a `<noscript>` element containing a sentence instructing that JavaScript should be enabled to play the story (as per SugarCube).
 
 ###3.1.0 changes:
 

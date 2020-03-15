@@ -97,6 +97,15 @@ tw-story {
 		border-style:solid;
 		padding: 2px;
 	}
+
+	/*
+		This animation for the <noscript> element should ideally prevent a "flash of unstyled content" where the
+		message is briefly visible.
+	*/
+	& tw-noscript {
+		animation: appear 0.8s;
+		-webkit-animation: appear 0.8s;
+	}
 }
 
 /*

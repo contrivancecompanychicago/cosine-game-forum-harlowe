@@ -383,7 +383,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			```
 			{(live: 0.2s)[
 				(if: time > 5s)[
-					Oops, I forgot the next link: [[Go east]].
+					Oops, I forgot the next link: [[Go east]].(stop:)
 				]
 			]}
 			```
@@ -776,9 +776,9 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			`(font:"Skia")[And what have we here?]`
 
 			Details:
-			Currently, this command will only work if the font is available to the player's browser.
-			If font files are embedded in your story stylesheet using base64 (an explanation for which
-			is beyond the scope of this macro's description) then it can be uses instead.
+			Currently, this command will only work if the font is available to the player's browser, or
+			if font files are linked using `url()` in your story's stylesheet, or embedded using base64 (explanations
+			for which are beyond the scope of this macro's description).
 
 			No error will be reported if the provided font name is not available, invalid or misspelled.
 
