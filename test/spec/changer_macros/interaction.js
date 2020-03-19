@@ -104,6 +104,15 @@ describe("interaction macros", function() {
 						p.find('tw-enchantment')[e.eventMethod]();
 						expect(p.find('tw-enchantment').length).toBe(0);
 					});
+					// Might not want to implement this
+					xit("when " + e.action + "ed, plain hooks (and only plain hooks) in the link text are removed", function() {
+						var p = runPassage("[foo[bar]|2>[baz]]<foo|(" + e.name + ":?foo)[]");
+						p.find('tw-enchantment')[e.eventMethod]();
+						expect(p.text()).toBe("foobaz");
+						p = runPassage("[{[baz](text-style:'bold')[garply][corge]}]<foo|(" + e.name + ":?foo)[]");
+						p.find('tw-enchantment')[e.eventMethod]();
+						expect(p.text()).toBe("garply");
+					});
 					it("nested enchantments are triggered one by one", function() {
 						var p = runPassage("[[cool]<foo|]<bar|(" + e.name + ":?foo)[beans](" + e.name + ":?bar)[lake]");
 						expect(p.text()).toBe("cool");
@@ -233,6 +242,15 @@ describe("interaction macros", function() {
 							p.find('tw-enchantment')[f]()[e.eventMethod]();
 							expect(p.find('tw-enchantment').length).toBe(0);
 						});
+					});
+					// Might not want to implement this
+					xit("when " + e.action + "ed, plain hooks (and only plain hooks) in each link text are removed", function() {
+						var p = runPassage("[foo[bar]|2>[baz]]<foo|[qux[bar]]<foo|(" + e.name + ":?foo)[]");
+						p.find('tw-enchantment')[e.eventMethod]();
+						expect(p.text()).toBe("foobazqux");
+						p = runPassage("[{[baz](text-style:\"bold\")[garply][corge]}]<foo|[qux[bar]]<foo|(" + e.name + ":?foo)[]");
+						p.find('tw-enchantment')[e.eventMethod]();
+						expect(p.text()).toBe("garplyqux");
 					});
 				} else {
 					it("goes to the given passage when either enchantment is " + e.action + "ed", function(done) {

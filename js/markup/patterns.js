@@ -163,7 +163,7 @@
 
 			Heading markup is used to create large headings, such as in structured prose or title splash passages.
 			It is almost the same as the Markdown heading syntax: it starts on a fresh line,
-			has one to six consecutive `f#`s, and ends at the line break.
+			has one to six consecutive `#`s, and ends at the line break.
 
 			Example usage:
 			```

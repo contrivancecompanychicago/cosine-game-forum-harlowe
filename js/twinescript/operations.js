@@ -220,6 +220,9 @@ define([
 					can be used to determine if 5 seconds have passed since this passage was displayed,
 					and thus whether the player waited 5 seconds before clicking the link.
 
+					It's recommended that you compare values of time using the `ms` or `s` suffixes for number data.
+					See the article on number data for more information.
+
 					When the passage is initially being rendered, `time` will be 0.
 
 					`time` used in (display:) macros will still produce the time of the host passage, not the

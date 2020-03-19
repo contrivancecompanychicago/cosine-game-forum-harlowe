@@ -263,7 +263,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		The enchantDesc object is a purely internal structure which describes the
 		enchantment. It contains the following:
 		
-		* {String} event The DOM event that triggers the rendering of this macro's contents.
+		* {[String]} event The DOM event (or events) that triggers the rendering of this macro's contents.
 		* {String} classList The list of classes to 'enchant' the hook with, to denote that it
 		is ready for the player to trigger an event on it.
 		* {String} rerender Determines whether to clear the span before rendering into it ("replace"),
@@ -299,7 +299,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 					Put this event in the "enchantment" jQuery event
 					namespace, solely for personal tidiness.
 				*/
-				enchantDesc.event + ".enchantment",
+				enchantDesc.event.map(e => e + ".enchantment").join(' '),
 				selector,
 				function generalEnchantmentEvent() {
 					/*
@@ -429,10 +429,6 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 								*/
 								const index = desc.section.enchantments.indexOf(enchantData);
 								desc.section.enchantments.splice(index,1);
-								/*
-									Of course, the <tw-enchantment>s
-									must also be removed.
-								*/
 								enchantData.disenchant();
 							}
 							/*
@@ -489,6 +485,12 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 	}
 
 	/*
+		A browser compatibility check for touch events (which suggest a touchscreen). If true, then mouseover and mouseout events
+		should have "click" added.
+	*/
+	const hasTouchEvents = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+
+	/*
 		Interaction macros produce ChangerCommands that defer their attached
 		hook's rendering, and enchantment a target hook, waiting for the
 		target to be interacted with and then performing the deferred rendering.
@@ -502,7 +504,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 
 			Example usage:
 			* `There is a small dish of water. (click: "dish")[Your finger gets wet.]` causes "dish" to become a link that,
-			when clicked, reveals "Your finger gets wet." at the specified location.
+			when clicked, reveals "Your finger gets wet." at the location the macro is at.
 			* `[Fie and fuggaboo!]<shout| (click: ?shout)[Blast and damnation!]` does something similar to every hook named `<shout|`.
 
 			Rationale:
@@ -545,7 +547,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		{
 			name: "click",
 			enchantDesc: {
-				event    : "click",
+				event    : ["click"],
 				once     : true,
 				rerender : "",
 				classList: "link enchantment-link",
@@ -572,7 +574,9 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 			consult (click:)'s details to review them.
 
 			This macro is not recommended for use in games or stories intended for use on touch devices, as
-			the concept of "hovering" over an element doesn't really make sense with that input method.
+			the concept of "hovering" over an element doesn't really make sense with that input method. In the event
+			that a story using this macro is played on a touch device, this macro will fall back to simply being activated
+			by clicking/touching.
 
 			Targeting ?Page, ?Passage or ?Sidebar:
 
@@ -591,7 +595,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		{
 			name: "mouseover",
 			enchantDesc: {
-				event    : "mouseenter",
+				event    : ["mouseenter", hasTouchEvents ? "click" : ""].filter(Boolean),
 				once     : true,
 				rerender : "",
 				classList: "enchantment-mouseover",
@@ -620,7 +624,9 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 			consult (click:)'s details to review them.
 
 			This macro is not recommended for use in games or stories intended for use on touch devices, as
-			the concept of "hovering" over an element doesn't really make sense with that input method.
+			the concept of "hovering" over an element doesn't really make sense with that input method. In the event
+			that a story using this macro is played on a touch device, this macro will fall back to simply being activated
+			by clicking/touching.
 
 			Targeting ?Page, ?Passage or ?Sidebar:
 
@@ -639,7 +645,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		{
 			name: "mouseout",
 			enchantDesc: {
-				event    : "mouseleave",
+				event    : ["mouseleave", hasTouchEvents ? "click" : ""].filter(Boolean),
 				once     : true,
 				rerender : "",
 				classList: "enchantment-mouseout",
@@ -660,7 +666,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 					/*
 						Put this event in the "enchantment" jQuery event namespace, alongside the other enchantment events.
 					*/
-					enchantDesc.event + ".enchantment",
+					enchantDesc.event.map(e => e + ".enchantment").join(' '),
 					/*
 						Since this event is on <tw-story>, it can't select its parent in a selector. So, that parent
 						must be selected in the function.

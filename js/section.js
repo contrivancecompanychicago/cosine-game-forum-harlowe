@@ -165,7 +165,7 @@ define([
 		*/
 		if (this.stackTop.evaluateOnly && result && (ChangerCommand.isPrototypeOf(result) || typeof result.TwineScript_Run === "function")) {
 			result = TwineError.create("syntax",
-				"I can't work out what this "
+				"I can't work out what "
 				+ (this.stackTop.evaluateOnly)
 				+ " should evaluate to, because it contains a "
 				+ ((ChangerCommand.isPrototypeOf(result)) ? "changer." : "command."),

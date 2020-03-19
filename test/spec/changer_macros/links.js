@@ -78,38 +78,59 @@ describe("link macros", function() {
 			expect(p.find('tw-link').length).toBe(0);
 			expect("$c").markupToPrint("12");
 		});
+		// May not want to implement this
+		xit("when clicked, plain hooks (and only plain hooks) in the link text are hidden", function() {
+			var p = runPassage("(link-reveal:'foo[bar]|2>[baz]')[qux]");
+			p.find('tw-link').click();
+			expect(p.text()).toBe("foobazqux");
+			expect(p.find('tw-link').length).toBe(0);
+			p = runPassage("(link-reveal:'[baz](text-style:\"bold\")[garply][corge]')[qux]");
+			p.find('tw-link').click();
+			expect(p.text()).toBe("garplyqux");
+			expect(p.find('tw-link').length).toBe(0);
+		});
 	});
-	describe("(link-repeat:)", function() {
-		it("accepts exactly 1 non-empty string", function() {
-			expect("(print:(link-repeat:))").markupToError();
-			expect("(print:(link-repeat:''))").markupToError();
-			expect("(print:(link-repeat:'baz'))").not.markupToError();
-			expect("(print:(link-repeat:2))").markupToError();
-			expect("(print:(link-repeat:false))").markupToError();
-			expect("(print:(link-repeat:'baz', 'baz'))").markupToError();
-		});
-		it("errors when placed in passage prose while not attached to a hook", function() {
-			expect("(link-repeat:'A')").markupToError();
-			expect("(link-repeat:'A')[]").not.markupToError();
-		});
-		it("when attached to a hook, creates a link", function() {
-			var link = runPassage("(link-repeat:'A')[]").find('tw-link');
-			expect(link.parent().is('tw-hook')).toBe(true);
-			expect(link.tag()).toBe("tw-link");
-		});
-		it("when clicked, reveals the hook and leaves the link as-is", function() {
-			var p = runPassage("(link-repeat:'A')[B(set:$c to 12)]");
-			p.find('tw-link').click();
-			expect(p.text()).toBe("AB");
-			expect(p.find('tw-link').length).toBe(1);
-			expect("$c").markupToPrint("12");
-		});
-		it("the link can be clicked multiple times", function() {
-			var p = runPassage("(set:$c to 0)(link-repeat:'A')[B(set:$c to it + 12)]");
-			p.find('tw-link').click();
-			p.find('tw-link').click();
-			p.find('tw-link').click();
-			expect("$c").markupToPrint("36");
+	["link-repeat","link-rerun"].forEach(function(name) {
+		describe("("+name+":)", function() {
+			it("accepts exactly 1 non-empty string", function() {
+				expect("(print:("+name+":)").markupToError();
+				expect("(print:("+name+":''))").markupToError();
+				expect("(print:("+name+":'baz'))").not.markupToError();
+				expect("(print:("+name+":2))").markupToError();
+				expect("(print:("+name+":false))").markupToError();
+				expect("(print:("+name+":'baz', 'baz'))").markupToError();
+			});
+			it("errors when placed in passage prose while not attached to a hook", function() {
+				expect("("+name+":'A')").markupToError();
+				expect("("+name+":'A')[]").not.markupToError();
+			});
+			it("when attached to a hook, creates a link", function() {
+				var link = runPassage("("+name+":'A')[]").find('tw-link');
+				expect(link.parent().is('tw-hook')).toBe(true);
+				expect(link.tag()).toBe("tw-link");
+			});
+			it("when clicked, reveals the hook and leaves the link as-is", function() {
+				var p = runPassage("("+name+":'A')[B(set:$c to 12)]");
+				p.find('tw-link').click();
+				expect(p.text()).toBe("AB");
+				expect(p.find('tw-link').length).toBe(1);
+				expect("$c").markupToPrint("12");
+			});
+			if (name === "link-repeat") {
+				it("when clicked multiple times, the hook is appended", function() {
+					var p = runPassage("(set:$c to 0)("+name+":'A')[B(set:$c to it + 12)]");
+					p.find('tw-link').click().click().click();
+					expect(p.text()).toBe("ABBB");
+					expect("$c").markupToPrint("36");
+				});
+			} else {
+				it("when clicked multiple times, the hook is re-ran", function() {
+					var p = runPassage("(set:$c to 0)("+name+":'A')[B(set:$c to it + 12)]");
+					p.find('tw-link').click().click().click();
+					expect(p.text()).toBe("AB");
+					expect("$c").markupToPrint("36");
+				});
+			}
 		});
 	});
 	/*
@@ -343,6 +364,17 @@ describe("link macros", function() {
 			var p = runPassage('|3)[Red]|3)[Blue]|3)[Green](link-show:"A",?3\'s last, ?3\'s 1st)');
 			p.find('tw-link').click();
 			expect(p.text()).toBe('RedGreenA');
+		});
+		// May not want to implement this
+		xit("when clicked, plain hooks (and only plain hooks) in the link text are removed", function() {
+			var p = runPassage("(link-show:'foo[bar]|2>[baz]',?1)");
+			p.find('tw-link').click();
+			expect(p.text()).toBe("foobaz");
+			expect(p.find('tw-link').length).toBe(0);
+			p = runPassage("(link-show:'[baz](text-style:\"bold\")[garply][corge]',?1)");
+			p.find('tw-link').click();
+			expect(p.text()).toBe("garply");
+			expect(p.find('tw-link').length).toBe(0);
 		});
 	});
 });

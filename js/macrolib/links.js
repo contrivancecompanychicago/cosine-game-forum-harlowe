@@ -183,13 +183,14 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			player clicks the link.
 			
 			Note that this particular macro's links disappear when they are clicked - if you want
-			their words to remain in the text, consider using (link-reveal:).
+			their words to remain in the text, or for only a small portion of the text
+			to disappear, consider using (link-reveal:).
 			
 			Details:
 			This creates a link which is visually indistinguishable from normal passage links.
 			
 			See also:
-			(link-reveal:), (link-repeat:), (link-goto:), (click:), (more:)
+			(link-reveal:), (link-rerun:), (link-repeat:), (link-goto:), (click:), (more:)
 
 			Added in: 1.0.0
 			#links 1
@@ -199,7 +200,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			(link-reveal: String) -> Changer
 			
 			Makes a changer to create a special link that shows a hook, keeping the link's
-			text visible after clicking.
+			text visible after clicking, or only removing a portion of it.
 			
 			Example usage:
 			`(link-reveal: "Heart")[broken]` will create a link reading "Heart"
@@ -214,12 +215,18 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			
 			Details:
 			This creates a link which is visually indistinguishable from normal passage links.
+
+			If you want to make only a certain portion of the link text disappear when the whole link is clicked,
+			simply place that portion inside a plain hook, one with no name and no macros attached to the front:
+			`(link-reveal:"She gasped[.]")[and ran over to me.]` will create a link reading "She gasped." that becomes
+			"She gasped and ran over to me." when clicked. This can be used to make the revealed text flow more naturally
+			into the link text, by removing or adjusting punctuation.
 			
 			If the link text contains formatting syntax, such as "**bold**", then it will be retained
 			when the link is demoted to text.
 			
 			See also:
-			(link:), (link-repeat:), (link-goto:), (click:), (more:)
+			(link:), (link-rerun:), (link-repeat:), (link-goto:), (click:), (more:)
 
 			Added in: 1.2.0
 			#links 2
@@ -229,31 +236,70 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			(link-repeat: String) -> Changer
 			
 			Makes a changer to create a special link that shows a hook, and, when clicked again,
-			re-runs the hook, appending its contents again.
+			repeats the hook, appending its contents again.
 			
 			Example usage:
-			`(link-repeat: "Add cheese")[(set:$cheese to it + 1)]` will create a link reading "Add cheese"
+			* `(link-repeat: "Add cheese")[(set:$cheese to it + 1)]` will create a link reading "Add cheese"
 			which, when clicked, adds 1 to the $cheese variable using (set:), and can be clicked repeatedly.
+			* `(link-repeat: "Scream a little ")[A]` will, when the link is clicked, add an A to the hook each time.
 			
 			Rationale:
 			
 			This is similar to (link:), but allows the created link to remain in the passage
-			after it is clicked. It can be used to make a link that displays more text after
-			each click, or which must be clicked multiple times before something can happen (using (set:)
-			and (if:) to keep count of the number of clicks).
+			after it is clicked. It can be used to make a link that fills with increasingly more text after
+			each click, possibly conveying a sense of powerlessness or desperation.
+
+			This macro is part of a pair with (link-rerun:) - the latter macro will empty the hook each time the link is
+			clicked. This one should be used if you'd prefer the hook to retain each of its past runs.
 			
 			Details:
 			This creates a link which is visually indistinguishable from normal passage links.
-			Each time the link is clicked, the text and macros printed in the previous run are
-			appended.
+
+			If you want to make a certain portion of the link text disappear when the link is clicked,
+			simply put that section of the link text in a plain hook, one with no name and no macros attached
+			to the front, as per (link-reveal:). Note that this text will disappear on the first click, and won't
+			reappear or change on subsequent clicks.
 			
 			See also:
-			(link-reveal:), (link:), (link-goto:), (click:)
+			(link-rerun:), (link-reveal:), (link:), (link-goto:), (click:)
 			
 			Added in: 1.2.0
 			#links 3
 		*/
-		["link-repeat"]
+		["link-repeat"],
+		/*d:
+			(link-rerun: String) -> Changer
+			
+			Makes a changer to create a special link that shows a hook, and, when clicked again,
+			re-runs the hook, replacing its contents with a fresh run of its code.
+			
+			Example usage:
+			* `(link-rerun: "ROLL DICE ")[You rolled a (random:1,6).]` will create a link reading "ROLL DICE"
+			which, when clicked, changes the hook to "You rolled a " followed by a random number between 1 and 6.
+
+			Rationale:
+			
+			This is similar to (link:), but allows the created link to remain in the passage
+			after it is clicked. It can be used to make a link which displays a slightly varying run of prose over and
+			over, or a link which must be clicked multiple times before something can happen (using (set:) and (if:) to
+			keep count of the number of clicks).
+
+			This macro is part of a pair with (link-repeat:) - the latter macro will append each run of the hook,
+			so that text gradually accumulates within it. This one should be used if you'd prefer the hook
+			to remain at a certain size, or need it to always naturally flow from the link text.
+
+			Details:
+			This creates a link which is visually indistinguishable from normal passage links.
+
+			If you want to make a certain portion of the link text disappear when the link is clicked,
+			simply put that section of the link text in a plain hook, one with no name and no macros attached
+			to the front, as per (link-reveal:). Note that this text will disappear on the first click, and won't
+			reappear or change on subsequent clicks.
+			
+			Added in: 3.2.0
+			#links 4
+		*/
+		["link-rerun"],
 	].forEach(arr =>
 		Macros.addChanger(arr,
 			(_, expr) => {
@@ -272,10 +318,10 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 				}
 				desc.source = '<tw-link tabindex=0>' + text + '</tw-link>';
 				/*
-					Only (link-replace:) removes the link on click (by using the "replace"
+					Only (link-replace:) and (link-rerun:) removes the link on click (by using the "replace"
 					append method) - the others merely append.
 				*/
-				desc.append = arr[0] === "link" ? "replace" : "append";
+				desc.append = (arr[0] === "link" || arr[0] === "link-rerun") ? "replace" : "append";
 				desc.transitionDeferred = true;
 				/*
 					As this is a deferred rendering macro, the current tempVariables
@@ -295,9 +341,26 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 					if (arr[0] === "link-reveal") {
 						link.contents().unwrap();
 					}
+					/*
+						(link-rerun:) replaces everything in the hook, but leaves
+						the link, so that the replacement can be repeated. It does this by removing the link,
+						then reattaching it after rendering.
+					*/
+					let parent;
+					if (arr[0] === "link-rerun") {
+						/*
+							Just to be sure that the link returns to the same DOM element, we
+							save the element in particular here.
+						*/
+						parent = link.parent();
+						link.detach();
+					}
 					desc.source = desc.innerSource + "";
 					desc.transitionDeferred = false;
 					desc.section.renderInto("", null, desc, tempVariables);
+					if (arr[0] === "link-rerun") {
+						parent.prepend(link);
+					}
 				};
 			},
 			[String]
@@ -338,10 +401,10 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			the link syntax is, essentially, a syntactic shorthand for (link-goto:).
 
 			See also:
-			(link:), (link-reveal:), (link-repeat:), (link-undo:), (goto:)
+			(link:), (link-reveal:), (link-undo:), (goto:)
 
 			Added in: 1.0.0
-			#links 4
+			#links 5
 		*/
 		(["link-goto"],
 			/*
@@ -434,7 +497,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			(undo:), (link-goto:)
 
 			Added in: 2.0.0
-			#links 6
+			#links 7
 		*/
 		("link-undo",
 			(text) => {
@@ -503,6 +566,10 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			`You (link-show: "struggle to listen.", ?more)`.
 
 			Details:
+			If you want to make a certain portion of the link text disappear when the whole link is clicked,
+			simply place that portion inside a plain hook, one with no name and no macros attached to the front, as per (link-reveal:).
+			`(link-show:"[Reply diplomatically.]", ?reply)` makes a link reading "Reply diplomatically." that disappears when clicked.
+
 			As with most link macros, providing this with an empty link text string will result in an error.
 
 			As with (show:) and (click:), providing this with a hook which is already visible, or which doesn't even exist,
@@ -512,7 +579,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			(show:), (link-reveal:), (click-append:), (more:)
 
 			Added in: 3.0.0
-			#links 6
+			#links 8
 		*/
 		("link-show",
 			(text) => {
@@ -529,6 +596,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 				cd.data.section = section;
 				cd.data.clickEvent = (link) => {
 					link.contents().unwrap();
+
 					hooks.forEach(hook => hook.forEach(section, elem => {
 						const hiddenSource = elem.data('hiddenSource');
 						if (hiddenSource === undefined) {
@@ -574,7 +642,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		(link-reveal:), (link:), (link-goto:), (click:)
 		
 		Added in: 3.0.0
-		#links 5
+		#links 6
 	*/
 	Macros.addChanger(["link-reveal-goto"],
 		(section, text, passage) => {

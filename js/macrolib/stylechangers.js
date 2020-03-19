@@ -341,6 +341,9 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			milliseconds. If (if:) or (unless:) macros are inside the hook, they of course will be re-evaluated each time.
 			
 			Details:
+			Numbers given to macros such as `(live:)` can be suffixed with `ms` or `s` to indicate whether you mean milliseconds or
+			seconds (see the article on number data for more information). If you give a bare number, the macro interprets it as milliseconds.
+
 			Live hooks will continue to re-render themselves until they encounter and print a (stop:) macro. (stop:) should be used
 			whenever you don't need to keep the hook "live", to save on processing and passage repainting (which can interfere
 			with clicking, selecting text, and other interactions).

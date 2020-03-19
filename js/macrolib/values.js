@@ -381,6 +381,11 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			You can only perform these operations (apart from `is`) on two pieces of data if they're both numbers. Adding the
 			string "5" to the number 2 would produce an error, and not the number 7 nor the string "52". You must
 			convert one side or the other using the (num:) or (str:) macros.
+
+			Finally, certain macros that accept numbers, such as `(live:)`, use those numbers as time durations. There is a special form of
+			number data you can use for this – put "s" or "ms" at the end of the number to specify if the number indicates milliseconds or
+			seconds. For instance, `50ms` means 50 milliseconds, and `5s` means 5 seconds (which is 5000 milliseconds). A number suffixed with `s` is
+			the same as a number suffixed with `ms` and multiplied by 1000.
 		*/
 		/*d:
 			(num: String) -> Number
