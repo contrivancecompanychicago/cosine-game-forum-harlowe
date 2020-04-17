@@ -587,7 +587,7 @@ define([
 		[either(Number,String), rest(either(Number,String))])
 		
 		/*d:
-			(rotated: Number, [...Any]) -> Array
+			(rotated: Number, ...Any) -> Array
 			
 			Similar to the (a:) macro, but it also takes a number at the start, and moves
 			each item forward by that number, wrapping back to the start
@@ -598,7 +598,7 @@ define([
 			* `(rotated: -2, 'A','B','C','D')` is equal to `(a: 'C','D','A','B')`.
 			
 			Rationale:
-			Sometimes, you may want to cycle through a number of values, without
+			Sometimes, you may want to cycle through a sequence of values, without
 			repeating any until you reach the end. For instance, you may have a rotating set
 			of flavour-text descriptions for a thing in your story, which you'd like displayed
 			in their entirety without the whim of a random picker. The (rotated:) macro
@@ -617,11 +617,14 @@ define([
 			something like this: `(str: ...(rotated: 1, ...$str))`
 			
 			Details:
-			To ensure that it's being used correctly, this macro requires three or more items -
-			providing just two, one or none will cause an error to be presented.
+			To ensure that it's being used correctly, this macro requires two or more items -
+			providing just one or none will cause an error to be presented.
+
+			If you can't reliably know how many positions you wish to rotate, but know that you need a certain
+			value to be at the front, simply use the (rotated-to:) variant of this macro instead.
 			
 			See also:
-			(sorted:)
+			(sorted:), (rotated-to:)
 			
 			Added in: 1.1.0
 			#data structure
@@ -647,6 +650,52 @@ define([
 			return array.slice(number).concat(array.slice(0, number)).map(clone);
 		},
 		[parseInt, Any, rest(Any)])
+
+		/*d:
+			(rotated-to: Lambda, [...Any]) -> Array
+			
+			Similar to the (a:) macro, but it also takes a "where" lambda at the start, and
+			cycles the order of the subsequent values so that the first value to match the lambda is
+			placed at the start.
+
+			Example usage:
+			* `(rotated-to: where it is 'D', 'A','B','C','D')` is equal to `(a: 'D','A','B','C')`.
+			* `(rotated-to: where it > 3, 1, 2, 3, 4, 5)` is equal to `(a: 4, 5, 1, 2, 3)`.
+
+			Rationale:
+			This is a variation of the (rotated:) macro. Both of these macros allow you to cycle through a sequence of values,
+			wrapping back to the start, until a certain value is at the front, then provide an array of the values in that order.
+			The former macro lets you specify an exact number of rotations to do; this one lets you specify what kind of value
+			should be at the front.
+
+			This is designed to be used with macros like (cycling-link:) - if you have a variable bound to the link, and want the link's initial
+			text to always be that variable's current contents (among a set of fixed text) then use (rotated-to:) like
+			so: `(cycling-link: bind $hat, ...(rotated-to: where it is $hat, "Helmet", "Beret", "Poker visor", "Tricorn"))`.
+
+			Details:
+			If the lambda doesn't match any of the values (that is, there's no value to rotate to) then an error will result.
+
+			To ensure that it's being used correctly, this macro requires two or more items -
+			providing just one or none will cause an error to be presented.
+
+			See also:
+			(sorted:), (rotated:), (find:)
+
+			Added in: 3.2.0
+			#data structure
+		*/
+		("rotated-to", (section, lambda, ...array) => {
+			const elems = lambda.filter(section, array);
+			if (TwineError.containsError(elems)) {
+				return elems;
+			}
+			if (!elems.length) {
+				return TwineError.create("macrocall", "None of these " + array.length + " values matched the lambda, so I can't rotate them.");
+			}
+			const index = array.indexOf(elems[0]);
+			return array.slice(index).concat(array.slice(0, index)).map(clone);
+		},
+		[Lambda.TypeSignature('where'), Any, rest(Any)])
 
 		/*d:
 			(repeated: Number, ...Any) -> Array

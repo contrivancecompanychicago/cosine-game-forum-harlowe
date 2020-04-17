@@ -248,7 +248,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 				*/
 				return "blocked";
 			},
-			[])
+			[]);
 
 		/*d:
 			(cycling-link: [Bind], ...String) -> Command
@@ -286,9 +286,8 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			and, as the first value, it will harmlessly overwrite $hat with itself (and thus leave it unchanged). Additionally, if you have
 			an array of strings that you'd like to reuse for the same cycling link in multiple passages, say as
 			`(set: $allHats to (a: "Helmet", "Beret", "Poker visor", "Tricorn"))`, and you'd like each cycling link to start on
-			whatever matching value is currently in $hat, simply first provide $hat as the first value,
-			then follow it with $allHats with $hat removed: `(cycling-link: bind $hat, $hat, ...($allHats - (a:$hat)))`. (Note that this doesn't
-			preserve the order of $allHats relative to $hat, however.)
+			whatever matching value is currently in $hat, simply use the (rotated-to:)
+			macro: `(cycling-link: bind $hat, ...(rotated-to: where it is $hat, ...$allHats))`.
 
 			If you use (replace:) to alter the text inside a (cycling-link:), such as `(cycling-link: bind $tattoo, "Star", "Feather")(replace:"Star")[Claw]`,
 			then the link's text will be changed, but the value assigned to the bound variable will *not* - $tattoo will still be "Star", and clicking the
@@ -299,14 +298,53 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			Added in: 3.0.0
 			#input
 		*/
-		("cycling-link",
+		/*d:
+			(seq-link: [Bind], ...String) -> Command
+			Also known as: (sequence-link:)
+
+			A command that creates a link that does not go anywhere, but changes its own text to the next in a sequence of strings, becoming plain text once the final
+			string is reached, and setting the optional bound variable to match the text at all times.
+
+			Example usage:
+			* `(seq-link: bind $candy, "Two candies", "One candy", "Some wrappers")` sets the $candy variable to always equal the currently displayed string. "Some wrappers", the final
+			string, becomes plain text instead of a link.
+			* `(seq-link: "We nodded,", "turned,", "and departed, not a word spoken")` has no bound variable.
+
+			Rationale:
+			This is a variation of the (cycling-link:) command macro that does not cycle - for more information about that macro,
+			see its corresponding article. This is a simpler macro, being simply a link that changes when clicked without looping, albeit less useful as
+			a means of obtaining the player's input.
+
+			While it's possible to produce this effect by simply using (link:) and nesting it, such as by `(link:"We nodded,")[(link:"turned,")[and departed, not a word spoken]]`,
+			this macro is much more convenient to write when you wish to use a large amount of link labels. Additionally, this macro allows a bound variable to
+			keep track of which string the player viewed last, as with (cycling-link:), which would be slightly more complicated to track using (link:) and (set:).
+
+			Details:
+			If one of the strings is empty, such as `(seq-link: "Two eggs", "One egg", "")`, then upon reaching the empty string, the link
+			will disappear permanently. If the *first* string is empty, an error will be produced (because then the link can never appear at all).
+
+			If attempting to render one string produces an error, such as `(seq-link: "Goose", "(print: 2 + 'foo')")`, then the error will only appear
+			once the link cycles to that string.
+
+			The bound variable will be set to the first value as soon as the sequence link is displayed - so, even if the player doesn't
+			interact with the link at all, the variable will still have the intended value.
+
+			If you use (replace:) to alter the text inside a (seq-link:), such as `(seq-link: bind $candy, "Two candies", "One candy", "Some wrappers")(replace:"Two")[Five]`,
+			then the link's text will be changed, but the value assigned to the bound variable will *not* - $candy will still be "Two candies" until the link is clicked.
+
+			If only one string was given to this macro, an error will be produced.
+
+			Added in: 3.2.0
+			#input
+		*/
+		[["cycling-link"],["seq-link","sequence-link"]].forEach((name, seq) => Macros.addCommand(name,
 			(...labels) => {
 				if (labels[0] === "") {
-					return TwineError.create("macrocall", "The first string in a (cycling-link:) can't be empty.");
+					return TwineError.create("macrocall", "The first string in a (" + name[0] + ":) can't be empty.");
 				}
 				if (labels.length <= (VarBind.isPrototypeOf(labels[0]) ? 2 : 1)) {
 					return TwineError.create("macrocall",
-						"I need two or more strings to cycle through, not just '"
+						"I need two or more strings to " + (seq ? "sequence" : "cycle") + " through, not just '"
 						+ labels[labels.length - 1]
 						+ "'."
 					);
@@ -330,10 +368,21 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 				const [{tempVariables}] = section.stack;
 				cd.data.clickEvent = (link) => {
 					/*
-						Rotate to the next label, cycling around if it's past the end.
+						Rotate to the next label...
 					*/
 					index = (index + 1) % labels.length;
-					let source = (labels[index] === "" ? "" : '<tw-link>' + labels[index] + '</tw-link>');
+					const ending = (index >= labels.length-1 && seq);
+					let source = (labels[index] === "" ? "" :
+						/*
+							...ending if this is a (seq-link:), or cycling around if it's past the end.
+						*/
+						ending ? labels[index] : '<tw-link>' + labels[index] + '</tw-link>');
+					/*
+						Remove the clickEvent if this really is the end.
+					*/
+					if (ending) {
+						cd.data.clickEvent = undefined;
+					}
 					/*
 						If there's a bound variable, set it to the value of the next string.
 						(If it returns an error, let that replace the source.)
@@ -374,8 +423,8 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 				}
 				return assign(cd, { source, append: "replace", transitionDeferred: true, });
 			},
-			[either(VarBind, String), rest(String)]);
-
+			[either(VarBind, String), rest(String)])
+	);
 	/*
 		An onchange event for <select> elements must be registered for the sake of the (dropdown:) macro,
 		which is implemented similar to the link macros - the ChangeDescriptor's data.dropdownEvent indicates

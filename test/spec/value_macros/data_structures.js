@@ -197,6 +197,27 @@ describe("data structure macros", function () {
 				+"(set:$b's 1st's 1st to 4)$a").markupToPrint("1,2,3");
 		});
 	});
+	describe("the (rotated-to:) macro", function() {
+		it("accepts 1 lambda and 2 or more arguments of any type", function() {
+			expect("(rotated-to:)").markupToError();
+			expect("(rotated-to: where it is 2)").markupToError();
+			expect("(rotated-to: where it is 2, 1)").markupToError();
+			["1", "'X'", "true"].forEach(function(e) {
+				for(var i = 2; i < 10; i += 1) {
+					expect("(rotated-to: where it is " + e + ", " + (e + ",").repeat(i) + ")").not.markupToError();
+				}
+			});
+		});
+		it("returns an array containing arguments 1+, rotated to the first value that satisfies the lambda", function() {
+			runPassage("(set: $a to (rotated-to:where it > 3,1,2,3,4))");
+			expect("(print: $a)").markupToPrint("4,1,2,3");
+			runPassage("(set: $a to (rotated-to:where it is 3,1,2,3,4))");
+			expect("(print: $a)").markupToPrint("3,4,1,2");
+		});
+		it("produces an error if the lambda doesn't match any items", function() {
+			expect("(rotated: where it is 5,1,2,3,4))").markupToError();
+		});
+	});
 	describe("the (sorted:) macro", function() {
 		it("accepts 2 or more number or string arguments", function() {
 			expect("(sorted:)").markupToError();
