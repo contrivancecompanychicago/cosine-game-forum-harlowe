@@ -39,7 +39,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		```
 	*/
 	const
-		{either, wrapped, optional, Any, zeroOrMore} = Macros.TypeSignature,
+		{either, wrapped, optional, Any, zeroOrMore, rest} = Macros.TypeSignature,
 		IfTypeSignature = [wrapped(Boolean, "If you gave a number, you may instead want to check that the number is not 0. "
 			+ "If you gave a string, you may instead want to check that the string is not \"\".")];
 
@@ -385,9 +385,9 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			cumbersome. This macro provides that functionality in a shorter form - the example above is equivalent to:
 			```
 			{(live: 0.2s)[
-				(if: time > 5s)[
-					Oops, I forgot the next link: [[Go east]].(stop:)
-				]
+			    (if: time > 5s)[
+			        Oops, I forgot the next link: [[Go east]].(stop: )
+			    ]
 			]}
 			```
 
@@ -1049,14 +1049,14 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		)
 		
 		/*d:
-			(text-style: String) -> Changer
+			(text-style: ...String) -> Changer
 			
-			This applies a selected built-in text style to the hook's text.
+			This applies one or more selected built-in text styles to the hook's text.
 			
 			Example usage:
-			`The shadow (text-style: "shadow")[flares] at you!` will style the word "flares" with a shadow.
-			
-			`(set: $s to (text-style: "shadow")) The shadow $s[flares] at you!` will also style it with a shadow.
+			* `The shadow (text-style: "shadow")[flares] at you!` will style the word "flares" with a shadow.
+			* `(set: $s to (text-style: "shadow")) The shadow $s[flares] at you!` will also style it with a shadow.
+			* `(text-style: "italic", "emboss")[Richard Donahue, King for Hire]` makes the text italic and embossed.
 			
 			Rationale:
 			While Twine offers markup for common formatting styles like bold and italic, having these
@@ -1068,37 +1068,45 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			which are otherwise unavailable or difficult to produce.
 			
 			Details:
-			At present, the following text strings will produce a particular style.
+			At present, the following text strings will produce a particular style. All of these are case-insensitive and dash-insensitive - "UPSIDE-DOWN" and "upsidedown" both work in place of "upside-down".
 
-			| String | Example
+			| String | Example | Incompatible with
 			|---
-			| "none"           | <t-s></t-s>
-			| "bold"           | <t-s style="font-weight:bold"></t-s>
-			| "italic"         | <t-s style="font-style:italic"></t-s>
-			| "underline"      | <t-s style="text-decoration: underline"></t-s>
-			| "strike"         | <t-s style="text-decoration: line-through"></t-s>
-			| "superscript"    | <t-s style="vertical-align:super;font-size:.83em"></t-s>
-			| "subscript"      | <t-s style="vertical-align:sub;font-size:.83em"></t-s>
-			| "mark"           | <t-s style="background-color: hsla(60, 100%, 50%, 0.6)"></t-s>
-			| "outline"        | <t-s style="color:white; text-shadow: -1px -1px 0 black, 1px -1px 0 black, -1px  1px 0 black, 1px  1px 0 black"></t-s>
-			| "shadow"         | <t-s style="text-shadow: 0.08em 0.08em 0.08em black"></t-s>
-			| "emboss"         | <t-s style="text-shadow: 0.08em 0.08em 0em black"></t-s>
-			| "condense"       | <t-s style="letter-spacing:-0.08em"></t-s>
-			| "expand"         | <t-s style="letter-spacing:0.1em"></t-s>
-			| "blur"           | <t-s style="text-shadow: 0em 0em 0.08em black; color:transparent"></t-s>
-			| "blurrier"       | <t-s style="text-shadow: 0em 0em 0.2em black; color:transparent"></t-s>
-			| "smear"          | <t-s style="text-shadow: 0em 0em 0.02em black, -0.2em 0em 0.5em black, 0.2em 0em 0.5em black; color:transparent"></t-s>
-			| "mirror"         | <t-s style="display:inline-block;transform:scaleX(-1)"></t-s>
-			| "upside-down"    | <t-s style="display:inline-block;transform:scaleY(-1)"></t-s>
-			| "blink"          | <t-s style="animation:fade-in-out 1s steps(1,end) infinite alternate"></t-s>
-			| "fade-in-out"    | <t-s style="animation:fade-in-out 2s ease-in-out infinite alternate"></t-s>
-			| "rumble"         | <t-s style="display:inline-block;animation:rumble linear 0.1s 0s infinite"></t-s>
-			| "shudder"        | <t-s style="display:inline-block;animation:shudder linear 0.1s 0s infinite"></t-s>
+			| "none"           | <t-s></t-s> | 
+			| "bold"           | <t-s style="font-weight:bold"></t-s> | 
+			| "italic"         | <t-s style="font-style:italic"></t-s> | 
+			| "underline"      | <t-s style="text-decoration: underline"></t-s> | "strike"
+			| "strike"         | <t-s style="text-decoration: line-through"></t-s> | "underline"
+			| "superscript"    | <t-s style="vertical-align:super;font-size:.83em"></t-s> | "subscript"
+			| "subscript"      | <t-s style="vertical-align:sub;font-size:.83em"></t-s> | "superscript"
+			| "mark"           | <t-s style="background-color: hsla(60, 100%, 50%, 0.6)"></t-s> | (background-color:)
+			| "outline"        | <t-s style="color:white; text-shadow: -1px -1px 0 black, 1px -1px 0 black, -1px  1px 0 black, 1px  1px 0 black"></t-s> | "shadow", "emboss", "blur", blurrier", "smear"
+			| "shadow"         | <t-s style="text-shadow: 0.08em 0.08em 0.08em black"></t-s> | "outline", "emboss", "blur", "blurrier", "smear"
+			| "emboss"         | <t-s style="text-shadow: 0.08em 0.08em 0em black"></t-s> | "outline", "shadow", "blur", "blurrier", "smear"
+			| "condense"       | <t-s style="letter-spacing:-0.08em"></t-s> | "expand"
+			| "expand"         | <t-s style="letter-spacing:0.1em"></t-s> | "condense"
+			| "blur"           | <t-s style="text-shadow: 0em 0em 0.08em black; color:transparent"></t-s> | "outline", "shadow", "emboss", "blurrier", "smear"
+			| "blurrier"       | <t-s style="text-shadow: 0em 0em 0.2em black; color:transparent"></t-s> | "outline", "shadow", "emboss", "blur", "smear"
+			| "smear"          | <t-s style="text-shadow: 0em 0em 0.02em black, -0.2em 0em 0.5em black, 0.2em 0em 0.5em black; color:transparent"></t-s> | "outline", "shadow", "emboss", "blur", "blurrier"
+			| "mirror"         | <t-s style="display:inline-block;transform:scaleX(-1)"></t-s> | "upside-down"
+			| "upside-down"    | <t-s style="display:inline-block;transform:scaleY(-1)"></t-s> | "mirror"
+			| "blink"          | <t-s style="animation:fade-in-out 1s steps(1,end) infinite alternate"></t-s> | "fade-in-out", "rumble", "shudder", "sway", "buoy"
+			| "fade-in-out"    | <t-s style="animation:fade-in-out 2s ease-in-out infinite alternate"></t-s> | "blink", "rumble", "shudder", "sway", "buoy"
+			| "rumble"         | <t-s style="display:inline-block;animation:rumble linear 0.1s 0s infinite"></t-s> | "blink", "fade-in-out", "shudder", "sway", "buoy"
+			| "shudder"        | <t-s style="display:inline-block;animation:shudder linear 0.1s 0s infinite"></t-s> | "blink", "fade-in-out", "rumble", "sway", "buoy"
+			| "sway"           | <t-s style="display:inline-block;animation:sway 5s linear 0s infinite"></t-s> | "blink", "fade-in-out", "rumble", "shudder", "buoy"
+			| "buoy"           | <t-s style="display:inline-block;animation:buoy 5s linear 0s infinite"></t-s> | "blink", "fade-in-out", "rumble", "shudder", "sway"
 			
 			You can use the "none" style to remove an existing style from a combined changer.
+
+			Due to browser limitations, combining many of these changers won't work exactly as intended – `(text-style: "underline", "strike")`, for instance,
+			will cause only the latter of the two to be applied, in this case "strike". These incompatibilities are listed in the table above.
 			
-			Due to browser limitations, hooks using "mirror", "upside-down", "rumble" or "shudder" will have its CSS `display`
+			Also due to browser limitations, hooks using "mirror", "upside-down", "sway", "buoy", "rumble" or "shudder" will have its CSS `display`
 			attribute set to `inline-block`.
+
+			Note that the animations of "rumble" and "shudder" are particularly intense, and may induce frustration or illness in
+			motion-sensitive readers. Take care when using them.
 
 			See also:
 			(css:)
@@ -1111,7 +1119,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			this closure, and used in the addChanger call.
 		*/
 		(...(() => {
-				var
+				const
 					/*
 						This is a shorthand used for the definitions below. As a function, it is treated as a dependent
 						attribute (dependent on the element's previous text-colour) so it will be applied at the same time
@@ -1223,39 +1231,52 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 							animation: "rumble linear 0.1s 0s infinite",
 							display: "inline-block",
 						},
+						sway: {
+							animation: "sway linear 2.5s 0s infinite",
+							display: "inline-block",
+						},
+						buoy: {
+							animation: "buoy linear 2.5s 0s infinite",
+							display: "inline-block",
+						},
 					});
 				
 				return [
 					"text-style",
-					(_, styleName) => {
-						/*
-							The name should be insensitive to normalise both capitalisation,
-							and hyphenation of names like "upside-down".
-						*/
-						styleName = Utils.insensitiveName(styleName);
-						
-						if (!(styleName in styleTagNames)) {
-							return TwineError.create(
-								"datatype",
-								"'" + styleName + '\' is not a valid (text-style:)',
-								"Only the following names are recognised (capitalisation and hyphens ignored): "
-									+ Object.keys(styleTagNames).join(", "));
+					(_, ...styleNames) => {
+						for (let i = 0; i < styleNames.length; i+=1) {
+							let styleName = Utils.insensitiveName(styleNames[i]);
+							/*
+								The name should be insensitive to normalise both capitalisation,
+								and hyphenation of names like "upside-down".
+							*/
+							styleName = Utils.insensitiveName(styleName);
+							
+							if (!(styleName in styleTagNames)) {
+								return TwineError.create(
+									"datatype",
+									"'" + styleName + '\' is not a valid (text-style:)',
+									"Only the following names are recognised (capitalisation and hyphens ignored): "
+										+ Object.keys(styleTagNames).join(", "));
+							}
+							styleNames[i] = styleName;
 						}
-						return ChangerCommand.create("text-style", [styleName]);
+						return ChangerCommand.create("text-style", styleNames);
 					},
-					(d, styleName) => {
-						Utils.assertMustHave(styleTagNames,[styleName]);
-						if (styleName === "none") {
-							d.styles = [];
-						}
-						else {
-							d.styles = d.styles.concat(styleTagNames[styleName]);
+					(d, ...styleNames) => {
+						for (let i = 0; i < styleNames.length; i+=1) {
+							if (styleNames[i] === "none") {
+								d.styles = [];
+							}
+							else {
+								d.styles = d.styles.concat(styleTagNames[styleNames[i]]);
+							}
 						}
 						return d;
 					}
 				];
 			})(),
-			[String]
+			[rest(String)]
 		)
 
 		/*d:

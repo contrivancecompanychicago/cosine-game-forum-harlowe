@@ -538,96 +538,149 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			}
 			return assign(cd, { source, append: "replace", });
 		},
-		[VarBind, String, rest(String)])
+		[VarBind, String, rest(String)]);
 
-		/*d:
-			(show: ...HookName) -> Command
+	/*d:
+		(show: ...HookName) -> Command
 
-			Reveals hidden hooks, running the code within.
+		Reveals hidden hooks, running the code within.
 
-			Example usage:
-			```
-			|fan)[The overhead fan spins lazily.]
-			
-			(link:"Turn on fan")[(show:?fan)]
-			```
+		Example usage:
+		```
+		|fan)[The overhead fan spins lazily.]
+		
+		(link:"Turn on fan")[(show:?fan)]
+		```
 
-			Rationale:
-			The purpose of hidden hooks is, of course, to eventually show them - and this macro is
-			how you show them. You can use this command inside a (link:), trigger it in real-time with
-			a (live:) macro, or anywhere else.
+		Rationale:
+		The purpose of hidden hooks is, of course, to eventually show them - and this macro is
+		how you show them. You can use this command inside a (link:), trigger it in real-time with
+		a (live:) macro, or anywhere else.
 
-			Using (show:) vs (replace:):
+		Using (show:) vs (replace:):
 
-			There are different reasons for using hidden hooks and (show:) instead of (replace:). For your stories,
-			think about whether the prose being revealed is part of the "main" text of the passage, or is just an aside.
-			In neatly-coded stories, the main text should appear early in a passage's code, as the focus of the
-			writer's attention.
+		There are different reasons for using hidden hooks and (show:) instead of (replace:). For your stories,
+		think about whether the prose being revealed is part of the "main" text of the passage, or is just an aside.
+		In neatly-coded stories, the main text should appear early in a passage's code, as the focus of the
+		writer's attention.
 
-			When using (replace:), the replacement prose is written far from its insertion point. This can improve
-			readability when the insertion point is part of a long paragraph or sentence, and the prose is a minor aside
-			or amendment, similar to a footnote or post-script, that would clutter the paragraph were it included inside.
-			Additionally, (replace:) can be used in a "header" or "footer" tagged passage to affect certain named hooks
-			throughout the story.
+		When using (replace:), the replacement prose is written far from its insertion point. This can improve
+		readability when the insertion point is part of a long paragraph or sentence, and the prose is a minor aside
+		or amendment, similar to a footnote or post-script, that would clutter the paragraph were it included inside.
+		Additionally, (replace:) can be used in a "header" or "footer" tagged passage to affect certain named hooks
+		throughout the story.
 
-			```
-			You turn away from her, facing the grandfather clock, its [stern ticking]<1| filling the tense silence.
+		```
+		You turn away from her, facing the grandfather clock, its [stern ticking]<1| filling the tense silence.
 
-			(click-replace: ?1)[echoing, hollow ticking]
-			```
+		(click-replace: ?1)[echoing, hollow ticking]
+		```
 
-			When using (show:), the hidden hook's position is fixed in the passage prose. This can improve
-			readability when the hidden hook contains a lot of the "main" text of a passage, which provides vital context
-			and meaning for the rest of the text.
+		When using (show:), the hidden hook's position is fixed in the passage prose. This can improve
+		readability when the hidden hook contains a lot of the "main" text of a passage, which provides vital context
+		and meaning for the rest of the text.
 
-			```
-			I don't know where to begin... |1)[The weird state of my birth, the prophecy made centuries ago,
-			my first day of school, the day of the meteors, the day I awoke my friends' powers... so many strands in
-			the tapestry of my tale, and no time to unravel them.] ...so for now I'll start with when we fell down the hole.
+		```
+		I don't know where to begin... |1)[The weird state of my birth, the prophecy made centuries ago,
+		my first day of school, the day of the meteors, the day I awoke my friends' powers... so many strands in
+		the tapestry of my tale, and no time to unravel them.] ...so for now I'll start with when we fell down the hole.
 
-			(link:"Where, indeed?")[(show:?1)]
-			```
+		(link:"Where, indeed?")[(show:?1)]
+		```
 
-			But, there aren't any hard rules for when you should use one or the other. As a passage changes in the writing, you should feel free to change between one or the other, or leave your choice as-is.
+		But, there aren't any hard rules for when you should use one or the other. As a passage changes in the writing, you should
+		feel free to change between one or the other, or leave your choice as-is.
 
-			Details:
-			(show:) will reveal every hook with the given name. To only reveal a specific hook, you can use the
-			possessive syntax, as usual: `(show: ?shrub's 1st)`.
+		Details:
+		(show:) will reveal every hook with the given name. To only reveal a specific hook, you can use the
+		possessive syntax, as usual: `(show: ?shrub's 1st)`.
 
-			If you provide to (show:) a hook which is already visible, nothing will happen - no error will be produced.
+		If you provide to (show:) a hook which is already visible, nothing will happen - no error will be produced. If you
+		wish to re-run an already visible hook, use (rerun:). Note that hooks whose visible contents have been replaced with nothing,
+		such as via `(replace: ?1)[]`, are still considered "visible".
 
-			If you wish to reveal a hook after a number of other links have been clicked and removed, such as those created
-			by (link-reveal:) or (click:), you may find the (more:) macro to be convenient.
+		If you wish to reveal a hook after a number of other links have been clicked and removed, such as those created
+		by (link-reveal:) or (click:), you may find the (more:) macro to be convenient.
 
-			See also:
-			(hidden:), (replace:), (more:)
+		See also:
+		(hidden:), (replace:), (rerun:), (more:)
 
-			Added in: 2.0.0
-			#showing and hiding
-		*/
-		("show",
-			() => {},
-			(cd, section, ...hooks) => {
-				hooks.forEach(hook => hook.forEach(section, elem => {
-					const hiddenSource = elem.data('hiddenSource');
-					if (hiddenSource === undefined) {
-						/*
-							Originally there was an error here, but it wasn't actually working, and I
-							decided that having (show:) silently fail when given already-shown
-							hooks' names provides it with slightly more flexibility in use, comparable to how most
-							hook-selecting macros like (click:) are permissive about the names given.
-						*/
-						return;
-					}
-					section.renderInto("", null,
-						assign({}, cd, { source: hiddenSource, target: elem })
-					);
-					elem.removeData('hiddenSource');
-				}));
-				return cd;
-			},
-			[rest(HookSet)])
+		Added in: 2.0.0
+		#showing and hiding
+	*/
+	/*d:
+		(rerun: ...HookName) -> Command
+		
+		Reruns hooks, restoring them to their original contents, and running the macros within them an additional time.
 
+		Example usage:
+		```
+		|1>[You drew a (either:...(range:2,10), "Jack", "Queen", "King", "Ace") of (either:"Hearts","Clubs","Spades","Diamonds").]
+		(link:"Shuffle and draw.")[(rerun:?1)]
+		```
+
+		Rationale:
+		You may often use macros like (replace:) or (append:) to alter the contents of hooks in your passages. But, you may also want an
+		easy way of reversing these changes, to restore the hook to its original state as it had been written in your passage's code.
+		This macro provides a means of doing so without having to reload or revisit the entire passage.
+
+		In addition to re-running hooks elsewhere in the passage, you can produce some useful effects by having a (rerun:) affect its containing hook:
+		```
+		|1>[You're nude in the changing room, with only your reflection for company.
+		(link:"Dress up")[You dress yourself up. Regrettably, you both look worse. (link:"Take off clothes")[(rerun:?1)]]]
+		```
+
+		Furthermore, as (rerun:) causes macros in the hook to re-run themselves, it can be used to "update" hooks to match the present game state:
+		```
+		|1>[Shields: $energy % (text-color:red)[( - $dmg %)]]
+		(link: "Take the punch")[(set:$dmg to (either:1,2,3), $energy to it - $dmg)You get punched square in the cockpit!(rerun: ?1)]
+		```
+
+		Details:
+		(rerun:) will use the hook's original source *as it was written* in the passage source - any alterations done to it using (replace:) and other
+		such macros will not be considered.
+
+		(rerun:) will re-run every hook with the given name. To only re-run a specific hook, you can use the
+		possessive syntax, as usual: `(rerun: ?daydream's 1st)`.
+
+		(rerun:), unlike (show:), will not work on hidden hooks until they become visible using (show:) or (link-show:).
+
+		If you want to rerun a hook multiple times based on elapsed real time, use the (live:) macro.
+
+		See also:
+		(replace:), (show:), (more:), (live:)
+
+		Added in: 3.2.0
+		#revision
+	*/
+	["show","rerun"].forEach(name => Macros.addCommand(name,
+		() => {},
+		(cd, section, ...hooks) => {
+			hooks.forEach(hook => hook.forEach(section, elem => {
+				/*
+					The test for whether a hook has been shown is, simply, whether it has the "hidden" data Boolean.
+					The (show:) macro only works on hidden hooks, and the (rerun:) macro only works on non-hidden hooks.
+				*/
+				if (Boolean(elem.data('hidden')) === (name === "rerun")) {
+					/*
+						Originally there was an error here, but it wasn't actually working, and I
+						decided that having (show:) silently fail when given already-shown
+						hooks' names provides it with slightly more flexibility in use, comparable to how most
+						hook-selecting macros like (click:) are permissive about the names given.
+					*/
+					return;
+				}
+				elem.removeData('hidden');
+				section.renderInto("", null,
+					assign({}, cd, { append: "replace", source: elem.data('originalSource') || '', target: elem })
+				);
+			}));
+			return cd;
+		},
+		[rest(HookSet)])
+	);
+
+	Macros.addCommand
 		/*d:
 			(stop:) -> Command
 			This macro, which accepts no arguments, creates a (stop:) command, which is not configurable.

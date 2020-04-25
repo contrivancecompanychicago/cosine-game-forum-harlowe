@@ -449,23 +449,28 @@ define([
 			whose positions are between the two numbers, inclusively.
 			
 			Example usage:
-			`(subarray: $a, 3, 7)` is the same as `$a's (a:3,4,5,6,7)` or `$a's 3rdto7th`
+			* `(subarray: $a, 3, 7)` is the same as `$a's (a:3,4,5,6,7)` or `$a's 3rdto7th`
+			* `(subarray: $a, 3, $b)` is the same as `$a's (range: 3, $b)` if $b is positive.
 			
 			Rationale:
 			
-			You can obtain subarrays of arrays without this macro, by using the `'s` or `of` syntax along
-			with either a specified range of consecutive positions, or an array of arbitrary position numbers.
-			For instance, `$a's 4thto12th` obtains a subarray of $a containing
-			its 4th through 12th values, and `$a's (a:1,3,5)` obtains a subarray of $a
-			containing just its 1st, 3rd and 5th positions.
-			But, for compatibility with previous Harlowe versions which did not
-			feature this syntax, this macro also exists.
+			This macro may seem redundant, as you can obtain subarrays of arrays without this macro, by using the
+			`'s` or `of` syntax along with either a specified range of consecutive positions, or an array of
+			arbitrary position numbers. For instance, `$a's 4thto12th` obtains a subarray of $a containing
+			its 4th through 12th values, `$a's (a:1,3,5)` obtains a subarray of $a
+			containing just its 1st, 3rd and 5th positions, and `$a's (range:1, $b)` obtains a subarray of each
+			position up to $b.
+
+			However, in the specific situation where you want to use a variable negative position, counting from the end of the array,
+			there isn't a succinct option using that syntax. When gathering each value in array $a
+			between position 1 and $b, where $b is a negative position counting from the end, `(range:1, $b)` doesn't work, and
+			the best you can do without this macro is something like `$a's (range: 1, $b + $a's length)`. So, this
+			macro can be used as a slightly shorter alternative, by writing `(subarray: $a, 1, -$b)`.
 			
 			Details:
 
-			If you provide negative numbers, they will be treated as being offset from the end
-			of the array - `-2` will specify the `2ndlast` item, just as 2 will specify
-			the `2nd` item.
+			As mentioned above, if you provide negative numbers, they will be treated as being offset from the end
+			of the array - `-2` will specify the `2ndlast` item, just as 2 will specify the `2nd` item.
 			
 			If the last number given is larger than the first (for instance, in `(subarray: (a:1,2,3,4), 4, 2)`)
 			then the macro will still work - in that case returning (a:2,3,4) as if the numbers were in
@@ -475,7 +480,7 @@ define([
 			(substring:), (rotated:)
 			
 			Added in: 1.0.0
-			#deprecated
+			#data structure
 		*/
 		("subarray", (_, array, a, b) => subset(array, a, b),
 		[Array, parseInt, parseInt])

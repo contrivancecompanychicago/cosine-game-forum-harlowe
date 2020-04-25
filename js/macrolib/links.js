@@ -598,10 +598,15 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 					link.contents().unwrap();
 
 					hooks.forEach(hook => hook.forEach(section, elem => {
-						const hiddenSource = elem.data('hiddenSource');
-						if (hiddenSource === undefined) {
+						/*
+							As with (show:), the condition for checking if the target has already been shown is simply
+							whether it has the "hidden" data Boolean.
+						*/
+						const hiddenSource = elem.data('originalSource') || '';
+						if (!elem.data('hidden')) {
 							return;
 						}
+						elem.removeData('hidden');
 						section.renderInto("", null,
 							assign({}, cd, { source: hiddenSource, target: elem, transitionDeferred: false }),
 							tempVariables

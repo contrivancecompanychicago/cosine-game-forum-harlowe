@@ -176,6 +176,30 @@ describe("control flow macros", function() {
 			expect('|3)[Red]$foo').markupToPrint("Red");
 		});
 	});
+	describe("the (rerun:) macro", function() {
+		it("accepts 1 or more hooknames", function() {
+			expect("(print:(rerun:))").markupToError();
+			expect("(print:(rerun:2))").markupToError();
+			expect("(print:(rerun:''))").markupToError();
+			expect("(print:(rerun:'s'))").markupToError();
+			expect("(print:(rerun:true))").markupToError();
+			expect("(print:(rerun:?foo))").not.markupToError();
+			expect("(print:(rerun:?foo, ?bar, ?baz, ?qux))").not.markupToError();
+		});
+		it("reruns shown hooks, executing the contained macros again", function() {
+			expect('(set:$foo to 1)|3>[(set:$foo to it+1)](rerun:?3)$foo').markupToPrint('3');
+		});
+		it("reverts hooks to their original code", function() {
+			expect('|3>[Garply](replace:?3)[Grault](rerun:?3)').markupToPrint('Garply');
+		});
+		it("doesn't work on hidden hooks", function() {
+			expect('(set:$foo to 1)|3)[(set:$foo to it+1)](rerun:?3)$foo').markupToPrint('1');
+		});
+		it("works when saved in another passage", function() {
+			runPassage("(set:$bar to (rerun:?3))");
+			expect('(set:$foo to 1)|3>[(set:$foo to it+1)]$bar$foo').markupToPrint("3");
+		});
+	});
 	describe("in debug mode, the <tw-expression> has the 'false' class when the hook is hidden", function() {
 		it("by (if:)", function() {
 			expect(runPassage("(if:false)[Gosh]").find('tw-expression').attr('class')).toMatch(/\bfalse\b/);

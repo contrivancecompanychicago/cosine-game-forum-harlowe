@@ -215,10 +215,10 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 
 			/*
 				First: if this isn't enabled, nothing needs to be rendered. However,
-				the source needs to be saved in case the (show:) macro is used on this.
-				We store it as "hiddenSource" in every element's jQuery data store.
+				the source needs to be saved in case the (show:) or (rerun:) macro is used on this.
+				We store it as "originalSource" in every element's jQuery data store.
 			*/
-			if (!enabled || (target.popAttr('hidden') !== undefined)) {
+			if (!enabled || (target.attr('hidden') !== undefined)) {
 				/*
 					You may wonder if this should use the descriptor's 'innerSource', which is used by
 					(link:) to store the "inner" source behind the link's <tw-link> source. What should
@@ -229,7 +229,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 					followed by (show:?a) should result in ?a appearing, instead of nothing happening. (And
 					(show:?b) shouldn't do anything, either.)
 				*/
-				ChangeDescriptor.create({target,data:Object.assign({}, data, {hiddenSource:source})}).update();
+				ChangeDescriptor.create({target,data:Object.assign({}, data, {originalSource:source, hidden:true})}).update();
 				return $();
 			}
 

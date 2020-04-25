@@ -42,18 +42,20 @@ describe("style changer macros", function() {
 		});
 	});
 	describe("the (textstyle:) macro", function() {
-		it("requires exactly 1 string argument", function() {
+		it("requires 1 or more string arguments", function() {
 			expect("(print:(textstyle:))").markupToError();
 			expect("(print:(textstyle:1))").markupToError();
-			expect("(print:(textstyle:'A','B'))").markupToError();
+			expect("(print:(textstyle:'A',1))").markupToError();
 		});
-		it("errors unless given a valid textstyle name", function() {
+		it("errors unless given one or more valid textstyle name", function() {
 			expect("(print:(textstyle:''))").markupToError();
 			expect("(print:(textstyle:'garply corge'))").markupToError();
 			['bold', 'italic', 'underline', 'strike', 'superscript', 'subscript', 'blink', 'shudder',
 			'mark', 'condense', 'expand', 'outline', 'shadow', 'emboss', 'smear', 'blur', 'blurrier',
-			'mirror', 'upsidedown', 'fadeinout', 'rumble'].forEach(function(e) {
-				expect("(print:(textstyle:'" + e + "'))").not.markupToError();
+			'mirror', 'upsidedown', 'fadeinout', 'rumble', 'shudder','buoy','sway'].forEach(function(e) {
+				expect("(textstyle:'" + e + "')[Hey]").not.markupToError();
+				expect("(textstyle:'" + e + "','bold')[Hey]").not.markupToError();
+				expect("(textstyle:'" + e + "','bold','italic')[Hey]").not.markupToError();
 			});
 		});
 		it("uses case- and dash-insensitive style names", function() {

@@ -142,8 +142,11 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 				As a result of the above, putting these in `header` tagged passages instead of `footer` tagged passages won't
 				do much good, as they are printed before the rest of the passage.
 
+				If you wish to use (replace:) to replace a hook with a copy of its own text, to undo the effects of other
+				(replace:), (append:), (prepend:) or other macros on it, consider using the (rerun:) macro instead.
+
 				See also:
-				(append:), (prepend:), (show:), (more:)
+				(append:), (prepend:), (show:), (rerun:), (more:)
 
 				Added in: 1.0.0
 				#revision
@@ -165,7 +168,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 				text or amending it with an extra sentence or word, changing or revealing a deeper meaning.
 
 				See also:
-				(replace:), (prepend:), (show:), (more:)
+				(replace:), (prepend:), (show:), (rerun:), (more:)
 
 				Added in: 1.0.0
 				#revision
@@ -188,7 +191,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 				preceding sentences or words to a text to change or reveal a deeper meaning.
 
 				See also:
-				(replace:), (append:), (show:), (more:)
+				(replace:), (append:), (show:), (rerun:), (more:)
 
 				Added in: 1.0.0
 				#revision

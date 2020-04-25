@@ -51,12 +51,13 @@ define([
 			If result is a ChangerCommand, please run it.
 		*/
 		if (result && typeof result === "object" && ChangerCommand.isPrototypeOf(result)) {
+			/*
+				The use of popAttr prevents the hook from executing normally
+				if it wasn't actually the eventual target of the changer function.
+			*/
+			nextHook.data('originalSource', nextHook.popAttr('source'));
 			const enabled = this.renderInto(
-				/*
-					The use of popAttr prevents the hook from executing normally
-					if it wasn't actually the eventual target of the changer function.
-				*/
-				nextHook.popAttr('source'),
+				nextHook.data('originalSource'),
 				/*
 					Don't forget: nextHook may actually be empty.
 					This is acceptable - the result changer could alter the
@@ -92,6 +93,10 @@ define([
 				}
 				return;
 			}
+			/*
+				Do note: renderInto(), via ChangeDescriptor.render(), installs the 'hidden' and 'originalSource'
+				attributes on the non-enabled hook by itself, thus not requiring this function to do it.
+			*/
 		}
 		/*
 			Attached false values hide hooks as well.
@@ -100,11 +105,12 @@ define([
 		*/
 		else if (result === false) {
 			/*
-				Just as in ChangeDescriptor.render(), suppressing a hook will move
-				its source into a 'hiddenSource' data store.
+				Removing the 'source' attribute is necessary to prevent this from being rendered
+				by Section.
 			*/
 			if (nextHook.attr('source')) {
-				nextHook.data('hiddenSource', nextHook.popAttr('source'));
+				nextHook.data('originalSource', nextHook.popAttr('source'));
+				nextHook.data('hidden',true);
 			}
 			expr.addClass("false");
 			
@@ -656,7 +662,7 @@ define([
 		/*
 			Obtain the code of the hook that the (live:) or (event:) changer suppressed.
 		*/
-		const source = target.data('hiddenSource') || "";
+		const source = target.data('originalSource') || "";
 		/*
 			Similarly to the other delayed rendering macros like (link:) and (click:),
 			this too must store the current stack tempVariables object, so that it can
@@ -1115,22 +1121,27 @@ define([
 					case Selectors.hook:
 					{
 						/*
-							First, hidden hooks should not be rendered, and instead stash
-							their source as "hiddenSource" data for macros to activate
-							later.
+							Since hooks can be re-ran with (rerun:), their original source needs to be stored.
 						*/
-						if (expr.attr('hidden')) {
-							expr.removeAttr('hidden');
-							expr.data('hiddenSource', expr.popAttr('source'));
+						let src = expr.popAttr('source') || '';
+						if (src) {
+							expr.data('originalSource', src);
+						}
+						/*
+							First, hidden hooks should not be rendered.
+							The 'hidden' data boolean is used by (show:) and (link-show:).
+						*/
+						if (expr.popAttr('hidden')) {
+							expr.data('hidden',true);
+							break;
 						}
 						/*
 							Now we can render visible hooks.
-							Note that hook rendering may be triggered early by attached
-							expressions, so a hook lacking a 'source' attr may have
-							already been rendered.
+							Note that hook rendering may be triggered early by attached expressions, so a hook lacking a 'source'
+							attr has probably already been rendered.
 						*/
-						if (expr.attr('source')) {
-							section.renderInto(expr.popAttr('source'), expr);
+						if (src) {
+							section.renderInto(src, expr);
 						}
 						break;
 					}

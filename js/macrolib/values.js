@@ -126,12 +126,17 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			You can obtain substrings of strings without this macro, by using the `'s` or `of` syntax along
 			with either a specified range of consecutive positions, or an array of arbitrary position numbers.
 			For instance, `$str's 4thto12th` obtains a substring of $str containing
-			its 4th through 12th characters, and `$a's (a:1,3,5)` obtains a substring of just the 1st, 3rd and 5th characters of $a.
-			But, for compatibility with previous Harlowe versions which did not
-			feature this syntax, this macro also exists.
+			its 4th through 12th characters, `$a's (a:1,3,5)` obtains a substring of just the 1st, 3rd and 5th characters of $a,
+			and `$a's (range:1, $b)` obtains a substring of each position up to $b.
+
+			However, in the specific situation where you want to use a variable negative position, counting from the end of the string,
+			there isn't a succinct option using that syntax. When gathering the characters in string $a
+			between position 1 and $b, where $b is a negative position counting from the end, `(range:1, $b)` doesn't work, and
+			the best you can do without this macro is something like `$a's (range: 1, $b + $a's length)`. So, this
+			macro can be used as a slightly shorter alternative, by writing `(subarray: $a, 1, -$b)`.
 			
 			Details:
-			If you provide negative numbers, they will be treated as being offset from the end
+			As mentioned above, if you provide negative numbers, they will be treated as being offset from the end
 			of the string - `-2` will specify the `2ndlast` character, just as 2 will specify
 			the `2nd` character.
 			
@@ -143,7 +148,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			(subarray:)
 
 			Added in: 1.0.0
-			#deprecated
+			#string
 		*/
 		("substring", (_, string, a, b) => subset(string, a, b),
 		[String, parseInt, parseInt])
