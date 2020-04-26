@@ -347,9 +347,6 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			This method is only for Harlowe debugging purposes. It is called nowhere except for the test specs.
 		*/
 		reset() {
-			if (!window.jasmine) {
-				return;
-			}
 			timeline = [];
 			recent = -1;
 			present = Moment.create();

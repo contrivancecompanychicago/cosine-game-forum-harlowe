@@ -12,9 +12,9 @@ describe("lambdas", function() {
 		expect("(print: each _a with _b)").not.markupToError();
 		expect("(print: where 2)").not.markupToError();
 		expect("(print: when 2)").not.markupToError();
-		expect("(print: making _b)").not.markupToError();
-		expect("(print: via _a)").not.markupToError();
-		expect("(print: with _b)").not.markupToError();
+		expect("(print: making _B)").not.markupToError();
+		expect("(print: via _A)").not.markupToError();
+		expect("(print: with _B)").not.markupToError();
 	});
 	it("cannot have 'each' without the temporary variable", function() {
 		expect("(print: each where true)").markupToError();

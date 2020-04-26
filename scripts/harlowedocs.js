@@ -58,6 +58,7 @@ global.document = {
 	head: { appendChild(){} },
 };
 global.window = global;
+
 require('../js/markup/codemirror/mode.js');
 if (highlighting === undefined) {
 	throw new Error("The kludge to import the CodeMirror mode's CSS didn't work.");
@@ -107,16 +108,17 @@ outputFile = outputFile.replace(/<code>([^<]+)<\/code>(~?)/g, ({length}, code, n
 */
 outputFile = `<!doctype html><title>Harlowe ${version} manual</title><meta charset=utf8><style>
 /* Normalisation CSS */
-html { font-size:110%; font-weight:lighter; background:white; }
-body { font-family:Georgia, "Times New Roman", Times, serif; line-height:1.5; margin:0 25vw 4em 25vw; color:black; }
+html { font-size:110%; font-weight:lighter; background:white; font-family:Georgia, "Times New Roman", Times, serif; line-height:1.5; margin:0 30vw 4em 22vw !important; color:black; }
+@media screen and (max-width: 1200px) { html { margin:0 12vw 4em 12vw  !important; } }
+@media screen and (max-width: 800px) { html { margin:0 6vw 4em 6vw !important; } }
 p { margin-top:1em; }
 strong,b { font-weight: bold; }
 a { color:#3B8BBA; }
 a:hover, a:focus, a:active { color:#22516d; }
-table { background:#fafafa; border-bottom:1px solid #ccc; border-collapse:collapse; border-right:1px solid #ccc; border-spacing:0; font-size:1em; width:100%; }
-table tr { border-top:1px solid #ccc; }
-table tr:nth-child(2n),thead { background:#eee; }
-table th,table td { border-left:1px solid #ccc; padding:4px; text-align:left; }
+table:not(.datamap) { background:#fafafa; border-bottom:1px solid #ccc; border-collapse:collapse; border-right:1px solid #ccc; border-spacing:0; font-size:1em; width:100%; }
+table:not(.datamap) tr { border-top:1px solid #ccc; }
+table:not(.datamap) tr:nth-child(2n),thead { background:#eee; }
+table:not(.datamap) th,table:not(.datamap) td { border-left:1px solid #ccc; padding:4px; text-align:left; }
 tfoot { background:#e3e3e3; }
 h1,h2,h3,h4,h5,h6 { border-bottom:solid 1px #ddd; color:#000; font-weight:400; line-height:1em; margin:0; padding-top:1rem; }
 h4,h5,h6 { font-weight:700; }
@@ -129,11 +131,20 @@ h6 { font-size:.9em; }
 h1,h2 { padding-top:2rem; padding-bottom:5px; }
 
 /* Nav bar */
-nav { position:fixed; width:15vw; max-width: 20vw; top:2.5vh;left:5vh; bottom:5vh; overflow-y:scroll; border:1px solid #888; padding:1rem; margin-bottom:2em; font-size:90% }
+nav { position:fixed; width:15vw; max-width: 20vw; top:2.5vh;left:2.5vw; bottom:5vh; overflow-y:scroll; border:1px solid #888; padding:1rem; margin-bottom:2em; font-size:90% }
 nav ul { list-style-type: none; margin: 0em; padding: 0em; }
 nav img { display:block; margin: 0 auto;}
 .nav_version { text-align:center }
-@media screen and (max-width: 800px) { nav { position:relative; } }
+@media screen and (max-width: 1200px) { nav { display:none; } }
+
+/* Night mode */
+#nightBar { position: fixed; top:0%;right:12vw; border:1px solid #888; border-radius:0.2rem}
+#night, #day { padding: 0.5rem 1rem; display:inline-block; cursor:pointer }
+html.night #night { background: #444 }
+html:not(.night) #day { background: #ccc }
+
+html.night main, html.night nav { filter: invert() hue-rotate(180deg); }
+html.night { background-color:black; }
 
 /* Main styles */
 .def_title { background:linear-gradient(180deg,white,white 70%,silver); border-bottom:1px solid silver; padding-bottom:5px; }
@@ -150,11 +161,23 @@ code { background:#FFF; border:1px solid #888; color:#000; display:block; paddin
 
 /* Inline code */
 pre { display:inline; }
-:not(pre) > code { background:hsla(0,0%,100%,0.75); border:1px dotted #888; display:inline; padding:1px; white-space:nowrap; }
-table :not(pre) > code { white-space: pre-wrap; }
+.previewButton { background:inherit; color:inherit; cursor:pointer; position:absolute; right: 0px; bottom: 0px; padding:0.1rem 0.3rem; border-top:1px solid #888; border-left:1px solid #888; }
+.previewButton::after { content:"▶"; }
+.previewButton:hover { background: #ccc }
+:not(pre) > code { background:hsla(0,0%,100%,0.75); border:1px dotted #888; display:inline; padding:1px; white-space:nowrap; font-size:1rem; }
+table:not(.datamap) :not(pre) > code { white-space: pre-wrap; }
 /* Heading links */
 .heading_link::before { content: "§"; display:inline-block; margin-left:-25px; padding-right:10px; color:black; font-weight:100; visibility:hidden; text-decoration:none; }
 :hover > .heading_link::before { visibility:visible; }
+
+/* Preview */
+#preview { z-index:20; position: fixed; width: 25vw; height:45vh; right:2vw; top: 10vh; overflow-y:scroll; border: 1px double #888; }
+@media screen and (max-width: 1200px) { #preview, .previewButton, #previewCode { display:none; } }
+html:not(.night) #preview tw-story { background-color:white; color:black }
+#previewCode { position:fixed; width:25vw; height:30vh; right: 2vw; bottom: 10vh; overflow:scroll; border: 1px double #888; }
+.CodeMirror { height: 100% !important; width:100% !important; }
+.previewCodeButton { font-size:200%; padding: 0.2rem 0.9rem; }
+html.night .previewCodeButton { color:white; }
 
 /* Kludge for the (text-style:) macro */
 t-s::before { content: 'Example text'; }
@@ -164,8 +187,52 @@ ${highlighting}
 
 /* Animations */
 ${animations}
-</style>${navElement}</ul></nav>${outputFile}
-<p><small>This manual was generated at: ${new Date}</small></p>`;
+</style>
+${navElement}</ul></nav>
+<div id="nightBar"><span id="day">☀️</span><span id="night"/>🌙</span></div>
+<div id="preview"><tw-story><noscript><tw-noscript>JavaScript needs to be enabled to use this code sample preview pane.</tw-noscript></noscript></tw-story>
+<tw-storydata startnode=1><tw-passagedata pid=1 name=Test>&lt;==>\nClick on ▶ on code samples in this documentation to preview the resulting Twine passage here!
+</tw-passagedata></tw-storydata>
+<script role="script" type="twine/javascript">
+window.previewPassage = function(text) {
+	State.reset();
+	Passages.clear();
+	Passages.set("Test", Passages.create($('<div name="Test" tags="">').text(text)));
+	Engine.goToPassage("Test");
+};
+</script>
+</div>
+<div id=previewCode><textarea>\nOr, type some Harlowe code in this text area, and click ▶ to see it render.\n\n(enchant:"this",(text-style:"buoy"))</textarea><div class="previewButton previewCodeButton"></div></div>
+<main>${outputFile}
+<p><small>This manual was generated at: ${new Date}</small></p>
+</main>
+/* Night Mode and Preview Buttons */
+<script>{
+let html = document.documentElement;
+night.addEventListener('click', function() { html.classList.add('night') });
+day  .addEventListener('click', function() { html.classList.remove('night') });
+Array.from(document.querySelectorAll('pre > code')).forEach(function(e) { e.innerHTML += "<div class='previewButton'></div>"; });
+document.addEventListener('click', function(e) { if (e.target.className === "previewButton") { previewPassage(e.target.parentNode.textContent.replace(/\\u200B/g,''))}});
+}</script>
+/* Preview */
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.50.2/codemirror.min.js"></script>
+<link rel=stylesheet href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.50.2/codemirror.min.css">
+<style>
+	/* TwineJS's dark theme for CodeMirror */
+	html.night .CodeMirror {color: #e0e0e0; background: hsl(0, 0%, 14.9%); }
+	html.night div.CodeMirror-selected {background: #4d4d4c !important;}
+	html.night .CodeMirror-gutters {background: #1d1f21; border-right: 0px;}
+	html.night .CodeMirror-linenumber {color: #969896;}
+	html.night .CodeMirror-cursor {border-left: 1px solid #b4b7b4 !important;}
+	html.night .CodeMirror-matchingbracket { text-decoration: underline; color: white !important;}
+</style>
+<style>${fs.readFileSync('build/harlowe-css.css')}</style><script>${fs.readFileSync('build/harlowe-min.js') + fs.readFileSync('build/twinemarkup-min.js')}</script>
+<script>{
+let cm = CodeMirror.modes['harlowe-3'].cm = CodeMirror.fromTextArea(previewCode.firstChild, { mode: null, lineWrapping:true });
+document.addEventListener('click', function(e) { if (e.target.className.includes('previewCodeButton')) { previewPassage(cm.doc.getValue())}});
+try { cm.setOption('mode','harlowe-3'); } catch(e) {}
+}</script>
+`;
 /*
 	Done
 */

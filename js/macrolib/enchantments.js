@@ -545,7 +545,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 			(link:), (link-reveal:), (link-repeat:), (mouseover:), (mouseout:), (replace:), (click-replace:)
 
 			Added in: 1.0.0
-			#links 7
+			#links 9
 		*/
 		{
 			name: "click",
@@ -593,7 +593,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 			(link:), (link-reveal:), (link-repeat:), (click:), (mouseout:), (replace:), (mouseover-replace:), (hover-style:)
 
 			Added in: 1.0.0
-			#links 12
+			#links 14
 		*/
 		{
 			name: "mouseover",
@@ -643,7 +643,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 			(link:), (link-reveal:), (link-repeat:), (click:), (mouseover:), (replace:), (mouseout-replace:), (hover-style:)
 
 			Added in: 1.0.0
-			#links 17
+			#links 19
 		*/
 		{
 			name: "mouseout",
@@ -720,7 +720,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		(click-prepend:), (click-append:)
 
 		Added in: 1.0.0
-		#links 8
+		#links 10
 	*/
 	/*d:
 		(click-append: HookName or String) -> Changer
@@ -739,7 +739,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		(click-replace:), (click-prepend:)
 
 		Added in: 1.0.0
-		#links 9
+		#links 11
 	*/
 	/*d:
 		(click-prepend: HookName or String) -> Changer
@@ -758,7 +758,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		(click-replace:), (click-append:)
 
 		Added in: 1.0.0
-		#links 10
+		#links 12
 	*/
 	/*d:
 		(mouseover-replace: HookName or String) -> Changer
@@ -767,7 +767,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		(click:)'s. For more information, consult the description of (click-replace:).
 
 		Added in: 1.0.0
-		#links 13
+		#links 15
 	*/
 	/*d:
 		(mouseover-append: HookName or String) -> Changer
@@ -776,7 +776,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		(click:)'s. For more information, consult the description of (click-append:).
 
 		Added in: 1.0.0
-		#links 14
+		#links 16
 	*/
 	/*d:
 		(mouseover-prepend: HookName or String) -> Changer
@@ -785,7 +785,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		(click:)'s. For more information, consult the description of (click-prepend:).
 
 		Added in: 1.0.0
-		#links 15
+		#links 17
 	*/
 	/*d:
 		(mouseout-replace: HookName or String) -> Changer
@@ -794,7 +794,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		(click:)'s. For more information, consult the description of (click-replace:).
 
 		Added in: 1.0.0
-		#links 18
+		#links 20
 	*/
 	/*d:
 		(mouseout-append: HookName or String) -> Changer
@@ -803,7 +803,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		(click:)'s. For more information, consult the description of (click-append:).
 
 		Added in: 1.0.0
-		#links 19
+		#links 21
 	*/
 	/*d:
 		(mouseout-prepend: HookName or String) -> Changer
@@ -812,7 +812,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		(click:)'s. For more information, consult the description of (click-prepend:).
 
 		Added in: 1.0.0
-		#links 20
+		#links 22
 	*/
 	revisionTypes.forEach((revisionType) => {
 		interactionTypes.forEach((interactionType) => {

@@ -124,7 +124,7 @@ define([
 		else if (result !== true) {
 			expr.replaceWith(TwineError.create("datatype",
 					objectName(result) + " cannot be attached to this hook.",
-					"Only Booleans, changer commands, and the (live:) macro can be attached to hooks."
+					"Only Booleans and changers can be attached to hooks."
 				).render(expr.attr('title')));
 		}
 		/*

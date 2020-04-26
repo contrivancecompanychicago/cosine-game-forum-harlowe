@@ -616,7 +616,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		Example usage:
 		```
 		|1>[You drew a (either:...(range:2,10), "Jack", "Queen", "King", "Ace") of (either:"Hearts","Clubs","Spades","Diamonds").]
-		(link:"Shuffle and draw.")[(rerun:?1)]
+		(link-rerun:"Shuffle and draw.")[(rerun:?1)]
 		```
 
 		Rationale:
@@ -632,8 +632,9 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 
 		Furthermore, as (rerun:) causes macros in the hook to re-run themselves, it can be used to "update" hooks to match the present game state:
 		```
+		(set:$energy to 100)
 		|1>[Shields: $energy % (text-color:red)[( - $dmg %)]]
-		(link: "Take the punch")[(set:$dmg to (either:1,2,3), $energy to it - $dmg)You get punched square in the cockpit!(rerun: ?1)]
+		(link-rerun: "Take the punch")[(set:$dmg to (either:1,2,3), $energy to it - $dmg)You get punched square in the cockpit!(rerun: ?1)]
 		```
 
 		Details:

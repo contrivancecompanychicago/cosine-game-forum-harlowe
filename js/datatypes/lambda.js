@@ -1,5 +1,5 @@
 "use strict";
-define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltypes/twineerror'], ({toJSLiteral, insensitiveName, plural}, {typeName, objectName, singleTypeCheck}, VarScope, TwineError) => {
+define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltypes/twineerror'], ({toJSLiteral, plural}, {typeName, objectName, singleTypeCheck}, VarScope, TwineError) => {
 	/*d:
 		Lambda data
 
@@ -172,8 +172,9 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 			ret[clauseType] = clause;
 			/*
 				The "making", "with" or "loop" variables' names must always be unique.
+				Note: like regular variables, temp variables are not case-insensitive.
 			*/
-			const nonunique = [ret.making, ret.with, ret.loop].filter((e,i,a)=>e && a.indexOf(insensitiveName(e)) !== i);
+			const nonunique = [ret.making, ret.with, ret.loop].filter((e,i,a)=>e && a.indexOf(e) !== i);
 			if (nonunique.length) {
 				return TwineError.create('syntax', 'This lambda has two variables named \'' + nonunique[0] + '\'.',
 					'Lambdas should have all-unique parameter names.');

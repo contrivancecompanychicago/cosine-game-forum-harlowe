@@ -561,7 +561,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Example usage:
 			```
 			(set: $desertChrome to (gradient: 0, 0, #e6a860, 0.49, black, 0.5, white, 1, blue))
-			(background: $desertChrome)(text-color:white)[Sunshine Desert]
+			(background: $desertChrome)+(text-color:white)[Sunshine Desert]
 			```
 			The above example produces <span style="color:#fff;background-image: linear-gradient(0deg, rgb(230, 168, 96) 0%,
 				rgb(0, 0, 0) 49%, rgb(255, 255, 255) 50%, rgb(25, 127, 230) 100%); display: initial;">Sunshine Desert</span>

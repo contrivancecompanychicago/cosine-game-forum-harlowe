@@ -32,6 +32,9 @@
 	else if (this && this.loaded && this.modules) {
 		lex = this.modules.Markup.lex;
 	}
+	else if (this.TwineMarkup) {
+		lex = this.TwineMarkup.lex;
+	}
 	
 	/*
 		The mode is defined herein.
