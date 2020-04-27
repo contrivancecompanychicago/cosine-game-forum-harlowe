@@ -573,7 +573,8 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			As with most link macros, providing this with an empty link text string will result in an error.
 
 			As with (show:) and (click:), providing this with a hook which is already visible, or which doesn't even exist,
-			will NOT produce an error, but simply do nothing.
+			will NOT produce an error, but simply do nothing. Also, showing a hook that was hidden with (hide:) will not re-run the
+			macros contained within, but simply make visible the hook as it was.
 
 			See also:
 			(show:), (link-reveal:), (click-append:), (more:)
@@ -603,14 +604,24 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 							whether it has the "hidden" data Boolean.
 						*/
 						const hiddenSource = elem.data('originalSource') || '';
-						if (!elem.data('hidden')) {
+						const data = elem.data('hidden');
+						if (!data) {
 							return;
 						}
 						elem.removeData('hidden');
-						section.renderInto("", null,
-							assign({}, cd, { source: hiddenSource, target: elem, transitionDeferred: false }),
-							tempVariables
-						);
+						/*
+							If the "hidden" data is a jQuery, then it was previously hidden using (hide:). In that case, restore
+							the hidden elements as-is without re-rendering.
+						*/
+						if (data instanceof $) {
+							elem.empty().append(data);
+						}
+						else {
+							section.renderInto("", null,
+								assign({}, cd, { source: hiddenSource, target: elem, transitionDeferred: false }),
+								tempVariables
+							);
+						}
 					}));
 				};
 				return assign(cd, {

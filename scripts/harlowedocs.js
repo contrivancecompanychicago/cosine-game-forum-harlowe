@@ -142,8 +142,8 @@ nav img { display:block; margin: 0 auto;}
 #night, #day { padding: 0.5rem 1rem; display:inline-block; cursor:pointer }
 html.night #night { background: #444 }
 html:not(.night) #day { background: #ccc }
-
-html.night main, html.night nav { filter: invert() hue-rotate(180deg); }
+/* This flips the colours for most article elements, but flips them back if they have an explicit background. */
+html.night main, html.night nav, html.night tw-debugger, html.night [style*=background] { filter: invert() hue-rotate(180deg); }
 html.night { background-color:black; }
 
 /* Main styles */
@@ -178,6 +178,8 @@ html:not(.night) #preview tw-story { background-color:white; color:black }
 .CodeMirror { height: 100% !important; width:100% !important; }
 .previewCodeButton { font-size:200%; padding: 0.2rem 0.9rem; }
 html.night .previewCodeButton { color:white; }
+#preview tw-debugger { position: absolute; padding: 0; min-height: 0; box-sizing:border-box; border-top:none; min-width: 80%; }
+#preview .panel-variables { border-top: solid black 2px; border-bottom: none; }
 
 /* Kludge for the (text-style:) macro */
 t-s::before { content: 'Example text'; }
@@ -191,7 +193,7 @@ ${animations}
 ${navElement}</ul></nav>
 <div id="nightBar"><span id="day">☀️</span><span id="night"/>🌙</span></div>
 <div id="preview"><tw-story><noscript><tw-noscript>JavaScript needs to be enabled to use this code sample preview pane.</tw-noscript></noscript></tw-story>
-<tw-storydata startnode=1><tw-passagedata pid=1 name=Test>&lt;==>\nClick on ▶ on code samples in this documentation to preview the resulting Twine passage here!
+<tw-storydata startnode=1 options="debug"><tw-passagedata pid=1 name=Test>&lt;==>\nClick on ▶ on code samples in this documentation to preview the resulting Twine passage here!
 </tw-passagedata></tw-storydata>
 <script role="script" type="twine/javascript">
 window.previewPassage = function(text) {
@@ -200,20 +202,21 @@ window.previewPassage = function(text) {
 	Passages.set("Test", Passages.create($('<div name="Test" tags="">').text(text)));
 	Engine.goToPassage("Test");
 };
+/* Debug Mode variables panel transplant */
+let vars = $('tw-debugger .panel-variables');
+$('tw-debugger').appendTo('#preview').empty().append(vars);
 </script>
 </div>
-<div id=previewCode><textarea>\nOr, type some Harlowe code in this text area, and click ▶ to see it render.\n\n(enchant:"this",(text-style:"buoy"))</textarea><div class="previewButton previewCodeButton"></div></div>
+<div id=previewCode><textarea>
+Or, type some Harlowe code in this text area, and click ▶ to see it render.
+
+\\(set: _style to (text-style:"buoy"), $word to "this")(enchant:$word, _style)\\
+
+This panel ↓ will show any variables that are set by the code.
+</textarea><div class="previewButton previewCodeButton"></div></div>
 <main>${outputFile}
 <p><small>This manual was generated at: ${new Date}</small></p>
 </main>
-/* Night Mode and Preview Buttons */
-<script>{
-let html = document.documentElement;
-night.addEventListener('click', function() { html.classList.add('night') });
-day  .addEventListener('click', function() { html.classList.remove('night') });
-Array.from(document.querySelectorAll('pre > code')).forEach(function(e) { e.innerHTML += "<div class='previewButton'></div>"; });
-document.addEventListener('click', function(e) { if (e.target.className === "previewButton") { previewPassage(e.target.parentNode.textContent.replace(/\\u200B/g,''))}});
-}</script>
 /* Preview */
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.50.2/codemirror.min.js"></script>
 <link rel=stylesheet href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.50.2/codemirror.min.css">
@@ -228,9 +231,17 @@ document.addEventListener('click', function(e) { if (e.target.className === "pre
 </style>
 <style>${fs.readFileSync('build/harlowe-css.css')}</style><script>${fs.readFileSync('build/harlowe-min.js') + fs.readFileSync('build/twinemarkup-min.js')}</script>
 <script>{
+let html = $('html');
+/* CodeMirror setup and Harlowe mode monkeying */
 let cm = CodeMirror.modes['harlowe-3'].cm = CodeMirror.fromTextArea(previewCode.firstChild, { mode: null, lineWrapping:true });
-document.addEventListener('click', function(e) { if (e.target.className.includes('previewCodeButton')) { previewPassage(cm.doc.getValue())}});
+html.on('click', '.previewCodeButton', function(e) { previewPassage(cm.doc.getValue())});
 try { cm.setOption('mode','harlowe-3'); } catch(e) {}
+
+/* Night Mode and Preview Buttons */
+html.on('click', '#night', function() { html.addClass('night'); })
+    .on('click', '#day',   function() { html.removeClass('night'); })
+    .on('click', '.previewButton:not(.previewCodeButton)', function(e) { previewPassage(e.target.parentNode.textContent.replace(/\\u200B/g,'')); });
+$('pre > code').append("<div class='previewButton'></div>");
 }</script>
 `;
 /*

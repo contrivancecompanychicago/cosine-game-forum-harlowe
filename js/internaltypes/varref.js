@@ -314,10 +314,14 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 	*/
 	function propertyDebugName(prop) {
 		if (prop.computed) {
-			if (typeof prop.value === "string") {
-				return "('" + prop.value + "')";
+			let {value} = prop;
+			if (value.varref) {
+				value = value.get();
 			}
-			return "(" + prop.value + ")";
+			if (typeof value === "string") {
+				return "('" + value + "')";
+			}
+			return "(" + value + ")";
 		}
 		return "'" + prop + "'";
 	}

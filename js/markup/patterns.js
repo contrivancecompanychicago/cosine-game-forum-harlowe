@@ -167,9 +167,9 @@
 
 			Example usage:
 			```
-			#Level 1 heading renders as an enclosing <h1>
-			   ###Level 3 heading renders as an enclosing <h3>
-			 ######Level 6 heading renders as an enclosing <h6>
+			#Level 1 heading renders as an enclosing `<h1>`
+			   ###Level 3 heading renders as an enclosing `<h3>`
+			 ######Level 6 heading renders as an enclosing `<h6>`
 			```
 
 			As you can see, unlike in Markdown, opening whitespace is permitted before the first #.
@@ -454,9 +454,9 @@
 
 			Example usage:
 			```
-			This line\
+			This line \
 			and this line
-			\and this line, are actually just one line.
+			\ and this line, are actually just one line.
 			```
 
 			Details:
@@ -535,7 +535,7 @@
 		/*d:
 			Style markup
 
-			Often, you'd like to apply styles to your text – to italicize a book title,
+			Often, you'd like to apply styles to your text – to italicise a word in dialogue,
 			for example. You can do this with simple formatting codes that
 			are similar to the double brackets of a link. Here is what's available to you:
 			
@@ -671,10 +671,11 @@
 			Your [ballroom gown]<c1| is [bright red]<c2| with [silver streaks]<c3|,
 			and covered in [moonstones]<c4|.
 
-			(click: ?c1)[A hand-me-down from your great aunt.]
-			(click: ?c2)[A garish shade, to your reckoning.]
-			(click: ?c3)[Only their faint shine keeps them from being seen as grey.]
-			(click: ?c4)[Dreadfully heavy, they weigh you down and make dancing arduous.]
+			[]<c5|
+			(click: ?c1)[(replace:?c5)[A hand-me-down from your great aunt.]]
+			(click: ?c2)[(replace:?c5)[A garish shade, to your reckoning.]]
+			(click: ?c3)[(replace:?c5)[Only their faint shine keeps them from being seen as grey.]]
+			(click: ?c4)[(replace:?c5)[Dreadfully heavy, they weigh you down and make dancing arduous.]]
 			```
 
 			As you can see, the top sentence remains mostly readable despite the fact that several words have (click:) behaviours
@@ -754,8 +755,8 @@
 
 			You can save this command to a variable, and then use it repeatedly, like so:
 			```
-			(set: $x to (font: "Skia"))
-			$x[This text is in Skia.]
+			(set: $x to (font: "Tahoma"))
+			$x[This text is in Tahoma.]
 			$x[As is this text.]
 			```
 

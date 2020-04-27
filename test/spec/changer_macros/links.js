@@ -365,6 +365,11 @@ describe("link macros", function() {
 			p.find('tw-link').click();
 			expect(p.text()).toBe('RedGreenA');
 		});
+		it("doesn't re-execute hooks hidden with (hide:)", function() {
+			var p = runPassage('(set:$foo to "foo")|1>[(set:$foo to it + "bar")$foo](hide:?1)(link-show:"A",?1)');
+			p.find('tw-link').click();
+			expect(p.text()).toBe('foobarA');
+		});
 		// May not want to implement this
 		xit("when clicked, plain hooks (and only plain hooks) in the link text are removed", function() {
 			var p = runPassage("(link-show:'foo[bar]|2>[baz]',?1)");

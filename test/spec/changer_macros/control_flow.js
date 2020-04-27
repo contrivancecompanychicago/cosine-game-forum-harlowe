@@ -171,9 +171,45 @@ describe("control flow macros", function() {
 			expect('|3)[Red](show:?3)(show:?3)').markupToPrint("Red");
 			expect('(set:$r to 10)|3)[(set:$r to it+10)$r](show:?3)(show:?3)(show:?3)').markupToPrint("20");
 		});
+		it("doesn't re-execute hooks hidden with (hide:)", function() {
+			var p = runPassage('(set:$foo to "foo")|1>[(set:$foo to it + "bar")$foo](hide:?1)(show:?1)');
+			expect(p.text()).toBe('foobar');
+		});
 		it("works when saved in another passage", function() {
 			runPassage("(set:$foo to (show:?3))");
 			expect('|3)[Red]$foo').markupToPrint("Red");
+		});
+	});
+	describe("the (hide:) macro", function() {
+		it("accepts 1 or more hooknames", function() {
+			expect("(print:(hide:))").markupToError();
+			expect("(print:(hide:2))").markupToError();
+			expect("(print:(hide:''))").markupToError();
+			expect("(print:(hide:'s'))").markupToError();
+			expect("(print:(hide:true))").markupToError();
+			expect("(print:(hide:?foo))").not.markupToError();
+			expect("(print:(hide:?foo, ?bar, ?baz, ?qux))").not.markupToError();
+		});
+		it("hides visible hooks", function() {
+			expect('|3>[Red](hide:?3)').markupToPrint('');
+			var p = runPassage('|3>[Red](link-reveal:"A")[(hide:?3)]');
+			expect(p.text()).toBe('RedA');
+			p.find('tw-link').click();
+			expect(p.text()).toBe('A');
+		});
+		it("hides specific same-named hooks", function() {
+			expect('|3>[Red]|3>[Blue]|3>[Green](hide:?3\'s 1st)').markupToPrint('BlueGreen');
+			expect('|3>[Red]|3>[Blue]|3>[Green](hide:?3\'s 2nd)').markupToPrint('RedGreen');
+			expect('|3>[Red]|3>[Blue]|3>[Green](hide:?3\'s last)').markupToPrint('RedBlue');
+			expect('|3>[Red]|3>[Blue]|3>[Green](hide:?3\'s last, ?3\'s 1st)').markupToPrint('Blue');
+		});
+		it("does nothing if the hook is already hidden", function() {
+			expect('|3)[Red](hide:?3)').markupToPrint("");
+			expect('|3>[Red](hide:?3)(hide:?3)').markupToPrint("");
+		});
+		it("works when saved in another passage", function() {
+			runPassage("(set:$foo to (hide:?3))");
+			expect('|3>[Red]$foo').markupToPrint("");
 		});
 	});
 	describe("the (rerun:) macro", function() {

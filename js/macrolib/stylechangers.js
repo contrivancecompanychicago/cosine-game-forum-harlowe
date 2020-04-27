@@ -131,6 +131,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			a variable that contains a boolean can be used in its place. For example:
 			
 			```
+			(set: $foundWand to true, $foundHat to true, $foundBeard to true)
 			(set: $isAWizard to $foundWand and $foundHat and $foundBeard)
 			
 			$isAWizard[You wring out your beard with a quick twisting spell.]
@@ -187,7 +188,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			    a loud growl. You're hungry for some shrubs.
 			](else:​)[
 			    a faint gurgle. You hope to scavenge some leaves.
-			]}.
+			]}
 			```
 			
 			Rationale:
@@ -207,8 +208,9 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			The (else-if:) and (else:) macros do not need to only be paired with (if:)! You can use (else-if:) and
 			(else:) in conjunction with boolean variables, like so:
 			```
+			(set:$married to false, $date to false)
 			$married[You hope this warrior will someday find the sort of love you know.]
-			(else-if: not $date)[You hope this warrior isn't doing anything this Sunday (because
+			(else-if: not $date)[You hope this warrior isn't doing anything this Sunday (because \
 			you've got overtime on Saturday.)]
 			```
 
@@ -258,6 +260,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 
 			Due to a mysterious quirk, it's possible to use multiple (else:) macro calls in succession:
 			```
+			(set: $isUtterlyEvil to (either:true,false))
 			$isUtterlyEvil[You suddenly grip their ankles and spread your warm smile into a searing smirk.]
 			(else:​)[In silence, you gently, reverently rub their soles.]
 			(else:​)[Before they can react, you unleash a typhoon of tickles!]

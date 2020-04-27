@@ -1129,7 +1129,8 @@ define([
 						}
 						/*
 							First, hidden hooks should not be rendered.
-							The 'hidden' data boolean is used by (show:) and (link-show:).
+							The 'hidden' data value is used by (show:) and (link-show:). If it's a boolean, then it hasn't been shown (run) yet.
+							If it's a jQuery, it has been shown, and its contents should be used instead of rendering.
 						*/
 						if (expr.popAttr('hidden')) {
 							expr.data('hidden',true);

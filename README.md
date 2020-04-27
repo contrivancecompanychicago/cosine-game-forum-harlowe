@@ -34,6 +34,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a debug mode panel listing which storylet passages are currently available, and their 'where' lambdas. This panel is only visible if you have `(storylet:)` macros in your story.
  * Added a `(link-rerun:)` macro, which is similar to `(link-repeat:)`, but which replaces the hook on each click rather than appending to it.
  * Added a `(rerun:)` macro, which replaces a given hook with its original source, eliminating any changes made to it by `(replace:)` or other macros. This also runs any macros inside the hook an additional time.
+ * Added a `(hide:)` macro, which removes the contents of a given hook from the passage, but allows the `(show:)` macro to restore the contents later. Hooks hidden with `(hide:)` will not re-run any containing macros when `(show:)` is used on them later.
  * Added a `(seq-link:)` macro, a variation of `(cycling-link:)` which does not cycle - it simply turns into plain text on the final string.
  * Added a `(rotated-to:)` macro, a variation of `(rotated:)` which, rather than rotating the values by a given number, takes a lambda and rotates them until the first one that matches the lambda is at the front. `(rotated-to:where it > 3, 1,2,3,4)` produces `(a:4,1,2,3)`.
  * Added the `pos` identifier, which is used in lambdas to provide the position of the data value (from those passed into the macro) that the lambda is currently processing. `(altered: via it + pos, 0,0,5,0,0)` equals `(a:1,2,8,4,5)`.

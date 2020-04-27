@@ -32,7 +32,7 @@ css = "{{CSS}}", JSON.stringify("<style title=\"Twine CSS\">" + read("build/harl
 default: dirs jshint css
 
 css: build/harlowe-css.css
-docs:
+docs: build/harlowe-min.js build/twinemarkup-min.js css
 	@node scripts/harlowedocs.js
 doku:
 	@node scripts/harlowedocs.js --doku

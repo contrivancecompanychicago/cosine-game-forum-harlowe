@@ -543,7 +543,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 	/*d:
 		(show: ...HookName) -> Command
 
-		Reveals hidden hooks, running the code within.
+		Reveals hidden hooks, running the code within if it's not been shown yet.
 
 		Example usage:
 		```
@@ -555,9 +555,10 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		Rationale:
 		The purpose of hidden hooks is, of course, to eventually show them - and this macro is
 		how you show them. You can use this command inside a (link:), trigger it in real-time with
-		a (live:) macro, or anywhere else.
+		a (live:) macro, or anywhere else. You can also re-reveal a hook that had been hidden with (hide:), but
+		any macros in that hook won't be re-run.
 
-		Using (show:) vs (replace:):
+		<h4>Using (show:) vs (replace:):</h4>
 
 		There are different reasons for using hidden hooks and (show:) instead of (replace:). For your stories,
 		think about whether the prose being revealed is part of the "main" text of the passage, or is just an aside.
@@ -595,9 +596,10 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		(show:) will reveal every hook with the given name. To only reveal a specific hook, you can use the
 		possessive syntax, as usual: `(show: ?shrub's 1st)`.
 
-		If you provide to (show:) a hook which is already visible, nothing will happen - no error will be produced. If you
-		wish to re-run an already visible hook, use (rerun:). Note that hooks whose visible contents have been replaced with nothing,
-		such as via `(replace: ?1)[]`, are still considered "visible".
+		If you provide to (show:) a hook which is already visible, nothing will happen - no error will be produced. If you provide to
+		(show:) a hook that had been visible, but was hidden with (hide:), then the hook will reappear, but its macros won't be re-run.
+		If you wish to re-run an already visible hook, use (rerun:). Note that hooks whose visible contents have been replaced with
+		nothing, such as via `(replace: ?1)[]`, are still considered "visible".
 
 		If you wish to reveal a hook after a number of other links have been clicked and removed, such as those created
 		by (link-reveal:) or (click:), you may find the (more:) macro to be convenient.
@@ -658,11 +660,12 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		() => {},
 		(cd, section, ...hooks) => {
 			hooks.forEach(hook => hook.forEach(section, elem => {
+				const data = elem.data('hidden');
 				/*
-					The test for whether a hook has been shown is, simply, whether it has the "hidden" data Boolean.
+					The test for whether a hook has been shown is, simply, whether it has "hidden" data.
 					The (show:) macro only works on hidden hooks, and the (rerun:) macro only works on non-hidden hooks.
 				*/
-				if (Boolean(elem.data('hidden')) === (name === "rerun")) {
+				if ((data !== undefined) === (name === "rerun")) {
 					/*
 						Originally there was an error here, but it wasn't actually working, and I
 						decided that having (show:) silently fail when given already-shown
@@ -672,9 +675,18 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 					return;
 				}
 				elem.removeData('hidden');
-				section.renderInto("", null,
-					assign({}, cd, { append: "replace", source: elem.data('originalSource') || '', target: elem })
-				);
+				/*
+					If the "hidden" data is a jQuery, then it was previously hidden using (hide:). In that case, restore
+					the hidden elements as-is without re-rendering.
+				*/
+				if (data instanceof $) {
+					elem.empty().append(data);
+				}
+				else {
+					section.renderInto("", null,
+						assign({}, cd, { append: "replace", source: elem.data('originalSource') || '', target: elem })
+					);
+				}
 			}));
 			return cd;
 		},
@@ -682,6 +694,63 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 	);
 
 	Macros.addCommand
+		/*d:
+			(hide: ...HookName) -> Command
+
+			Hides a hook that was already visible, without fully erasing it or its contained macro calls.
+
+			Example usage:
+			```
+			The exam paper sits before you.
+			|2>[(link-rerun:"Peek at palm")[(show:?1)(hide:?2)]]
+			|1)[It says:
+			(random:10,90)0m, (random:2,10)deg, 1/(either:2,3,4)
+			(link-rerun:"Hide palm")[(hide:?1)(show:?2)]]
+			```
+
+			Rationale:
+			There are times when you need to remove a hook from visibility, but don't want its contents to be forgotten or re-run,
+			as would happen if you used (replace:). The (hide:) macro simply makes a hook invisible, keeping its contents stored
+			as they are until you use (show:) to reveal them again.
+
+			Details:
+			(hide:) will hide every hook with the given name. To only hide a specific hook, you can use the
+			possessive syntax, as usual: `(hide: ?1's 1st)`.
+
+			If you want to remove the hook's contents all together, and re-create it anew later, consider using (replace:) and (rerun:)
+			rather than (show:) and (hide:).
+
+			See also:
+			(show:), (rerun:), (replace:)
+
+			Added in: 3.2.0
+			#showing and hiding
+		*/
+		("hide",
+			() => {},
+			(cd, section, ...hooks) => {
+
+				hooks.forEach(hook => hook.forEach(section, elem => {
+					/*
+						The test for whether a hook has been shown is, simply, whether it has "hidden" data.
+						The (show:) macro only works on hidden hooks, and the (rerun:) macro only works on non-hidden hooks.
+					*/
+					if (Boolean(elem.data('hidden'))) {
+						/*
+							Just as with (show:), this doesn't produce an error when run on already-hidden hooks.
+						*/
+						return;
+					}
+					/*
+						To hide a hook, such that its contents aren't affected by or visible to any other elements:
+						Take its .contents(), detach it, and make it the 'hidden' data.
+					*/
+					elem.data('hidden', elem.contents().detach());
+				}));
+				return cd;
+			},
+			[rest(HookSet)])
+
 		/*d:
 			(stop:) -> Command
 			This macro, which accepts no arguments, creates a (stop:) command, which is not configurable.

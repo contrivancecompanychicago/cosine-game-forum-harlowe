@@ -735,14 +735,16 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			The (cond:) macro (short for "condition") offers such utility.
 
 			In situations where you would write something like this,
-			```
-			(if: not $lostTheSword)[(set: $weapon to "a holy sword")]
-			(else: )[(set:$weapon to "an unholy swear-word")]
-			```
+			
+			`{(if: not $lostTheSword)[
+			(set: $weapon to "a holy sword")
+			](else: )[
+			(set:$weapon to "an unholy swear-word")
+			]}`
+
 			you could instead simply write this.
-			```
-			(set: $weapon to (cond: not $lostTheSword, "a holy sword", "an unholy swear-word"))
-			```
+
+			`(set: $weapon to (cond: not $lostTheSword, "a holy sword", "an unholy swear-word"))`
 
 			Details:
 			This macro is intended to resemble the "cond" function in Lisp, as well as the "ternary" operator in numerous other

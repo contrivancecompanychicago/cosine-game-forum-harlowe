@@ -344,7 +344,8 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		},
 
 		/*
-			This method is only for Harlowe debugging purposes. It is called nowhere except for the test specs.
+			This method is only for Harlowe debugging purposes. It is called nowhere except for the test specs
+			and the documentation's live preview feature.
 		*/
 		reset() {
 			timeline = [];

@@ -1502,6 +1502,7 @@ define([
 			You can also use (dm:) as a kind of "multiple choice" structure, if you combine it with
 			the `'s` or `of` syntax. For instance...
 			```
+			(set: $monsterName to "Slime")
 			(set: $element to $monsterName of (dm:
 				"Chilltoad", "Ice",
 				"Rimeswan", "Ice",
