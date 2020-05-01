@@ -9,6 +9,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a long-standing bug where continuous ranges for arrays, such as `(a: 1,2)'s 4thlasttolast`, wouldn't work correctly. (What that example should do is provide the entire array, as is consistent with Python.)
  * Fixed a long-standing bug where `(click: ?Passage)` and `(click: ?Sidebar)` just flat-out didn't work at all.
  * Fixed a long-standing bug where lambdas would produce an incorrect duplicate-name error if the temp variables used with their clauses contained capital letters.
+ * Fixed a long-standing bug where hooks that had `(transition:)` transitions would restart their transition animations whenever the containing passage finished transitioning in. Previously, the only way to overcome this was to make the passage transition using `(transition-arrive:"instant")`.
  * Fixed a bug where the default CSS for `(click: ?Page)` (a blue border around the page) wasn't visible. (Now, an `::after` pseudo-element is created for the enchantment, so that the border displays above all the page content.)
  * Now, `(mouseover:)` and `(mouseout:)` should work correctly with ?Page, ?Passage, and ?Sidebar.
  * Fixed a bug where `(for:)` would emit infinite loop errors if 50 or more elements were given to it.
@@ -19,6 +20,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * The behaviour for multiple `(click:)` macros affecting the same hook (such as in `|A>[B] (click: ?A)[1] (click: ?A)[2]`) has changed to be slightly more intuitive: formerly, as you clicked the hook, the last `(click:)` would activate first (so, `[2]` then `[1]`). Now, they activate from first to last. This also applies to `(mouseover:)` and `(mouseout:)`.
  * Now, the text input box in `(prompt:)` is auto-focused when the dialog appears, allowing the player to type into it without having to click it.
  * Now, pressing Return or Enter in a `(prompt:)` text input box should submit the text, as if "OK" was clicked.
+ * Now, `(enchant:)` can correctly apply `(transition:)` transitions to existing hooks and text. Enchanting an existing hook with a transition will cause it to animate immediately, even if it was already visible - so, it's best used at the top level of passages, and in headers or footers.
+ * Now, `(enchant:)` can also accept a 'via' lambda as its second argument, to apply a slightly different changer to each hook or text - `(enchant: ?passage's lines, via (text-color:(hsl: pos * 10, 1, 0.5)))` uses the new "pos" identifier (see below) to give each line of the passage a different colour.
  * The default CSS for `(mouseover:)` and `(mouseout:)` (a dotted gray border and translucent cyan border, respectively) has been brightened slightly to be more visible.
  * Reworded the error message produced by trying to get an array element that's outside the array's length (such as `(a: 1,2)'s 5th`).
  * Removed unused, undocumented CSS for the following (also unused) elements: `<tw-outline>`, `<tw-shadow>`, `<tw-emboss>`, `<tw-condense>`, `<tw-expand>`, `<tw-blur>`, `<tw-blurrier>`, `<tw-smear>`, `<tw-mirror>`, `<tw-upside-down>`, `<tw-fade-in-out>`, `<tw-rumble>`, `<tw-shudder>`, and `<tw-shudder-in>`. The CSS applied to these was mostly functionally identical to their corresponding `(textstyle:)` styling.
@@ -38,7 +41,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a `(seq-link:)` macro, a variation of `(cycling-link:)` which does not cycle - it simply turns into plain text on the final string.
  * Added a `(rotated-to:)` macro, a variation of `(rotated:)` which, rather than rotating the values by a given number, takes a lambda and rotates them until the first one that matches the lambda is at the front. `(rotated-to:where it > 3, 1,2,3,4)` produces `(a:4,1,2,3)`.
  * Added the `pos` identifier, which is used in lambdas to provide the position of the data value (from those passed into the macro) that the lambda is currently processing. `(altered: via it + pos, 0,0,5,0,0)` equals `(a:1,2,8,4,5)`.
- * Added a `<noscript>` element containing a sentence instructing that JavaScript should be enabled to play the story (as per SugarCube).
+ * Added a `<noscript>` element to the output HTML, containing a sentence instructing that JavaScript should be enabled to play the story (as per SugarCube).
  * `(text-style:)` now lets you provide multiple style names, as a shortcut to combining multiple changers. `(text-style:"italic","outline")` is the same as `(text-style:"italic")+(text-style:"outline")`.
  * Added two more styles to `(text-style:)`, "buoy" and "sway", which are slow, gentle movement animations to serve as counterparts to "rumble" and "shudder".
 

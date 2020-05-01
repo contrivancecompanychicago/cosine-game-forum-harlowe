@@ -158,7 +158,7 @@
 			*/
 			if (token.type === "hookRef" || token.type === "hook") {
 				referenceTokens.hook.forEach(e => {
-					if (e !== token && e.name === token.name) {
+					if (e !== token && e.name && e.name === token.name) {
 						const tagStart =
 							// This assumes that the end of the hook's text consists of its <tag|,
 							// and nothing else.

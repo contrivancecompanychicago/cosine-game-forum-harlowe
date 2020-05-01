@@ -592,6 +592,8 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			* "rumble" (causes the hook to instantly appear while shaking up and down)
 			* "slide-right" (causes the hook to slide in from the right)
 			* "slide-left" (causes the hook to slide in from the left)
+			* "slide-top" (causes the hook to slide in from the top)
+			* "slide-bottom" (causes the hook to slide in from the bottom)
 			* "pulse" (causes the hook to instantly appear while pulsating rapidly)
 			
 			All transitions are 0.8 seconds long, unless a (transition-time:) command is added

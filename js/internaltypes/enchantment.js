@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils', 'internaltypes/changedescriptor'], ($, Utils, ChangeDescriptor) => {
+define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changercommand', 'utils/operationutils', 'internaltypes/twineerror'], ($, Utils, ChangeDescriptor, ChangerCommand, {objectName}, TwineError) => {
 	/*
 		Enchantments are special styling that is applied to selected elements of a
 		passage by a macro. Enchantments are registered with a Section by pushing
@@ -18,7 +18,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor'], ($, Utils, ChangeD
 			scope to enchant.
 		*/
 		create(descriptor) {
-			Utils.assertOnlyHas(descriptor, ['scope', 'section', 'attr', 'data', 'changer', 'functions']);
+			Utils.assertOnlyHas(descriptor, ['scope', 'section', 'attr', 'data', 'changer', 'functions', 'lambda']);
 
 			return Object.assign(Object.create(this), {
 				/*
@@ -36,15 +36,8 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor'], ($, Utils, ChangeD
 			classes to the matched elements.
 		*/
 		enchantScope() {
-			const {attr, data, functions, section, changer} = this;
-			let {scope} = this;
-			/*
-				scope could be a jQuery, if this is a HTML scope created by, say, (enchant: "<i>"). In which
-				case, convert it to an array for the purposes of this method.
-			*/
-			if (scope instanceof $) {
-				scope = Array.prototype.map.call(scope, e => $(e));
-			}
+			const {attr, data, functions, section} = this;
+			let {scope, lambda} = this;
 			/*
 				Reset the enchantments store, to prepare for the insertion of
 				a fresh set of <tw-enchantment>s.
@@ -54,7 +47,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor'], ($, Utils, ChangeD
 			/*
 				Now, enchant each selected word or hook within the scope.
 			*/
-			scope.forEach(section, (e) => {
+			scope.forEach(section, (e, i) => {
 				/*
 					Create a fresh <tw-enchantment>, and wrap the elements in it.
 
@@ -75,8 +68,39 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor'], ($, Utils, ChangeD
 				if (functions) {
 					functions.forEach(fn => fn(wrapping));
 				}
+				/*
+					Lambdas are given to enchantments exclusively through (enchant:). They override any
+					other changers (which shouldn't be on here anyway) and instead call the author-supplied
+					lambda with each part of the scope as a separate hook to sculpt a specific changer for that hook.
+				*/
+				let changer;
+				if (lambda) {
+					changer = lambda.apply(section, { loop: scope.TwineScript_GetProperty(i), pos: i+1 });
+					if (!ChangerCommand.isPrototypeOf(changer)) {
+						e.replaceWith(TwineError.create("macrocall",
+							"The 'via' lambda given to (enchant:) must return a changer, not " + objectName(changer) + "."
+						).render(""));
+						lambda = changer = null;
+					}
+					else {
+						const summary = changer.summary();
+						if (summary.includes('newTargets') || summary.includes('target')) {
+							/*
+								Since (enchant:) was given a lambda, and since lambdas can reference variables, it's not possible
+								to type-check this lambda until runtime, upon which the original <tw-expression> for the enchantment is long gone.
+								So, instead, the first item in the scope to produce an error gets replaced by it, and the rest of the scope is ignored.
+							*/
+							e.replaceWith(TwineError.create("macrocall",
+								"The changer produced by the 'via' lambda given to (enchant:) can't include a revision command like (replace:) or (append:)."
+							).render(""));
+							lambda = changer = null;
+						}
+					}
+				} else {
+					changer = this.changer;
+				}
 				if (changer) {
-					const cd = ChangeDescriptor.create({section, target:wrapping});
+					const cd = ChangeDescriptor.create({section, target:wrapping });
 					changer.run(cd);
 					cd.update();
 					/*

@@ -3,18 +3,6 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 ($, TwineMarkup, Selectors) => {
 
 	const
-		// Used by lockProperties
-		lockDesc = {
-			configurable: 0,
-			writable: 0
-		},
-		
-		// Used to cache t8n animation times
-		t8nAnimationTimes = {
-			"transition-in": Object.create(null),
-			"transition-out": Object.create(null)
-		},
-		
 		// These two are used by childrenProbablyInline (see below).
 		usuallyBlockElements = (
 			// The most common block HTML tags that would be used in passage source
@@ -33,24 +21,14 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 
 		// Certain HTML elements cannot have their parents unwrapped: <audio>, for instance,
 		// will break if it is ever detached from the DOM.
-		nonDetachableElements = ["audio"];
+		nonDetachableElements = ["audio",];
 
 	let Utils;
 	/*
-		Caches the CSS time (duration + delay) for a particular transition,
-		to save on costly $css() lookups.
-
-		@param (String) Transition to use
-		@param {String} Either "transition-in" or "transition-out"
+		Hard-coded default time for transitions, in milliseconds.
 	*/
-	function cachedTransitionTime(transIndex, className) {
-		const animClass = t8nAnimationTimes[className];
-		if (!animClass[transIndex]) {
-			const p = $('<p>').appendTo(document.body).attr("data-t8n", transIndex).addClass(className);
-			animClass[transIndex] = Utils.cssTimeUnit(p.css("animation-duration")) + Utils.cssTimeUnit(p.css("animation-delay"));
-			p.remove();
-		}
-		return animClass[transIndex];
+	function defaultTransitionTime(transIndex) {
+		return transIndex === "instant" ? 0 : 800;
 	}
 
 	let
@@ -78,7 +56,7 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 		lockProperty(obj, prop, value) {
 			// Object.defineProperty does walk the prototype chain
 			// when reading a property descriptor dict.
-			const propDesc = Object.create(lockDesc);
+			const propDesc = Object.create({ configurable: 0, writable: 0 });
 			value && (propDesc.value = value);
 			Object.defineProperty(obj, prop, propDesc);
 			return obj;
@@ -366,13 +344,14 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 			@param (Number) Replacement animation-duration value.
 		*/
 
-		transitionOut(el, transIndex, transitionTime) {
+		transitionOut(el, transIndex, transitionTime, transitionDelay = 0, expedite = 0) {
 			/*
 				Quick early exit.
 			*/
 			if (el.length === 0) {
 				return;
 			}
+			transitionTime = transitionTime || defaultTransitionTime(transIndex);
 			const childrenInline = Utils.childrenProbablyInline(el),
 				/*
 					If the element is not a tw-hook or tw-passage, we must
@@ -399,14 +378,12 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 				Now, apply the transition.
 			*/
 			el.attr("data-t8n", transIndex).addClass("transition-out");
+			el.css({
+				'animation-duration': transitionTime + "ms",
+				'animation-delay':   (transitionDelay - expedite) + "ms",
+			});
 			if (Utils.childrenProbablyInline(el)) {
 				el.css('display','inline-block');
-			}
-			/*
-				If an alternative transition time was supplied, use it.
-			*/
-			if (typeof transitionTime === "number") {
-				el.css('animation-duration', transitionTime + "ms");
 			}
 			
 			/*
@@ -415,7 +392,7 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 				but in the event of CSS being off, these events won't trigger
 				- whereas the below method will simply occur immediately.
 			*/
-			const delay = transitionTime || cachedTransitionTime(transIndex, "transition-out");
+			const delay = transitionTime;
 
 			!delay ? onComplete() : window.setTimeout(onComplete, delay);
 		},
@@ -428,13 +405,14 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 			@param (Number) Replacement animation-duration value.
 		*/
 
-		transitionIn(el, transIndex, transitionTime) {
+		transitionIn(el, transIndex, transitionTime, transitionDelay = 0, expedite = 0) {
 			/*
 				Quick early exit.
 			*/
 			if (el.length === 0) {
 				return;
 			}
+			transitionTime = transitionTime || defaultTransitionTime(transIndex);
 			const childrenInline = Utils.childrenProbablyInline(el),
 				/*
 					If the element is not a tw-hook or tw-passage, we must
@@ -444,27 +422,6 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 				mustWrap =
 					el.length > 1 || !childrenInline ||
 					!['tw-hook','tw-passage'].includes(el.tag());
-			
-			/*
-				The default transition callback is to remove the transition-in
-				class. (#maybe this should always be performed???)
-			*/
-			function onComplete () {
-				/*
-					Unwrap the wrapping... unless it contains a non-unwrappable element,
-					in which case the wrapping must just have its attributes removed.
-				*/
-				const detachable = el.findAndFilter(nonDetachableElements.join(",")).length === 0;
-				if (mustWrap && detachable) {
-					el.contents().unwrap();
-				}
-				/*
-					Otherwise, remove the transition attributes.
-				*/
-				else {
-					el.removeClass("transition-in").removeAttr("data-t8n");
-				}
-			}
 			/*
 				As mentioned above, we must, in some cases, wrap the nodes in containers.
 			*/
@@ -476,17 +433,47 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 				and letting the built-in CSS take over.
 			*/
 			el.attr("data-t8n", transIndex).addClass("transition-in");
-			/*
-				If an alternative transition time was supplied, use it.
-			*/
-			if (typeof transitionTime === "number") {
-				el.css('animation-duration', transitionTime + "ms");
-			}
+			el.css({
+				'animation-duration': transitionTime + "ms",
+				'animation-delay':   (transitionDelay - expedite) + "ms",
+			});
 			
 			if (Utils.childrenProbablyInline(el)) {
 				el.css('display','inline-block');
 			}
-			const delay = transitionTime || cachedTransitionTime(transIndex, "transition-in");
+			const delay = transitionTime + transitionDelay - expedite;
+
+			/*
+				The default transition callback is to remove the transition-in
+				class. (#maybe this should always be performed???)
+			*/
+			function onComplete () {
+				/*
+					Unwrap the wrapping... unless it contains a non-unwrappable element,
+					in which case the wrapping must just have its attributes removed.
+				*/
+				const detachable = el.filter(nonDetachableElements.join(",")).length === 0;
+				if (mustWrap && detachable) {
+					/*
+						Nested transitioning elements restart their animations when they're momentarily
+						detached from the DOM by unwrap().
+						For each nested transition, such as <tw-transition-container>,
+						take their existing animation delay and decrease it by the delay.
+						(Negative delays expedite the animation conveniently.)
+					*/
+					el.find('tw-transition-container').each((_,child) => {
+						const existingDelay = Utils.cssTimeUnit($(child).css('animation-delay')) || 0;
+						$(child).css('animation-delay', (existingDelay - delay) + "ms");
+					});
+					el.contents().unwrap();
+				}
+				/*
+					Otherwise, remove the transition attributes.
+				*/
+				else {
+					el.removeClass("transition-in").removeAttr("data-t8n");
+				}
+			}
 
 			!delay ? onComplete() : window.setTimeout(onComplete, delay);
 		},

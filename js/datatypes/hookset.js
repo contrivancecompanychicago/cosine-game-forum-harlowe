@@ -558,7 +558,7 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 
 		/*
 			HookSets are identical if they have the same selector, base, properties (and if
-			a property is a slices, it is order-sensitive) and prev.
+			a property is a slice, it is order-sensitive) and prev.
 		*/
 		TwineScript_is(other) {
 			return hash(this) + "" === hash(other) + "";

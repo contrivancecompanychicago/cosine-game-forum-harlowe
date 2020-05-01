@@ -24,21 +24,20 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		//                            of "trigger element" needs to be rendered in its place initially.
 		innerSource:       "",
 		
-		// {Boolean} enabled          Whether or not this code is enabled.
-		//                            (Disabled code won't be used until something enables it).
+		// {Boolean} enabled          Whether or not this code is enabled. (Disabled code won't be used until something enables it).
 		enabled:          true,
 		
 		// {jQuery|HookSet} target    Where to render the source, if not the hookElement.
 		target:           null,
 		
-		// {String} append            Which jQuery method name to append the source to the dest with.
-		append:           "append",
+		// {String} append            Which jQuery method name to append the source to the dest with. Empty if the descriptor is merely enchanting text.
+		append:           "",
 
 		// [newTargets]               Alternative targets (which are {target,append} objects) to use instead of the original.
 		newTargets:       null,
 		
 		// {String} [transition]      Which built-in transition to use.
-		transition:       "instant",
+		transition:       "",
 		
 		// {Number|Null} [transitionTime]  The duration of the transition, in ms, or null if the default speed should be used.
 		transitionTime:   null,
@@ -47,6 +46,9 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		//                                 that reuses this ChangeDescriptor, such as a (link:). This replaces the transition with "instant"
 		//                                 but leaves the "transition" value untouched.
 		transitionDeferred: false,
+
+		// {Number} [transitionDelay]     The duration, in ms, to delay the start of the transition.
+		transitionDelay:   0,
 
 		// {Object} [loopVars]        An object of {temp variable : values array} pairs, which the source should loop over.
 		//                            Used only by (for:)
@@ -69,6 +71,9 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		//                            Used by enchantment macros to determine where to register
 		//                            their enchantments to.
 		section:          null,
+
+		// {Number} timestamp         Used by certain time-specific characteristics of this descriptor (currently, just transitions).
+		timestamp:           0,
 		
 		/*
 			This method produces a short list of properties this descriptor has, which were altered by the changers
@@ -78,7 +83,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		summary() {
 			return [
 				"source", "innerSource", "enabled", "target", "append", "newTargets",
-				"transition", "transitionTime"
+				"transition", "transitionTime", "transitionDelay"
 			]
 			.filter(e => this.hasOwnProperty(e))
 			.concat([
@@ -119,7 +124,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 			to the target HTML element.
 		*/
 		update() {
-			const {section, newTargets} = this;
+			const {section, newTargets, transition, transitionDeferred, append} = this;
 			let {target} = this;
 			
 			/*
@@ -197,6 +202,32 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 					forEachTarget(target);
 				}
 			});
+
+			/*
+				If this isn't a descriptor that's appending/replacing code, a new transition has
+				been installed on this existing hook.
+				Transition it using this descriptor's given transition, if it wasn't deferred (i.e. behind a link).
+			*/
+			if (transition && !transitionDeferred && !append) {
+				/*
+					Hooks should only animate if they're appearing in the passage for the first time. To determine
+					this, find the nearest parent with a timestamp (installed by render() below) and compare that
+					to the current time.
+				*/
+				let stamped = target, ts;
+				do {
+					ts = stamped.data('timestamp');
+					(!ts) && (stamped = stamped.parent());
+				}
+				while (!ts && stamped.length);
+				transitionIn(target, transition, this.transitionTime, this.transitionDelay,
+					/*
+						This delta expedites the animation - if it's expedited past its natural end,
+						it's as if it isn't re-animated (which it shouldn't).
+					*/
+					ts ? Date.now() - ts : 0
+				);
+			}
 		},
 		
 		/*
@@ -212,6 +243,10 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 				{target, target:oldTarget, append} = this;
 			
 			assertOnlyHas(this, changeDescriptorShape);
+			if (!append) {
+				impossible("ChangeDescriptor.render", "This doesn't have an 'append' method chosen.");
+				return $();
+			}
 
 			/*
 				First: if this isn't enabled, nothing needs to be rendered. However,
@@ -416,12 +451,18 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 				dom.length ? dom : undefined
 			);
 			/*
+				This timestamp is used exclusively for transition enchantments, to determine whether
+				to re-animate the hook enchanted by it.
+			*/
+			target.data('timestamp', Date.now());
+			/*
 				Apply the style/data/attr attributes to the target element.
 			*/
 			this.update();
 			
 			/*
-				Transition it using this descriptor's given transition, if it wasn't deferred.
+				Transition it using this descriptor's given transition, if it wasn't deferred
+				Note that this.update() won't perform transitionIn because append must be non-falsy here.
 			*/
 			if (transition && !transitionDeferred) {
 				transitionIn(
@@ -437,8 +478,10 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 						This is #awkward, I know...
 					*/
 					append === "replace" ? target : dom,
-					transition,
-					transitionTime
+					transition, transitionTime, this.transitionDelay,
+					// expedite should always be 0 for changeDescriptors that have their render() called, but,
+					// for consistency...
+					this.expedite
 				);
 			}
 			

@@ -841,7 +841,7 @@ define([
 				No changers, etc. are capable of being applied here.
 			*/
 			this.stack.unshift({
-				desc: ChangeDescriptor.create({ target: p, source: expr, section: this}),
+				desc: ChangeDescriptor.create({ target: p, source: expr, section: this, append:"append" }),
 				tempVariables: this.stackTop.tempVariables,
 				/*
 					This special string (containing the reason we're evaluating this markup)
@@ -915,14 +915,14 @@ define([
 			/*
 				This is the ChangeDescriptor that defines this rendering.
 			*/
-			const desc = ChangeDescriptor.create({ target, source, section: this});
+			const desc = ChangeDescriptor.create({ target, source, section: this, append: "append"});
 			
 			/*
 				Run the changer function, if given, on that descriptor.
 			*/
 			if (changer) {
 				/*
-					If a non-changer object was passed in, assign its values,
+					If a non-changer object (such as another descriptor) was passed in, assign its values,
 					overwriting the default descriptor's.
 					Honestly, having non-changer descriptor-altering objects
 					is a bit displeasingly rough-n-ready, but it's convenient...

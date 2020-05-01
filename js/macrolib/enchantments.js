@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 'passages', 'macros', 'datatypes/hookset', 'datatypes/changercommand', 'internaltypes/enchantment', 'internaltypes/twineerror'],
-($, Utils, Selectors, {is}, Engine, Passages, Macros, HookSet, ChangerCommand, Enchantment, TwineError) => {
+define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 'passages', 'macros', 'datatypes/hookset', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/enchantment', 'internaltypes/twineerror'],
+($, Utils, Selectors, {is}, Engine, Passages, Macros, HookSet, ChangerCommand, Lambda, Enchantment, TwineError) => {
 
 	const {either,rest} = Macros.TypeSignature;
 	/*
@@ -9,15 +9,16 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 	*/
 
 	/*d:
-		(enchant: HookName or String, Changer) -> Command
+		(enchant: HookName or String, Changer or Lambda) -> Command
 
-		Applies a changer to every occurrence of a hook or string in a passage, and continues applying that changer to any further
-		occurrences that are made to appear in the same passage later.
+		Applies a changer (or a "via" lambda producing a changer) to every occurrence of a hook or string in a passage, and continues
+		applying that changer to any further occurrences that are made to appear in the same passage later.
 
 		Example usage:
 		* `(enchant: "gold", (text-colour: yellow) + (text-style:'bold'))` makes all occurrences of "gold" in the text be bold and yellow.
-		* `(enchant: ?dossier, (link: "Click to read"))` makes all the hooks named "dossier" be hidden behind links reading
-		"Click to read".
+		* `(enchant: ?dossier, (link: "Click to read"))` makes all the hooks named "dossier" be hidden behind links reading "Click to read".
+		* `(enchant: ?passage's chars, via (text-color:(hsl: pos * 10, 1, 0.5)))` colours all of the characters in the passage in a
+		rainbow pattern.
 
 		Rationale:
 		While changers allow you to style or transform certain hooks in a passage, it can be tedious and error-prone to attach them to every
@@ -46,11 +47,21 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		every passage, you can essentially write a "styling language" for your story, where certain hook names "mean" certain colours or
 		behaviour. (This is loosely comparable to using CSS to style class names, but exclusively uses macros.)
 
+		If a "via" lambda is supplied to (enchant:) instead of a changer, then that lambda can compute a changer dynamically, based on specifics of
+		each hook that's enchanted. For instance, `(enchant: "O", via (text-style:(cond: its pos % 2 is 0, 'bold', 'none')))`
+
 		Details:
+		Unlike the (replace:), (append:) and (prepend:) macros, this macro can affect text and hooks that appear after it. This is because it creates
+		an ongoing effect, giving a style to hooks and making them retain it, whereas those replacement macros can be considered single, immediate commands.
+
 		As with (click:), the "enchantment" affects the text produced by (display:) macros, and any hooks changed by (replace:) etc. in the future,
 		until the player makes their next turn.
 
 		The built-in hook names, ?Page, ?Passage, ?Sidebar and ?Link, can be targeted by this macro, and can be styled on a per-passage basis this way.
+
+		You can use (enchant:) with (transition:) to add transitions to hooks or text elsewhere in the same passage – however, if those hooks or words have already appeared,
+		they won't abruptly animate. For example, `(event: when time > 2s)[(enchant:"Riddles", (t8n:"Shudder"))]` adds an (enchant:) macro call to the passage
+		after 2 seconds, and won't affect instances of the word "Riddles" that are already in the passage.
 
 		See also:
 		(click:)
@@ -63,23 +74,32 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 			/*
 				First, test the changer to confirm it contains no revision macros.
 			*/
-			const summary = changer.summary();
-			if (summary.includes('newTargets') || summary.includes('target')) {
-				return TwineError.create(
-					"macrocall",
-					"The changer given to (enchant:) can't include a revision command like (replace:) or (append:)."
-				);
+			if (ChangerCommand.isPrototypeOf(changer)) {
+				const summary = changer.summary();
+				if (summary.includes('newTargets') || summary.includes('target')) {
+					return TwineError.create(
+						"macrocall",
+						"The changer given to (enchant:) can't include a revision command like (replace:) or (append:)."
+					);
+				}
 			}
 		},
 		(section, scope, changer) => {
 			const enchantment = Enchantment.create({
-				scope: HookSet.from(scope), changer, section,
+				scope: HookSet.from(scope),
+				/*
+					Because the changer provided to this macro could actually be a "via" lambda that produces changers,
+					Enchantment has both "lambda" and "changer" properties to distinguish them.
+					We make the distinction here.
+				*/
+				[ChangerCommand.isPrototypeOf(changer) ? "changer" : "lambda"]: changer,
+				section,
 			});
 			section.enchantments.push(enchantment);
 			enchantment.enchantScope();
 			return "";
 		},
-		[either(HookSet,String), ChangerCommand],
+		[either(HookSet,String), either(ChangerCommand, Lambda.TypeSignature('via'))],
 		false // Can't have attachments.
 	);
 

@@ -1144,7 +1144,7 @@ define([
 			* `(history:) contains "Cellar"` is true if the player has visited a passage called
 			"Cellar" at some point.
 			* `(history: where "Intermission" is not in its name)` is an array of visited passage names,
-			but not including passages whose name contans "Intermission" anywhere in it.
+			but not including passages whose name contains "Intermission" anywhere in it.
 			* `(history: where its tags contains "Forest") is (a:)` is true if the player visited no passages
 			with the "Forest" tag (because then the returned array would be empty, the same as (a:)),
 			and false if they have.

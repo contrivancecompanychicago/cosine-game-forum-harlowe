@@ -1,17 +1,24 @@
 describe("enchantment macros", function () {
 	'use strict';
 	describe("(enchant:)", function() {
-		it("accepts either a string or a hook reference, followed by a changer command", function() {
+		it("accepts either a string or a hook reference, followed by a changer command or a 'via' lambda", function() {
 			expect("(print:(enchant:?foo, (font:'Skia')))").not.markupToError();
 			expect("(print:(enchant:'baz', (font:'Skia')))").not.markupToError();
+			expect("(print:(enchant:?foo, via (font:'Skia')))").not.markupToError();
+			expect("(print:(enchant:'baz', via (font:'Skia')))").not.markupToError();
 
 			expect("(print:(enchant:?foo))").markupToError();
 			expect("(print:(enchant:(font:'Skia')))").markupToError();
 			expect("(print:(enchant:'baz'))").markupToError();
 			expect("(print:(enchant:(font:'Skia'), 'baz'))").markupToError();
+			expect("(print:(enchant:(font:'Skia'), where (font:'Skia')))").markupToError();
 		});
 		it("errors when the changer contains a revision command", function() {
 			expect("[]<foo|(enchant:?foo,(append:?baz))").markupToError();
+		});
+		it("errors when the 'via' lambda returns a non-changer or a revision command", function() {
+			expect("[]<foo|(enchant:?foo, via 2)").markupToError();
+			expect("[]<foo|(enchant:?foo, via (append:?baz))").markupToError();
 		});
 		//TODO: write more basic functionality tests comparable to (click:)'s
 	});

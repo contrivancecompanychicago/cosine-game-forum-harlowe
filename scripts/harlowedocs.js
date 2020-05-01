@@ -140,11 +140,11 @@ nav img { display:block; margin: 0 auto;}
 /* Night mode */
 #nightBar { position: fixed; top:0%;right:12vw; border:1px solid #888; border-radius:0.2rem}
 #night, #day { padding: 0.5rem 1rem; display:inline-block; cursor:pointer }
-html.night #night { background: #444 }
-html:not(.night) #day { background: #ccc }
+html.theme-dark #night { background: #444 }
+html:not(.theme-dark) #day { background: #ccc }
 /* This flips the colours for most article elements, but flips them back if they have an explicit background. */
-html.night main, html.night nav, html.night tw-debugger, html.night [style*=background] { filter: invert() hue-rotate(180deg); }
-html.night { background-color:black; }
+html.theme-dark main, html.theme-dark nav, html.theme-dark tw-debugger, html.theme-dark [style*=background] { filter: invert() hue-rotate(180deg); }
+html.theme-dark { background-color:black; }
 
 /* Main styles */
 .def_title { background:linear-gradient(180deg,white,white 70%,silver); border-bottom:1px solid silver; padding-bottom:5px; }
@@ -171,13 +171,13 @@ table:not(.datamap) :not(pre) > code { white-space: pre-wrap; }
 :hover > .heading_link::before { visibility:visible; }
 
 /* Preview */
-#preview { z-index:20; position: fixed; width: 25vw; height:45vh; right:2vw; top: 10vh; overflow-y:scroll; border: 1px double #888; }
+#preview { display:none; z-index:20; position: fixed; width: 25vw; height:45vh; right:2vw; top: 10vh; overflow-y:scroll; border: 1px double #888; }
 @media screen and (max-width: 1200px) { #preview, .previewButton, #previewCode { display:none; } }
-html:not(.night) #preview tw-story { background-color:white; color:black }
-#previewCode { position:fixed; width:25vw; height:30vh; right: 2vw; bottom: 10vh; overflow:scroll; border: 1px double #888; }
+html:not(.theme-dark) #preview tw-story { background-color:white; color:black }
+#previewCode { display:none; position:fixed; width:25vw; height:30vh; right: 2vw; bottom: 10vh; overflow:scroll; border: 1px double #888; }
 .CodeMirror { height: 100% !important; width:100% !important; }
 .previewCodeButton { font-size:200%; padding: 0.2rem 0.9rem; }
-html.night .previewCodeButton { color:white; }
+html.theme-dark .previewCodeButton { color:white; }
 #preview tw-debugger { position: absolute; padding: 0; min-height: 0; box-sizing:border-box; border-top:none; min-width: 80%; }
 #preview .panel-variables { border-top: solid black 2px; border-bottom: none; }
 
@@ -222,15 +222,16 @@ This panel ↓ will show any variables that are set by the code.
 <link rel=stylesheet href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.50.2/codemirror.min.css">
 <style>
 	/* TwineJS's dark theme for CodeMirror */
-	html.night .CodeMirror {color: #e0e0e0; background: hsl(0, 0%, 14.9%); }
-	html.night div.CodeMirror-selected {background: #4d4d4c !important;}
-	html.night .CodeMirror-gutters {background: #1d1f21; border-right: 0px;}
-	html.night .CodeMirror-linenumber {color: #969896;}
-	html.night .CodeMirror-cursor {border-left: 1px solid #b4b7b4 !important;}
-	html.night .CodeMirror-matchingbracket { text-decoration: underline; color: white !important;}
+	html.theme-dark .CodeMirror {color: #e0e0e0; background: hsl(0, 0%, 14.9%); }
+	html.theme-dark div.CodeMirror-selected {background: #4d4d4c !important;}
+	html.theme-dark .CodeMirror-gutters {background: #1d1f21; border-right: 0px;}
+	html.theme-dark .CodeMirror-linenumber {color: #969896;}
+	html.theme-dark .CodeMirror-cursor {border-left: 1px solid #b4b7b4 !important;}
+	html.theme-dark .CodeMirror-matchingbracket { text-decoration: underline; color: white !important;}
 </style>
 <style>${fs.readFileSync('build/harlowe-css.css')}</style><script>${fs.readFileSync('build/harlowe-min.js') + fs.readFileSync('build/twinemarkup-min.js')}</script>
 <script>{
+$('#preview, #previewCode').show();
 let html = $('html');
 /* CodeMirror setup and Harlowe mode monkeying */
 let cm = CodeMirror.modes['harlowe-3'].cm = CodeMirror.fromTextArea(previewCode.firstChild, { mode: null, lineWrapping:true });
@@ -238,8 +239,8 @@ html.on('click', '.previewCodeButton', function(e) { previewPassage(cm.doc.getVa
 try { cm.setOption('mode','harlowe-3'); } catch(e) {}
 
 /* Night Mode and Preview Buttons */
-html.on('click', '#night', function() { html.addClass('night'); })
-    .on('click', '#day',   function() { html.removeClass('night'); })
+html.on('click', '#night', function() { html.addClass('theme-dark'); })
+    .on('click', '#day',   function() { html.removeClass('theme-dark'); })
     .on('click', '.previewButton:not(.previewCodeButton)', function(e) { previewPassage(e.target.parentNode.textContent.replace(/\\u200B/g,'')); });
 $('pre > code').append("<div class='previewButton'></div>");
 }</script>
