@@ -367,6 +367,7 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 			The following function takes a jQuery set of elements and produces
 			a reduce() function which extracts just the ones keyed to a given index
 			(or array of indexes).
+
 		*/
 		const reducer = (elements, index) => {
 			/*
@@ -385,23 +386,33 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 				if (first < 0) { first += length; }
 				if (last < 0) { last += length; }
 				
-				let ret = $(elements.get(first));
+				/*
+					Due to the surprisingly prohibitive cost of $().add(), these are gathered as
+					an array first.
+				*/
+				let arr = [elements.get(first)[0]];
 				while (first !== last) {
 					first += Math.sign(last - first);
-					ret = ret.add(elements.get(first));
+					arr.push(elements.get(first)[0]);
 				}
-				return ret;
+				return $(arr);
 			}
 			// TODO: "3n+1th" selectors
 			else if (typeof index === "string") {
 				/*
 					"?hook's chars" selects the individual characters inside ?hook. Notice that
 					textNodeToChars() splits up Text nodes whenever it's called, as with wrapTextNodes().
+
+					Again, due to the cost of $().add(), this uses element arrays, and only converts to jQuery at the end.
 				*/
 				if (index === "chars") {
-					let ret = $();
-					elements.textNodes().forEach(t => textNodeToChars(t).forEach(t => ret = ret.add(t)));
-					return ret;
+					let arr = [];
+					for (let t of elements.textNodes()) {
+						for (let t of textNodeToChars(t)) {
+							arr.push(t);
+						}
+					}
+					return $(arr);
 				}
 				/*
 					"?hook's links" selects links within the ?hook.
@@ -418,18 +429,17 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 					/*
 						Place all of the elements into the current collection. When one is found that's after
 						the current <br>, create a new collection.
+						Again, due to the cost of $().add(), this uses element arrays, and only converts to jQuery at the end.
 					*/
-					const lines = [$()];
-					let ret = $();
+					const lines = [[]];
 					elements.textNodes(":not(tw-sidebar):not(tw-sidebar *)").forEach(node => {
 						if (node.compareDocumentPosition(brs[0]) & 2) {
 							brs.shift();
-							lines.push($());
+							lines.push([]);
 						}
-						lines[lines.length-1] = lines[lines.length-1].add(node);
+						lines[lines.length-1] = lines[lines.length-1].concat(node);
 					});
-					lines.forEach(e => ret = ret.add(e.wrapAll('<tw-pseudo-hook>').parent()));
-					return ret;
+					return $(lines.map(e => $(e).wrapAll('<tw-pseudo-hook>').parent()[0]));
 				}
 			}
 			// Luckily, negatives indices work fine with $().get().

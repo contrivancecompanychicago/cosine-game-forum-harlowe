@@ -1,11 +1,17 @@
 /*** Animations ***/
 
 @mixin keyframes($animation-name) {
-	@-webkit-keyframes #{$animation-name} {
-		@content;
-	}
 	@keyframes #{$animation-name} {
 		@content;
+		/*
+			This is used for transition-ins which are delayed - .transition-in has visibility:hidden, meaning
+			until the animation begins, it is invisible.
+		*/
+		0%,to { visibility:visible; }
+	}
+	@-webkit-keyframes #{$animation-name} {
+		@content;
+		0%,to { visibility:visible; }
 	}
 }
 
@@ -27,25 +33,21 @@
 }
 
 @include keyframes(rumble) {
-	0%,to {}
 	25% { @include transform(translateY(-0.1em)) }
 	75% { @include transform(translateY(0.1em)) }
 }
 
 @include keyframes(shudder) {
-	0%,to {}
 	25% { @include transform(translateX(0.1em)) }
 	75% { @include transform(translateX(-0.1em)) }
 }
 
 @include keyframes(buoy) {
-	0%,to {}
 	25% { @include transform(translateY(0.25em)) }
 	75% { @include transform(translateY(-0.25em)) }
 }
 
 @include keyframes(sway) {
-	0%,to {}
 	25% { @include transform(translateX(0.25em)) }
 	75% { @include transform(translateX(-0.25em)) }
 }
@@ -54,7 +56,6 @@
 
 @include keyframes(box-flash) {
 	0% { background-color: white; color: white; }
-	to {}
 }
 
 @include keyframes(pulse) {
@@ -88,22 +89,18 @@
 
 @include keyframes(slide-right) {
 	0% { @include transform(translateX(-100vw)); }
-	to {}
 }
 
 @include keyframes(slide-left) {
 	0% { @include transform(translateX(100vw)); }
-	to {}
 }
 
 @include keyframes(slide-up) {
 	0% { @include transform(translateY(100vh)); }
-	to {}
 }
 
 @include keyframes(slide-down) {
 	0% { @include transform(translateY(-100vh)); }
-	to {}
 }
 
 @include keyframes(flicker) {

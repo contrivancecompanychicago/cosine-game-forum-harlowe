@@ -639,6 +639,8 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			Much like (live:), this macro should be given a number of milliseconds (such as `50ms`) or seconds
 			(such as `10s`). Providing 0 or fewer seconds/milliseconds is not permitted and will result in an error.
 
+			This can be attached to links, much like (t8n:) itself.
+
 			See also:
 			(transition:)
 
@@ -664,6 +666,45 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 					using wrapper hooks anyway).
 				*/
 				d.data.t8nTime       = time;
+				return d;
+			},
+			[Number]
+		)
+		/*d:
+			(transition-delay: Number) -> Changer
+			Also known as: (t8n-delay:)
+			
+			A command that, when added to a (transition:) command, delays the start of the transition by a given time.
+
+			Example usage:
+			`(t8n:"slide-right")+(t8n-delay:3s)[Sorry I'm late.]` makes the text slide in from the right, but only
+			after 3 seconds have passed.
+
+			Details:
+			Much like (live:), this macro should be given a number of milliseconds (such as `50ms`) or seconds
+			(such as `10s`). Providing negative seconds/milliseconds is not permitted and will result in an error.
+
+			Unlike (transition-time:), this does nothing when attached to links, because clicking the link should
+			begin the transition immediately. Attaching it to a link will not produce an error.
+
+			See also:
+			(transition:)
+
+			Added in: 3.2.0
+			#transitions 2
+		*/
+		(["transition-delay", "t8n-delay"],
+			(_, time) => {
+				if (time < 0) {
+					return TwineError.create(
+						"datatype",
+						"(transition-delay:) should be a non-negative number of (milli)seconds, not " + time
+					);
+				}
+				return ChangerCommand.create("transition-delay", [time]);
+			},
+			(d, time) => {
+				d.transitionDelay = time;
 				return d;
 			},
 			[Number]
@@ -703,7 +744,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			(transition-arrive:)
 
 			Added in: 3.0.0
-			#transitions 3
+			#transitions 4
 		*/
 		(["transition-depart", "t8n-depart"],
 			(_, name) => {
@@ -755,7 +796,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			(transition-depart:)
 
 			Added in: 3.0.0
-			#transitions 4
+			#transitions 5
 		*/
 		(["transition-arrive", "t8n-arrive"],
 			(_, name) => {

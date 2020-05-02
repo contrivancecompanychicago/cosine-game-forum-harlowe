@@ -39,10 +39,11 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 			const {attr, data, functions, section} = this;
 			let {scope, lambda} = this;
 			/*
-				Reset the enchantments store, to prepare for the insertion of
-				a fresh set of <tw-enchantment>s.
+				Create an array to temporarily store a fresh set of <tw-enchantment>s.
+				For performance reasons, this is not a jQuery that gets .add()ed to,
+				but it is converted to one at the end.
 			*/
-			this.enchantments = $();
+			let enchantmentsArr = [];
 			
 			/*
 				Now, enchant each selected word or hook within the scope.
@@ -54,7 +55,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 					It's a little odd that the generated wrapper must be retrieved
 					using a terminating .parent(), but oh well.
 				*/
-				const wrapping = e.wrapAll("<tw-enchantment>").parent();
+				const wrapping = e.wrap("<tw-enchantment>").parent();
 
 				/*
 					Apply the attr, data and functions now.
@@ -135,8 +136,12 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 				/*
 					Store the wrapping in the enchantments list.
 				*/
-				this.enchantments = this.enchantments.add(wrapping);
+				enchantmentsArr.push(wrapping);
 			});
+			/*
+				Replace this enchantment's enchanted elements jQuery with a new one.
+			*/
+			this.enchantments = $(enchantmentsArr);
 		},
 		/*
 			This method removes the enchantment wrappers installed by enchantScope().

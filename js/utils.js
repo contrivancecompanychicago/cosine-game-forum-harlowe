@@ -47,11 +47,6 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 	Utils = {
 		/*
 			Locks a particular property of an object.
-
-			@param {Object} Object
-			@param {String} Property to lock
-			@param {String} A value to set the property to
-			@return The affected object
 		*/
 		lockProperty(obj, prop, value) {
 			// Object.defineProperty does walk the prototype chain
@@ -159,10 +154,6 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 			A quick method for adding an 's' to the end of a string
 			that comes in the form "[num] [noun]". Used exclusively for
 			error messages.
-
-			@param {Number} The quantity
-			@param {String} The noun to possibly pluralise
-			@return {String}
 		*/
 		plural(num, noun) {
 			return num + " " + noun + (num > 1 ? "s" : "");
@@ -339,11 +330,7 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 
 		/*
 			Transition an element out.
-			@param {jQuery} jQuery collection to transition out
-			@param (String) transition to use
-			@param (Number) Replacement animation-duration value.
 		*/
-
 		transitionOut(el, transIndex, transitionTime, transitionDelay = 0, expedite = 0) {
 			/*
 				Quick early exit.
@@ -399,12 +386,7 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 
 		/*
 			Transition an element in.
-
-			@param {jQuery} jQuery collection to transition out
-			@param (String) Transition to use
-			@param (Number) Replacement animation-duration value.
 		*/
-
 		transitionIn(el, transIndex, transitionTime, transitionDelay = 0, expedite = 0) {
 			/*
 				Quick early exit.

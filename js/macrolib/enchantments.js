@@ -19,6 +19,8 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		* `(enchant: ?dossier, (link: "Click to read"))` makes all the hooks named "dossier" be hidden behind links reading "Click to read".
 		* `(enchant: ?passage's chars, via (text-color:(hsl: pos * 10, 1, 0.5)))` colours all of the characters in the passage in a
 		rainbow pattern.
+		* `(enchant: ?passage's chars, via (t8n-delay:pos * 30) + (t8n:'instant'))` causes the passage's characters to "type out" when the
+		player first visits, such as in a visual novel or other such computer game.
 
 		Rationale:
 		While changers allow you to style or transform certain hooks in a passage, it can be tedious and error-prone to attach them to every
@@ -96,7 +98,10 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 				section,
 			});
 			section.enchantments.push(enchantment);
-			enchantment.enchantScope();
+			/*
+				section.updateEnchantments() will be run automatically after
+				this has been executed, meaning we don't have to do it here.
+			*/
 			return "";
 		},
 		[either(HookSet,String), either(ChangerCommand, Lambda.TypeSignature('via'))],

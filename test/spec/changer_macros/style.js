@@ -352,29 +352,31 @@ describe("style changer macros", function() {
 			}
 		});
 	});
-	describe("the (transition-time:) macro", function() {
-		it("requires exactly 1 number argument", function() {
-			expect("(print:(transition:))").markupToError();
-			expect("(print:(transition:'A'))").markupToError();
-			expect("(print:(transition:2,2))").markupToError();
+	['time','delay'].forEach(function(name) {
+		describe("the (transition-"+name+":) macro", function() {
+			it("requires exactly 1 number argument", function() {
+				expect("(print:(transition-"+name+":))").markupToError();
+				expect("(print:(transition-"+name+":'A'))").markupToError();
+				expect("(print:(transition-"+name+":2,2))").markupToError();
+			});
+			it("errors unless given a positive number", function() {
+				expect("(print:(transition-"+name+":0s))").markupToError();
+				expect("(print:(transition-"+name+":-50ms))").markupToError();
+				expect("(print:(transition-"+name+":50ms))").not.markupToError();
+			});
+			it("errors when placed in passage prose while not attached to anything", function() {
+				expect("(transition-"+name+":2s)").markupToError();
+				expect("(transition-"+name+":2s)[]").not.markupToError();
+			});
+			it("has structural equality", function() {
+				expect("(print: (transition-"+name+":2s) is (transition-"+name+":2s))").markupToPrint("true");
+				expect("(print: (transition-"+name+":2s) is (transition-"+name+":2ms))").markupToPrint("false");
+			});
+			it("is aliased to (t8n-"+name+":)", function() {
+				expect("(print: (t8n-"+name+":2s) is (transition-"+name+":2s))").markupToPrint("true");
+			});
+			// TODO: Add .css() tests of output, including passage links.
 		});
-		it("errors unless given a positive number", function() {
-			expect("(print:(transition-time:0s))").markupToError();
-			expect("(print:(transition-time:-50ms))").markupToError();
-			expect("(print:(transition-time:50ms))").not.markupToError();
-		});
-		it("errors when placed in passage prose while not attached to anything", function() {
-			expect("(transition-time:2s)").markupToError();
-			expect("(transition-time:2s)[]").not.markupToError();
-		});
-		it("has structural equality", function() {
-			expect("(print: (transition-time:2s) is (transition-time:2s))").markupToPrint("true");
-			expect("(print: (transition-time:2s) is (transition-time:2ms))").markupToPrint("false");
-		});
-		it("is aliased to (t8n-time:)", function() {
-			expect("(print: (t8n-time:2s) is (transition-time:2s))").markupToPrint("true");
-		});
-		// TODO: Add .css() tests of output, including passage links.
 	});
 	describe("the (text-rotate:) macro", function() {
 		it("requires exactly 1 number argument", function() {
