@@ -50,6 +50,9 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		// {Number} [transitionDelay]     The duration, in ms, to delay the start of the transition.
 		transitionDelay:   0,
 
+		// {Number} [transitionSkip]  If a keyboard key or mouse button is held down, skip this many milliseconds in the transition.
+		transitionSkip:   0,
+
 		// {Object} [loopVars]        An object of {temp variable : values array} pairs, which the source should loop over.
 		//                            Used only by (for:)
 		loopVars:         null,
@@ -220,7 +223,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 					(!ts) && (stamped = stamped.parent());
 				}
 				while (!ts && stamped.length);
-				transitionIn(target, transition, this.transitionTime, this.transitionDelay,
+				transitionIn(target, transition, this.transitionTime, this.transitionDelay, this.transitionSkip,
 					/*
 						This delta expedites the animation - if it's expedited past its natural end,
 						it's as if it isn't re-animated (which it shouldn't).
@@ -478,7 +481,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 						This is #awkward, I know...
 					*/
 					append === "replace" ? target : dom,
-					transition, transitionTime, this.transitionDelay,
+					transition, transitionTime, this.transitionDelay, this.transitionSkip,
 					// expedite should always be 0 for changeDescriptors that have their render() called, but,
 					// for consistency...
 					this.expedite

@@ -231,7 +231,7 @@ define([
 			then an error will be produced.
 
 			See also:
-			(push:), (set:)
+			(put:), (set:)
 
 			Added in: 1.0.0
 			#basics 3

@@ -352,7 +352,7 @@ describe("style changer macros", function() {
 			}
 		});
 	});
-	['time','delay'].forEach(function(name) {
+	['time','delay','skip'].forEach(function(name) {
 		describe("the (transition-"+name+":) macro", function() {
 			it("requires exactly 1 number argument", function() {
 				expect("(print:(transition-"+name+":))").markupToError();

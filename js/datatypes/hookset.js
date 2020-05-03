@@ -103,7 +103,7 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 			 ...but leaving runs of whitespace as-is.
 			*/
 			.reduce((a,e) => {
-				if (e.match(realWhitespace) && a[a.length-1].match(realWhitespace)) {
+				if (e.match(realWhitespace) && a.length && a[a.length-1].match(realWhitespace)) {
 					a[a.length-1] += e;
 				}
 				else {
@@ -390,10 +390,10 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 					Due to the surprisingly prohibitive cost of $().add(), these are gathered as
 					an array first.
 				*/
-				let arr = [elements.get(first)[0]];
+				let arr = [elements.get(first)];
 				while (first !== last) {
 					first += Math.sign(last - first);
-					arr.push(elements.get(first)[0]);
+					arr.push(elements.get(first));
 				}
 				return $(arr);
 			}
@@ -408,8 +408,8 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 				if (index === "chars") {
 					let arr = [];
 					for (let t of elements.textNodes()) {
-						for (let t of textNodeToChars(t)) {
-							arr.push(t);
+						for (let c of textNodeToChars(t)) {
+							arr.push(c);
 						}
 					}
 					return $(arr);

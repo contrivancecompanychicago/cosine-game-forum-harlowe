@@ -15,6 +15,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where `(for:)` would emit infinite loop errors if 50 or more elements were given to it.
  * Fixed a long-standing bug where clicking the sidebar "undo" and "redo" icons would cause `(click:?Page)` in the preceding or following passages to automatically fire, even though you didn't actually click them.
  * Significantly improved the performance of macros like `(enchant:)` and `(click:)` when they target a hook's `chars` or `lines`, such as by `(enchant: ?passage's hooks, $changer)`.
+ * Fixed a bug where an `(enchant:)` given `?passage's chars` would crash Harlowe if the passage began with whitespace characters.
 
 ####Alterations
 
@@ -41,6 +42,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a `(hide:)` macro, which removes the contents of a given hook from the passage, but allows the `(show:)` macro to restore the contents later. Hooks hidden with `(hide:)` will not re-run any containing macros when `(show:)` is used on them later.
  * Added a `(seq-link:)` macro, a variation of `(cycling-link:)` which does not cycle - it simply turns into plain text on the final string.
  * Added a `(transition-delay:)` macro (also known as `(t8n-delay:)`) which adds an initial delay to transitions before they begin animating. This can only enchant hooks, not links.
+ * Added a `(transition-skip:)` macro (also known as `(t8n-skip:)`) which, when included with a transition, allows the player to speed up the transition by a given number of milliseconds per frame, by holding down any keyboard key, mouse button or touching the screen.
  * Added a `(rotated-to:)` macro, a variation of `(rotated:)` which, rather than rotating the values by a given number, takes a lambda and rotates them until the first one that matches the lambda is at the front. `(rotated-to:where it > 3, 1,2,3,4)` produces `(a:4,1,2,3)`.
  * Added the `pos` identifier, which is used in lambdas to provide the position of the data value (from those passed into the macro) that the lambda is currently processing. `(altered: via it + pos, 0,0,5,0,0)` equals `(a:1,2,8,4,5)`.
  * Added a `<noscript>` element to the output HTML, containing a sentence instructing that JavaScript should be enabled to play the story (as per SugarCube).

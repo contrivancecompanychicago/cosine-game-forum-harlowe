@@ -603,7 +603,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			`(t8n:"dissolve")+(t8n:"shudder")` won't make a transition that simultaneously dissolve-fades and shudders.
 
 			See also:
-			(text-style:), (transition-time:)
+			(text-style:), (transition-time:), (transition-delay:), (transition-skip:)
 
 			Added in: 1.0.0
 			#transitions 1
@@ -652,7 +652,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				if (time <= 0) {
 					return TwineError.create(
 						"datatype",
-						"(transition-time:) should be a positive number of (milli)seconds, not " + time
+						"(transition-time:) should be given a positive number of (milli)seconds, not " + time
 					);
 				}
 				return ChangerCommand.create("transition-time", [time]);
@@ -688,7 +688,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			begin the transition immediately. Attaching it to a link will not produce an error.
 
 			See also:
-			(transition:)
+			(transition:), (transition-time:), (transition-skip:)
 
 			Added in: 3.2.0
 			#transitions 2
@@ -698,13 +698,62 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				if (time < 0) {
 					return TwineError.create(
 						"datatype",
-						"(transition-delay:) should be a non-negative number of (milli)seconds, not " + time
+						"(transition-delay:) should be given a non-negative number of (milli)seconds, not " + time
 					);
 				}
 				return ChangerCommand.create("transition-delay", [time]);
 			},
 			(d, time) => {
 				d.transitionDelay = time;
+				return d;
+			},
+			[Number]
+		)
+		/*d:
+			(transition-skip: Number) -> Changer
+			Also known as: (t8n-skip:)
+			
+			A command that, when added to a (transition:) command, allows the player to skip or accelerate the transition by
+			holding down a keyboard key or mouse button, or by touching the touch device.
+
+			Example usage:
+			`(t8n:"slide-right")+(t8n-time:3s)+(t8n-skip:0.2s)[OK! I'm comin'!]` makes the text slide in from the right,
+			but only after 3 seconds have passed... but if the player holds a key, mouse button, or the screen, it gets
+			advanced by an additional 0.2 seconds each millisecond they hold.
+
+			Rationale:
+			It's tempting to use transitions a lot in your story, but these can come at a cost to the player - watching
+			and waiting for transitions to complete can be tiring and detrimental to your story's pacing, especially
+			if they have to revisit certain parts of your story a lot. This macro can help by providing them with a means
+			of skipping or accelerating the transitions if they so choose.
+
+			Details:
+			The number given is an amount of milliseconds (or seconds, if specified) to advance the transition. For each
+			millisecond of the transition, Harlowe checks if a key or button is held, and if so, then it is advanced
+			by the given number (in addition to the elapsed millisecond).
+
+			If a non-positive number is given, an error will be produced.
+
+			This effect advances both a transition's (transition-time:)s and (transition-delay:)s.
+
+			See also:
+			(transition:), (transition-delay:), (transition-time:)
+
+			Added in: 3.2.0
+			#transitions 6
+		*/
+		(["transition-skip", "t8n-skip"],
+			(_, time) => {
+				if (time <= 0) {
+					return TwineError.create(
+						"datatype",
+						"(transition-skip:) should be given a positive number, not " + time
+					);
+				}
+				return ChangerCommand.create("transition-skip", [time]);
+			},
+			(d, time) => {
+				d.transitionSkip = time;
 				return d;
 			},
 			[Number]

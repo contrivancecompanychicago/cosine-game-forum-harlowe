@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
-($, TwineMarkup, Selectors) => {
+define(['jquery', 'requestAnimationFrame', 'markup', 'utils/selectors', 'utils/polyfills'],
+($, requestAnimationFrame, TwineMarkup, Selectors) => {
 
 	const
 		// These two are used by childrenProbablyInline (see below).
@@ -23,7 +23,6 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 		// will break if it is ever detached from the DOM.
 		nonDetachableElements = ["audio",];
 
-	let Utils;
 	/*
 		Hard-coded default time for transitions, in milliseconds.
 	*/
@@ -39,7 +38,72 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 			once page load has completed, causing onStartup() to just run the passed function
 			immediately.
 		*/
-		startupCallbacks = [];
+		startupCallbacks = [],
+		/*
+			A map of held-down keyboard keys, and a count of how many keys are held down concurrently.
+			For back-compatibility's sake, this uses jQuery "which" codes instead of "key" event codes.
+		*/
+		keysHeld = {},
+		keysHeldCount = 0,
+		/*
+			And, the same for mouse buttons.
+		*/
+		buttonsHeld = {},
+		buttonsHeldCount = 0;
+
+	/*
+		This simple event keeps both of the aformentioned sets of maps and counts live.
+	*/
+	$(document.documentElement).on('keydown keyup mousedown mouseup', ({which, type}) => {
+		const down = type.includes("down"),
+			key = type.includes("key"),
+			map = key ? keysHeld : buttonsHeld;
+		if (map[which] && !down) {
+			key ? (keysHeldCount = Math.max(keysHeldCount - 1, 0)) : (buttonsHeldCount = Math.max(buttonsHeldCount - 1, 0));
+		}
+		else if (!map[which] && down) {
+			key ? (keysHeldCount += 1) : (buttonsHeldCount += 1);
+		}
+		map[which] = down;
+	});
+
+	let Utils;
+	/*
+		A convenience function for transitionIn and transitionOut, which calls a function
+		when a transition is complete, and also potentially accelerates the end
+		of the transition if it can be skipped and an input is being held.
+	*/
+	function onTransitionComplete(el, delay, transitionSkip, endFn) {
+		/*
+			Each frame, reduce the delay, and potentially reduce it further if this
+			transition can be skipped and an input is being held.
+		*/
+		let previousTimestamp = null, elapsedRealTime = 0;
+		function animate(timestamp) {
+			if (el[0].compareDocumentPosition(document) & 1) {
+				delay = 0;
+			}
+			if (previousTimestamp) {
+				delay -= (timestamp - previousTimestamp);
+				elapsedRealTime += (timestamp - previousTimestamp);
+			}
+			previousTimestamp = timestamp;
+			/*
+				The test for whether a transition can be skipped is simply that any key is being held.
+			*/
+			if (transitionSkip > 0 && (keysHeldCount + buttonsHeldCount) > 0) {
+				delay -= transitionSkip;
+				el.css('animation-delay', ((Utils.cssTimeUnit(el.css('animation-delay')) || 0) - transitionSkip) + "ms");
+			}
+			if (delay <= 0) {
+				endFn(elapsedRealTime);
+			}
+			else {
+				requestAnimationFrame(animate);
+			}
+		}
+		!delay ? animate() : requestAnimationFrame(animate);
+	}
 
 	/*
 		A static class with helper methods used throughout Harlowe.
@@ -331,7 +395,7 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 		/*
 			Transition an element out.
 		*/
-		transitionOut(el, transIndex, transitionTime, transitionDelay = 0, expedite = 0) {
+		transitionOut(el, transIndex, transitionTime, transitionDelay = 0, transitionSkip = 0, expedite = 0) {
 			/*
 				Quick early exit.
 			*/
@@ -348,13 +412,6 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 				mustWrap =
 					el.length > 1 || !childrenInline ||
 					!['tw-hook','tw-passage'].includes(el.tag());
-			
-			/*
-				The default transition callback is to remove the element.
-			*/
-			function onComplete() {
-				el.remove();
-			}
 			/*
 				As mentioned above, we must, in some cases, wrap the nodes in containers.
 			*/
@@ -364,30 +421,29 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 			/*
 				Now, apply the transition.
 			*/
-			el.attr("data-t8n", transIndex).addClass("transition-out");
-			el.css({
+			el.attr("data-t8n", transIndex).addClass("transition-out").css({
 				'animation-duration': transitionTime + "ms",
 				'animation-delay':   (transitionDelay - expedite) + "ms",
 			});
-			if (Utils.childrenProbablyInline(el)) {
+			if (childrenInline) {
 				el.css('display','inline-block');
 			}
-			
 			/*
-				Ideally I'd use this:
-				.one("animationend webkitAnimationEnd MSAnimationEnd", function(){ oldElem.remove(); });
-				but in the event of CSS being off, these events won't trigger
-				- whereas the below method will simply occur immediately.
+				Each frame, reduce the delay, and potentially reduce it further if this
+				transition can be skipped and an input is being held.
 			*/
-			const delay = transitionTime;
-
-			!delay ? onComplete() : window.setTimeout(onComplete, delay);
+			onTransitionComplete(el, transitionTime + transitionDelay - expedite, transitionSkip, () => {
+				/*
+					As a transition-out, all that needs to be done at the end is remove the element.
+				*/
+				el.remove();
+			});
 		},
 
 		/*
 			Transition an element in.
 		*/
-		transitionIn(el, transIndex, transitionTime, transitionDelay = 0, expedite = 0) {
+		transitionIn(el, transIndex, transitionTime, transitionDelay = 0, transitionSkip = 0, expedite = 0) {
 			/*
 				Quick early exit.
 			*/
@@ -414,22 +470,15 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 				Now, perform the transition by assigning these attributes
 				and letting the built-in CSS take over.
 			*/
-			el.attr("data-t8n", transIndex).addClass("transition-in");
-			el.css({
+			el.attr("data-t8n", transIndex).addClass("transition-in").css({
 				'animation-duration': transitionTime + "ms",
 				'animation-delay':   (transitionDelay - expedite) + "ms",
 			});
 			
-			if (Utils.childrenProbablyInline(el)) {
+			if (childrenInline) {
 				el.css('display','inline-block');
 			}
-			const delay = transitionTime + transitionDelay - expedite;
-
-			/*
-				The default transition callback is to remove the transition-in
-				class. (#maybe this should always be performed???)
-			*/
-			function onComplete () {
+			onTransitionComplete(el, transitionTime + transitionDelay - expedite, transitionSkip, (elapsedRealTime) => {
 				/*
 					Unwrap the wrapping... unless it contains a non-unwrappable element,
 					in which case the wrapping must just have its attributes removed.
@@ -444,8 +493,8 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 						(Negative delays expedite the animation conveniently.)
 					*/
 					el.find('tw-transition-container').each((_,child) => {
-						const existingDelay = Utils.cssTimeUnit($(child).css('animation-delay')) || 0;
-						$(child).css('animation-delay', (existingDelay - delay) + "ms");
+						child = $(child);
+						child.css('animation-delay', (Utils.cssTimeUnit(child.css('animation-delay') || 0) - elapsedRealTime) + "ms");
 					});
 					el.contents().unwrap();
 				}
@@ -455,9 +504,7 @@ define(['jquery', 'markup', 'utils/selectors', 'utils/polyfills'],
 				else {
 					el.removeClass("transition-in").removeAttr("data-t8n");
 				}
-			}
-
-			!delay ? onComplete() : window.setTimeout(onComplete, delay);
+			});
 		},
 
 		/*
