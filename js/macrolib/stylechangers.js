@@ -1381,9 +1381,9 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			with the mouse pointer, and is removed when hovering off.
 
 			Example usage:
-			The following makes a (link:) that turns cyan and italic when the mouse hovers over it.
+			The following makes a (link:) that turns italic when the mouse hovers over it.
 			```
-			(hover-style:(text-color:cyan) + (text-style:'italic'))+(link:"The lake")
+			(hover-style:(text-style:'italic'))+(link:"The lake")
 			[The still, cold lake.]
 			```
 
@@ -1441,7 +1441,15 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			},
 			(d, changer) => {
 				d.data.hoverChanger = changer;
-				d.attr.push({ hover: false });
+				/*
+					This is a function instead of a bare value because of the following reason:
+					when a link is inside a (hover-style:) enchanted hook, the act of clicking the
+					link causes the same ChangeDescriptor to be re-run, but with the link's source
+					replaced with the innerSource. As a result, when the hook is hovered over,
+					its old "hover" attr gets clobbered... unless this function explicitly checks for
+					and returns it.
+				*/
+				d.attr.push({ hover: (_, oldHover) => oldHover === undefined ? false : oldHover });
 				return d;
 			},
 			[ChangerCommand]

@@ -16,7 +16,6 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 
 		Example usage:
 		* `(enchant: "gold", (text-colour: yellow) + (text-style:'bold'))` makes all occurrences of "gold" in the text be bold and yellow.
-		* `(enchant: ?dossier, (link: "Click to read"))` makes all the hooks named "dossier" be hidden behind links reading "Click to read".
 		* `(enchant: ?passage's chars, via (text-color:(hsl: pos * 10, 1, 0.5)))` colours all of the characters in the passage in a
 		rainbow pattern.
 		* `(enchant: ?passage's chars, via (t8n-delay:pos * 30) + (t8n:'instant'))` causes the passage's characters to "type out" when the
@@ -64,6 +63,8 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		You can use (enchant:) with (transition:) to add transitions to hooks or text elsewhere in the same passage – however, if those hooks or words have already appeared,
 		they won't abruptly animate. For example, `(event: when time > 2s)[(enchant:"Riddles", (t8n:"Shudder"))]` adds an (enchant:) macro call to the passage
 		after 2 seconds, and won't affect instances of the word "Riddles" that are already in the passage.
+
+		You cannot use (enchant:) with (link:) or any of its relatives – because the enchanted hook or text is already in the passage, the link can't appear.
 
 		See also:
 		(click:)

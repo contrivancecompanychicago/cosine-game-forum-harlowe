@@ -591,6 +591,21 @@ describe("style changer macros", function() {
 			expect("(hover-style:(t8n:'dissolve'))[]").markupToError();
 			expect("(hover-style:(text-color:'red')+(hook:'E'))[]").markupToError();
 		});
+		it("works correctly when combined with (link:)", function(done) {
+			var hover = runPassage("(hover-style:(text-style:'bold'))+(link:'The lake')[The still, cold lake.]").find('tw-hook');
+			hover.mouseenter();
+			setTimeout(function() {
+				hover.click();
+				setTimeout(function() {
+					expect(hover.attr('style')).toMatch(/font-weight:\s*(bold|800)/);
+					hover.mouseleave();
+					setTimeout(function() {
+						expect(hover.attr('style')).not.toMatch(/font-weight:\s*(bold|800)/);
+						done();
+					});
+				});
+			});
+		});
 	});
 	it("can compose arbitrarily deep", function(done) {
 		var align = runPassage(

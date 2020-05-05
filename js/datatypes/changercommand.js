@@ -22,7 +22,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/changedescriptor', 'inte
 			"a changer command",
 		
 		TwineScript_Print() {
-			return "`[A ('" + this.macroName + "':) command]`";
+			return "`[A (" + this.macroName + ":) command]`";
 		},
 		
 		/*

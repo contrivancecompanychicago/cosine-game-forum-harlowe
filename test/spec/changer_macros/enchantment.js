@@ -20,6 +20,9 @@ describe("enchantment macros", function () {
 			expect("[]<foo|(enchant:?foo, via 2)").markupToError();
 			expect("[]<foo|(enchant:?foo, via (append:?baz))").markupToError();
 		});
+		it("doesn't error when given (link:) changers", function() {
+			expect("[]<foo|(enchant:?foo, (link:'bar'))").not.markupToError();
+		});
 		//TODO: write more basic functionality tests comparable to (click:)'s
 	});
 	describe("enchanting ?Link", function() {

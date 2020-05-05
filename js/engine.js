@@ -146,7 +146,7 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 			Find out how many tw-passage elements there are currently in the
 			destination element.
 		*/
-		const oldPassages = Utils.$(story.children(passageSelector));
+		const oldPassages = story.children(passageSelector).not(".transition-out, .transition-out *");
 		
 		/*
 			If this isn't a stretchtext transition, send away all of the

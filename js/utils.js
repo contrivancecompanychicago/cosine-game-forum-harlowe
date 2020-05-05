@@ -51,13 +51,19 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/selectors', 'utils/p
 		buttonsHeld = {},
 		buttonsHeldCount = 0;
 
+	let Utils;
 	/*
 		This simple event keeps both of the aformentioned sets of maps and counts live.
 	*/
-	$(document.documentElement).on('keydown keyup mousedown mouseup', ({which, type}) => {
+	$(document.documentElement).on('keydown keyup mousedown mouseup', ({key, button, type}) => {
 		const down = type.includes("down"),
-			key = type.includes("key"),
-			map = key ? keysHeld : buttonsHeld;
+			map = key ? keysHeld : buttonsHeld,
+			/*
+				Keys are indexed by insensitiveName, as this allows keys to be referenced by authors
+				without keeping track of capitalisation, or whether Shift is being held.
+				There are no specified utility key names which collide under this.
+			*/
+			which = (key && Utils.insensitiveName(key)) || button;
 		if (map[which] && !down) {
 			key ? (keysHeldCount = Math.max(keysHeldCount - 1, 0)) : (buttonsHeldCount = Math.max(buttonsHeldCount - 1, 0));
 		}
@@ -67,7 +73,6 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/selectors', 'utils/p
 		map[which] = down;
 	});
 
-	let Utils;
 	/*
 		A convenience function for transitionIn and transitionOut, which calls a function
 		when a transition is complete, and also potentially accelerates the end
@@ -284,6 +289,21 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/selectors', 'utils/p
 		insensitiveName(e) {
 			return (e + "").toLowerCase().replace(/-|_/g, "");
 		},
+
+		/*
+			Input utilities
+		*/
+
+		/*
+			Provides access to the keysHeld map, which tracks keyboard input.
+		*/
+		allKeysDown: (...keys) => keys.every(key => keysHeld[key]),
+		someKeysDown: (...keys) => keys.some(key => keysHeld[key]),
+
+		/*
+			Provides access to the buttonsHeld map, which tracks button input.
+		*/
+		buttonsDown: (...buttons) => buttons.every(b => buttonsHeld[b]),
 		
 		/*
 			Element utilities
@@ -343,12 +363,7 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/selectors', 'utils/p
 
 		/*
 			Replaces oldElem with newElem while transitioning between both.
-
-			@param a jQuery object currently in the DOM or a DOM structure
-			@param an unattached jQuery object to attach
-			@param transition to use
 		*/
-
 		transitionReplace(oldElem, newElem, transIndex) {
 			const closest = oldElem.closest(Selectors.hook);
 			if (closest.length > 0) {
@@ -505,16 +520,6 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/selectors', 'utils/p
 					el.removeClass("transition-in").removeAttr("data-t8n");
 				}
 			});
-		},
-
-		/*
-			Runs a jQuery selector, but:
-			- uses the <tw-story> element as context, unless one was given.
-			- ignores elements that are transitioning out.
-		*/
-
-		$(str, context) {
-			return $(str, context || Utils.storyElement).not(".transition-out, .transition-out *");
 		},
 
 		/*

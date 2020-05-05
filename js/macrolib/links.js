@@ -327,7 +327,13 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 					As this is a deferred rendering macro, the current tempVariables
 					object must be stored for reuse, as the section pops it when normal rendering finishes.
 				*/
-				const [{tempVariables}] = desc.section.stack;
+				const tempVariables =
+					/*
+						The only known situation when there is no section is when this is being run by
+						ChangerCommand.summary(). In that case, the tempVariables will never be used,
+						so a bare object can just be provided.
+					*/
+					(desc.section && desc.section.stack[0]) ? desc.section.stack[0].tempVariables : Object.create(null);
 				/*
 					All links need to store their section as jQuery data, so that clickLinkEvent can
 					check if the section is blocked (thus preventing clicks).
