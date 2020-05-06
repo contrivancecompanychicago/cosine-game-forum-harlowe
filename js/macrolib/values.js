@@ -598,7 +598,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			<div style="position:absolute;left:100%;width:1px;background-color:black;height:64px;">1,<br>#bf3f3f</div>
 			<div style="background:linear-gradient(90deg, rgba(191, 63, 63, 1) 0%, rgba(165, 191, 63, 1) 20%,
 				rgba(63, 191, 114, 1) 40%, rgba(63, 114, 191, 1) 60%, rgba(165, 63, 191, 1) 80%,
-				rgba(191, 63, 63, 1) 100%); height:64px;"></div>
+				rgba(191, 63, 63, 1) 100%); height:64px;z-index:-1;"></div>
 			</div>
 			(gradient:)'s first argument is a degree angle, which can be used to rotate the gradient's direction, changing
 			where the first and last colours are placed in the element. Changing the degree angle in the above example from 90 degrees

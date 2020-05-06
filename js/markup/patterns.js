@@ -226,6 +226,7 @@
 
 			Example usage:
 			```
+			(enchant:?passage, (text-size:0.6))
 			|==
 			This is in the leftmost column, which has a right margin of about 2 letters wide.
 			    =|||=
@@ -238,10 +239,11 @@
 
 			You can create nested columns by enclosing the inner set of columns in an unnamed hook, like so:
 			```
+			(enchant:?passage, (text-size:0.6))
 			|==
 			This is the outer left column.
 			==|
-			This is outer right column.
+			This is the outer right column.
 			[\
 			  |==
 			This is the inner left column, inside the outer right column.

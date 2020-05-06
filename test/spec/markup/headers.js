@@ -32,7 +32,7 @@ describe("headers and rules", function() {
 				expect(
 					"A" + "\n".repeat(i) + "#A"
 				).markupToBecome(
-					"A" + "<br>" + "<br data-cons=\"\">".repeat(i-1) + "<h1>A</h1>"
+					"A" + "<br>" + "<tw-consecutive-br></tw-consecutive-br>".repeat(i-1) + "<h1>A</h1>"
 				);
 			});
 		});
@@ -93,7 +93,7 @@ describe("headers and rules", function() {
 				expect(
 					"A" + "\n".repeat(i) + "---"
 				).markupToBecome(
-					"A" + "<br>" + "<br data-cons=\"\">".repeat(i-1) + "<hr>"
+					"A" + "<br>" + "<tw-consecutive-br></tw-consecutive-br>".repeat(i-1) + "<hr>"
 				);
 			});
 		});

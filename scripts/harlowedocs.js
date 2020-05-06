@@ -171,7 +171,7 @@ table:not(.datamap) :not(pre) > code { white-space: pre-wrap; }
 :hover > .heading_link::before { visibility:visible; }
 
 /* Preview */
-#preview { display:none; z-index:20; position: fixed; width: 25vw; height:45vh; right:2vw; top: 10vh; overflow-y:scroll; border: 1px double #888; }
+#preview { display:none; z-index:20; position: fixed; width: 25vw; height:45vh; right:2vw; top: 10vh; overflow-y:scroll; border: 1px double #888; font-size:16px; }
 @media screen and (max-width: 1200px) { #preview, .previewButton, #previewCode { display:none; } }
 html:not(.theme-dark) #preview tw-story { background-color:white; color:black }
 #previewCode { display:none; position:fixed; width:25vw; height:30vh; right: 2vw; bottom: 10vh; overflow:scroll; border: 1px double #888; }

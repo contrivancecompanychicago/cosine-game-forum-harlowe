@@ -69,11 +69,14 @@ build/harlowe-min.js: js/*.js js/*/*.js js/*/*/*.js
 unwrap = /(?:,|\n)define\([^\;]+\;/g, ""
 # Inject the definitions of valid macros, containing only the name/sig/returntype/aka
 validmacros = "\"MACROS\"", JSON.stringify(require("./scripts/metadata").Macro.shortDefs())
+# Inject the pre-built CodeMirror CSS
+codemirrorcss = "\"CODEMIRRORCSS\"", JSON.stringify(require("./scripts/codemirrorcss"))
 
 build/twinemarkup-min.js: js/markup/*.js js/markup/*/*.js
 	@node_modules/.bin/r.js -o $(requirejs_twinemarkup_flags) \
 	| $(call node_replace, $(unwrap)) \
 	| $(call node_replace, $(validmacros)) \
+	| $(call node_replace, $(codemirrorcss)) \
 	| babel --presets es2015 \
 	| uglifyjs $(uglify_flags) \
 	> build/twinemarkup-min.js

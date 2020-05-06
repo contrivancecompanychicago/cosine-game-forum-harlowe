@@ -58,7 +58,7 @@ describe("aligner syntax", function() {
 		[1,2,3,4].forEach(function(i) {
 			expect(runPassage(
 				"A" + "\n".repeat(i) + "==>\ngarply\n<==\n"
-			).children('br').length).toBe(i);
+			).children('br,tw-consecutive-br').length).toBe(i);
 		});
 	});
 	it("won't create <br> elements afterward", function() {

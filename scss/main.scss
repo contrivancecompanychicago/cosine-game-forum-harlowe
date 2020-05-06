@@ -74,11 +74,10 @@ tw-story {
 	color: $color;
 
 	/*
-		This causes consecutive line breaks to consume less height than they normally would.
-		The [data-cons] attr is installed by Renderer. To keep the CSS class namespace empty for authors,
-		it's a custom attr and not a class.
+		Consecutive line breaks should consume less height than they normally would.
+		Renderer converts those <br>s into this element.
 	*/
-	br[data-cons] {
+	tw-consecutive-br {
 		display: block;
 		height: 0;
 		margin: 0.8ex 0;

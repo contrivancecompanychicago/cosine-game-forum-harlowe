@@ -144,7 +144,7 @@ define([
 		const {nextSibling} = (e instanceof $ ? e[0] : e);
 		if (nextSibling &&
 				((nextSibling instanceof Text && !nextSibling.textContent.trim())
-				|| (nextSibling.tagName || '').toLowerCase() === "br")) {
+				|| ["br","tw-consecutive-br"].includes((nextSibling.tagName || '').toLowerCase()))) {
 
 			const { whitespace, nextElem } = nextNonWhitespace(nextSibling);
 			return { whitespace: $(nextSibling).add(whitespace), nextElem };
@@ -567,9 +567,9 @@ define([
 			afterNode = null;
 		}
 		/*
-			- If the node contains <br>, replace with a single space.
+			- If the node contains no raw <br>s, or raw <tw-consecutive-br>, replace with a single space.
 		*/
-		elem.findAndFilter('br:not([data-raw])')
+		elem.findAndFilter('br:not([data-raw]),tw-consecutive-br:not([data-raw])')
 			.filter(noVerbatim)
 			.replaceWith(document.createTextNode(" "));
 		/*

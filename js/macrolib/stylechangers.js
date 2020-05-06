@@ -881,7 +881,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			No error will be reported if the provided font name is not available, invalid or misspelled.
 
 			See also:
-			(text-style:)
+			(text-style:), (text-size:)
 
 			Added in: 1.0.0
 			#styling
@@ -1017,6 +1017,58 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				return d;
 			},
 			[either(String, Colour)]
+		)
+		/*d:
+			(text-size: Number) -> Changer
+			Also known as: (size:)
+
+			This styling command changes the text size of the attached hook by the given fraction.
+			Give it a number greater than 1 to enlarge the text, and a number smaller to decrease
+			the text. Providing 1 to this macro will revert the text size back to the default.
+
+			Example usage:
+			```
+			This is normal text.
+			(text-size:0.5)[Umm... this text is half the size of normal text]
+			(size:2)[This text is enlarged twofold!]
+			```
+
+			Details:
+			The default text size for Harlowe, with no other CSS changes to any elements, is 16px, and its
+			default line height is 24px. This macro multiplies both of those CSS properties by the given
+			number, scaling both proportionally. This size is absolute - any pure CSS alterations to the text
+			size of the passage, story or page, using (css:) or story stylesheets, will NOT be taken into account.
+
+			This macro also scales any markup which displays text larger or smaller by default, such as
+			header markup or the "superscript" (text-style:).
+
+			Be careful about using this macro with (hover-style:) - changing the displayed size of the "hover region"
+			when the mouse begins to hover over it can lead to the pointer "slipping off" the region, causing it to abruptly
+			stop hovering (and deactivating the style) unexpectedly.
+
+			See also:
+			(text-style:), (font:)
+
+			Added in: 3.2.0
+			#styling
+		*/
+		(["text-size", "size"],
+			(_, percent) => {
+				if (percent < 0) {
+					return TwineError.create('macrocall', 'The (text-size:) macro requires a positive number, not '
+						+ percent + '.');
+				}
+				return ChangerCommand.create("text-size", [percent]);
+			},
+			(d, percent) => {
+				/*
+					The constants 24 and 36 are what the default CSS, "font-size:1.5em" and "line-height:1.5em",
+					compute to (on Firefox) with no other CSS changes.
+				*/
+				d.styles.push({'font-size': percent*24 + "px", 'line-height': percent*36 + "px" });
+				return d;
+			},
+			[Number]
 		)
 		/*d:
 			(text-rotate: Number) -> Changer
@@ -1403,6 +1455,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			* (text-colour:)
 			* (text-rotate:)
 			* (text-style:)
+			* (text-size:)
 			
 			More extensive mouse-based interactivity should use the (mouseover:) and (mouseout:) macros.
 

@@ -363,13 +363,13 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 							*/
 							let lookahead = tokens[i + 1];
 							while (lookahead && (lookahead.type === "br" || (lookahead.type === "tag" && /^<br\b/i.test(lookahead.text)))) {
-								out += "<br data-cons "
+								out += "<tw-consecutive-br"
 									/*
 										Preserving the [data-raw] attribute is necessary for the collapsing syntax's collapse code.
 										Non-raw <br>s are collapsed by it.
 									*/
-									+ (lookahead.type === "tag" ? "data-raw" : "")
-									+ ">";
+									+ (lookahead.type === "tag" ? " data-raw" : "")
+									+ "></tw-consecutive-br>";
 								i += 1;
 								lookahead = tokens[i + 1];
 							}

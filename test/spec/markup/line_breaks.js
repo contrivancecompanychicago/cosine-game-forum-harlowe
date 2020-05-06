@@ -13,7 +13,7 @@ describe("line break syntax", function() {
 			expect(
 				"\n".repeat(4)
 			).markupToBecome(
-				"<br>" + "<br data-cons=\"\">".repeat(3)
+				"<br>" + "<tw-consecutive-br></tw-consecutive-br>".repeat(3)
 			);
 		});
 	});

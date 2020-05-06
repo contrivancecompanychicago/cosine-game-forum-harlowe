@@ -425,7 +425,7 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 					/*
 						"Lines" excludes the sidebar, so that the "undo" and "redo" links aren't included.
 					*/
-					const brs = elements.findAndFilter('br:not(tw-sidebar *)').get();
+					const brs = elements.findAndFilter('br:not(tw-sidebar *),tw-consecutive-br:not(tw-sidebar *)').get();
 					/*
 						Place all of the elements into the current collection. When one is found that's after
 						the current <br>, create a new collection.

@@ -52,7 +52,7 @@ describe("collapsing whitespace syntax", function() {
 	});
 	it("leaves raw HTML <br> tags as is", function() {
 		var p = runPassage("{\nA<br>\n<br>B\n}");
-		expect(p.find('br').length).toBe(2);
+		expect(p.find('br,tw-consecutive-br').length).toBe(2);
 	});
 	it("collapses runs of whitespace between non-whitespace down to a single space", function() {
 		expect(

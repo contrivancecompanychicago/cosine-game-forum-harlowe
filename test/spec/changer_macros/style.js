@@ -352,15 +352,16 @@ describe("style changer macros", function() {
 			}
 		});
 	});
-	['time','delay','skip'].forEach(function(name) {
+	['time','delay','skip'].forEach(function(name,i) {
 		describe("the (transition-"+name+":) macro", function() {
 			it("requires exactly 1 number argument", function() {
 				expect("(print:(transition-"+name+":))").markupToError();
 				expect("(print:(transition-"+name+":'A'))").markupToError();
 				expect("(print:(transition-"+name+":2,2))").markupToError();
 			});
-			it("errors unless given a positive number", function() {
-				expect("(print:(transition-"+name+":0s))").markupToError();
+			it("errors unless given a " + (i===1 ? "non-negative" : "positive") + " number", function() {
+				var e = expect("(print:(transition-"+name+":0s))");
+				(i===1 ? e.not : e).markupToError();
 				expect("(print:(transition-"+name+":-50ms))").markupToError();
 				expect("(print:(transition-"+name+":50ms))").not.markupToError();
 			});
@@ -376,6 +377,29 @@ describe("style changer macros", function() {
 				expect("(print: (t8n-"+name+":2s) is (transition-"+name+":2s))").markupToPrint("true");
 			});
 			// TODO: Add .css() tests of output, including passage links.
+		});
+	});
+
+	describe("the (text-size:) macro", function() {
+		it("requires exactly 1 positive number argument", function() {
+			expect("(print:(text-size:))").markupToError();
+			expect("(print:(text-size:1.1))").not.markupToError();
+			expect("(print:(text-size:'A'))").markupToError();
+			expect("(print:(text-size:55,55))").markupToError();
+			expect("(print:(text-size:-0.2))").markupToError();
+		});
+		it("scales the attached hook's font-size and line-height", function(done) {
+			var hook = runPassage("(text-size:2)[Sized.]").find('tw-hook');
+			setTimeout(function() {
+				expect(hook.attr('style')).toMatch(/font-size:\s*48px/);
+				expect(hook.attr('style')).toMatch(/line-height:\s*72px/);
+				hook = runPassage("(text-size:0.82)[Sized.]").find('tw-hook');
+				setTimeout(function() {
+					expect(hook.attr('style')).toMatch(/font-size:\s*19\.68px/);
+					expect(hook.attr('style')).toMatch(/line-height:\s*29.52px/);
+					done();
+				});
+			});
 		});
 	});
 	describe("the (text-rotate:) macro", function() {

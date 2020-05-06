@@ -596,6 +596,11 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		(show:) will reveal every hook with the given name. To only reveal a specific hook, you can use the
 		possessive syntax, as usual: `(show: ?shrub's 1st)`.
 
+		Much like (replace:), (show:) cannot affects hooks or text that haven't been printed yet - if the (show:)
+		runs at the same time that the passage is appearing (as in, it isn't inside a hook that's delayed by (live:), (link:), (event:)
+		or similar macros), and a hook or line of text appears after it in the passage, the macro won't replace its contents
+		even if it's a valid target. For example: `(show:?fence)|fence)[A white picket fence.]` won't work because the (show:) runs immediately.
+
 		If you provide to (show:) a hook which is already visible, nothing will happen - no error will be produced. If you provide to
 		(show:) a hook that had been visible, but was hidden with (hide:), then the hook will reappear, but its macros won't be re-run.
 		If you wish to re-run an already visible hook, use (rerun:). Note that hooks whose visible contents have been replaced with

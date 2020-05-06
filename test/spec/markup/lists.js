@@ -43,7 +43,7 @@ describe("list markup", function() {
 				expect(
 					"A" + "\n".repeat(i) + "* A"
 				).markupToBecome(
-					"A" + "<br>" + "<br data-cons=\"\">".repeat(i-1) + "<ul><li>A</li></ul>"
+					"A" + "<br>" + "<tw-consecutive-br></tw-consecutive-br>".repeat(i-1) + "<ul><li>A</li></ul>"
 				);
 			});
 		});
@@ -137,7 +137,7 @@ describe("list markup", function() {
 				expect(
 					"A" + "\n".repeat(i) + "0. A"
 				).markupToBecome(
-					"A" + "<br>" + "<br data-cons=\"\">".repeat(i-1) + "<ol><li>A</li></ol>"
+					"A" + "<br>" + "<tw-consecutive-br></tw-consecutive-br>".repeat(i-1) + "<ol><li>A</li></ol>"
 				);
 			});
 		});

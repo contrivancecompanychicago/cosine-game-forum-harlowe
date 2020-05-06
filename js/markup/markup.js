@@ -241,7 +241,7 @@
 			All block rules have a single specific canFollow and cannotFollow.
 		*/
 		Object.keys(blockRules).forEach((key) => {
-			blockRules[key].canFollow = [null, "br", "hr", "bulleted", "numbered", "heading", "align"];
+			blockRules[key].canFollow = [null, "br", "hr", "bulleted", "numbered", "heading", "align", "escapedLine"];
 			blockRules[key].cannotFollow = ["text"];
 		});
 		
