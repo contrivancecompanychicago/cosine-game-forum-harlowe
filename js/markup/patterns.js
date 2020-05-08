@@ -1002,7 +1002,7 @@
 		each:       "each" + wb,
 		augmentedAssign: either("\\+", "\\-", "\\*", "\\\/", "%") + "=",
 
-		bind:       "bind" + wb,
+		bind:       "2?bind" + wb,
 
 		incorrectOperator,
 	};

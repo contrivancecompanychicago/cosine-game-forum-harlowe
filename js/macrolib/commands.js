@@ -260,6 +260,8 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			* `(cycling-link: bind $head's hair, "Black", "Brown", "Blonde", "Red", "White")` binds the "hair" value in the $head datamap to the
 			current link text.
 			* `(cycling-link: "Mew", "Miao", "Mrr", "Mlem")` has no bound variable.
+			* `(cycling-link: 2bind $pressure, "Low", "Medium", "High")` has a two-way bound variable. Whenever $pressure is either "Low", "Medium",
+			or "High", the link will change its text automatically to match.
 
 			Rationale:
 			The cycling link is an interaction idiom popularised in Twine 1 which combines the utility of a dial input element with
@@ -272,6 +274,13 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			other, even though no hooks and (set:)s can be attached to them.
 
 			Details:
+
+			This macro accepts two-way binds using the `2bind` syntax. These will cause the link to rotate its values to match the current value of the bound
+			variable, if it can - if $pressure is "Medium" when entering the passage with `(cycling-link: 2bind $pressure, "Low", "Medium", "High")`, then it will
+			rotate "Medium" to the front, as if the link had already been clicked once. Also, it will automatically update itself whenever
+			any other macro changes the bound variable. However, if the variable no longer matches any of the link's strings, then it won't update - for
+			instance, if the variable becomes "It's Gonna Blow", then a cycling link with the strings "Low", "Medium" and "High" won't update.
+
 			If one of the strings is empty, such as `(cycling-link: "Two eggs", "One egg", "")`, then upon reaching the empty string, the link
 			will disappear permanently. If the *first* string is empty, an error will be produced (because then the link can never appear at all).
 
@@ -280,14 +289,6 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 
 			The bound variable will be set to the first value as soon as the cycling link is displayed - so, even if the player doesn't
 			interact with the link at all, the variable will still have the intended value.
-
-			If you want to include the current value of the bound variable in the link's series of strings, simply refer to it directly after
-			the bind: `(cycling-link: bind $hat, $hat, "Beret", "Poker visor", "Tricorn")` will place $hat's current value in the series,
-			and, as the first value, it will harmlessly overwrite $hat with itself (and thus leave it unchanged). Additionally, if you have
-			an array of strings that you'd like to reuse for the same cycling link in multiple passages, say as
-			`(set: $allHats to (a: "Helmet", "Beret", "Poker visor", "Tricorn"))`, and you'd like each cycling link to start on
-			whatever matching value is currently in $hat, simply use the (rotated-to:)
-			macro: `(cycling-link: bind $hat, ...(rotated-to: where it is $hat, ...$allHats))`.
 
 			If you use (replace:) to alter the text inside a (cycling-link:), such as `(cycling-link: bind $tattoo, "Star", "Feather")(replace:"Star")[Claw]`,
 			then the link's text will be changed, but the value assigned to the bound variable will *not* - $tattoo will still be "Star", and clicking the
@@ -360,17 +361,34 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 					bind = labels.shift();
 				}
 				let index = 0;
+				/*
+					If there's a bind, and it's two-way, and one of the labels matches the bound
+					variable's value, change the index to match.
+				*/
+				if (bind && bind.bind === "two way") {
+					/*
+						The two-way binding attribute (used by the handler to find bound elements)
+						is installed, and if the variable currently matches an available label,
+						the index changes to it.
+					*/
+					cd.attr.push({"data-2bind": true});
+					const bindIndex = labels.indexOf(bind.varRef.get());
+					if (bindIndex > -1) {
+						index = bindIndex;
+					}
+				}
 
 				/*
 					As this is a deferred rendering macro, the current tempVariables
 					object must be stored for reuse, as the section pops it when normal rendering finishes.
 				*/
 				const [{tempVariables}] = section.stack;
-				cd.data.clickEvent = (link) => {
-					/*
-						Rotate to the next label...
-					*/
-					index = (index + 1) % labels.length;
+
+				/*
+					This updater function is called when the element is clicked, and again
+					when a two-way binding fires from a variable update.
+				*/
+				function nextLabel(expr, activated) {
 					const ending = (index >= labels.length-1 && seq);
 					let source = (labels[index] === "" ? "" :
 						/*
@@ -384,10 +402,11 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 						cd.data.clickEvent = undefined;
 					}
 					/*
-						If there's a bound variable, set it to the value of the next string.
+						If there's a bound variable, and this rerender wasn't called by
+						a two-way binding activation, set it to the value of the next string.
 						(If it returns an error, let that replace the source.)
 					*/
-					if (bind) {
+					if (bind && !activated) {
 						const result = bind.set(labels[index]);
 						if (TwineError.containsError(result)) {
 							/*
@@ -395,7 +414,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 								we need to explicitly replace the link with the rendered error rather than return
 								the error (to nobody).
 							*/
-							link.replaceWith(result.render(labels[index]));
+							expr.replaceWith(result.render(labels[index]));
 							return;
 						}
 					}
@@ -405,16 +424,48 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 					*/
 					const cd2 = assign({}, cd, { source, transitionDeferred: false, });
 					/*
-						Since cd2's target SHOULD equal link, passing anything as the second argument won't do anything useful
+						Since cd2's target SHOULD equal expr, passing anything as the second argument won't do anything useful
 						(much like how the first argument is overwritten by cd2's source). So, null is given.
 					*/
 					cd.section.renderInto("", null, cd2, tempVariables);
-				};
+				}
+				/*
+					The 2-way bind could have set the index to the end of the label list. If that label is "",
+					don't install the event.
+				*/
+				labels[index] && (cd.data.clickEvent = (expr) => {
+					/*
+						Rotate to the next label...
+					*/
+					index = (index + 1) % labels.length;
+					nextLabel(expr, false);
+				})
+				/*
+					This event is called by a handler installed in VarBind.js. Every variable set causes
+					this to fire - if it was the bound variable, then try to update the link
+					to match the variable (if a match exists).
+				*/
+				&& (cd.data.twoWayBindEvent = (expr, obj, name) => {
+					if (bind.varRef.matches(obj,name)) {
+						const value = bind.varRef.get();
+						const bindIndex = labels.indexOf(value);
+						// Only actually update if the new index differs from the current.
+						if (bindIndex > -1 && bindIndex !== index) {
+							index = bindIndex;
+							/*
+								Rotate to the given label, making sure not to recursively
+								call set() on the binding again.
+							*/
+							nextLabel(expr, true);
+						}
+					}
+				});
+
 				/*
 					As above, the bound variable, if present, is set to the first label. Errors resulting
 					from this operation can be returned immediately.
 				*/
-				let source = '<tw-link>' + labels[0] + '</tw-link>';
+				let source = '<tw-link>' + labels[index] + '</tw-link>';
 				if (bind) {
 					const result = bind.set(labels[index]);
 					if (TwineError.containsError(result)) {
@@ -456,11 +507,13 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		When one option is selected, the bound variable is set to match the string value of the text.
 
 		Example usage:
-		* `(dropdown: bind _origin, "Abyssal outer reaches", "Gyre's wake", "The planar interstice")`
+		* `(dropdown: bind _origin, "Abyssal outer reaches", "Gyre's wake", "The planar interstice")` has a normal bound variable.
+		* `(dropdown: 2bind $title, "Duke", "King", "Emperor")` has a two-way bound variable - if $title is "Duke", "King" or "Emperor",
+		then the dropdown will automatically be scrolled to that option.
 
 		Rationale:
 		Dropdown menus offer a more esoteric, but visually and functionally unique way of presenting the player with
-		a choice from several options. Compared to other list-selection elements like (cycling-links:) or lists of links,
+		a choice from several options. Compared to other list-selection elements like (cycling-link:)s or lists of links,
 		dropdowns are best used for a long selection of options which should be displayed all together, but would not otherwise
 		easily fit in the screen in full.
 
@@ -469,6 +522,12 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		itself - for instance, to present an in-story bureaucratic form or machine control panel.
 
 		Details:
+
+		This macro accepts two-way binds using the `2bind` syntax. These will cause the dropdown to always match the current value of the bound
+		variable, if it can. Also, it will automatically update itself whenever any other macro changes the bound variable. However,
+		if the variable no longer matches any of the dropdown's strings, then it won't update - for
+		instance, if the variable becomes "Peasant", then a dropdown with the strings "Duke", "King" and "Emperor" won't update.
+
 		Note that unlike (cycling-link:), another command that uses bound variables, the bound variable is mandatory here.
 
 		Also note that unlike (cycling-link:), empty strings can be given. These instead create **separator elements**,
@@ -501,6 +560,18 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			}
 		},
 		(cd, _, bind, ...labels) => {
+			let index = 0;
+			/*
+				If there's a bind, and it's two-way, and one of the labels matches the bound
+				variable's value, change the index to match.
+			*/
+			if (bind.bind === "two way") {
+				cd.attr.push({"data-2bind": true});
+				const bindIndex = labels.indexOf(bind.varRef.get());
+				if (bindIndex > -1) {
+					index = bindIndex;
+				}
+			}
 			/*
 				In order to create separators that are long enough, we must find the longest
 				label's length (in code points, *not* UCS2 length) and then make the
@@ -509,7 +580,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			const longestLabelLength = Math.max(...labels.map(e=>[...e].length));
 			let source = '<select>'
 				+ labels.map((label, i) =>
-					'<option' + (i === 0 ? ' selected' : '') + (label === "" ? ' disabled' : '') + '>'
+					'<option' + (i === index ? ' selected' : '') + (label === "" ? ' disabled' : '') + '>'
 					/*
 						Create the separator using box-drawing "─" characters, which should be
 						visually preferable to plain hyphens.
@@ -532,7 +603,23 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 					return;
 				}
 			};
-			const result = bind.set(labels[0]);
+			/*
+				This event is called by a handler installed in VarBind.js. Every variable set causes
+				this to fire - if it was the bound variable, then try to update the dropdown
+				to match the variable (if a match exists).
+			*/
+			cd.data.twoWayBindEvent = (dropdownMenu, obj, name) => {
+				if (bind.varRef.matches(obj,name)) {
+					const value = bind.varRef.get();
+					const bindIndex = labels.indexOf(value);
+					// Only actually update if the new index differs from the current.
+					if (bindIndex > -1 && bindIndex !== index) {
+						dropdownMenu.find('select').val(value);
+						index = bindIndex;
+					}
+				}
+			};
+			const result = bind.set(labels[index]);
 			if (TwineError.containsError(result)) {
 				return result;
 			}

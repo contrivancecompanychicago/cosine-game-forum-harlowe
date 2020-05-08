@@ -422,6 +422,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 		else if (type === "bind") {
 			midString = "VarBind.create(";
 			right = compile(tokens.slice(i + 1), varRefArgs("right"))
+				+ (token.text.startsWith('2') ? ",'two way'" : '')
 				+ ")";
 			needsLeft = false;
 		}

@@ -141,6 +141,27 @@ describe("interface macros", function(){
 					runPassage("(set:_bar to 'qux')(set:$foo to ("+name+":'_bar','foo'))");
 					expect('(set:_bar to "baz")$foo').markupToPrint("baz");
 				});
+				describe("if it's a two-way bind", function() {
+					it("rotates to match the variable if it matches a label", function(done) {
+						var p = runPassage("(set:$foo to 'baz')("+name+": 2bind $foo, 'bar','baz', 'qux')");
+						expect(p.text()).toBe('baz');
+						p.find('tw-link').click();
+						setTimeout(function(){
+							expect(p.text()).toBe("qux");
+							expect("$foo").markupToPrint("qux");
+							done();
+						},20);
+					});
+					it("updates whenever the variable changes", function(done) {
+						var p = runPassage("(set:$foo to 'baz')("+name+": 2bind $foo, 'bar','baz', 'qux')(link:'X')[(set:$foo to 'bar')]");
+						expect(p.find('tw-expression[name='+name+'] tw-link').text()).toBe('baz');
+						p.find('tw-hook tw-link').click();
+						setTimeout(function(){
+							expect(p.find('tw-expression[name='+name+'] tw-link').text()).toBe("bar");
+							done();
+						},20);
+					});
+				});
 				it("errors if the bind is invalid", function() {
 					expect("(set:$foo to 1)("+name+": bind $foo's 1st, 'bar','baz', 'qux')").markupToError();
 				});
@@ -243,6 +264,27 @@ describe("interface macros", function(){
 					done();
 				}, 20);
 			}, 20);
+		});
+		describe("when given a two-way bind", function() {
+			it("rotates to match the variable", function(done) {
+				var p = runPassage("(set:$foo to 'qux')(dropdown: 2bind $foo, 'bar','baz', 'qux')");
+				expect(p.find('select').val()).toBe('qux');
+				p.find('select').val('baz').change();
+				setTimeout(function(){
+					expect(p.find('select').val()).toBe("baz");
+					expect("$foo").markupToPrint("baz");
+					done();
+				},20);
+			});
+			it("updates whenever the variable changes", function(done) {
+				var p = runPassage("(set:$foo to 'baz')(dropdown: 2bind $foo, 'bar','baz', 'qux')(link:'X')[(set:$foo to 'bar')]");
+				expect(p.find('select').val()).toBe('baz');
+				p.find('tw-hook tw-link').click();
+				setTimeout(function(){
+					expect(p.find('select').val()).toBe("bar");
+					done();
+				},20);
+			});
 		});
 		it("errors if the first or last labels are empty", function() {
 			expect("(dropdown: bind $foo, '','baz','qux')").markupToError();

@@ -1,11 +1,40 @@
 "use strict";
-define(['utils', 'utils/operationutils', 'internaltypes/varref', 'internaltypes/twineerror'], (Utils, {objectName}, VarRef, TwineError) => {
+define(['jquery', 'utils', 'utils/operationutils', 'internaltypes/varref', 'internaltypes/twineerror'], ($, Utils, {objectName}, VarRef, TwineError) => {
 	/*
 		VarBinds provide a means for certain UI input macros like (textarea:) to bind changes to their contents
 		to a variable.
 
 		They are unobservable - attempts to store them or use them in any other macros must fail.
 	*/
+
+	/*
+		Two-way binding macros work by waiting on this event handler, which fires when any variable set is
+		performed. This only passes the object and name, as those macros can retrieve the current value
+		from their own passed-in VarBind object.
+	*/
+	VarRef.on('set', (obj, name) => {
+		/*
+			For a deep data structure (set:), VarRef.on will fire set callbacks for every object in the
+			chain: $a's b's c's d to 1 will produce 'set' callbacks for c, b, a and State.variables.
+			We only care about the root - false positives created by altering a deep value in a datamap
+			neighbouring the actual bound value don't really matter, as the twoWayBindEvent function should
+			filter them out.
+		*/
+		if (obj.TwineScript_VariableStore) {
+			/*
+				Sadly, there isn't quite a more efficient way of sleuthing out every DOM element
+				that could be a two-way bound interaction element, beyond a DOM query with an attachable attribute.
+			*/
+			$(Utils.storyElement).find('[data-2bind]').each((_,elem) => {
+				elem = $(elem);
+				/*
+					Retrieve and run the twoWayBindEvent handler, which should've been installed by the macro.
+				*/
+				const d = elem.data('twoWayBindEvent');
+				(typeof d === "function") && d(elem, obj, name);
+			});
+		}
+	});
 	
 	/*d:
 		Bind data
@@ -20,12 +49,17 @@ define(['utils', 'utils/operationutils', 'internaltypes/varref', 'internaltypes/
 		inside them, like `$diary's 1st's event`. Once bound, the macro's element will set data to it automatically, as if by a series of
 		unseen (set:)s or (move:)s.
 
+		Two-way binds, created by the `2bind` syntax, enforce an equality that normal binds do not: whenever the variable changes outside
+		of the element, such as by an `(event:)` macro, then the interaction element updates to match, if it can. Thus, there are two bindings
+		between the data and the element using it: the variable updates when the element changes, and the element updates when the variable changes.
+
 		Note that bound variables can't be (set:) into variables themselves, because there's no real point to doing so (and it could lead to
 		a lot of undue confusion).
 
 		| Operator | Purpose | Example
 		|---
 		| `bind` | Binds the named variable on the right. | `bind $weapon`, `bind _hat`, `bind $profile's age`
+		| `2bind` | Double-binds the named variable on the right. | `2bind $weapon`, `2bind _hat`, `2bind $profile's age`
 	*/
 	const VarBind = Object.freeze({
 		/*
@@ -49,7 +83,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varref', 'internaltypes/
 		
 		/*
 			bind is either "one way" (the DOM element's first provided value is automatically selected and
-			written to the variable) or the NOT implemented "two way" (the macro's contained value determines which option in
+			written to the variable) or "two way" (the macro's contained value determines which option in
 			the DOM element is initially selected, and continues to affect the DOM element if the variable is remotely
 			changed).
 		*/

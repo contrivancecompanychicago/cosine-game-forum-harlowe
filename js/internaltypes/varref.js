@@ -857,6 +857,15 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		},
 
 		/*
+			This small check is used by two-way VarBinds to determine if they need to update
+			whenever a VarRef "set" event is fired. The check is, simply, if the set object and
+			name match the lowest level of a VarRef's property chain.
+		*/
+		matches(obj, name) {
+			return this.object === obj && this.compiledPropertyChain[0] === name;
+		},
+
+		/*
 			This creator function accepts an object and a property chain.
 			But, it can also expand another VarRef that's passed into it.
 			This is almost always called by compiled TwineScript code.
@@ -925,7 +934,8 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		},
 
 		/*
-			This is used only by Debug Mode - it lets event handlers be registered and called when variables change.
+			This is used by two-way bind macros and by Debug Mode - it lets event handlers be registered
+			and called when variables change.
 			"set" functions have the signature (obj, prop, value).
 			"delete" functions have the signature (obj, prop).
 		*/

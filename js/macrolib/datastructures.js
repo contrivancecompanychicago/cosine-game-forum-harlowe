@@ -671,11 +671,11 @@ define([
 			This is a variation of the (rotated:) macro. Both of these macros allow you to cycle through a sequence of values,
 			wrapping back to the start, until a certain value is at the front, then provide an array of the values in that order.
 			The former macro lets you specify an exact number of rotations to do; this one lets you specify what kind of value
-			should be at the front.
+			should be at the front, if you don't know the exact order of the passed-in strings (which may be the case if they come
+			from an array).
 
-			This is designed to be used with macros like (cycling-link:) - if you have a variable bound to the link, and want the link's initial
-			text to always be that variable's current contents (among a set of fixed text) then use (rotated-to:) like
-			so: `(cycling-link: bind $hat, ...(rotated-to: where it is $hat, "Helmet", "Beret", "Poker visor", "Tricorn"))`.
+			Note that while the lambda argument provides a lot of flexibility, if you simply want to compare each value to a known
+			value, `where it is` (such as in an example above) is a simple enough lambda formulation to do so.
 
 			Details:
 			If the lambda doesn't match any of the values (that is, there's no value to rotate to) then an error will result.
@@ -1611,6 +1611,7 @@ define([
 			| `is not` | Evaluates to `true` if both sides differ in items. | `(ds:5,4) is not (ds:5)` (is true)
 			| `contains` | Evaluates to `true` if the left side contains the right side. | `(ds:"Ape") contains "Ape"`<br>`(ds:(ds:99)) contains (ds:99)`<br>`(ds: 1,2,3) contains all of (a:2,3)`<br>`(ds: 1,2,3) contains any of (a:3,4)`
 			| `is in` | Evaluates to `true` if the right side contains the left side. | `"Ape" is in (ds:"Ape")`<br>`(a:3,4) is in (ds:1,2,3)`
+			| `is not in` | Evaluates to `true` if the right side does not contain the left side. | `"Hope" is not in (ds:"Famine","Plague","Pollution")`
 			| `+` | Joins datasets. | `(ds:1,2,3) + (ds:1,2,4)` (is `(ds:1,2,3,4)`)
 			| `-` | Subtracts datasets. | `(ds:1,2,3) - (ds:1,3)` (is `(ds:2)`)
 			| `...` | When used in a macro call, it separates each value in the right side.<br>The dataset's values are sorted before they are spread out.| `(a: 0, ...(ds:1,2,3,4), 5)` (is `(a:0,1,2,3,4,5)`)

@@ -46,6 +46,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a `(rerun:)` macro, which replaces a given hook with its original source, eliminating any changes made to it by `(replace:)` or other macros. This also runs any macros inside the hook an additional time.
  * Added a `(hide:)` macro, which removes the contents of a given hook from the passage, but allows the `(show:)` macro to restore the contents later. Hooks hidden with `(hide:)` will not re-run any containing macros when `(show:)` is used on them later.
  * Added a `(seq-link:)` macro, a variation of `(cycling-link:)` which does not cycle - it simply turns into plain text on the final string.
+ * Added `2bind`, a "two-way bind" variation of `bind` which causes the `(cycling-link:)`, `(seq-link:)` and `(dropdown:)` macros to automatically match the current value of the bound variable, and update itself whenever another macro changes the variable.
  * Added a `(text-size:)` style changer macro (also known as `(size:)`) that scales the attached hook's font size and line height by the given multiplier.
  * Added a `(transition-delay:)` macro (also known as `(t8n-delay:)`) which adds an initial delay to transitions before they begin animating. This can only enchant hooks, not links.
  * Added a `(transition-skip:)` macro (also known as `(t8n-skip:)`) which, when included with a transition, allows the player to speed up the transition by a given number of milliseconds per frame, by holding down any keyboard key, mouse button or touching the screen.
