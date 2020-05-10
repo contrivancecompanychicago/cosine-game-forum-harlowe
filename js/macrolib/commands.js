@@ -619,6 +619,13 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 					}
 				}
 			};
+			/*
+				This is designed to overcome a limitation of Windows Chrome, which gives <select>s
+				with a transparent background colour a colour of white.
+			*/
+			cd.styles.push({
+				'background-color'() { return Utils.parentColours($(this)).backgroundColour; },
+			});
 			const result = bind.set(labels[index]);
 			if (TwineError.containsError(result)) {
 				return result;

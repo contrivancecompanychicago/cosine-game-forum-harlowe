@@ -125,11 +125,11 @@ const outputFile = {
 	heading:
 		"font-weight:bold;",
 	hr:
-		"display:block; background-image: linear-gradient(0deg, transparent, transparent 45%, hsla(0,0%,75%,1.0) 45%, transparent 55%, transparent);",
+		"background-image: linear-gradient(0deg, transparent, transparent 45%, hsla(0,0%,75%,1.0) 45%, transparent 55%, transparent);",
 	align:
-		"display:block; color: hsla(14,99%,37%,1.0); background-color: hsla(14,99%,87%,0.1);",
+		"color: hsla(14,99%,37%,1.0); background-color: hsla(14,99%,87%,0.1);",
 	column:
-		"display:block; color: hsla(204,99%,37%,1.0); background-color: hsla(204,99%,87%,0.1);",
+		"color: hsla(204,99%,37%,1.0); background-color: hsla(204,99%,87%,0.1);",
 	
 	escapedLine:
 		"font-weight:bold; color: hsla(51,100%,30%,1.0);",

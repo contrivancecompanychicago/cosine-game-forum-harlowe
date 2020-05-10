@@ -310,6 +310,44 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/selectors', 'utils/p
 		*/
 
 		/*
+			Determines the colours of an element (both colour and backgroundColour) by
+			scanning all of its parent elements, ignoring transparency.
+		*/
+		parentColours(elem) {
+			const ret = { colour: null, backgroundColour: null };
+			/*
+				Browsers represent the colour "transparent" as either "transparent",
+				hsla(n, n, n, 0) or rgba(n, n, n, 0).
+			*/
+			const transparent = /^\w+a\(.+?,\s*0\s*\)$|^transparent$/;
+			/*
+				To correctly identify the colours of this element, iterate
+				upward through all the elements containing it.
+			*/
+			for (; elem.length && elem[0] !== document; elem = elem.parent()) {
+				if (!ret.backgroundColour) {
+					const colour = elem.css('background-color');
+					if (!colour.match(transparent)) {
+						ret.backgroundColour = colour;
+					}
+				}
+				if (!ret.colour) {
+					const colour = elem.css('color');
+					if (!colour.match(transparent)) {
+						ret.colour = colour;
+					}
+				}
+				if (ret.colour && ret.backgroundColour) {
+					return ret;
+				}
+			}
+			/*
+				If there's no colour anywhere, assume this is a completely unstyled document.
+			*/
+			return { colour: "#fff", backgroundColour: "#000" };
+		},
+
+		/*
 			childrenProbablyInline: returns true if the matched elements probably only contain elements that
 			are of the 'inline' or 'none' CSS display type.
 			
@@ -325,12 +363,13 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/selectors', 'utils/p
 				so that $css() can be run on them after the first loop has returned all-true.
 			*/
 			const unknown = [];
-			return Array.prototype.every.call(jq.find('*'), elem => {
+			return Array.prototype.every.call(jq.findAndFilter('*'), elem => {
 				/*
 					If it actually has "style=display:inline", "hidden", or "style=display:none"
 					as an inline attribute, well, that makes life easy for us.
 				*/
-				if (elem.hidden || /none|inline/.test(elem.style.display)) {
+				if (elem.hidden || /none|inline/.test(elem.style.display)
+						|| /display: (?!none|inline)/.test(elem.getAttribute('style'))) {
 					return true;
 				}
 				/*
@@ -342,7 +381,8 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/selectors', 'utils/p
 							If it has an inline style which is NOT none or inline,
 							then go ahead and return false.
 						*/
-						|| /none|inline/.test(elem.style.display)) {
+						|| /none|inline/.test(elem.style.display)
+						|| /display: (?!none|inline)/.test(elem.getAttribute('style'))) {
 					return false;
 				}
 				/*

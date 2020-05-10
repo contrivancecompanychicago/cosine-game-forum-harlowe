@@ -969,7 +969,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 					};
 				}
 				// This final property is necessary for margins to appear.
-				style.display = 'block';
+				style.display = 'inline-block';
 				return ChangerCommand.create("align", [style]);
 			},
 			(d, style) => {
@@ -1312,26 +1312,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 								},
 							},
 							{
-								color() {
-									/*
-										To correctly identify the background colour of this element, iterate
-										upward through all the elements containing it.
-									*/
-									for (let elem = $(this); elem.length && elem[0] !== document; elem = elem.parent()) {
-										const colour = elem.css('background-color');
-										/*
-											Browsers represent the colour "transparent" as either "transparent",
-											hsla(n, n, n, 0) or rgba(n, n, n, 0).
-										*/
-										if (colour !== "transparent" && !colour.match(/^\w+a\(.+?,\s*0\s*\)$/)) {
-											return colour;
-										}
-									}
-									/*
-										If there's no colour anywhere, assume this is a completely unstyled document.
-									*/
-									return "#fff";
-								},
+								color() { return Utils.parentColours($(this)).backgroundColour; },
 							}
 						],
 						shadow: {
@@ -1507,7 +1488,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			},
 			[ChangerCommand]
 		)
-		
+
 		/*d:
 			(css: String) -> Changer
 			
@@ -1556,4 +1537,162 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			[String]
 		)
 		;
+
+	/*d:
+		(box: String, Number) -> Changer
+
+		When attached to a hook, it becomes a "box", with a given width proportional to the containing element's width,
+		height proportional to the window, and a scroll bar if its contained text is longer than its height can contain.
+
+		Example usage:
+		* `(box:"=XX=", 0.25)[Chapter complete]` produces a box that's centered, 50% of the containing element's width, and 25% of the
+		window's height.
+		* `(box:"==X", 0.5)[Chapter complete]` produces a box that's right-aligned, 33% of the containing element's width, and 50% of the
+		window's height.
+		* `(box:"X", 0.5)[Chapter complete]` produces a box that takes up the full containing element's width, and 50% of the
+		window's height.
+
+		Rationale:
+
+		There are times when you want to make a block of text appear to occupy an enclosed, small region with its own scroll bar,
+		so that players can scroll through it separate from the rest of the passage - for instance, if it's an excerpt of some
+		in-story document, or if it's a "message log" which has lots of text appended to it with (append:). This macro
+		provides that ability.
+
+		Details:
+		The first value you give to this macro is a "sizing line" similar to the aligner and column markup - a sequence of zero or
+		more `=` signs, then a sequence of characters (preferably "X"), then zero or more `=` signs. Think of this string as a visual
+		depiction of the box's horizontal proportions - the `=` signs are the space to the left and right, and the characters in
+		the middle are the box itself.
+
+		The second value is a percentage of the window height, and must be above 0 and not higher than 1. If you need to reposition the hook
+		vertically, consider using (float-box:).
+
+		The "containing element" is whatever structure contains the hook. If it's inside column markup, the containing column is the
+		element. If it's inside another hook (including a hook that also has (box:) attached), that hook is the element. Usually,
+		however, it will just be the passage itself.
+
+		This changer does not interact well with (align:), which also sets the horizontal placement of hooks - adding these changers
+		together will cause one to override the placement of the other. (align:) will also, if center-alignment is given, force
+		the hook's horizontal size to 50% of the containing element.
+
+		If you want the box's horizontal size to be a large proportion of the available width, it may be more readable if you uniformly varied
+		the characters that comprise the sizing string: `(box:"=XxxxXxxxXxxxX=", 0.25)`, for instance, makes it easier to discern that
+		the box is 13/15th of the available width.
+
+		You can use this with (enchant:) and `?passage` to affect the placement of the passage in the page.
+
+		The resulting hook has the CSS attributes "display:block" and "overflow-y:scroll". Additionally, the hook will have
+		'padding:1em', unless another padding value has been applied to it (such as via (css:)).
+
+		See also:
+		(align:), (float-box:)
+
+		Added in: 3.2.0
+		#styling
+	*/
+	/*d:
+		(float-box: String, String) -> Changer
+
+		When attached to a hook, it becomes a "floating box", placed at a given portion of the window, sized proportionally to the
+		window's dimensions, and with a scroll bar if its contained text is longer than its height can contain.
+
+		Example usage:
+		* `(float-box: "X====","Y====")[CASH: $35,101]` produces a box that's placed in the top-left corner of the window,
+		is 20% of the window's width, and 20% of the window's height.
+		* `(float-box: "=XXX=","======Y")[Marvin: "Really?"]` produces a box that's placed in the middle bottom of the window,
+		is 60% of the window's width, and 1/7th of the window's height.
+
+		Rationale:
+
+		This is a variant of (box:). There are times when you want a single block of text to be separated from the main passage's text,
+		to the point where it's positioned offset from it as a separate panel - character statistics readouts in RPGs, and commentary
+		asides are two possible uses. Unlike (box:), which leaves the hook in the passage, this provides that necessary spatial separation.
+
+		Details:
+		The values you give to this macro are "sizing lines" identical to those accepted by (box:) - consult its documentation for more
+		information about those lines. However, while those lines scaled the hook proportional to the "containing element", (float-box:)
+		scales proportional to the reader's browser window. The second string references the vertical position and size of the
+		hook - since (box:) cannot affect the vertical position of the hook, it only accepts a number representing its size.
+
+		It's a recommended convention that the centre characters in the sizing line strings be "X" (for "X axis") for the horizontal line
+		and "Y" (for "Y axis") for the vertical - but you may use whatever you wish as long as it is not a `=`.
+
+		Since it is "floating", this box remains fixed in the window even when the player scrolls up and down.
+
+		The resulting hook has the CSS attributes "display:block", "position:fixed" and "overflow-y:scroll". Additionally, the hook will have
+		'padding:1em', unless another padding value has been applied to it (such as via (css:)).
+
+		See also:
+		(align:), (box:)
+
+		Added in: 3.2.0
+		#styling
+	*/
+	const geomStringRegExp = /^(=*)([^=]+)=*$/;
+	const geomParse = str => {
+		const length = str.length;
+		const [matched, left, inner] = (geomStringRegExp.exec(str) || []);
+		if (!matched) {
+			return {marginLeft:0, marginRight:0,size:0};
+		}
+		return {marginLeft: (left.length/length)*100, size: (inner.length/length)*100};
+	};
+
+	['box','float-box'].forEach(name => Macros.addChanger(name,
+		/*
+			Even though these two macros differ in type signature, they have the same function bodies. The "height"
+			argument is a string for one macro and a number for another, so checks are necessary to distinguish them.
+		*/
+		(_, widthStr, height) => {
+			const widthErr = widthStr.search(geomStringRegExp) === -1;
+			const heightErr = (name === "float-box" && height.search(geomStringRegExp) === -1);
+			if (widthErr || heightErr) {
+				return TwineError.create("macrocall", 'The (' + name + ':) macro requires a sizing line'
+						+ '("==X==", "==X", "=XXXX=" etc.) be provided, not "' + (widthErr ? widthStr : height) + '".');
+			}
+			if (name === "box" && (height <= 0 || height > 1)) {
+				return TwineError.create("macrocall", 'The (' + name + ':) macro requires a positive number less than or equal to 1, not '
+					+ height + '.');
+			}
+			return ChangerCommand.create(name, [widthStr, height]);
+		},
+		(d, widthStr, height) => {
+			const {marginLeft,size} = geomParse(widthStr);
+			let top;
+			if (name === "float-box") {
+				({marginLeft:top, size:height} = geomParse(height));
+			}
+			else {
+				// Convert the height number to VH
+				height *= 100;
+			}
+			/*
+				(box:)es are within flow; they use the % of the containing box (and <tw-passage> is considered
+				a box). (float-box:)es are not within flow, and use "vm".
+			*/
+			const boxUnits = (name === "box" ? "%" : "vw");
+			const styles = {
+				display:        "block",
+				width:           size + boxUnits,
+				[name === "box" ? "margin-left" : "left"]:   marginLeft + boxUnits,
+				height:          height + "vh",
+				"overflow-y":   "scroll",
+				padding() { return $(this).css('padding') || '1em'; },
+			};
+			if (name === "float-box") {
+				Object.assign(styles, {
+					position: 'fixed',
+					top: top + "vh",
+					/*
+						Being disconnected from their parnet, float-boxes need their own backgroud-color.
+					*/
+					'background-color'() { return Utils.parentColours($(this)).backgroundColour; },
+				});
+			}
+			d.styles.push(styles);
+			return d;
+		},
+		[String, name === "box" ? Number : String]
+	));
 });

@@ -14,12 +14,15 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Now, `(mouseover:)` and `(mouseout:)` should work correctly with ?Page, ?Passage, and ?Sidebar.
  * Fixed a bug where `(for:)` would emit infinite loop errors if 50 or more elements were given to it.
  * Fixed a long-standing bug where clicking the sidebar "undo" and "redo" icons would cause `(click:?Page)` in the preceding or following passages to automatically fire, even though you didn't actually click them.
+ * Fixed a long-standing bug where block elements (like `(align:)` enchanted hooks) weren't transitioning in correctly when their passage appeared.
  * Significantly improved the performance of macros like `(enchant:)` and `(click:)` when they target a hook's `chars` or `lines`, such as by `(enchant: ?passage's hooks, $changer)`.
  * Fixed a bug where an `(enchant:)` given `?passage's chars` would crash Harlowe if the passage began with whitespace characters.
  * Fixed a bug where `(enchant:)` given a link changer such as `(link:)` would cause a Javascript error. It now causes no error, but it does nothing. (The documentation that formerly cited this as an example usage has been changed.)
  * Fixed a bug where `(hover-style:)` combined with a link changer such as `(link:)` would cause the specified hover style, after the link was clicked, to permanently persist on the hook.
  * Fixed a bug where `(hover-style:)` couldn't actually override the default hover colour for links of any kind, due to a CSS conflict.
  * Now, consecutive line breaks (which Harlowe reduces the cumulative height of) at the start of a passage are no longer the wrong height while that passage transitions in. (To handle this, consecutive line breaks are now made into `<tw-consecutive-br>` elements instead of `<br data-cons>` elements.)
+ * Now, `(dropdown:)` explicitly uses the background of its containing hook, instead of being transparent, which the Windows version of Chrome displays as white, regardless of text colour.
+ * Now, align, horizontal rule, and column syntax in the editor no longer occupies two lines unexpectedly.
 
 ####Alterations
 
@@ -55,6 +58,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a `<noscript>` element to the output HTML, containing a sentence instructing that JavaScript should be enabled to play the story (as per SugarCube).
  * `(text-style:)` now lets you provide multiple style names, as a shortcut to combining multiple changers. `(text-style:"italic","outline")` is the same as `(text-style:"italic")+(text-style:"outline")`.
  * Added two more styles to `(text-style:)`, "buoy" and "sway", which are slow, gentle movement animations to serve as counterparts to "rumble" and "shudder".
+ * Added a `(box:)` changer macro, which turns the attached hook into a box with given width and horizontal margins, a height scaling with window height, and a scroll bar if its contained prose exceeds its height.
+ * Added a `(float-box:)` changer macro, a variant of `(box:)` which turns the hook into a separate pane floating on the window, using `position:fixed`. These have an explicit vertical position as well as horizontal position.
 
 ###3.1.0 changes:
 

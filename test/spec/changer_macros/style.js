@@ -558,6 +558,78 @@ describe("style changer macros", function() {
 			expect("(print: (align:'<==') is (align:'=><=='))").markupToPrint("false");
 		});
 	});
+	describe("the (box:) macro", function() {
+		it("requires 1 string and 1 number", function() {
+			expect("(print:(box:))").markupToError();
+			expect("(print:(box:1))").markupToError();
+			expect("(print:(box:'A'))").markupToError();
+			expect("(print:(box:'A','B'))").markupToError();
+		});
+		it("errors if not given a valid size string", function() {
+			expect("(box:'',1)[]").markupToError();
+			expect("(box:'===',1)[]").markupToError();
+			expect("(box:'=X=X=',1)[]").markupToError();
+		});
+		it("errors if not given a valid vertical size", function() {
+			expect("(box:'=X=',1.5)[]").markupToError();
+			expect("(box:'=X=',0)[]").markupToError();
+			expect("(box:'=X=',-0.1)[]").markupToError();
+		});
+		it("gives the hook the specified margins, width, height, as well as display:block", function() {
+			[
+				['=XX=', 25, 50, 40],
+				['X===', 0, 25, 10],
+				['==XXXXXXXX', 20, 80, 35],
+			].forEach(function(a) {
+				var code = a[0], marginLeft=a[1], width=a[2], height=a[3];
+
+				var s = runPassage("(box:'" + code + "', " + height/100 + ")[]").find('tw-hook').attr('style');
+				expect(s).toMatch(RegExp("margin-left:\\s*"+marginLeft+"%"));
+				expect(s).toMatch(RegExp("\\bwidth:\\s*"+width+"%"));
+				expect(s).toMatch(RegExp("\\bheight:\\s*"+height+"vh"));
+				expect(s).toMatch(/display:\s*block/);
+				expect(s).toMatch(/overflow-y:\s*scroll/);
+			});
+		});
+	});
+	describe("the (float-box:) macro", function() {
+		it("requires exactly 2 string arguments", function() {
+			expect("(print:(float-box:))").markupToError();
+			expect("(print:(float-box:1))").markupToError();
+			expect("(print:(float-box:'A'))").markupToError();
+		});
+		it("errors if not given valid size strings", function() {
+			expect("(float-box:'')[]").markupToError();
+			expect("(float-box:'===','=X=')[]").markupToError();
+			expect("(float-box:'=X=','=X=X=')[]").markupToError();
+		});
+		it("gives the hook the specified margins, width, height, as well as display:block and position:fixed", function() {
+			[
+				['=XX=', 'Y', 25, 0, 50, 100],
+				['X===', '====Y=====', 0, 40, 25, 10],
+				['==XXXXXXXX', 'YYYY====', 20, 0, 80, 50],
+			].forEach(function(a) {
+				var code = a[0], code2=a[1], marginLeft=a[2], marginTop=a[3], width=a[4], height=a[5];
+
+				var s = runPassage("(float-box:'" + code + "', '" + code2 + "')[]").find('tw-hook').attr('style');
+				expect(s).toMatch(RegExp("\\bleft:\\s*"+marginLeft+"vw|\\binset:\\s*"+marginLeft+"vw"));
+				expect(s).toMatch(RegExp("\\btop:\\s*"+marginTop+"vh|\\binset:\\s*\\d+vw\\s*"+marginTop+"vh"));
+				expect(s).toMatch(RegExp("\\bwidth:\\s*"+width+"vw"));
+				expect(s).toMatch(RegExp("\\bheight:\\s*"+height+"vh"));
+				expect(s).toMatch(/display:\s*block/);
+				expect(s).toMatch(/position:\s*fixed/);
+				expect(s).toMatch(/overflow-y:\s*scroll/);
+			});
+		});
+		it("has the background colour of outer hooks", function(done) {
+			var hook = runPassage("(background: #fadaba)[|2>[(float-box:'=X=','=Y=')[baz]]]")
+				.find('tw-hook[name=2] > tw-hook');
+			setTimeout(function() {
+				expect(hook).toHaveColour('#fadaba');
+				done();
+			});
+		});
+	});
 	describe("the (hover-style:) macro", function() {
 		it("requires exactly 1 style changer argument", function() {
 			expect("(hover-style:)[]").markupToError();
