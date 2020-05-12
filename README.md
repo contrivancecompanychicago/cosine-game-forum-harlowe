@@ -18,6 +18,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Significantly improved the performance of macros like `(enchant:)` and `(click:)` when they target a hook's `chars` or `lines`, such as by `(enchant: ?passage's hooks, $changer)`.
  * Fixed a bug where an `(enchant:)` given `?passage's chars` would crash Harlowe if the passage began with whitespace characters.
  * Fixed a bug where `(enchant:)` given a link changer such as `(link:)` would cause a Javascript error. It now causes no error, but it does nothing. (The documentation that formerly cited this as an example usage has been changed.)
+ * Fixed a bug where `(enchant:)` given `?passage's lines` would crash Harlowe if the passage contained zero line breaks.
  * Fixed a bug where `(hover-style:)` combined with a link changer such as `(link:)` would cause the specified hover style, after the link was clicked, to permanently persist on the hook.
  * Fixed a bug where `(hover-style:)` couldn't actually override the default hover colour for links of any kind, due to a CSS conflict.
  * Now, consecutive line breaks (which Harlowe reduces the cumulative height of) at the start of a passage are no longer the wrong height while that passage transitions in. (To handle this, consecutive line breaks are now made into `<tw-consecutive-br>` elements instead of `<br data-cons>` elements.)
@@ -41,25 +42,34 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 ####Additions
 
+#####Coding
+
  * Added the `is not in` operator - `$a is not in $b` is a more intelligible phrasing for `not ($a is in $b)`. (Currently, `contains` still doesn't have a negative equivalent.)
+ * Added the `pos` identifier, which is used in lambdas to provide the position of the data value (from those passed into the macro) that the lambda is currently processing. `(altered: via it + pos, 0,0,5,0,0)` equals `(a:1,2,8,4,5)`.
+ * Added `2bind`, a "two-way bind" variation of `bind` which causes the `(cycling-link:)`, `(seq-link:)` (See below) and `(dropdown:)` macros to automatically match the current value of the bound variable, and update itself whenever another macro changes the variable.
+
+#####Macros
+
  * Added some new macros, `(storylet:)` and `(open-storylets:)`, to support "storylets", an alternative way to link between groups of passages that's preferable for writing non-linear "episodic" interactive fiction. Instead of writing direct links between each episode, you instead write a requirement at the start of each episode, specifying (using a 'when' lambda) when would be the best time to let the player visit the passages. An example is `(storylet: when $season is "spring")`. Then, when you want the player to go to an episode, you use macros like `(open-storylets:)` to get a list of which storylet passages are available right now, and create links or other structures from there. Thanks to Emily Short for popularising the "storylet" design pattern.
  * Added a `(metadata:)` macro, which, when placed in a passage, adds values to the `(passage:)` datamap for that passage, allowing you to store any arbitrary data on it for your own use. This takes the same values as `(dm:)` - string names and data values in alternation.
- * Added a debug mode panel listing which storylet passages are currently available, and their 'where' lambdas. This panel is only visible if you have `(storylet:)` macros in your story.
  * Added a `(link-rerun:)` macro, which is similar to `(link-repeat:)`, but which replaces the hook on each click rather than appending to it.
  * Added a `(rerun:)` macro, which replaces a given hook with its original source, eliminating any changes made to it by `(replace:)` or other macros. This also runs any macros inside the hook an additional time.
  * Added a `(hide:)` macro, which removes the contents of a given hook from the passage, but allows the `(show:)` macro to restore the contents later. Hooks hidden with `(hide:)` will not re-run any containing macros when `(show:)` is used on them later.
  * Added a `(seq-link:)` macro, a variation of `(cycling-link:)` which does not cycle - it simply turns into plain text on the final string.
- * Added `2bind`, a "two-way bind" variation of `bind` which causes the `(cycling-link:)`, `(seq-link:)` and `(dropdown:)` macros to automatically match the current value of the bound variable, and update itself whenever another macro changes the variable.
  * Added a `(text-size:)` style changer macro (also known as `(size:)`) that scales the attached hook's font size and line height by the given multiplier.
  * Added a `(transition-delay:)` macro (also known as `(t8n-delay:)`) which adds an initial delay to transitions before they begin animating. This can only enchant hooks, not links.
  * Added a `(transition-skip:)` macro (also known as `(t8n-skip:)`) which, when included with a transition, allows the player to speed up the transition by a given number of milliseconds per frame, by holding down any keyboard key, mouse button or touching the screen.
  * Added a `(rotated-to:)` macro, a variation of `(rotated:)` which, rather than rotating the values by a given number, takes a lambda and rotates them until the first one that matches the lambda is at the front. `(rotated-to:where it > 3, 1,2,3,4)` produces `(a:4,1,2,3)`.
- * Added the `pos` identifier, which is used in lambdas to provide the position of the data value (from those passed into the macro) that the lambda is currently processing. `(altered: via it + pos, 0,0,5,0,0)` equals `(a:1,2,8,4,5)`.
- * Added a `<noscript>` element to the output HTML, containing a sentence instructing that JavaScript should be enabled to play the story (as per SugarCube).
  * `(text-style:)` now lets you provide multiple style names, as a shortcut to combining multiple changers. `(text-style:"italic","outline")` is the same as `(text-style:"italic")+(text-style:"outline")`.
  * Added two more styles to `(text-style:)`, "buoy" and "sway", which are slow, gentle movement animations to serve as counterparts to "rumble" and "shudder".
  * Added a `(box:)` changer macro, which turns the attached hook into a box with given width and horizontal margins, a height scaling with window height, and a scroll bar if its contained prose exceeds its height.
  * Added a `(float-box:)` changer macro, a variant of `(box:)` which turns the hook into a separate pane floating on the window, using `position:fixed`. These have an explicit vertical position as well as horizontal position.
+ * Added the changer macros `(border:)`, `(border-size:)`, `(border-colour:)` and `(border-radius:)` (aliases `(b4r:)`, `(b4r-size:)`, `(b4r-colour:)` and `(b4r-radius:)`) which add and adjust CSS borders for hooks. These will automatically make the attached hook have `display:inline-block`, so that it remains rectangular and the border can properly enclose it. `(border-radius:)` will also add padding, proportional to the amount of corner rounding, so that the corners don't encroach on the inner text.
+
+#####Other
+
+ * Added a debug mode panel listing which storylet passages are currently available, and their 'where' lambdas. This panel is only visible if you have `(storylet:)` macros in your story.
+ * Added a `<noscript>` element to the output HTML, containing a sentence instructing that JavaScript should be enabled to play the story (as per SugarCube).
 
 ###3.1.0 changes:
 

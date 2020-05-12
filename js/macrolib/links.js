@@ -215,12 +215,6 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			
 			Details:
 			This creates a link which is visually indistinguishable from normal passage links.
-
-			If you want to make only a certain portion of the link text disappear when the whole link is clicked,
-			simply place that portion inside a plain hook, one with no name and no macros attached to the front:
-			`(link-reveal:"She gasped[.]")[and ran over to me.]` will create a link reading "She gasped." that becomes
-			"She gasped and ran over to me." when clicked. This can be used to make the revealed text flow more naturally
-			into the link text, by removing or adjusting punctuation.
 			
 			If the link text contains formatting syntax, such as "**bold**", then it will be retained
 			when the link is demoted to text.
@@ -230,6 +224,15 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 
 			Added in: 1.2.0
 			#links 2
+		*/
+		/*
+			Excised from Details:
+
+			If you want to make only a certain portion of the link text disappear when the whole link is clicked,
+			simply place that portion inside a plain hook, one with no name and no macros attached to the front:
+			`(link-reveal:"She gasped[.]")[and ran over to me.]` will create a link reading "She gasped." that becomes
+			"She gasped and ran over to me." when clicked. This can be used to make the revealed text flow more naturally
+			into the link text, by removing or adjusting punctuation.
 		*/
 		["link-reveal"],
 		/*d:
@@ -254,17 +257,20 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			
 			Details:
 			This creates a link which is visually indistinguishable from normal passage links.
-
-			If you want to make a certain portion of the link text disappear when the link is clicked,
-			simply put that section of the link text in a plain hook, one with no name and no macros attached
-			to the front, as per (link-reveal:). Note that this text will disappear on the first click, and won't
-			reappear or change on subsequent clicks.
 			
 			See also:
 			(link-rerun:), (link-reveal:), (link:), (link-goto:), (click:)
 			
 			Added in: 1.2.0
 			#links 3
+		*/
+		/*
+			Excised from Details:
+
+			If you want to make a certain portion of the link text disappear when the link is clicked,
+			simply put that section of the link text in a plain hook, one with no name and no macros attached
+			to the front, as per (link-reveal:). Note that this text will disappear on the first click, and won't
+			reappear or change on subsequent clicks.
 		*/
 		["link-repeat"],
 		/*d:
@@ -290,21 +296,24 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 
 			Details:
 			This creates a link which is visually indistinguishable from normal passage links.
-
+			
+			Added in: 3.2.0
+			#links 4
+		*/
+		/*
+			Excised from Details:
+			
 			If you want to make a certain portion of the link text disappear when the link is clicked,
 			simply put that section of the link text in a plain hook, one with no name and no macros attached
 			to the front, as per (link-reveal:). Note that this text will disappear on the first click, and won't
 			reappear or change on subsequent clicks.
-			
-			Added in: 3.2.0
-			#links 4
 		*/
 		["link-rerun"],
 	].forEach(arr =>
 		Macros.addChanger(arr,
 			(_, expr) => {
 				if (!expr) {
-					return TwineError.create("macrocall", emptyLinkTextMessages[0]);
+					return TwineError.create("datatype", emptyLinkTextMessages[0]);
 				}
 				return ChangerCommand.create(arr[0], [expr]);
 			},
@@ -418,7 +427,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			*/
 			(text) => {
 				if (!text) {
-					return TwineError.create("macrocall", ...emptyLinkTextMessages);
+					return TwineError.create("datatype", ...emptyLinkTextMessages);
 				}
 			},
 			(cd, section, text, passage) => {
@@ -508,7 +517,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 		("link-undo",
 			(text) => {
 				if (!text) {
-					return TwineError.create("macrocall", emptyLinkTextMessages[0]);
+					return TwineError.create("datatype", emptyLinkTextMessages[0]);
 				}
 			},
 			(cd, section, text) => {
@@ -572,10 +581,6 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			`You (link-show: "struggle to listen.", ?more)`.
 
 			Details:
-			If you want to make a certain portion of the link text disappear when the whole link is clicked,
-			simply place that portion inside a plain hook, one with no name and no macros attached to the front, as per (link-reveal:).
-			`(link-show:"[Reply diplomatically.]", ?reply)` makes a link reading "Reply diplomatically." that disappears when clicked.
-
 			As with most link macros, providing this with an empty link text string will result in an error.
 
 			As with (show:) and (click:), providing this with a hook which is already visible, or which doesn't even exist,
@@ -588,10 +593,16 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			Added in: 3.0.0
 			#links 8
 		*/
+		/*
+			Excised from Details:
+			If you want to make a certain portion of the link text disappear when the whole link is clicked,
+			simply place that portion inside a plain hook, one with no name and no macros attached to the front, as per (link-reveal:).
+			`(link-show:"[Reply diplomatically.]", ?reply)` makes a link reading "Reply diplomatically." that disappears when clicked.
+		*/
 		("link-show",
 			(text) => {
 				if (!text) {
-					return TwineError.create("macrocall", emptyLinkTextMessages[0]);
+					return TwineError.create("datatype", emptyLinkTextMessages[0]);
 				}
 			},
 			(cd, section, text, ...hooks) => {
@@ -669,7 +680,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 	Macros.addChanger(["link-reveal-goto"],
 		(section, text, passage) => {
 			if (!text) {
-				return TwineError.create("macrocall", ...emptyLinkTextMessages);
+				return TwineError.create("datatype", ...emptyLinkTextMessages);
 			}
 			/*
 				Being a variant of (link-goto:), this uses the same rules for passage name computation.

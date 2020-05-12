@@ -8,7 +8,7 @@ const {min} = Math,
 	warmHookBG   = nestedBG(40, 100, 50),
 	coolHookBG   = nestedBG(220, 100, 50),
 	macro        = percent => nestedBG(320, 44, 50)(percent) + "color: hsla(320,44%,46%,1.0);",
-	invalid      = "color: hsla(0,67%,42%,1.0) !important; background-color: hsla(17,100%,74%,0.74) !important;",
+	invalid      = "color: hsla(0,67%,42%,1.0) !important; background-color: hsla(17,100%,50%,0.5) !important;",
 	intangible   = "font-weight:100; color: hsla(0,0,0,0.5)",
 	colorRegExp  = /hsla\((\d+),\s*(\d+)%,\s*(\d+)%,\s*(\d+\.\d+)\)/g;
 

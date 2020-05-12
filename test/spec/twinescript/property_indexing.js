@@ -290,6 +290,13 @@ describe("property indexing", function() {
 						done();
 					},20);
 				});
+				it("works with only one line", function(done) {
+					var a = runPassage('(enchant:?passage\'s lines, (text-style:"shadow"))I just want to say hello to you').find('tw-enchantment');
+					setTimeout(function(){
+						expect(a.attr('style')).toMatch(/text-shadow/);
+						done();
+					},20);
+				});
 				it("works with (hover-style:)", function(done) {
 					var a = runPassage('|a>[foo\nbar\nbaz](enchant: ?a\'s lines,(hover-style:(background:white)))').find('tw-hook tw-enchantment');
 					a.mouseenter();

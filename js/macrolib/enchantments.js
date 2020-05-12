@@ -81,7 +81,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 				const summary = changer.summary();
 				if (summary.includes('newTargets') || summary.includes('target')) {
 					return TwineError.create(
-						"macrocall",
+						"datatype",
 						"The changer given to (enchant:) can't include a revision command like (replace:) or (append:)."
 					);
 				}

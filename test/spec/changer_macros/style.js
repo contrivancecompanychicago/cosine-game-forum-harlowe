@@ -417,6 +417,123 @@ describe("style changer macros", function() {
 			});
 		});
 	});
+	describe("the (border:) macro", function() {
+		it("errors unless given a valid border name", function() {
+			expect("(print:(border:))").markupToError();
+			expect("(print:(border:1))").markupToError();
+			expect("(print:(border:'A','A'))").markupToError();
+			['dotted','dashed','solid','double','groove','ridge',
+					'inset','outset','none'].forEach(function(name) {
+				expect("(print:(border:'"+name+"'))").not.markupToError();
+			});
+		});
+		it("uses case- and dash-insensitive border names", function() {
+			expect("(border:'solID')[]").not.markupToError();
+			expect("(border:'--sol--id')[]").not.markupToError();
+			expect("(border:'_sOl_-id')[]").not.markupToError();
+		});
+		it("is aliased as (b4r:)", function() {
+			expect("(print:(border:'solid') is (b4r:'solid'))").markupToPrint('true');
+		});
+		it("applies a border to the attached hook", function(done) {
+			var hook = runPassage("(border:'dotted')[Dotted.]").find('tw-hook');
+			setTimeout(function() {
+				expect(hook[0].style.borderStyle).toBe("dotted");
+				done();
+			});
+		});
+		it("applies a default border width of 8px, unless another changer applied another value", function(done) {
+			var hook = runPassage("(border:'ridge')[Ridge.]").find('tw-hook');
+			setTimeout(function() {
+				expect(hook[0].style.borderWidth).toMatch("8px");
+				hook = runPassage("(Css:'border-width:10px')+(border:'ridge')[Ridge.]").find('tw-hook');
+				setTimeout(function() {
+					expect(hook[0].style.borderWidth).toMatch("10px");
+					done();
+				});
+			});
+		});
+		it("applies a default display of 'inline-block', unless another changer applied another non-inline value", function(done) {
+			var hook = runPassage("(border:'ridge')[Ridge.]").find('tw-hook');
+			setTimeout(function() {
+				expect(hook[0].style.display).toMatch("inline-block");
+				hook = runPassage("(Css:'display:flex')+(border:'ridge')[Ridge.]").find('tw-hook');
+				setTimeout(function() {
+					expect(hook[0].style.display).toMatch("flex");
+					hook = runPassage("(Css:'display:inline-flex')+(border:'ridge')[Ridge.]").find('tw-hook');
+					setTimeout(function() {
+						expect(hook[0].style.display).toMatch("inline-block");
+						done();
+					});
+				});
+			});
+		});
+	});
+	describe("the (border-size:) macro", function() {
+		it("requires 1 positive number", function() {
+			expect("(print:(border-size:))").markupToError();
+			expect("(print:(border-size:'A'))").markupToError();
+			expect("(print:(border-size:-1))").markupToError();
+		});
+		it("is aliased as (b4r-size:)", function() {
+			expect("(print:(b4r-size:3) is (border-size:3))").markupToPrint('true');
+		});
+		it("multiplies the default border width of 8px by that number", function(done) {
+			var hook = runPassage("(border-size:1.9)+(border:'ridge')[Ridge.]").find('tw-hook');
+			setTimeout(function() {
+				expect(hook[0].style.borderWidth).toMatch("15.2px");
+				done();
+			});
+		});
+	});
+	describe("the (border-radius:) macro", function() {
+		it("requires 1 positive number", function() {
+			expect("(print:(border-radius:))").markupToError();
+			expect("(print:(border-radius:'A'))").markupToError();
+			expect("(print:(border-radius:-1))").markupToError();
+		});
+		it("is aliased as (b4r-radius:)", function() {
+			expect("(print:(b4r-radius:3) is (border-radius:3))").markupToPrint('true');
+		});
+		it("applies a border-radius equal to 8px multipled by the given number", function(done) {
+			var hook = runPassage("(border-radius:1.9)+(border:'ridge')[Ridge.]").find('tw-hook');
+			setTimeout(function() {
+				expect(hook[0].style.borderRadius).toMatch("15.2px");
+				done();
+			});
+		});
+		it("applies a padding equal to 1px multipled by the given number, unless another changer applied another value", function(done) {
+			var hook = runPassage("(border-radius:1.9)+(border:'ridge')[Ridge.]").find('tw-hook');
+			setTimeout(function() {
+				expect(hook[0].style.padding).toMatch("1.9px");
+				hook = runPassage("(Css:'padding:10px')+(border:'ridge')+(border-radius:1.9)[Ridge.]").find('tw-hook');
+				setTimeout(function() {
+					expect(hook[0].style.padding).toMatch("10px");
+					done();
+				});
+			});
+		});
+	});
+	describe("the (border-colour:) macro", function() {
+		it("requires 1 colour or 1 string", function() {
+			expect("(print:(border-colour:))").markupToError();
+			expect("(print:(border-colour:'red','blue'))").markupToError();
+			expect("(print:(border-colour:red,blue))").markupToError();
+			expect("(print:(border-colour:-1))").markupToError();
+		});
+		it("is aliased as (b4r-colour:), (b4r-color:) and (border-colour:)", function() {
+			['b4r-color','b4r-colour','border-color'].forEach(function(name) {
+				expect("(print:("+name+":red) is (border-colour:red))").markupToPrint('true');
+			});
+		});
+		it("applies a border-color equal to the given colour or string", function(done) {
+			var hook = runPassage("(border-colour:#ff0022)+(border:'ridge')[Ridge.]").find('tw-hook');
+			setTimeout(function() {
+				expect(hook.attr('style') + '').toMatch(/border-color:\s*(?:rgb\(255,\s*0,\s*34\))/i);
+				done();
+			});
+		});
+	});
 	describe("the (background:) macro", function() {
 		it("requires 1 string argument, 1 colour argument or 1 gradient argument", function() {
 			expect("(print:(background:))").markupToError();
@@ -588,7 +705,7 @@ describe("style changer macros", function() {
 				expect(s).toMatch(RegExp("\\bwidth:\\s*"+width+"%"));
 				expect(s).toMatch(RegExp("\\bheight:\\s*"+height+"vh"));
 				expect(s).toMatch(/display:\s*block/);
-				expect(s).toMatch(/overflow-y:\s*scroll/);
+				expect(s).toMatch(/overflow-y:\s*auto/);
 			});
 		});
 	});
@@ -618,7 +735,7 @@ describe("style changer macros", function() {
 				expect(s).toMatch(RegExp("\\bheight:\\s*"+height+"vh"));
 				expect(s).toMatch(/display:\s*block/);
 				expect(s).toMatch(/position:\s*fixed/);
-				expect(s).toMatch(/overflow-y:\s*scroll/);
+				expect(s).toMatch(/overflow-y:\s*auto/);
 			});
 		});
 		it("has the background colour of outer hooks", function(done) {

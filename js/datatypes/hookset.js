@@ -433,7 +433,7 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 					*/
 					const lines = [[]];
 					elements.textNodes(":not(tw-sidebar):not(tw-sidebar *)").forEach(node => {
-						if (node.compareDocumentPosition(brs[0]) & 2) {
+						if (brs.length && (node.compareDocumentPosition(brs[0]) & 2)) {
 							brs.shift();
 							lines.push([]);
 						}

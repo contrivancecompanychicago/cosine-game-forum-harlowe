@@ -97,8 +97,8 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		A list of valid transition names. Used by (transition:).
 	*/
 	const validT8ns = ["instant", "dissolve", "rumble", "shudder", "pulse", "flicker", "slideleft", "slideright", "slideup", "slidedown"];
-	const validT8nsMessage = "Only the following names are recognised (capitalisation and hyphens ignored): "
-		+ validT8ns.join(", ");
+	const validMsg = "Only the following names are recognised (capitalisation and hyphens ignored): ";
+	const validT8nsMessage = validMsg + validT8ns.join(", ");
 
 	Macros.addChanger
 		/*d:
@@ -863,7 +863,206 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			},
 			[String]
 		)
-		
+
+		/*d:
+			(border: String) -> Changer
+			Also known as: (b4r:)
+
+			A changer macro that applies a CSS border to the hook.
+
+			Example usage:
+			```
+			(b4r:"dotted")[I love you!
+			I want to be your wife!]
+			```
+
+			Details:
+			This macro accepts the following border names:
+
+			| String | Example
+			|---
+			| "none" | Example text
+			| "solid" | <span style="border: 8px solid black;margin:2px;display:inline-block">Example text</span>
+			| "dotted" | <span style="border: 8px dotted black;margin:2px;display:inline-block">Example text</span>
+			| "dashed" | <span style="border: 8px dashed black;margin:2px;display:inline-block">Example text</span>
+			| "double" | <span style="border: 8px double black;margin:2px;display:inline-block">Example text</span>
+			| "groove" | <span style="border: 8px groove black;margin:2px;display:inline-block">Example text</span>
+			| "ridge" | <span style="border: 8px ridge black;margin:2px;display:inline-block">Example text</span>
+			| "inset" | <span style="border: 8px inset black;margin:2px;display:inline-block">Example text</span>
+			| "outset" | <span style="border: 8px outset black;margin:2px;display:inline-block">Example text</span>
+
+			The "none" type can be used to remove a border that another changer may have included.
+
+			The default size of the border, with no other CSS changes to any elements, is 8px (8 pixels),
+			unless a change is applied using (border-size:).
+
+			Due to browser CSS limitations, the border will force the hook to become a single rectangular area. The hook can
+			no longer word-wrap, and moreover occupies every line in which its text is contained. So, this changer is best
+			suited for entire paragraphs of text (or hooks using the (box:) changer) rather than single words or phrases.
+
+			See also:
+			(border-size:), (border-radius:), (border-colour:)
+
+			Added in: 3.2.0
+			#borders
+		*/
+		(["border","b4r"],
+			(_, name) => {
+				const validBorders = ['dotted','dashed','solid','double','groove','ridge',
+					'inset','outset','none'];
+
+				name = Utils.insensitiveName(name);
+				if (validBorders.indexOf(name) === -1) {
+					return TwineError.create(
+						"datatype", "'" + name + '\' is not a valid border name',
+						validMsg + validBorders.join(', ')
+					);
+				}
+				return ChangerCommand.create("border", [name]);
+			},
+			(d, name) => {
+				d.styles.push({
+					"display"() {
+						let d = $(this).css('display');
+						/*
+							Borders require block-style formatting for the hook.
+							Let's not alter the display property if there is no border, actually,
+							and also, if there's already a block display for it (such as via (box:)).
+						*/
+						if (name === "none" || !d.includes("inline")) {
+							return d;
+						}
+						return "inline-block";
+					},
+					"border-style": name,
+					"border-width"() {
+						/*
+							Don't replace deliberately-placed border sizes.
+							Note: .css('border-width') doesn't work (and moreover is slower).
+						*/
+						return this.style.borderWidth || '8px';
+					},
+				});
+				return d;
+			},
+			[String]
+		)
+
+		/*d:
+			(border-size: Number) -> Changer
+			Also known as: (b4r-size:)
+
+			When applied to a hook being changed by the (border:) changer, this multiplies the size
+			of the border by a given amount.
+
+			Example usage:
+			`(b4r:"solid")+(b4r-size:1/8)[Do not read anything outside of this box.]`
+
+			Details:
+
+			The default size of borders added using (border:) is 8px (8 pixels). The number given is multiplied
+			by 8 to produce the new size (in CSS pixels). If a number lower than 0 is given, an error will be produced.
+
+			Added in: 3.2.0
+			#borders
+		*/
+		(["border-size","b4r-size"],
+			(_, width) => {
+				if (width <= 0) {
+					return TwineError.create(
+						"datatype", 'The (border-size:) macro requires a positive number, not '
+							+ width + '.'
+					);
+				}
+				return ChangerCommand.create("border-size", [width]);
+			},
+			(d, width) => {
+				d.styles.push({ "border-width": (width*8) + "px" });
+				return d;
+			},
+			[Number]
+		)
+
+		/*d:
+			(border-radius: Number) -> Changer
+			Also known as: (b4r-radius:)
+
+			When applied to a hook being changed by the (border:) changer, this rounds the corners, causing the box to become
+			increasingly round.
+
+			Example usage:
+			```
+			(b4r:'solid')+(b4r-radius:1)[Hasn't this gone on too long?]
+			(b4r:'solid')+(b4r-radius:2)[Shouldn't you tell them the truth?]
+			(b4r:'solid')+(b4r-radius:6)[//That you're not really who you say you are??//]
+			```
+
+			Details:
+			Values greater than the border's (border-width:) (which is 1 if it wasn't changed) will cause the interior of the
+			element to become constrained by the curvature of the corners, as the rectangle's corners get cut off.
+			Because of this, this macro also adds a slight amount of interior padding (distance between the border and the
+			contained text) equal to 1px (1 pixel) multiplied by the passed-in number, unless another changer (such as (css:))
+			provided a different padding value.
+
+			Added in: 3.2.0
+			#borders
+		*/
+		(["border-radius","b4r-radius"],
+			(_, radius) => {
+				if (radius < 0) {
+					return TwineError.create(
+						"datatype", 'The (border-radius:) macro requires a non-negative number, not '
+							+ radius + '.'
+					);
+				}
+				return ChangerCommand.create("border-radius", [radius]);
+			},
+			(d, radius) => {
+				d.styles.push({
+					"border-radius": (radius*8) + "px",
+					padding() { return this.style.padding || (radius + "px"); },
+				});
+				return d;
+			},
+			[Number]
+		)
+
+		/*d:
+			(border-colour: String or Colour) -> Changer
+			Also known as: (b4r-colour:), (border-color:), (b4r-color:)
+
+			When applied to a hook being changed by the (border:) changer, this changes the border's colour.
+
+			Example usage:
+			`(b4r-color:magenta)+(b4r:"ridge")[LEVEL 01: DREAM WORLD]`
+
+			Details:
+			Much like (text-colour:), this accepts either a Colour (such as those produced by (hsl:) or (rgb:), or plain literals
+			like `#fff`), or a CSS colour string.
+
+			Certain (border:) styles, namely "ridge", "groove", "inset" and "outset", will modify the colour,
+			darkening it for certain parts of the border to produce their namesake appearance.
+
+			Selecting `"transparent"` as the colour will cause the border to "disappear", but also cause the space surrounding
+			the hook to remain.
+
+			Added in: 3.2.0
+			#borders
+		*/
+		(["border-colour","b4r-colour","border-color","b4r-color"],
+			(_, colour) => {
+				if (Colour.isPrototypeOf(colour)) {
+					colour = colour.toRGBAString(colour);
+				}
+				return ChangerCommand.create("border-colour", [colour]);
+			},
+			(d, colour) => {
+				d.styles.push({ "border-color": colour });
+				return d;
+			},
+			[either(String,Colour)]
+		)
+
 		/*d:
 			(font: String) -> Changer
 			
@@ -922,7 +1121,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 					centerIndex = arrow.indexOf("><");
 				
 				if (!/^(==+>|<=+|=+><=+|<==+>)$/.test(arrow)) {
-					return TwineError.create('macrocall', 'The (align:) macro requires an alignment arrow '
+					return TwineError.create('datatype', 'The (align:) macro requires an alignment arrow '
 						+ '("==>", "<==", "==><=" etc.) be provided, not "' + arrow + '"');
 				}
 				
@@ -1034,7 +1233,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			```
 
 			Details:
-			The default text size for Harlowe, with no other CSS changes to any elements, is 16px, and its
+			The default text size for Harlowe, with no other CSS changes to any elements, is 16px (16 pixels), and its
 			default line height is 24px. This macro multiplies both of those CSS properties by the given
 			number, scaling both proportionally. This size is absolute - any pure CSS alterations to the text
 			size of the passage, story or page, using (css:) or story stylesheets, will NOT be taken into account.
@@ -1055,7 +1254,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		(["text-size", "size"],
 			(_, percent) => {
 				if (percent < 0) {
-					return TwineError.create('macrocall', 'The (text-size:) macro requires a positive number, not '
+					return TwineError.create('datatype', 'The (text-size:) macro requires a positive number, not '
 						+ percent + '.');
 				}
 				return ChangerCommand.create("text-size", [percent]);
@@ -1384,8 +1583,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 								return TwineError.create(
 									"datatype",
 									"'" + styleName + '\' is not a valid (text-style:)',
-									"Only the following names are recognised (capitalisation and hyphens ignored): "
-										+ Object.keys(styleTagNames).join(", "));
+									validMsg + Object.keys(styleTagNames).join(", "));
 							}
 							styleNames[i] = styleName;
 						}
@@ -1582,7 +1780,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 
 		You can use this with (enchant:) and `?passage` to affect the placement of the passage in the page.
 
-		The resulting hook has the CSS attributes "display:block" and "overflow-y:scroll". Additionally, the hook will have
+		The resulting hook has the CSS attributes "display:block" and "overflow-y:auto". Additionally, the hook will have
 		'padding:1em', unless another padding value has been applied to it (such as via (css:)).
 
 		See also:
@@ -1620,7 +1818,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 
 		Since it is "floating", this box remains fixed in the window even when the player scrolls up and down.
 
-		The resulting hook has the CSS attributes "display:block", "position:fixed" and "overflow-y:scroll". Additionally, the hook will have
+		The resulting hook has the CSS attributes "display:block", "position:fixed" and "overflow-y:auto". Additionally, the hook will have
 		'padding:1em', unless another padding value has been applied to it (such as via (css:)).
 
 		See also:
@@ -1648,11 +1846,11 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			const widthErr = widthStr.search(geomStringRegExp) === -1;
 			const heightErr = (name === "float-box" && height.search(geomStringRegExp) === -1);
 			if (widthErr || heightErr) {
-				return TwineError.create("macrocall", 'The (' + name + ':) macro requires a sizing line'
+				return TwineError.create("datatype", 'The (' + name + ':) macro requires a sizing line'
 						+ '("==X==", "==X", "=XXXX=" etc.) be provided, not "' + (widthErr ? widthStr : height) + '".');
 			}
 			if (name === "box" && (height <= 0 || height > 1)) {
-				return TwineError.create("macrocall", 'The (' + name + ':) macro requires a positive number less than or equal to 1, not '
+				return TwineError.create("datatype", 'The (' + name + ':) macro requires a positive number less than or equal to 1, not '
 					+ height + '.');
 			}
 			return ChangerCommand.create(name, [widthStr, height]);
@@ -1677,7 +1875,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				width:           size + boxUnits,
 				[name === "box" ? "margin-left" : "left"]:   marginLeft + boxUnits,
 				height:          height + "vh",
-				"overflow-y":   "scroll",
+				"overflow-y":   "auto",
 				padding() { return $(this).css('padding') || '1em'; },
 			};
 			if (name === "float-box") {
@@ -1685,7 +1883,8 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 					position: 'fixed',
 					top: top + "vh",
 					/*
-						Being disconnected from their parnet, float-boxes need their own backgroud-color.
+						Being disconnected from their parent and placed over arbitrary document regions,
+						float-boxes need their own background-color.
 					*/
 					'background-color'() { return Utils.parentColours($(this)).backgroundColour; },
 				});

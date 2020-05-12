@@ -145,7 +145,7 @@ define(['macros','renderer', 'utils/operationutils', 'datatypes/lambda', 'intern
 						Specific to (metadata:): passage metadata keys can't be named "tags", "source" or "name" in any case-sensitivity.
 					*/
 					else if (["tags","source","name"].includes(key.toLowerCase())) {
-						return TwineError.create("macrocall",
+						return TwineError.create("datatype",
 							"You can't use '" + key + "' as a (metadata:) data name."
 						);
 					}

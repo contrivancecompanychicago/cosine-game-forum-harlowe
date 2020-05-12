@@ -341,10 +341,10 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		[["cycling-link"],["seq-link","sequence-link"]].forEach((name, seq) => Macros.addCommand(name,
 			(...labels) => {
 				if (labels[0] === "") {
-					return TwineError.create("macrocall", "The first string in a (" + name[0] + ":) can't be empty.");
+					return TwineError.create("datatype", "The first string in a (" + name[0] + ":) can't be empty.");
 				}
 				if (labels.length <= (VarBind.isPrototypeOf(labels[0]) ? 2 : 1)) {
-					return TwineError.create("macrocall",
+					return TwineError.create("datatype",
 						"I need two or more strings to " + (seq ? "sequence" : "cycle") + " through, not just '"
 						+ labels[labels.length - 1]
 						+ "'."
@@ -550,11 +550,11 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 	Macros.addCommand("dropdown",
 		(_, ...labels) => {
 			if (labels[0] === "" || labels[labels.length-1] === "") {
-				return TwineError.create("macrocall", "The first or last strings in a (dropdown:) can't be empty.",
+				return TwineError.create("datatype", "The first or last strings in a (dropdown:) can't be empty.",
 					"Because empty strings create separators within (dropdown:)s, having them at the start or end doesn't make sense.");
 			}
 			if (labels.length <= 1) {
-				return TwineError.create("macrocall",
+				return TwineError.create("datatype",
 					"I need two or more strings to create a (dropdown:) menu, not just " + labels.length + "."
 				);
 			}
