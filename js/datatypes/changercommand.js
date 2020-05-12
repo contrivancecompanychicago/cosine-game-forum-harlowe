@@ -49,7 +49,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/changedescriptor', 'inte
 		*/
 		create(macroName, params = [], next = null) {
 			if(!Array.isArray(params)) {
-				impossible('ChangerCommand.create', 'params was not an array');
+				impossible('ChangerCommand.create', 'params was not an array but ' + params);
 			}
 			
 			return Object.assign(Object.create(this), {

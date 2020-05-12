@@ -418,13 +418,15 @@ describe("style changer macros", function() {
 		});
 	});
 	describe("the (border:) macro", function() {
-		it("errors unless given a valid border name", function() {
+		it("errors unless given up to 4 valid border names", function() {
 			expect("(print:(border:))").markupToError();
 			expect("(print:(border:1))").markupToError();
 			expect("(print:(border:'A','A'))").markupToError();
 			['dotted','dashed','solid','double','groove','ridge',
 					'inset','outset','none'].forEach(function(name) {
 				expect("(print:(border:'"+name+"'))").not.markupToError();
+				expect("(print:(border:" + ('"'+name+'",').repeat(4) + "))").not.markupToError();
+				expect("(print:(border:" + ('"'+name+'",').repeat(5) + "))").markupToError();
 			});
 		});
 		it("uses case- and dash-insensitive border names", function() {
@@ -439,7 +441,11 @@ describe("style changer macros", function() {
 			var hook = runPassage("(border:'dotted')[Dotted.]").find('tw-hook');
 			setTimeout(function() {
 				expect(hook[0].style.borderStyle).toBe("dotted");
-				done();
+				hook = runPassage("(border:'dotted','solid','dashed','ridge')[Dotted.]").find('tw-hook');
+				setTimeout(function() {
+					expect(hook[0].style.borderStyle).toBe("dotted solid dashed ridge");
+					done();
+				});
 			});
 		});
 		it("applies a default border width of 8px, unless another changer applied another value", function(done) {
@@ -470,10 +476,14 @@ describe("style changer macros", function() {
 		});
 	});
 	describe("the (border-size:) macro", function() {
-		it("requires 1 positive number", function() {
+		it("requires up to 4 positive numbers", function() {
 			expect("(print:(border-size:))").markupToError();
 			expect("(print:(border-size:'A'))").markupToError();
 			expect("(print:(border-size:-1))").markupToError();
+			expect("(print:(border-size:1,1))").not.markupToError();
+			expect("(print:(border-size:1,1,1))").not.markupToError();
+			expect("(print:(border-size:1,1,1,1))").not.markupToError();
+			expect("(print:(border-size:1,1,1,1,1))").markupToError();
 		});
 		it("is aliased as (b4r-size:)", function() {
 			expect("(print:(b4r-size:3) is (border-size:3))").markupToPrint('true');
@@ -487,10 +497,14 @@ describe("style changer macros", function() {
 		});
 	});
 	describe("the (border-radius:) macro", function() {
-		it("requires 1 positive number", function() {
+		it("requires up to 4 positive numbers", function() {
 			expect("(print:(border-radius:))").markupToError();
 			expect("(print:(border-radius:'A'))").markupToError();
 			expect("(print:(border-radius:-1))").markupToError();
+			expect("(print:(border-radius:1,1))").not.markupToError();
+			expect("(print:(border-radius:1,1,1))").not.markupToError();
+			expect("(print:(border-radius:1,1,1,1))").not.markupToError();
+			expect("(print:(border-radius:1,1,1,1,1))").markupToError();
 		});
 		it("is aliased as (b4r-radius:)", function() {
 			expect("(print:(b4r-radius:3) is (border-radius:3))").markupToPrint('true');
@@ -515,11 +529,15 @@ describe("style changer macros", function() {
 		});
 	});
 	describe("the (border-colour:) macro", function() {
-		it("requires 1 colour or 1 string", function() {
+		it("requires up to 4 colours or strings", function() {
 			expect("(print:(border-colour:))").markupToError();
-			expect("(print:(border-colour:'red','blue'))").markupToError();
-			expect("(print:(border-colour:red,blue))").markupToError();
 			expect("(print:(border-colour:-1))").markupToError();
+			expect("(print:(border-colour:'red','blue'))").not.markupToError();
+			expect("(print:(border-colour:red,blue))").not.markupToError();
+			expect("(print:(border-colour:red,red,green))").not.markupToError();
+			expect("(print:(border-colour:red,blue,red,green))").not.markupToError();
+			expect("(print:(border-colour:red,blue,red,white,green))").markupToError();
+			expect("(print:(border-colour:'red','blue','red','green'))").not.markupToError();
 		});
 		it("is aliased as (b4r-colour:), (b4r-color:) and (border-colour:)", function() {
 			['b4r-color','b4r-colour','border-color'].forEach(function(name) {

@@ -865,7 +865,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		)
 
 		/*d:
-			(border: String) -> Changer
+			(border: String, [String], [String], [String]) -> Changer
 			Also known as: (b4r:)
 
 			A changer macro that applies a CSS border to the hook.
@@ -877,7 +877,20 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			```
 
 			Details:
-			This macro accepts the following border names:
+
+			The border macros accept up to four values. These values refer to *sides of a rectangle*, going clockwise
+			from the top: the first value is the **top** edge (12 o'clock), second is the **right** edge (3 o'clock),
+			third is the **bottom** edge (6 o'clock), fourth is the **left** edge (9 o'clock). You can stop giving
+			values anywhere. If an edge doesn't have a value, then it will use whatever the opposite edge's value is.
+
+			*`(border: "solid", "dotted", "dashed", "double")` provides all four sides.
+			*`(border: "solid", "dotted", "dashed")` stops at the bottom edge, so the left edge will use "dotted", to match
+			the right edge.
+			*`(border: "solid", "dotted")` stops at the right edge, so the bottom edge will use "solid", to match
+			the top edge, and the left edge will use "dotted", to match the right edge.
+			*`(border: "solid")` causes all of the edges to use "solid".
+
+			This macro affects the style of the border, and accepts the following border names:
 
 			| String | Example
 			|---
@@ -904,23 +917,32 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			(border-size:), (border-radius:), (border-colour:)
 
 			Added in: 3.2.0
-			#borders
+			#borders 1
 		*/
 		(["border","b4r"],
-			(_, name) => {
+			(_, ...names) => {
+				if (names.length > 4) {
+					return TwineError.create("macrocall", "(border:) only accepts up to 4 style names, but was given "
+						+ (names.length+1) + '.');
+				}
 				const validBorders = ['dotted','dashed','solid','double','groove','ridge',
 					'inset','outset','none'];
-
-				name = Utils.insensitiveName(name);
-				if (validBorders.indexOf(name) === -1) {
-					return TwineError.create(
-						"datatype", "'" + name + '\' is not a valid border name',
-						validMsg + validBorders.join(', ')
-					);
+				/*
+					Check each of the names for errors, and convert them to insensitive names.
+				*/
+				for(let i = 0; i < names.length; i += 1) {
+					const name = Utils.insensitiveName(names[i]);
+					if (validBorders.indexOf(name) === -1) {
+						return TwineError.create(
+							"datatype", "The " + Utils.nth(i+1) + " string given to (border:), '" + name + '\' is not a valid style name.',
+							validMsg + validBorders.join(', ')
+						);
+					}
+					names[i] = name;
 				}
-				return ChangerCommand.create("border", [name]);
+				return ChangerCommand.create("border", names);
 			},
-			(d, name) => {
+			(d, ...names) => {
 				d.styles.push({
 					"display"() {
 						let d = $(this).css('display');
@@ -929,12 +951,16 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 							Let's not alter the display property if there is no border, actually,
 							and also, if there's already a block display for it (such as via (box:)).
 						*/
-						if (name === "none" || !d.includes("inline")) {
+						if (names.every(n => n === 'none') || !d.includes("inline")) {
 							return d;
 						}
 						return "inline-block";
 					},
-					"border-style": name,
+					/*
+						Because this macro's edge order is the same as CSS's, we simply
+						provide the names here as-is.
+					*/
+					"border-style": names.join(' '),
 					"border-width"() {
 						/*
 							Don't replace deliberately-placed border sizes.
@@ -945,11 +971,11 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				});
 				return d;
 			},
-			[String]
+			[String, ...Array(3).fill(optional(String))]
 		)
 
 		/*d:
-			(border-size: Number) -> Changer
+			(border-size: Number, [Number], [Number], [Number]) -> Changer
 			Also known as: (b4r-size:)
 
 			When applied to a hook being changed by the (border:) changer, this multiplies the size
@@ -960,31 +986,43 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 
 			Details:
 
+			The border macros accept up to four values. These values refer to *sides of a rectangle*, going clockwise
+			from the top: the first value is the **top** edge (12 o'clock), second is the **right** edge (3 o'clock),
+			third is the **bottom** edge (6 o'clock), fourth is the **left** edge (9 o'clock). You can stop giving
+			values anywhere. If an edge doesn't have a value, then it will use whatever the opposite edge's value is
+			(or the top value if it's the only one).
+
 			The default size of borders added using (border:) is 8px (8 pixels). The number given is multiplied
 			by 8 to produce the new size (in CSS pixels). If a number lower than 0 is given, an error will be produced.
 
 			Added in: 3.2.0
-			#borders
+			#borders 3
 		*/
 		(["border-size","b4r-size"],
-			(_, width) => {
-				if (width <= 0) {
-					return TwineError.create(
-						"datatype", 'The (border-size:) macro requires a positive number, not '
-							+ width + '.'
-					);
+			(_, ...widths) => {
+				if (widths.length > 4) {
+					return TwineError.create("macrocall", "(border-size:) only accepts up to 4 positive numbers, but was given "
+						+ (widths.length+1) + '.');
 				}
-				return ChangerCommand.create("border-size", [width]);
+				for(let i = 0; i < widths.length; i += 1) {
+					if (widths[i] <= 0) {
+						return TwineError.create(
+							"datatype", "The " + Utils.nth(i+1) + " number given to (border-size:), "
+								+ widths[i] + ', isn\'t positive.'
+						);
+					}
+				}
+				return ChangerCommand.create("border-size", widths);
 			},
-			(d, width) => {
-				d.styles.push({ "border-width": (width*8) + "px" });
+			(d, ...widths) => {
+				d.styles.push({ "border-width": widths.map(width => (width*8) + "px").join(' ') });
 				return d;
 			},
-			[Number]
+			[Number, ...Array(3).fill(optional(Number))]
 		)
 
 		/*d:
-			(border-radius: Number) -> Changer
+			(border-radius: Number, [Number], [Number], [Number]) -> Changer
 			Also known as: (b4r-radius:)
 
 			When applied to a hook being changed by the (border:) changer, this rounds the corners, causing the box to become
@@ -998,6 +1036,12 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			```
 
 			Details:
+			The border macros accept up to four values. These values refer to *sides of a rectangle*, going clockwise
+			from the top: the first value is the **top** edge (12 o'clock), second is the **right** edge (3 o'clock),
+			third is the **bottom** edge (6 o'clock), fourth is the **left** edge (9 o'clock). You can stop giving
+			values anywhere. If an edge doesn't have a value, then it will use whatever the opposite edge's value is
+			(or the top value if it's the only one).
+
 			Values greater than the border's (border-width:) (which is 1 if it wasn't changed) will cause the interior of the
 			element to become constrained by the curvature of the corners, as the rectangle's corners get cut off.
 			Because of this, this macro also adds a slight amount of interior padding (distance between the border and the
@@ -1005,38 +1049,51 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			provided a different padding value.
 
 			Added in: 3.2.0
-			#borders
+			#borders 4
 		*/
 		(["border-radius","b4r-radius"],
-			(_, radius) => {
-				if (radius < 0) {
-					return TwineError.create(
-						"datatype", 'The (border-radius:) macro requires a non-negative number, not '
-							+ radius + '.'
-					);
+			(_, ...radii) => {
+				if (radii.length > 4) {
+					return TwineError.create("macrocall", "(border-radius:) only accepts up to 4 non-negative numbers, but was given "
+						+ (radii.length+1) + '.');
 				}
-				return ChangerCommand.create("border-radius", [radius]);
+				for(let i = 0; i < radii.length; i += 1) {
+					if (radii[i] < 0) {
+						return TwineError.create(
+							"datatype", "The " + Utils.nth(i+1) + " number given to (border-radius:), "
+								+ radii[i] + ', is negative.'
+						);
+					}
+				}
+				return ChangerCommand.create("border-radius", radii);
 			},
-			(d, radius) => {
+			(d, ...radii) => {
 				d.styles.push({
-					"border-radius": (radius*8) + "px",
-					padding() { return this.style.padding || (radius + "px"); },
+					"border-radius": radii.map(r => (r*8) + "px").join(' '),
+					padding() { return this.style.padding || radii.map(r => r + "px").join(' '); },
 				});
 				return d;
 			},
-			[Number]
+			[Number, ...Array(3).fill(optional(Number))]
 		)
 
 		/*d:
-			(border-colour: String or Colour) -> Changer
+			(border-colour: String or Colour, [String or Colour], [String or Colour], [String or Colour]) -> Changer
 			Also known as: (b4r-colour:), (border-color:), (b4r-color:)
 
 			When applied to a hook being changed by the (border:) changer, this changes the border's colour.
 
 			Example usage:
 			`(b4r-color:magenta)+(b4r:"ridge")[LEVEL 01: DREAM WORLD]`
+			`(b4r-color:red,yellow,green,blue)+(b4r:"dotted")[Isn't it a lovely time?]`
 
 			Details:
+			The border macros accept up to four values. These values refer to *sides of a rectangle*, going clockwise
+			from the top: the first value is the **top** edge (12 o'clock), second is the **right** edge (3 o'clock),
+			third is the **bottom** edge (6 o'clock), fourth is the **left** edge (9 o'clock). You can stop giving
+			values anywhere. If an edge doesn't have a value, then it will use whatever the opposite edge's value is
+			(or the top value if it's the only one).
+
 			Much like (text-colour:), this accepts either a Colour (such as those produced by (hsl:) or (rgb:), or plain literals
 			like `#fff`), or a CSS colour string.
 
@@ -1047,20 +1104,21 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			the hook to remain.
 
 			Added in: 3.2.0
-			#borders
+			#borders 2
 		*/
 		(["border-colour","b4r-colour","border-color","b4r-color"],
-			(_, colour) => {
-				if (Colour.isPrototypeOf(colour)) {
-					colour = colour.toRGBAString(colour);
+			(_, ...colours) => {
+				if (colours.length > 4) {
+					return TwineError.create("macrocall", "(border-colour:) only accepts up to 4 colours, but was given "
+						+ (colours.length+1) + '.');
 				}
-				return ChangerCommand.create("border-colour", [colour]);
+				return ChangerCommand.create("border-colour", colours.map(c => Colour.isPrototypeOf(c) ? c.toRGBAString(c) : c));
 			},
-			(d, colour) => {
-				d.styles.push({ "border-color": colour });
+			(d, ...colours) => {
+				d.styles.push({ "border-color": colours.join(' ') });
 				return d;
 			},
-			[either(String,Colour)]
+			[either(String,Colour),...Array(3).fill(optional(either(String,Colour)))]
 		)
 
 		/*d:
