@@ -233,19 +233,21 @@ beforeEach(function() {
 				colour = colour.replace(/(\(|\))/g, "\\$1");
 				var rgba = hexToRGBA(colour);
 				var pass;
+				var result = (a.jquery && a.attr('style')) + '';
 				if (colour === "transparent") {
-					pass = (colour === "transparent" || colour.match(/^\w+a\(.+?,\s*0\s*\)$/));
+					pass = result.match(new RegExp(
+						"color:\\s*(?:transparent|\\w+a\\(.+?,\\s*0\\s*\\))", "i"));
 				}
 				else {
-					pass = a.jquery && (a.attr('style') + '').match(new RegExp(
+					pass = result.match(new RegExp(
 						"color:\\s*(?:" + colour + rgba + ")", "i"));
 				}
 				return {
 					pass: !!pass,
 					message: !pass
-						? "Expected element style '" + a.attr('style')
+						? "Expected element style '" + result
 							+ "' to contain a colour of " + colour
-						: "Expected element style '" + a.attr('style')
+						: "Expected element style '" + result
 							+ "' not to contain a colour of " + colour
 				};
 			}

@@ -368,11 +368,11 @@
 		belongingOperator = "of" + wb,
 		
 		/*
-			Identifiers: either "it", "time", "visit" or "visits".
+			Identifiers: either "it", "time", "visit", "visits", "exit", "exits", or "pos".
 			"it" is a bit of a problem because its possessive is "its", not "it's",
 			so we can't use a derivation similar to property.
 		*/
-		identifier          = either("it","time","visits?", "exits?","pos") + wb,
+		identifier          = either("it","time","visits?","exits?","pos") + wb,
 		
 		itsProperty         = "its" + mws + "(" + validPropertyName + ")",
 		
@@ -537,7 +537,7 @@
 		/*d:
 			Style markup
 
-			Often, you'd like to apply styles to your text – to italicise a word in dialogue,
+			It's expected that you'd want to apply styles to your text – to italicise a word in dialogue,
 			for example. You can do this with simple formatting codes that
 			are similar to the double brackets of a link. Here is what's available to you:
 			

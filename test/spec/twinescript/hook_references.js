@@ -11,9 +11,15 @@ describe("hook references", function() {
 		expect("|A_>[foo] |_A>[bar] |_a_>[baz] |a>[qux](replace:?_A_)[garply]").markupToPrint("garply garply garply garply");
 		expect("|A_>[foo] |_A>[bar] |_a_>[baz] |a>[qux](replace:?A)[garply]").markupToPrint("garply garply garply garply");
 	});
+	it("aren't the same as strings", function() {
+		expect("|a>[foo] bar(replace:'?a')[garply]").markupToPrint("foo bar");
+	});
 	describe("bare hook references in passage text", function() {
 		it("are printed literally", function() {
 			expect("|a>[Golly] ?a").markupToPrint("Golly ?a");
+		});
+		it("aren't falsely selected by hook references", function() {
+			expect("?a ?b(replace:?a)[garply]").markupToPrint("?a ?b");
 		});
 	});
 });

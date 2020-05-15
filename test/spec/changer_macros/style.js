@@ -8,9 +8,9 @@ describe("style changer macros", function() {
 
 	describe("the (css:) macro", function() {
 		it("requires exactly 1 string argument", function() {
-			expect("(css:)").markupToError();
-			expect("(css:1)").markupToError();
-			expect("(css:'A','B')").markupToError();
+			expect("(css:)[]").markupToError();
+			expect("(css:1)[]").markupToError();
+			expect("(css:'A','B')[]").markupToError();
 		});
 		it("applies the passed CSS to the hook as an inline style property", function() {
 			expect(runPassage("(css:'display:inline-block')[Hey]").find('tw-hook').css('display'))
@@ -38,7 +38,48 @@ describe("style changer macros", function() {
 		});
 		it("errors when placed in passage prose while not attached to anything", function() {
 			expect("(css:'color:red')").markupToError();
-			expect("(css:'color:red')[]").not.markupToError();
+		});
+	});
+	describe("the (text-colour:) macro", function() {
+		it("requires exactly 1 string or 1 colour", function() {
+			expect("(text-colour:)[]").markupToError();
+			expect("(text-colour:1)[]").markupToError();
+			expect("(text-colour:'A','B')[]").markupToError();
+			expect("(text-colour:'red')[]").not.markupToError();
+			expect("(text-colour:red)[]").not.markupToError();
+		});
+		it("is aliased as (color:), (text-color:) and (colour:)", function() {
+			expect("(print: (text-colour:white) is (colour:white))").markupToPrint('true');
+			expect("(print: (text-colour:white) is (color:white))").markupToPrint('true');
+			expect("(print: (text-colour:white) is (text-color:white))").markupToPrint('true');
+		});
+		it("changes the hook's text colour", function() {
+			expect(runPassage("(text-colour:#440044)[foo]").find('tw-hook')).toHaveColour('#440044');
+		});
+		it("works with (enchant:)", function() {
+			expect(runPassage("(enchant:?bar,(text-colour:#440044))|bar>[foo]").findAndFilter('tw-hook').css('color')).toMatch(/rgba?\(68,\s?0,\s?68[\),]/);
+		});
+		it("changes the colour of links inside hooks", function() {
+			['(color:#ff0022)|a>[foo(link:"bar")[]]',
+			'|b>[foo(link:"bar")+(color:#ff0022)[]]',
+			'|c>[foo(link:"bar")[]](enchant:?c,(color:#ff0022))',
+			'(color:#ff0022)|aa>[foo[[test]]]',
+			'|bb>[foo(color:#ff0022)[[test]]]',
+			'|cc>[foo[[test]]](enchant:?cc,(color:#ff0022))',
+			'(color:#ff0022)|e>[foobaz(click:"baz")[]]',
+			'|f>[foo(color:#ff0022)[bab](click:"bab")[]]',
+			'|g>[foobak(click:"bak")[]](enchant:?g,(color:#ff0022))'
+			].forEach(function(code){
+				expect(runPassage(code).findAndFilter('tw-link, .enchantment-link').css('color')).toMatch(/rgba?\(255,\s?0,\s?34[\),]/);
+			});
+		});
+		it("does not change the colour of links when used with (enchant:?page) or (enchant:?passage)", function() {
+			['(link:"bar")[]',
+			'[[test]]',
+			'baz(click:"baz")[]'].forEach(function(code){
+				expect(runPassage('(enchant:?passage,(color:#ff0022))'+code).find('tw-link,.enchantment-link').css('color')).not.toMatch(/rgba?\(255,\s?0,\s?34[\),]/);
+				expect(runPassage('(enchant:?page,(color:#ff0022))'+code).find('tw-link,.enchantment-link').css('color')).not.toMatch(/rgba?\(255,\s?0,\s?34[\),]/);
+			});
 		});
 	});
 	describe("the (textstyle:) macro", function() {
@@ -496,38 +537,6 @@ describe("style changer macros", function() {
 			});
 		});
 	});
-	describe("the (border-radius:) macro", function() {
-		it("requires up to 4 positive numbers", function() {
-			expect("(print:(border-radius:))").markupToError();
-			expect("(print:(border-radius:'A'))").markupToError();
-			expect("(print:(border-radius:-1))").markupToError();
-			expect("(print:(border-radius:1,1))").not.markupToError();
-			expect("(print:(border-radius:1,1,1))").not.markupToError();
-			expect("(print:(border-radius:1,1,1,1))").not.markupToError();
-			expect("(print:(border-radius:1,1,1,1,1))").markupToError();
-		});
-		it("is aliased as (b4r-radius:)", function() {
-			expect("(print:(b4r-radius:3) is (border-radius:3))").markupToPrint('true');
-		});
-		it("applies a border-radius equal to 8px multipled by the given number", function(done) {
-			var hook = runPassage("(border-radius:1.9)+(border:'ridge')[Ridge.]").find('tw-hook');
-			setTimeout(function() {
-				expect(hook[0].style.borderRadius).toMatch("15.2px");
-				done();
-			});
-		});
-		it("applies a padding equal to 1px multipled by the given number, unless another changer applied another value", function(done) {
-			var hook = runPassage("(border-radius:1.9)+(border:'ridge')[Ridge.]").find('tw-hook');
-			setTimeout(function() {
-				expect(hook[0].style.padding).toMatch("1.9px");
-				hook = runPassage("(Css:'padding:10px')+(border:'ridge')+(border-radius:1.9)[Ridge.]").find('tw-hook');
-				setTimeout(function() {
-					expect(hook[0].style.padding).toMatch("10px");
-					done();
-				});
-			});
-		});
-	});
 	describe("the (border-colour:) macro", function() {
 		it("requires up to 4 colours or strings", function() {
 			expect("(print:(border-colour:))").markupToError();
@@ -549,6 +558,35 @@ describe("style changer macros", function() {
 			setTimeout(function() {
 				expect(hook.attr('style') + '').toMatch(/border-color:\s*(?:rgb\(255,\s*0,\s*34\))/i);
 				done();
+			});
+		});
+	});
+	describe("the (corner-radius:) macro", function() {
+		it("requires up to 4 positive numbers", function() {
+			expect("(print:(corner-radius:))").markupToError();
+			expect("(print:(corner-radius:'A'))").markupToError();
+			expect("(print:(corner-radius:-1))").markupToError();
+			expect("(print:(corner-radius:1,1))").not.markupToError();
+			expect("(print:(corner-radius:1,1,1))").not.markupToError();
+			expect("(print:(corner-radius:1,1,1,1))").not.markupToError();
+			expect("(print:(corner-radius:1,1,1,1,1))").markupToError();
+		});
+		it("applies a border-radius equal to 8px multipled by the given number", function(done) {
+			var hook = runPassage("(corner-radius:1.9)+(border:'ridge')[Ridge.]").find('tw-hook');
+			setTimeout(function() {
+				expect(hook[0].style.borderRadius).toMatch("15.2px");
+				done();
+			});
+		});
+		it("applies a padding equal to 1px multipled by the given number, unless another changer applied another value", function(done) {
+			var hook = runPassage("(corner-radius:1.9)+(border:'ridge')[Ridge.]").find('tw-hook');
+			setTimeout(function() {
+				expect(hook[0].style.padding).toMatch("1.9px");
+				hook = runPassage("(Css:'padding:10px')+(border:'ridge')+(corner-radius:1.9)[Ridge.]").find('tw-hook');
+				setTimeout(function() {
+					expect(hook[0].style.padding).toMatch("10px");
+					done();
+				});
 			});
 		});
 	});
@@ -605,6 +643,17 @@ describe("style changer macros", function() {
 		it("compositions have structural equality", function() {
 			expect("(print: (background:black)+(background:'garply') is (background:black)+(background:'garply'))").markupToPrint("true");
 			expect("(print: (background:black)+(background:'garply') is (background:black)+(background:'grault'))").markupToPrint("false");
+		});
+		it("makes the hook display:block only if it has block children", function(done) {
+			var p = runPassage("(background:#4f5)[foo]");
+			setTimeout(function() {
+				expect(p.find('tw-hook').css('display')).toBe('inline');
+				p = runPassage("(background:#49F)[<div>foo</div>]");
+				setTimeout(function() {
+					expect(p.find('tw-hook').css('display')).toBe('block');
+					done();
+				});
+			});
 		});
 	});
 	describe("the (align:) macro", function() {
@@ -706,22 +755,21 @@ describe("style changer macros", function() {
 			expect("(box:'=X=X=',1)[]").markupToError();
 		});
 		it("errors if not given a valid vertical size", function() {
-			expect("(box:'=X=',1.5)[]").markupToError();
 			expect("(box:'=X=',0)[]").markupToError();
 			expect("(box:'=X=',-0.1)[]").markupToError();
 		});
 		it("gives the hook the specified margins, width, height, as well as display:block", function() {
 			[
-				['=XX=', 25, 50, 40],
-				['X===', 0, 25, 10],
-				['==XXXXXXXX', 20, 80, 35],
+				['=XX=', 25, 50, 4],
+				['X===', 0, 25, 1],
+				['==XXXXXXXX', 20, 80, 3.5],
 			].forEach(function(a) {
 				var code = a[0], marginLeft=a[1], width=a[2], height=a[3];
 
-				var s = runPassage("(box:'" + code + "', " + height/100 + ")[]").find('tw-hook').attr('style');
+				var s = runPassage("(box:'" + code + "', " + height + ")[]").find('tw-hook').attr('style');
 				expect(s).toMatch(RegExp("margin-left:\\s*"+marginLeft+"%"));
 				expect(s).toMatch(RegExp("\\bwidth:\\s*"+width+"%"));
-				expect(s).toMatch(RegExp("\\bheight:\\s*"+height+"vh"));
+				expect(s).toMatch(RegExp("\\bheight:\\s*"+height+"em"));
 				expect(s).toMatch(/display:\s*block/);
 				expect(s).toMatch(/overflow-y:\s*auto/);
 			});

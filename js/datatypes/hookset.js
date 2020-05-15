@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {Patterns}) => {
+define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 	/*
 		A HookSet is an object representing a "hook selection". Hooks in
 		Twine passages can have identical titles, and both can therefore be
@@ -327,7 +327,7 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 		@return {String} classlist string
 	*/
 	function hookToSelector(c) {
-		c = Utils.insensitiveName(c).replace(/\?/g, '').replace(/"/g, "&quot;");
+		c = Utils.insensitiveName(c).replace(/"/g, "&quot;");
 		let ret = Selectors.hook+'[name="' + c + '"]';
 		/*
 			The built-in names work alongside user names: |page>[] will be
@@ -349,15 +349,15 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 		This private method returns a jQuery collection of every <tw-hook>
 		in this HookSet's Section which matches this HookSet's selector string.
 	*/
-	function hooks({dom}) {
+	function hooks(section) {
+		const {dom} = section;
 		let ret = $();
-
 		/*
 			First, take the elements from all the previous hooks that
 			this was concatenated to. (For instance, [?a] + ?b's 1st)
 		*/
 		if (this.prev) {
-			ret = ret.add(hooks.call(this.prev, {dom}));
+			ret = ret.add(hooks.call(this.prev, section));
 		}
 		/*
 			If this has a selector itself (such as ?a + [?b]'s 1st), add those elements
@@ -450,16 +450,23 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 			/*
 				If this is a pseudo-hook (search string) selector, we must gather text nodes.
 			*/
-			if (!this.selector.match("^" + Patterns.hookRef + "$")) {
+			if (this.selector.type === "string") {
 				/*
 					Note that wrapTextNodes currently won't target text directly inside <tw-story>,
 					<tw-sidebar> and other <tw-passage>s.
 				*/
-				ownElements = wrapTextNodes(this.selector, dom);
+				ownElements = wrapTextNodes(this.selector.data, dom);
+			}
+			/*
+				Conversely, if this has a base, then we add those elements
+				(as restricted by the properties).
+			*/
+			else if (this.selector.type === "base") {
+				return ret.add(this.properties.reduce(reducer, hooks.call(this.selector.data, section)));
 			}
 			else {
 				ownElements = dom.add(dom.parentsUntil(Utils.storyElement.parent()))
-					.findAndFilter(hookToSelector(this.selector));
+					.findAndFilter(hookToSelector(this.selector.data));
 			}
 			if (this.properties.length) {
 				ret = ret.add(this.properties.reduce(reducer, ownElements));
@@ -467,13 +474,6 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 			else {
 				ret = ret.add(ownElements);
 			}
-		}
-		/*
-			Conversely, if this has a base, then we add those elements
-			(as restricted by the properties).
-		*/
-		if (this.base) {
-			ret = ret.add(this.properties.reduce(reducer, hooks.call(this.base, {dom})));
 		}
 		return ret;
 	}
@@ -491,10 +491,15 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 		if (!hookset) {
 			return [];
 		}
-		const {selector, base, properties, prev} = hookset;
+		const {selector, properties, prev} = hookset;
 		// The hash of ?red + ?blue should equal that of ?blue + ?red. To do this,
 		// the prev's hash and this hookset's hash is added to an array, which is then sorted and returned.
-		return [JSON.stringify([Utils.insensitiveName(selector) || "", hash(base), [...properties].sort()]), ...hash(prev)].sort();
+		return [
+			JSON.stringify([
+				selector.type === "base" ? hash(selector.data) : Utils.insensitiveName(selector.data),
+				[...properties].sort()
+			]), ...hash(prev)
+		].sort();
 	}
 	
 	const HookSet = Object.freeze({
@@ -542,7 +547,7 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 			if (this.properties.length > 0 || this.prev) {
 				return "a complex hook name";
 			}
-			return this.selector + " (a hook name)";
+			return "?" + this.selector.data + " (a hook name)";
 		},
 
 		TwineScript_TypeName: "a hook name (like ?this)",
@@ -567,7 +572,7 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 		},
 
 		/*
-			HookSets are identical if they have the same selector, base, properties (and if
+			HookSets are identical if they have the same selector, properties (and if
 			a property is a slice, it is order-sensitive) and prev.
 		*/
 		TwineScript_is(other) {
@@ -585,7 +590,7 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 			* A {first: Number, last:Number} object. This is created by "?a's 1stTo2ndlast" and such.
 		*/
 		TwineScript_GetProperty(prop) {
-			return HookSet.create(undefined, this, [prop], undefined);
+			return HookSet.create({type:"base", data:this}, [prop], undefined);
 		},
 
 		/*
@@ -597,15 +602,16 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 		// passing in a section, and it doesn't make much sense to ever do so.
 
 		TwineScript_Clone() {
-			return HookSet.create(this.selector, this.base, this.properties, this.prev);
+			return HookSet.create(this.selector, this.properties, this.prev);
 		},
 		
 		/*
 			Creates a new HookSet, which contains the following:
 
-			{String} selector: a hook name, such as "?flank" for ?flank, or a bare search string.
-			{HookSet} base: an alternative to selector. A HookSet from which the properties
-				are being extracted.
+			{Object} selector: the hook selector. It has:
+				{String} type: "name", "string", or "base"
+				{String|HookSet} data: a hook name, such as "?flank" for ?flank, a bare search string,
+					or a HookSet from which the properties are being extracted.
 			{Array} properties: a set of properties to restrict the current set of hooks.
 			{HookSet} prev: a hook which has been +'d with this one.
 
@@ -615,17 +621,28 @@ define(['jquery', 'utils', 'utils/selectors', 'markup'], ($, Utils, Selectors, {
 			(?apple + ?banana's  2ndlast)'s 2ndlast
 			[          base            ]   [properties]
 		*/
-		create(selector, base, properties = [], prev = undefined) {
+		create(selector, properties = [], prev = undefined) {
 			return Object.assign(Object.create(this || HookSet), {
-				selector, base, properties, prev
+				// Freezing the selector guarantees that,
+				// when TwineScript_Clone() passes it by value,
+				// no permutation is possible.
+				selector: Object.freeze(selector),
+				properties, prev
 			});
 		},
 
 		/*
 			This brief sugar method is only used in macrolib/enchantments.
+			This is the only way that {type:"string"} selectors are produced.
 		*/
 		from(arg) {
-			return HookSet.isPrototypeOf(arg) ? arg : HookSet.create(arg);
+			/*
+				Only HookSets and search strings should be given to this.
+			*/
+			if (!HookSet.isPrototypeOf(arg) && typeof arg !== "string") {
+				Utils.impossible("HookSet.from() was given a non-HookSet non-string.");
+			}
+			return HookSet.isPrototypeOf(arg) ? arg : HookSet.create({type:'string',data:arg});
 		},
 	});
 	return HookSet;

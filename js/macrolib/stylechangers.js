@@ -806,7 +806,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				return ChangerCommand.create("transition-depart", [name]);
 			},
 			(d, name) => {
-				d.data.t8nDepart     = name;
+				d.data.t8nDepart = name;
 				return d;
 			},
 			[String]
@@ -858,7 +858,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				return ChangerCommand.create("transition-arrive", [name]);
 			},
 			(d, name) => {
-				d.data.t8nArrive     = name;
+				d.data.t8nArrive = name;
 				return d;
 			},
 			[String]
@@ -914,7 +914,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			suited for entire paragraphs of text (or hooks using the (box:) changer) rather than single words or phrases.
 
 			See also:
-			(border-size:), (border-radius:), (border-colour:)
+			(border-size:), (border-colour:), (corner-radius:)
 
 			Added in: 3.2.0
 			#borders 1
@@ -995,6 +995,9 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			The default size of borders added using (border:) is 8px (8 pixels). The number given is multiplied
 			by 8 to produce the new size (in CSS pixels). If a number lower than 0 is given, an error will be produced.
 
+			See also:
+			(border:), (corner-radius:), (text-size:)
+
 			Added in: 3.2.0
 			#borders 3
 		*/
@@ -1022,17 +1025,16 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		)
 
 		/*d:
-			(border-radius: Number, [Number], [Number], [Number]) -> Changer
-			Also known as: (b4r-radius:)
+			(corner-radius: Number, [Number], [Number], [Number]) -> Changer
 
-			When applied to a hook being changed by the (border:) changer, this rounds the corners, causing the box to become
-			increasingly round.
+			When applied to a hook, this rounds the corners, causing the hook to become
+			increasingly round or button-like.
 
 			Example usage:
 			```
-			(b4r:'solid')+(b4r-radius:1)[Hasn't this gone on too long?]
-			(b4r:'solid')+(b4r-radius:2)[Shouldn't you tell them the truth?]
-			(b4r:'solid')+(b4r-radius:6)[//That you're not really who you say you are??//]
+			(b4r:'solid')+(corner-radius:1)[Hasn't this gone on too long?]
+			(b4r:'solid')+(corner-radius:2)[Shouldn't you tell them the truth?]
+			(b4r:'solid')+(corner-radius:6)[//That you're not really who you say you are??//]
 			```
 
 			Details:
@@ -1042,30 +1044,36 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			values anywhere. If an edge doesn't have a value, then it will use whatever the opposite edge's value is
 			(or the top value if it's the only one).
 
-			Values greater than the border's (border-width:) (which is 1 if it wasn't changed) will cause the interior of the
-			element to become constrained by the curvature of the corners, as the rectangle's corners get cut off.
-			Because of this, this macro also adds a slight amount of interior padding (distance between the border and the
-			contained text) equal to 1px (1 pixel) multiplied by the passed-in number, unless another changer (such as (css:))
-			provided a different padding value.
+			Obviously, unless the hook has a (background:) or a (border:), the rounded corners will not be visible, and this
+			changer will have no real effect.
+
+			If the hook has a (border:), values greater than the border's (border-width:) (which is 1 if it wasn't changed)
+			will cause the interior of the element to become constrained by the curvature of the corners, as the
+			rectangle's corners get cut off. Because of this, this macro also adds a slight amount of interior
+			padding (distance between the border and the contained text) equal to 1px (1 pixel) multiplied by the
+			passed-in number, unless another changer (such as (css:)) provided a different padding value.
+
+			See also:
+			(border:), (background:), (border-size:)
 
 			Added in: 3.2.0
 			#borders 4
 		*/
-		(["border-radius","b4r-radius"],
+		("corner-radius",
 			(_, ...radii) => {
 				if (radii.length > 4) {
-					return TwineError.create("macrocall", "(border-radius:) only accepts up to 4 non-negative numbers, but was given "
+					return TwineError.create("macrocall", "(corner-radius:) only accepts up to 4 non-negative numbers, but was given "
 						+ (radii.length+1) + '.');
 				}
 				for(let i = 0; i < radii.length; i += 1) {
 					if (radii[i] < 0) {
 						return TwineError.create(
-							"datatype", "The " + Utils.nth(i+1) + " number given to (border-radius:), "
+							"datatype", "The " + Utils.nth(i+1) + " number given to (corner-radius:), "
 								+ radii[i] + ', is negative.'
 						);
 					}
 				}
-				return ChangerCommand.create("border-radius", radii);
+				return ChangerCommand.create("corner-radius", radii);
 			},
 			(d, ...radii) => {
 				d.styles.push({
@@ -1102,6 +1110,9 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 
 			Selecting `"transparent"` as the colour will cause the border to "disappear", but also cause the space surrounding
 			the hook to remain.
+
+			See also:
+			(background:), (text-colour:)
 
 			Added in: 3.2.0
 			#borders 2
@@ -1250,6 +1261,15 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			Details:
 			This macro only affects the text colour. To change the text background, call upon
 			the (background:) macro.
+
+			This macro will change the colour of links inside the contained hook, with one exception:
+			using (enchant:) to enchant the entire passage (via `?passage` or `?page`) with (text-colour:)
+			will NOT affect links. This is to allow you to re-style the entire story without having to lose
+			the distinct colour of links compared to passage text. You can change the colour of all links using
+			an explicit `(enchant: ?link, (text-colour: $color))`.
+
+			Also, while this will change the colour of links inside the contained hook, the hover colour
+			for the link will remain the same. You can alter that colour by styling the links using (hover-style:).
 
 			See also:
 			(background:)
@@ -1441,12 +1461,20 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 					*/
 					property = {"background-size": "cover", "background-image":"url(" + value + ")"};
 				}
-				d.styles.push(property,
+				d.styles.push(property, {
 					/*
 						We also need to alter the "display" property in a case where the element
 						has block children - the background won't display if it's kept as initial.
 					 */
-					{ display() { return Utils.childrenProbablyInline($(this)) ? "initial" : "block"; } });
+					display() {
+						const e = $(this);
+						/*
+							Don't change the "display" if there are no element children.
+							childrenProbablyInline() defaults to false for elements with no element children.
+						*/
+						return (!e.children().length || Utils.childrenProbablyInline(e)) ? $(this).css('display') : "block";
+					},
+				});
 				return d;
 			},
 			[either(String,Colour,Gradient)]
@@ -1798,15 +1826,12 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		(box: String, Number) -> Changer
 
 		When attached to a hook, it becomes a "box", with a given width proportional to the containing element's width,
-		height proportional to the window, and a scroll bar if its contained text is longer than its height can contain.
+		a given number of lines tall, and a scroll bar if its contained text is longer than its height can contain.
 
 		Example usage:
-		* `(box:"=XX=", 0.25)[Chapter complete]` produces a box that's centered, 50% of the containing element's width, and 25% of the
-		window's height.
-		* `(box:"==X", 0.5)[Chapter complete]` produces a box that's right-aligned, 33% of the containing element's width, and 50% of the
-		window's height.
-		* `(box:"X", 0.5)[Chapter complete]` produces a box that takes up the full containing element's width, and 50% of the
-		window's height.
+		* `(box:"=XX=", 1)[Chapter complete]` produces a box that's centered, 50% of the containing element's width, and 1 line tall.
+		* `(box:"==X", 3)[Chapter complete]` produces a box that's right-aligned, 33% of the containing element's width, 3 lines tall.
+		* `(box:"X", 7)[Chapter complete]` produces a box that takes up the full containing element's width, and 7 lines tall.
 
 		Rationale:
 
@@ -1821,8 +1846,9 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		depiction of the box's horizontal proportions - the `=` signs are the space to the left and right, and the characters in
 		the middle are the box itself.
 
-		The second value is a percentage of the window height, and must be above 0 and not higher than 1. If you need to reposition the hook
-		vertically, consider using (float-box:).
+		The second value is a height, in text lines. This size varies based on the font size of the containing element,
+		which is adjustible with (text-size:) and other changers. The hook will be given a CSS `height` value of `1em` multiplied
+		by the number of lines given. If you need to reposition the hook vertically, consider using (float-box:) instead.
 
 		The "containing element" is whatever structure contains the hook. If it's inside column markup, the containing column is the
 		element. If it's inside another hook (including a hook that also has (box:) attached), that hook is the element. Usually,
@@ -1838,8 +1864,8 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 
 		You can use this with (enchant:) and `?passage` to affect the placement of the passage in the page.
 
-		The resulting hook has the CSS attributes "display:block" and "overflow-y:auto". Additionally, the hook will have
-		'padding:1em', unless another padding value has been applied to it (such as via (css:)).
+		The resulting hook has the CSS attributes "display:block", "overflow-y:auto", and "box-sizing:content-box". Additionally,
+		the hook will have 'padding:1em', unless another padding value has been applied to it (such as via (css:)).
 
 		See also:
 		(align:), (float-box:)
@@ -1860,7 +1886,6 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		is 60% of the window's width, and 1/7th of the window's height.
 
 		Rationale:
-
 		This is a variant of (box:). There are times when you want a single block of text to be separated from the main passage's text,
 		to the point where it's positioned offset from it as a separate panel - character statistics readouts in RPGs, and commentary
 		asides are two possible uses. Unlike (box:), which leaves the hook in the passage, this provides that necessary spatial separation.
@@ -1868,8 +1893,9 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		Details:
 		The values you give to this macro are "sizing lines" identical to those accepted by (box:) - consult its documentation for more
 		information about those lines. However, while those lines scaled the hook proportional to the "containing element", (float-box:)
-		scales proportional to the reader's browser window. The second string references the vertical position and size of the
-		hook - since (box:) cannot affect the vertical position of the hook, it only accepts a number representing its size.
+		scales proportional to the reader's browser window, using `vw` and `wh` CSS units. The second string references the vertical
+		position and size of the hook - since (box:) cannot affect the vertical position of the hook, it only accepts a number representing
+		its size.
 
 		It's a recommended convention that the centre characters in the sizing line strings be "X" (for "X axis") for the horizontal line
 		and "Y" (for "Y axis") for the vertical - but you may use whatever you wish as long as it is not a `=`.
@@ -1890,7 +1916,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		const length = str.length;
 		const [matched, left, inner] = (geomStringRegExp.exec(str) || []);
 		if (!matched) {
-			return {marginLeft:0, marginRight:0,size:0};
+			return {marginLeft:0, size:0};
 		}
 		return {marginLeft: (left.length/length)*100, size: (inner.length/length)*100};
 	};
@@ -1907,8 +1933,8 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				return TwineError.create("datatype", 'The (' + name + ':) macro requires a sizing line'
 						+ '("==X==", "==X", "=XXXX=" etc.) be provided, not "' + (widthErr ? widthStr : height) + '".');
 			}
-			if (name === "box" && (height <= 0 || height > 1)) {
-				return TwineError.create("datatype", 'The (' + name + ':) macro requires a positive number less than or equal to 1, not '
+			if (name === "box" && (height <= 0)) {
+				return TwineError.create("datatype", 'The (' + name + ':) macro requires a positive number, not '
 					+ height + '.');
 			}
 			return ChangerCommand.create(name, [widthStr, height]);
@@ -1919,20 +1945,17 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			if (name === "float-box") {
 				({marginLeft:top, size:height} = geomParse(height));
 			}
-			else {
-				// Convert the height number to VH
-				height *= 100;
-			}
 			/*
 				(box:)es are within flow; they use the % of the containing box (and <tw-passage> is considered
-				a box). (float-box:)es are not within flow, and use "vm".
+				a box). (float-box:)es are not within flow, and use "vh".
 			*/
 			const boxUnits = (name === "box" ? "%" : "vw");
 			const styles = {
 				display:        "block",
 				width:           size + boxUnits,
-				[name === "box" ? "margin-left" : "left"]:   marginLeft + boxUnits,
-				height:          height + "vh",
+				[name === "box" ? "margin-left" : "left"]: marginLeft + boxUnits,
+				height:          height + (name === "box" ? "em" : "vh"),
+				"box-sizing":   "content-box",
 				"overflow-y":   "auto",
 				padding() { return $(this).css('padding') || '1em'; },
 			};

@@ -46,6 +46,11 @@ tw-story {
 	font: 100% Georgia, serif;
 	// Use the more intuitive box model.
 	box-sizing: border-box;
+	// In case enchantments opt into content-box, their descendants
+	// should still use border-box.
+	[style*=content-box] * {
+		box-sizing: border-box;
+	}
 
 	/*
 		Instead of a 60% width, this uses 40% horizontal padding (applied below).

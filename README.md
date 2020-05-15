@@ -10,6 +10,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a long-standing bug where `(click: ?Passage)` and `(click: ?Sidebar)` just flat-out didn't work at all.
  * Fixed a long-standing bug where lambdas would produce an incorrect duplicate-name error if the temp variables used with their clauses contained capital letters.
  * Fixed a long-standing bug where hooks that had `(transition:)` transitions would restart their transition animations whenever the containing passage finished transitioning in. Previously, the only way to overcome this was to make the passage transition using `(transition-arrive:"instant")`.
+ * Fixed a long-standing bug where strings containing hookname syntax (such as `"?pear"`) were considered identical to actual hooknames (such as `?pear`).
  * Fixed a bug where the default CSS for `(click: ?Page)` (a blue border around the page) wasn't visible. (Now, an `::after` pseudo-element is created for the enchantment, so that the border displays above all the page content.)
  * Now, `(mouseover:)` and `(mouseout:)` should work correctly with ?Page, ?Passage, and ?Sidebar.
  * Fixed a bug where `(for:)` would emit infinite loop errors if 50 or more elements were given to it.
@@ -27,6 +28,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 ####Alterations
 
+ * The behaviour of `(text-colour:)` regarding links has been changed. Formerly, `(text-colour:)` couldn't change the colour of links inside hooks unless it was used with `(enchant:)` and wasn't used with `?passage` or `?page`. This meant that changing the colour of individual links was, unintuitively, not possible without `(enchant:)`. Now, a simpler rule is in place: `(text-colour:)` will always change links' colours, unless it's used with `(enchant: ?passage)` or `(enchant:?page)`. (This exception means that all of `(enchant:)`'s behaviour is unchanged with this release.)
  * The behaviour for multiple `(click:)` macros affecting the same hook (such as in `|A>[B] (click: ?A)[1] (click: ?A)[2]`) has changed to be slightly more intuitive: formerly, as you clicked the hook, the last `(click:)` would activate first (so, `[2]` then `[1]`). Now, they activate from first to last. This also applies to `(mouseover:)` and `(mouseout:)`.
  * Now, the text input box in `(prompt:)` is auto-focused when the dialog appears, allowing the player to type into it without having to click it.
  * Now, pressing Return or Enter in a `(prompt:)` text input box should submit the text, as if "OK" was clicked.
@@ -64,7 +66,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added two more styles to `(text-style:)`, "buoy" and "sway", which are slow, gentle movement animations to serve as counterparts to "rumble" and "shudder".
  * Added a `(box:)` changer macro, which turns the attached hook into a box with given width and horizontal margins, a height scaling with window height, and a scroll bar if its contained prose exceeds its height.
  * Added a `(float-box:)` changer macro, a variant of `(box:)` which turns the hook into a separate pane floating on the window, using `position:fixed`. These have an explicit vertical position as well as horizontal position.
- * Added the changer macros `(border:)`, `(border-size:)`, `(border-colour:)` and `(border-radius:)` (aliases `(b4r:)`, `(b4r-size:)`, `(b4r-colour:)` and `(b4r-radius:)`) which add and adjust CSS borders for hooks. These will automatically make the attached hook have `display:inline-block`, so that it remains rectangular and the border can properly enclose it. `(border-radius:)` will also add padding, proportional to the amount of corner rounding, so that the corners don't encroach on the inner text.
+ * Added the changer macros `(border:)`, `(border-size:)`, and `(border-colour:)` (aliases `(b4r:)`, `(b4r-size:)`, `(b4r-colour:)`) which add and adjust CSS borders for hooks. `(border:)` will automatically make the attached hook have `display:inline-block`, so that it remains rectangular and the border can properly enclose it.
+ * Added `(corner-radius:)`, which rounds the corners of the hook (using the CSS "border-radius" property, which, despite its name, works on elements without borders). It will also add padding, proportional to the amount of corner rounding, so that the corners don't encroach on the inner text.
 
 #####Other
 

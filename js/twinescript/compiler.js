@@ -305,7 +305,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 					2. The ? sigil is needed to distinguish the hook name
 					from a pseudo-hook selector string.
 				*/
-				return " HookSet.create('?" + token.name + "') ";
+				return " HookSet.create({type:'name', data:'" + token.name + "'}) ";
 			}
 			else if (token.type === "string") {
 				/*

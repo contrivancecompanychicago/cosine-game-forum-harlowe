@@ -9,10 +9,14 @@ tw-link, .link, tw-icon, .enchantment-clickblock {
 }
 
 @mixin enchantable-color {
-	tw-passage tw-enchantment[style^="color"] &:not(:hover),
-	tw-passage tw-enchantment[style*=" color"] &:not(:hover),
-	tw-passage tw-enchantment[style^="color"][hover="true"] &:hover,
-	tw-passage tw-enchantment[style*=" color"][hover="true"] &:hover, {
+	/*
+		Links only inherit colours from styled elements that are inside the passage,
+		so enchanting ?passage or ?story with (color:) won't affect them.
+	*/
+	tw-passage [style^="color"] &:not(:hover),
+	tw-passage [style*=" color"] &:not(:hover),
+	tw-passage [style^="color"][hover="true"] &:hover,
+	tw-passage [style*=" color"][hover="true"] &:hover, {
 		color: inherit;
 	}
 }

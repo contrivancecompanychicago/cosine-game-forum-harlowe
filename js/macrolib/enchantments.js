@@ -60,6 +60,11 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 
 		The built-in hook names, ?Page, ?Passage, ?Sidebar and ?Link, can be targeted by this macro, and can be styled on a per-passage basis this way.
 
+		Using (text-colour:) with this macro will let you change the colour of links inside the indicated hook, with one exception:
+		using (enchant:) to enchant the entire passage (via `?passage` or `?page`) with (text-colour:) will NOT affect links. This is to allow you
+		to re-style the entire story without having to lose the distinct colour of links compared to passage text. You can change the colour of all links using
+		an explicit `(enchant: ?link, (text-colour: $color))`.
+
 		You can use (enchant:) with (transition:) to add transitions to hooks or text elsewhere in the same passage – however, if those hooks or words have already appeared,
 		they won't abruptly animate. For example, `(event: when time > 2s)[(enchant:"Riddles", (t8n:"Shudder"))]` adds an (enchant:) macro call to the passage
 		after 2 seconds, and won't affect instances of the word "Riddles" that are already in the passage.
