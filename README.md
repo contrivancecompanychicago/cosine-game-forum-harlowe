@@ -10,7 +10,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a long-standing bug where `(click: ?Passage)` and `(click: ?Sidebar)` just flat-out didn't work at all.
  * Fixed a long-standing bug where lambdas would produce an incorrect duplicate-name error if the temp variables used with their clauses contained capital letters.
  * Fixed a long-standing bug where hooks that had `(transition:)` transitions would restart their transition animations whenever the containing passage finished transitioning in. Previously, the only way to overcome this was to make the passage transition using `(transition-arrive:"instant")`.
- * Fixed a long-standing bug where strings containing hookname syntax (such as `"?pear"`) were considered identical to actual hooknames (such as `?pear`).
+ * Fixed a long-standing bug where strings containing HookName syntax (such as `"?pear"`) were considered identical to actual hooknames (such as `?pear`).
  * Fixed a bug where the default CSS for `(click: ?Page)` (a blue border around the page) wasn't visible. (Now, an `::after` pseudo-element is created for the enchantment, so that the border displays above all the page content.)
  * Now, `(mouseover:)` and `(mouseout:)` should work correctly with ?Page, ?Passage, and ?Sidebar.
  * Fixed a bug where `(for:)` would emit infinite loop errors if 50 or more elements were given to it.
@@ -49,6 +49,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added the `is not in` operator - `$a is not in $b` is a more intelligible phrasing for `not ($a is in $b)`. (Currently, `contains` still doesn't have a negative equivalent.)
  * Added the `pos` identifier, which is used in lambdas to provide the position of the data value (from those passed into the macro) that the lambda is currently processing. `(altered: via it + pos, 0,0,5,0,0)` equals `(a:1,2,8,4,5)`.
  * Added `2bind`, a "two-way bind" variation of `bind` which causes the `(cycling-link:)`, `(seq-link:)` (See below) and `(dropdown:)` macros to automatically match the current value of the bound variable, and update itself whenever another macro changes the variable.
+ * Added the special built-in HookName `?Visited`, which allows you to select links to visited passages, and change the unique colour these links have.
 
 #####Macros
 

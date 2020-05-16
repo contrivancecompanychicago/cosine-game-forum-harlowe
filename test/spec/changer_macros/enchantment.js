@@ -78,6 +78,40 @@ describe("enchantment macros", function () {
 			},400);
 		});
 	});
+	describe("enchanting ?Visited", function() {
+		it("wraps each <tw-link> that leads to a visited passage in a <tw-enchantment>", function(done) {
+			createPassage("","qux");
+			runPassage("","bar");
+			runPassage("(enchant:?Visited,(text-style:'italic'))[[Next->bar]] [[Prev->qux]]");
+			setTimeout(function() {
+				var enchantment = $($('tw-link')[0]).parent();
+				expect(enchantment.is('tw-enchantment')).toBe(true);
+				expect(enchantment.attr('style')).toMatch(/font-style: \s*italic/);
+
+				enchantment = $($('tw-link')[1]).parent();
+				expect(enchantment.is('tw-enchantment')).toBe(false);
+				done();
+			});
+		});
+		it("can override properties that <tw-link> inherits from CSS", function(done) {
+			runPassage("","bar");
+			runPassage("(enchant:?Link,(text-style:'mirror')+(color:'#800000'))[[Next->bar]]");
+			setTimeout(function() {
+				expect($('tw-link').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+				done();
+			},400);
+		});
+		it("works with (link-reveal-goto:)", function(done) {
+			runPassage("","bar");
+			runPassage("(enchant:?Visited,(text-style:'italic'))(link-reveal-goto:'Next','bar')[]");
+			setTimeout(function() {
+				var enchantment = $($('tw-link')[0]).parent();
+				expect(enchantment.is('tw-enchantment')).toBe(true);
+				expect(enchantment.attr('style')).toMatch(/font-style: \s*italic/);
+				done();
+			});
+		});
+	});
 	describe("enchanting ?Page", function() {
 		it("wraps the ?Page in a <tw-enchantment>", function(done) {
 			runPassage("(enchant:?Page,(text-style:'bold'))");

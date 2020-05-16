@@ -35,8 +35,8 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 
 		Built in hook names:
 
-		There are four special built-in hook names, ?Page, ?Passage, ?Sidebar and ?Link, which, in addition to selecting named hooks,
-		also affect parts of the page.
+		There are five special built-in hook names, ?Page, ?Passage, ?Sidebar, ?Link and ?Visited, which, in addition to selecting named hooks,
+		also affect parts of the page that you can't normally style with macros. They can be styled using the (enchant:) macro.
 
 		* `?Page` selects the page element (to be precise, the `<tw-story>` element) and using it with the (background:) macro lets you
 		change the background of the entire page.
@@ -45,6 +45,9 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 		* `?Sidebar` selects the passage's sidebar containing undo/redo icons (`<tw-sidebar>`). You can style it with styling macros, or use
 		(replace:) or (append:) to insert your own text into it.
 		* `?Link` selects all of the links (passage links, and those created by (link:) and other macros) in the passage.
+		* `?Visited` is a variant of `?Link` which only selects links to visited passages. This allows you to affect and re-style these links
+		in particular. These links normally have a different colour to normal links, but if you apply a colour to `?Link`, that colour is
+		replaced. You can restore the distinct colour these links have by applying a colour to `?Visited` afterward.
 
 		Data names:
 
@@ -338,6 +341,7 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 			passage: ", tw-passage",
 			sidebar: ", tw-sidebar",
 			link: ", tw-link, .enchantment-link",
+			visited: ", tw-link.visited"
 		}[c]) || "";
 		return ret;
 	}
