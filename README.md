@@ -50,6 +50,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added the `pos` identifier, which is used in lambdas to provide the position of the data value (from those passed into the macro) that the lambda is currently processing. `(altered: via it + pos, 0,0,5,0,0)` equals `(a:1,2,8,4,5)`.
  * Added `2bind`, a "two-way bind" variation of `bind` which causes the `(cycling-link:)`, `(seq-link:)` (See below) and `(dropdown:)` macros to automatically match the current value of the bound variable, and update itself whenever another macro changes the variable.
  * Added the special built-in HookName `?Visited`, which allows you to select links to visited passages, and change the unique colour these links have.
+ * Colours now have an alpha `a` data value, containing the alpha value given to the `(hsl:)` and `(rgb:)` macros - `(hsl: 130, 1, 0.5, 0.2)'s a` is 0.2.
+ * Colours now have an `lch` data value, which contains a datamap of LCH color space values for that colour (corresponding to the numbers given to the new `(lch:)` macro). Because LCH's values conflict with HSL's, the LCH values are inside this datamap instead of directly accessible from the colour itself.
 
 #####Macros
 
@@ -68,7 +70,10 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a `(box:)` changer macro, which turns the attached hook into a box with given width and horizontal margins, a height scaling with window height, and a scroll bar if its contained prose exceeds its height.
  * Added a `(float-box:)` changer macro, a variant of `(box:)` which turns the hook into a separate pane floating on the window, using `position:fixed`. These have an explicit vertical position as well as horizontal position.
  * Added the changer macros `(border:)`, `(border-size:)`, and `(border-colour:)` (aliases `(b4r:)`, `(b4r-size:)`, `(b4r-colour:)`) which add and adjust CSS borders for hooks. `(border:)` will automatically make the attached hook have `display:inline-block`, so that it remains rectangular and the border can properly enclose it.
- * Added `(corner-radius:)`, which rounds the corners of the hook (using the CSS "border-radius" property, which, despite its name, works on elements without borders). It will also add padding, proportional to the amount of corner rounding, so that the corners don't encroach on the inner text.
+ * Added a `(corner-radius:)` macro, which rounds the corners of the hook (using the CSS "border-radius" property, which, despite its name, works on elements without borders). It will also add padding, proportional to the amount of corner rounding, so that the corners don't encroach on the inner text.
+ * Added an `(lch:)` macro (alias `(lcha:)`), an alternative colour creation macro (comparable to `(hsl:)`) that uses the LCH colour space (which is the CIELAB colour space, familiar to graphic designers, but expressed radially using a HSL-style hue angle).
+ * Added `(complement:)`, a macro which takes a colour and produces its complement by rotating its LCH hue by 180 degrees.
+ * Added `(palette:)`, a macro designed for rapid prototyping which produces a four-colour palette based on a given colour, for use with `(text-colour:)`, `(background:)` and `(enchant:)`.
 
 #####Other
 

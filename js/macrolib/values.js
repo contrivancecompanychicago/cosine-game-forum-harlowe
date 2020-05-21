@@ -9,7 +9,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 	const
 		{rest, zeroOrMore, either, optional,
 		/* Any is a value, not a method. */
-		Any} = Macros.TypeSignature;
+		Any} = Macros.TypeSignature,
+		{max,min,round} = Math;
 	
 	Macros.add
 		/*d:
@@ -446,9 +447,10 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			can then layer such elements to produce a few interesting visual effects.
 
 			Example usage:
-			* `(rgb: 255, 0, 47)` produces a colour with 255 red, 0 blue and 47 green.
+			* `(rgb: 255, 0, 47)` produces <tw-colour style="background-color:rgb(255,0,47);"></tw-colour>.
 			* `(rgb: 90, 0, 0)'s r` produces the number 90.
-			* `(rgb: 178, 229, 178, 0.6)` produces a 40% transparent faint green.
+			* `(rgb: 178, 229, 178, 0.6)` produces <tw-colour style="background-color:rgba(178,229,178,0.6);"></tw-colour>
+			(a 40% transparent green).
 
 			Rationale:
 
@@ -467,10 +469,10 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Giving alpha percentages higher than 1 or lower than 0 will cause an error.
 
 			See also:
-			(hsl:), (gradient:)
+			(hsl:), (lch:), (gradient:)
 
 			Added in: 2.0.0
-			#colour
+			#colour 2
 		*/
 		(["rgb","rgba"], (_, ...values) => {
 			for (let val, i = 0; i < 3; i += 1) {
@@ -489,7 +491,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 		[parseInt, parseInt, parseInt, optional(Number)])
 
 		/*d:
-			(hsl: Number, Number, [Number]) -> Colour
+			(hsl: Number, Number, Number, [Number]) -> Colour
 			Also known as: (hsla:)
 
 			This macro creates a colour using the given hue (h) angle in degrees, as well as the given
@@ -501,9 +503,10 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			can then layer such elements to produce a few interesting visual effects.
 
 			Example usage:
-			* `(hsl: 120, 0.8, 0.5)` produces a colour with 120 degree hue, 80% saturation and 50% lightness.
+			* `(hsl: 120, 0.8, 0.5)` produces <tw-colour style="background:rgb(25,229,25);"></tw-colour>.
 			* `(hsl: 28, 1, 0.4)'s h` produces the number 28.
-			* `(hsl: 120, 0.5, 0.8, 0.6)` produces a 40% transparent faint green.
+			* `(hsl: 120, 0.5, 0.8, 0.6)` produces <tw-colour style="background:rgba(178,229,178,0.6);"></tw-colour>
+			(a 40% transparent green).
 
 			Rationale:
 
@@ -523,13 +526,13 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Giving alpha percentages higher than 1 or lower than 0 will cause an error.
 
 			See also:
-			(rgb:), (gradient:)
+			(rgb:), (lch:), (gradient:)
 
 			Added in: 2.0.0
-			#colour
+			#colour 1
 		*/
 		(["hsl","hsla"], (_, h, s, l, a) => {
-			const errorMsg = " values must be numbers between 0 and 1 inclusive, not ";
+			const errorMsg = " values for (hsl:) must be numbers between 0 and 1 inclusive, not ";
 			if (s < 0 || s > 1) {
 				return TwineError.create("macrocall", "Saturation" + errorMsg + objectName(s) + ".");
 			}
@@ -544,13 +547,193 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 				to be given directly to the (hsl:) macro, to cycle through the hues continuously.
 				Round is used because, as the user's hue range is effectively continuous, nothing is lost by using it.
 			*/
-			h = Math.round(h) % 360;
+			h = round(h) % 360;
 			if (h < 0) {
 				h += 360;
 			}
 			return Colour.create({h, s, l, a});
 		},
 		[Number, Number, Number, optional(Number)])
+
+		/*d:
+			(lch: Number, Number, Number, [Number]) -> Colour
+			Also known as: (lcha:)
+
+			This macro creates a colour using three values in the CIELAB colour model - a lightness (l) percentage,
+			a chroma (c) value, and a hue (h) angle in degrees - , and, optionally, the transparency
+			(alpha, or a) percentage, which is a fractional value between 0 (fully transparent)
+			and 1 (fully visible).
+
+			Anything drawn with a partially transparent colour will itself be partially transparent. You
+			can then layer such elements to produce a few interesting visual effects.
+
+			Example usage:
+			* `(lch: 0.6, 80, 10)` produces <tw-colour style="background:rgb(255,11,54);"></tw-colour>.
+			* `(lch: 0.6, 80, 10)'s lch's c` produces the number 80.
+			* `(lch: 0.9, 15, 142, 0.6)` produces <tw-colour style="background:rgba(188,201,151,0.6);"></tw-colour>
+			(a 40% transparent green).
+
+			Rationale:
+
+			The CIELAB colour model is considered to be more universally useful than the RGB model and its HSL representation,
+			whose treatment of "lightness" doesn't properly reflect the actual perceived *luminosity* of the colours
+			in question. For instance, this colour <tw-colour style="background:hsl(120,100%,50%);"></tw-colour>
+			(produced by `(hsl:120,1,0.5)`) and this colour <tw-colour style="background:hsl(220,100%,50%);"></tw-colour>
+			(produced by `(hsl:220,1,0.5)`) have the same HSL lightness (0.5), but one appears to the human eye to be less
+			bright than the other, due to one hue being less luminous than the other.
+
+			The lightness in LCH more closely corresponds to how the human eye perceives luminosity - `(lch:0.9,80,120)`
+			produces <tw-colour style="background:hsl(86, 92.5%, 46.2%)"></tw-colour>, and `(lch:0.9,80,220)`
+			produces <tw-colour style="background:hsl(196.4, 100%, 74.2%)"></tw-colour>, which, as you can see, is a pair closer in luminosity
+			than the previous pair. Note that this means the lightness and hue values of LCH are **not** directly transferable between (hsl:)
+			and this macro - they have different meanings in each. A hue angle in LCH is usually between 10 and 20 degrees less than its
+			angle in HSL, varying by the LCH lightness.
+
+			Additionally, CIELAB's colour model replaces the "saturation" value of HSL with "chroma". Rather than being a single percentage
+			from 0 to 1, LCH's chroma is a value whose upper bound varies with the colour's hue, reflecting how the human eye distinguishes
+			some hues more accurately than others.
+
+			Details:
+			Despite all of the above, any colour produced by this macro will have to be internally converted back to HSL in order to
+			be used, due to HTML and CSS not fully supporting LCH as of 2020. As such, colours produced by this macro are constrained
+			by HSL's limits - as LCH accepts a greater variety of chroma and lightness combinations than what HSL can represent, the output
+			colour will be automatically converted to the nearest valid HSL values, if necessary.
+
+			Giving lightness or alpha values less than 0 and greater than 1 will cause an error. Giving chroma values less than 0
+			and greater than 132 will cause an error. However, you can give any kind of hue number to (lch:), and it will automatically
+			round it to fit the 0-359 degree range - so, a value of 380 will become 20. This allows you to cycle through hues easily by
+			providing a steadily increasing variable or a counter, such as `(lch: 0.9, 80, time / 100)`.
+
+			See also:
+			(hsl:), (rgb:), (gradient:), (complement:)
+
+			Added in: 3.2.0
+			#colour 3
+		*/
+		(["lch","lcha"], (_, l, c, h, a) => {
+			const errorMsg = " values for (lch:) must be numbers between 0 and ";
+			const errorMsg2 = " inclusive, not ";
+			if (l < 0 || l > 1) {
+				return TwineError.create("macrocall", "Lightness" + errorMsg + "1" + errorMsg2 + objectName(l) + ".");
+			}
+			if (c < 0 || c > 132) {
+				return TwineError.create("macrocall", "Chroma" + errorMsg + "132" + errorMsg2 + objectName(c) + ".");
+			}
+			if (a < 0 || a > 1) {
+				return TwineError.create("macrocall", "Alpha" + errorMsg + "1" + errorMsg2 + objectName(a) + ".");
+			}
+			/*
+				As with (hsl:), H is silently rounded and truncated to the 0..359 range.
+			*/
+			h = round(h) % 360;
+			if (h < 0) {
+				h += 360;
+			}
+			return Colour.create({l, c, h, a});
+		},
+		[Number, Number, Number, optional(Number)])
+
+		/*d:
+			(complement: Colour) -> Colour
+
+			When given a colour, this provides a complement to that colour.
+
+			Example usage:
+			`(complement:orange)` produces <tw-colour style="background:hsl(221, 100%, 71.1%);"></tw-colour>.
+
+			Details:
+			This is a very simple macro - the returned colour is the same as the input colour, except that its LCH hue
+			(as given to the (lch:) macro) has been rotated by 180 degrees, producing a colour with equivalent chroma
+			and luminosity, but an opposite hue.
+
+			Note that, unlike (text-colour:), this will not take a string containing a CSS colour. This is because
+			it operates purely on Harlowe colour data, and doesn't have a means of converting CSS colours into
+			colour data.
+
+			See also:
+			(lch:)
+
+			#colour 4
+		*/
+		("complement", (_, colour) => colour.LCHRotate(180),
+		[Colour])
+
+		/*d:
+			(palette: String, Colour) -> Array
+
+			When given a string specifying a palette type, and a colour, this macro produces an array containing the given colour
+			followed by three additional colours that together form a palette, for use with (text-colour:), (background:), and other macros.
+
+			Example usage:
+			```
+			{(set: _p to (palette: "mono", orange+black))
+			(enchant: ?page, (background: _p's 1st)+(text-colour: _p's 2nd))
+			(enchant: ?link, (colour: _p's 3rd)+(hover-style:(colour:_p's 4th)))}
+			This passage uses (link:"(more)")[a brown palette.]
+			```
+
+			Rationale:
+			Intended for game jams and rapid prototyping, (palette:) provides a quick and simple palette for stories and passages. When you aren't
+			too fussed with making your story look significantly different from the Harlowe default, but just want a certain colour scheme to provide a certain
+			mood, or colour a specific passage differently to offset it from the rest of the story, you can defer the task of choosing text or background
+			colours to this macro. It will choose colours which contrast with the given colour to attempt to maximise readability, while still having an
+			interesting relationship with the given colour's hue.
+
+			Details:
+			The following type strings are accepted.
+			| String | Explanation
+			|---
+			| "mono" | The returned colours are tints and shades of the given colour.
+			| "adjacent" | The returned colours' hues are 30° to the left, 30° to the right, and 60° to the right of the given colour's hue.
+			| "triad" | The returned colours' hues are 140° to the left, 140° to the right, and 180° to the right of the given colour's hue.
+
+			This macro interprets the passed-in colour as a background colour, and the three colours it provides are intended as text colours -
+			but you can easily use them for other purposes. The given colour could be used as a text colour, and any of the received colours
+			could be used as different backgrounds.
+
+			The three returned colours all have a luminosity chosen to provide sufficient contrast with the given colour's luminosity. If
+			the given colour's luminosity is very low or very high (near 0 or 1) then the returned colours will have a luminosity near
+			the other extremity.
+
+			#colour 5
+		*/
+		("palette", (_, type, bg) => {
+			const {l,h} = bg.toLCHA();
+			const lcha = {
+				// This formula was devised entirely through trial and error.
+				l: l <= 0.75 ? 0.75 + (l/3) : 0.75 - ((1-l)*3),
+				c: 80,
+				h,
+				a:1
+			};
+			let text, link, hover;
+			/*
+				The "mono" palette is the base, and each other palette type is
+				a modification of it.
+			*/
+			text  = Colour.create(lcha);
+			lcha.l += (l <= 0.75 ? -0.1 : 0.1);
+			link  = Colour.create(lcha);
+			lcha.l += (l <= 0.85 ? 0.15 : -0.15);
+			hover = Colour.create(lcha);
+
+			if (type === "adjacent") {
+				text    = text.LCHRotate(-30);
+				link    = text.LCHRotate(30);
+				hover   = text.LCHRotate(60);
+			}
+			else if (type === "triad") {
+				hover   = text.LCHRotate(180);
+				link    = text.LCHRotate(140);
+				text    = text.LCHRotate(-140);
+			}
+			else if (type !== "mono") {
+				return TwineError.create("macrocall", "'" + type + '\' is not a valid (palette:) type.',
+					'Only the following names are recognised (capitalisation and hyphens ignored): mono, adjacent, triad.');
+			}
+			return [bg,text,link,hover];
+		},
+		[String, Colour])
 
 		/*d:
 			(gradient: Number, ...Number, Colour) -> Gradient
@@ -623,7 +806,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			linear-gradient "colour hints", which are used to adjust the midpoints between colour stops, are currently not supported by this macro.
 
 			Added in: 3.1.0
-			#colour 4
+			#colour 6
 		*/
 		(["gradient"], (_, degree, ...args) => {
 			/*
@@ -638,7 +821,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			/*
 				Just like with (hsl:), we silently rounded and truncate degrees to the 0..359 range.
 			*/
-			degree = Math.round(degree) % 360;
+			degree = round(degree) % 360;
 			if (degree < 0) {
 				degree += 360;
 			}
@@ -931,7 +1114,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Added in: 1.0.0
 			#maths
 		*/
-		min: [Math.min, rest(Number)],
+		min: [min, rest(Number)],
 		/*d:
 			(max: ...Number) -> Number
 
@@ -943,7 +1126,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Added in: 1.0.0
 			#maths
 		*/
-		max: [Math.max, rest(Number)],
+		max: [max, rest(Number)],
 		/*d:
 			(abs: Number) -> Number
 
@@ -1029,7 +1212,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 
 			#number
 		*/
-		round:  [Math.round, Number],
+		round:  [round, Number],
 		/*d:
 			(ceil: Number) -> Number
 
@@ -1138,8 +1321,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 				from = 0;
 				to = a;
 			} else {
-				from = Math.min(a, b);
-				to = Math.max(a, b);
+				from = min(a, b);
+				to = max(a, b);
 			}
 			to += 1;
 			return ~~((Math.random() * (to - from))) + from;

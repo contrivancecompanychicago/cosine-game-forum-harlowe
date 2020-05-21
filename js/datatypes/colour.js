@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery'], ($) => {
+define(['jquery', 'utils'], ($, {matMul}) => {
 	/*d:
 		Colour data
 
@@ -38,7 +38,8 @@ define(['jquery'], ($) => {
 		white. `#a4e + black` is a dim purple.
 
 		Like datamaps, colour values have a few read-only data names, which let you examine the **r**ed, **g**reen and **b**lue
-		components that make up the colour, as well as its **h**ue, **s**aturation and **l**ightness.
+		components that make up the colour, as well as its **h**ue, **s**aturation and **l**ightness, its **a**lpha transparency,
+		and a datamap showing its **lch** form (in the same values given to the (lch:) macro).
 
 		| Data name | Example | Meaning
 		|---
@@ -48,16 +49,27 @@ define(['jquery'], ($) => {
 		| `h` | `$colour's h` | The hue angle in degrees, a whole number from 0 to 359.
 		| `s` | `$colour's s` | The saturation percentage, a fractional number from 0 to 1.
 		| `l` | `$colour's l` | The lightness percentage, a fractional number from 0 to 1.
+		| `a` | `$colour's a` | The alpha percentage, a fractional number from 0 to 1.
+		| `lch` | `$colour's lch` | A datamap of LCH values for this colour.
 
 		These values can be used in the (hsl:) and (rgb:) macros to produce further colours. Note that some of these values
 		do not transfer one-to-one between representations! For instance, the hue of a gray is essentially irrelevant, so grays
 		will usually have a `h` value equal to 0, even if you provided a different hue to (hsl:). Furthermore, colours with a
 		lightness of 1 are always white, so their saturation and hue are irrelevant.
 
+		The `lch` value produces a datamap containing these values:
+		| Data name | Example | Meaning
+		|---
+		| `l` | `$colour's lch's l` | The lightness percentage, a fractional number from 0 to 1.
+		| `c` | `$colour's lch's c` | The chroma component, a whole number from 0 to 230 (but which is usually below 132).
+		| `h` | `$colour's lch's h` | The hue angle in degrees, a whole number from 0 to 359.
+
 		Colours, when used in passage prose or given to (print:), produce a square swatch containing the colour. This is a `<tw-colour>`
 		element, but otherwise has no other features or capabilities and is intended solely for debugging purposes.
 	*/
 	const
+		{max,min,sin,cos,pow,round,floor,atan2,cbrt,sqrt,PI} = Math,
+		{assign, create} = Object,
 		/*
 			These RegExps check for HTML #fff and #ffffff format colours.
 		*/
@@ -66,7 +78,7 @@ define(['jquery'], ($) => {
 		/*
 			This cache here is used by the function just below.
 		*/
-		cssNameCache = Object.create(null);
+		cssNameCache = create(null);
 
 	/*
 		This private function tries its best to convert a CSS3 colour name (like "rebeccapurple"
@@ -126,35 +138,35 @@ define(['jquery'], ($) => {
 		r /= 255, g /= 255, b /= 255;
 
 		const
-			max = Math.max(r, g, b),
-			min = Math.min(r, g, b),
+			Max = max(r, g, b),
+			Min = min(r, g, b),
 			// Lightness is the average of the highest and lowest values.
-			l = (max + min) / 2,
-			delta = max - min;
+			l = (Max + Min) / 2,
+			delta = Max - Min;
 
-		if (max === min) {
+		if (Max === Min) {
 			// If all three RGB values are equal, it is a gray.
 			return { h:0, s:0, l };
 		}
 		// Calculate hue and saturation as follows.
 		let h;
-		switch (max) {
+		switch (Max) {
 			case r: h = (g - b) / delta + (g < b ? 6 : 0); break;
 			case g: h = (b - r) / delta + 2; break;
 			case b: h = (r - g) / delta + 4; break;
 		}
-		h = Math.round(h * 60);
+		h = round(h * 60);
 
 		const s = l > 0.5
-			? delta / (2 - max - min)
-			: delta / (max + min);
+			? delta / (2 - Max - Min)
+			: delta / (Max + Min);
 		return { h, s, l, a };
 	}
 
 	function HSLToRGB({h, s, l, a}) {
 		// If saturation is 0, it is a grey.
 		if (s === 0) {
-			const gray = Math.floor(l * 255);
+			const gray = floor(l * 255);
 			return { r: gray, g: gray, b: gray };
 		}
 		// Convert the H value to decimal.
@@ -176,11 +188,98 @@ define(['jquery'], ($) => {
 			return p;
 		}
 		return {
-			r: Math.floor(hueToRGBComponent(h + 1/3) * 255),
-			g: Math.floor(hueToRGBComponent(h) * 255),
-			b: Math.floor(hueToRGBComponent(h - 1/3) * 255),
+			r: floor(hueToRGBComponent(h + 1/3) * 255),
+			g: floor(hueToRGBComponent(h) * 255),
+			b: floor(hueToRGBComponent(h - 1/3) * 255),
 			a,
 		};
+	}
+
+	/*
+		These functions convert RGB 0..255 values (interpreted as sRGB, as per browser
+		specs for CSS colours defined using RGB and HSL) into LCH values
+		where L is 0..1+, C is 0..100+, and H is 0..360.
+	*/
+	const D50white = [0.96422, 1.00000, 0.82521],
+		kappa = 24389/27, epsilon = 216/24389,
+		down = a => a.map(v => [v]),
+		across = a => a.map(v => v[0]);
+
+	function sRGBToLCH({r,g,b,a}) {
+		// Taken from https://drafts.csswg.org/css-color-4/conversions.js
+		const sRGBtoXYZ = [
+			[0.4124564,  0.3575761,  0.1804375],
+			[0.2126729,  0.7151522,  0.0721750],
+			[0.0193339,  0.1191920,  0.9503041]
+		];
+		const D65toD50 = [
+			[ 1.0478112,  0.0228866, -0.0501270],
+			[ 0.0295424,  0.9904844, -0.0170491],
+			[-0.0092345,  0.0150436,  0.7521316]
+		];
+		let f =
+			across(matMul(D65toD50, matMul(sRGBtoXYZ, down([r/255,g/255,b/255]))))
+			.map((v, i) => v / D50white[i])
+			.map(v => v > epsilon ? cbrt(v) : (kappa * v + 16)/116);
+		const Lab = [(116 * f[1]) - 16, 500 * (f[0] - f[1]), 200 * (f[1] - f[2])];
+		const hue = atan2(Lab[2], Lab[1]) * 180 / PI;
+		return {
+			l: Lab[0]/100,
+			c: sqrt(pow(Lab[1], 2) + pow(Lab[2], 2)),
+			h: hue >= 0 ? hue : hue + 360,
+			a
+		};
+	}
+
+	function LCHTosRGB({l,c,h,a}) {
+		l*=100;
+		// Taken from https://drafts.csswg.org/css-color-4/conversions.js
+		const D50toD65 = [
+			[ 0.9555766, -0.0230393,  0.0631636],
+			[-0.0282895,  1.0099416,  0.0210077],
+			[ 0.0122982, -0.0204830,  1.3299098]
+		];
+		const XYZtosRGB = [
+			[ 3.2404542, -1.5371385, -0.4985314],
+			[-0.9692660,  1.8760108,  0.0415560],
+			[ 0.0556434, -0.2040259,  1.0572252]
+		];
+		const f = [];
+		f[1] = (l + 16)/116;
+		f[0] = (c * cos(h * PI / 180))/500 + f[1];
+		f[2] = f[1] - (c * sin(h * PI / 180))/200;
+		const XYZ = [
+			pow(f[0],3) > epsilon ? pow(f[0],3) : (116*f[0]-16)/kappa,
+			l > kappa * epsilon ? pow((l+16)/116,3) : l/kappa,
+			pow(f[2],3) > epsilon ? pow(f[2],3) : (116*f[2]-16)/kappa
+		].map((v, i) => v * D50white[i]);
+		const [r,g,b] = across(matMul(D50toD65, matMul(XYZtosRGB, down(XYZ)))).map(v=>v*255);
+		return {r,g,b,a};
+	}
+
+	function validsRGB(lcha) {
+		var rgba = LCHTosRGB(lcha);
+		return [rgba.r, rgba.g, rgba.b].every(v => v >= 0 && v <= 255);
+	}
+
+	/*
+		In order to convert LCH to RGB, it is often necessary to constrain the
+		colour's chroma. This function (from https://css.land/lch) binary-searches
+		for the lowest chroma that can fit into RGB.
+	*/
+	function constrainLCH(lcha) {
+		if (validsRGB(lcha)) {
+			return lcha;
+		}
+		lcha = assign({},lcha);
+		let high = lcha.c;
+		let low = 0;
+		lcha.c /= 2;
+		while (high - low > 1e-5) {
+			(validsRGB(lcha)) ? (low = lcha.c) : (high = lcha.c);
+			lcha.c = (high + low)/2;
+		}
+		return lcha;
 	}
 
 	const Colour = Object.freeze({
@@ -199,8 +298,8 @@ define(['jquery'], ($) => {
 				These are just shorthands (for "lvalue" and "rvalue").
 			*/
 			const
-				l = this,
-				r = other;
+				l = this.toRGBA(),
+				r = other.toRGBA();
 			
 			return Colour.create({
 				/*
@@ -215,16 +314,27 @@ define(['jquery'], ($) => {
 		},
 		
 		TwineScript_Print() {
+			const {r,g,b,a} = this.toRGBA();
 			return "<tw-colour style='background-color:rgba("
-				+ [this.r, this.g, this.b, this.a].join(',') + ");'></span>";
+				+ [r, g, b, a].join(',') + ");'></span>";
 		},
 		
 		TwineScript_is(other) {
-			return Colour.isPrototypeOf(other) &&
-				other.r === this.r &&
-				other.g === this.g &&
-				other.b === this.b &&
-				other.a === this.a;
+			if (!Colour.isPrototypeOf(other)) {
+				return false;
+			}
+			if (other.lcha && this.lcha) {
+				return other.lcha.l === this.lcha.l &&
+					other.lcha.c === this.lcha.c &&
+					other.lcha.h === this.lcha.h &&
+					other.a === this.a;
+			}
+			const obj = this.toRGBA();
+			other = other.toRGBA();
+			return other.r === obj.r &&
+				other.g === obj.g &&
+				other.b === obj.b &&
+				other.a === obj.a;
 		},
 		
 		TwineScript_Clone() {
@@ -235,45 +345,83 @@ define(['jquery'], ($) => {
 			This converts the colour into a CSS rgba() function.
 		*/
 		toRGBAString() {
-			return `rgba(${this.r}, ${this.g}, ${this.b}, ${this.a})`;
+			const {r,g,b,a} = this.toRGBA();
+			return `rgba(${r}, ${g}, ${b}, ${a})`;
+		},
+
+		toHSLA() {
+			return RGBToHSL(this.toRGBA());
+		},
+
+		/*
+			For each of these methods, use the colour's canonical LCH if it's present.
+		*/
+		toRGBA() {
+			return this.lch ? LCHTosRGB(constrainLCH(assign({}, this.lch, { a: this.a }))) : this;
+		},
+
+		toLCHA() {
+			return this.lch ? assign({}, this.lch) : sRGBToLCH(this);
+		},
+
+		/*
+			Used by (complement:), this rotates a colour's LCH hue.
+		*/
+		LCHRotate(r) {
+			if (r < 0) {
+				r = 360 + r;
+			}
+			const lch = this.toLCHA();
+			lch.h = (lch.h+r) % 360;
+			lch.a = this.a;
+			return Colour.create(lch);
 		},
 
 		/*
 			This, in addition to exposing r, g and b values, provides h, s and l values as alternatives.
 		*/
 		TwineScript_GetProperty(prop) {
-			if (prop === "h" || prop === "s" || prop === "l") {
-				return RGBToHSL(this)[prop];
+			if (prop === "lch") {
+				const lch = this.toLCHA();
+				return new Map([['l', lch.l], ['c', lch.c], ['h', lch.h]]);
 			}
-			if (prop === "r" || prop === "g" || prop === "b") {
-				return this[prop];
+			const obj = this.toRGBA();
+			if (prop === "h" || prop === "s" || prop === "l") {
+				return RGBToHSL(obj)[prop];
+			}
+			if (prop === "r" || prop === "g" || prop === "b" || prop === "a") {
+				return obj[prop];
 			}
 		},
-		TwineScript_Properties: ['h','s','l','r','g','b'],
+		TwineScript_Properties: ['h','s','l','r','g','b','a','lch'],
 
 		/*
 			This constructor accepts an object containing r, g and b numeric properties,
 			an object containing h, s and l numeric properties,
 			or a string comprising a CSS hex colour.
 		*/
-		create(rgbObj) {
-			if (typeof rgbObj === "string") {
-				if (Colour.isHexString(rgbObj)) {
-					return this.create(hexToRGB(rgbObj));
-				}
-				return this.create(css3ToRGB(rgbObj));
+		create(obj) {
+			if (typeof obj === "string") {
+				return this.create((Colour.isHexString(obj) ? hexToRGB : css3ToRGB)(obj));
 			}
+
 			// To save computation, don't do the HSL to RGB conversion
 			// if the RGB values are already present.
-			if ("h" in rgbObj && "s" in rgbObj && "l" in rgbObj &&
-					!("r" in rgbObj) && !("g" in rgbObj) && !("b" in rgbObj)) {
-				return this.create(HSLToRGB(rgbObj));
+			if ("h" in obj && "s" in obj && "l" in obj &&
+					!("r" in obj) && !("g" in obj) && !("b" in obj)) {
+				return this.create(HSLToRGB(obj));
 			}
 			// Assume alpha is 1 if it is not specified.
-			if (!("a" in rgbObj) || typeof rgbObj.a !== "number") {
-				rgbObj.a = 1;
+			if (!("a" in obj) || typeof obj.a !== "number") {
+				obj.a = 1;
 			}
-			return Object.assign(Object.create(this), rgbObj);
+			// LCH colours store their initial values rather than converting to
+			// RGB immediately.
+			if ('h' in obj && 'c' in obj && !('s' in obj) && 'l' in obj) {
+				// Make sure to copy the object by value rather than by reference.
+				return assign(create(this), { a: obj.a, lch: { l: obj.l, c: obj.c, h: obj.h, }});
+			}
+			return assign(create(this), obj);
 		},
 		/*
 			This static method determines if a given string matches a HTML hex colour format.

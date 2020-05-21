@@ -495,7 +495,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		@method get
 		@return {Error|Anything}
 	*/
-	function get(obj, prop, originalProp) {
+	function get(obj, prop, originalProp = prop) {
 		/*
 			{first, last} properties are slices (continuous subsets) created by the "?a's 2ndlasttolast" accesses.
 			This syntax should only be usable with sequentials (as determined by isSequential()).
@@ -586,13 +586,16 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			if (Array.isArray(obj) && typeof prop === "number") {
 				return TwineError.create("property", "This array of " + (obj.length+1) + " elements doesn't have a "
 				+ propertyDebugName(originalProp)
-				+ " element.");
+				+ " element.",
+				obj.length ? "It contains: " + andList(obj.map(objectName)) + '.' : "The array is empty.");
 			}
+			const keys = Array.from(obj.keys());
 			return TwineError.create("property", "I can't find a "
 				// Use the original non-compiled property key in the error message.
 				+ propertyDebugName(originalProp)
 				+ " data name in "
-				+ objectName(obj));
+				+ objectName(obj),
+				obj instanceof Map && keys.length ? ("Its names include: " + andList(keys) + ".") : undefined);
 		}
 		return result;
 	}

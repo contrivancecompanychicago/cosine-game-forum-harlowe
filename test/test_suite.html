@@ -234,6 +234,8 @@ beforeEach(function() {
 				var rgba = hexToRGBA(colour);
 				var pass;
 				var result = (a.jquery && a.attr('style')) + '';
+				// "Round down" irrational fractional values
+				result = result.replace(/\.\d\d\d+/g,'');
 				if (colour === "transparent") {
 					pass = result.match(new RegExp(
 						"color:\\s*(?:transparent|\\w+a\\(.+?,\\s*0\\s*\\))", "i"));
@@ -256,7 +258,10 @@ beforeEach(function() {
 			compare: function(a,colour) {
 				colour = colour.replace(/(\(|\))/g, "\\$1");
 				var rgba = hexToRGBA(colour);
-				var pass = a.jquery && (a.attr('style') + '').match(new RegExp(
+				var result = a.jquery && (a.attr('style') + '');
+				// "Round down" irrational fractional values
+				result = result.replace(/\.\d\d\d\d+/g,'');
+				var pass = result.match(new RegExp(
 						"color:\\s*(?:" + colour + rgba + ")", "i"));
 				return {
 					pass: !!pass,

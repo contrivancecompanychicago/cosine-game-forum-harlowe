@@ -327,6 +327,16 @@ describe("property indexing", function() {
 				expect('(print: (floor:red\'s s * 1000))').markupToPrint("803");
 				expect('(print: red\'s l)').markupToPrint("0.5");
 			});
+			it("'a' produces the colour's alpha in the range 0 to 1", function() {
+				expect('(print: (rgba:0,50,50,0.2)\'s a)').markupToPrint("0.2");
+				expect('(print: red\'s a)').markupToPrint("1");
+			});
+			it("'lch' produces a datamap of the colour's LCH values", function() {
+				expect('(print: (rgba:0,50,50,0.2)\'s lch is a datamap)').markupToPrint("true");
+				expect('(print: (lch:0.7,80,50,0.2)\'s lch\'s l)').markupToPrint("0.7");
+				expect('(print: (lch:0.7,80,50,0.2)\'s lch\'s c)').markupToPrint("80");
+				expect('(print: (lch:0.7,80,50,0.2)\'s lch\'s h)').markupToPrint("50");
+			});
 			it("no other values are present", function() {
 				expect("(print:red's create)").markupToError();
 				expect("(print:red's toHexString)").markupToError();

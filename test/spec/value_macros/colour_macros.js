@@ -57,6 +57,60 @@ describe("colour macros", function() {
 			expectColourToBe("(hsla:270,0.1,0.5,0.7)", "rgba(127,114,140,0.7)");
 		});
 	});
+	describe("the (complement:) macro", function() {
+		it("takes a single colour", function() {
+			expect("(complement: 1)").markupToError();
+			expect("(complement: 'red')").markupToError();
+			expect("(complement: red)").not.markupToError();
+		});
+		it("returns the colour rotated 180 degrees through the LCH circle", function() {
+			expect("(print: (complement: (lch:0.9,40,120)) is (lch:0.9,40,300))").markupToPrint('true');
+		});
+	});
+	describe("the (lch:) macro", function() {
+		it("takes a fractional L value between 0 and 1 inclusive, a C value between 0 and 132, and an optional fractional A value between 0 and 1 inclusive", function() {
+			expect("(lch: 1)").markupToError();
+			expect("(lch: 1,1)").markupToError();
+			expect("(lch: 2,40,1)").markupToError();
+			expect("(lch: 1,140,1)").markupToError();
+			expect("(lch: -1,40,1)").markupToError();
+			expect("(lch: 1,-1,1)").markupToError();
+		});
+		it("takes any kind of finite numeric H value", function() {
+			expect("(lch: 0.5,90,1)").not.markupToError();
+			expect("(lch: 0.5,90,900)").not.markupToError();
+			expect("(lch: 0.5,90,-8)").not.markupToError();
+			expect("(lch: 0.5,90,1.00006)").not.markupToError();
+		});
+		it("fractional H values are rounded", function() {
+			expect("(print:(lch: 0.5, 90, 170)'s lch's h)").markupToPrint("170");
+			expect("(print:(lch: 0.5, 90, 59.1)'s lch's h)").markupToPrint("59");
+			expect("(print:(lch: 0.5, 90, 3.999)'s lch's h)").markupToPrint("4");
+		});
+		it("produces a colour using the three numbers and alpha", function() {
+			expectColourToBe("(lch:0.6,80,10)", "#ff0b36");
+			expectColourToBe("(lch:0.6,80,10,0.61)", "rgba(255,11,54,0.61)");
+		});
+		it("is aliased as (lcha:)", function() {
+			expectColourToBe("(lcha:0.6,80,10)", "#ff0b36");
+			expectColourToBe("(lcha:0.6,80,10,0.61)", "rgba(255,11,54,0.61)");
+		});
+	});
+	describe("the (palette:) macro", function() {
+		it("takes a valid palette type string, and a colour", function() {
+			expect("(palette: 1)").markupToError();
+			expect("(palette: 'red')").markupToError();
+			expect("(palette: red)").markupToError();
+			["mono","adjacent","triad"].forEach(function(e) {
+				expect("(palette: '" +e+ "', red)").not.markupToError();
+			});
+		});
+		it("returns an array of four colours, including the input colour", function() {
+			expect("(print: (palette: 'mono', red) is an array)").markupToPrint('true');
+			expect("(print: (palette: 'mono', red)'s length)").markupToPrint('4');
+			expect("(print:(all-pass: _a where _a is a colour, ...(palette:'mono', red)))").markupToPrint('true');
+		});
+	});
 	describe("the (gradient:) macro", function() {
 		it("takes a degree number, followed by two or more pairs of percentages and colours", function() {
 			expect("(gradient: 45)").markupToError();
