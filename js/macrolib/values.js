@@ -7,9 +7,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 	*/
 	
 	const
-		{rest, zeroOrMore, either, optional,
-		/* Any is a value, not a method. */
-		Any} = Macros.TypeSignature,
+		{rest, zeroOrMore, either, optional, insensitiveSet, numberRange, positiveInteger, percent, Any } = Macros.TypeSignature,
 		{max,min,round} = Math;
 	
 	Macros.add
@@ -315,16 +313,12 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			#string
 		*/
 		(["str-repeated", "string-repeated"], (_, number, string) => {
-			if (number <= 0) {
-				return TwineError.create("macrocall",
-					"I can't repeat this string " + number + " times.");
-			}
 			if (string.length === 0) {
 				return TwineError.create("macrocall", "I can't repeat an empty string.");
 			}
 			return string.repeat(number);
 		},
-		[parseInt, String])
+		[positiveInteger, String])
 		/*d:
 			(str-reversed: String) -> String
 			Also known as: (string-reversed:)
@@ -439,7 +433,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Also known as: (rgba:)
 
 			This macro creates a colour using the three red (r), green (g) and blue (b) values
-			provided, whose values are whole numbers between 0 and 255, and, optionally,
+			provided, whose values are numbers between 0 and 255, and, optionally,
 			the transparency (alpha, or a) percentage, which is a fractional value between 0
 			(fully transparent) and 1 (fully visible).
 
@@ -463,8 +457,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 
 			This macro takes the same range of numbers as the CSS `rgb()` function.
 
-			Giving values higher than 255 or lower than 0, or with a fractional part,
-			will cause an error.
+			Giving values higher than 255 or lower than 0 will cause an error. Former versions of Harlowe
+			did not allow fractional values to be given, but that restriction is no longer present.
 
 			Giving alpha percentages higher than 1 or lower than 0 will cause an error.
 
@@ -474,21 +468,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Added in: 2.0.0
 			#colour 2
 		*/
-		(["rgb","rgba"], (_, ...values) => {
-			for (let val, i = 0; i < 3; i += 1) {
-				val = values[i];
-				if (val < 0 || val > 255) {
-					return TwineError.create("macrocall",
-						"RGB values must be whole numbers between 0 and 255, not " + objectName(val) + ".");
-				}
-			}
-			if (values[3] < 0 || values[3] > 1) {
-				return TwineError.create("macrocall",
-					"Alpha values must be numbers between 0 and 1 inclusive, not " + objectName(values[3]) + ".");
-			}
-			return Colour.create({r: values[0], g: values[1], b: values[2], a: values[3]});
-		},
-		[parseInt, parseInt, parseInt, optional(Number)])
+		(["rgb","rgba"], (_, ...values) => Colour.create({r: values[0], g: values[1], b: values[2], a: values[3]}),
+		[numberRange(255), numberRange(255), numberRange(255), optional(percent)])
 
 		/*d:
 			(hsl: Number, Number, Number, [Number]) -> Colour
@@ -532,16 +513,6 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			#colour 1
 		*/
 		(["hsl","hsla"], (_, h, s, l, a) => {
-			const errorMsg = " values for (hsl:) must be numbers between 0 and 1 inclusive, not ";
-			if (s < 0 || s > 1) {
-				return TwineError.create("macrocall", "Saturation" + errorMsg + objectName(s) + ".");
-			}
-			if (l < 0 || l > 1) {
-				return TwineError.create("macrocall", "Lightness" + errorMsg + objectName(l) + ".");
-			}
-			if (a < 0 || a > 1) {
-				return TwineError.create("macrocall", "Alpha" + errorMsg + objectName(l) + ".");
-			}
 			/*
 				Unlike S and L, H is silently rounded and truncated to the 0..359 range. This allows increasing counters
 				to be given directly to the (hsl:) macro, to cycle through the hues continuously.
@@ -553,7 +524,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			}
 			return Colour.create({h, s, l, a});
 		},
-		[Number, Number, Number, optional(Number)])
+		[Number, percent, percent, optional(percent)])
 
 		/*d:
 			(lch: Number, Number, Number, [Number]) -> Colour
@@ -611,17 +582,6 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			#colour 3
 		*/
 		(["lch","lcha"], (_, l, c, h, a) => {
-			const errorMsg = " values for (lch:) must be numbers between 0 and ";
-			const errorMsg2 = " inclusive, not ";
-			if (l < 0 || l > 1) {
-				return TwineError.create("macrocall", "Lightness" + errorMsg + "1" + errorMsg2 + objectName(l) + ".");
-			}
-			if (c < 0 || c > 132) {
-				return TwineError.create("macrocall", "Chroma" + errorMsg + "132" + errorMsg2 + objectName(c) + ".");
-			}
-			if (a < 0 || a > 1) {
-				return TwineError.create("macrocall", "Alpha" + errorMsg + "1" + errorMsg2 + objectName(a) + ".");
-			}
 			/*
 				As with (hsl:), H is silently rounded and truncated to the 0..359 range.
 			*/
@@ -631,7 +591,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			}
 			return Colour.create({l, c, h, a});
 		},
-		[Number, Number, Number, optional(Number)])
+		[percent, numberRange(132), Number, optional(percent)])
 
 		/*d:
 			(complement: Colour) -> Colour
@@ -727,13 +687,9 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 				link    = text.LCHRotate(140);
 				text    = text.LCHRotate(-140);
 			}
-			else if (type !== "mono") {
-				return TwineError.create("macrocall", "'" + type + '\' is not a valid (palette:) type.',
-					'Only the following names are recognised (capitalisation and hyphens ignored): mono, adjacent, triad.');
-			}
 			return [bg,text,link,hover];
 		},
-		[String, Colour])
+		[insensitiveSet("mono","adjacent","triad"), Colour])
 
 		/*d:
 			(gradient: Number, ...Number, Colour) -> Gradient
@@ -809,15 +765,6 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			#colour 6
 		*/
 		(["gradient"], (_, degree, ...args) => {
-			/*
-				First, check that the degree angle is correct.
-			*/
-			if (typeof degree !== "number") {
-				return TwineError.create(
-					"datatype",
-					"(gradient:)'s first argument should be a number of degrees, not " + objectName(degree) + "."
-				);
-			}
 			/*
 				Just like with (hsl:), we silently rounded and truncate degrees to the 0..359 range.
 			*/

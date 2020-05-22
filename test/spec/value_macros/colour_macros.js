@@ -5,18 +5,18 @@ describe("colour macros", function() {
 		expect(runPassage("(print:" + str + ")").find('tw-colour')).toHaveBackgroundColour(colour);
 	}
 	describe("the (rgb:) macro", function() {
-		it("takes three whole numbers between 0 and 255 inclusive, and an optional fractional A value between 0 and 1 inclusive", function() {
+		it("takes three numbers between 0 and 255 inclusive, and an optional fractional A value between 0 and 1 inclusive", function() {
 			expect("(rgb: 1)").markupToError();
 			expect("(rgb: 1,1)").markupToError();
-			expect("(rgb: 12, 12, 12.1)").markupToError();
 			expect("(rgb: 1, 300, 1)").markupToError();
 			expect("(rgb: 1, 300, 1, 2)").markupToError();
+			expect("(rgb: 12, 12, 12.1)").not.markupToError();
 		});
 		it("produces a colour using the three numbers", function() {
 			expectColourToBe("(rgb:255,0,255)", "#FF00FF");
 			expectColourToBe("(rgb:47,25,12)", "#2F190C");
 			expectColourToBe("(rgb:255,0,255,0.7)", "rgba(255,0,255,0.7)");
-			expectColourToBe("(rgb:47,25,12,0.4)", "rgba(47,25,12,0.4)");
+			expectColourToBe("(rgb:47.1,25,12,0.4)", "rgba(47.1,25,12,0.4)");
 		});
 		it("is aliased as (rgba:)", function() {
 			expectColourToBe("(rgba:255,0,255)", "#FF00FF");

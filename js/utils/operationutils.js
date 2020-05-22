@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($, {impossible, permutations, toJSLiteral}, HookSet, TwineError) => {
+define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($, {impossible, insensitiveName, permutations, toJSLiteral}, HookSet, TwineError) => {
 	
 	/*
 		First, a quick shortcut to determine whether the
@@ -94,10 +94,11 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 			return arg === undefined;
 		}
 
+		const jsType = typeof arg;
 		/*
-			Now, check if the signature is an Optional, Either, or Wrapped.
+			Now, check if the signature is an Optional, Either, Wrapped, or a Range type.
 		*/
-		if (type.innerType) {
+		if (typeof type !== "function" && type.pattern) {
 			
 			/*
 				Optional signatures can exit early if the arg is absent.
@@ -130,6 +131,19 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 					&& type.clauses.includes("with")   === "with"   in arg;
 			}
 			/*
+				If the type expects an insensitive set of values, check if there's a match.
+			*/
+			if (type.pattern === "insensitive set") {
+				return type.innerType.includes(insensitiveName(arg));
+			}
+			/*
+				If the type expects a limited range of numbers, check if there's a match.
+			*/
+			if (type.pattern === "number range" || type.pattern === "integer range") {
+				return jsType === "number" && !Number.isNaN(arg) && arg >= type.min && arg <= type.max
+					&& (type.pattern !== "integer range" || !(arg + '').includes('.'));
+			}
+			/*
 				Otherwise, if this is a Wrapped signature, ignore the included
 				message and continue.
 			*/
@@ -151,16 +165,16 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 			The built-in types. Let's not get tricky here.
 		*/
 		if (type === String) {
-			return typeof arg === "string";
+			return jsType === "string";
 		}
 		if (type === Boolean) {
-			return typeof arg === "boolean";
+			return jsType === "boolean";
 		}
 		if (type === parseInt) {
-			return typeof arg === "number" && !Number.isNaN(arg) && !(arg + '').includes('.');
+			return jsType === "number" && !Number.isNaN(arg) && !(arg + '').includes('.');
 		}
 		if (type === Number) {
-			return typeof arg === "number" && !Number.isNaN(arg);
+			return jsType === "number" && !Number.isNaN(arg);
 		}
 		if (type === Array) {
 			return Array.isArray(arg);
@@ -170,7 +184,6 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 		}
 		/*
 			For TwineScript-specific types, this check should mostly suffice.
-			TODO: I really need to replace those duck-typing properties.
 		*/
 		return Object.isPrototypeOf.call(type,arg);
 	}

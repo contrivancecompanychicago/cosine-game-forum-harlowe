@@ -39,7 +39,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		```
 	*/
 	const
-		{either, wrapped, optional, Any, zeroOrMore, rest} = Macros.TypeSignature,
+		{either, wrapped, optional, Any, zeroOrMore, rest, insensitiveSet, positiveNumber, nonNegativeNumber} = Macros.TypeSignature,
 		IfTypeSignature = [wrapped(Boolean, "If you gave a number, you may instead want to check that the number is not 0. "
 			+ "If you gave a string, you may instead want to check that the string is not \"\".")];
 
@@ -97,9 +97,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		A list of valid transition names. Used by (transition:).
 	*/
 	const validT8ns = ["instant", "dissolve", "rumble", "shudder", "pulse", "flicker", "slideleft", "slideright", "slideup", "slidedown"];
-	const validMsg = "Only the following names are recognised (capitalisation and hyphens ignored): ";
-	const validT8nsMessage = validMsg + validT8ns.join(", ");
-
+	const validBorders = ['dotted','dashed','solid','double','groove','ridge', 'inset','outset','none'];
 	Macros.addChanger
 		/*d:
 			(if: Boolean) -> Changer
@@ -609,20 +607,12 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			#transitions 1
 		*/
 		(["transition", "t8n"],
-			(_, name) => {
-				name = Utils.insensitiveName(name);
-				if (validT8ns.indexOf(name) === -1) {
-					return TwineError.create(
-						"datatype",
-						"'" + name + '\' is not a valid (transition:)', validT8nsMessage);
-				}
-				return ChangerCommand.create("transition", [name]);
-			},
+			(_, name) => ChangerCommand.create("transition", [Utils.insensitiveName(name)]),
 			(d, name) => {
 				d.transition     = name;
 				return d;
 			},
-			[String]
+			[insensitiveSet(...validT8ns)]
 		)
 
 		/*d:
@@ -648,15 +638,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			#transitions 2
 		*/
 		(["transition-time", "t8n-time"],
-			(_, time) => {
-				if (time <= 0) {
-					return TwineError.create(
-						"datatype",
-						"(transition-time:) should be given a positive number of (milli)seconds, not " + time
-					);
-				}
-				return ChangerCommand.create("transition-time", [time]);
-			},
+			(_, time) => ChangerCommand.create("transition-time", [time]),
 			(d, time) => {
 				d.transitionTime     = time;
 				/*
@@ -668,7 +650,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				d.data.t8nTime       = time;
 				return d;
 			},
-			[Number]
+			[positiveNumber]
 		)
 		/*d:
 			(transition-delay: Number) -> Changer
@@ -694,20 +676,12 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			#transitions 2
 		*/
 		(["transition-delay", "t8n-delay"],
-			(_, time) => {
-				if (time < 0) {
-					return TwineError.create(
-						"datatype",
-						"(transition-delay:) should be given a non-negative number of (milli)seconds, not " + time
-					);
-				}
-				return ChangerCommand.create("transition-delay", [time]);
-			},
+			(_, time) => ChangerCommand.create("transition-delay", [time]),
 			(d, time) => {
 				d.transitionDelay = time;
 				return d;
 			},
-			[Number]
+			[nonNegativeNumber]
 		)
 		/*d:
 			(transition-skip: Number) -> Changer
@@ -743,20 +717,12 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			#transitions 6
 		*/
 		(["transition-skip", "t8n-skip"],
-			(_, time) => {
-				if (time <= 0) {
-					return TwineError.create(
-						"datatype",
-						"(transition-skip:) should be given a positive number, not " + time
-					);
-				}
-				return ChangerCommand.create("transition-skip", [time]);
-			},
+			(_, time) => ChangerCommand.create("transition-skip", [time]),
 			(d, time) => {
 				d.transitionSkip = time;
 				return d;
 			},
-			[Number]
+			[positiveNumber]
 		)
 
 		/*d:
@@ -796,20 +762,12 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			#transitions 4
 		*/
 		(["transition-depart", "t8n-depart"],
-			(_, name) => {
-				name = Utils.insensitiveName(name);
-				if (validT8ns.indexOf(name) === -1) {
-					return TwineError.create(
-						"datatype",
-						"'" + name + '\' is not a valid transition', validT8nsMessage);
-				}
-				return ChangerCommand.create("transition-depart", [name]);
-			},
+			(_, name) => ChangerCommand.create("transition-depart", [Utils.insensitiveName(name)]),
 			(d, name) => {
 				d.data.t8nDepart = name;
 				return d;
 			},
-			[String]
+			[insensitiveSet(...validT8ns)]
 		)
 
 		/*d:
@@ -848,20 +806,12 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			#transitions 5
 		*/
 		(["transition-arrive", "t8n-arrive"],
-			(_, name) => {
-				name = Utils.insensitiveName(name);
-				if (validT8ns.indexOf(name) === -1) {
-					return TwineError.create(
-						"datatype",
-						"'" + name + '\' is not a valid transition', validT8nsMessage);
-				}
-				return ChangerCommand.create("transition-arrive", [name]);
-			},
+			(_, name) => ChangerCommand.create("transition-arrive", [Utils.insensitiveName(name)]),
 			(d, name) => {
 				d.data.t8nArrive = name;
 				return d;
 			},
-			[String]
+			[insensitiveSet(...validT8ns)]
 		)
 
 		/*d:
@@ -920,28 +870,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			#borders 1
 		*/
 		(["border","b4r"],
-			(_, ...names) => {
-				if (names.length > 4) {
-					return TwineError.create("macrocall", "(border:) only accepts up to 4 style names, but was given "
-						+ (names.length+1) + '.');
-				}
-				const validBorders = ['dotted','dashed','solid','double','groove','ridge',
-					'inset','outset','none'];
-				/*
-					Check each of the names for errors, and convert them to insensitive names.
-				*/
-				for(let i = 0; i < names.length; i += 1) {
-					const name = Utils.insensitiveName(names[i]);
-					if (validBorders.indexOf(name) === -1) {
-						return TwineError.create(
-							"datatype", "The " + Utils.nth(i+1) + " string given to (border:), '" + name + '\' is not a valid style name.',
-							validMsg + validBorders.join(', ')
-						);
-					}
-					names[i] = name;
-				}
-				return ChangerCommand.create("border", names);
-			},
+			(_, ...names) => ChangerCommand.create("border", names.map(Utils.insensitiveName)),
 			(d, ...names) => {
 				d.styles.push({
 					"display"() {
@@ -971,7 +900,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				});
 				return d;
 			},
-			[String, ...Array(3).fill(optional(String))]
+			[insensitiveSet(...validBorders), ...Array(3).fill(optional(insensitiveSet(...validBorders)))]
 		)
 
 		/*d:
@@ -1002,26 +931,12 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			#borders 3
 		*/
 		(["border-size","b4r-size"],
-			(_, ...widths) => {
-				if (widths.length > 4) {
-					return TwineError.create("macrocall", "(border-size:) only accepts up to 4 positive numbers, but was given "
-						+ (widths.length+1) + '.');
-				}
-				for(let i = 0; i < widths.length; i += 1) {
-					if (widths[i] <= 0) {
-						return TwineError.create(
-							"datatype", "The " + Utils.nth(i+1) + " number given to (border-size:), "
-								+ widths[i] + ', isn\'t positive.'
-						);
-					}
-				}
-				return ChangerCommand.create("border-size", widths);
-			},
+			(_, ...widths) => ChangerCommand.create("border-size", widths),
 			(d, ...widths) => {
 				d.styles.push({ "border-width": widths.map(width => (width*8) + "px").join(' ') });
 				return d;
 			},
-			[Number, ...Array(3).fill(optional(Number))]
+			[nonNegativeNumber, ...Array(3).fill(optional(nonNegativeNumber))]
 		)
 
 		/*d:
@@ -1060,21 +975,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			#borders 4
 		*/
 		("corner-radius",
-			(_, ...radii) => {
-				if (radii.length > 4) {
-					return TwineError.create("macrocall", "(corner-radius:) only accepts up to 4 non-negative numbers, but was given "
-						+ (radii.length+1) + '.');
-				}
-				for(let i = 0; i < radii.length; i += 1) {
-					if (radii[i] < 0) {
-						return TwineError.create(
-							"datatype", "The " + Utils.nth(i+1) + " number given to (corner-radius:), "
-								+ radii[i] + ', is negative.'
-						);
-					}
-				}
-				return ChangerCommand.create("corner-radius", radii);
-			},
+			(_, ...radii) => ChangerCommand.create("corner-radius", radii),
 			(d, ...radii) => {
 				d.styles.push({
 					"border-radius": radii.map(r => (r*8) + "px").join(' '),
@@ -1082,7 +983,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				});
 				return d;
 			},
-			[Number, ...Array(3).fill(optional(Number))]
+			[nonNegativeNumber, ...Array(3).fill(optional(nonNegativeNumber))]
 		)
 
 		/*d:
@@ -1118,13 +1019,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			#borders 2
 		*/
 		(["border-colour","b4r-colour","border-color","b4r-color"],
-			(_, ...colours) => {
-				if (colours.length > 4) {
-					return TwineError.create("macrocall", "(border-colour:) only accepts up to 4 colours, but was given "
-						+ (colours.length+1) + '.');
-				}
-				return ChangerCommand.create("border-colour", colours.map(c => Colour.isPrototypeOf(c) ? c.toRGBAString(c) : c));
-			},
+			(_, ...colours) => ChangerCommand.create("border-colour", colours.map(c => Colour.isPrototypeOf(c) ? c.toRGBAString(c) : c)),
 			(d, ...colours) => {
 				d.styles.push({ "border-color": colours.join(' ') });
 				return d;
@@ -1330,13 +1225,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			#styling
 		*/
 		(["text-size", "size"],
-			(_, percent) => {
-				if (percent < 0) {
-					return TwineError.create('datatype', 'The (text-size:) macro requires a positive number, not '
-						+ percent + '.');
-				}
-				return ChangerCommand.create("text-size", [percent]);
-			},
+			(_, percent) => ChangerCommand.create("text-size", [percent]),
 			(d, percent) => {
 				/*
 					The constants 24 and 36 are what the default CSS, "font-size:1.5em" and "line-height:1.5em",
@@ -1345,7 +1234,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				d.styles.push({'font-size': percent*24 + "px", 'line-height': percent*36 + "px" });
 				return d;
 			},
-			[Number]
+			[nonNegativeNumber]
 		)
 		/*d:
 			(text-rotate: Number) -> Changer
@@ -1656,25 +1545,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 				
 				return [
 					"text-style",
-					(_, ...styleNames) => {
-						for (let i = 0; i < styleNames.length; i+=1) {
-							let styleName = Utils.insensitiveName(styleNames[i]);
-							/*
-								The name should be insensitive to normalise both capitalisation,
-								and hyphenation of names like "upside-down".
-							*/
-							styleName = Utils.insensitiveName(styleName);
-							
-							if (!(styleName in styleTagNames)) {
-								return TwineError.create(
-									"datatype",
-									"'" + styleName + '\' is not a valid (text-style:)',
-									validMsg + Object.keys(styleTagNames).join(", "));
-							}
-							styleNames[i] = styleName;
-						}
-						return ChangerCommand.create("text-style", styleNames);
-					},
+					(_, ...styleNames) => ChangerCommand.create("text-style", styleNames.map(Utils.insensitiveName)),
 					(d, ...styleNames) => {
 						for (let i = 0; i < styleNames.length; i+=1) {
 							if (styleNames[i] === "none") {
@@ -1685,10 +1556,10 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 							}
 						}
 						return d;
-					}
+					},
+					[rest(insensitiveSet(...Object.keys(styleTagNames)))]
 				];
-			})(),
-			[rest(String)]
+			})()
 		)
 
 		/*d:

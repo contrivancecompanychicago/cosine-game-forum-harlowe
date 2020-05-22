@@ -14,7 +14,7 @@ define([
 	'internaltypes/twinenotifier'],
 ($, {shuffled}, NaturalSort, Macros, {objectName, typeName, subset, collectionType, isValidDatamapName, is, unique, clone, range}, State, Engine, Passages, Lambda, AssignmentRequest, TwineError, TwineNotifier) => {
 	
-	const {optional, rest, either, zeroOrMore, Any}   = Macros.TypeSignature;
+	const {optional, rest, either, zeroOrMore, Any, positiveInteger}   = Macros.TypeSignature;
 	
 	Macros.add
 		/*d:
@@ -641,14 +641,13 @@ define([
 			*/
 			number *= -1;
 			/*
-				These error checks are maybe a bit strict, but ensure that this behaviour
+				This macro's range bounds are maybe a bit strict, but ensure that this behaviour
 				could (maybe) be freed up in later versions.
 			*/
 			if (number === 0) {
-				return TwineError.create("macrocall",
-					"I can't rotate these values by 0 positions.");
+				return TwineError.create("macrocall", "I can't rotate these values by 0 positions.");
 			}
-			else if (Math.abs(number) >= array.length) {
+			if (Math.abs(number) >= array.length) {
 				return TwineError.create("macrocall",
 					"I can't rotate these " + array.length + " values by " + number + " positions.");
 			}
@@ -736,17 +735,13 @@ define([
 			#data structure
 		*/
 		("repeated", (_, number, ...array) => {
-			if (number <= 0) {
-				return TwineError.create("macrocall",
-					"I can't repeat these values " + number + " times.");
-			}
 			const ret = [];
 			while(number-- > 0) {
 				ret.push(...array);
 			}
 			return ret.map(clone);
 		},
-		[parseInt, rest(Any)])
+		[positiveInteger, rest(Any)])
 
 		/*d:
 			(interlaced: Array, ...Array) -> Array

@@ -40,6 +40,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * `(mouseover:)`, `(mouseout:)` and their related macros, which use mouse-hovering input that isn't possible on touch devices, will now fall back to simply being activated by clicks/touches on touch devices.
  * After much fretting and fussing, I've decided to un-deprecate `(subarray:)` and `(substring:)`, because my intended subsequence syntax - `$a's 1stTo2ndlast` and `$a's (range: $b, $c)` - has a not-uncommon edge case where it fails - when `$c` in the preceding example is negative. This un-deprecation changes nothing about how they behaved, but the documentation has been rewritten to include them.
  * Slightly adjusted the animation of `(text-style:"rumble")` and `(text-style:"shudder")` so that the text shifts position from its centre, rather than its left edge.
+ * `(rgb:)` now accepts fractional values for the R, G, and B components.
  * Made the syntax highlighting dark mode colours 50% brighter.
 
 ####Additions

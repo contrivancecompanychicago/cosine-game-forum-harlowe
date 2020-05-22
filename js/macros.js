@@ -200,6 +200,28 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 							+ ".");
 					}
 
+					if (type.pattern === "insensitive set") {
+						return TwineError.create('datatype', objectName(arg) + ' is not a valid name string for ' + name + ".",
+							'Only the following names are recognised (capitalisation and hyphens ignored): ' + andList(type.innerType) + "."
+						);
+					}
+
+					if (type.pattern === "number range" || type.pattern === "integer range") {
+						const {max,min} = type;
+						return TwineError.create('datatype',
+							// This construction assumes that the minimum will always be 0, 1 or >0.
+							name + "'s " + nth(ind + 1) + " value must be a" +
+							(
+								min > 0 ? " positive" : ""
+							) + (
+								type.pattern === "integer range" ? " whole" : ""
+							) + " number" + (
+								min === 0 ? " between 0 and " + max :
+								max < Infinity ? " up to " + max : ""
+							) + ", not " + objectName(arg) + "."
+						);
+					}
+
 					/*
 						Otherwise, it was the most common case: an invalid data type.
 					*/
@@ -392,6 +414,26 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 				return {pattern: "rest",             innerType: type };
 			},
 			
+			/*
+				Note that "innerType" here isn't actually a valid type, but simply a set of
+				recognised values. #awkward
+			*/
+			insensitiveSet(...values) {
+				return {pattern: "insensitive set",   innerType: values };
+			},
+
+			numberRange(max) {
+				return {pattern: "number range", min: 0, max };
+			},
+
+			positiveNumber: { pattern: "number range", min: 0.0001, max: Infinity },
+
+			nonNegativeNumber: { pattern: "number range", min: 0, max: Infinity },
+
+			positiveInteger: { pattern: "integer range", min: 1, max: Infinity },
+
+			percent: { pattern: "number range", min: 0, max: 1 },
+
 			/*
 				This is used exclusively to provide custom error messages for particular
 				type constraints.
