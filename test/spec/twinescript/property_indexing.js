@@ -273,6 +273,9 @@ describe("property indexing", function() {
 					expect('|a>[[[foo->qux]]bar[[qux<-baz]]](replace: ?a\'s links\'s 1st)[F]').markupToPrint("Fbarbaz");
 					expect('|a>[foobarbaz](replace: ?a\'s links)[1]').markupToPrint("foobarbaz");
 				});
+				it("selects the hook itself if it's a link", function() {
+					expect('(link:"foo")|a>[bar](replace: ?a\'s links)[baz]').markupToPrint("baz");
+				});
 				it("doesn't create <tw-pseudo-hook>s", function() {
 					expect(runPassage('foo\n[[bar]]\n(enchant:?passage\'s links\'s 1st, (text-colour:#333))').find('tw-pseudo-hook').length).toBe(0);
 				});

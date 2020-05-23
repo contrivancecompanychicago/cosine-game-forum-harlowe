@@ -840,7 +840,7 @@ define([
 			Added in: 2.0.0
 			#data structure
 		*/
-		("altered", (section, lambda, ...args) => args.map((loop, pos) => lambda.apply(section, {loop, pos:pos+1})),
+		("altered", (section, lambda, ...args) => args.map((loop, pos) => lambda.apply(section, {loop, pos:pos+1, failArg: loop})),
 		[Lambda.TypeSignature('via'), zeroOrMore(Any)])
 		/*d:
 			(find: Lambda, [...Any]) -> Array
@@ -1032,7 +1032,7 @@ define([
 			return TwineError.containsError(args) || args
 				.reduce((making,loop,pos) => lambda.apply(section,{making,loop,pos:pos+1}));
 		},
-		[either(Lambda.TypeSignature('where via making'), Lambda.TypeSignature('via making')), rest(Any)])
+		[either(Lambda.TypeSignature('where','via','making'), Lambda.TypeSignature('via','making')), rest(Any)])
 		;
 		
 	Macros.add

@@ -90,11 +90,12 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 			macro definitions in macrolib. Specifically, it lets us specify which clauses a macro
 			expects its lambda to have.
 		*/
-		TypeSignature(clauses) {
+		TypeSignature(...clauses) {
 			return {
 				pattern: "lambda", innerType: Lambda, clauses,
 				typeName: "a \""
-					+ clauses.split().concat('').join(" ...")
+					// This concat() causes a trailing ... to be added to the end of the clauses.
+					+ clauses.concat('').join(" ...")
 					+ "\" lambda",
 			};
 		},
@@ -240,7 +241,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 
 			/*
 				At the start of a "making via where" lambda, we must filter out the values that fail
-				the "making" clause, without running the "via" clause at all. So, ignoreVia is used by filter()
+				the "where" clause, without running the "via" clause at all. So, ignoreVia is used by filter()
 				to signify that this must be done.
 			*/
 			const via = (!ignoreVia && this.via);

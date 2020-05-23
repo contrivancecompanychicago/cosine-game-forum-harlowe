@@ -993,8 +993,8 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			When applied to a hook being changed by the (border:) changer, this changes the border's colour.
 
 			Example usage:
-			`(b4r-color:magenta)+(b4r:"ridge")[LEVEL 01: DREAM WORLD]`
-			`(b4r-color:red,yellow,green,blue)+(b4r:"dotted")[Isn't it a lovely time?]`
+			* `(b4r-color:magenta)+(b4r:"ridge")[LEVEL 01: DREAM WORLD]`
+			* `(b4r-color:red,yellow,green,blue)+(b4r:"dotted")[Isn't it a lovely time?]`
 
 			Details:
 			The border macros accept up to four values. These values refer to *sides of a rectangle*, going clockwise

@@ -648,7 +648,7 @@ define([
 	}
 	
 	/*
-		A live hook is one that has the (live:) macro attached.
+		A live hook is one that has the (live:) or (event:) macro attached.
 		It repeatedly re-renders, allowing a passage to have "live" behaviour.
 		
 		The default delay for (live:), which is also used by (event:), is 20ms.

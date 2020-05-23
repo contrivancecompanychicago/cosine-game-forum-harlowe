@@ -45,9 +45,6 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 		* `?Sidebar` selects the passage's sidebar containing undo/redo icons (`<tw-sidebar>`). You can style it with styling macros, or use
 		(replace:) or (append:) to insert your own text into it.
 		* `?Link` selects all of the links (passage links, and those created by (link:) and other macros) in the passage.
-		* `?Visited` is a variant of `?Link` which only selects links to visited passages. This allows you to affect and re-style these links
-		in particular. These links normally have a different colour to normal links, but if you apply a colour to `?Link`, that colour is
-		replaced. You can restore the distinct colour these links have by applying a colour to `?Visited` afterward.
 
 		Data names:
 
@@ -64,6 +61,9 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 		* `lines` (as in `?passage's lines`) selects individual lines of text within a hook. A line is any run of text or code between line breaks
 		(or the passage's start and end) - a word-wrapped paragraph of prose is thus considered a single "line" as a result.
 		* `links` (as in `?body's links`) is similar in use to `?link`, but only selects links within the hook.
+		* `visited` (as in `?body's visited`) only selects links to visited passages. This allows you to affect and re-style these links
+		in particular. These links normally have a different colour to normal links, but if you apply a colour to `?Link`, that colour is
+		replaced. You can restore the distinct colour these links have by applying a colour to `visited` afterward.
 
 		**Warning:** using `chars` with (enchant:) may cause text-to-speech assistive programs to fail to read the enchanted
 		passage correctly. If this would be unacceptable for you or your story, refrain from using `chars` with (enchant:).
@@ -75,6 +75,7 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 		| `chars` | `?title's chars`, `chars of ?scream` | Each individual character within the hook, as if the characters were hooks in themselves.
 		| `links` | `?body's links`, `links of ?aside` | Each link inside the hook.
 		| `lines` | `?passage's lines`, `lines of ?passage` | Each span of continuous text, separated by line breaks, inside the passage.
+		| `visited` | `?passage's visited`, `visited of ?passage` | Each passage link (and (link-goto:) link) inside the hook that points to an already visited passage.
 
 		Operators:
 
@@ -340,8 +341,7 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 			page: ", tw-story",
 			passage: ", tw-passage",
 			sidebar: ", tw-sidebar",
-			link: ", tw-link, .enchantment-link",
-			visited: ", tw-link.visited"
+			link: ", tw-link, .enchantment-link"
 		}[c]) || "";
 		return ret;
 	}
@@ -423,7 +423,10 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 					This selector should be in keeping with ?Link, above.
 				*/
 				if (index === "links") {
-					return elements.find('tw-link, .enchantment-link');
+					return elements.findAndFilter('tw-link, .enchantment-link');
+				}
+				if (index === "visited") {
+					return elements.findAndFilter('tw-link.visited');
 				}
 				if (index === "lines") {
 					/*
@@ -600,7 +603,7 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 		/*
 			This single array determines the legal property names for HookSets.
 		*/
-		TwineScript_Properties: ['chars','links','lines'],
+		TwineScript_Properties: ['chars','links','lines','visited'],
 
 		// As of 19-08-2016, HookSets no longer have a length property, because calculating it requires
 		// passing in a section, and it doesn't make much sense to ever do so.

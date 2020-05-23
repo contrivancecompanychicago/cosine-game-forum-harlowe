@@ -122,9 +122,6 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 				If the type expects a lambda, then check the clauses and kind.
 			*/
 			if (type.pattern === "lambda" && singleTypeCheck(arg, type.innerType)) {
-				if(typeof type.clauses !== 'string') {
-					impossible('singleTypeCheck','lambda signature had non-string clauses');
-				}
 				return type.clauses.includes("where")  === "where"  in arg
 					&& type.clauses.includes("making") === "making" in arg
 					&& type.clauses.includes("via")    === "via"    in arg
