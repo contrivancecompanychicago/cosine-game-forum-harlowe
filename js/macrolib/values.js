@@ -641,6 +641,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 
 			Details:
 			The following type strings are accepted.
+			
 			| String | Explanation
 			|---
 			| "mono" | The returned colours are tints and shades of the given colour.

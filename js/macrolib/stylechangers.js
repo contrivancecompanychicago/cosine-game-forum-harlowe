@@ -856,7 +856,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 
 			The "none" type can be used to remove a border that another changer may have included.
 
-			The default size of the border, with no other CSS changes to any elements, is 8px (8 pixels),
+			The default size of the border, with no other CSS changes to any elements, is 2px (2 pixels),
 			unless a change is applied using (border-size:).
 
 			Due to browser CSS limitations, the border will force the hook to become a single rectangular area. The hook can
@@ -873,7 +873,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			(_, ...names) => ChangerCommand.create("border", names.map(Utils.insensitiveName)),
 			(d, ...names) => {
 				d.styles.push({
-					"display"() {
+					display() {
 						let d = $(this).css('display');
 						/*
 							Borders require block-style formatting for the hook.
@@ -895,7 +895,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 							Don't replace deliberately-placed border sizes.
 							Note: .css('border-width') doesn't work (and moreover is slower).
 						*/
-						return this.style.borderWidth || '8px';
+						return this.style.borderWidth || '2px';
 					},
 				});
 				return d;
@@ -911,7 +911,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			of the border by a given amount.
 
 			Example usage:
-			`(b4r:"solid")+(b4r-size:1/8)[Do not read anything outside of this box.]`
+			`(b4r:"solid")+(b4r-size:4)[Do not read anything outside of this box.]`
 
 			Details:
 
@@ -921,8 +921,12 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			values anywhere. If an edge doesn't have a value, then it will use whatever the opposite edge's value is
 			(or the top value if it's the only one).
 
-			The default size of borders added using (border:) is 8px (8 pixels). The number given is multiplied
-			by 8 to produce the new size (in CSS pixels). If a number lower than 0 is given, an error will be produced.
+			The default size of borders added using (border:) is 2px (2 pixels). The number given is a number of
+			CSS pixels to set the new size to. Since CSS pixels don't exactly correspond to display pixels
+			(such as, for instance, if the browser window is zoomed in) then it's possible to have a non-whole
+			number of CSS pixels (such as 1.5, which would, if the browser window was zoomed in to 200%, become
+			3 display pixels). Thus, this macro accepts numbers with fractional values. That being said,
+			if a number lower than 0 is given, an error will be produced.
 
 			See also:
 			(border:), (corner-radius:), (text-size:)
@@ -933,7 +937,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		(["border-size","b4r-size"],
 			(_, ...widths) => ChangerCommand.create("border-size", widths),
 			(d, ...widths) => {
-				d.styles.push({ "border-width": widths.map(width => (width*8) + "px").join(' ') });
+				d.styles.push({ "border-width": widths.map(width => width + "px").join(' ') });
 				return d;
 			},
 			[nonNegativeNumber, ...Array(3).fill(optional(nonNegativeNumber))]
@@ -947,8 +951,8 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 
 			Example usage:
 			```
-			(b4r:'solid')+(corner-radius:1)[Hasn't this gone on too long?]
-			(b4r:'solid')+(corner-radius:2)[Shouldn't you tell them the truth?]
+			(b4r:'solid')+(corner-radius:2)[Hasn't this gone on too long?]
+			(b4r:'solid')+(corner-radius:4)[Shouldn't you tell them the truth?]
 			(b4r:'solid')+(corner-radius:6)[//That you're not really who you say you are??//]
 			```
 
@@ -962,11 +966,11 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			Obviously, unless the hook has a (background:) or a (border:), the rounded corners will not be visible, and this
 			changer will have no real effect.
 
-			If the hook has a (border:), values greater than the border's (border-width:) (which is 1 if it wasn't changed)
+			If the hook has a (border:), values greater than the border's (border-width:) (which is 2 if it wasn't changed)
 			will cause the interior of the element to become constrained by the curvature of the corners, as the
-			rectangle's corners get cut off. Because of this, this macro also adds a slight amount of interior
-			padding (distance between the border and the contained text) equal to 1px (1 pixel) multiplied by the
-			passed-in number, unless another changer (such as (css:)) provided a different padding value.
+			rectangle's corners get cut off. Because of this, this macro also adds interior padding (distance between the
+			border and the contained text) equal to each of the passed-in numbers, unless another changer (such as (css:))
+			provided a different padding value.
 
 			See also:
 			(border:), (background:), (border-size:)
@@ -978,7 +982,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			(_, ...radii) => ChangerCommand.create("corner-radius", radii),
 			(d, ...radii) => {
 				d.styles.push({
-					"border-radius": radii.map(r => (r*8) + "px").join(' '),
+					"border-radius": radii.map(r => r + "px").join(' '),
 					padding() { return this.style.padding || radii.map(r => r + "px").join(' '); },
 				});
 				return d;

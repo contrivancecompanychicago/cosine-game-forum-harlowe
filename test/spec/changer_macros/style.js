@@ -489,10 +489,10 @@ describe("style changer macros", function() {
 				});
 			});
 		});
-		it("applies a default border width of 8px, unless another changer applied another value", function(done) {
+		it("applies a default border width of 2px, unless another changer applied another value", function(done) {
 			var hook = runPassage("(border:'ridge')[Ridge.]").find('tw-hook');
 			setTimeout(function() {
-				expect(hook[0].style.borderWidth).toMatch("8px");
+				expect(hook[0].style.borderWidth).toMatch("2px");
 				hook = runPassage("(Css:'border-width:10px')+(border:'ridge')[Ridge.]").find('tw-hook');
 				setTimeout(function() {
 					expect(hook[0].style.borderWidth).toMatch("10px");
@@ -529,10 +529,10 @@ describe("style changer macros", function() {
 		it("is aliased as (b4r-size:)", function() {
 			expect("(print:(b4r-size:3) is (border-size:3))").markupToPrint('true');
 		});
-		it("multiplies the default border width of 8px by that number", function(done) {
+		it("multiplies the default border width of 1px by that number", function(done) {
 			var hook = runPassage("(border-size:1.9)+(border:'ridge')[Ridge.]").find('tw-hook');
 			setTimeout(function() {
-				expect(hook[0].style.borderWidth).toMatch("15.2px");
+				expect(hook[0].style.borderWidth).toMatch("1.9px");
 				done();
 			});
 		});
@@ -571,10 +571,10 @@ describe("style changer macros", function() {
 			expect("(print:(corner-radius:1,1,1,1))").not.markupToError();
 			expect("(print:(corner-radius:1,1,1,1,1))").markupToError();
 		});
-		it("applies a border-radius equal to 8px multipled by the given number", function(done) {
+		it("applies a border-radius equal to 1px multipled by the given number", function(done) {
 			var hook = runPassage("(corner-radius:1.9)+(border:'ridge')[Ridge.]").find('tw-hook');
 			setTimeout(function() {
-				expect(hook[0].style.borderRadius).toMatch("15.2px");
+				expect(hook[0].style.borderRadius).toMatch("1.9px");
 				done();
 			});
 		});
