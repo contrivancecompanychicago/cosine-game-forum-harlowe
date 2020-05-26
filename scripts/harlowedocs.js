@@ -120,15 +120,15 @@ table:not(.datamap) tr { border-top:1px solid #ccc; }
 table:not(.datamap) tr:nth-child(2n),thead { background:#eee; }
 table:not(.datamap) th,table:not(.datamap) td { border-left:1px solid #ccc; padding:4px; text-align:left; }
 tfoot { background:#e3e3e3; }
-h1,h2,h3,h4,h5,h6 { border-bottom:solid 1px #ddd; color:#000; font-weight:400; line-height:1em; margin:0; padding-top:1rem; }
-h4,h5,h6 { font-weight:700; }
-h1 { font-size:2.5em; }
-h2 { font-size:2em; }
-h3 { font-size:1.5em; }
-h4 { font-size:1.2em; }
-h5 { font-size:1em; }
-h6 { font-size:.9em; }
-h1,h2 { padding-top:2rem; padding-bottom:5px; }
+main h1,main h2,main h3,main h4,main h5,main h6 { border-bottom:solid 1px #ddd; font-weight:400; line-height:1em; margin:0; padding-top:1rem; }
+main h4,main h5,main h6 { font-weight:700; }
+main h1 { font-size:2.5em; }
+main h2 { font-size:2em; }
+main h3 { font-size:1.5em; }
+main h4 { font-size:1.2em; }
+main h5 { font-size:1em; }
+main h6 { font-size:.9em; }
+main h1,main h2 { padding-top:2rem; padding-bottom:5px; }
 
 /* Nav bar */
 nav { position:fixed; width:15vw; max-width: 20vw; top:2.5vh;left:2.5vw; bottom:5vh; overflow-y:scroll; border:1px solid #888; padding:1rem; margin-bottom:2em; font-size:90% }
@@ -171,11 +171,11 @@ table:not(.datamap) :not(pre) > code { white-space: pre-wrap; }
 :hover > .heading_link::before { visibility:visible; }
 
 /* Preview */
-#preview { display:none; z-index:20; position: fixed; width: 25vw; height:45vh; right:2vw; top: 10vh; overflow-y:scroll; border: 1px double #888; font-size:16px; }
-@media screen and (max-width: 1200px) { #preview, .previewButton, #previewCode { display:none; } }
+#preview { display:none; z-index:21; position: fixed; width: 25vw; height:45vh; right:2vw; top: 10vh; overflow-y:scroll; border: 1px double #888; font-size:16px; transition: width 0.8s; }
+@media screen and (max-width: 1200px) { #preview, .previewButton, #previewCode, #fullPreviewBar { display:none; } }
 html:not(.night) #preview tw-story { background-color:white; color:black }
-#previewCode { display:none; position:fixed; width:25vw; height:30vh; right: 2vw; bottom: 10vh; overflow:scroll; border: 1px double #888; }
-.CodeMirror { height: 100% !important; width:100% !important; }
+#previewCode { display:none; z-index:20; position:fixed; width:25vw; height:30vh; right: 2vw; bottom: 10vh; overflow:scroll; border: 1px double #888; transition: width 0.8s; }
+.CodeMirror { height: 100% !important; width:100% !important; background-color:white; }
 .previewCodeButton { font-size:200%; padding: 0.2rem 0.9rem; }
 html.night .previewCodeButton { color:white; }
 #preview tw-debugger { position: absolute; padding: 0; min-height: 0; box-sizing:border-box; border-top:none; min-width: 80%; }
@@ -183,6 +183,13 @@ html.night .previewCodeButton { color:white; }
 
 /* Kludge for the (text-style:) macro */
 t-s::before { content: 'Example text'; }
+
+/* Fullscreen preview */
+#fullPreviewBar { position:fixed; right: 27vw; top: 10vh; height: 80vh; width: 16px; cursor:pointer; background: hsla(0,0%,50%,0.25); border-left: solid 1px hsla(0,0%,0%,0.25); transition: right 0.8s; }
+#fullPreviewBar:hover { background: hsla(0,0%,50%,0.5); border-left: solid 1px hsla(0,0%,0%,0.5); }
+html.fullPreview main, html.fullPreview nav { opacity: 0.05; }
+html.fullPreview #preview, html.fullPreview #previewCode { width:95vw; }
+html.fullPreview #fullPreviewBar { right: 97vw; }
 
 /* Highlighting */
 ${highlighting}
@@ -213,7 +220,8 @@ Or, type some Harlowe code in this text area, and click ▶ to see it render.
 \\(set: _style to (text-style:"buoy"), $word to "this")(enchant:$word, _style)\\
 
 This panel ↓ will show any variables that are set by the code.
-</textarea><div class="previewButton previewCodeButton"></div></div>
+</textarea><div class="previewButton previewCodeButton" title="Run this Harlowe code."></div></div>
+<div id=fullPreviewBar></div>
 <main>${outputFile}
 <p><small>This manual was generated at: ${new Date}</small></p>
 </main>
@@ -241,8 +249,14 @@ try { cm.setOption('mode','harlowe-3'); } catch(e) {}
 /* Night Mode and Preview Buttons */
 html.on('click', '#night', function() { html.addClass('night'); $('#previewCode').addClass('theme-dark'); })
     .on('click', '#day',   function() { html.removeClass('night'); $('#previewCode').removeClass('theme-dark'); })
+    .on('click', '#fullPreviewBar', function() {
+        html.addClass('fullPreview')
+            .on('click.previewOff', function(e) {
+                if (!(e.target.compareDocumentPosition(document) & 1) && !$(e.target).parents('#previewCode, #preview').length) { html.removeClass('fullPreview').off('.previewOff') }
+            });
+    })
     .on('click', '.previewButton:not(.previewCodeButton)', function(e) { previewPassage(e.target.parentNode.textContent.replace(/\\u200B/g,'')); });
-$('pre > code').append("<div class='previewButton'></div>");
+$('pre > code').append("<div class='previewButton' title='Run this Harlowe code.'></div>");
 }</script>
 `;
 /*

@@ -531,7 +531,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Also known as: (lcha:)
 
 			This macro creates a colour using three values in the CIELAB colour model - a lightness (l) percentage,
-			a chroma (c) value, and a hue (h) angle in degrees - , and, optionally, the transparency
+			a chroma (c) value, and a hue (h) angle in degrees, and, optionally, the transparency
 			(alpha, or a) percentage, which is a fractional value between 0 (fully transparent)
 			and 1 (fully visible).
 
@@ -879,7 +879,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 
 			Details:
 			This macro is intended to resemble the "cond" function in Lisp, as well as the "ternary" operator in numerous other
-			programming languages.
+			programming languages. It also might remind you of the values given to (dm:) - a piece of metadata, followed by its matching
+			data - except that (dm:) ties names to data, whereas this ties conditions to data.
 
 			If only one value was given to (cond:), then that value will be returned as-is.
 

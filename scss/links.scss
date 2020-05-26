@@ -53,17 +53,17 @@ tw-broken-link {
 }
 
 .enchantment-mouseover {
-	border-bottom: 1px dashed #999;
+	border-bottom: 2px dashed #999;
 }
 .enchantment-mouseoverblock {
-	border: 1px dashed #999;
+	border: 2px dashed #999;
 	display:block;
 }
 
 .enchantment-mouseout, .enchantment-mouseoutblock {
 	border: hsla(200,50%,50%,0.6) 1px solid;
 	&:hover {
-		background-color: hsla(200,50%,50%,0.25);
+		background-color: hsla(200,25%,75%,0.75);
 		border: transparent 1px solid;
 		border-radius: 0.2em;
 	}

@@ -10,6 +10,9 @@ describe("the (hook:) macro", function () {
 		expect("(hook:'A')").markupToError();
 		expect("(hook:'A')[]").not.markupToError();
 	});
+	it("errors when given an empty string", function() {
+		expect("(hook:'')[]").markupToError();
+	});
 	it("gives a name to the hook", function (){
 		runPassage("(hook:'grault')[foo]");
 		expect($('tw-passage').find('tw-hook').attr('name')).toBe('grault');

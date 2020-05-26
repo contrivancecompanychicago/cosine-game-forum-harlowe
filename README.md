@@ -30,7 +30,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
  * The behaviour of `(text-colour:)` regarding links has been changed. Formerly, `(text-colour:)` couldn't change the colour of links inside hooks unless it was used with `(enchant:)` and wasn't used with `?passage` or `?page`. This meant that changing the colour of individual links was, unintuitively, not possible without `(enchant:)`. Now, a simpler rule is in place: `(text-colour:)` will always change links' colours, unless it's used with `(enchant: ?passage)` or `(enchant:?page)`. (This exception means that all of `(enchant:)`'s behaviour is unchanged with this release.)
  * The behaviour for multiple `(click:)` macros affecting the same hook (such as in `|A>[B] (click: ?A)[1] (click: ?A)[2]`) has changed to be slightly more intuitive: formerly, as you clicked the hook, the last `(click:)` would activate first (so, `[2]` then `[1]`). Now, they activate from first to last. This also applies to `(mouseover:)` and `(mouseout:)`.
- * Now, the text input box in `(prompt:)` is auto-focused when the dialog appears, allowing the player to type into it without having to click it.
+ * Now, the text input box in `(prompt:)` is wider, and is auto-focused when the dialog appears, allowing the player to type into it without having to click it.
+ * `(hook:)` now gives an error if it's given an empty string.
  * Now, `?hook's links` will contain the hook itself, if it's a link, or has been given a link changer or enchantment.
  * Now, pressing Return or Enter in a `(prompt:)` text input box should submit the text, as if "OK" was clicked.
  * Now, `(enchant:)` can correctly apply `(transition:)` transitions to existing hooks and text. Enchanting an existing hook with a transition will cause it to animate immediately, even if it was already visible - so, it's best used at the top level of passages, and in headers or footers.

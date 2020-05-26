@@ -243,8 +243,8 @@ describe("property indexing", function() {
 		});
 		describe("for hook references", function() {
 			describe("'chars'", function() {
-				it("selects all of the chars in a hook", function() {
-					expect('|a>[foo𐌎arbaz](replace: ?a\'s chars)[1]').markupToPrint("111111111");
+				it("selects all of the non-whitespace chars in a hook", function() {
+					expect('|a>[foo 𐌎ar baz](replace: ?a\'s chars)[1]').markupToPrint("111 111 111");
 					expect('|a>[foobarbaz](replace: ?a\'s chars\'s 1st)[F]').markupToPrint("Foobarbaz");
 					expect('|a>[foo[𐌎ar]<b|baz](enchant: ?a\'s chars,(text-style:"outline"))(enchant: ?b\'s chars\'s 1st,(background:blue))').not.markupToError();
 					expect('|a>[foo](replace: ?a\'s chars\'s 1st\'s chars\'s chars\'s chars)[1]').markupToPrint("1oo");

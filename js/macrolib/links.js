@@ -571,7 +571,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			and is written together with it:
 
 			```
-			"Look, it's important to comment even the simplest code...|extra)[ You might remember what it does now, but not at 4:50 PM on Friday
+			"Look, it's important to comment even the simplest code...|extra)[ You might remember what it does now, but not at 4:50 PM on Friday \
 			afternoon, when you're about to push to production and a runtime error shows up in it.]"
 
 			You (link-reveal:"struggle to listen.")[(show: ?extra)]

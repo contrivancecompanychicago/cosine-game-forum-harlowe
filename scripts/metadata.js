@@ -406,7 +406,7 @@ function processTextTerms(text, name, allow) {
 		/*
 			Convert the minor headings into <h4> elements.
 		*/
-		.replace(/\n([A-Z][\w\?\s\d]+:)\n/g,"\n####$1\n")
+		.replace(/\n([A-Z][\w\,\?\s\d]+:)\n/g,"\n####$1\n")
 		/*
 			Convert "Added in" lines to italics
 		*/

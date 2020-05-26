@@ -57,7 +57,7 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 		Moreover, a few special data names exist.
 		* `chars` (as in `?title's chars`) selects each individual character inside the hook,
 		as if it was in its own hook. This can be used for a variety of text effects - using (enchant:) with `?hook's chars's 1st` can be used to
-		give a hook a styled "drop-cap" without having to explicitly style the leading character.
+		give a hook a styled "drop-cap" without having to explicitly style the leading character. This will NOT select whitespace characters.
 		* `lines` (as in `?passage's lines`) selects individual lines of text within a hook. A line is any run of text or code between line breaks
 		(or the passage's start and end) - a word-wrapped paragraph of prose is thus considered a single "line" as a result.
 		* `links` (as in `?body's links`) is similar in use to `?link`, but only selects links within the hook.
@@ -413,7 +413,9 @@ define(['jquery', 'utils', 'utils/selectors'], ($, Utils, Selectors) => {
 					let arr = [];
 					for (let t of elements.textNodes()) {
 						for (let c of textNodeToChars(t)) {
-							arr.push(c);
+							if (!c.textContent.match(realWhitespace)) {
+								arr.push(c);
+							}
 						}
 					}
 					return $(arr);

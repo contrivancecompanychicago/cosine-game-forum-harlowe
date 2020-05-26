@@ -856,7 +856,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 			
 			Example usage:
 			```
-			{(live: 1s)[
+			{(set:$packedBags to true)(live: 1s)[
 			    (if: $packedBags)[OK, let's go!(stop:)]
 			    (else: )[(either:"Are you ready yet?","We mustn't be late!")]
 			]}

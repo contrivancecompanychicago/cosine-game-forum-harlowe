@@ -986,15 +986,15 @@ define([
 			Consider, first of all, a typical (for:) and (set:) loop such as the following:
 			```
 			{(set:$allNames to "")
-			(for: each _name, ...(history: ))[
-			    (set:$allNames to it + "/" _name)
+			(for: each _name, ...(history: ), "here")[
+			    (set:$allNames to it + "/" + _name)
 			]}
-			You've visited: $allNames
+			CURRENT DISK PATH: $allNames
 			```
 			This can be rewritten using (folded:) as follows. While this version may seem a little harder to read if you're not used to it, it
 			allows you to accomplish the same thing in a single line, by immediately using the macro's provided value without a variable:
 			```
-			You've visited: (folded: _name making _allNames via _allNames + "/" + _name, ...(history: )))
+			CURRENT DISK PATH: (folded: _name making _allNames via _allNames + "/" + _name, ...(history: ), "here")
 			```
 			This macro uses a lambda (which is the "temp variable `making` another temp variable `via` expression" expression) to run the
 			expression using every provided value, much like those repeated (set:) calls.
@@ -1002,7 +1002,8 @@ define([
 			If you need to perform this operation at various different times in your story, you may wish to (set:) the lambda into a variable,
 			so that you, for instance, might need only write:
 			```
-			You've visited: (folded: $namesWithForwardSlashes, ...(history: )))
+			(set: $namesWithForwardSlashes to _name making _allNames via _allNames + "/" + _name)
+			CURRENT DISK PATH: (folded: $namesWithForwardSlashes, ...(history: ), "here")
 			```
 
 			Details:
@@ -1491,6 +1492,7 @@ define([
 			create "momentary" datamaps which are used only in some operation. For instance,
 			to add several values to a datamap at once, you can do something like this:
 			```
+			(set: $map to (dm:))
 			(set: $map to it + (dm: "Name 1", "Value 1", "Name 2", "Value 2"))
 			```
 

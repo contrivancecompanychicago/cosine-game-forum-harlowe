@@ -207,6 +207,8 @@
 			This has margins 3/4 left, 1/4 right
 			  =><=====
 			This has margins 1/6 left, 5/6 right.
+
+			(Try expanding this code preview using the bar on the left.)
 			```
 
 			#section
@@ -235,6 +237,8 @@
 			This is in the right column, which has a right margin of about 5 letters wide. It is twice as wide as the left column.
 			  |==|
 			This text is not in columns, but takes up the entire width, as usual.
+
+			(Try expanding this code preview using the bar on the left.)
 			```
 
 			You can create nested columns by enclosing the inner set of columns in an unnamed hook, like so:
@@ -333,6 +337,7 @@
 			in your passage's prose.
 
 			```
+			(set: $plushieName to "Whispy", _heldItem to "briefcase")
 			Your beloved plushie, $plushieName, awaits you after a long work day.
 			You put your _heldItem down and lift it for a snuggle.
 			```
@@ -341,6 +346,7 @@
 			then the variable can be attached to a hook to apply the changer to the hook:
 
 			```
+			(set: $robotText to (font:"Courier New"), _assistantText to (size:0.8))
 			$robotText[Good golly! Your flesh... it's so soft!]
 			_assistantText[Don't touch me, please! I'm ticklish.]
 			```

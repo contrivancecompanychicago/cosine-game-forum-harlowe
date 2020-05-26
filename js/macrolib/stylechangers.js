@@ -16,6 +16,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		(t8n:), (text-rotate:), (hook:), (click:), (link:), (for:), (if:), and more.
 
 		```
+		(set: $sawDuckHarbinger to true)
 		(if: $sawDuckHarbinger)[You still remember spying the black duck, harbinger of doom.]
 		(t8n-depart: "dissolve")[[Return to the present]]
 		```
@@ -33,7 +34,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 		Changers can be combined using the `+` operator: `(text-colour: red) + (font: "Courier New")[This text is red Courier New.]`
 		styles the text using both changers at once. These combined changers, too, can be saved in variables or used with (enchant:).
 		```
-		(set: _alertText to (font:"Courier New") + (text-style: "shudder")+(text-colour:"#e74"))
+		(set: _alertText to (font:"Courier New") + (text-style: "buoy")+(text-colour:"#e74"))
 		_alertText[Social alert: no one read the emails you sent yesterday.]
 		_alertText[Arithmetic error: I forgot my seven-times-tables.]
 		```
@@ -474,20 +475,24 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 
 		/*d:
 			(hook: String) -> Changer
-			A command that allows the author to give a hook a computed tag name.
+			A changer that allows the author to give a hook a computed tag name.
 			
 			Example usage:
-			`(hook: $name)[]`
+			`(hook: $name)[]` gives the hook a name equal to what string is in the $name variable.
 			
 			Rationale:
-			You may notice that it isn't possible to attach a nametag to hooks with commands
-			already attached - in the case of `(font:"Museo Slab")[The Vault]<title|`, the nametag results
-			in an error. This command can be added with other commands to allow the hook to be named:
+			It's possible to add together changers, save them in variables, and use them in various locations
+			throughout your story. You may, after doing so, want to give a common name to each of those hooks that
+			have that variable attached, so that, for instance, the (append:) macro can act on them as one.
+			This command can be added to those changers to allow the hooks to be named:
 			`(font:"Museo Slab")+(hook: "title")`.
 			
-			Furthermore, unlike the nametag syntax, (hook:) can be given any string expression:
+			Also, unlike the nametag syntax for hook names, (hook:) can be given any string expression:
 			`(hook: "eyes" + (string:$eyeCount))` is valid, and will, as you'd expect, give the hook
 			the name of `eyes1` if `$eyeCount` is 1.
+
+			Details:
+			If an empty string is given to this macro, an error will be produced.
 
 			See also:
 			(hidden:)
@@ -496,7 +501,12 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			#styling
 		*/
 		("hook",
-			(_, name) => ChangerCommand.create("hook", [name]),
+			(_, name) => {
+				if (!name) {
+					return TwineError.create("datatype", "(hook:) names can't be empty strings.");
+				}
+				return ChangerCommand.create("hook", [name]);
+			},
 			(d, name) => d.attr.push({name: name}),
 			[String]
 		)
@@ -833,26 +843,26 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			third is the **bottom** edge (6 o'clock), fourth is the **left** edge (9 o'clock). You can stop giving
 			values anywhere. If an edge doesn't have a value, then it will use whatever the opposite edge's value is.
 
-			*`(border: "solid", "dotted", "dashed", "double")` provides all four sides.
-			*`(border: "solid", "dotted", "dashed")` stops at the bottom edge, so the left edge will use "dotted", to match
+			* `(border: "solid", "dotted", "dashed", "double")` provides all four sides.
+			* `(border: "solid", "dotted", "dashed")` stops at the bottom edge, so the left edge will use "dotted", to match
 			the right edge.
-			*`(border: "solid", "dotted")` stops at the right edge, so the bottom edge will use "solid", to match
+			* `(border: "solid", "dotted")` stops at the right edge, so the bottom edge will use "solid", to match
 			the top edge, and the left edge will use "dotted", to match the right edge.
-			*`(border: "solid")` causes all of the edges to use "solid".
+			* `(border: "solid")` causes all of the edges to use "solid".
 
 			This macro affects the style of the border, and accepts the following border names:
 
 			| String | Example
 			|---
 			| "none" | Example text
-			| "solid" | <span style="border: 8px solid black;margin:2px;display:inline-block">Example text</span>
-			| "dotted" | <span style="border: 8px dotted black;margin:2px;display:inline-block">Example text</span>
-			| "dashed" | <span style="border: 8px dashed black;margin:2px;display:inline-block">Example text</span>
-			| "double" | <span style="border: 8px double black;margin:2px;display:inline-block">Example text</span>
-			| "groove" | <span style="border: 8px groove black;margin:2px;display:inline-block">Example text</span>
-			| "ridge" | <span style="border: 8px ridge black;margin:2px;display:inline-block">Example text</span>
-			| "inset" | <span style="border: 8px inset black;margin:2px;display:inline-block">Example text</span>
-			| "outset" | <span style="border: 8px outset black;margin:2px;display:inline-block">Example text</span>
+			| "solid" | <span style="border: 2px solid black;margin:2px;display:inline-block">Example text</span>
+			| "dotted" | <span style="border: 2px dotted black;margin:2px;display:inline-block">Example text</span>
+			| "dashed" | <span style="border: 2px dashed black;margin:2px;display:inline-block">Example text</span>
+			| "double" | <span style="border: 2px double black;margin:2px;display:inline-block">Example text</span>
+			| "groove" | <span style="border: 2px groove black;margin:2px;display:inline-block">Example text</span>
+			| "ridge" | <span style="border: 2px ridge black;margin:2px;display:inline-block">Example text</span>
+			| "inset" | <span style="border: 2px inset black;margin:2px;display:inline-block">Example text</span>
+			| "outset" | <span style="border: 2px outset black;margin:2px;display:inline-block">Example text</span>
 
 			The "none" type can be used to remove a border that another changer may have included.
 
@@ -951,17 +961,17 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 
 			Example usage:
 			```
-			(b4r:'solid')+(corner-radius:2)[Hasn't this gone on too long?]
-			(b4r:'solid')+(corner-radius:4)[Shouldn't you tell them the truth?]
-			(b4r:'solid')+(corner-radius:6)[//That you're not really who you say you are??//]
+			(b4r:'solid')+(corner-radius:8)[Hasn't this gone on too long?]
+			(b4r:'solid')+(corner-radius:12)[Shouldn't you tell them the truth?]
+			(b4r:'solid')+(corner-radius:16)[//That you're not really who you say you are??//]
 			```
 
 			Details:
-			The border macros accept up to four values. These values refer to *sides of a rectangle*, going clockwise
-			from the top: the first value is the **top** edge (12 o'clock), second is the **right** edge (3 o'clock),
-			third is the **bottom** edge (6 o'clock), fourth is the **left** edge (9 o'clock). You can stop giving
-			values anywhere. If an edge doesn't have a value, then it will use whatever the opposite edge's value is
-			(or the top value if it's the only one).
+			The border macros accept up to four values. These values refer to *corners of a rectangle*, going clockwise
+			from the top: the first value is the **top-left** corner (10 o'clock), second is the **top-right** corner (2 o'clock),
+			third is the **bottom-right** corner (4 o'clock), fourth is the **bottom-left** corner (8 o'clock). You can stop giving
+			values anywhere. If a corner doesn't have a value, then it will use whatever the opposite corner's value is
+			(or the top-left value if it's the only one).
 
 			Obviously, unless the hook has a (background:) or a (border:), the rounded corners will not be visible, and this
 			changer will have no real effect.
@@ -1654,9 +1664,9 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			This takes a string of inline CSS, and applies it to the hook, as if it
 			were a HTML "style" property.
 			
-			Usage example:
+			Example usage:
 			```
-			(css: "background-color:indigo")
+			(css: "background-color:indigo;color:white;")[What's going on? Where am I?]
 			```
 			
 			Rationale:

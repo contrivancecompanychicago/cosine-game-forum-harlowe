@@ -537,9 +537,9 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 			it visually resembles a link, and that clicking it causes the attached hook to be revealed.
 
 			Example usage:
-			* `There is a small dish of water. (click: "dish")[Your finger gets wet.]` causes "dish" to become a link that,
-			when clicked, reveals "Your finger gets wet." at the location the macro is at.
-			* `[Fie and fuggaboo!]<shout| (click: ?shout)[Blast and damnation!]` does something similar to every hook named `<shout|`.
+			```
+			There is a small dish of water. (click: "dish")[Your finger gets wet.]
+			```
 
 			Rationale:
 
@@ -595,6 +595,12 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 			when the mouse pointer merely hovers over it. The target is also styled differently (with a dotted underline),
 			to denote this hovering functionality.
 
+			Example usage:
+			```
+			|1>[Hey, c'mover here, cutie.]
+			(mouseover:?1)[Wanna merge brains over this printer cable?]
+			```
+
 			Rationale:
 
 			(click:) and (link:) can be used to create links in your passage that reveal text or, in conjunction with
@@ -642,6 +648,12 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 			A variation of (click:) that, instead of showing the hook when the target is clicked, shows it
 			when the mouse pointer moves over it, and then leaves. The target is also styled differently (a translucent cyan frame),
 			to denote this hovering functionality.
+
+			Example usage:
+			```
+			|1>[CORE OVERRIDE]
+			(mouseout:?1)[Core overridden. The programs are going wild.]
+			```
 
 			Rationale:
 
@@ -744,7 +756,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		Example usage:
 		```
 		My deepest secret.
-		(click-replace: "secret")[longing for you].
+		(click-replace: "secret")[longing for you]
 		```
 
 		See also:
@@ -763,7 +775,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		Example usage:
 		```
 		I have nothing to fear.
-		(click-append: "fear")[ but my own hand].
+		(click-append: "fear")[ but my own hand]
 		```
 
 		See also:
@@ -782,7 +794,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		Example usage:
 		```
 		Who stands with me?
-		(click-prepend: "?")[ but my shadow].
+		(click-prepend: "?")[ but my shadow]
 		```
 
 		See also:
@@ -863,7 +875,7 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 		Example usage:
 		```
 		Time to get in your crimchair, plug in your crimphones, power up your crimrig and your crimgrip - the next page in your crimming career awaits.
-		(click-goto: "crim", "Explanation Passage").
+		(click-goto: "crim", "Test")
 		```
 
 		See also:
