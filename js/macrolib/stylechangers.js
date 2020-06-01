@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'datatypes/gradient', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
-($, Macros, Utils, Selectors, Colour, Gradient, ChangerCommand, Lambda, ChangeDescriptor, TwineError) => {
+define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
+($, Macros, Utils, Colour, Gradient, ChangerCommand, Lambda, ChangeDescriptor, TwineError) => {
 
 	/*
 		Built-in hook style changer macros.
@@ -850,7 +850,7 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			the top edge, and the left edge will use "dotted", to match the right edge.
 			* `(border: "solid")` causes all of the edges to use "solid".
 
-			This macro affects the style of the border, and accepts the following border names:
+			This macro affects the style of the border, and accepts the following border names.
 
 			| String | Example
 			|---
@@ -1171,8 +1171,8 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 			This macro only affects the text colour. To change the text background, call upon
 			the (background:) macro.
 
-			This macro will change the colour of links inside the contained hook, with one exception:
-			using (enchant:) to enchant the entire passage (via `?passage` or `?page`) with (text-colour:)
+			This macro will change the colour of links inside the contained hook, with one exception: using
+			(enchant:) to enchant the entire passage (via `?passage` or `?page`) with (text-colour:)
 			will NOT affect links. This is to allow you to re-style the entire story without having to lose
 			the distinct colour of links compared to passage text. You can change the colour of all links using
 			an explicit `(enchant: ?link, (text-colour: $color))`.
@@ -1574,6 +1574,52 @@ define(['jquery','macros', 'utils', 'utils/selectors', 'datatypes/colour', 'data
 					[rest(insensitiveSet(...Object.keys(styleTagNames)))]
 				];
 			})()
+		)
+
+		/*d:
+			(collapse:) -> Changer
+
+			When attached to a hook, this collapses the whitespace within the hook, in the same manner as the collapsing whitespace markup.
+
+			Example usage:
+			* `(collapse:)[This text is (set:$a to 1) collapsed.]`
+			* `(enchant: ?page, (collapse:))`
+
+			Rationale:
+			While the collapsing whitespace markup allows specific sections of passage prose to be collapsed, there are times when you want
+			this functionality available as a changer, such as to style the whole page using (enchant:), or to add it to another changer.
+			This macro provides that functionality.
+
+			Details:
+			Unlike most macros, this takes no values - there is only one way of collapsing whitespace (for now).
+
+			This collapses whitespace in the same manner as the collapsing whitespace markup, so consult its documentation for more information.
+
+			There is no way to reverse this whitespace-collapsing effect - it is permanently removed.
+
+			When this is used with (enchant:) to affect an existing hook, its excess whitespace will be deleted immediately, with no transition.
+			Moreover, the whitespace-collapsing effect is ongoing, not just a once-off effect. This becomes clear when you consider
+			the following code.
+			```
+			(enchant:?1, (collapse:))
+			|1>["Back in time? Is this a time travel story now?"]
+			(append:?1)[
+				he shook his head.
+			]
+			```
+			Because the enchantment is an ongoing effect, the text appended to ?1 will be collapsed, even though it's written outside of the collapsing hook.
+			This would not occur if ?1 was a span of collapsing whitespace markup.
+
+			Added in: 3.1.0
+			#styling
+		*/
+		("collapse",
+			() => ChangerCommand.create("collapse"),
+			(d) => {
+				d.attr.push({ collapsing: true });
+				return d;
+			},
+			[]
 		)
 
 		/*d:

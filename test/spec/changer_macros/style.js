@@ -886,6 +886,100 @@ describe("style changer macros", function() {
 			});
 		});
 	});
+	describe("the (collapse:) macro", function() {
+		function tests(expect) {
+			it("eliminates runs of whitespace between { and }", function() {
+				expect("A(collapse:)[   \n   ]B").markupToPrint("AB");
+			});
+			it("works on whitespace enclosed in elements", function() {
+				expect("A(collapse:)[ '' '' // // ]B").markupToPrint("AB");
+			});
+			it("reduces whitespace between non-whitespace to single spaces", function() {
+				expect("A (collapse:)[ A  \n  B ] B").markupToPrint("A A B B");
+				expect("A(collapse:)[ C ]B").markupToPrint("ACB");
+			});
+			it("leaves other syntax as is", function() {
+				expect("(collapse:)[   ''A ''   ] B").markupToPrint("A B");
+				expect("(collapse:)[A '' B'']").markupToPrint("A B");
+				expect("(collapse:)[''B '' C]").markupToPrint("B C");
+			});
+			it("collapses runs of whitespace between non-whitespace down to a single space", function() {
+				expect("(collapse:)[   A   B   ]").markupToPrint("A B");
+				expect("(collapse:)[   A B   ]").markupToPrint("A B");
+				expect("X(collapse:)[   A   B   ]Y").markupToPrint("XA BY");
+				expect("G(collapse:)[   A  ](collapse:)[ B   ]H").markupToPrint("GA BH");
+			});
+			it("collapses through invisible expressions", function() {
+				expect("(collapse:)[ (set: $r to 1)\n(set: $r to 2) ]").markupToPrint("");
+				expect("(collapse:)[A(set: $r to 1)B]").markupToPrint("AB");
+			});
+			it("works with expressions", function() {
+				expect("(set: $a to '')(set: $b to 'B')(collapse:)[A  $a $b $a C]").markupToPrint("A B C");
+				expect("(set: $a to '')(set: $b to 'B')A(collapse:)[ $a $b $a ]C").markupToPrint("ABC");
+				expect("A(collapse:)[ (print:'') (print:'B') (print:'') ]C").markupToPrint("ABC");
+			});
+			it("won't affect text inside macros", function() {
+				expect("(collapse:)[(print:'Red   Blue''s length)]").markupToPrint("10");
+			});
+			it("won't affect text outputted by expressions", function() {
+				expect("(collapse:)[(set: $a to 'Red   Blue')(print:$a)]").markupToPrint("Red   Blue");
+			});
+			it("won't affect text inside verbatim guards", function() {
+				expect("(collapse:)[   `   `   ]").markupToPrint("   ");
+				expect("(collapse:)[   `  A C  `   ]").markupToPrint("  A C  ");
+				expect("(collapse:)[A`   `B]").markupToPrint("A   B");
+				expect("(collapse:)[A `   ` B]").markupToPrint("A     B");
+			});
+			it("will affect text inside nested hooks", function() {
+				expect("(collapse:)[ A(if:true)[      ]B ]").markupToPrint("A B");
+				expect("(collapse:)[ X(if:false)[      ]Y ]").markupToPrint("XY");
+				expect("(collapse:)[ C (if:true)[    ] D ]").markupToPrint("C D");
+				expect("(collapse:)[ E (if:true)[  F  ] G ]").markupToPrint("E F G");
+				expect("(collapse:)[ H (if:true)[  I  J ] K ]").markupToPrint("H I J K");
+			});
+			it("doesn't needlessly eliminate preceding and trailing spaces in nested hooks", function() {
+				expect("(collapse:)[A[ A]<1| [B ]<1|B]").markupToPrint("A A B B");
+				expect("(collapse:)[E['' ''E]<1| [B'' '']<1|B]").markupToPrint("E E B B");
+				expect("(collapse:)[''C''[ ''C'']<1| [''D'' ]<1|''D'']").markupToPrint("C C D D");
+				expect("(collapse:)[E [ E]<1| [F ]<1| F]").markupToPrint("E E F F");
+				expect("(collapse:)[''G'' [ ''G'']<1| [''H'' ]<1| ''H'']").markupToPrint("G G H H");
+				expect("(collapse:)[I'' ''['' ''I]<1| [J'' '']<1|'' ''J]").markupToPrint("I I J J");
+			});
+			it("works with (replace:) inserting text across collapsed regions", function() {
+				expect("(collapse:)[[]<1|(replace:?1)[Good     golly!]]").markupToPrint("Good golly!");
+				expect("(collapse:)[[]<1|](collapse:)+(replace:?1)[Good     golly!]").markupToPrint("Good golly!");
+			});
+			it("works with links in nested hooks", function() {
+				expect("(collapse:)[A[ [[B]]]<1|]").markupToPrint("A B");
+				expect("(collapse:)[[[[D]] ]<1|C]").markupToPrint("D C");
+				expect("(collapse:)[E[ [[F]] ]<1|G]").markupToPrint("E F G");
+			});
+			it("will not affect text inside verbatim guards inside nested hooks", function() {
+				expect("(collapse:)[ A (if:true)[`    `] B ]").markupToPrint("A      B");
+				expect("(collapse:)[ C (if:true)[ ` `B` ` ] D ]").markupToPrint("C  B  D");
+			});
+			it("works even when empty", function() {
+				expect("A(collapse:)[]B").markupToPrint("AB");
+			});
+		}
+		tests(expect);
+		it("leaves raw HTML <br> tags as is", function() {
+			var p = runPassage("(collapse:)[\nA<br>\n<br>B\n]");
+			expect(p.find('br,tw-consecutive-br').length).toBe(2);
+		});
+		// The semantics of (enchant:) mean that this isn't applicable.
+		it("works with (replace:) inserting text into and out of collapsed regions", function() {
+			expect("(collapse:)[]<1|(replace:?1)[Good     golly!]").markupToPrint("Good     golly!");
+			expect("[]<2|(collapse:)[(replace:?2)[Good \n golly!]]").markupToPrint("Good golly!");
+			expect("[]<2|(collapse:)+(replace:?2)[Good \n golly!]").markupToPrint("Good golly!");
+		});
+		describe("with (enchant:)", function() {
+			tests(function(str) {
+				return expect(str.replace("(collapse:)", "(hook:'garply')") + "(enchant:?garply,(collapse:))");
+			});
+		});
+	});
+
 	it("can compose arbitrarily deep", function(done) {
 		var align = runPassage(
 			"(set:$c1 to (align:'==>'))"

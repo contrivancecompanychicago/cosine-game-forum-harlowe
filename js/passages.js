@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils/naturalsort', 'utils', 'utils/selectors', 'markup', 'renderer', 'internaltypes/twineerror'], ($, NaturalSort, {unescape,onStartup,insensitiveName}, Selectors, TwineMarkup, Renderer, TwineError) => {
+define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internaltypes/twineerror'], ($, NaturalSort, {unescape,onStartup,insensitiveName}, TwineMarkup, Renderer, TwineError) => {
 	const {assign} = Object;
 	/*
 		Passages
@@ -185,7 +185,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/selectors', 'markup', 're
 		read every <tw-passagedata> from the <tw-storydata> HTML and store them in Passages until then.
 	*/
 	onStartup(() => {
-		Array.from($(Selectors.storyData + " > " + Selectors.passageData)).forEach(e => {
+		Array.from($("tw-storydata > tw-passagedata")).forEach(e => {
 			e = $(e);
 			Passages.set(e.attr('name'), new Passage(e));
 		});

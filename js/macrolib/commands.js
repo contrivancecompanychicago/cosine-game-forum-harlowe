@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'renderer', 'engine', 'internaltypes/twineerror', 'datatypes/hookset', 'datatypes/lambda', 'datatypes/varbind', 'utils/operationutils', 'utils/dialog'],
-($, requestAnimationFrame, Macros, Utils, Selectors, State, Passages, Renderer, Engine, TwineError, HookSet, Lambda, VarBind, {printBuiltinValue}, Dialog) => {
+define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 'internaltypes/twineerror', 'datatypes/hookset', 'datatypes/lambda', 'datatypes/varbind', 'utils/operationutils', 'utils/renderutils'],
+($, requestAnimationFrame, Macros, Utils, State, Passages, Renderer, Engine, TwineError, HookSet, Lambda, VarBind, {printBuiltinValue}, {dialog}) => {
 	
 	/*d:
 		Command data
@@ -945,7 +945,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 						showing a TwineError, a developer-facing error, seems incorrect. So, instead
 						a (confirm:) is shown, offering to delete the data.
 					*/
-					const d = Dialog({
+					const d = dialog({
 							message: "Sorry to interrupt... The story tried to load saved data, but there was a problem.\n"
 								+ result.message
 								+ "\n\nThat data might have been saved from a different version of this story. Should I delete it?"
@@ -1000,7 +1000,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 		("alert",
 			() => {},
 			(/* no cd because this is attachable:false */ section, message) => {
-				Utils.storyElement.append(Dialog({message, defaultValue:false, cancelCallback: () => section.unblock()}));
+				Utils.storyElement.append(dialog({message, defaultValue:false, cancelCallback: () => section.unblock()}));
 				section.stackTop.blocked = true;
 			},
 			[String], false)
@@ -1264,7 +1264,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 						"Please rewrite this without putting such macros here."
 					);
 				}
-				const d = Dialog({
+				const d = dialog({
 					message,
 					defaultValue,
 					cancelCallback() {
@@ -1318,7 +1318,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'utils/selectors',
 						"Please rewrite this without putting such macros here."
 					);
 				}
-				Utils.storyElement.append(Dialog({
+				Utils.storyElement.append(dialog({
 					message, defaultValue: false, cancelCallback: () => section.unblock(false), confirmCallback: () => section.unblock(true)
 				}));
 			},

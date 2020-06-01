@@ -120,15 +120,15 @@ table:not(.datamap) tr { border-top:1px solid #ccc; }
 table:not(.datamap) tr:nth-child(2n),thead { background:#eee; }
 table:not(.datamap) th,table:not(.datamap) td { border-left:1px solid #ccc; padding:4px; text-align:left; }
 tfoot { background:#e3e3e3; }
-main h1,main h2,main h3,main h4,main h5,main h6 { border-bottom:solid 1px #ddd; font-weight:400; line-height:1em; margin:0; padding-top:1rem; }
-main h4,main h5,main h6 { font-weight:700; }
-main h1 { font-size:2.5em; }
-main h2 { font-size:2em; }
-main h3 { font-size:1.5em; }
-main h4 { font-size:1.2em; }
-main h5 { font-size:1em; }
-main h6 { font-size:.9em; }
-main h1,main h2 { padding-top:2rem; padding-bottom:5px; }
+body>:not(#preview) h1,body>:not(#preview) h2,body>:not(#preview) h3,body>:not(#preview) h4,body>:not(#preview) h5,body>:not(#preview) h6 { border-bottom:solid 1px #ddd; font-weight:400; line-height:1em; margin:0; padding-top:1rem; }
+body>:not(#preview) h4,body>:not(#preview) h5,body>:not(#preview) h6 { font-weight:700; }
+body>:not(#preview) h1 { font-size:2.5em; }
+body>:not(#preview) h2 { font-size:2em; }
+body>:not(#preview) h3 { font-size:1.5em; }
+body>:not(#preview) h4 { font-size:1.2em; }
+body>:not(#preview) h5 { font-size:1em; }
+body>:not(#preview) h6 { font-size:.9em; }
+body>:not(#preview) h1,body>:not(#preview) h2 { padding-top:2rem; padding-bottom:5px; }
 
 /* Nav bar */
 nav { position:fixed; width:15vw; max-width: 20vw; top:2.5vh;left:2.5vw; bottom:5vh; overflow-y:scroll; border:1px solid #888; padding:1rem; margin-bottom:2em; font-size:90% }

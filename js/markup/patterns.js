@@ -241,7 +241,7 @@
 			(Try expanding this code preview using the bar on the left.)
 			```
 
-			You can create nested columns by enclosing the inner set of columns in an unnamed hook, like so:
+			You can create nested columns by enclosing the inner set of columns in an unnamed hook, like so.
 			```
 			(enchant:?passage, (text-size:0.6))
 			|==
@@ -642,6 +642,9 @@
 			If the markup contains a (replace:) command attached to a hook, the hook will still have its whitespace
 			collapsed, even if it is commanded to replace text outside of the markup.
 
+			You may apply this collapsing effect to specific hooks using the (collapse:) macro. In particular,
+			if you wish for the entire page's whitespace to collapse, consider using (enchant:) and (collapse:).
+
 			If you only want to remove specific line breaks, consider the escaped line break markup.
 
 			#whitespace
@@ -691,7 +694,7 @@
 
 			Built in names:
 
-			There are five special built-in hook names, ?Page, ?Passage, ?Sidebar, ?Link and ?Visited, which, in addition to selecting named hooks,
+			There are four special built-in hook names, ?Page, ?Passage, ?Sidebar, and ?Link, which, in addition to selecting named hooks,
 			also affect parts of the page that you can't normally style with macros. They can be styled using the (enchant:) macro.
 
 			* `?Page` selects the page element (to be precise, the `<tw-story>` element) and using it with the (background:) macro lets you
@@ -702,9 +705,6 @@
 			(replace:) or (append:) to insert your own text into it.
 			* `?Link` selects all of the links (passage links, and those created by (link:) and other macros) in the passage. This is similar to the
 			`links` data value for HookName data.
-			* `?Visited` is a variant of `?Link` which only selects links to visited passages. This allows you to affect and re-style these links
-			in particular. These links normally have a different colour to normal links, but if you apply a colour to `?Link`, that colour is
-			replaced. You can restore the distinct colour these links have by applying a colour to `?Visited` afterward.
 
 			(Note that, as mentioned above, if you use these names for your own hooks, such as by creating a named hook like `|passage>[]`,
 			then they will, of course, be included in the selections of these names.)
@@ -760,24 +760,24 @@
 			This text is outside the hook.
 			```
 
-			The (font:) macro is one of several macros which produces a special styling command, instead of a basic
-			data type like a number or a string. In this case, the command changes the attached hook's font to Courier New,
+			The (font:) macro is one of several macros which produces a special styling changer, instead of a basic
+			data type like a number or a string. In this case, the changer changes the attached hook's font to Courier New,
 			without modifying the other text.
 
-			You can save this command to a variable, and then use it repeatedly, like so:
+			You can save this changer to a variable, and then use it repeatedly, like so.
 			```
 			(set: $x to (font: "Tahoma"))
 			$x[This text is in Tahoma.]
 			$x[As is this text.]
 			```
 
-			The basic (if:) macro is used by attaching it to a hook, too:
+			The basic (if:) macro is used by attaching it to a hook, too.
 
 			```
 			(if: $x is 2)[This text is only displayed if $x is 2.]
 			```
 
-			For more information about command macros, consult the descriptions for each of them in turn.
+			For more information about changer macros, consult the descriptions for each of them in turn.
 
 			#coding 3
 		*/

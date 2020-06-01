@@ -88,13 +88,6 @@ describe("collapsing whitespace syntax", function() {
 			"A B C"
 		);
 	});
-	it("can collapse spaces in empty elements", function() {
-		expect(
-			"{A '' '' B}"
-		).markupToPrint(
-			"A B"
-		);
-	});
 	it("collapses through invisible expressions", function() {
 		expect(
 			"{ (set: $r to 1)\n(set: $r to 2) }"
@@ -190,7 +183,7 @@ describe("collapsing whitespace syntax", function() {
 	});
 	it("works with (replace:) inserting text into and out of collapsed regions", function() {
 		expect("{[]<1|}(replace:?1)[Good     golly!]").markupToPrint("Good     golly!");
-		expect("[]<2|{(replace:?2)[Good     golly!]}").markupToPrint("Good golly!");
+		expect("[]<2|{(replace:?2)[Good  \n   golly!]}").markupToPrint("Good golly!");
 	});
 	it("works with links in nested hooks", function() {
 		expect("{A[ [[B]]]<1|}").markupToPrint("A B");

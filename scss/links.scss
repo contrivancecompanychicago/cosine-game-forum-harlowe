@@ -89,9 +89,7 @@ tw-broken-link {
 		position:absolute;
 		// May not be necessary, but just in case...
 		pointer-events:none;
-		// If no colour is specified, box-shadow uses 'color'.
-		// Might as well use vmax because % doesn't work for box-shadow.
-		box-shadow: 0 0 0 0.5vmax;
+		// The actual box-shadow is defined below.
 		// 'box-shadow-color' doesn't exist (can't be animated), so we must overload 'color'.
 		color: hsla(225, 73%, 57%,0.5); // $linkcolour at 0.5 opacity
 		transition: color 0.2s ease-in-out;
@@ -104,7 +102,13 @@ tw-broken-link {
 		color: hsla(7, 71%, 55%, 0.5); // $activecolour at 0.5 opacity
 	}
 	// <tw-story> has an inset box, unlike <tw-passage> et al.
-	body > &::after {
+	&::after {
 		box-shadow: inset 0 0 0 0.5vmax;
+	}
+	// All other clickblocks have normal box-shadows.
+	tw-story &::after {
+		// If no colour is specified, box-shadow uses 'color'.
+		// Might as well use vmax because % doesn't work for box-shadow.
+		box-shadow: 0 0 0 0.5vmax;
 	}
 }

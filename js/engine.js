@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
-($, Utils, Selectors, State, Section, Passages) => {
+define(['jquery', 'utils', 'state', 'section', 'passages'],
+($, Utils, State, Section, Passages) => {
 	/*
 		Utils.storyElement is a getter, so we need a reference to Utils as well
 		as all of these methods.
@@ -32,7 +32,7 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 	function createPassageElement () {
 		const
 			container = $('<tw-passage><tw-sidebar>'),
-			sidebar = container.children(Selectors.sidebar);
+			sidebar = container.children('tw-sidebar');
 		
 		/*
 			Generate the HTML for the permalink.
@@ -114,7 +114,7 @@ define(['jquery', 'utils', 'utils/selectors', 'state', 'section', 'passages'],
 			Note that since old passages take awhile to transition out, disenchanting everything
 			else within them would be unwise.
 		*/
-		if (parent.is(Selectors.enchantment)) {
+		if (parent.is('tw-enchantment')) {
 			/*
 				But first, undo the (enchant:) "inherit" kludge for <tw-story>, described in Enchantment.
 			*/

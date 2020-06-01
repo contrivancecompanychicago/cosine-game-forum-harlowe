@@ -2,12 +2,12 @@
 define([
 	'jquery',
 	'utils',
-	'utils/selectors',
 	'renderer',
 	'twinescript/environ',
 	'twinescript/operations',
 	'state',
 	'utils/operationutils',
+	'utils/renderutils',
 	'datatypes/changercommand',
 	'datatypes/hookset',
 	'datatypes/colour',
@@ -16,7 +16,7 @@ define([
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier',
 ],
-($, Utils, Selectors, Renderer, Environ, Operations, State, {printBuiltinValue,objectName}, ChangerCommand, HookSet, Colour, ChangeDescriptor, VarScope, TwineError, TwineNotifier) => {
+($, Utils, Renderer, Environ, Operations, State, {printBuiltinValue,objectName}, {collapse}, ChangerCommand, HookSet, Colour, ChangeDescriptor, VarScope, TwineError, TwineNotifier) => {
 
 	let Section;
 
@@ -205,7 +205,7 @@ define([
 				*/
 				let whitespaceAfter, plusMark = nextElem;
 				({whitespace:whitespaceAfter, nextElem} = nextNonWhitespace(plusMark));
-				if (nextElem.is(Selectors.expression)) {
+				if (nextElem.is('tw-expression')) {
 					/*
 						It's an expression - we can join them.
 						Add the expressions, and remove the interstitial + and whitespace.
@@ -255,7 +255,7 @@ define([
 				If not, then the changer's attempted attachment fails and an error results, and it doesn't matter if the expression
 				is dropped (by us executing its js early) as well.
 			*/
-			if (nextElem.is(Selectors.expression)) {
+			if (nextElem.is('tw-expression')) {
 				const nextValue = this.eval(nextElem.popAttr('js'));
 				/*
 					Errors produced by expression evaluation should be propagated above changer attachment errors, I guess.
@@ -296,7 +296,7 @@ define([
 					return;
 				}
 			}
-			if (nextElem.is(Selectors.hook)) {
+			if (nextElem.is('tw-hook')) {
 				/*
 					If it's an anonymous hook, apply the summed changer to it
 					(and remove the whitespace).
@@ -323,7 +323,7 @@ define([
 			If the above loop wasn't entered at all (i.e. the result wasn't a changer) then an error may
 			be called for. For now, obtain the next hook anyway.
 		*/
-		nextHook = nextHook.length ? nextHook : nextNonWhitespace(expr).nextElem.filter(Selectors.hook);
+		nextHook = nextHook.length ? nextHook : nextNonWhitespace(expr).nextElem.filter('tw-hook');
 
 		/*
 			Print any error that resulted.
@@ -446,207 +446,7 @@ define([
 			Utils.impossible('Section.runExpression', "The expression evaluated to an unknown value: " + result.toSource());
 		}
 	}
-	
-	/*
-		This quick memoized feature test checks if the current platform supports Node#normalize().
-	*/
-	const supportsNormalize = (() => {
-		let result;
-		return () => {
-			if (result !== undefined) {
-				return result;
-			}
-			const p = $('<p>');
-			/*
-				If the method is absent, then...
-			*/
-			if (!p[0].normalize) {
-				return (result = false);
-			}
-			/*
-				There are two known normalize bugs: not normalising text ranges containing a hyphen,
-				and not normalising blank text nodes. This attempts to discern both bugs.
-			*/
-			p.append(document.createTextNode("0-"),document.createTextNode("2"),document.createTextNode(""))
-				[0].normalize();
-			return (result = (p.contents().length === 1));
-		};
-	})();
 
-	/*
-		Both of these navigates up the tree to find the nearest text node outside this element,
-		earlier or later in the document.
-		These return an unwrapped Text node, not a jQuery.
-	*/
-	function prevParentTextNode(e) {
-		const elem = e.first()[0],
-			parent = e.parent();
-		/*
-			Quit early if there's no parent.
-		*/
-		if (!parent.length) {
-			return null;
-		}
-		/*
-			Get the parent's text nodes, and obtain only the last one which is
-			earlier (or later, depending on positionBitmask) than this element.
-		*/
-		let textNodes = parent.textNodes().filter((e) => {
-			const pos = e.compareDocumentPosition(elem);
-			return pos & 4 && !(pos & 8);
-		});
-		textNodes = textNodes[textNodes.length-1];
-		/*
-			If no text nodes were found, look higher up the tree, to the grandparent.
-		*/
-		return !textNodes ? prevParentTextNode(parent) : textNodes;
-	}
-	
-	function nextParentTextNode(e) {
-		const elem = e.last()[0],
-			parent = e.parent();
-		/*
-			Quit early if there's no parent.
-		*/
-		if (!parent.length) {
-			return null;
-		}
-		/*
-			Get the parent's text nodes, and obtain only the last one which is
-			earlier (or later, depending on positionBitmask) than this element.
-		*/
-		const textNodes = parent.textNodes().filter((e) => {
-			const pos = e.compareDocumentPosition(elem);
-			return pos & 2 && !(pos & 8);
-		})[0];
-		/*
-			If no text nodes were found, look higher up the tree, to the grandparent.
-		*/
-		return !textNodes ? nextParentTextNode(parent) : textNodes;
-	}
-
-	/*
-		<tw-collapsed> elements should collapse whitespace inside them in a specific manner - only
-		single spaces between non-whitespace should remain.
-		This function performs this transformation by modifying the text nodes of the passed-in element.
-
-		@param {jQuery} The element whose whitespace must collapse.
-	*/
-	function collapse(elem) {
-		/*
-			A .filter() callback which removes nodes inside a <tw-verbatim>,
-			a replaced <tw-hook>, or a <tw-expression> element, unless it is also inside a
-			<tw-collapsed> inside the <tw-expression>. Used to prevent text inside those
-			elements from being truncated.
-		*/
-		function noVerbatim(e) {
-			/*
-				The (this || e) dealie is a kludge to support its use in a jQuery
-				.filter() callback as well as a bare function.
-			*/
-			return $(this || e).parentsUntil('tw-collapsed')
-				.filter('tw-verbatim, tw-expression, '
-					/*
-						Also, remove nodes that have collapsing=false on their parent elements,
-						which is currently (June 2015) only used to denote hooks whose contents were (replace:)d from
-						outside the collapsing syntax - e.g. {[]<1|}(replace:?1)[Good  golly!]
-					*/
-					+ '[collapsing=false]')
-				.length === 0;
-		}
-		/*
-			We need to keep track of what the previous and next exterior text nodes are,
-			but only if they were also inside a <tw-collapsed>.
-		*/
-		let beforeNode = prevParentTextNode(elem);
-		if (!$(beforeNode).parents('tw-collapsed').length) {
-			beforeNode = null;
-		}
-		let afterNode = nextParentTextNode(elem);
-		if (!$(afterNode).parents('tw-collapsed').length) {
-			afterNode = null;
-		}
-		/*
-			- If the node contains no raw <br>s, or raw <tw-consecutive-br>, replace with a single space.
-		*/
-		elem.findAndFilter('br:not([data-raw]),tw-consecutive-br:not([data-raw])')
-			.filter(noVerbatim)
-			.replaceWith(document.createTextNode(" "));
-		/*
-			Having done that, we can now work on the element's nodes without concern for modifying the set.
-		*/
-		const nodes = elem.textNodes();
-		
-		/*
-			This is part of an uncomfortable #kludge used to determine whether to
-			retain a final space at the end, by checking how much was trimmed from
-			the finalNode and lastVisibleNode.
-		*/
-		let finalSpaces = 0;
-		
-		nodes.reduce((prevNode, node) => {
-			/*
-				- If the node is inside a <tw-verbatim> or <tw-expression>, regard it as a solid Text node
-				that cannot be split or permuted. We do this by returning a new, disconnected text node,
-				and using that as prevNode in the next iteration.
-			*/
-			if (!noVerbatim(node)) {
-				return document.createTextNode("A");
-			}
-			/*
-				- If the node contains runs of whitespace, reduce all runs to single spaces.
-				(This reduces nodes containing only whitespace to just a single space.)
-			*/
-			node.textContent = node.textContent.replace(/\s+/g,' ');
-			/*
-				- If the node begins with a space and previous node ended with whitespace or is empty, trim left.
-				(This causes nodes containing only whitespace to be emptied.)
-			*/
-			if (node.textContent[0] === " "
-					&& (!prevNode || !prevNode.textContent || prevNode.textContent.search(/\s$/) >-1)) {
-				node.textContent = node.textContent.slice(1);
-			}
-			return node;
-		}, beforeNode);
-		/*
-			- Trim the rightmost nodes up to the nearest visible node.
-			In the case of { <b>A </b><i> </i> }, there are 3 text nodes that need to be trimmed.
-			This uses [].every to iterate up until a point.
-		*/
-		[...nodes].reverse().every((node) => {
-			if (!noVerbatim(node)) {
-				return false;
-			}
-			// If this is the last visible node, merely trim it right, and return false;
-			if (!node.textContent.match(/^\s*$/)) {
-				node.textContent = node.textContent.replace(/\s+$/, (substr) => {
-					finalSpaces += substr.length;
-					return '';
-				});
-				return false;
-			}
-			// Otherwise, trim it down to 0, and set finalSpaces
-			else {
-				finalSpaces += node.textContent.length;
-				node.textContent = "";
-				return true;
-			}
-		});
-		/*
-			- If the afterNode is present, and the previous step removed whitespace, reinsert a single space.
-			In the case of {|1>[B ]C} and {|1>[''B'' ]C}, the space inside ?1 before "C" should be retained.
-		*/
-		if (finalSpaces > 0 && afterNode) {
-			nodes[nodes.length-1].textContent += " ";
-		}
-		/*
-			Now that we're done, normalise the nodes.
-			(But, certain browsers' Node#normalize may not work,
-			in which case, don't bother at all.)
-		*/
-		elem[0] && supportsNormalize() && elem[0].normalize();
-	}
-	
 	/*
 		A live hook is one that has the (live:) or (event:) macro attached.
 		It repeatedly re-renders, allowing a passage to have "live" behaviour.
@@ -715,7 +515,7 @@ define([
 				it to be stopped. Inside an (if:), it allows one-off live events to be coded.
 				If a (stop:) is in the rendering target, we shan't continue running.
 			*/
-			if (target.find(Selectors.expression + "[name='stop']").length) {
+			if (target.find("tw-expression[name='stop']").length) {
 				return;
 			}
 			/*
@@ -975,8 +775,8 @@ define([
 					{(replace:?1)[  H  ]} will always collapse the affixed hook regardless of
 					where the ?1 hook is.
 				*/
-				let collapses = (target instanceof $ && target.is(Selectors.hook)
-							&& target.parents('tw-collapsed').length > 0);
+				let collapses = (target instanceof $ && target.is('tw-hook')
+							&& target.parents('tw-collapsed,[collapsing=true]').length > 0);
 				this.stack.unshift({desc, finalIter, tempVariables, collapses, evaluateOnly: this.stackTop && this.stackTop.evaluateOnly });
 			};
 
@@ -998,9 +798,9 @@ define([
 				*/
 				const targetTag = target && target.tag();
 				tempVariables.TwineScript_VariableStoreName = (
-					targetTag === Selectors.hook ? (target.attr('name') ? ("?" + target.attr('name')) : "an unnamed hook") :
-					targetTag === Selectors.expression ? ("a " + target.attr('type') + " expression") :
-					targetTag === Selectors.passage ? "this passage" :
+					targetTag === 'tw-hook' ? (target.attr('name') ? ("?" + target.attr('name')) : "an unnamed hook") :
+					targetTag === 'tw-expression' ? ("a " + target.attr('type') + " expression") :
+					targetTag === 'tw-passage' ? "this passage" :
 					"an unknown scope"
 				);
 			}
@@ -1113,12 +913,12 @@ define([
 			/*
 				Execute the expressions immediately.
 			*/
-			dom.findAndFilter(Selectors.hook + ',' + Selectors.expression)
+			dom.findAndFilter('tw-hook,tw-expression')
 					.each(function() {
 				const expr = $(this);
 				
 				switch(expr.tag()) {
-					case Selectors.hook:
+					case 'tw-hook':
 					{
 						/*
 							Since hooks can be re-ran with (rerun:), their original source needs to be stored.
@@ -1146,7 +946,7 @@ define([
 						}
 						break;
 					}
-					case Selectors.expression:
+					case 'tw-expression':
 					{
 						/*
 							Control flow blockers are sub-expressions which, when evaluated, block control flow
@@ -1239,8 +1039,7 @@ define([
 			if (dom.length && collapses) {
 				collapse(dom);
 			}
-			
-			dom.findAndFilter(Selectors.collapsed).each(function() {
+			dom.findAndFilter('tw-collapsed,[collapsing=true]').each(function() {
 				collapse($(this));
 			});
 			

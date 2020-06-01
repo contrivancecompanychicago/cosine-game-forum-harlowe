@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 'passages', 'macros', 'datatypes/hookset', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/enchantment', 'internaltypes/twineerror'],
-($, Utils, Selectors, {is}, Engine, Passages, Macros, HookSet, ChangerCommand, Lambda, Enchantment, TwineError) => {
+define(['jquery', 'utils', 'utils/operationutils', 'engine', 'passages', 'macros', 'datatypes/hookset', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/enchantment', 'internaltypes/twineerror'],
+($, Utils, {is}, Engine, Passages, Macros, HookSet, ChangerCommand, Lambda, Enchantment, TwineError) => {
 
 	const {either,rest} = Macros.TypeSignature;
 	/*
@@ -252,8 +252,13 @@ define(['jquery', 'utils', 'utils/selectors', 'utils/operationutils', 'engine', 
 					and its dest is inside it, then it should NOT be collapsed, reflecting
 					its, shall we say, "lexical" position rather than its "dynamic" position.
 				*/
-				const collapsing = $(desc.target).parents().filter('tw-collapsed').length > 0;
-				if (!collapsing) {
+				const collapsing = $(desc.target).parents().filter('tw-collapsed,[collapsing=true]').length > 0;
+				if (!collapsing &&
+						/*
+							If the (collapse:) changer was already applied to this descriptor
+							(such as by (collapse:)+(replace:)), then don't override it.
+						*/
+						!desc.attr.some(e => e.collapsing)) {
 					desc.attr = [...desc.attr, { collapsing: false }];
 				}
 				/*

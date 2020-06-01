@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'engine', 'datatypes/changercommand', 'datatypes/hookset', 'internaltypes/twineerror'],
-($, Macros, Utils, Selectors, State, Passages, Engine, ChangerCommand, HookSet, TwineError) => {
+define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/changercommand', 'datatypes/hookset', 'internaltypes/twineerror'],
+($, Macros, Utils, State, Passages, Engine, ChangerCommand, HookSet, TwineError) => {
 	/*
 		This module defines the behaviour of links in Harlowe - both
 		the normal passage links, and the (link:) macro's links.
@@ -28,7 +28,7 @@ define(['jquery', 'macros', 'utils', 'utils/selectors', 'state', 'passages', 'en
 			The jQuery event namespace is "passage-link".
 		*/
 		"click.passage-link",
-		Selectors.internalLink,
+		'tw-link',
 		function clickLinkEvent() {
 			const link = $(this),
 				/*

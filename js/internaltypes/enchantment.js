@@ -1,5 +1,6 @@
 "use strict";
-define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changercommand', 'utils/operationutils', 'internaltypes/twineerror'], ($, Utils, ChangeDescriptor, ChangerCommand, {objectName}, TwineError) => {
+define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changercommand', 'utils/operationutils', 'internaltypes/twineerror', 'utils/renderutils'],
+($, Utils, ChangeDescriptor, ChangerCommand, {objectName}, TwineError, {collapse}) => {
 	/*
 		Enchantments are special styling that is applied to selected elements of a
 		passage by a macro. Enchantments are registered with a Section by pushing
@@ -131,6 +132,19 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 				*/
 				if (e.is(Utils.storyElement)) {
 					wrapping.css({ width: '100%', height: '100%' });
+				}
+				/*
+					If the wrapping has been given a (collapse:) changer, whose influence is signaled
+					with [collapsing=true], then collapse the whitespace within.
+				*/
+				if (wrapping.attr('collapsing') === 'true') {
+					/*
+						Remove all contained [collapsing=false] attributes - (enchant:) applies ongoing
+						collapsing, rather than a one-off transformation, so it should always
+						supercede individual hooks' collapsing semantics.
+					*/
+					wrapping.find('[collapsing=false]').each(function() { $(this).removeAttr('collapsing'); });
+					collapse(wrapping);
 				}
 
 				/*

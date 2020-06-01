@@ -22,10 +22,10 @@ require.config({
 		'jqueryplugins',
 	],
 });
-require(['jquery', 'debugmode', 'renderer', 'state', 'section', 'engine', 'passages', 'utils', 'utils/selectors', 'utils/dialog', 'macros',
+require(['jquery', 'debugmode', 'renderer', 'state', 'section', 'engine', 'passages', 'utils', 'utils/renderutils', 'macros',
 	'macrolib/values', 'macrolib/commands', 'macrolib/datastructures', 'macrolib/stylechangers', 'macrolib/enchantments', 'macrolib/metadata',
 	'macrolib/links', 'repl'],
-		($, DebugMode, Renderer, State, Section, Engine, Passages, Utils, Selectors, Dialog) => {
+		($, DebugMode, Renderer, State, Section, Engine, Passages, Utils, {dialog}) => {
 	/*
 		Harlowe, the default story format for Twine 2.
 		
@@ -102,7 +102,7 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'section', 'engine', 'passa
 				the passage animate beneath it. This is just a slightly awkward inconsistency for a dialog box that shouldn't appear in normal situations.
 				Additionally, this is affixed to the parent of the <tw-story> so that it isn't easily removed without being seen by the player.
 			*/
-			Utils.storyElement.parent().append(Dialog({
+			Utils.storyElement.parent().append(dialog({
 				message: "Sorry to interrupt, but this page's code has got itself in a mess.\n\n"
 					+ printJSError(e)
 					+ "\n(This is probably due to a bug in the Harlowe game engine.)"
@@ -120,7 +120,7 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'section', 'engine', 'passa
 		This is the main function which starts up the entire program.
 	*/
 	Utils.onStartup(() => {
-		const header = $(Selectors.storyData);
+		const header = $('tw-storydata');
 
 		if (header.length === 0) {
 			return;
@@ -144,26 +144,26 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'section', 'engine', 'passa
 		// If there's no set start passage, find the passage with the
 		// lowest passage ID, and use that.
 		if (!startPassage) {
-			startPassage = [].reduce.call($(Selectors.passageData), (id, el) => {
+			startPassage = [].reduce.call($('tw-passagedata'), (id, el) => {
 				const pid = el.getAttribute('pid');
 				return (pid < id ? pid : id);
 			}, Infinity);
 		}
-		startPassage = $(Selectors.passageData + "[pid=" + startPassage + "]").attr('name');
+		startPassage = $("tw-passagedata[pid=" + startPassage + "]").attr('name');
 
 		// Init game engine
 		installHandlers();
 		
 		// Execute the custom scripts
 		let scriptError = false;
-		$(Selectors.script).each(function(i) {
+		$("[role=script]").each(function(i) {
 			try {
 				__HarloweEval($(this).html());
 			} catch (e) {
 				// Only show the first script error, leaving the rest suppressed.
 				if (!scriptError) {
 					scriptError = true;
-					Utils.storyElement.parent().append(Dialog({
+					Utils.storyElement.parent().append(dialog({
 						message:"There is a problem with this story's " + Utils.nth(i + 1) + " script:\n\n" + printJSError(e),
 					}));
 				}
@@ -171,7 +171,7 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'section', 'engine', 'passa
 		});
 		
 		// Apply the stylesheets
-		$(Selectors.stylesheet).each(function(i) {
+		$("[role=stylesheet]").each(function(i) {
 			// In the future, pre-processing may occur.
 			$(document.head).append('<style data-title="Story stylesheet ' + (i + 1) + '">' + $(this).html());
 		});
@@ -180,12 +180,12 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'section', 'engine', 'passa
 		// (Yes, it's #awkward that Section.create needs a false dom like <p> to operate...)
 		const metadataErrors = Passages.loadMetadata(Section.create($('<p>')));
 		if (metadataErrors.length) {
-			const dialog = Dialog({
+			const d = dialog({
 				message: "These errors occurred when running the `(metadata:)` macro calls in this story's passages:<p></p>",
 			});
 			// Because these TwineErrors have their 'source' property modified to list their actual source, render() doesn't need an argument.
-			metadataErrors.forEach(error => dialog.find('p').append(error.render('')));
-			Utils.storyElement.parent().append(dialog);
+			metadataErrors.forEach(error => d.find('p').append(error.render('')));
+			Utils.storyElement.parent().append(d);
 		}
 		
 		// Load the sessionStorage if it's present (and we're not testing)

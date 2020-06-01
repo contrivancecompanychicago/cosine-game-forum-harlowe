@@ -302,7 +302,7 @@ define([
 					* Mouseover areas created by (mouseover:), (mouseover-replace:), (mouseover-append:), (mouseover-prepend:), and (mouseover-goto:).
 					* Mouseout areas created by (mouseout:), (mouseout-replace:), (mouseout-append:), (mouseout-prepend:), and (mouseout-goto:).
 
-					Do note the following, however:
+					Do note the following, however.
 					* Multiple passage links that lead to the same passage (such as `[[A->Dead]] [[B->Dead]] [[C->Dead]]`) are all counted separately.
 					* As of Harlowe 3.1.0, this does not consider (link-undo:) macros to be exits, as they tend to only undo game progress.
 					* This will also not consider (event:) or (live:) macros to be exits, even if they are guaranteed to display their hooks

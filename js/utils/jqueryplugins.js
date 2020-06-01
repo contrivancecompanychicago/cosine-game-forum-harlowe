@@ -41,12 +41,11 @@ define(['jquery'], ($) => {
 				First, create an array containing all descendent and contents nodes
 				which are text nodes.
 			*/
-			return Array.from(this.add(this.contents().add(this.find(selector).contents())).filter(function() {
-				return this instanceof Text;
-			}))
+			return this.get().concat(this.contents().get(), this.find(selector).contents().get()).filter(function(e,i,a) {
+				return e instanceof Text && a.indexOf(e) === i;
+			})
 			/*
-				the addBack() call adds back the descendents in an unwanted order, so we must
-				sort the returned array using compareDocumentPosition.
+				We must sort the returned array using compareDocumentPosition.
 			*/
 			.sort((left, right) => (left.compareDocumentPosition(right)) & 2 ? 1 : -1);
 		},

@@ -387,7 +387,7 @@ define([
 			Example usage:
 			`(a:)` creates an empty array, which could be filled with other values later.
 			`(a: "gold", "frankincense", "myrrh")` creates an array with three strings.
-			This is also a valid array, but with its elements spaced in a way that makes them more readable:
+			This is also a valid array, but with its elements spaced in a way that makes them more readable.
 			```
 			(a:
 				"You didn't sleep in the tiniest bed",
@@ -402,7 +402,7 @@ define([
 			
 			Details:
 			Note that due to the way the spread `...` operator works, spreading an array into
-			the (a:) macro will accomplish nothing: `(a: ...$array)` is the same as just the `$array`.
+			the (a:) macro will re-create the original array unchanged: `(a: ...$array)` is the same as just `$array`.
 			
 			See also:
 			(dm:), (ds:)
@@ -1474,7 +1474,7 @@ define([
 			Example usage:
 			`(dm:)` creates an empty datamap.
 			`(dm: "Cute", 4, "Wit", 7)` creates a datamap with two names and values.
-			The following code also creates a datamap, with the names and values laid out in a readable fashion:
+			The following code also creates a datamap, with the names and values laid out in a readable fashion.
 			```
 			(dm:
 				"Susan", "A petite human in a yellow dress",
@@ -1584,7 +1584,7 @@ define([
 			care about the order, and instead would simply use the array as a storage place for
 			values - using `contains` and `is in` to check which values are inside.
 
-			Think of datasets as being like arrays, but with specific restrictions:
+			Think of datasets as being like arrays, but with specific restrictions.
 
 			* You can't access any positions within the dataset (so, for instance, the `1st`, `2ndlast`
 			and `last` aren't available, although the `length` still is) and can only use `contains`

@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'requestAnimationFrame', 'markup', 'utils/selectors', 'utils/polyfills'],
-($, requestAnimationFrame, TwineMarkup, Selectors) => {
+define(['jquery', 'requestAnimationFrame', 'markup', 'utils/polyfills'],
+($, requestAnimationFrame) => {
 
 	const
 		// These two are used by childrenProbablyInline (see below).
@@ -429,7 +429,7 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/selectors', 'utils/p
 			Replaces oldElem with newElem while transitioning between both.
 		*/
 		transitionReplace(oldElem, newElem, transIndex) {
-			const closest = oldElem.closest(Selectors.hook);
+			const closest = oldElem.closest('tw-hook');
 			if (closest.length > 0) {
 				oldElem = closest;
 			}
@@ -667,7 +667,7 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/selectors', 'utils/p
 		passage is being rendered into it).
 	*/
 	$(() => {
-		storyElement = $(Selectors.story);
+		storyElement = $('tw-story');
 		// Run all the callbacks registered in startupCallbacks by other modules.
 		startupCallbacks.forEach(e => e());
 		// Release startupCallbacks, causing onStartup() to no longer register functions,

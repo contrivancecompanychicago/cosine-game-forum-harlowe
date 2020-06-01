@@ -728,7 +728,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			`0.6,#3f72bf` <span style="width:1em;height:1em;display:inline-block;background:#3f72bf"></span>,
 			`0.8,#a53fbf` <span style="width:1em;height:1em;display:inline-block;background:#a53fbf"></span>,
 			and `1,#bf3f3f` <span style="width:1em;height:1em;display:inline-block;background:#bf3f3f"></span>.
-			This corresponds to the following gradient, which for documentation purposes has its colour stops marked:
+			This corresponds to the following gradient, which for documentation purposes has its colour stops marked.
 			<div style="position:relative">
 			<div style="position:absolute;left:0%;width:1px;background-color:black;color:white;height:64px;">0,<br>#bf3f3f</div>
 			<div style="position:absolute;left:20%;width:1px;background-color:black;color:white;height:64px;">0.2,<br>#a5bf3f</div>
