@@ -16,10 +16,10 @@ define(['jquery', 'utils', 'renderer'], function($, Utils, Renderer) {
 				"<input type=text style='display:block'></input>\n" : "")
 			+ '</div><div style="text-align:right">'
 			/*
-				The confirmCallback is used to differentiate (prompt:) from (confirm:). Its presence
+				The confirmCallback is used to differentiate (alert:) from (confirm:). Its presence
 				causes a second "Cancel" link to appear next to "OK".
 			*/
-			+ (confirmCallback ?
+			+ (confirmCallback && cancelButton ?
 				"<span style='width:75%;margin-right:1em'><tw-link tabindex=0>" + confirmButton + "</tw-link></span>"
 					+ "<span style='width:25%;margin-left:1em'><tw-link tabindex=0>" + cancelButton + "</tw-link></span>"
 				: "<tw-link tabindex=0>" + confirmButton + "</tw-link>")

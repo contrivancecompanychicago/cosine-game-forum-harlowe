@@ -190,10 +190,11 @@ describe("basic command macros", function() {
 		});
 	});
 	describe("the (alert:) macro", function() {
-		it("requires exactly 1 string argument", function() {
+		it("requires 1 or 2 string arguments", function() {
 			expect("(alert:)").markupToError();
 			expect("(alert:1)").markupToError();
-			expect("(alert:'e','f')").markupToError();
+			expect("(alert:'e')").not.markupToError();
+			expect("(alert:'e','f')").not.markupToError();
 		});
 		it("produces a command which creates a dialog with a backdrop, the given string, and an 'OK' close link", function(done) {
 			runPassage("(alert:'Gooball')");
@@ -215,24 +216,36 @@ describe("basic command macros", function() {
 			runPassage("$x");
 			expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(1);
 		});
+		it("changes the links' text if the optional string is given", function() {
+			runPassage("(alert:'baz','foo')");
+			expect($("tw-dialog tw-link").last().text()).toBe("foo");
+		});
+		it("errors if the optional string is blank", function() {
+			expect("(alert:'baz','')").markupToError();
+		});
 	});
 
 	['prompt','confirm'].forEach(function(name, confirm) {
 		describe("the (" + name + ":) macro", function() {
 			var args = "'Gooball'" + (confirm ? "" : ",'foo'");
 			if(confirm) {
-				it("requires exactly 1 string argument", function() {
+				it("requires either 1, 2 or 3 string arguments", function() {
 					expect("(confirm:)").markupToError();
 					expect("(confirm:1)").markupToError();
 					expect("(confirm:'e')").not.markupToError();
-					expect("(confirm:'e','f')").markupToError();
+					expect("(confirm:'e','f')").not.markupToError();
+					expect("(confirm:'e','f','g')").not.markupToError();
+					expect("(confirm:'e','f','g','h')").markupToError();
 				});
 			} else {
-				it("requires exactly 2 string arguments", function() {
+				it("requires either 2, 3 or 4 string arguments", function() {
 					expect("(prompt:)").markupToError();
 					expect("(prompt:1)").markupToError();
 					expect("(prompt:'e')").markupToError();
 					expect("(prompt:'e','f')").not.markupToError();
+					expect("(prompt:'e','f','g')").not.markupToError();
+					expect("(prompt:'e','f','g','h')").not.markupToError();
+					expect("(prompt:'e','f','g','h','i')").markupToError();
 				});
 			}
 			it("produces a command which creates a dialog with a backdrop, the given string, an 'OK' close link, and a 'Cancel' close link", function(done) {
@@ -246,6 +259,14 @@ describe("basic command macros", function() {
 					expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(0);
 					done();
 				},20);
+			});
+			it("changes the links' text if optional strings are given", function() {
+				runPassage("("+name+":" + args + ",'foo','bar')");
+				expect($("tw-dialog tw-link").first().text()).toBe("bar");
+				expect($("tw-dialog tw-link").last().text()).toBe("foo");
+			});
+			it("errors if the last optional string is blank", function() {
+				expect("("+name+":" + args + ",'foo','')").markupToError();
 			});
 			if(!confirm) {
 				it("evaluates to the text area's contents when 'OK' is clicked", function(done) {

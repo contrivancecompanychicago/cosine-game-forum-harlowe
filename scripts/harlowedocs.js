@@ -172,7 +172,7 @@ table:not(.datamap) :not(pre) > code { white-space: pre-wrap; }
 
 /* Preview */
 #preview { display:none; z-index:21; position: fixed; width: 25vw; height:45vh; right:2vw; top: 10vh; overflow-y:scroll; border: 1px double #888; font-size:16px; transition: width 0.8s; }
-@media screen and (max-width: 1200px) { #preview, .previewButton, #previewCode, #fullPreviewBar { display:none; } }
+@media screen and (max-width: 1200px) { #preview, .previewButton, #previewCode, #fullPreviewBar { display:none !important; } }
 html:not(.night) #preview tw-story { background-color:white; color:black }
 #previewCode { display:none; z-index:20; position:fixed; width:25vw; height:30vh; right: 2vw; bottom: 10vh; overflow:scroll; border: 1px double #888; transition: width 0.8s; }
 .CodeMirror { height: 100% !important; width:100% !important; background-color:white; }

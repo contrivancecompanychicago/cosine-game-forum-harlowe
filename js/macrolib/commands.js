@@ -970,13 +970,15 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 			[String], false)
 
 		/*d:
-			(alert: String) -> Command
+			(alert: String, [String]) -> Command
 
 			This macro produces a command that, when evaluated, shows a pop-up dialog box with the given
-			string displayed, and an "OK" link to dismiss it.
+			string displayed, and a link (whose text can also be provided) to dismiss it.
 
 			Example usage:
-			`(alert:"Beyond this point, things get serious. Grab a snack and buckle up.")`
+			```
+			(alert:"Beyond this point, things get serious. Grab a snack and buckle up.", "Sure.")
+			```
 
 			Details:
 			The dialog that is produced is implemented entirely in HTML. User CSS stylesheets can be used to
@@ -984,6 +986,9 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 
 			In Harlowe versions prior to 3.1.0, this macro used the built-in `alert()` function of the browser, but to
 			support certain newer browsers that no longer offer this function, the macro was changed.
+
+			If no string is given for the "OK" link's text, it will default to "OK". Giving an empty string for it
+			will cause an error (because that link must be clickable for the dialog to work).
 
 			When the dialog is on-screen, the entire game is essentially "paused" - until it is dismissed,
 			no further computations are performed, links can't be clicked, and (live:) and (event:) macros
@@ -999,11 +1004,14 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 		*/
 		("alert",
 			() => {},
-			(/* no cd because this is attachable:false */ section, message) => {
-				Utils.storyElement.append(dialog({message, defaultValue:false, cancelCallback: () => section.unblock()}));
+			(/* no cd because this is attachable:false */ section, message, confirmButton) => {
+				if (confirmButton === "") {
+					return TwineError.create("datatype", "The text for (alert:)'s link can't be blank.");
+				}
+				Utils.storyElement.append(dialog({message, confirmButton, defaultValue:false, cancelCallback: () => section.unblock()}));
 				section.stackTop.blocked = true;
 			},
-			[String], false)
+			[String, optional(String)], false)
 
 		/*d:
 			(open-url: String) -> Command
@@ -1224,19 +1232,24 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 			[String, optional(String)])
 
 		/*d:
-			(prompt: String, String) -> String
+			(prompt: String, String, [String], [String]) -> String
 
 			When this macro is evaluated, a browser pop-up dialog box is shown with the first string displayed,
-			a text entry box containing the second string (as a default value), an "OK" link and a "Cancel" link.
-			If "OK" is clicked, it evaluates to the string in the text entry box. If "Cancel" is clicked, it evaluates to
+			a text entry box containing the second string (as a default value), a confirm link and a cancel link.
+			If the confirm link is clicked, it evaluates to the string in the text entry box. If "Cancel" is clicked, it evaluates to
 			the default value regardless of the entry box's contents.
 
 			Example usage:
-			`(set: $name to (prompt: "Your name, please:", "Frances Spayne"))`
+			`(set: $name to (prompt: "Your name, please:", "Frances Spayne", "Don't care", "Confirm"))`
 
 			Details:
 			The dialog that is produced is implemented entirely in HTML. User CSS stylesheets can be used to
 			style it, and (enchant:) macros that affect ?Link can affect the dialog links.
+
+			The order of the two optional strings is: the cancel link text, followed by the confirm link text. If
+			one or neither of these is provided, the defaults for each are "Cancel" and "OK". Giving a blank string
+			for the cancel link will cause that link to disappear. Giving an empty string for the confirm link will
+			cause an error (because that link must be clickable for the dialog to work).
 
 			In Harlowe versions prior to 3.1.0, this macro used the built-in `prompt()` function of the browser, but to
 			support certain newer browsers that no longer offer this function, the macro was changed.
@@ -1252,7 +1265,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 			#popup
 		*/
 		("prompt",
-			(section, message, defaultValue) => {
+			(section, message, defaultValue, cancelButton, confirmButton) => {
 				/*
 					Since (prompt:) and (confirm:) create dialogs as soon as they're evaluated, we need this extra check,
 					in addition to the one in Section for expressions, to ensure that this isn't being used in a pure
@@ -1264,9 +1277,11 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 						"Please rewrite this without putting such macros here."
 					);
 				}
+				if (confirmButton === "") {
+					return TwineError.create("datatype", "The text for (prompt:)'s confirm link can't be blank.");
+				}
 				const d = dialog({
-					message,
-					defaultValue,
+					message, cancelButton, confirmButton, defaultValue,
 					cancelCallback() {
 						section.unblock(defaultValue);
 					},
@@ -1278,21 +1293,27 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 				// Regrettably, this arbitrary timeout seems to be the only reliable way to focus the <input>.
 				setTimeout(() => d.find('input').last().focus(), 100);
 			},
-			[String, String])
+			[String, String, optional(String), optional(String)])
 
 		/*d:
-			(confirm: String) -> Boolean
+			(confirm: String, [String], [String]) -> Boolean
 
 			When this macro is evaluated, a pop-up dialog box is shown with the given string displayed,
-			as well as "OK" and "Cancel" link to confirm or cancel whatever action or fact the string tells the player.
-			When it is submitted, it evaluates to the boolean true if "OK" had been clicked, and false if "Cancel" had.
+			as well as two links (whose text can also be provided) to confirm or cancel whatever action
+			or fact the string tells the player. When it is submitted, it evaluates to the boolean true if the
+			confirm link had been clicked, and false if the cancel link had.
 
 			Example usage:
-			`(set: $makeCake to (confirm: "Transform your best friend into a cake?"))`
+			`(set: $makeCake to (confirm: "Transform your best friend into a cake?", "Do not", "Please do"))`
 
 			Details:
 			The dialog that is produced is implemented entirely in HTML. User CSS stylesheets can be used to
 			style it, and (enchant:) macros that affect ?Link can affect the dialog links.
+
+			The order of the two optional strings is: the cancel link text, followed by the confirm link text. If
+			one or neither of these is provided, the defaults for each are "Cancel" and "OK". Giving a blank string
+			for the cancel link will cause that link to disappear. Giving an empty string for the confirm link will
+			cause an error (because that link must be clickable for the dialog to work).
 
 			In Harlowe versions prior to 3.1.0, this macro used the built-in `confirm()` function of the browser, but to
 			support certain newer browsers that no longer offer this function, the macro was changed.
@@ -1308,7 +1329,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 			#popup
 		*/
 		("confirm",
-			(section, message) => {
+			(section, message, cancelButton, confirmButton) => {
 				/*
 					As with (prompt:), we need an extra check here.
 				*/
@@ -1318,11 +1339,15 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 						"Please rewrite this without putting such macros here."
 					);
 				}
+				if (confirmButton === "") {
+					return TwineError.create("datatype", "The text for (confirm:)'s confirm link can't be blank.");
+				}
 				Utils.storyElement.append(dialog({
-					message, defaultValue: false, cancelCallback: () => section.unblock(false), confirmCallback: () => section.unblock(true)
+					message, cancelButton, confirmButton,
+					defaultValue: false, cancelCallback: () => section.unblock(false), confirmCallback: () => section.unblock(true)
 				}));
 			},
-			[String])
+			[String, optional(String), optional(String)])
 
 		/*d:
 			(page-url:) -> String
