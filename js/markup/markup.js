@@ -22,6 +22,8 @@
 		}
 		return obj;
 	};
+
+	const {keys, assign} = Object;
 	
 	/*
 		When passed a Lexer object, this function augments it with rules.
@@ -240,7 +242,7 @@
 		/*
 			All block rules have a single specific canFollow and cannotFollow.
 		*/
-		Object.keys(blockRules).forEach((key) => {
+		keys(blockRules).forEach((key) => {
 			blockRules[key].canFollow = [null, "br", "hr", "bulleted", "numbered", "heading", "align", "escapedLine"];
 			blockRules[key].cannotFollow = ["text"];
 		});
@@ -341,6 +343,12 @@
 						hookFront: "hook",
 					},
 					cannotCross: ["verbatimOpener"],
+					/*
+						The "hookFront" and "hookBack" tokens (well, actually just "hookBack" once
+						they're folded together) set the mode back to 'markup' even when inside a macro.
+						This explicit innerMode setting causes this.
+					*/
+					innerMode: 'markup',
 				}),
 			},
 
@@ -415,7 +423,7 @@
 		/*
 			Expression rules.
 		*/
-		const expressionRules = setupRules(macroMode, {
+		const expressionRules = assign(setupRules(macroMode, {
 			macroFront: {
 				fn: (match) => ({
 					isFront: true,
@@ -463,12 +471,20 @@
 			variable:   { fn: textTokenFn("name") },
 			
 			tempVariable: { fn: textTokenFn("name") },
+		}), {
+			/*
+				Plain unappended hooks are allowed in expression position as well as
+				inline position. This is implemented by copying the fully-set-up rules
+				from inlineRules.
+			*/
+			hookFront: inlineRules.hookFront,
+			hookBack:  inlineRules.hookBack,
 		});
 		
 		/*
 			Now, macro code rules.
 		*/
-		const macroRules = setupRules(macroMode, Object.assign({
+		const macroRules = setupRules(macroMode, assign({
 
 				/*
 					The macroName must be a separate token, because it could
@@ -725,11 +741,11 @@
 			Note: as the mode arrays are passed by reference by the above,
 			the arrays must now be modified in-place, using [].push.apply().
 		*/
-		markupMode.push(            ...Object.keys(blockRules),
+		markupMode.push(            ...keys(blockRules),
 									// expressionRules must come before inlineRules because
 									// passageLink conflicts with hookAnonymousFront.
-									...Object.keys(expressionRules),
-									...Object.keys(inlineRules));
+									...keys(expressionRules),
+									...keys(inlineRules));
 		
 		/*
 			Warning: the property pattern "'s" conflicts with the string literal
@@ -737,20 +753,20 @@
 			the former is always matched first, expressionRules
 			must be pushed first.
 		*/
-		macroMode.push(             ...Object.keys(expressionRules),
-									...Object.keys(macroRules));
+		macroMode.push(             ...keys(expressionRules),
+									...keys(macroRules));
 
 		/*
 			Merge all of the categories together.
 		*/
-		const allRules = Object.assign({}, blockRules, inlineRules, expressionRules, macroRules);
+		const allRules = assign({}, blockRules, inlineRules, expressionRules, macroRules);
 		
 		/*
 			Add the 'pattern' property to each rule
 			(the RegExp used by the lexer to match it), as well
 			as some other properties.
 		*/
-		Object.keys(allRules).forEach((key) => {
+		keys(allRules).forEach((key) => {
 			/*
 				Each named rule uses the same-named Pattern for its
 				regular expression.
@@ -779,7 +795,7 @@
 				allRules[key].peek = Patterns[key + "Peek"];
 			}
 		});
-		Object.assign(Lexer.rules, allRules);
+		assign(Lexer.rules, allRules);
 		/*
 			Declare that the starting mode for lexing, before any
 			tokens are appraised, is...

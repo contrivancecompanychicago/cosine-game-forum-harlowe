@@ -289,7 +289,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 		/*d:
 			(hidden:) -> Changer
 
-			Produces a command that can be attached to hooks to hide them.
+			Produces a changer that can be attached to hooks to hide them.
 
 			Example usage:
 			```
@@ -484,7 +484,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			It's possible to add together changers, save them in variables, and use them in various locations
 			throughout your story. You may, after doing so, want to give a common name to each of those hooks that
 			have that variable attached, so that, for instance, the (append:) macro can act on them as one.
-			This command can be added to those changers to allow the hooks to be named:
+			This changer can be added to those changers to allow the hooks to be named:
 			`(font:"Museo Slab")+(hook: "title")`.
 			
 			Also, unlike the nametag syntax for hook names, (hook:) can be given any string expression:
@@ -515,7 +515,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			(for: Lambda, [...Any]) -> Changer
 			Also known as: (loop:)
 
-			A command that repeats the attached hook, setting a temporary variable to a different value on each repeat.
+			When attached to a hook, this repeats the attached hook, setting a temporary variable to a different value on each repeat.
 
 			Example usage:
 			* `(for: each _item, ...$arr) [You have the _item.]` prints "You have the " and the item, for each item in $arr.
@@ -585,7 +585,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			(transition: String) -> Changer
 			Also known as: (t8n:)
 			
-			A command that applies a built-in CSS transition to a hook as it appears.
+			A changer that applies a built-in CSS transition to a hook as it appears.
 			
 			Example usage:
 			`(t8n: "pulse")[Gleep!]` makes the hook `[Gleep!]` use the "pulse" transition
@@ -604,8 +604,8 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			* "slide-bottom" (causes the hook to slide in from the bottom)
 			* "pulse" (causes the hook to instantly appear while pulsating rapidly)
 			
-			All transitions are 0.8 seconds long, unless a (transition-time:) command is added
-			to the command.
+			All transitions are 0.8 seconds long, unless a (transition-time:) changer is added
+			to the changer.
 
 			You can't combine transitions by adding them together, like you can with (text-style:) -
 			`(t8n:"dissolve")+(t8n:"shudder")` won't make a transition that simultaneously dissolve-fades and shudders.
@@ -629,7 +629,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			(transition-time: Number) -> Changer
 			Also known as: (t8n-time:)
 			
-			A command that, when added to a (transition:) command, adjusts the time of the transition.
+			A changer that, when added to a (transition:) changer, adjusts the time of the transition.
 
 			Example usage:
 			`(set: $slowTransition to (transition:"shudder") + (transition-time: 2s))` creates a transition
@@ -666,7 +666,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			(transition-delay: Number) -> Changer
 			Also known as: (t8n-delay:)
 			
-			A command that, when added to a (transition:) command, delays the start of the transition by a given time.
+			A changer that, when added to a (transition:) changer, delays the start of the transition by a given time.
 
 			Example usage:
 			`(t8n:"slide-right")+(t8n-delay:3s)[Sorry I'm late.]` makes the text slide in from the right, but only
@@ -697,7 +697,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			(transition-skip: Number) -> Changer
 			Also known as: (t8n-skip:)
 			
-			A command that, when added to a (transition:) command, allows the player to skip or accelerate the transition by
+			A changer that, when added to a (transition:) changer, allows the player to skip or accelerate the transition by
 			holding down a keyboard key or mouse button, or by touching the touch device.
 
 			Example usage:
@@ -956,8 +956,8 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 		/*d:
 			(corner-radius: Number, [Number], [Number], [Number]) -> Changer
 
-			When applied to a hook, this rounds the corners, causing the hook to become
-			increasingly round or button-like.
+			When applied to a hook, this rounds the corners by the given number of pixels, causing the hook
+			to become increasingly round or button-like.
 
 			Example usage:
 			```
@@ -1048,7 +1048,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			the font's family name (such as "Helvetica Neue" or "Courier") as a string.
 
 			Example usage:
-			`(font:"Skia")[And what have we here?]`
+			`(font:'Courier New')[And what have we here?]`
 
 			Details:
 			Currently, this command will only work if the font is available to the player's browser, or
@@ -1075,7 +1075,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 		/*d:
 			(align: String) -> Changer
 			
-			This styling command changes the alignment of text in the attached hook, as if the
+			This styling changer changes the alignment of text in the attached hook, as if the
 			`===>`~ arrow syntax was used. In fact, these same arrows (`==>`~, `=><=`~, `<==>`~, `====><=`~ etc.)
 			should be supplied as a string to specify the degree of alignment.
 
@@ -1083,7 +1083,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			`(align: "=><==")[Hmm? Anything the matter?]`
 
 			Details:
-			Hooks affected by this command will take up their own lines in the passage, regardless of
+			Hooks affected by this changer will take up their own lines in the passage, regardless of
 			their placement in the story prose. This allows them to be aligned in the specified manner.
 
 			Added in: 1.1.0
@@ -1159,7 +1159,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			(text-colour: String or Colour) -> Changer
 			Also known as: (colour:), (text-color:), (color:)
 
-			This styling command changes the colour used by the text in the attached hook.
+			This styling changer changes the colour used by the text in the attached hook.
 			You can supply either a string with a CSS-style colour (a colour name or
 			RGB number supported by CSS), or a built-in colour object.
 
@@ -1208,7 +1208,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			(text-size: Number) -> Changer
 			Also known as: (size:)
 
-			This styling command changes the text size of the attached hook by the given fraction.
+			This styling changer changes the text size of the attached hook by the given fraction.
 			Give it a number greater than 1 to enlarge the text, and a number smaller to decrease
 			the text. Providing 1 to this macro will revert the text size back to the default.
 
@@ -1246,6 +1246,49 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 					compute to (on Firefox) with no other CSS changes.
 				*/
 				d.styles.push({'font-size': percent*24 + "px", 'line-height': percent*36 + "px" });
+				return d;
+			},
+			[nonNegativeNumber]
+		)
+		/*d:
+			(text-indent: Number) -> Changer
+			
+			This styling changer causes the attached hook to be indented by the given number of pixels.
+
+			Example usage:
+			* `(enchant: ?passage's lines, (text-indent:12))` gives each line (paragraph) of the passage an indent of 12 pixels.
+			* `(text-indent: 24)+(size:1.5)[CHAPTER TWO]` makes just this hook have a leading indent of 24 pixels.
+
+			Rationale:
+			Indentation of initial letters has long been used in typesetting as a means of helping the human eye distinguish paragraphs of
+			text from each other. While you can use line breaks to separate paragraphs, this often takes up an uncomfortable amount of vertical space,
+			and can be unsuitable for long sections of prose. This macro can be used to provide indentation to single hooks, or, using (enchant:),
+			to every line in a passage.
+
+			Details:
+			This will place a gap before the first character of the attached hook, even if it isn't at the start of a line.
+
+			The given number is the number of CSS pixels to indent the hook by. If it is negative, an error will be produced.
+
+			Because this uses the CSS 'text-indent' attribute, hooks using this macro will have their CSS `display` attribute
+			set to `inline-block`.
+
+			It is recommended that you do NOT use this macro for precisely placing text offset from the left or right of the passage.
+			You will get better results using the (align:) macro, aligner marker, or column markup for this purpose.
+
+			See also:
+			(align:)
+
+			Added in: 3.2.0
+			#styling
+		*/
+		("text-indent",
+			(_, width) => ChangerCommand.create("text-indent", [width]),
+			(d, width) => {
+				d.styles.push({
+					'text-indent': width + "px",
+					display: 'inline-block',
+				});
 				return d;
 			},
 			[nonNegativeNumber]
@@ -1437,7 +1480,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			Due to browser limitations, combining many of these changers won't work exactly as intended – `(text-style: "underline", "strike")`, for instance,
 			will cause only the latter of the two to be applied, in this case "strike". These incompatibilities are listed in the table above.
 			
-			Also due to browser limitations, hooks using "mirror", "upside-down", "sway", "buoy", "rumble" or "shudder" will have its CSS `display`
+			Also due to browser limitations, hooks using "mirror", "upside-down", "sway", "buoy", "rumble" or "shudder" will have their CSS `display`
 			attribute set to `inline-block`.
 
 			Note that the animations of "rumble" and "shudder" are particularly intense, and may induce frustration or illness in
@@ -1754,10 +1797,10 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 		;
 
 	/*d:
-		(box: String, Number) -> Changer
+		(box: String, [Number]) -> Changer
 
 		When attached to a hook, it becomes a "box", with a given width proportional to the containing element's width,
-		a given number of lines tall, and a scroll bar if its contained text is longer than its height can contain.
+		an optional number of lines tall, and a scroll bar if its contained text is longer than its height can contain.
 
 		Example usage:
 		* `(box:"=XX=", 1)[Chapter complete]` produces a box that's centered, 50% of the containing element's width, and 1 line tall.
@@ -1777,9 +1820,10 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 		depiction of the box's horizontal proportions - the `=` signs are the space to the left and right, and the characters in
 		the middle are the box itself.
 
-		The second value is a height, in text lines. This size varies based on the font size of the containing element,
+		The second, optional value is a height, in text lines. This size varies based on the font size of the containing element,
 		which is adjustible with (text-size:) and other changers. The hook will be given a CSS `height` value of `1em` multiplied
-		by the number of lines given. If you need to reposition the hook vertically, consider using (float-box:) instead.
+		by the number of lines given. If you need to reposition the hook vertically, consider using (float-box:) instead. if no
+		height is given, then it will use a height large enough to display all of the lines, as usual.
 
 		The "containing element" is whatever structure contains the hook. If it's inside column markup, the containing column is the
 		element. If it's inside another hook (including a hook that also has (box:) attached), that hook is the element. Usually,
@@ -1885,11 +1929,13 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 				display:        "block",
 				width:           size + boxUnits,
 				[name === "box" ? "margin-left" : "left"]: marginLeft + boxUnits,
-				height:          height + (name === "box" ? "em" : "vh"),
 				"box-sizing":   "content-box",
 				"overflow-y":   "auto",
 				padding() { return $(this).css('padding') || '1em'; },
 			};
+			if (height !== undefined) {
+				styles.height = height + (name === "box" ? "em" : "vh");
+			}
 			if (name === "float-box") {
 				Object.assign(styles, {
 					position: 'fixed',
@@ -1904,6 +1950,6 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			d.styles.push(styles);
 			return d;
 		},
-		[String, name === "box" ? Number : String]
+		[String, name === "box" ? optional(Number) : String]
 	));
 });

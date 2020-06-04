@@ -561,6 +561,22 @@ describe("style changer macros", function() {
 			});
 		});
 	});
+	describe("the (text-indent:) macro", function() {
+		it("requires a non-negative number", function() {
+			expect("(print:(text-indent:))").markupToError();
+			expect("(print:(text-indent:'A'))").markupToError();
+			expect("(print:(text-indent:-1))").markupToError();
+			expect("(print:(text-indent:14))").not.markupToError();
+			expect("(print:(text-indent:13,11))").markupToError();
+		});
+		it("applies a text-indent equal to 1px multipled by the given number", function(done) {
+			var hook = runPassage("(text-indent:1.9)[foo]").find('tw-hook');
+			setTimeout(function() {
+				expect(hook[0].style.textIndent).toMatch("1.9px");
+				done();
+			});
+		});
+	});
 	describe("the (corner-radius:) macro", function() {
 		it("requires up to 4 positive numbers", function() {
 			expect("(print:(corner-radius:))").markupToError();
@@ -743,11 +759,12 @@ describe("style changer macros", function() {
 		});
 	});
 	describe("the (box:) macro", function() {
-		it("requires 1 string and 1 number", function() {
+		it("requires 1 string and 1 optional number", function() {
 			expect("(print:(box:))").markupToError();
 			expect("(print:(box:1))").markupToError();
-			expect("(print:(box:'A'))").markupToError();
+			expect("(print:(box:'A'))").not.markupToError();
 			expect("(print:(box:'A','B'))").markupToError();
+			expect("(print:(box:'A',1))").not.markupToError();
 		});
 		it("errors if not given a valid size string", function() {
 			expect("(box:'',1)[]").markupToError();
@@ -758,10 +775,11 @@ describe("style changer macros", function() {
 			expect("(box:'=X=',0)[]").markupToError();
 			expect("(box:'=X=',-0.1)[]").markupToError();
 		});
-		it("gives the hook the specified margins, width, height, as well as display:block", function() {
+		it("gives the hook the specified margins, width, height (if given), as well as display:block", function() {
 			[
 				['=XX=', 25, 50, 4],
 				['X===', 0, 25, 1],
+				['X===', 0, 25, ''],
 				['==XXXXXXXX', 20, 80, 3.5],
 			].forEach(function(a) {
 				var code = a[0], marginLeft=a[1], width=a[2], height=a[3];
@@ -769,7 +787,12 @@ describe("style changer macros", function() {
 				var s = runPassage("(box:'" + code + "', " + height + ")[]").find('tw-hook').attr('style');
 				expect(s).toMatch(RegExp("margin-left:\\s*"+marginLeft+"%"));
 				expect(s).toMatch(RegExp("\\bwidth:\\s*"+width+"%"));
-				expect(s).toMatch(RegExp("\\bheight:\\s*"+height+"em"));
+				if (!height) {
+					expect(s).not.toMatch(RegExp("\\bheight:\\s"));
+				}
+				else {
+					expect(s).toMatch(RegExp("\\bheight:\\s*"+height+"em"));
+				}
 				expect(s).toMatch(/display:\s*block/);
 				expect(s).toMatch(/overflow-y:\s*auto/);
 			});

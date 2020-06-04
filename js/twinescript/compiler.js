@@ -315,6 +315,12 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				*/
 				return token.text.replace(/\n/g, "\\n");
 			}
+			else if (token.type === "hook") {
+				/*
+					For now, expression hooks simply compile to strings.
+				*/
+				return toJSLiteral(token.innerText);
+			}
 			else if (token.type === "colour") {
 				return "Colour.create("
 					+ toJSLiteral(token.colour)
@@ -395,12 +401,12 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			*/
 		}
 		else if (type === "error") {
-			return "TwineError.create('syntax'," + toJSLiteral(token.message) + ")";
+			return "TwineError.create('syntax'," + toJSLiteral(token.message)
+				+ (token.explanation ? ", " + toJSLiteral(token.explanation) : "")
+			+ ")";
 		}
 		/*
-			I'll admit it: I'm not yet sure what place the JS comma will have in
-			TwineScript. As of right now, let's just pass it through
-			at the correct precedence, and require both sides.
+			The JS comma serves just to separate macro arguments in Harlowe.
 		*/
 		else if (type === "comma") {
 			midString = ",";

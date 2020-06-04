@@ -216,7 +216,7 @@ define([
 
 					This keyword evaluates to the number of milliseconds passed since the passage
 					was displayed. Its main purpose is to be used alongside changers
-					such as (live:) or (link:). `(link:"Click")[(if: time > 5s)[...]]`, for instance,
+					such as (live:), (event:) or (link:). `(link:"Click")[(if: time > 5s)[...]]`, for instance,
 					can be used to determine if 5 seconds have passed since this passage was displayed,
 					and thus whether the player waited 5 seconds before clicking the link.
 

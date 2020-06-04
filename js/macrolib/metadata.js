@@ -76,7 +76,7 @@ define(['macros','renderer', 'utils/operationutils', 'datatypes/lambda', 'intern
 			When placed in a passage, this adds the given names and values to the (passage:) datamap for this passage.
 
 			Example usage:
-			* `(metadata: "danger", 4, "hint", "Dragon teeth are fire-hardened, and dragon fillings must be fire-resistant.")` in a passage
+			* `(metadata: "danger", 4, "hint", "Dragon teeth are fire-hardened.")` in a passage
 			named "Dragon dentistry" causes `(passage:"Dragon dentistry")'s danger` to be 4, and `(passage:"Dragon dentistry")'s hint` to equal the given string.
 			* `(metadata: "rarity", 5)` in a passage called "Adamantium" causes `(passage: "Adamantium")'s rarity` to be 5. You can then use
 			`(passages: where it contains 'rarity' and its rarity >= (random: 1, 10))` to get a list of passages that may randomly exclude the "Adamantium" passage.

@@ -69,6 +69,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a `(transition-delay:)` macro (also known as `(t8n-delay:)`) which adds an initial delay to transitions before they begin animating. This can only enchant hooks, not links.
  * Added a `(transition-skip:)` macro (also known as `(t8n-skip:)`) which, when included with a transition, allows the player to speed up the transition by a given number of milliseconds per frame, by holding down any keyboard key, mouse button or touching the screen.
  * Added a `(collapsed:)` changer macro, which causes the attached hook's whitespace to collapse, as if by the `{` and `}` collapsing whitespace markup. This can also be used with `(enchant:)`.
+ * Added a `(text-indent:)` changer macro, which applies a leading indent to the attached hook, and can be applied to each line in the passage using, for example, `(enchant:?passage's lines, (text-indent:12))`.
  * Added a `(rotated-to:)` macro, a variation of `(rotated:)` which, rather than rotating the values by a given number, takes a lambda and rotates them until the first one that matches the lambda is at the front. `(rotated-to:where it > 3, 1,2,3,4)` produces `(a:4,1,2,3)`.
  * `(text-style:)` now lets you provide multiple style names, as a shortcut to combining multiple changers. `(text-style:"italic","outline")` is the same as `(text-style:"italic")+(text-style:"outline")`.
  * Added two more styles to `(text-style:)`, "buoy" and "sway", which are slow, gentle movement animations to serve as counterparts to "rumble" and "shudder".

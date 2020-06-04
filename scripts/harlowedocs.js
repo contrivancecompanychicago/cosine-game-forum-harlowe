@@ -143,7 +143,7 @@ nav img { display:block; margin: 0 auto;}
 html.night #night { background: #444 }
 html:not(.night) #day { background: #ccc }
 /* This flips the colours for most article elements, but flips them back if they have an explicit background. */
-html.night main, html.night nav, html.night tw-debugger, html.night [style*=background] { filter: invert() hue-rotate(180deg); }
+html.night main, html.night nav, html.night tw-debugger, html.night main [style*=background] { filter: invert() hue-rotate(180deg); }
 html.night { background-color:black; }
 
 /* Main styles */

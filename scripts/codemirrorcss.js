@@ -7,11 +7,13 @@ const {min} = Math,
 	nestedBG     = (h,s,l) => e => "background-color: hsla(" + h + "," + s + "%," + l + "%," + e +");",
 	warmHookBG   = nestedBG(40, 100, 50),
 	coolHookBG   = nestedBG(220, 100, 50),
-	macro        = percent => nestedBG(320, 44, 50)(percent) + "color: hsla(320,44%,46%,1.0);",
+	macroBG        = percent => nestedBG(320, 44, 50)(percent),
+	macroColour  = "color: hsla(320,44%,46%,1.0);",
 	invalid      = "color: hsla(0,67%,42%,1.0) !important; background-color: hsla(17,100%,50%,0.5) !important;",
 	intangible   = "font-weight:100; color: hsla(0,0,0,0.5)",
 	colorRegExp  = /hsla\((\d+),\s*(\d+)%,\s*(\d+)%,\s*(\d+\.\d+)\)/g;
 
+const versionClass = 'cm-harlowe-3-';
 /*
 	If a property includes commas, then it's a multiple-name selector.
 	It will be converted to "[selector], [selector]" etc.
@@ -20,7 +22,7 @@ const outputFile = {
 	root: 'box-sizing:border-box;',
 
 	// The cursor token highlight should ignore the most common tokens, unwrapped text tokens.
-	"cursor:not([class^='cm-harlowe-3-text cm-harlowe-3-root'])":
+	["cursor:not([class^='" + versionClass + "text " + versionClass + "-root'])"]:
 		"border-bottom: 2px solid darkgray;",
 
 	CodeMirror: "padding: 0 !important",
@@ -47,24 +49,26 @@ const outputFile = {
 	unclosedHook: warmHookBG(0.05) + "font-weight:bold;",
 	
 	//TODO: whitespace within collapsed
-	"error:not([class*='cm-harlowe-3-string'])":
+	["error:not([class*='" + versionClass + "string'])"]:
 		invalid,
 	
-	macro:        macro(0.05),
-	"macro-2":    macro(0.1),
-	"macro-3":    macro(0.15),
-	"macro-4":    macro(0.2),
-	"macro-5":    macro(0.25),
-	"macro-6":    macro(0.3),
-	"macro-7":    macro(0.35),
-	"macro-8":    macro(0.4),
+	macro:        macroBG(0.05),
+	"macro-2":    macroBG(0.1),
+	"macro-3":    macroBG(0.15),
+	"macro-4":    macroBG(0.2),
+	"macro-5":    macroBG(0.25),
+	"macro-6":    macroBG(0.3),
+	"macro-7":    macroBG(0.35),
+	"macro-8":    macroBG(0.4),
 
 	macroName:
-		"font-style:italic;",
+		"font-style:italic;" + macroColour,
 
 	// The bottommost element is a macro open/close bracket
 	"^=macro ":
-		"font-weight:bold;",
+		"font-weight:bold;" + macroColour,
+
+	comma: macroColour,
 
 	"bold, strong":
 		"font-weight:bold;",
@@ -170,9 +174,9 @@ const outputFile = {
 					}
 					// There's no need for $= because that will always be cm-harlowe-root or cm-harlowe-cursor.
 					if (e.indexOf("^=") === 0) {
-						return "[class^='cm-harlowe-3-" + e.slice(2) + "']";
+						return "[class^='" + versionClass + e.slice(2) + "']";
 					}
-					return ".cm-harlowe-3-" + e;
+					return "." + versionClass + e;
 				});
 			let rule = selector.join(', ') + "{" + this[e] + "}";
 			/*

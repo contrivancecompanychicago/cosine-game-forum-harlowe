@@ -765,7 +765,7 @@ define([
 			However, (interlaced:) can also be of use alongside macros which accept a sequence: you
 			can use it to cleanly insert values between each item. For instance, one can pair
 			an array with another array of spaces, and then convert them to a string with (str:).
-			`(str: ...(interlaced: $arr, (repeated: $arr's length, ' '))` will create a string containing
+			`(str: ...(interlaced: $arr, (repeated: $arr's length, ' ')))` will create a string containing
 			each element of $arr, followed by a space.
 			
 			Details:
