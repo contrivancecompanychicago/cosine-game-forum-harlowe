@@ -103,7 +103,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 		/*d:
 			(if: Boolean) -> Changer
 			
-			This macro accepts only booleans, and produces a command that can be attached to hooks
+			This macro accepts only booleans, and produces a changer that can be attached to hooks
 			to hide them "if" the value was false.
 			
 			Example usage:
@@ -158,7 +158,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			(unless: Boolean) -> Changer
 			
 			This macro is the negated form of (if:): it accepts only booleans, and returns
-			a command that can be attached hooks to hide them "if" the value was true.
+			a changer that can be attached hooks to hide them "if" the value was true.
 			
 			For more information, see the documentation of (if:).
 
@@ -174,7 +174,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			(else-if: Boolean) -> Changer
 			
 			This macro's result changes depending on whether the previous hook in the passage
-			was shown or hidden. If the previous hook was shown, then this command hides the attached
+			was shown or hidden. If the previous hook was shown, then this changer hides the attached
 			hook. Otherwise, it acts like (if:), showing the attached hook if it's true, and hiding it
 			if it's false. If there was no preceding hook before this, then an error message will be printed.
 

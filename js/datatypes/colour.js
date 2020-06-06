@@ -57,10 +57,11 @@ define(['jquery', 'utils'], ($, {matMul}) => {
 		will usually have a `h` value equal to 0, even if you provided a different hue to (hsl:). Furthermore, colours with a
 		lightness of 1 are always white, so their saturation and hue are irrelevant.
 
-		The `lch` value produces a datamap containing these values:
+		The `lch` value produces a datamap containing these values.
+
 		| Data name | Example | Meaning
 		|---
-		| `l` | `$colour's lch's l` | The lightness percentage, a fractional number from 0 to 1.
+		| `l` | `$colour's lch's l` | The lightness percentage, a fractional number from 0 to 1. (Not the same as `$colour's l`!)
 		| `c` | `$colour's lch's c` | The chroma component, a whole number from 0 to 230 (but which is usually below 132).
 		| `h` | `$colour's lch's h` | The hue angle in degrees, a whole number from 0 to 359.
 

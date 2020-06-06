@@ -27,36 +27,6 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 	}
 
 	/*
-		To extract control flow blockers in an expression, this performs a depth-first search
-		(much as how statement execution is a depth-first walk over the parse tree).
-	*/
-	function findBlockers(token) {
-		const blockers = [];
-		/*
-			String tokens have children so that the syntax highlighting can see into them somewhat, but
-			their contained "blockers" should be ignored.
-		*/
-		if (token.type !== "string") {
-			for (let i = 0; i < token.children.length; i += 1) {
-				blockers.push(...findBlockers(token.children[i]));
-			}
-		}
-		const firstChild = token.firstChild();
-		/*
-			Control flow blockers are macros whose name matches one of the aforelisted
-			blocker macros.
-		*/
-		if (token.type === "macro" && firstChild && firstChild.type === "macroName"
-				&& Renderer.options.blockerMacros.includes(insensitiveName(
-					// Slice off the trailing :, which is included in macroName tokens.
-					firstChild.text.slice(0,-1)
-				))) {
-			blockers.push(token);
-		}
-		return blockers;
-	}
-
-	/*
 		Text constant used by align.
 		The string "text-align: " is selected by the debugmode CSS, so the one space
 		must be present.
@@ -217,7 +187,7 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 				let token = tokens[i];
 				switch(token.type) {
 					case "error": {
-						out += TwineError.create("syntax",token.message)
+						out += TwineError.create("syntax", token.message, token.explanation)
 							.render(escape(token.text))[0].outerHTML;
 						break;
 					}
@@ -486,9 +456,63 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 						/*
 							Only macro expressions may contain control flow blockers; these are extracted
 							and compiled separately from the parent expression.
+							Also, this same loop is used to extract and precompile code hooks, which
+							saves Compiler needing to re-call Renderer.
 						*/
-						const blockers = token.type === "macro" ? findBlockers(token) : [];
-						const compiledBlockers = blockers.map(b => {
+						const blockers = [], innerMarkupErrors = [];
+						if (token.type === "macro") {
+							/*
+								To extract control flow blockers and precompile code hooks in an expression, this performs a depth-first search
+								(much as how statement execution is a depth-first walk over the parse tree).
+							*/
+							(function recur(token) {
+								/*
+									- String tokens have children so that the syntax highlighting can see into them somewhat, but
+									their contained "blockers" should be ignored.
+									- Hooks, of course, shouldn't be entered either.
+								*/
+								if (token.type !== "string" && token.type !== "hook") {
+									token.children.every(recur);
+								}
+								const firstChild = token.firstChild();
+								/*
+									Control flow blockers are macros whose name matches one of the aforelisted
+									blocker macros.
+								*/
+								if (token.type === "macro" && firstChild && firstChild.type === "macroName"
+										&& Renderer.options.blockerMacros.includes(insensitiveName(
+											// Slice off the trailing :, which is included in macroName tokens.
+											firstChild.text.slice(0,-1)
+										))) {
+									blockers.push(token);
+								}
+								else if (token.type === "hook") {
+									//Before compiling the interior into HTML, check for an error token first.
+									//If so, don't bother.
+									if (!token.everyLeaf(token => {
+										if (token.type === "error") {
+											innerMarkupErrors.push(token);
+											return false;
+										}
+										return true;
+									})) {
+										return false;
+									}
+									//Inner hooks' child tokens are converted to HTML early, so that the code hooks'
+									//consumers can execute it slightly faster than just lexing the markup aLL over again.
+									token.html = render(token.children);
+								}
+								return true;
+							}(token));
+						}
+						if (innerMarkupErrors.length) {
+							return TwineError.create('syntax',"This code hook\'s markup contained " + innerMarkupErrors.length + " error"
+								+ (innerMarkupErrors.length ? 's' : '') + ":<br>—"
+								+ innerMarkupErrors.map(error => error.message).join("<br>—")
+							).render(escape(token.text))[0].outerHTML;
+						}
+
+						const compiledBlockers = blockers.length && blockers.map(b => {
 							const ret = Compiler(b);
 							/*
 								When the blockers' execution completes, the values produced by them are stored by the passage.
@@ -512,8 +536,8 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 							Since all the blockers were "macro" tokens, changing them back from "blockedValue" tokens is trivial.
 						*/
 						blockers.forEach(b => b.type = 'macro');
-						break;
 					}
+					break;
 					/*
 						Base case
 					*/

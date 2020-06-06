@@ -144,8 +144,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			["error"],
 			["comma"],
 			{rightAssociative: ["spread", "bind"]},
-			["to"],
-			["into"],
+			["to","into"],
 			["where", "when", "via"],
 			["with", "making", "each"],
 			["augmentedAssign"],
@@ -271,20 +270,17 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			}
 			return "";
 		}
-		/*
-			Obtain the first token, which is used for several base-cases in this function,
-			such as the one below.
-		*/
-		let token = tokens[0];
+		let token;
 		/*
 			Potential early return if we're at a leaf node.
 		*/
 		if (tokens.length === 1) {
+			token = tokens[0];
 			if (token.type === "identifier") {
 				if (isVarRef) {
 					return "VarRef.create(Operations.Identifiers," + toJSLiteral(token.text) + ")";
 				}
-				return " Operations.Identifiers." + token.text.toLowerCase() + " ";
+				return "Operations.Identifiers." + token.text.toLowerCase() + " ";
 			}
 			else if (token.type === "variable") {
 				return "VarRef.create(State.variables,"
@@ -297,15 +293,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 					+ ")" + (isVarRef ? "" : ".get()");
 			}
 			else if (token.type === "hookRef") {
-				/*
-					Some remarks:
-					
-					1. Note that the 'section' is that provided by the environ,
-					and is not the Section prototype.
-					2. The ? sigil is needed to distinguish the hook name
-					from a pseudo-hook selector string.
-				*/
-				return " HookSet.create({type:'name', data:'" + token.name + "'}) ";
+				return "HookSet.create({type:'name', data:'" + token.name + "'}) ";
 			}
 			else if (token.type === "string") {
 				/*
@@ -316,20 +304,13 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				return token.text.replace(/\n/g, "\\n");
 			}
 			else if (token.type === "hook") {
-				/*
-					For now, expression hooks simply compile to strings.
-				*/
-				return toJSLiteral(token.innerText);
+				return "CodeHook.create(" + toJSLiteral(token.html) + ")";
 			}
 			else if (token.type === "colour") {
-				return "Colour.create("
-					+ toJSLiteral(token.colour)
-					+ ")";
+				return "Colour.create(" + toJSLiteral(token.colour) + ")";
 			}
 			else if (token.type === "datatype") {
-				return "Datatype.create("
-					+ toJSLiteral(token.name)
-					+ ")";
+				return "Datatype.create(" + toJSLiteral(token.name) + ")";
 			}
 			/*
 				"blockedValue" tokens aren't created by the TwineMarkup tokeniser, but made from permuted macro
@@ -353,6 +334,11 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				if (isVarRef && whitespaceError) {
 					return "TwineError.create('operation'," + toJSLiteral(whitespaceError) + ")";
 				}
+			}
+			else if (token.type === "error") {
+				return "TwineError.create('syntax'," + toJSLiteral(token.message)
+					+ (token.explanation ? ", " + toJSLiteral(token.explanation) : "")
+				+ ")";
 			}
 		}
 
@@ -399,11 +385,6 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			/*
 				If no token was found, skip the rest of these checks.
 			*/
-		}
-		else if (type === "error") {
-			return "TwineError.create('syntax'," + toJSLiteral(token.message)
-				+ (token.explanation ? ", " + toJSLiteral(token.explanation) : "")
-			+ ")";
 		}
 		/*
 			The JS comma serves just to separate macro arguments in Harlowe.

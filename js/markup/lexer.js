@@ -210,7 +210,7 @@
 			if (!this.children || this.children.length === 0) {
 				return !!fn(this);
 			}
-			return this.children.reduce((a,e) => e.everyLeaf(fn) && a, true);
+			return this.children.reduce((a,e) => a && e.everyLeaf(fn), true);
 		},
 		
 		/*

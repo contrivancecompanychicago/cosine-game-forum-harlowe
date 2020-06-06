@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changercommand', 'datatypes/lambda', 'datatypes/hookset', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
-($, NaturalSort, {insensitiveName, nth, plural, andList, lockProperty}, {objectName, typeName, singleTypeCheck}, ChangerCommand, Lambda, HookSet, ChangeDescriptor, TwineError) => {
+define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changercommand', 'datatypes/lambda', 'datatypes/hookset', 'datatypes/codehook', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
+($, NaturalSort, {insensitiveName, nth, plural, andList, lockProperty}, {objectName, typeName, singleTypeCheck}, ChangerCommand, Lambda, HookSet, CodeHook, ChangeDescriptor, TwineError) => {
 	/*
 		This contains a registry of macro definitions, and methods to add to that registry.
 	*/
@@ -76,12 +76,8 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		This converts a passed macro function into one that performs type-checking
 		on its inputs before running. It provides macro authors with another layer of
 		error feedback.
-		
-		@param {String|Array}      The macro's name(s).
-		@param {Function}          A macro function.
-		@param {Array|Object|null} An array of Twine macro parameter type data.
 	*/
-	function typeSignatureCheck(name, fn, typeSignature) {
+	function typeSignatureCheck(name, fn, typeSignature, isChanger = false) {
 		/*
 			The typeSignature *should* be an Array, but if it's just one item,
 			we can normalise it to Array form.
@@ -118,7 +114,17 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			for(let ind = 0, end = Math.max(args.length, typeSignature.length); ind < end; ind += 1) {
 				let type = typeSignature[ind];
 				const arg = args[ind];
-				
+
+				/*
+					Passing a hook as an argument to a changer gives a unique hint.
+				*/
+				if (CodeHook.isPrototypeOf(arg) && isChanger) {
+					return TwineError.create(
+						"syntax", "Please put this hook outside the parentheses of the changer macro, not inside it.",
+						"Hooks should appear after a macro: " + name + "[Some text]"
+					);
+				}
+
 				/*
 					A rare early error check can be made up here: if ind >= typeSignature.length,
 					and Rest is not in effect, then too many params were supplied.
@@ -361,7 +367,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		addChanger: function addChanger(name, fn, changerCommandFn, typeSignature) {
 			
 			privateAdd(name,
-				readArguments(typeSignatureCheck(name, fn, typeSignature))
+				readArguments(typeSignatureCheck(name, fn, typeSignature, true))
 			);
 			ChangerCommand.register(Array.isArray(name) ? name[0] : name, changerCommandFn);
 			

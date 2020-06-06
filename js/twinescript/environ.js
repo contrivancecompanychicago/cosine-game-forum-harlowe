@@ -8,6 +8,8 @@ define([
 	'datatypes/lambda',
 	'datatypes/datatype',
 	'datatypes/varbind',
+	'datatypes/codehook',
+	'datatypes/typedvar',
 	'internaltypes/varref',
 	'internaltypes/twineerror',
 	'twinescript/operations'
@@ -15,7 +17,7 @@ define([
 /*
 	To keep the eval scope very clean in compiled code, no destructuring is done here.
 */
-(Macros, State, Utils, Colour, HookSet, Lambda, Datatype, VarBind, VarRef, TwineError, OperationsProto) => {
+(Macros, State, Utils, Colour, HookSet, Lambda, Datatype, VarBind, CodeHook, TypedVar, VarRef, TwineError, OperationsProto) => {
 	/*
 		Creates a new script execution environment. This accepts and
 		decorates a Section object (see Engine.showPassage) with the

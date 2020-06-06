@@ -315,7 +315,7 @@ define([
 			const macroCall = (expr.attr('title') || ("(" + result.macroName + ": ...)"));
 			expr.replaceWith(TwineError.create("syntax",
 				"The (" + result.macroName + ":) changer should be stored in a variable or attached to a hook.",
-				"Macros like this should appear to the left of a hook: " + macroCall + "[Some text]"
+				"Macros like this should appear before a hook: " + macroCall + "[Some text]"
 			).render(expr.attr('title')));
 			return;
 		}
