@@ -8,14 +8,14 @@ define(['utils', 'engine', 'markup', 'twinescript/compiler', 'twinescript/enviro
 				TwineMarkup and the Harlowe compiler.
 			*/
 			window.REPL = function(a) {
-			  var r = Compiler(TwineMarkup.lex("(print:" + a + ")"));
-			  console.log(r);
-			  var result = Environ({}).eval(r);
-			  return result.TwineScript_Run ? result.TwineScript_Run().source : result;
+				let r = Compiler(TwineMarkup.lex("(print:" + a + ")"));
+				console.log(r);
+				let result = Environ({}).eval(r);
+				return result.TwineScript_Run ? result.TwineScript_Run().source : result;
 			};
 			window.LEX = function(a) {
-			  var r = TwineMarkup.lex(a);
-			  return (r.length === 1 ? r[0] : r);
+				let r = TwineMarkup.lex(a);
+				return (r.length === 1 ? r[0] : r);
 			};
 		}
 	}));

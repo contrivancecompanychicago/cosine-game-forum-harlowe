@@ -24,7 +24,7 @@ require.config({
 });
 require(['jquery', 'debugmode', 'renderer', 'state', 'section', 'engine', 'passages', 'utils', 'utils/renderutils', 'macros',
 	'macrolib/values', 'macrolib/commands', 'macrolib/datastructures', 'macrolib/stylechangers', 'macrolib/enchantments', 'macrolib/metadata',
-	'macrolib/links', 'repl'],
+	'macrolib/links', 'macrolib/custommacros', 'repl'],
 		($, DebugMode, Renderer, State, Section, Engine, Passages, Utils, {dialog}) => {
 	/*
 		Harlowe, the default story format for Twine 2.

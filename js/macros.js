@@ -64,10 +64,10 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			
 			// Do the error check now.
 			const error = TwineError.containsError(args);
-
 			if (error) {
 				return error;
 			}
+
 			return fn(...args);
 		};
 	}
@@ -86,25 +86,32 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		typeSignature = [].concat(typeSignature || []);
 		
 		/*
-			The name is used solely for error message generation. It can be a String or
-			an Array of Strings. If it's the latter, and there's more than one name,
-			we'll (often incorrectly, but still informatively) use the first name,
-			as we have no other information about which macro name was used.
+			Custom macros have no name.
+		*/
+		const custom = !name;
+		/*
+			The invocation (its name in "(name:)" format) is used solely for error message generation.
+			If the macro has more than one name, we'll (often incorrectly, but still informatively)
+			use the first name, as we have no other information about which macro name was used.
 			It's an uncomfortable state of affairs, I know.
 		*/
-		name = "(" + (Array.isArray(name) && name.length > 1 ? name[0] : name) + ":)";
+		const invocation = (custom ? '' : "(" + (Array.isArray(name) && name.length > 1 ? name[0] : name) + ":)");
+		name = custom ? "this custom macro" : "the " + invocation + " macro" ;
+
 		/*
 			This is also used for error message generation: it provides the author with
 			a readable sentence about the type signature of the macro.
 		*/
 		let signatureInfo;
 		if (typeSignature.length > 0) {
-			signatureInfo = "The " + name + " macro must only be given "
+			signatureInfo = name + " must only be given "
 				// Join [A,B,C] into "A, B, and C".
 				+ andList(typeSignature.map(typeName))
 				+ (typeSignature.length > 1 ? ", in that order" : ".");
 		} else {
-			signatureInfo = "The macro must not be given any data - just write " + name + ".";
+			signatureInfo = (
+				name + " must not be given any data." + (custom ? '' : " Just write " + invocation)
+			);
 		}
 		
 		// That being done, we now have the wrapping function.
@@ -121,7 +128,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 				if (CodeHook.isPrototypeOf(arg) && isChanger) {
 					return TwineError.create(
 						"syntax", "Please put this hook outside the parentheses of the changer macro, not inside it.",
-						"Hooks should appear after a macro: " + name + "[Some text]"
+						"Hooks should appear after a macro" + (custom ? '.' : ": " + invocation + "[Some text]")
 					);
 				}
 
@@ -133,7 +140,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 					return TwineError.create(
 						"datatype",
 						(args.length - typeSignature.length) +
-							" too many values were given to this " + name + " macro.",
+							" too many values were given to " + name + ".",
 						signatureInfo
 					);
 				}
@@ -171,7 +178,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 					if (arg === undefined) {
 						return TwineError.create(
 							"datatype",
-							"The " + name + " macro needs "
+							name + " needs "
 								+ plural((typeSignature.length - ind), "more value") + ".",
 							signatureInfo
 						);
@@ -397,6 +404,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			// Return the function to enable "bubble chaining".
 			return addCommand;
 		},
+
 		
 		/*
 			These helper functions/constants are used for defining semantic type signatures for
@@ -465,17 +473,9 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			Runs a macro.
 			
 			In compile(), the myriad arguments given to a macro invocation are
-			converted to 2 parameters to runMacro:
-			
-			@param {String} The macro's name.
-			@param {Array} An array enclosing the passed arguments.
-			@return The result of the macro function.
+			converted to 2 arguments to runMacro.
 		*/
 		run(name, args) {
-			// First and least, the error rejection check.
-			if (TwineError.containsError(name)) {
-				return name;
-			}
 			/*
 				Check if the macro exists as a built-in.
 			*/

@@ -994,7 +994,7 @@
 		isNotIn:    "is" + mws + "not" + mws + "in" + wb,
 		
 		addition:          escape("+")      + notBefore("="),
-		subtraction:       escape("-")      + notBefore("="),
+		subtraction:       escape("-")      + notBefore("=","type"),
 		multiplication:    escape("*")      + notBefore("="),
 		division:          either("/", "%") + notBefore("="),
 		
@@ -1012,6 +1012,7 @@
 		augmentedAssign: either("\\+", "\\-", "\\*", "\\\/", "%") + "=",
 
 		bind:       "2?bind" + wb,
+		typeSignature: escape("-type") + wb,
 
 		incorrectOperator,
 	};

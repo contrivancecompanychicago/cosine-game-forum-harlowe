@@ -727,8 +727,8 @@
 				};
 				return a;
 			},{}),
-			// These, being purely symbols, do not have that necessity.
-			["comma", "spread", "addition", "subtraction",
+			// These, being purely or partly symbols, do not have that necessity.
+			["comma", "spread", "typeSignature", "addition", "subtraction",
 			"multiplication", "division"].reduce((a, e) => {
 				a[e] = { fn: emptyFn };
 				return a;

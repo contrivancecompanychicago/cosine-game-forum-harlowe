@@ -51,6 +51,20 @@ define([
 		| `matches` | Evaluates to boolean `true` if the data on the left matches the pattern on the right. | `(a:2,3) matches (a: num, num)`
 		| `is a`, `is an` | Similar to `matches`, but requires the right side to be just a type name. | `(a:2,3) is an array`, `4.1 is a number`
 	*/
+
+	const typeIndex = {
+		array:    { class: Array,     typeOf: Array.isArray, },
+		datamap:  { class: Map,       typeOf: obj => obj instanceof Map },
+		dataset:  { class: Set,       typeOf: obj => obj instanceof Set },
+		changer:  { class: Changer,   typeOf: obj => Changer.isPrototypeOf(obj) },
+		colour:   { class: Colour,    typeOf: obj => Colour.isPrototypeOf(obj) },
+		gradient: { class: Gradient,  typeOf: obj => Gradient.isPrototypeOf(obj) },
+		string:   { class: String,    typeOf: obj => typeof obj === "string" },
+		number:   { class: Number,    typeOf: obj => typeof obj === "number" },
+		boolean:  { class: Boolean,   typeOf: obj => typeof obj === "boolean" },
+		// Lambdas, AssignmentRequests and DataType are not included because they're not meant to be pattern-matched.
+	};
+
 	const Datatype = Object.freeze({
 		
 		datatype: true,
@@ -73,19 +87,15 @@ define([
 		TwineScript_IsTypeOf(obj) {
 			const {name} = this;
 
-			const expectedName = Array.isArray(obj) ? "array"
-				: obj instanceof Map ? "datamap"
-				: obj instanceof Set ? "dataset"
-				: Colour.isPrototypeOf(obj) ? "colour"
-				: Gradient.isPrototypeOf(obj) ? "gradient"
-				// Lambdas, AssignmentRequests and DataType are not included because they're not meant to be pattern-matched.
-				: typeof obj === "string" ? "string"
-				: typeof obj === "number" ? "number"
-				: typeof obj === "boolean" ? "boolean"
-				// If we get this far, some kind of foreign JS value has probably been passed in.
-				: "unknown";
+			return (typeIndex[name] ? typeIndex[name].typeOf(obj) : false);
+		},
 
-			return name === expectedName;
+		/*
+			Because Harlowe uses a different set of objects for type signatures of its
+			internal functions, these user-facing type-checking objects need to be
+		*/
+		toTypeSignatureObject() {
+			return typeIndex[this.name].class;
 		},
 
 		create(name) {

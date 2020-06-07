@@ -145,6 +145,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			["comma"],
 			{rightAssociative: ["spread", "bind"]},
 			["to","into"],
+			["typeSignature"],
 			["where", "when", "via"],
 			["with", "making", "each"],
 			["augmentedAssign"],
@@ -348,6 +349,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 		let i;
 		[token, i] = precedentToken(tokens, "least");
 		const type = (token || {}).type;
+		const before = tokens.slice(0, i), after = tokens.slice(i + 1);
 		/*
 			This helper creates arguments for recursive compile() calls whose results should be VarRefs.
 		*/
@@ -402,37 +404,42 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				is probably easily disputed.
 			*/
 			midString = "Operations.makeSpreader(";
-			right = compile(tokens.slice(i + 1))
-				+ ")";
+			right = compile(after) + ")";
 			needsLeft = false;
 		}
 		else if (type === "bind") {
 			midString = "VarBind.create(";
-			right = compile(tokens.slice(i + 1), varRefArgs("right"))
+			right = compile(after, varRefArgs("right"))
 				+ (token.text.startsWith('2') ? ",'two way'" : '')
 				+ ")";
 			needsLeft = false;
 		}
 		else if (type === "to") {
 			assignment = "to";
-			right = compile(tokens.slice(i + 1), varRefArgs("right"));
-			left  = "Operations.setIt(" + compile(tokens.slice(0,  i), varRefArgs("left")) + ")";
+			right = compile(after, varRefArgs("right"));
+			left  = "Operations.setIt(" + compile(before, varRefArgs("left")) + ")";
 		}
 		else if (type === "into") {
 			assignment = "into";
 			// varRefArgs uses the syntactic left, which isn't the compiler's left.
-			right = compile(tokens.slice(0,  i), varRefArgs("left"));
-			left  = "Operations.setIt(" + compile(tokens.slice(i + 1), varRefArgs("right")) + ")";
+			right = compile(before, varRefArgs("left"));
+			left  = "Operations.setIt(" + compile(after, varRefArgs("right")) + ")";
+		}
+		else if (type === "typeSignature") {
+			left = "TypedVar.create(";
+			midString = compile(before) + ",";
+			right = compile(after, varRefArgs("right"))
+				+ ")";
 		}
 		else if (type === "where" || type === "when" || type === "via") {
 			left = "Lambda.create("
-				+ (compile(tokens.slice(0, i), {isVarRef:true, whitespaceError:null}).trim()
+				+ (compile(before, {isVarRef:true, whitespaceError:null}).trim()
 					// Omitting the temp variable means that you must use "it"
 					|| "undefined")
 				+ ",";
 			midString = toJSLiteral(token.type)
 				+ ",";
-			right = toJSLiteral(compile(tokens.slice(i + 1)))
+			right = toJSLiteral(compile(after))
 				+ ")";
 		}
 		else if (type === "with" || type === "making" || type === "each") {
@@ -440,7 +447,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				This token requires that whitespace + a temp variable be to the right of it.
 				(Hence, why "each" is included among them.)
 			*/
-			const rightTokens = tokens.slice(i + 1);
+			const rightTokens = after;
 			if (![2,3].includes(rightTokens.length) || rightTokens[0].type !== "whitespace" || rightTokens[1].type !== "tempVariable"
 					|| (rightTokens[2] && rightTokens[2].type !== "whitespace")) {
 				left = "TwineError.create('operation','I need a temporary variable to the right of \\'";
@@ -461,7 +468,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				// Other keywords can have a preceding temp variable, though.
 				else {
 					left = "Lambda.create("
-						+ (compile(tokens.slice(0, i), {isVarRef:true, whitespaceError:null}).trim()
+						+ (compile(before, {isVarRef:true, whitespaceError:null}).trim()
 							// Omitting the temp variable means that you must use "it"
 							|| "undefined")
 						+ ",";
@@ -478,7 +485,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 		*/
 		else if (type === "augmentedAssign") {
 			assignment = token.operator;
-			left  = compile(tokens.slice(0,  i), varRefArgs("left"));
+			left  = compile(before, varRefArgs("left"));
 			/*
 				This line converts the "b" in "a += b" into "a + b" (for instance),
 				thus partially de-sugaring the augmented assignment.
@@ -489,8 +496,8 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				a binary-arity Operation method name.
 			*/
 			right = "Operations['" + assignment + "']("
-				+ (compile(tokens.slice(0,  i)) + ","
-				+  compile(tokens.slice(i + 1))) + ")";
+				+ (compile(before) + ","
+				+  compile(after)) + ")";
 		}
 		/*
 			The following are the logical arithmetic operators.
@@ -514,8 +521,8 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			};
 
 			const
-				leftIsComparison        = isComparisonOp(tokens.slice(0,  i)),
-				rightIsComparison       = isComparisonOp(tokens.slice(i + 1)),
+				leftIsComparison        = isComparisonOp(before),
+				rightIsComparison       = isComparisonOp(after),
 				// This error message is used for elided "is not" comparisons.
 				ambiguityError = "TwineError.create('operation', 'This use of \"is not\" and \""
 					+ type + "\" is grammatically ambiguous',"
@@ -529,9 +536,9 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			*/
 			if (elidedComparison === token.type) {
 				operation = '';
-				left  = (compile(tokens.slice(0,  i), {isVarRef, elidedComparison})).trim();
+				left  = (compile(before, {isVarRef, elidedComparison})).trim();
 				midString = ",";
-				right = (compile(tokens.slice(i + 1), {elidedComparison})).trim();
+				right = (compile(after, {elidedComparison})).trim();
 			}
 			/*
 				If the left side is a comparison operator, and the right side is not,
@@ -553,7 +560,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				right = "Operations.elidedComparisonOperator("
 					+ toJSLiteral(token.type) + ","
 					+ operator + ","
-					+ compile(tokens.slice(i + 1), {elidedComparison:type})
+					+ compile(after, {elidedComparison:type})
 					+ ")";
 			}
 			/*
@@ -579,7 +586,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				right = "Operations.elidedComparisonOperator("
 					+ toJSLiteral(token.type) + ","
 					+ operator + ","
-					+ compile(tokens.slice(0, i), {elidedComparison:type})
+					+ compile(before, {elidedComparison:type})
 					+ ")";
 
 				/*
@@ -620,7 +627,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				The test for determining whether this is a unary or binary +/- is to attempt compiling the left side,
 				and if it "fails" (using testNeedsRight to mask the error) or is empty, decide that it is unary.
 			*/
-			const testLeft = compile(tokens.slice(0, i), { testNeedsRight: true }).trim();
+			const testLeft = compile(before, { testNeedsRight: true }).trim();
 			if (!testLeft) {
 				/*
 					Converting the token to a unary "positive" or "negative" involves the slightly #awkward
@@ -644,7 +651,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 		else if (type === "not") {
 			midString = " ";
 			right = "Operations.not("
-				+ compile(tokens.slice(i + 1))
+				+ compile(after)
 				+ ")";
 			needsLeft = false;
 		}
@@ -657,7 +664,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				/*
 					belongingProperties place the variable on the right.
 				*/
-				+ compile(tokens.slice (i + 1), varRefArgs("right"))
+				+ compile(after, varRefArgs("right"))
 				+ ","
 				/*
 					Utils.toJSLiteral() is used to both escape the name
@@ -676,7 +683,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			else {
 				// Since, as with belonging properties, the variable is on the right,
 				// we must compile the right side as a varref.
-				right = compile(tokens.slice (i + 1), varRefArgs("right"));
+				right = compile(after, varRefArgs("right"));
 			}
 			possessive = "belonging";
 		}
@@ -693,7 +700,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				inside the Operations.get() call, while leaving the right side as is.
 			*/
 			left = "VarRef.create("
-				+ compile(tokens.slice(0, i), varRefArgs("left"))
+				+ compile(before, varRefArgs("left"))
 				+ ","
 				/*
 					Utils.toJSLiteral() is used to both escape the name
@@ -795,8 +802,8 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				values for left and right, but usually they will just be
 				the tokens to the left and right of the matched one.
 			*/
-			left  = left  || (compile(tokens.slice(0,  i), {isVarRef})).trim();
-			right = right || (compile(tokens.slice(i + 1))).trim();
+			left  = left  || (compile(before, {isVarRef})).trim();
+			right = right || (compile(after)).trim();
 			/*
 				The compiler should implicitly insert the "it" keyword when the
 				left-hand-side of a comparison operator was omitted.

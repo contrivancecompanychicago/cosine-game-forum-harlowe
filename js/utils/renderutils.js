@@ -444,7 +444,7 @@ define(['jquery', 'utils', 'renderer'], function($, Utils, Renderer) {
 				node.textContent = node.textContent.slice(1);
 			}
 			return node;
-		}, beforeNode);console.log(...elem.get());
+		}, beforeNode);
 		/*
 			- Trim the rightmost nodes up to the nearest visible node.
 			In the case of { <b>A </b><i> </i> }, there are 3 text nodes that need to be trimmed.

@@ -1,5 +1,5 @@
 "use strict";
-define([], () => {
+define(['internaltypes/twineerror'], (TwineError) => {
 	/*d:
 		CodeHook data
 
@@ -20,6 +20,10 @@ define([], () => {
 		TwineScript_Unstorable: true,
 		
 		create(html) {
+			const error = TwineError.containsError(html);
+			if (error) {
+				return error;
+			}
 			return Object.assign(Object.create(this), { html });
 		},
 	});
