@@ -485,28 +485,10 @@
 			Now, macro code rules.
 		*/
 		const macroRules = setupRules(macroMode, assign({
-
-				/*
-					The macroName must be a separate token, because it could
-					be a method call (which in itself contains a variable token
-					and 0+ property tokens).
-				*/
 				macroName: {
 					// This must be the first token inside a macro.
 					canFollow: ['macroFront'],
-					fn(match) {
-						/*
-							If match[2] is present, then it matched a variable.
-							Thus, it's a method call.
-						*/
-						if (match[2]) {
-							return {
-								isMethodCall:   true,
-								innerText:      match[2],
-							};
-						}
-						return { isMethodCall:   false };
-					},
+					fn: textTokenFn("name"),
 				},
 
 				groupingFront: {

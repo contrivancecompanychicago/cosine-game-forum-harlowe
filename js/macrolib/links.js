@@ -432,6 +432,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			},
 			(cd, section, text, passage) => {
 				/*
+					First, check that the passage name can actually be parsed.
 				*/
 				let error;
 				({text, passage, error} = passageNameParse(section, text, passage));

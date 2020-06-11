@@ -857,14 +857,28 @@
 			such as altering the game's state, displaying different text depending on the game's state, and altering
 			the manner in which text is displayed.
 
+			Built-in macros:
+
 			There are many built-in macros in Harlowe. To use one, you must *call* upon it in your passage by writing
 			the name, a colon, and some data values to provide it, all in parentheses. For instance, you call the (print:)
 			macro like so: `(print: 54)`. In this example, `print` is the macro's name, and `54` is the value.
 
 			The name of the macro is case-insensitive, dash-insensitive and underscore-insensitive. This means that
-			any combination of case, dashes and underscores in the name will be ignored. You can, for instance, write
+			almost any combination of case, dashes and underscores in the name will be ignored. You can, for instance, write
 			`(go-to:)` as `(goto:)`, `(Goto:)`, `(GOTO:)`, `(GoTo:)`, `(Go_To:)`, `(Got--o:)`, `(-_-_g-o-t-o:)`, or 
-			any other combination or variation.
+			almost any other combination or variation. There is, however, ONE exception: the name cannot start with an underscore
+			_, because that would make it a temp variable.
+
+			Custom macros:
+
+			In addition to built-in macros, it is also possible to write your own macros, using the (macro:) macro. You need
+			to save these macros inside a variable or temp variable using the (set:) macro. Once you've done so, you can call it
+			much like it was a built-in macro, except by replacing the name with the variable: `($someCustomMacro:)` is how you would
+			call a custom macro stored in the variable $someCustomMacro, and `(_anotherCustomMacro:)` is how you would
+			call a custom macro stored in the temp variable _anotherCustomMacro. Note that you can't use dataname access to
+			use macros that are inside arrays or datamaps: `($array's 1st:)` is, unfortunately, not a valid custom macro call.
+
+			Passing data:
 
 			You can provide any type of data values to a macro call - numbers, strings, booleans, and so forth. These
 			can be in any form, as well - `"Red" + "belly"` is an expression that produces a single string, "Redbelly",

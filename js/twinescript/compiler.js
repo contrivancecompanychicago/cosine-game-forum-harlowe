@@ -743,19 +743,14 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				The first child token in a macro is always the method name.
 			*/
 			const macroNameToken = token.children[0];
-			if(macroNameToken.type !== "macroName") {
+			const variableCall = macroNameToken.type.endsWith("ariable");
+			if(macroNameToken.type !== "macroName" && !variableCall) {
 				impossible('Compiler.compile', 'macro token had no macroName child token');
 			}
 			
-			midString = 'Macros.run('
-				/*
-					The macro name, if it constitutes a method call, contains a
-					variable expression representing which function should be called.
-					Operations.runMacro will, if given a function instead of a string
-					identifier, run the function in place of a macro's fn.
-				*/
-				+ (macroNameToken.isMethodCall
-					? compile(macroNameToken.children)
+			midString = 'Macros.run' + (variableCall ? 'Custom' : '') + '('
+				+ (variableCall
+					? compile(macroNameToken)
 					: '"' + token.name + '"'
 				)
 				/*
@@ -776,6 +771,12 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 					This is currently true, but it is nonetheless a fairly bold assumption.
 				*/
 				+ compile(token.children.slice(1))
+				/*
+					There's an #awkward issue here: when lexing a custom macro, the variable is consumed,
+					but the trailing ":" isn't – it simply becomes loose text. So, that token (which is the
+					first token after this one) must be sliced off.
+				*/
+					.slice(+variableCall)
 				+ '])';
 			needsLeft = needsRight = false;
 		}

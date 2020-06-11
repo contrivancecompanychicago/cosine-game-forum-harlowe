@@ -163,7 +163,6 @@ define([
 			Execute the expression, and obtain its result value.
 		*/
 		let result = this.eval(expr.popAttr('js') || '');
-
 		/*
 			If this stack frame is being rendered in "evaluate only" mode (i.e. it's inside a link's passage name or somesuch)
 			then it's only being rendered to quickly check what the resulting DOM looks like. As such, changers or commands which
@@ -319,6 +318,7 @@ define([
 			).render(expr.attr('title')));
 			return;
 		}
+
 		/*
 			If the above loop wasn't entered at all (i.e. the result wasn't a changer) then an error may
 			be called for. For now, obtain the next hook anyway.
@@ -443,7 +443,7 @@ define([
 			The only remaining values should be unattached changers, or booleans.
 		*/
 		else if (!(ChangerCommand.isPrototypeOf(result) || typeof result === "boolean")) {
-			Utils.impossible('Section.runExpression', "The expression evaluated to an unknown value: " + result.toSource());
+			Utils.impossible('Section.runExpression', "The expression evaluated to an unknown value: " + result);
 		}
 	}
 
@@ -904,17 +904,22 @@ define([
 				this.stackTop.dom = dom;
 				this.stackTop.desc = undefined;
 			}
-			/*
-				This provides (sigh) a reference to this object usable by the
-				inner function, below.
-			*/
-			const section = this;
 
 			/*
 				Execute the expressions immediately.
 			*/
+			const section = this;
 			dom.findAndFilter('tw-hook,tw-expression')
 					.each(function() {
+				/*
+					This is used to halt the loop if a hook contained a blocker - the call to renderInto()
+					would've created another stack frame, which, being blocked, hasn't been removed yet.
+					This needs to be at the start of the function, not the end, or else (output:)'s blocking
+					won't work, for reasons I do not understand.
+				*/
+				if (section.stackTop.blocked) {
+					return false;
+				}
 				const expr = $(this);
 				
 				switch(expr.tag()) {
@@ -1014,13 +1019,6 @@ define([
 						if (expr.attr('js')) {
 							runExpression.call(section, expr);
 						}
-					}
-					/*
-						This is used to halt the loop if a hook contained a blocker - the call to renderInto()
-						would've created another stack frame, which, being blocked, hasn't been removed yet.
-					*/
-					if (section.stackTop.blocked) {
-						return false;
 					}
 				}
 			});

@@ -487,8 +487,10 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 									blockers.push(token);
 								}
 								else if (token.type === "hook") {
-									//Before compiling the interior into HTML, check for an error token first.
-									//If so, don't bother.
+									/*
+										Before compiling the interior into HTML, check for an error token (from a markup error) first.
+										If so, don't bother.
+									*/
 									if (!token.everyLeaf(token => {
 										if (token.type === "error") {
 											innerMarkupErrors.push(token);
@@ -498,8 +500,10 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 									})) {
 										return false;
 									}
-									//Inner hooks' child tokens are converted to HTML early, so that the code hooks'
-									//consumers can execute it slightly faster than just lexing the markup aLL over again.
+									/*
+										Inner hooks' child tokens are converted to HTML early, so that the code hooks'
+										consumers can execute it slightly faster than just lexing the markup aLL over again.
+									*/
 									token.html = render(token.children);
 								}
 								return true;

@@ -3,10 +3,11 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 	/*d:
 		TypedVar data
 
-		TBW
-	*/
-	/*
-		TODO: bring in a lot of stuff from TypeSignature in Macros for this.
+		Typed variables are used by the (macro:) macro to specify the input data for your custom macros. They combine a datatype
+		and a variable, joined by adding the `-type` suffix to the datatype. `str-type _name` defines a typed variable, _name, which can only be set to a string.
+		You can add the `-type` suffix to anything that contains a datatype - `$leonsKickassDatatype-type _option` is valid if $leonsKickassDatatype contains a datatype.
+		The ability to restrict the type of data that your custom macros receive is a great assistance in debugging your stories,
+		as well as understanding what the custom macro is and does - especially if the custom macros were written by someone else and imported into the project.
 	*/
 	return Object.freeze({
 		TwineScript_TypeName: "a typed variable",

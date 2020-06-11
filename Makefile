@@ -45,6 +45,7 @@ all: dirs jshint dist/format.js docs dist/exampleOutput.html
 clean:
 	@-rm -f build/*
 	@-rm -f dist/*
+	@cp icon.svg dist/icon.svg
 
 dirs:
 	@-mkdir -p build dist

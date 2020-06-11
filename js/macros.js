@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changercommand', 'datatypes/lambda', 'datatypes/hookset', 'datatypes/codehook', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
-($, NaturalSort, {insensitiveName, nth, plural, andList, lockProperty}, {objectName, typeName, singleTypeCheck}, ChangerCommand, Lambda, HookSet, CodeHook, ChangeDescriptor, TwineError) => {
+define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changercommand', 'datatypes/custommacro', 'datatypes/lambda', 'datatypes/hookset', 'datatypes/codehook', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
+($, NaturalSort, {insensitiveName, nth, plural, andList, lockProperty}, {objectName, typeName, singleTypeCheck}, ChangerCommand, CustomMacro, Lambda, HookSet, CodeHook, ChangeDescriptor, TwineError) => {
 	/*
 		This contains a registry of macro definitions, and methods to add to that registry.
 	*/
@@ -10,74 +10,64 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		// Private collection of registered macros.
 		macroRegistry = {};
 		
-	/*
-		This function wraps another function (expected to be a macro implementation
-		function) in such a way that its arguments are spread-out, error-checked,
-		and then passed to the function.
-	*/
-	function readArguments(fn) {
-		/*
-			The arguments are already in array form - no need
-			to use Array.from(arguments) here!
-		*/
-		return (args) => {
-			
-			// Spreaders are spread out now.
-			args = args.reduce((newArgs, el) => {
-				if (el && el.spreader === true) {
-					const {value} = el;
-					/*
-						TwineErrors, obviously, can't be spread.
-					*/
-					const error = TwineError.containsError(value);
-					if (error) {
-						return error;
+	function spreadArguments(args) {
+		return args.reduce((newArgs, el) => {
+			if (el && el.spreader === true) {
+				const {value} = el;
+				/*
+					TwineErrors, obviously, can't be spread.
+				*/
+				const error = TwineError.containsError(value);
+				if (error) {
+					newArgs.push(error);
+				}
+				/*
+					Currently, the full gamut of spreadable
+					JS objects isn't available - only arrays, sets, and strings.
+				*/
+				else if (Array.isArray(value)
+						|| typeof value === "string") {
+					for(let i = 0; i < value.length; i++) {
+						newArgs.push(value[i]);
 					}
-					/*
-						Currently, the full gamut of spreadable
-						JS objects isn't available - only arrays, sets, and strings.
-					*/
-					if (Array.isArray(value)
-							|| typeof value === "string") {
-						for(let i = 0; i < value.length; i++) {
-							newArgs.push(value[i]);
-						}
-					}
-					else if (value instanceof Set) {
-						newArgs.push(...Array.from(value).sort(NaturalSort("en")));
-					}
-					else {
-						newArgs.push(
-							TwineError.create("operation",
-								"I can't spread out "
-								+ objectName(value)
-								+ ", because it is not a string, dataset, or array."
-							)
-						);
-					}
+				}
+				else if (value instanceof Set) {
+					newArgs.push(...Array.from(value).sort(NaturalSort("en")));
 				}
 				else {
-					newArgs.push(el);
+					newArgs.push(
+						TwineError.create("operation",
+							"I can't spread out "
+							+ objectName(value)
+							+ ", because it is not a string, dataset, or array."
+						)
+					);
 				}
-				return newArgs;
-			}, []);
-			
-			// Do the error check now.
-			const error = TwineError.containsError(args);
-			if (error) {
-				return error;
 			}
-
-			return fn(...args);
-		};
+			else {
+				newArgs.push(el);
+			}
+			return newArgs;
+		}, []);
 	}
 	
 	/*
-		This converts a passed macro function into one that performs type-checking
-		on its inputs before running. It provides macro authors with another layer of
-		error feedback.
+		This takes a macro entry (which is passed in along with its name),
+		and type-checks the args passed to it before running it (or, alternatively, returning
+		an error.)
 	*/
-	function typeSignatureCheck(name, fn, typeSignature, isChanger = false) {
+	function typeCheckAndRun(name, {fn, typeSignature, isChanger = false}, args) {
+		/*
+			This is kind of embarrassing... but repeated trailing commas is actually not
+			an invalid syntax in Harlowe. (a:,,,,) simply produces (a:), despite being
+			compiled to "Macros.run("a", [section,,,,,]); The reason
+			is that the .reduce() in spreadArguments filters those empty JS array cells out.
+			However, it won't do that if args is spread out using a rest param, like
+			[section, ...args]. So, that separation between section and args must, currently,
+			be done here.
+		*/
+		const section = args[0];
+		args = spreadArguments(args.slice(1));
 		/*
 			The typeSignature *should* be an Array, but if it's just one item,
 			we can normalise it to Array form.
@@ -113,165 +103,166 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 				name + " must not be given any data." + (custom ? '' : " Just write " + invocation)
 			);
 		}
-		
-		// That being done, we now have the wrapping function.
-		return (section, ...args) => {
-			let rest;
+		let rest;
+
+		for(let ind = 0, end = Math.max(args.length, typeSignature.length); ind < end; ind += 1) {
+			let type = typeSignature[ind];
+			const arg = args[ind];
+
+			if (TwineError.containsError(arg)) {
+				return arg;
+			}
+
+			/*
+				Passing a hook as an argument to a changer gives a unique hint.
+			*/
+			if (CodeHook.isPrototypeOf(arg) && isChanger) {
+				return TwineError.create(
+					"syntax", "Please put this hook outside the parentheses of the changer macro, not inside it.",
+					"Hooks should appear after a macro" + (custom ? '.' : ": " + invocation + "[Some text]")
+				);
+			}
+
+			/*
+				A rare early error check can be made up here: if ind >= typeSignature.length,
+				and Rest is not in effect, then too many params were supplied.
+			*/
+			if (ind >= typeSignature.length && !rest) {
+				return TwineError.create(
+					"datatype",
+					(args.length - typeSignature.length) +
+						" too many values were given to " + name + ".",
+					signatureInfo
+				);
+			}
 			
-			for(let ind = 0, end = Math.max(args.length, typeSignature.length); ind < end; ind += 1) {
-				let type = typeSignature[ind];
-				const arg = args[ind];
-
+			/*
+				If a Rest type has already come before, then it will fill in for
+				the absence of a type now.
+			*/
+			type || (type = rest);
+			/*
+				Conversely, if the rest type is being introduced now,
+				we now note it down and extract the type parameter...
+			*/
+			if (type.innerType && (type.pattern === "rest" || type.pattern === "zero or more")) {
+				rest = type.innerType;
 				/*
-					Passing a hook as an argument to a changer gives a unique hint.
+					...but, we only extract the type parameter if it's a Rest.
+					ZeroOrMore is used in singleTypeCheck as a synonym for Optional,
+					and should remain boxed.
 				*/
-				if (CodeHook.isPrototypeOf(arg) && isChanger) {
-					return TwineError.create(
-						"syntax", "Please put this hook outside the parentheses of the changer macro, not inside it.",
-						"Hooks should appear after a macro" + (custom ? '.' : ": " + invocation + "[Some text]")
-					);
+				if (type.pattern === "rest") {
+					type = type.innerType;
 				}
-
+			}
+			// Now do the check.
+			if (!singleTypeCheck(arg,type)) {
 				/*
-					A rare early error check can be made up here: if ind >= typeSignature.length,
-					and Rest is not in effect, then too many params were supplied.
+					If the check failed, an error message must be supplied.
+					We can infer the reason why singleTypeCheck returned just by
+					examining arg.
+					
+					For instance, if the arg is undefined, then the problem is a
+					"not enough values" error.
 				*/
-				if (ind >= typeSignature.length && !rest) {
+				if (arg === undefined) {
 					return TwineError.create(
 						"datatype",
-						(args.length - typeSignature.length) +
-							" too many values were given to " + name + ".",
+						name + " needs "
+							+ plural((typeSignature.length - ind), "more value") + ".",
 						signatureInfo
 					);
 				}
-				
 				/*
-					If a Rest type has already come before, then it will fill in for
-					the absence of a type now.
+					Unstorable data types are the only kinds which Any signatures will not
+					match. Produce a special error message in this case.
 				*/
-				type || (type = rest);
-				/*
-					Conversely, if the rest type is being introduced now,
-					we now note it down and extract the type parameter...
-				*/
-				if (type.innerType && (type.pattern === "rest" || type.pattern === "zero or more")) {
-					rest = type.innerType;
-					/*
-						...but, we only extract the type parameter if it's a Rest.
-						ZeroOrMore is used in singleTypeCheck as a synonym for Optional,
-						and should remain boxed.
-					*/
-					if (type.pattern === "rest") {
-						type = type.innerType;
-					}
-				}
-				// Now do the check.
-				if (!singleTypeCheck(arg,type)) {
-					/*
-						If the check failed, an error message must be supplied.
-						We can infer the reason why singleTypeCheck returned just by
-						examining arg.
-						
-						For instance, if the arg is undefined, then the problem is a
-						"not enough values" error.
-					*/
-					if (arg === undefined) {
-						return TwineError.create(
-							"datatype",
-							name + " needs "
-								+ plural((typeSignature.length - ind), "more value") + ".",
-							signatureInfo
-						);
-					}
-					/*
-						Unstorable data types are the only kinds which Any signatures will not
-						match. Produce a special error message in this case.
-					*/
-					if (arg && arg.TwineScript_Unstorable &&
-							(type === Macros.TypeSignature.Any ||
-								(type.innerType && type.innerType === Macros.TypeSignature.Any))) {
-						return TwineError.create(
-							"datatype",
-							name + "'s " + nth(ind + 1) + " value, " + objectName(arg) + ", is not valid data for this macro.",
-							signatureInfo
-						);
-					}
-
-					/*
-						If the data type is a lambda, produce special error messages.
-					*/
-					if (arg && Lambda.isPrototypeOf(arg) && type.pattern === "lambda") {
-						/*
-							Print an error comparing the expected clauses with the actual ones.
-						*/
-						/*jshint -W083 */
-						return TwineError.create('datatype',
-							name + "'s " + nth(ind + 1) + " value (a lambda) should have "
-							+ andList(["where","when","making","via","with"].filter(e => type.clauses.includes(e)).map(e => "a '" + e + "' clause"))
-							+ ", not "
-							+ andList(["where","when","making","via","with"].filter(e => e in arg).map(e => "a '" + e + "' clause"))
-							+ ".");
-					}
-
-					if (type.pattern === "insensitive set") {
-						return TwineError.create('datatype', objectName(arg) + ' is not a valid name string for ' + name + ".",
-							'Only the following names are recognised (capitalisation and hyphens ignored): ' + andList(type.innerType) + "."
-						);
-					}
-
-					if (type.pattern === "number range" || type.pattern === "integer range") {
-						const {max,min} = type;
-						return TwineError.create('datatype',
-							// This construction assumes that the minimum will always be 0, 1 or >0.
-							name + "'s " + nth(ind + 1) + " value must be a" +
-							(
-								min > 0 ? " positive" : ""
-							) + (
-								type.pattern === "integer range" ? " whole" : ""
-							) + " number" + (
-								min === 0 ? " between 0 and " + max :
-								max < Infinity ? " up to " + max : ""
-							) + ", not " + objectName(arg) + "."
-						);
-					}
-
-					/*
-						Otherwise, it was the most common case: an invalid data type.
-					*/
+				if (arg && arg.TwineScript_Unstorable &&
+						(type === Macros.TypeSignature.Any ||
+							(type.innerType && type.innerType === Macros.TypeSignature.Any))) {
 					return TwineError.create(
 						"datatype",
-						name + "'s " +
-							nth(ind + 1) + " value is " + objectName(arg) +
-							", but should be " +
-							typeName(type) + ".",
-						/*
-							If this type signature has a custom error message, use that here.
-						*/
-						type.message || signatureInfo
+						name + "'s " + nth(ind + 1) + " value, " + objectName(arg) + ", is not valid data for this macro.",
+						signatureInfo
 					);
 				}
+
+				/*
+					If the data type is a lambda, produce special error messages.
+				*/
+				if (arg && Lambda.isPrototypeOf(arg) && type.pattern === "lambda") {
+					/*
+						Print an error comparing the expected clauses with the actual ones.
+					*/
+					/*jshint -W083 */
+					return TwineError.create('datatype',
+						name + "'s " + nth(ind + 1) + " value (a lambda) should have "
+						+ andList(["where","when","making","via","with"].filter(e => type.clauses.includes(e)).map(e => "a '" + e + "' clause"))
+						+ ", not "
+						+ andList(["where","when","making","via","with"].filter(e => e in arg).map(e => "a '" + e + "' clause"))
+						+ ".");
+				}
+
+				if (type.pattern === "insensitive set") {
+					return TwineError.create('datatype', objectName(arg) + ' is not a valid name string for ' + name + ".",
+						'Only the following names are recognised (capitalisation and hyphens ignored): ' + andList(type.innerType) + "."
+					);
+				}
+
+				if (type.pattern === "number range" || type.pattern === "integer range") {
+					const {max,min} = type;
+					return TwineError.create('datatype',
+						// This construction assumes that the minimum will always be 0, 1 or >0.
+						name + "'s " + nth(ind + 1) + " value must be a" +
+						(
+							min > 0 ? " positive" : ""
+						) + (
+							type.pattern === "integer range" ? " whole" : ""
+						) + " number" + (
+							min === 0 ? " between 0 and " + max :
+							max < Infinity ? " up to " + max : ""
+						) + ", not " + objectName(arg) + "."
+					);
+				}
+
+				/*
+					Otherwise, it was the most common case: an invalid data type.
+				*/
+				return TwineError.create(
+					"datatype",
+					name + "'s " +
+						nth(ind + 1) + " value is " + objectName(arg) +
+						", but should be " +
+						typeName(type) + ".",
+					/*
+						If this type signature has a custom error message, use that here.
+					*/
+					type.message || signatureInfo
+				);
 			}
-			/*
-				Type checking has passed - now let the macro run.
-			*/
-			return fn(section, ...args);
-		};
+		}
+		/*
+			Type checking has passed - now let the macro run.
+		*/
+		return fn(section, ...args);
 	}
 	
 	/*
 		The bare-metal macro registration function.
 		If an array of names is given, an identical macro is created under each name.
-		
-		@param {String|Array} A String, or an Array holding multiple strings.
-		@param {String} The type (either "sensor", "changer", or, and in absentia, "value")
-		@param {Function} The function.
 	*/
-	function privateAdd(name, fn) {
+	function privateAdd(name, fn, typeSignature, isChanger = false) {
 		// Add the fn to the macroRegistry, plus aliases (if name is an array of aliases)
+		const obj = { fn, typeSignature };
+		if (isChanger) {
+			obj.isChanger = true;
+		}
+		Object.freeze(obj);
 		if (Array.isArray(name)) {
-			name.forEach((n) => lockProperty(macroRegistry, insensitiveName(n), fn));
+			name.forEach((n) => lockProperty(macroRegistry, insensitiveName(n), obj));
 		} else {
-			lockProperty(macroRegistry, insensitiveName(name), fn);
+			lockProperty(macroRegistry, insensitiveName(name), obj);
 		}
 	}
 
@@ -280,13 +271,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		that macro's Command objects. Currently, Commands do not have a shared prototype,
 		so this function performs their initialisation in its stead.
 	*/
-	const commandMaker = (firstName, checkFn, runFn, attachable) => (...args) => {
-		/*
-			Slice off the original "section" argument, which SHOULD be the first element in args,
-			because TwineScript_Run() brings in its own argument, and it should thus be unneeded for the
-			checkFn.
-		*/
-		args = args.slice(1);
+	const commandMaker = (firstName, checkFn, runFn, attachable) => (section, ...args) => {
 		/*
 			The passed-in checkFn should only return a value if the check fails,
 			and that value must be a TwineError. I'm so confident about this that I'm not even
@@ -345,14 +330,10 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		},
 		
 		/*
-			A high-level wrapper for privateAdd() that creates a macro from
-			a name (or array of names), a macro implementation function, and
-			a parameter type signature array.
+			A wrapper for privateAdd() that can be chained.
 		*/
 		add: function add(name, fn, typeSignature) {
-			privateAdd(name,
-				readArguments(typeSignatureCheck(name, fn, typeSignature))
-			);
+			privateAdd(name, fn, typeSignature);
 			// Return the function to enable "bubble chaining".
 			return add;
 		},
@@ -365,7 +346,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			
 			The second argument, ChangerCommandFn, is the "base" for the ChangerCommands returned
 			by the macro. The ChangerCommands are partial-applied versions of it, pre-filled
-			with author-supplied parameters and given TwineScript-related expando properties.
+			with author-supplied parameters.
 			
 			For instance, for (font: "Skia"), the changerCommandFn is partially applied with "Skia"
 			as an argument, augmented with some other values, and returned as the ChangerCommand
@@ -373,9 +354,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		*/
 		addChanger: function addChanger(name, fn, changerCommandFn, typeSignature) {
 			
-			privateAdd(name,
-				readArguments(typeSignatureCheck(name, fn, typeSignature, true))
-			);
+			privateAdd(name, fn, typeSignature, true);
 			ChangerCommand.register(Array.isArray(name) ? name[0] : name, changerCommandFn);
 			
 			// Return the function to enable "bubble chaining".
@@ -398,13 +377,10 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 				to unwrap it.
 			*/
 			const firstName = [].concat(name)[0];
-			privateAdd(name,
-				readArguments(typeSignatureCheck(name, commandMaker(firstName, checkFn, runFn, attachable), typeSignature))
-			);
+			privateAdd(name, commandMaker(firstName, checkFn, runFn, attachable), typeSignature);
 			// Return the function to enable "bubble chaining".
 			return addCommand;
 		},
-
 		
 		/*
 			These helper functions/constants are used for defining semantic type signatures for
@@ -470,7 +446,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		},
 
 		/*
-			Runs a macro.
+			Runs a built-in macro.
 			
 			In compile(), the myriad arguments given to a macro invocation are
 			converted to 2 arguments to runMacro.
@@ -481,16 +457,25 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			*/
 			if (!Macros.has(name)) {
 				return TwineError.create("macrocall",
-					"I can't run the macro '"
-					+ name
-					+ "' because it doesn't exist.",
-					"Did you mean to run a macro? If you have a word written like (this:), "
-					+ "it is regarded as a macro name."
+					"I can't run the macro '" + name + "' because it doesn't exist.",
+					"Did you mean to run a macro? If you have a word written like (this:), it is regarded as a macro name."
 				);
 			}
-			return Macros.get(name)(args);
+			return typeCheckAndRun(name, Macros.get(name), args);
 		},
 		
+		/*
+			Runs a custom macro, whose definition is passed in instead of a name.
+		*/
+		runCustom(obj, args) {
+			/*
+				First, check that the variable is indeed a macro.
+			*/
+			if (!CustomMacro.isPrototypeOf(obj)) {
+				return TwineError.create("macrocall", "I can't call " + objectName(obj) + " because it isn't a custom macro.");
+			}
+			return typeCheckAndRun('', obj, args);
+		},
 	};
 	
 	return Object.freeze(Macros);
