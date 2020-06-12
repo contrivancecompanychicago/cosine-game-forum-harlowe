@@ -44,11 +44,6 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 					"The datatyped variables named for (macro:) must be temp variables (with a '_'), not global variables (with a '$').",
 					"Write them with a _ sigil at the start instead of a $ sigil.");
 			}
-			/*
-				TODO: Error if any Live macros are in the CodeHook.
-				TODO: Macros have optional names.
-				TODO: Macros error when placed in bare passage prose.
-			*/
 		}
 		return CustomMacro.create(parameters.slice(0, -1), parameters[parameters.length-1]);
 	},

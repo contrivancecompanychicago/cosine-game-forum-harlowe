@@ -478,7 +478,7 @@ define([
 			/*
 				We must do an inDOM check here in case a different (live:) macro
 				(or a (goto:) macro) caused this to leave the DOM between
-				previous runs.
+				previous runs, or if this was erroneously used in a (macro:) macro's code hook.
 			*/
 			if (!this.inDOM()) {
 				return;
@@ -698,7 +698,6 @@ define([
 			this.stack.shift();
 			return ret;
 		},
-
 		
 		/*
 			Renders the given TwineMarkup code into a given element,
@@ -908,19 +907,18 @@ define([
 			/*
 				Execute the expressions immediately.
 			*/
-			const section = this;
 			dom.findAndFilter('tw-hook,tw-expression')
-					.each(function() {
+					.each((_, expr) => {
 				/*
 					This is used to halt the loop if a hook contained a blocker - the call to renderInto()
 					would've created another stack frame, which, being blocked, hasn't been removed yet.
 					This needs to be at the start of the function, not the end, or else (output:)'s blocking
 					won't work, for reasons I do not understand.
 				*/
-				if (section.stackTop.blocked) {
+				if (this.stackTop.blocked) {
 					return false;
 				}
-				const expr = $(this);
+				expr = $(expr);
 				
 				switch(expr.tag()) {
 					case 'tw-hook':
@@ -947,7 +945,7 @@ define([
 							attr has probably already been rendered.
 						*/
 						if (src) {
-							section.renderInto(src, expr);
+							this.renderInto(src, expr);
 						}
 						break;
 					}
@@ -999,15 +997,15 @@ define([
 									The first blocker can now be taken out and run, which
 									blocks this section and ends execution.
 								*/
-								section.stackTop.blocked = true;
-								let error = section.eval(blockers.shift());
+								this.stackTop.blocked = true;
+								let error = this.eval(blockers.shift());
 								/*
 									If the blocker's code resulted in an error (such as a basic type signature error),
 									this is the first occasion it'd become known. Display that error, if it is given,
 									and unblock this section.
 								*/
 								if (TwineError.containsError(error)) {
-									section.stackTop.blocked = false;
+									this.stackTop.blocked = false;
 									expr.removeData('blockers').replaceWith(error.render(expr.attr('title'), expr));
 								}
 								return false;
@@ -1017,7 +1015,7 @@ define([
 							}
 						}
 						if (expr.attr('js')) {
-							runExpression.call(section, expr);
+							runExpression.call(this, expr);
 						}
 					}
 				}
@@ -1026,7 +1024,7 @@ define([
 			/*
 				If the section was blocked, then don't shift() the stack frame, but leave it until it's unblocked.
 			*/
-			if (section.stackTop.blocked) {
+			if (this.stackTop.blocked) {
 				return;
 			}
 

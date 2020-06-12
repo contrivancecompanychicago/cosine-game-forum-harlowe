@@ -509,7 +509,7 @@
 						/*
 							These must also be included so that the correct error can be reported.
 						*/
-						"boolean", "number"],
+						"datatype", "hook", "boolean", "number"],
 				},
 				
 				possessiveOperator: { fn: emptyFn },

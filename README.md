@@ -22,6 +22,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where `(enchant:)` given `?passage's lines` would crash Harlowe if the passage contained zero line breaks.
  * Fixed a bug where `(hover-style:)` combined with a link changer such as `(link:)` would cause the specified hover style, after the link was clicked, to permanently persist on the hook.
  * Fixed a bug where `(hover-style:)` couldn't actually override the default hover colour for links of any kind, due to a CSS conflict.
+ * Fixed a bug where trying to use datanames with certain unusual types of data (changers, commands, datatypes) would give a bad Javascript error message instead of the intended error message.
  * Now, consecutive line breaks (which Harlowe reduces the cumulative height of) at the start of a passage are no longer the wrong height while that passage transitions in. (To handle this, consecutive line breaks are now made into `<tw-consecutive-br>` elements instead of `<br data-cons>` elements.)
  * Now, `(dropdown:)` explicitly uses the background of its containing hook, instead of being transparent, which the Windows version of Chrome displays as white, regardless of text colour.
  * Now, align, horizontal rule, and column syntax in the editor no longer occupies two lines unexpectedly.

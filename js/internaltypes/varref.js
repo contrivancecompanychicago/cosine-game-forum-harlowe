@@ -1,6 +1,6 @@
 "use strict";
-define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'datatypes/hookset', 'datatypes/colour', 'datatypes/gradient'],
-(State, TwineError, {impossible, andList}, {isObject, isSequential, objectName, typeName, clone, numericIndex, isValidDatamapName, subset}, HookSet, Colour, Gradient) => {
+define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'datatypes/hookset'],
+(State, TwineError, {impossible, andList}, {isObject, isSequential, objectName, typeName, clone, numericIndex, isValidDatamapName, subset}, HookSet) => {
 	/*
 		VarRefs are essentially objects pairing a chain of properties
 		with an initial variable reference - "$red's blue's gold" would be
@@ -332,6 +332,12 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 	*/
 	function canSet(obj, prop) {
 		/*
+			First, variable stores.
+		*/
+		if (obj.TwineScript_VariableStore) {
+			return true;
+		}
+		/*
 			As with get() below, array properties allow multiple property keys to be set at once.
 		*/
 		if (Array.isArray(prop)) {
@@ -339,26 +345,8 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		}
 
 		/*
-			HookRefs cannot be altered.
+			Maps can only have string names.
 		*/
-		if (HookSet.isPrototypeOf(obj)) {
-			return TwineError.create('operation', "I can't modify " + objectName(obj),
-				'You should alter hooks indirectly using macros like (replace:) or (enchant:).');
-		}
-		/*
-			Neither can datasets.
-		*/
-		if (obj instanceof Set) {
-			return TwineError.create('operation', "I can't modify " + objectName(obj),
-				'You should use an (array:) if you need to modify the data inside this dataset.');
-		}
-		/*
-			Neither can colours or gradients.
-		*/
-		if (Colour.isPrototypeOf(obj) || Gradient.isPrototypeOf(obj)) {
-			return TwineError.create('operation', "I can't modify the components of " + objectName(obj) + ".");
-		}
-
 		if (obj instanceof Map) {
 			if(typeof prop !== "string") {
 				return TwineError.create('operation',
@@ -392,6 +380,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 					+ propertyDebugName(prop) + "."
 				);
 			}
+			return true;
 		}
 		/*
 			Identifiers cannot be set.
@@ -401,14 +390,11 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				"I can't alter the value of the '"
 				+ prop + "' identifier.", "You can only alter data in variables and hooks, not fixed identifiers.");
 		}
-		/*
-			Numbers and booleans cannot have properties altered.
-		*/
-		if (typeof obj === "number" || typeof obj === "boolean") {
-			return TwineError.create("operation", "You can't alter the data values of "
-				+ objectName(obj) + ".");
-		}
-		return true;
+
+		return TwineError.create('operation', "I can't modify " + objectName(obj),
+			obj instanceof Set ? 'You should use an (array:) if you need to modify the data inside this dataset.' :
+			HookSet.isPrototypeOf(obj) ? 'You should alter hooks indirectly using macros like (replace:) or (enchant:).' : undefined
+		);
 	}
 	
 	/*
@@ -558,11 +544,6 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		/*
 			An additional error condition exists for get(): if the property
 			doesn't exist, don't just return undefined.
-			
-			I wanted to use hasOwnProperty here, but it didn't work
-			with the State.variables object, which, as you know, uses
-			differential properties on the prototype chain. Oh well,
-			it's probably not that good an idea anyway.
 		*/
 		if (result === undefined) {
 			/*
@@ -589,7 +570,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				+ " element.",
 				obj.length ? "It contains: " + andList(obj.map(objectName)) + '.' : "The array is empty.");
 			}
-			const keys = Array.from(obj.keys());
+			const keys = Array.from(typeof obj.keys === "function" && obj.keys());
 			return TwineError.create("property", "I can't find a "
 				// Use the original non-compiled property key in the error message.
 				+ propertyDebugName(originalProp)

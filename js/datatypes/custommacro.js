@@ -31,7 +31,7 @@ define(['jquery','internaltypes/changedescriptor', 'internaltypes/varscope', 'in
 		This means the TwineScript_Run() function here simply returns a pre-permuted CD (albeit
 		one that can be further permuted by TwineScript_Attach().
 	*/
-	const commandObjectName = "a custom macro command";
+	const commandObjectName = "a custom command";
 	const makeCommandObject = cd => {
 		const ret = assign({
 			TwineScript_ObjectName: commandObjectName,
@@ -78,32 +78,45 @@ define(['jquery','internaltypes/changedescriptor', 'internaltypes/varscope', 'in
 			and attaching a special "output" property used to retrieve the output.
 			The stack frame itself needs to be in a variable because .execute() will pop it off the stackTop.
 		*/
-		let output;
+		let output, dom = $('<p>').append(body.html);
 		section.stack.unshift({
 			tempVariables,
-			dom: $('<p>').append(body.html),
+			dom,
 			/*
 				Output is used for both the values returned by (output:) and the ChangeDescriptors returned by (command:).
 			*/
 			output(data) {
-				if (output !== undefined) {
-					output = TwineError.create("custommacro",
-						"There can't be more than one (output:) or (output-hook:) macro inside a custom macro's code.");
-				} else {
-					output = data;
-				}
+				/*
+					Because both output macros block control flow to force an early exit, there shouldn't be a need
+					for a double-output error (i.e. output already having a value).
+				*/
+				output = data;
 			},
 		});
 		section.execute();
 		/*
-			TBW
+			Section.execute() doesn't pop the stack frame if it's blocked, since it could potentially unblock, and
+			the entire section is discarded when (goto:) or (undo:) activate. In the case of (output:), we must
+			pop the stack frame ourselves.
 		*/
 		if (section.stackTop.blocked) {
 			section.stack.shift();
 		}
-		/**
-			TODO: Extract rendering errors and return them.
-		**/
+		/*
+			If errors resulted from this execution, extract and return those instead of the output.
+		*/
+		const errors = dom.find('tw-error').get().map(e =>
+			/*
+				This makes use of the fact that rendered TwineErrors have the original error stashed on them, so that
+				Section.evaluateTwineMarkup() can de-render them after the fact.
+			*/
+			$(e).data('TwineError').message
+		).join('\n');
+
+		if (errors.length) {
+			return TwineError.create('custommacro','These errors occurred when running a custom macro:\n' + errors);
+		}
+
 		/*
 			Currently, custom macros are required to return something, even if that thing is an error.
 		*/

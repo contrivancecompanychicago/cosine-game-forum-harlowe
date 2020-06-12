@@ -183,6 +183,16 @@ describe("property indexing", function() {
 				expect("|a>[](set:$a's 1st to (a:1,2))").markupToError();
 			});
 		});
+		it("cannot be used with other values", function() {
+			['(text-size:2)',
+			'[(output:2)]',
+			'str',
+			'(str-type _a)',
+			'(bind _a)'].map(function(e) {
+				expect("(set:" + e + "'s 1st to 2)").markupToError();
+				expect("(set:$foo to "+e+")(set:$foo's 1st to 2)").markupToError();
+			});
+		});
 	});
 	describe("string indices", function() {
 		describe("for datamaps", function() {
@@ -371,6 +381,16 @@ describe("property indexing", function() {
 				expect(
 					"(set:$foo to (gradient:0,0,black,1,white))(set:$foo's stops's 1st's colour to blue)"
 				).markupToError();
+			});
+		});
+		it("cannot be used with other values", function() {
+			['(text-size:2)',
+			'[(output:2)]',
+			'str',
+			'(str-type _a)',
+			'(bind _a)'].map(function(e) {
+				expect("(set:" + e + "'s bar to 2)").markupToError();
+				expect("(set:$foo to "+e+")(set:$foo's bar to 2)").markupToError();
 			});
 		});
 	});
