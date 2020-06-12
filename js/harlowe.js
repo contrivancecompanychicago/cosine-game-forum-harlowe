@@ -22,10 +22,10 @@ require.config({
 		'jqueryplugins',
 	],
 });
-require(['jquery', 'debugmode', 'renderer', 'state', 'section', 'engine', 'passages', 'utils', 'utils/renderutils', 'macros',
+require(['jquery', 'debugmode', 'renderer', 'state', 'section', 'engine', 'passages', 'utils', 'utils/renderutils', 'internaltypes/twineerror', 'macros',
 	'macrolib/values', 'macrolib/commands', 'macrolib/datastructures', 'macrolib/stylechangers', 'macrolib/enchantments', 'macrolib/metadata',
 	'macrolib/links', 'macrolib/custommacros', 'repl'],
-		($, DebugMode, Renderer, State, Section, Engine, Passages, Utils, {dialog}) => {
+		($, DebugMode, Renderer, State, Section, Engine, Passages, Utils, {dialog}, TwineError) => {
 	/*
 		Harlowe, the default story format for Twine 2.
 		
@@ -58,6 +58,10 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'section', 'engine', 'passa
 		// If the debug option is on, add the debugger.
 		if (Engine.options.debug) {
 			DebugMode();
+		}
+		// Otherwise, add the callback to enable Debug Mode as soon as the first error occurs.
+		else {
+			TwineError.on('error', (error, code) => !$('tw-debugger').length && DebugMode(error, code));
 		}
 		installHandlers = null;
 	};

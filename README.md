@@ -85,6 +85,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 #####Other
 
  * Added a debug mode panel listing which storylet passages are currently available, and their 'where' lambdas. This panel is only visible if you have `(storylet:)` macros in your story.
+ * Now, whenever the first error of your story is displayed, debug mode will automatically, immediately enable itself, so you can begin debugging there and then.
  * Added a `<noscript>` element to the output HTML, containing a sentence instructing that JavaScript should be enabled to play the story (as per SugarCube).
 
 ###3.1.0 changes:

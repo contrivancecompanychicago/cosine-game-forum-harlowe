@@ -247,6 +247,13 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		},
 
 		/*
+			Returns an array of all passage names. Used nowhere except for populating the Debug UI.
+		*/
+		timelinePassageNames() {
+			return timeline.map(t => t.passage);
+		},
+
+		/*
 			Movers/shakers
 		*/
 

@@ -1,6 +1,6 @@
 "use strict";
 define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'engine', 'passages', 'section'],
-($, Utils, State, VarRef, TwineError, {objectName, typeName, is, isObject}, Engine, Passages, Section) => () => {
+($, Utils, State, VarRef, TwineError, {objectName, typeName, is, isObject}, Engine, Passages, Section) => (initialError, code) => {
 	/*
 		Debug Mode
 
@@ -51,6 +51,21 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		to travel to any of them at will.
 	*/
 	const turnsDropdown = debugElement.find('.turns');
+	/*
+		Add the dropdown entries if debug mode was enabled partway through the story.
+	*/
+	State.timelinePassageNames().forEach((passageName, i) => {
+		turnsDropdown.append("<option value=" + i + ">"
+			+ (i+1) + ": " + passageName
+			+ "</option>");
+	});
+	turnsDropdown.val(State.pastLength);
+	/*
+		The turns dropdown should be disabled only if one or less turns is in the State history.
+	*/
+	if (State.pastLength > 0) {
+		turnsDropdown.removeAttr('disabled');
+	}
 	turnsDropdown.change(({target:{value}}) => {
 		/*
 			Work out whether to travel back or forward by subtracting the
@@ -392,7 +407,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		}
 	});
 
-	TwineError.on('error', (error, code) => {
+	const onError = (error, code) => {
 		/*
 			To ensure functional column widths, the .panel-errors pane contains a <table>.
 		*/
@@ -415,7 +430,15 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		}
 		table.append(row);
 		debugElement.find('.tab-errors').text(`${childRowCount} Error${childRowCount !== 1 ? 's' : ''}`);
-	});
+	};
+	TwineError.on('error', onError);
+	/*
+		If an error prompted Debug Mode to be enabled, add it to the pane, and also refresh the other panes.
+	*/
+	if (initialError) {
+		onError(initialError, code);
+		refresh();
+	}
 
 	/*
 		Finally, append the debug mode element to the <body>.
