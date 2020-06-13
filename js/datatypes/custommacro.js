@@ -114,6 +114,7 @@ define(['jquery','internaltypes/changedescriptor', 'internaltypes/varscope', 'in
 		).join('\n');
 
 		if (errors.length) {
+			//TODO: attach the DOM and view it with a given button.
 			return TwineError.create('custommacro','These errors occurred when running a custom macro:\n' + errors);
 		}
 

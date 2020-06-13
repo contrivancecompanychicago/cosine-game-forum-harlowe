@@ -10,17 +10,63 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 
 		Example usage:
 		```
-		(set: $healthSummary to (macro: datamap-type _stats, [
-			(if: _stats's HP <= 0)[(output: "You appear to be deceased.")]
+		(set: $healthSummary to (macro: dm-type _stats, [
+			(set: _TheyAre to _stats's name + " is ")
+			Dead characters get a single, pithy line.
+			(if: _stats's HP <= 0)[(output: _TheyAre + "deceased.")]
+			Living characters get specific status conditions called out.
 			(output:
-				"Your vital signs are " + (cond: _stats's HP > 50, "fair.", "poor.") +
-				(cond: _stats's poison > 0, " You are poisoned.", "") +
-				(cond: _stats's heartbreak, " You are heartbroken.")
+				_TheyAre + "in " + (cond: _stats's HP > 50, "fair", "poor") + " health." +
+				(cond: _stats's poison > 0, " " + _TheyAre + "poisoned.", "") +
+				(cond: _stats's heartbreak, " " + _TheyAre + "heartbroken.", "")
 			)
 		]))
+		(set: $steelyStats to (dm: "name", "Steely", "HP", 80, "poison", 0, "heartbreak", true))
+		($healthSummary: $steelyStats)
 		```
 
-		TBW
+		Rationale:
+
+		This macro provides you with the means to expand Harlowe's collection of built-in macros with
+		custom utilities tailored specifically for your story. While many Twine projects are simple
+		hypertext stories, there are many that use it to make more complicated simulations, role-playing games,
+		generative art, and so on. Being able to craft a language in which to write the many algorithms such
+		games involve is essential to keeping your code succinct and readable.
+
+		Creating a custom macro:
+
+		Custom macros consist of two structures: a set of data inputs (called *parameters*), and a body of code that creates the output.
+		Each of these is represented by two very specific data types, the TypedVar and the CodeHook.
+
+		Each TypedVar consists of a datatype, the "-type" suffix, and a temp variable. When you, the author, call
+		the macro and give data at that TypedVar's position, it is put into the temp variable if it fits the datatype.
+		A macro stored in $treasure with `str-type _name, num-type price` can be called by `($treasure: "Gold Watch", 155)`.
+		The datatypes are checked, and if they don't match (for instance, by incorrectly writing `($treasure: 155, "Gold Watch")`),
+		then an error will result. This ensures that incorrectly written custom macro calls are caught early, just like with built-in macros.
+
+		The CodeHook is where the code of your custom macro is written. You can (set:) temp variables in it, use (if:), (for:),
+		(cond:) and so forth to run different sections of code, and output a final value using either (output:) or (output-hook:).
+		(Consult each of those macros' articles to learn the exact means of using them, and their differences.) The temp variables
+		specified by the TypedVars are automatically set with the passed-in data.
+
+		Custom macros can be called like any other macro, by using the variable instead of a name: `($someCustomMacro:)` is how you would
+		call a custom macro stored in the variable $someCustomMacro, and `(_anotherCustomMacro:)` is how you would
+		call a custom macro stored in the temp variable _anotherCustomMacro.
+
+		Details:
+
+		You can, of course, have zero TypedVars, for a macro that needs no input values, and simply outputs a complicated (or randomised) value
+		by itself.
+
+		In this version, (macro:) code hooks do NOT have access to temp variables created outside of them. `(set: _name to "Fox", _aCustomMacro to (macro:[(output:_name)])) (_aCustomMacro:)`
+		will cause an error, because _name isn't accessible inside the _aCustomMacro macro.
+
+		All custom macros must return some value. If no (output:) or (output-hook:) macros were run inside the code hook, an error will result.
+
+		See also:
+		(output:), (output-hook:)
+
+		#custom macros 1
 	*/
 	add("macro", (_, ...parameters) => {
 		/*
@@ -71,6 +117,11 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		(output: Any) -> Instant
 
 		TBW
+
+		See also:
+		(output-hook:)
+
+		#custom macros 2
 	*/
 	addCommand("output", () => {}, ({stack}, any) => {
 		/*
@@ -89,6 +140,11 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		(output-hook: Any) -> Changer
 
 		TBW
+
+		See also:
+		(output:)
+
+		#custom macros 3
 	*/
 	addChanger("output-hook",
 		(section) => Object.assign(ChangerCommand.create("output-hook", [section]), { TwineScript_Unstorable: true }),
