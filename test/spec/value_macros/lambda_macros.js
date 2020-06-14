@@ -162,6 +162,10 @@ describe("lambda macros", function() {
 				+'(set: $bar to (all-pass: _baz where "qux" of _foo of $corge contains _baz, 3,4,5))'
 				+'(print: $bar)').markupToPrint('true');
 		});
+		it("temp variables are dynamically scoped", function() {
+			runPassage('(set: _foo to "baz", $corge to (dm:"foo",(a:1,2,3,4,5)))(set:$lam to _baz where _foo of $corge contains _baz)');
+			expect('(set: _foo to "foo")(set: $bar to (all-pass: $lam, 3,4,5))(print: $bar)').markupToPrint('true');
+		});
 	});
 	describe("the (some-pass:) macro", function() {
 		it("accepts a 'where' or 'each' lambda, plus zero or more other values", function() {

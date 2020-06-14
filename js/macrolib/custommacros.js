@@ -14,7 +14,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 			(set: _TheyAre to _stats's name + " is ")
 			Dead characters get a single, pithy line.
 			(if: _stats's HP <= 0)[(output: _TheyAre + "deceased.")]
-			Living characters get specific status conditions called out.
+			Living characters get specific status conditions referred to.
 			(output:
 				_TheyAre + "in " + (cond: _stats's HP > 50, "fair", "poor") + " health." +
 				(cond: _stats's poison > 0, " " + _TheyAre + "poisoned.", "") +
@@ -58,8 +58,8 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		You can, of course, have zero TypedVars, for a macro that needs no input values, and simply outputs a complicated (or randomised) value
 		by itself.
 
-		In this version, (macro:) code hooks do NOT have access to temp variables created outside of them. `(set: _name to "Fox", _aCustomMacro to (macro:[(output:_name)])) (_aCustomMacro:)`
-		will cause an error, because _name isn't accessible inside the _aCustomMacro macro.
+		Currently, (macro:) code hooks do NOT have access to temp variables created outside of them. `(set: _name to "Fox", _aCustomMacro to (macro:[(output:_name)])) (_aCustomMacro:)`
+		will cause an error, because _name isn't accessible inside the _aCustomMacro macro. They do, however, have access to global variables (which begin with `$`).
 
 		All custom macros must return some value. If no (output:) or (output-hook:) macros were run inside the code hook, an error will result.
 
@@ -116,7 +116,32 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 	/*d:
 		(output: Any) -> Instant
 
-		TBW
+		Use this macro inside a (macro:)'s CodeHook to output the value that the macro produces.
+
+		Example usage:
+		```
+		(set: $randomCaps to (macro: str-type _str, [
+			(output:
+				(folded: _char making _out via _out + (either:(lowercase:_char),(uppercase:_char)),
+				..._str)
+			)
+		]))
+		($randomCaps:"I think my voice module is a little bit very broken.")
+		```
+
+		Rationale:
+		For more information on custom macros, consult the (macro:) macro's article.
+		All custom macros have inputs and output. This macro specifies the data value to output - provide it at the end
+		of your macro's CodeHook, and give it the value you want the macro call to evaluate to.
+
+		This is best suited for macros which primarily compute single data values, like strings, arrays and datamaps.
+		If you wish to output a long span of code, please consider using the (output-hook:) changer instead.
+
+		Details:
+		As soon as an (output:) macro is run, all further macros and code in the CodeHook will be ignored,
+		much like how the (go-to:) and (undo:) macros behave.
+
+		Attempting to call (output:) outside of a custom macro's CodeHook will cause an error.
 
 		See also:
 		(output-hook:)
@@ -137,9 +162,54 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		/*attachable:false*/ false);
 
 	/*d:
-		(output-hook: Any) -> Changer
+		(output-hook:) -> Changer
 
-		TBW
+		Use this macro inside a (macro:)'s CodeHook to output a command that, when run, renders the attached hook.
+
+		Example usage:
+		```
+		(set: $describePotion to (macro: dm-type _potion, [
+			(size:0.7)+(box:"=XXXXX=")+(border:"solid")+(output-hook:)[\
+			##(print:_potion's name)
+			|==
+			''Colour'': (print:_potion's colour)
+			''Smell'': (print:_potion's smell)
+			''Flask'': (print:_potion's flask)
+			''Effect'': (print: _potion's effect)
+			==|
+			//(print: _potion's desc)//
+			]
+		]))
+		($describePotion: (dm:
+			"name", "Vasca's Dreambrew",
+			"colour", "Puce",
+			"smell", "Strong acidic honey",
+			"flask", "Conical, green glass, corked",
+			"effect", "The drinker will, upon sleeping, revisit the last dream they had, exactly as it was.",
+			"desc", "Though Vasca was famed in life for her more practical potions, this brew is still sought after"
+			+ " by soothsayers and dream-scryers alike.",
+		))
+		```
+
+		Rationale:
+		For more information on custom macros, consult the (macro:) macro's article.
+		All custom macros have inputs and output. This macro lets you output an entire hook, displaying it in a single
+		call of the macro. Attach this to a hook at the end of your custom macro's code hook, and the custom macro will
+		output a command that displays the hook, similar to how (print:) or (link-goto:) work.
+
+		If you want your custom macro to return single values of data, like numbers or arrays, rather than hooks, please
+		use the (output:) macro instead.
+
+		Details:
+		As soon as a hook with (output-hook:) attached is encountered, all further macros and code in the CodeHook will be ignored,
+		just as how (output:) behaves. This behaviour is unique among changers.
+
+		You can combine (output-hook:) with other changers, like (text-style:) or (link:). The hook that is displayed by the command
+		will have those other changers applied to it.
+
+		As you might have noticed, (output-hook:) accepts no values itself - simply attach it to a hook.
+
+		Attempting to call (output:) outside of a custom macro's CodeHook will cause an error.
 
 		See also:
 		(output:)
@@ -148,12 +218,22 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 	*/
 	addChanger("output-hook",
 		(section) => Object.assign(ChangerCommand.create("output-hook", [section]), { TwineScript_Unstorable: true }),
-		(cd, section) => {
-			outputValue(section.stack, cd);
+		(cd, {stack,stackTop}) => {
+			/*
+				(output-hook:) commands are deferred render commands, but they need access to the temp variables
+				present at the time of creation, inside the custom macro. This #awkward hack leverages
+				loopVars to store the tempVariables, as just one sad little loop.
+			*/
+			cd.loopVars = Object.keys(stackTop.tempVariables).reduce((a,key) => {
+				a[key] = [stackTop.tempVariables[key]];
+				return a;
+			},{});
+
+			outputValue(stack, cd);
 			/*
 				Unlike a command, changers have to explicitly block the section's control flow like so.
 			*/
-			section.stackTop.blocked = true;
+			stackTop.blocked = true;
 			/*
 				This leaves the passed-in CD unchanged.
 				I believe every changer in Harlowe returns the same ChangeDescriptor, so any changers added to (output-hook:)

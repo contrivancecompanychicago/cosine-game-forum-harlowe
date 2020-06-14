@@ -42,15 +42,9 @@ define(['jquery','internaltypes/changedescriptor', 'internaltypes/varscope', 'in
 				return ret;
 			},
 			/*
-				When this command is run, simply return the fully permuted CD,
-				except that its target has been changed to the input CD's target
-				(i.e. a <tw-expression> outside of the custom macro's body, rather than
-				a <tw-hook> inside of it).
+				When this command is run, simply return the fully permuted CD.
 			*/
-			TwineScript_Run: cd2 => {
-				cd.target = cd2.target;
-				return cd;
-			},
+			TwineScript_Run: () => cd,
 		});
 		return ret;
 	};
