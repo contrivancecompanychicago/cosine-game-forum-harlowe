@@ -5,7 +5,7 @@ define(['jquery', 'utils', 'renderer'], function($, Utils, Renderer) {
 		the warning dialog for (loadgame:). This may be expanded in the future to offer more author-facing
 		customisability.
 	*/
-	function dialog({message = '', defaultValue, cancelCallback = $.noop, confirmCallback, cancelButton = "Cancel", confirmButton = "OK"}) {
+	function dialog({section, message = '', defaultValue, cancelCallback = $.noop, confirmCallback, cancelButton = "Cancel", confirmButton = "OK"}) {
 		const ret = $(Renderer.exec("<tw-backdrop><tw-dialog>"
 			+ '<div style="text-align:center;margin:0 auto">\n'
 			/*
@@ -27,8 +27,15 @@ define(['jquery', 'utils', 'renderer'], function($, Utils, Renderer) {
 		/*
 			The user-provided text is rendered separately from the rest of the dialog, so that injection bugs, such as
 			inserting closing </tw-dialog> tags, are harder to bring about.
+			The section being provided denotes that this is user-specified code (rather than in-engine error message code,
+			such as in Harlowe.js).
 		*/
-		ret.find('tw-dialog').prepend(Renderer.exec(message));
+		if (section) {
+			section.renderInto(message, ret.find('tw-dialog'), {append:"prepend"});
+		}
+		else {
+			ret.find('tw-dialog').prepend(Renderer.exec(message));
+		}
 
 		/*
 			The passed-in defaultValue string, if non-empty, is used as the input element's initial value.

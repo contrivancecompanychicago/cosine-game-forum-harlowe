@@ -1008,7 +1008,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 				if (confirmButton === "") {
 					return TwineError.create("datatype", "The text for (alert:)'s link can't be blank.");
 				}
-				Utils.storyElement.append(dialog({message, confirmButton, defaultValue:false, cancelCallback: () => section.unblock()}));
+				Utils.storyElement.append(dialog({section, message, confirmButton, defaultValue:false, cancelCallback: () => section.unblock()}));
 				section.stackTop.blocked = true;
 			},
 			[String, optional(String)], false)
@@ -1281,7 +1281,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 					return TwineError.create("datatype", "The text for (prompt:)'s confirm link can't be blank.");
 				}
 				const d = dialog({
-					message, cancelButton, confirmButton, defaultValue,
+					section, message, cancelButton, confirmButton, defaultValue,
 					cancelCallback() {
 						section.unblock(defaultValue);
 					},
@@ -1343,7 +1343,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 					return TwineError.create("datatype", "The text for (confirm:)'s confirm link can't be blank.");
 				}
 				Utils.storyElement.append(dialog({
-					message, cancelButton, confirmButton,
+					section, message, cancelButton, confirmButton,
 					defaultValue: false, cancelCallback: () => section.unblock(false), confirmCallback: () => section.unblock(true)
 				}));
 			},

@@ -903,7 +903,6 @@ define([
 				this.stackTop.dom = dom;
 				this.stackTop.desc = undefined;
 			}
-
 			/*
 				Execute the expressions immediately.
 			*/

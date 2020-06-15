@@ -34,4 +34,11 @@ tw-backdrop {
 	display:flex;
 	align-items:center;
 	justify-content: center;
+	/*
+		Currently, it's possible to put multiple dialogs onscreen at once.
+		When this happens, hide all but the first one.
+	*/
+	& ~ tw-backdrop {
+		display:none;
+	}
 }
