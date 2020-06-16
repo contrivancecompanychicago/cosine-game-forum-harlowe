@@ -184,16 +184,19 @@ tw-error-explanation {
 	font-size: 0.8rem;
 	line-height: 1rem;
 }
-tw-error-explanation-button {
+tw-folddown {
 	cursor: pointer;
 	line-height: 0em;
 	border-radius: 1px;
 	border: 1px solid black;
 	font-size: 0.8rem;
 	margin: 0 0.4rem;
-	opacity: 0.5;
-	& .folddown-arrowhead {
-		display:inline-block;
+	padding:2px;
+	&::before {
+		content: "\25b6";
+	}
+	&.open::before {
+		content: "\25bc";
 	}
 }
 tw-notifier {

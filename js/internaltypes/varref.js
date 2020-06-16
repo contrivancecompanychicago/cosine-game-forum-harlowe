@@ -693,8 +693,11 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 					by splicing them.
 				*/
 				if (typeof object === "string") {
-					if (typeof value !== "string" || value.length !== (Array.isArray(property) ? property.length : 1)) {
+					if (typeof value !== "string") {
 						return TwineError.create("datatype", "I can't put this non-string value, " + objectName(value) + ", in a string.");
+					}
+					else if (value.length !== (Array.isArray(property) ? property.length : 1)) {
+						return TwineError.create("datatype", objectName(value) + "is not the right length to fit into this string location.");
 					}
 					/*
 						Convert strings to an array of code points, to ensure that the indexes are correct.
@@ -730,6 +733,15 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 					depending on if the property is a slice.
 				*/
 				else if (isObject(object)) {
+					/*
+						If the value's knownName needs to be updated, do that now.
+						This only needs to be performed during sets, not deletes, because
+						deletes (of properties deep in data structures) simply cause sets
+						of the parent object to the same variable.
+					*/
+					if (value.TwineScript_KnownName !== undefined) {
+						value.TwineScript_KnownName = this.TwineScript_ObjectName;
+					}
 					/*
 						If the property is an array of properties, and the value is an array also,
 						set each value to its matching property.

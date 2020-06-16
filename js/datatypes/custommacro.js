@@ -55,7 +55,8 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 		to the variable names (since type-checking has been completed), sets up the environment
 		in which the body is executed, executes it, then returns the result.
 	*/
-	const macroEntryFn = ({varNames, body}) => (section, ...args) => {
+	const macroEntryFn = (macro) => (section, ...args) => {
+		const {varNames, body} = macro;
 		/*
 			The passed-in arguments to the custom macro become temp. variables
 			immediately.
@@ -63,7 +64,7 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 			custom macro. So, closures do not exist in Harlowe custom macros at this time.
 		*/
 		const tempVariables = assign(create(VarScope), {
-			TwineScript_VariableStoreName: "a custom macro call",
+			TwineScript_VariableStoreName: macro.TwineScript_ObjectName,
 		});
 		args.forEach((arg,i) => tempVariables[varNames[i]] = arg);
 
@@ -109,14 +110,14 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 
 		if (errors.length) {
 			//TODO: attach the DOM and view it with a given button.
-			return TwineError.create('custommacro','These errors occurred when running a custom macro:\n' + errors);
+			return TwineError.create('custommacro','These errors occurred when running ' + macro.TwineScript_ObjectName + ':\n' + errors);
 		}
 
 		/*
 			Currently, custom macros are required to return something, even if that thing is an error.
 		*/
 		if (output === undefined) {
-			return TwineError.create("custommacro", "This custom macro didn't output any data using (output:) or (output-hook:).");
+			return TwineError.create("custommacro", macro.TwineScript_ObjectName + " didn't output any data using (output:) or (output-hook:).");
 		}
 		/*
 			As described above, if (output-hook:) was run, and a ChangeDescriptor was
@@ -133,7 +134,9 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 
 	return Object.freeze({
 		TwineScript_TypeName: "a custom macro",
-		TwineScript_ObjectName: "a custom macro",
+		get TwineScript_ObjectName() {
+			return this.TwineScript_KnownName ? "the " + this.TwineScript_KnownName + " macro" : "a custom macro";
+		},
 		TwineScript_GetProperty(prop) {
 			if (prop === "params") {
 				return [...this.params];
@@ -141,6 +144,7 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 		},
 		TwineScript_Properties: ['params'],
 		TwineScript_DebugContents() {
+			// TODO: display the parameters
 			return "<div class='panel-source'>" + escape(this.body.source) + "</div>";
 		},
 
@@ -155,6 +159,10 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 				varNames: params.map(p => p.varRef.propertyChain[0]),
 				typeSignature: params.map(p => p.datatype.toTypeSignatureObject()),
 				body,
+				/*
+					knownName is assigned to whatever variable this data structure was last assigned to, by VarRef.set().
+				*/
+				TwineScript_KnownName: "",
 			});
 			ret.fn = macroEntryFn(ret);
 			return ret;

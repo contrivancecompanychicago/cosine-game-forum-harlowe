@@ -217,7 +217,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			+ (trail ? "<span class='variable-path " + (tempScope ? "temporary" : "global") + "'>" + Utils.escape(trail) + "</span> " : '')
 			+ Utils.escape(name + '')
 			+ (tempScope ? ("<span class='temporary-variable-scope'>" + tempScope + "</span>") : "") +
-			"</span><span class='variable-value'>" + val + (hasContents ? "<span class='variable-contents-dial'></span>" : '') + "</span>"
+			"</span><span class='variable-value'>" + val + (hasContents ? "<tw-folddown tabindex=0></tw-folddown>" : '') + "</span>"
 			+ (hasContents ? "<div class='variable-contents' style='display:none'>" + value.TwineScript_DebugContents() + "</div>" : "")
 		)
 		/*
@@ -250,12 +250,6 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			[...value].forEach((elem) => updateVariables("???", path.concat(name), elem, tempScope));
 		}
 	}
-	/*
-		Set up the variable contents spinner.
-	*/
-	root.on('click', 'tw-debugger .variable-contents-dial', ({target}) => {
-		$(target).toggleClass('open').parent().next().toggle();
-	});
 
 	const storyletsTable = debugElement.find('.panel-storylets');
 	/*

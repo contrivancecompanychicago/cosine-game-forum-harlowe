@@ -30,7 +30,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		This macro provides you with the means to expand Harlowe's collection of built-in macros with
 		custom utilities tailored specifically for your story. While many Twine projects are simple
 		hypertext stories, there are many that use it to make more complicated simulations, role-playing games,
-		generative art, and so on. Being able to craft a language in which to write the many algorithms such
+		generative art, and so on. Being able to craft a personal language of macros in which to write the many algorithms such
 		games involve is essential to keeping your code succinct and readable.
 
 		Creating a custom macro:
@@ -265,7 +265,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 	/*d:
 		(error: String) -> Instant
 
-		Designed for use in custom macros, this causes the custom macro to immediately produce an error, with the given message,
+		Designed for use in custom macros, this causes the custom macro to immediately produce an error, with the given message string,
 		and ceases running any further code in the CodeHook.
 		
 		Example usage:

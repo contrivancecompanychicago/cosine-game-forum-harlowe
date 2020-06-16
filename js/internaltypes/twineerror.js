@@ -5,6 +5,15 @@ define(['jquery', 'utils'], ($, {impossible, escape}) => {
 		information as they can, in order to give the author sufficient assistance in
 		understanding the error.
 	*/
+
+	/*
+		Set up the fold-down buttons used here. These are also used in Debug Mode.
+	*/
+	$(document.documentElement).on('click', 'tw-folddown', ({target}) => {
+		target = $(target);
+		target.toggleClass('open');
+		(target.next().length) ? target.next().toggle() : target.parent().next().toggle();
+	});
 	
 	/*
 		This dictionary supplies explanations for the most typical error types.
@@ -128,25 +137,9 @@ define(['jquery', 'utils'], ($, {impossible, escape}) => {
 					.hide(),
 				/*
 					The button to reveal the explanation consists of a rightward arrowhead
-					which is rotated when the explanation is unfolded down.
+					(styled with SCSS) which becomes a downward arrow when opened.
 				*/
-				explanationButton = $("<tw-error-explanation-button tabindex=0>")
-					/*
-						The arrowhead must be in its own <span> so that it can be rotated.
-						The CSS class "folddown-arrowhead" is used exclusively for this kind of thing.
-					*/
-					.html("<span class='folddown-arrowhead'>&#9658;</span>");
-					
-			/*
-				Wire up the explanation button to reveal the error explanation.
-			*/
-			explanationButton.on('click', () => {
-				explanationElement.toggle();
-				explanationButton.children(".folddown-arrowhead").css(
-					'transform',
-					'rotate(' + (explanationElement.is(':visible') ? '90deg' : '0deg') + ')'
-				);
-			});
+				explanationButton = $("<tw-folddown tabindex=0>");
 			
 			errorElement.append(explanationButton).append(explanationElement);
 
