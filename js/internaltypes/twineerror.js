@@ -21,6 +21,7 @@ define(['jquery', 'utils'], ($, {impossible, escape}) => {
 		unimplemented: "I currently don't have this particular feature. I'm sorry.",
 		javascript:    "This error message was reported by your browser's Javascript engine. "
 			+ "I don't understand it either, but it usually means that an expression was badly written.",
+		user:          "This is a custom error created by (error:). It usually means you used a custom macro incorrectly.",
 	},
 
 	/*
@@ -38,8 +39,8 @@ define(['jquery', 'utils'], ($, {impossible, escape}) => {
 			But, a different explanation can be provided by the caller, if they choose.
 		*/
 		create(type, message, explanation) {
-			if (!message) {
-				impossible("TwineError.create", "called with only 1 string.");
+			if (!message || typeof message !== "string") {
+				impossible("TwineError.create", "has a bad message string");
 			}
 			/*
 				Whatever happens, there absolutely must be a valid explanation from either source.

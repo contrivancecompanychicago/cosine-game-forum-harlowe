@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery','internaltypes/changedescriptor', 'internaltypes/varscope', 'internaltypes/twineerror'], ($, ChangeDescriptor, VarScope, TwineError) => {
+define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varscope', 'internaltypes/twineerror'], ($, {escape}, ChangeDescriptor, VarScope, TwineError) => {
 	const {assign,create} = Object;
 	/*d:
 		CustomMacro data
@@ -140,6 +140,9 @@ define(['jquery','internaltypes/changedescriptor', 'internaltypes/varscope', 'in
 			}
 		},
 		TwineScript_Properties: ['params'],
+		TwineScript_DebugContents() {
+			return "<div class='panel-source'>" + escape(this.body.source) + "</div>";
+		},
 
 		/*
 			Custom macros have a TypeSignature that the type-checker functions in Macros

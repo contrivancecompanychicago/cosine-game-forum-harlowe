@@ -326,6 +326,7 @@ tw-debugger {
 		@include flexbox;
 		@include flex-direction(row);
 		flex-shrink: 0;
+		flex-wrap:wrap;
 		&:nth-child(2n) {
 			background:#EEE;
 		}
@@ -348,6 +349,24 @@ tw-debugger {
 		}
 		.temporary::before {
 			content: "_";
+		}
+		.variable-contents-dial {
+			width:16px;
+			height:16px;
+			border:1px solid black;
+			border-radius:4px;
+			margin-left:8px;
+			cursor:pointer;
+			&::before {
+				content: "▷";
+			}
+			&.open::before {
+				content: "▽";
+			}
+		}
+		.variable-contents {
+			flex-basis: 100%;
+			white-space: pre;
 		}
 	}
 	.error-row {

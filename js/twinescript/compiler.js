@@ -305,7 +305,10 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				return token.text.replace(/\n/g, "\\n");
 			}
 			else if (token.type === "hook") {
-				return "CodeHook.create(" + toJSLiteral(token.html) + ")";
+				/*
+					Slice off the opening [ and closing ] of the source.
+				*/
+				return "CodeHook.create(" + toJSLiteral(token.text.slice(1,-1)) + "," + toJSLiteral(token.html) + ")";
 			}
 			else if (token.type === "colour") {
 				return "Colour.create(" + toJSLiteral(token.colour) + ")";

@@ -83,6 +83,13 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added `(complement:)`, a macro which takes a colour and produces its complement by rotating its LCH hue by 180 degrees.
  * Added `(palette:)`, a macro designed for rapid prototyping which produces a four-colour palette based on a given colour, for use with `(text-colour:)`, `(background:)` and `(enchant:)`.
 
+#####Custom Macros
+
+ * A new macro, `(macro:)`, allows you to write custom macros for Harlowe and store them in variables. `(set: $earthName to (macro: [(output:(either:"Terra","Earth"))]))` produces a custom macro that can be called by writing `($earthName:)`.
+ * Added three macros, `(output:)`, `(output-hook:)` and `(error:)`, which are used to output final values for your custom macros. `(output:)` is used for macros that produce data values, such as `(min:)` or `(lowercase:)`, whereas `(output-hook:)` is used for macros that produce commands that display complicated markup, such as `(cycling-link:)`. `(error:)` can be used to output custom error messages.
+ * Added CodeHooks, which are special kinds of hooks that go inside macro calls, rather than just in passage prose. These are used to write the inner code of custom macros. You can use `(if:)`, `(for:)`, `(set:)`, and most other macros inside one. Their contents are invisible at runtime - only the result produced by `(output:)` or `(output-hook:)` is visible - so you can comment your code by simply writing prose inside it.
+ * Added a new operator, `-type`, which is used to define the parameters of custom macros. Place a datatype (such as `str` or `dm`) in front, and a temp variable after it (such as `str-type _name`) and you have a TypedVar, which is a variable name combined with a datatype. When you call a custom macro, each value provided to it is compared with the datatype, then placed in the temp variable when the CodeHook is run. `(set: $earthName to (macro: boolean-type _isFuture, [(output:(cond: _isFuture, "Terra","Earth"))]))` produces a custom macro that can be called by writing `($earthName: true)` or `($earthName: false)`, and produces an error when you write `($earthName: 2)`.
+
 #####Other
 
  * Added a debug mode panel listing which storylet passages are currently available, and their 'where' lambdas. This panel is only visible if you have `(storylet:)` macros in your story.

@@ -857,7 +857,7 @@
 			such as altering the game's state, displaying different text depending on the game's state, and altering
 			the manner in which text is displayed.
 
-			Built-in macros:
+			Built in macros:
 
 			There are many built-in macros in Harlowe. To use one, you must *call* upon it in your passage by writing
 			the name, a colon, and some data values to provide it, all in parentheses. For instance, you call the (print:)

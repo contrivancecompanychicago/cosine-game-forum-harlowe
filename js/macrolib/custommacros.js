@@ -53,6 +53,9 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		call a custom macro stored in the variable $someCustomMacro, and `(_anotherCustomMacro:)` is how you would
 		call a custom macro stored in the temp variable _anotherCustomMacro.
 
+		If you want to use a custom macro throughout your story, the best place to create it is in a "startup" tagged passage. This will aid
+		in testing your story, as those passages' contents are always run first, regardless of the starting passage.
+
 		Details:
 
 		You can, of course, have zero TypedVars, for a macro that needs no input values, and simply outputs a complicated (or randomised) value
@@ -74,21 +77,37 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 			requires a different-typed final parameter after a rest parameter) so this loop corrects that.
 		*/
 		let i;
+		const names = [];
 		for(i = 0; i < parameters.length; i += 1) {
 			const last = (i === parameters.length - 1);
+			// The param must be a typedvar XOR the last parameter.
 			if (TypedVar.isPrototypeOf(parameters[i]) === last) {
 				return TwineError.create("datatype", "The " + (!last ? Utils.nth(parameters.length-i+1) + "-" : '')
 					+ "last value given to (macro:) should be a " + (!last ? "datatyped variable" : "code hook") + ", not " + objectName(parameters[i]));
 			}
 			/*
-				Even though the varRefs themselves are not used at all as objects when running custom macros, it is still
+				Even though the VarRefs themselves are not used at all as objects when running custom macros, it is still
 				important that they are not syntactically written as global variables, but rather temp variables, as that
 				is how they semantically behave inside the code hook / macro body.
 			*/
-			if (!last && parameters[i].varRef.object === State.variables) {
-				return TwineError.create("datatype",
-					"The datatyped variables named for (macro:) must be temp variables (with a '_'), not global variables (with a '$').",
-					"Write them with a _ sigil at the start instead of a $ sigil.");
+			if (!last) {
+				if (parameters[i].varRef.object === State.variables) {
+					return TwineError.create("datatype",
+						"A custom macro's datatyped variables must be temp variables (with a '_'), not global variables (with a '$').",
+						"Write them with a _ sigil at the start instead of a $ sigil.");
+				}
+				if (parameters[i].varRef.propertyChain.length > 1) {
+					return TwineError.create("datatype",
+						"A custom macro's datatyped variables can't be properties inside a data structure."
+					);
+				}
+				const name = parameters[i].varRef.propertyChain[0];
+				if (names.includes(name)) {
+					return TwineError.create("datatype",
+						"A custom macro's datatyped variables can't both be named '" + name + "'."
+					);
+				}
+				names.push(name);
 			}
 		}
 		return CustomMacro.create(parameters.slice(0, -1), parameters[parameters.length-1]);
@@ -101,7 +120,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		can't be found anywhere, then it's safe to assume that (output:) was called outside of a
 		custom macro.
 	*/
-	const outputValue = (stack, data) => {
+	const outputValue = (name, stack, data) => {
 		const inCustomMacro = stack.some(frame => {
 			if (typeof frame.output === "function") {
 				frame.output(data);
@@ -109,7 +128,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 			}
 		});
 		if (!inCustomMacro) {
-			return TwineError.create("macrocall","(output:) and (output-hook:) should only be used inside a code hook passed to (macro:).");
+			return TwineError.create("macrocall","(" + name + ":) should only be used inside a code hook passed to (macro:).");
 		}
 	};
 
@@ -144,7 +163,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		Attempting to call (output:) outside of a custom macro's CodeHook will cause an error.
 
 		See also:
-		(output-hook:)
+		(output-hook:), (error:)
 
 		#custom macros 2
 	*/
@@ -152,7 +171,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		/*
 			If this errors, then the error will be returned now.
 		*/
-		return outputValue(stack, any)
+		return outputValue("output", stack, any)
 		/*
 			By forcibly blocking the control flow of the section after executing this macro, (output:)
 			has the same semantics as "return" in other programming languages.
@@ -212,12 +231,12 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		Attempting to call (output:) outside of a custom macro's CodeHook will cause an error.
 
 		See also:
-		(output:)
+		(output:), (error:)
 
 		#custom macros 3
 	*/
 	addChanger("output-hook",
-		(section) => Object.assign(ChangerCommand.create("output-hook", [section]), { TwineScript_Unstorable: true }),
+		(section) => Object.assign(ChangerCommand.create("output-hook", [section])),
 		(cd, {stack,stackTop}) => {
 			/*
 				(output-hook:) commands are deferred render commands, but they need access to the temp variables
@@ -229,7 +248,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 				return a;
 			},{});
 
-			outputValue(stack, cd);
+			outputValue("output-hook", stack, cd);
 			/*
 				Unlike a command, changers have to explicitly block the section's control flow like so.
 			*/
@@ -242,4 +261,55 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 			return cd;
 		},
 		[]);
+
+	/*d:
+		(error: String) -> Instant
+
+		Designed for use in custom macros, this causes the custom macro to immediately produce an error, with the given message,
+		and ceases running any further code in the CodeHook.
+		
+		Example usage:
+		```
+		(set: $altCaps to (macro: str-type _input, [
+			(if: _input is "")[(error: "I can't alt-caps an empty string.")]
+			(output:
+				(folded: _char making _result via _result +
+					(cond: pos % 2 is 0, (lowercase:_char), (uppercase:_char)),
+					..._input
+				)
+			)
+		]))
+		($altCaps:"")
+		```
+
+		Rationale:
+		Allowing your custom macros to produce insightful error messages is essential to making them user-friendly, especially
+		if you intend other authors to use them. In the example above, for instance, an empty string inputted to the $altCaps
+		macro would causes (folded:) to produce an error, as `..._input` would spread zero characters. However, the earlier
+		custom error provides a better message, explaining exactly what the problem is.
+
+		Details:
+		As with (output:), as soon as this is encountered, all further macros and code in the CodeHook will be ignored.
+		Note that this occurs even if the macro is given as input to another macro - `(cond: false, (error:"There's a problem"), "")`
+		will always produce the error, regardless of (cond:)'s behaviour.
+
+		If an empty string is given to this macro, an error (different from the intended error) will be produced. Also,
+		attempting to call (error:) outside of a custom macro's CodeHook will cause another (also different from intended) error.
+
+		See also:
+		(output:), (output-hook:)
+
+		#custom macros 4
+	*/
+	addCommand("error",
+		(message) => {
+			if (!message) {
+				return TwineError.create("datatype", "This (error:) macro was given an empty string.");
+			}
+		},
+		({stack}, message) => {
+			return outputValue("error", stack, TwineError.create("user", message)) || "blocked";
+		},
+	[String],
+	/*attachable:false*/false);
 });

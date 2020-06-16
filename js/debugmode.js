@@ -10,6 +10,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 
 		This module exports a single function which, when run, performs all of the Debug Mode setup.
 	*/
+	const root = $(document.documentElement);
 	const debugElement = $(`<tw-debugger>
 		<div class='panel panel-variables'></div>
 		<div class='panel panel-errors' hidden><table></table></div>
@@ -27,7 +28,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 	*/
 	const showInvisibles = debugElement.find('.show-invisibles');
 	showInvisibles.click(() => {
-		$(document.documentElement).toggleClass('debug-mode');
+		root.toggleClass('debug-mode');
 		showInvisibles.toggleClass('enabled');
 	});
 	/*
@@ -205,6 +206,10 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			trail = path.reduce((a,e) => a + e + "'s ", '');
 		}
 		/*
+			CodeHooks and custom macros have special content which can't be displayed in a single row, but which can be viewed by a fold-down button.
+		*/
+		const hasContents = value.TwineScript_DebugContents;
+		/*
 			Create the <span>s for the variable's name and value.
 		*/
 		row.empty().append(
@@ -212,7 +217,8 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			+ (trail ? "<span class='variable-path " + (tempScope ? "temporary" : "global") + "'>" + Utils.escape(trail) + "</span> " : '')
 			+ Utils.escape(name + '')
 			+ (tempScope ? ("<span class='temporary-variable-scope'>" + tempScope + "</span>") : "") +
-			"</span><span class='variable-value'>" + val + "</span>"
+			"</span><span class='variable-value'>" + val + (hasContents ? "<span class='variable-contents-dial'></span>" : '') + "</span>"
+			+ (hasContents ? "<div class='variable-contents' style='display:none'>" + value.TwineScript_DebugContents() + "</div>" : "")
 		)
 		/*
 			Data structure entries are indented by their depth in the structure, to a maximum of 5 levels deep.
@@ -244,6 +250,12 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			[...value].forEach((elem) => updateVariables("???", path.concat(name), elem, tempScope));
 		}
 	}
+	/*
+		Set up the variable contents spinner.
+	*/
+	root.on('click', 'tw-debugger .variable-contents-dial', ({target}) => {
+		$(target).toggleClass('open').parent().next().toggle();
+	});
 
 	const storyletsTable = debugElement.find('.panel-storylets');
 	/*

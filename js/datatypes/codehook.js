@@ -19,12 +19,17 @@ define(['internaltypes/twineerror'], (TwineError) => {
 
 		TwineScript_Unstorable: true,
 		
-		create(html) {
+		/*
+			To save on processing when running custom macros, CodeHooks store their pre-compiled HTML.
+			Passages could do this, too, but there isn't currently much call for it, since they're usually
+			visited only a few times.
+		*/
+		create(source, html) {
 			const error = TwineError.containsError(html);
 			if (error) {
 				return error;
 			}
-			return Object.assign(Object.create(this), { html });
+			return Object.assign(Object.create(this), { source, html });
 		},
 	});
 });
