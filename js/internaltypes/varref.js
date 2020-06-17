@@ -1,6 +1,6 @@
 "use strict";
 define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'datatypes/hookset'],
-(State, TwineError, {impossible, andList}, {isObject, isSequential, objectName, typeName, clone, numericIndex, isValidDatamapName, subset}, HookSet) => {
+(State, TwineError, {impossible, andList, nth}, {isObject, isSequential, objectName, typeName, clone, isValidDatamapName, subset}, HookSet) => {
 	/*
 		VarRefs are essentially objects pairing a chain of properties
 		with an initial variable reference - "$red's blue's gold" would be
@@ -323,6 +323,9 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			}
 			return "(" + value + ")";
 		}
+		if (typeof prop === "number") {
+			return nth(prop);
+		}
 		return "'" + prop + "'";
 	}
 	
@@ -433,7 +436,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			If it's an array, and the prop is an index,
 			we should remove the item in-place without creating a hole.
 		*/
-		if (Array.isArray(obj) && numericIndex.exec(prop)) {
+		if (Array.isArray(obj) && /^(?:[1-9]\d*|0)$/.exec(prop)) {
 			obj.splice(prop, 1);
 		}
 		/*
@@ -901,8 +904,8 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				object, propertyChain, compiledPropertyChain, deepestObject
 			});
 		},
-		
-		get TwineScript_ObjectName() {
+
+		TwineScript_ToSource() {
 			const debugName = (name, pos) => {
 				if (!pos && (this.object === State.variables || this.object.TwineScript_VariableStore))
 					return name;
@@ -922,7 +925,11 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				(this.propertyChain.length === 1
 					? debugName(this.propertyChain[0])
 					: this.propertyChain.reduce((a, e, i) => a + "'s " + debugName(e,i))
-				) +
+				);
+		},
+		
+		get TwineScript_ObjectName() {
+			return this.TwineScript_ToSource() +
 				/*
 					Include the name of the VariableStore's scope, if this is a temp. variable.
 				*/

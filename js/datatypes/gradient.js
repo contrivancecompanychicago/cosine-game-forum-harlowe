@@ -1,5 +1,5 @@
 "use strict";
-define([], () => {
+define(['utils/operationutils'], ({toSource}) => {
 	/*d:
 		Gradient data
 
@@ -48,6 +48,10 @@ define([], () => {
 			}
 		},
 		TwineScript_Properties: ["angle","stops"],
+
+		TwineScript_ToSource() {
+			return "(gradient:" + this.angle + "," + this.stops.map(stop => toSource(stop.stop) + "," + toSource(stop.colour)) + ")";
+		},
 
 		TwineScript_is(other) {
 			return other.angle === this.angle

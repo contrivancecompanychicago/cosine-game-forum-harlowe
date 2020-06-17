@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils', 'utils/renderutils'], ($, Utils, {textNodeToChars, realWhitespace, findTextInNodes}) => {
+define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Utils, {textNodeToChars, realWhitespace, findTextInNodes}, {toSource}) => {
 	/*
 		A HookSet is an object representing a "hook selection". Hooks in
 		Twine passages can have identical titles, and both can therefore be
@@ -151,10 +151,8 @@ define(['jquery', 'utils', 'utils/renderutils'], ($, Utils, {textNodeToChars, re
 			(as restricted by the properties).
 		*/
 		/*
-			The following function takes a jQuery set of elements and produces
-			a reduce() function which extracts just the ones keyed to a given index
-			(or array of indexes).
-
+			The following function takes a jQuery set of elements and extracts just
+			the ones keyed to a given index (or array of indexes).
 		*/
 		const reducer = (elements, index) => {
 			/*
@@ -251,17 +249,17 @@ define(['jquery', 'utils', 'utils/renderutils'], ($, Utils, {textNodeToChars, re
 			}
 			/*
 				Conversely, if this has a base, then we add those elements
-				(as restricted by the properties).
+				(as restricted by the property).
 			*/
 			else if (this.selector.type === "base") {
-				return ret.add(this.properties.reduce(reducer, hooks.call(this.selector.data, section)));
+				return ret.add(reducer(hooks.call(this.selector.data, section), this.property));
 			}
 			else {
 				ownElements = dom.add(dom.parentsUntil(Utils.storyElement.parent()))
 					.findAndFilter(hookToSelector(this.selector.data));
 			}
-			if (this.properties.length) {
-				ret = ret.add(this.properties.reduce(reducer, ownElements));
+			if (this.property) {
+				ret = ret.add(reducer(ownElements, this.property));
 			}
 			else {
 				ret = ret.add(ownElements);
@@ -283,13 +281,13 @@ define(['jquery', 'utils', 'utils/renderutils'], ($, Utils, {textNodeToChars, re
 		if (!hookset) {
 			return [];
 		}
-		const {selector, properties, prev} = hookset;
+		const {selector, property, prev} = hookset;
 		// The hash of ?red + ?blue should equal that of ?blue + ?red. To do this,
 		// the prev's hash and this hookset's hash is added to an array, which is then sorted and returned.
 		return [
 			JSON.stringify([
 				selector.type === "base" ? hash(selector.data) : Utils.insensitiveName(selector.data),
-				[...properties].sort()
+				property
 			]), ...hash(prev)
 		].sort();
 	}
@@ -336,7 +334,7 @@ define(['jquery', 'utils', 'utils/renderutils'], ($, Utils, {textNodeToChars, re
 				Let's not bother printing out this hookset's entire heritage
 				if it's anything more than basic.
 			*/
-			if (this.properties.length > 0 || this.prev) {
+			if (this.property || this.prev) {
 				return "a complex hook name";
 			}
 			return "?" + this.selector.data + " (a hook name)";
@@ -347,6 +345,26 @@ define(['jquery', 'utils', 'utils/renderutils'], ($, Utils, {textNodeToChars, re
 			HookSets cannot be assigned to variables.
 		*/
 		TwineScript_Unstorable: true,
+		/*
+			However, they can be stored in changers, so they need a ToSource anyway.
+		*/
+		TwineScript_ToSource() {
+			let ret = '';
+			const {type, data} = this.selector;
+			if (type === "name") {
+				ret += "?" + data;
+			}
+			else if (type === "string") {
+				ret += JSON.stringify(data);
+			}
+			else if (type === "base") {
+				ret += data.TwineScript_ToSource() + "'s " + toSource(this.property, true);
+			}
+			if (this.prev) {
+				ret += " + " + this.prev.TwineScript_ToSource();
+			}
+			return ret;
+		},
 
 		/*
 			HookSets can be concatenated in the same manner as ChangerCommands.
@@ -382,7 +400,7 @@ define(['jquery', 'utils', 'utils/renderutils'], ($, Utils, {textNodeToChars, re
 			* A {first: Number, last:Number} object. This is created by "?a's 1stTo2ndlast" and such.
 		*/
 		TwineScript_GetProperty(prop) {
-			return HookSet.create({type:"base", data:this}, [prop], undefined);
+			return HookSet.create({type:"base", data:this}, prop, undefined);
 		},
 
 		/*
@@ -394,7 +412,7 @@ define(['jquery', 'utils', 'utils/renderutils'], ($, Utils, {textNodeToChars, re
 		// passing in a section, and it doesn't make much sense to ever do so.
 
 		TwineScript_Clone() {
-			return HookSet.create(this.selector, this.properties, this.prev);
+			return HookSet.create(this.selector, this.property, this.prev);
 		},
 		
 		/*
@@ -402,9 +420,9 @@ define(['jquery', 'utils', 'utils/renderutils'], ($, Utils, {textNodeToChars, re
 
 			{Object} selector: the hook selector. It has:
 				{String} type: "name", "string", or "base"
-				{String|HookSet} data: a hook name, such as "?flank" for ?flank, a bare search string,
+				{String|HookSet} data: a hook name, such as "flank" for ?flank, a bare search string,
 					or a HookSet from which the properties are being extracted.
-			{Array} properties: a set of properties to restrict the current set of hooks.
+			{Array} property: a property to restrict the current set of hooks.
 			{HookSet} prev: a hook which has been +'d with this one.
 
 			Consider this diagram:
@@ -413,13 +431,13 @@ define(['jquery', 'utils', 'utils/renderutils'], ($, Utils, {textNodeToChars, re
 			(?apple + ?banana's  2ndlast)'s 2ndlast
 			[          base            ]   [properties]
 		*/
-		create(selector, properties = [], prev = undefined) {
+		create(selector, property, prev = undefined) {
 			return Object.assign(Object.create(this || HookSet), {
 				// Freezing the selector guarantees that,
 				// when TwineScript_Clone() passes it by value,
 				// no permutation is possible.
 				selector: Object.freeze(selector),
-				properties, prev
+				property, prev
 			});
 		},
 

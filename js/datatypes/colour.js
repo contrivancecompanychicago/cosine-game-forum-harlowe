@@ -317,7 +317,7 @@ define(['jquery', 'utils'], ($, {matMul}) => {
 		TwineScript_Print() {
 			const {r,g,b,a} = this.toRGBA();
 			return "<tw-colour style='background-color:rgba("
-				+ [r, g, b, a].join(',') + ");'></span>";
+				+ [r, g, b, a].join(',') + ");'></tw-colour>";
 		},
 		
 		TwineScript_is(other) {
@@ -395,6 +395,13 @@ define(['jquery', 'utils'], ($, {matMul}) => {
 			}
 		},
 		TwineScript_Properties: ['h','s','l','r','g','b','a','lch'],
+
+		TwineScript_ToSource() {
+			const hsl = !this.lch && RGBToHSL(this);
+			return "(" + (this.lch ? "lch" : "hsl") + ":"
+				+ (this.lch ? [this.lch.l, this.lch.c, this.lch.h] : [hsl.h, hsl.s, hsl.l])
+				+ (this.a !== 1 ? "," + this.a : "") + ")";
+		},
 
 		/*
 			This constructor accepts an object containing r, g and b numeric properties,

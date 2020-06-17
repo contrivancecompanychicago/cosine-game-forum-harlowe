@@ -1,5 +1,5 @@
 "use strict";
-define(['utils', 'utils/operationutils', 'internaltypes/changedescriptor', 'internaltypes/twineerror'], ({impossible}, {is}, ChangeDescriptor, TwineError) => {
+define(['utils', 'utils/operationutils', 'internaltypes/changedescriptor', 'internaltypes/twineerror'], ({impossible}, {is,toSource}, ChangeDescriptor, TwineError) => {
 	/*
 		A ChangerCommand is a command that is used to alter the way a particular
 		Section renders the value. It does this by mutating a passed-in ChangeDescriptor
@@ -23,6 +23,15 @@ define(['utils', 'utils/operationutils', 'internaltypes/changedescriptor', 'inte
 		
 		TwineScript_Print() {
 			return "`[A (" + this.macroName + ":) command]`";
+		},
+
+		TwineScript_ToSource() {
+			return "(" + this.macroName + ":"
+				/*
+					(else:) is an unfortunate special case that needs to be addressed.
+				*/
+				+ (this.name === "else" ? "": this.params.map(toSource))
+				+ ")" + (this.next ? "+" + this.next.TwineScript_ToSource() : "");
 		},
 		
 		/*

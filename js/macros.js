@@ -1,6 +1,6 @@
 "use strict";
 define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changercommand', 'datatypes/custommacro', 'datatypes/lambda', 'datatypes/hookset', 'datatypes/codehook', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
-($, NaturalSort, {insensitiveName, nth, plural, andList, lockProperty}, {objectName, typeName, singleTypeCheck}, ChangerCommand, CustomMacro, Lambda, HookSet, CodeHook, ChangeDescriptor, TwineError) => {
+($, NaturalSort, {insensitiveName, nth, plural, andList, lockProperty}, {objectName, typeName, singleTypeCheck, toSource}, ChangerCommand, CustomMacro, Lambda, HookSet, CodeHook, ChangeDescriptor, TwineError) => {
 	/*
 		This contains a registry of macro definitions, and methods to add to that registry.
 	*/
@@ -204,30 +204,17 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 						+ ".");
 				}
 
+				/*
+					Insensitive set patterns also have a special error description.
+				*/
 				if (type.pattern === "insensitive set") {
 					return TwineError.create('datatype', objectName(arg) + ' is not a valid name string for ' + name + ".",
 						'Only the following names are recognised (capitalisation and hyphens ignored): ' + andList(type.innerType) + "."
 					);
 				}
 
-				if (type.pattern === "number range" || type.pattern === "integer range") {
-					const {max,min} = type;
-					return TwineError.create('datatype',
-						// This construction assumes that the minimum will always be 0, 1 or >0.
-						name + "'s " + nth(ind + 1) + " value must be a" +
-						(
-							min > 0 ? " positive" : ""
-						) + (
-							type.pattern === "integer range" ? " whole" : ""
-						) + " number" + (
-							min === 0 ? " between 0 and " + max :
-							max < Infinity ? " up to " + max : ""
-						) + ", not " + objectName(arg) + "."
-					);
-				}
-
 				/*
-					Otherwise, it was the most common case: an invalid data type.
+					Otherwise, give the generic data type error message.
 				*/
 				return TwineError.create(
 					"datatype",
@@ -295,6 +282,9 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 				TwineScript_ObjectName: "a (" + firstName + ":) command",
 				TwineScript_TypeName: "a (" + firstName + ":) command",
 				TwineScript_Print: () => "`[A (" + firstName + ":) command]`",
+				TwineScript_ToSource() {
+					return "(" + firstName + ":" + args.map(toSource) + ")";
+				},
 			},
 			/*
 				Only assign the TwineScript_Attach() method, and a TwineScript_Run() that

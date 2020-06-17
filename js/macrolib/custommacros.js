@@ -69,6 +69,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		See also:
 		(output:), (output-hook:)
 
+		Added in: 3.2.0
 		#custom macros 1
 	*/
 	add("macro", (_, ...parameters) => {
@@ -165,6 +166,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		See also:
 		(output-hook:), (error:)
 
+		Added in: 3.2.0
 		#custom macros 2
 	*/
 	addCommand("output", () => {}, ({stack}, any) => {
@@ -191,7 +193,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 			(size:0.7)+(box:"=XXXXX=")+(border:"solid")+(output-hook:)[\
 			##(print:_potion's name)
 			|==
-			''Colour'': (print:_potion's colour)
+			''Hue'': (print:_potion's hue)
 			''Smell'': (print:_potion's smell)
 			''Flask'': (print:_potion's flask)
 			''Effect'': (print: _potion's effect)
@@ -201,7 +203,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		]))
 		($describePotion: (dm:
 			"name", "Vasca's Dreambrew",
-			"colour", "Puce",
+			"hue", "Puce",
 			"smell", "Strong acidic honey",
 			"flask", "Conical, green glass, corked",
 			"effect", "The drinker will, upon sleeping, revisit the last dream they had, exactly as it was.",
@@ -233,6 +235,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		See also:
 		(output:), (error:)
 
+		Added in: 3.2.0
 		#custom macros 3
 	*/
 	addChanger("output-hook",
@@ -299,6 +302,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		See also:
 		(output:), (output-hook:)
 
+		Added in: 3.2.0
 		#custom macros 4
 	*/
 	addCommand("error",

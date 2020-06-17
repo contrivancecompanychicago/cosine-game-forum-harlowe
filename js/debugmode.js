@@ -1,6 +1,6 @@
 "use strict";
 define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'engine', 'passages', 'section'],
-($, Utils, State, VarRef, TwineError, {objectName, typeName, is, isObject}, Engine, Passages, Section) => (initialError, code) => {
+($, {escape,nth,storyElement}, State, VarRef, TwineError, {objectName, typeName, is, isObject, toSource}, Engine, Passages, Section) => (initialError, code) => {
 	/*
 		Debug Mode
 
@@ -179,20 +179,20 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			Obtain the row which needs to be updated. If it doesn't exist,
 			create it below.
 		*/
-		let row = variablesTable.children('[data-name="' + Utils.escape(name + '') + '"][data-path="' + Utils.escape(path + '') + '"]');
+		let row = variablesTable.children('[data-name="' + escape(name + '') + '"][data-path="' + escape(path + '') + '"]');
 		/*
 			The debug name used defers to the TwineScript_DebugName if it exists,
 			and falls back to the objectName if not. Note that the TwineScript_DebugName can contain HTML structures
 			(such as a <tw-colour> for colours) but the objectName could contain user-inputted data, so only the latter is escaped.
 		*/
-		const val = isObject(value) && value.TwineScript_DebugName ? value.TwineScript_DebugName() : Utils.escape(objectName(value));
+		const val = isObject(value) && value.TwineScript_DebugName ? value.TwineScript_DebugName() : escape(objectName(value));
 		if (!row.length) {
 			/*
 				To provide easy comparisons for the refresh() method below,
 				store the name and value of the row as data attributes of its element.
 			*/
-			row = $('<div class="variable-row" data-name="' + Utils.escape(name + '')
-				+ '" data-path="' + Utils.escape(path + '')
+			row = $('<div class="variable-row" data-name="' + escape(name + '')
+				+ '" data-path="' + escape(path + '')
 				+ '" data-value="' + val +'"></div>').appendTo(variablesTable);
 		}
 		/*
@@ -206,24 +206,26 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			trail = path.reduce((a,e) => a + e + "'s ", '');
 		}
 		/*
-			CodeHooks and custom macros have special content which can't be displayed in a single row, but which can be viewed by a fold-down button.
+			Source code for objects can be viewed with a folddown button.
 		*/
-		const hasContents = value.TwineScript_DebugContents;
+		const folddown = typeof value === "object";
 		/*
 			Create the <span>s for the variable's name and value.
 		*/
 		row.empty().append(
 			"<span class='variable-name " + (trail ? '' : tempScope ? "temporary" : "global") + "'>"
-			+ (trail ? "<span class='variable-path " + (tempScope ? "temporary" : "global") + "'>" + Utils.escape(trail) + "</span> " : '')
-			+ Utils.escape(name + '')
+			+ (trail ? "<span class='variable-path " + (tempScope ? "temporary" : "global") + "'>" + escape(trail) + "</span> " : '')
+			+ escape(name + '')
 			+ (tempScope ? ("<span class='temporary-variable-scope'>" + tempScope + "</span>") : "") +
-			"</span><span class='variable-value'>" + val + (hasContents ? "<tw-folddown tabindex=0></tw-folddown>" : '') + "</span>"
-			+ (hasContents ? "<div class='variable-contents' style='display:none'>" + value.TwineScript_DebugContents() + "</div>" : "")
+			"</span><span class='variable-value'>" + val + "</span><span class='variable-buttons'>"
+				+ (folddown ? "<tw-folddown tabindex=0>(source:)</tw-folddown>" : '')
+				+ "</span>"
+			+ (folddown ? "<div class='variable-contents panel-source' style='display:none'>" + escape(toSource(value)) + "</div>" : "")
 		)
 		/*
 			Data structure entries are indented by their depth in the structure, to a maximum of 5 levels deep.
 		*/
-		.css('padding-left',Math.min(5,path.length)+'em')
+		.css('padding-left', Math.min(5,path.length)+'em')
 		/*
 			This append should cause the variablesTable to always sort data structure contents after the structure itself.
 		*/
@@ -237,7 +239,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			should be sufficient.
 		*/
 		if (Array.isArray(value)) {
-			value.forEach((elem,i) => updateVariables(Utils.nth(i+1), path.concat(name), elem, tempScope));
+			value.forEach((elem,i) => updateVariables(nth(i+1), path.concat(name), elem, tempScope));
 		}
 		else if (value instanceof Map) {
 			[...value].forEach(([key,elem]) => updateVariables(key, path.concat(name), elem, tempScope));
@@ -256,13 +258,13 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		 A Section must be passed to Passages.getStorylets() in refresh(), so we need to generate one.
 		 This is created at startup and cached here;
 	*/
-	const storyletSection = Section.create(Utils.storyElement);
+	const storyletSection = Section.create(storyElement);
 	/*
 		Unlike variables, storylet rows don't need to be added or removed (instead just having their
 		data-open value changed) so we can create them all just once, here.
 	*/
 	Passages.allStorylets().forEach(map => {
-		const name = Utils.escape(map.get('name') + '');
+		const name = escape(map.get('name') + '');
 		$('<div class="storylet-row storylet-closed" data-name="' + name
 			+ '"></div>')
 			/*

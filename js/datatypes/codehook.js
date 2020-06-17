@@ -19,6 +19,10 @@ define(['internaltypes/twineerror'], (TwineError) => {
 
 		TwineScript_Unstorable: true,
 		
+		TwineScript_ToSource() {
+			return "[" + this.source + "]";
+		},
+
 		/*
 			To save on processing when running custom macros, CodeHooks store their pre-compiled HTML.
 			Passages could do this, too, but there isn't currently much call for it, since they're usually

@@ -1,13 +1,21 @@
 "use strict";
-define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($, {impossible, insensitiveName, permutations, toJSLiteral}, HookSet, TwineError) => {
+define(['jquery', 'utils', 'internaltypes/twineerror'], ($, {impossible, nth, insensitiveName, permutations, toJSLiteral}, TwineError) => {
 	
+	/*
+		Some cached strings to save a few characters when this is compiled. Yes, these are Hungarian Notated... well spotted.
+	*/
+	const sObject = "object",
+		sBoolean = "boolean",
+		sString = "string",
+		sNumber = "number",
+		sFunction = "function";
 	/*
 		First, a quick shortcut to determine whether the
 		given value is an object (i.e. whether the "in"
 		operator can be used on a given value).
 	*/
 	function isObject(value) {
-		return !!value && (typeof value === "object" || typeof value === "function");
+		return !!value && (typeof value === sObject || typeof value === sFunction);
 	}
 	
 	/*
@@ -18,8 +26,8 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 		return Array.isArray(value) ? "array" :
 			value instanceof Map ? "datamap" :
 			value instanceof Set ? "dataset" :
-			typeof value === "string" ? "string" :
-			value && typeof value === "object" ? "object" :
+			typeof value === sString ? sString :
+			value && typeof value === sObject ? sObject :
 			/*
 				If it's not an object, then it's not a collection. Return
 				a falsy string (though I don't condone using this function in
@@ -48,7 +56,7 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 			and numbers to be used.
 			(This kind of defeats the point of using ES6 Maps, though...)
 		*/
-		if(typeof name !== "string" && typeof name !== "number") {
+		if(typeof name !== sString && typeof name !== sNumber) {
 			return TwineError.create(
 				"property",
 				"Only strings and numbers can be used as data names for "
@@ -59,7 +67,7 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 			To avoid confusion between types, it is not permitted to make OR REFERENCE
 			a number data key if a similar string key is present, and vice-versa.
 		*/
-		const otherName = (typeof name === "string" ? +name : ''+name);
+		const otherName = (typeof name === sString ? +name : ''+name);
 		
 		/*
 			If the name was a non-numeric string, otherName should be NaN.
@@ -98,7 +106,7 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 		/*
 			Now, check if the signature is an Optional, Either, Wrapped, or a Range type.
 		*/
-		if (typeof type !== "function" && type.pattern) {
+		if (typeof type !== sFunction && type.pattern) {
 			
 			/*
 				Optional signatures can exit early if the arg is absent.
@@ -137,7 +145,7 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 				If the type expects a limited range of numbers, check if there's a match.
 			*/
 			if (type.pattern === "number range" || type.pattern === "integer range") {
-				return jsType === "number" && !Number.isNaN(arg) && arg >= type.min && arg <= type.max
+				return jsType === sNumber && !Number.isNaN(arg) && arg >= type.min && arg <= type.max
 					&& (type.pattern !== "integer range" || !(arg + '').includes('.'));
 			}
 			/*
@@ -162,16 +170,16 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 			The built-in types. Let's not get tricky here.
 		*/
 		if (type === String) {
-			return jsType === "string";
+			return jsType === sString;
 		}
 		if (type === Boolean) {
-			return jsType === "boolean";
+			return jsType === sBoolean;
 		}
 		if (type === parseInt) {
-			return jsType === "number" && !Number.isNaN(arg) && !(arg + '').includes('.');
+			return jsType === sNumber && !Number.isNaN(arg) && !(arg + '').includes('.');
 		}
 		if (type === Number) {
-			return jsType === "number" && !Number.isNaN(arg);
+			return jsType === sNumber && !Number.isNaN(arg);
 		}
 		if (type === Array) {
 			return Array.isArray(arg);
@@ -187,10 +195,10 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 
 	/*
 		A shortcut to determine whether a given value should have
-		sequential collection functionality (e.g. Array, String, other stuff).
+		sequential collection functionality (e.g. Array, String, HookSet).
 	*/
 	function isSequential(value) {
-		return typeof value === "string" || Array.isArray(value) || HookSet.isPrototypeOf(value);
+		return typeof value === sString || Array.isArray(value) || typeof value.hooks === sFunction;
 	}
 	/*
 		Now, a function to clone arbitrary values.
@@ -204,7 +212,7 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 		/*
 			If it has a custom TwineScript clone method, use that.
 		*/
-		if (typeof value.TwineScript_Clone === "function") {
+		if (typeof value.TwineScript_Clone === sFunction) {
 			return value.TwineScript_Clone();
 		}
 		/*
@@ -225,7 +233,7 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 		/*
 			If it's a function, Function#bind() makes a copy without altering its 'this'.
 		*/
-		if (typeof value === "function") {
+		if (typeof value === sFunction) {
 			return Object.assign(value.bind(), value);
 		}
 		/*
@@ -240,7 +248,7 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 		/*
 			If we've gotten here, something unusual has been passed in.
 		*/
-		impossible("OperationUtils.clone", "The value " + (value.toSource ? value.toSource() : value) + " cannot be cloned!");
+		impossible("OperationUtils.clone", "The value " + value + " cannot be cloned!");
 		return value;
 	}
 	
@@ -255,8 +263,8 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 			: Array.isArray(obj) ? "an array"
 			: obj instanceof Map ? "a datamap"
 			: obj instanceof Set ? "a dataset"
-			: typeof obj === "boolean" ? "the boolean value '" + obj + "'"
-			: (typeof obj === "string" || typeof obj === "number")
+			: typeof obj === sBoolean ? "the boolean value '" + obj + "'"
+			: (typeof obj === sString || typeof obj === sNumber)
 				? 'the ' + typeof obj + " " + toJSLiteral(obj)
 			: obj === undefined ? "an empty variable"
 			: "...whatever this is";
@@ -276,13 +284,21 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 		@return {String}
 	*/
 	function typeName(obj) {
-		if (Object.getPrototypeOf(obj) === Object.prototype && obj.innerType) {
+		const plain = Object.getPrototypeOf(obj) === Object.prototype;
+		if (plain && obj.innerType) {
 			/*
 				Some type descriptors have a special name that isn't JUST the innerType's
 				typeName (to my knowledge, just lambdas with specific clauses).
 			*/
 			if (obj.typeName) {
 				return obj.typeName;
+			}
+			if (obj.pattern === "insensitive set") {
+				/*
+					Rather than fully represent the set of strings,
+					this simply represents the general type.
+				*/
+				return "a case-insensitive string name";
 			}
 			if (obj.pattern === "either") {
 				if(!Array.isArray(obj.innerType)) {
@@ -295,6 +311,22 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 				return "(optional) " + typeName(obj.innerType);
 			}
 			return typeName(obj.innerType);
+		}
+		/*
+			Number ranges have more precise descriptions.
+		*/
+		else if (plain && obj.pattern && obj.pattern.endsWith(" range")) {
+			const {min,max} = obj;
+			return "a" +
+				// This construction assumes that the minimum will always be 0, 1 or >0.
+				(
+					min > 0 ? " positive" : ""
+				) + (
+					obj.pattern === "integer range" ? " whole" : ""
+				) + " number" + (
+					min === 0 ? " between 0 and " + max :
+					max < Infinity ? " up to " + max : ""
+				);
 		}
 		
 		return (
@@ -315,6 +347,51 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 			: objectName(obj)
 		);
 	}
+
+	/*
+		This is used to convert all possible user-storable data back into an executable
+		code serialisation, for use by Debug Mode and the (source:) macro.
+	*/
+	function toSource(obj, isProperty = false) {
+		if (typeof obj.TwineScript_ToSource === sFunction) {
+			return obj.TwineScript_ToSource();
+		}
+		/*
+			These property ranges, "1stto2ndlast" etc., are saved by HookSets,
+			and need to be serialised with them.
+		*/
+		if (Object.getPrototypeOf(obj) === Object.prototype && "first" in obj && "last" in obj) {
+			return (obj.first < 0 ? (obj.first !== -1 ? nth(-obj.first) : "") + "last" : nth(obj.first+1)) + "to"
+				+ (obj.last < 0 ? (obj.last !== -1 ? nth(-obj.last) : "") + "last" : nth(obj.last+1));
+		}
+		/*
+			The following three heavily leverage the way JS arrays serialise themselves
+			automatically.
+		*/
+		if (Array.isArray(obj)) {
+			/*
+				The conversion from 1-based to 0-based properties is not far under Harlowe's surface,
+				so it must be reversed here.
+			*/
+			return "(a:" + (isProperty ? obj.map(e => e+(e>0)) : obj).map(toSource) + ")";
+		}
+		if (obj instanceof Map) {
+			return "(dm:" + Array.from(obj.entries()).map((e) => e.map(toSource)) + ")";
+		}
+		if (obj instanceof Set) {
+			return "(ds:" + [...obj].map(toSource) + ")";
+		}
+		/*
+			Numbers used as property indices need to be converted to "nth".
+		*/
+		if (typeof obj === sNumber && isProperty === true) {
+			return nth(obj+1);
+		}
+		/*
+			What remains should be only JS primitives.
+		*/
+		return toJSLiteral(obj);
+	}
 	
 	/*
 		As TwineScript uses pass-by-value rather than pass-by-reference
@@ -326,7 +403,7 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 		/*
 			For primitives, === is sufficient.
 		*/
-		if (typeof l !== "object" && typeof r !== "object") {
+		if (typeof l !== sObject && typeof r !== sObject) {
 			return l === r;
 		}
 		/*
@@ -361,13 +438,13 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 			For TwineScript built-ins, use the TwineScript_is() method to determine
 			uniqueness.
 		*/
-		if (l && typeof l.TwineScript_is === "function") {
+		if (l && typeof l.TwineScript_is === sFunction) {
 			return l.TwineScript_is(r);
 		}
 		/*
 			For plain objects (such as ChangerCommand params), compare structurally.
 		*/
-		if (l && typeof l === "object" && r && typeof r === "object"
+		if (l && typeof l === sObject && r && typeof r === sObject
 				&& Object.getPrototypeOf(l) === Object.prototype
 				&& Object.getPrototypeOf(r) === Object.prototype) {
 			return is(
@@ -391,7 +468,7 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 			comparison.
 		*/
 		if (container || container === "") {
-			if (typeof container === "string") {
+			if (typeof container === sString) {
 				return container.includes(obj);
 			}
 			if(Array.isArray(container)) {
@@ -418,7 +495,7 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 		/*
 			Only datatype values can be used as the right side of "is a".
 		*/
-		if (typeof r.TwineScript_IsTypeOf === "function") {
+		if (typeof r.TwineScript_IsTypeOf === sFunction) {
 			return r.TwineScript_IsTypeOf(l);
 		}
 		return TwineError.create("operation", "\"is a\" should only be used to compare type names, not " + objectName(r) + ".");
@@ -433,10 +510,10 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 		/*
 			Mainly for readability, the datatype checks are done first.
 		*/
-		if (l && typeof l.TwineScript_IsTypeOf === "function") {
+		if (l && typeof l.TwineScript_IsTypeOf === sFunction) {
 			return l.TwineScript_IsTypeOf(r);
 		}
-		if (r && typeof r.TwineScript_IsTypeOf === "function") {
+		if (r && typeof r.TwineScript_IsTypeOf === sFunction) {
 			return r.TwineScript_IsTypeOf(l);
 		}
 		/*
@@ -491,7 +568,7 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 			means that, in order to treat astral plane characters as 1 character in 1 position,
 			they must be converted to and from arrays whenever indexing or .slice() is performed.
 		*/
-		const isString = typeof sequence === "string";
+		const isString = typeof sequence === sString;
 		if (isString) {
 			sequence = Array.from(sequence);
 		}
@@ -542,7 +619,7 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 		if (TwineError.containsError(value)) {
 			return value;
 		}
-		if (value && typeof value.TwineScript_Print === "function") {
+		if (value && typeof value.TwineScript_Print === sFunction) {
 			return value.TwineScript_Print();
 		}
 		else if (value instanceof Map) {
@@ -629,6 +706,7 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 		clone,
 		objectName,
 		typeName,
+		toSource,
 		is,
 		contains,
 		isA,
@@ -636,12 +714,6 @@ define(['jquery', 'utils', 'datatypes/hookset', 'internaltypes/twineerror'], ($,
 		subset,
 		range,
 		printBuiltinValue,
-		/*
-			Used to determine if a property name is an array index.
-			If negative indexing sugar is ever added, this could
-			be replaced with a function.
-		*/
-		numericIndex: /^(?:[1-9]\d*|0)$/,
 		/*
 			An Array#filter() function which filters out duplicates using the is() comparator
 			instead of Javascript referencing. This manually filters out similar array/map objects which

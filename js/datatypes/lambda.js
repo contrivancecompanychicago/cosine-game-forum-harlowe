@@ -86,6 +86,14 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 		},
 
 		/*
+			Lambdas store their entire soure entirely for the purposes to ToSource,
+			as decompiling the JS of their clauses is too difficult.
+		*/
+		TwineScript_ToSource() {
+			return this.source;
+		},
+
+		/*
 			This static method is used exclusively to produce type signature objects for use by
 			macro definitions in macrolib. Specifically, it lets us specify which clauses a macro
 			expects its lambda to have.
@@ -107,7 +115,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 			Lambdas are constructed by joining one of these clauses with a subject (which is either another
 			lambda - thus adding their clauses - or a temp variable).
 		*/
-		create(subject, clauseType, clause) {
+		create(subject, clauseType, clause, source) {
 			let ret;
 			/*
 				Firstly, if the subject is an error, propagate it.
@@ -167,6 +175,11 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 				// Extract the variable name from the TempVar, and make that the 'loop' variable name.
 				ret.loop = (subject ? subject.propertyChain[0] : "");
 			}
+			/*
+				Add the source, or update the source to include this lambda's contents.
+				Either way, it's just an assignment.
+			*/
+			ret.source = source;
 			/*
 				We add the new clause, then do some further error-checking afterwards.
 			*/

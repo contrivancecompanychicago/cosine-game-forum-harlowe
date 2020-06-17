@@ -330,9 +330,17 @@ tw-debugger {
 		&:nth-child(2n) {
 			background:#EEE;
 		}
-		.variable-name, .variable-value {
+		.variable-name{
 			display:inline-block;
-			width:50%;
+			width:40%;
+		}
+		.variable-value {
+			display:inline-block;
+			width:40%;
+		}
+		.variable-buttons {
+			width: 20%;
+			display:inline-block;
 		}
 		.variable-path {
 			opacity:0.4;

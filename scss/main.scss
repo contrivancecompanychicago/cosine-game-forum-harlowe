@@ -192,10 +192,10 @@ tw-folddown {
 	font-size: 0.8rem;
 	margin: 0 0.4rem;
 	padding:2px;
-	&::before {
+	&::after {
 		content: "\25b6";
 	}
-	&.open::before {
+	&.open::after {
 		content: "\25bc";
 	}
 }

@@ -166,8 +166,8 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			#basics 7
 		*/
 		("unless",
-			(_, expr) => ChangerCommand.create("unless", [!expr]),
-			(d, expr) => d.enabled = d.enabled && expr,
+			(_, expr) => ChangerCommand.create("unless", [expr]),
+			(d, expr) => d.enabled = d.enabled && !expr,
 		IfTypeSignature)
 		
 		/*d:
@@ -568,9 +568,9 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 						"The lambda provided to (for:) must refer to a temp variable, not just 'it'."
 					);
 				}
-				return ChangerCommand.create("for", [lambda, args]);
+				return ChangerCommand.create("for", [lambda].concat(args));
 			},
-			(d, lambda, args) => {
+			(d, lambda, ...args) => {
 				const loopVars = lambda.filter(d.section, args);
 				let error;
 				if ((error = TwineError.containsError(loopVars))) {

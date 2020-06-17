@@ -1,6 +1,6 @@
 "use strict";
 define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatypes/gradient', 'internaltypes/twineerror'],
-(Macros, {realWhitespace, nth, anyRealLetter}, {subset, objectName, clone}, Colour, Gradient, TwineError) => {
+(Macros, {realWhitespace, nth, anyRealLetter}, {subset, objectName, clone, toSource}, Colour, Gradient, TwineError) => {
 	/*
 		Built-in value macros.
 		These macros manipulate the primitive values - boolean, string, number.
@@ -112,6 +112,16 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			(_, ...args) => args.join(''),
 		// (str: accepts a lot of any primitive)
 		[zeroOrMore(Macros.TypeSignature.either(String, Number, Boolean, Array))])
+
+		/*d:
+			(source: Any) -> String
+
+			TBW
+
+			Added in: 3.2.0
+			#string
+		*/
+		("source", (_, val) => toSource(val), [Any])
 
 		/*d:
 			(substring: String, Number, Number) -> String
@@ -802,29 +812,10 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 				/*
 					Colour-stop type-checking must be done here.
 				*/
-				else if (typeof stop !== "number" || stop < 0 || stop > 1) {
-					if (Colour.isPrototypeOf(stop)) {
-						return TwineError.create(
-							"datatype",
-							"(gradient:) colour-stops should be pairs of numbers and colours, not colours and numbers."
-						);
-					}
+				else if (typeof stop !== "number" || !Colour.isPrototypeOf(colour)) {
 					return TwineError.create(
 						"datatype",
-						"(gradient:) colour-stop percents should be fractional numbers between 0 and 1, not " + objectName(stop) + "."
-					);
-				}
-				else if (!Colour.isPrototypeOf(colour)) {
-					if (typeof colour === "string" && colour.startsWith('#')) {
-						return TwineError.create(
-							"datatype",
-							"HTML hex colours should be given to (gradient:) as bare colour values like #808080, not strings like \"" + colour + "\"."
-						);
-					}
-					return TwineError.create(
-						"datatype",
-						"(gradient:) colours should be built-in colours, HTML hex colours, or colours produced by (rgb:),"
-						+ " (rgba:), (hsl:) or (hsla:), not " + objectName(stop) + "."
+						"(gradient:) colour-stops should be pairs of numbers and colours, not colours and numbers."
 					);
 				}
 				else {
@@ -847,7 +838,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			}
 			return Gradient.create(degree, pairs);
 		},
-		[Number, rest(either(Number, Colour))])
+		[Number, rest(either(percent, Colour))])
 
 		/*d:
 			(cond: Boolean, Any, ...Any) -> Any

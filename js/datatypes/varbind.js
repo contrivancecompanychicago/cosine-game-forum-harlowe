@@ -70,6 +70,10 @@ define(['jquery', 'utils', 'utils/operationutils', 'internaltypes/varref', 'inte
 
 		TwineScript_Unstorable: true,
 
+		TwineScript_ToSource() {
+			return (this.bind === "two way" ? "2" : "") + "bind " + this.varRef.TwineScript_ToSource();
+		},
+
 		/*
 			Setting a value in a VarBind is fairly straightforward - simply set the varRef, and then pass up any errors.
 		*/
@@ -92,12 +96,14 @@ define(['jquery', 'utils', 'utils/operationutils', 'internaltypes/varref', 'inte
 				Produce a user-facing error if a non-varRef was given.
 				Since "bind" is just another operator, this can't be picked up in compilation until now.
 			*/
-			if (!VarRef.isPrototypeOf(varRef)
-					/*
-						There's another kind of varRef-like object though: wrapped TwineErrors that have been given get() and set()
-						methods. These don't have the VarRef prototype (because it's frozen and thus non-overridable) but
-					*/
-					&& !varRef.varref) {
+			if (!VarRef.isPrototypeOf(varRef)) {
+				/*
+					Wrapped errors (errors wrapped with .get() and .set() methods by VarRef)
+					should be unwrapped now.
+				*/
+				if (varRef.varref && TwineError.containsError(varRef.get())) {
+					return varRef.get();
+				}
 				return TwineError.create("operation", "I can only 'bind' a variable, not " + objectName(varRef) + ".");
 			}
 			

@@ -443,6 +443,9 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			midString = toJSLiteral(token.type)
 				+ ",";
 			right = toJSLiteral(compile(after))
+				+ ","
+				// Lambdas need to store their entire Harlowe source.
+				+ toJSLiteral(tokens.map(e => e.text).join(''))
 				+ ")";
 		}
 		else if (type === "with" || type === "making" || type === "each") {
@@ -466,7 +469,9 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				if (type === "each") {
 					left = "Lambda.create(";
 					midString = compile(rightTokens, varRefArgs("right")).trim();
-					right = ",'where','true')";
+					right = ",'where','true',"
+						// Lambdas need to store their entire Harlowe source.
+						+ toJSLiteral(tokens.map(e => e.text).join('')) + ")";
 				}
 				// Other keywords can have a preceding temp variable, though.
 				else {
@@ -478,6 +483,8 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 					midString = toJSLiteral(token.type)
 						+ ",";
 					right = toJSLiteral(rightTokens[1].name)
+						// Lambdas need to store their entire Harlowe source.
+						+ "," + toJSLiteral(tokens.map(e => e.text).join(''))
 						+ ")";
 				}
 			}

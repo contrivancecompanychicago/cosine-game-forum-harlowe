@@ -14,6 +14,10 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 		TwineScript_ObjectName: "a typed variable",
 
 		TwineScript_Unstorable: true,
+
+		TwineScript_ToSource() {
+			return this.datatype.TwineScript_ToSource() + "-type " + this.varRef.TwineScript_ToSource();
+		},
 		
 		create(datatype, varRef) {
 			/*

@@ -84,6 +84,10 @@ define([
 			return Datatype.create(this.name);
 		},
 
+		TwineScript_ToSource() {
+			return this.name;
+		},
+
 		TwineScript_IsTypeOf(obj) {
 			const {name} = this;
 

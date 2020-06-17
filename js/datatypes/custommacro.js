@@ -143,9 +143,9 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 			}
 		},
 		TwineScript_Properties: ['params'],
-		TwineScript_DebugContents() {
-			// TODO: display the parameters
-			return "<div class='panel-source'>" + escape(this.body.source) + "</div>";
+
+		TwineScript_ToSource() {
+			return "(macro:" + this.params.map(p => p.TwineScript_ToSource()) + "," + this.body.TwineScript_ToSource() + ")";
 		},
 
 		/*

@@ -135,6 +135,7 @@ define([
 				TwineScript_TypeName:     "a (set:) operation",
 				TwineScript_ObjectName:   "a (set:) operation",
 				TwineScript_Unstorable: true,
+				// Being unstorable and not used by any other data strctures, this doesn't need a ToSource() function.
 				TwineScript_Print:        () => debugMessage && TwineNotifier.create(debugMessage).render()[0].outerHTML,
 			};
 		},
@@ -201,6 +202,7 @@ define([
 				TwineScript_TypeName:     "a (put:) operation",
 				TwineScript_ObjectName:   "a (put:) operation",
 				TwineScript_Unstorable: true,
+				// Being unstorable and not used by any other data strctures, this doesn't need a ToSource() function.
 				TwineScript_Print:        () => debugMessage && TwineNotifier.create(debugMessage).render()[0].outerHTML,
 			};
 		},
@@ -284,6 +286,7 @@ define([
 				TwineScript_TypeName:     "a (move:) operation",
 				TwineScript_ObjectName:   "a (move:) operation",
 				TwineScript_Unstorable: true,
+				// Being unstorable and not used by any other data strctures, this doesn't need a ToSource() function.
 				TwineScript_Print:        () => debugMessage && TwineNotifier.create(debugMessage).render()[0].outerHTML,
 			};
 		},
