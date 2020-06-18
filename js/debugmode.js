@@ -12,7 +12,13 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 	*/
 	const root = $(document.documentElement);
 	const debugElement = $(`<tw-debugger>
-		<div class='panel panel-variables'></div>
+		<div class='panel panel-variables panel-variables-empty'>
+			<div class='panel-variables-table'></div>
+			<div class='panel-variables-bottom'>
+				<button class='panel-variables-copy'>Copy $ variables as (set:) call</button>
+				<input class='clipboard' type="text" style='opacity:0;pointer-events:none;position:absolute;'></input>
+			</div>
+		</div>
 		<div class='panel panel-errors' hidden><table></table></div>
 		<div class='panel panel-source' hidden></div>
 		<div class='panel panel-storylets' hidden></div>
@@ -20,7 +26,8 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		<button class='tab tab-variables enabled'>0 Variables</button> <button class='tab tab-errors'>0 Errors</button> <button class='tab tab-source'>Source</button>
 		<button class='tab tab-storylets' hidden>0 Storylets</button>
 		</div>
-		Turns: <select class='turns' disabled></select><button class='show-invisibles'>Debug View</button></tw-debugger>`);
+		Turns: <select class='turns' disabled></select><button class='show-invisibles'>Debug View</button>
+		</tw-debugger>`);
 
 	/*
 		Set up the showInvisibles button, which toggles debug mode CSS (showing <tw-expression> elements and such)
@@ -160,13 +167,17 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		);
 	});
 
-	const variablesTable = debugElement.find('.panel-variables');
+	const variablesTable = debugElement.find('.panel-variables-table');
 	/*
 		Update the number of variables on the showVariables button.
 	*/
-	function updateVariablesTabName() {
+	function updateVariablesTab() {
 		const children = variablesTable.children();
 		debugElement.find('.tab-variables').text(`${children.length} Variable${children.length !== 1 ? 's' : ''}`);
+		/*
+			Also toggle the .panel-variables-empty class if there are no variables.
+		*/
+		variablesTable.parent()[(children.length > 0 ? 'remove' : 'add') + 'Class']('panel-variables-empty');
 	}
 	/*
 		Here, we set up the variables table.
@@ -208,7 +219,12 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		/*
 			Source code for objects can be viewed with a folddown button.
 		*/
-		const folddown = typeof value === "object";
+		const tooLong = val.length > 48;
+		const folddown = typeof value === "object" || tooLong;
+		/*
+			If the value is greater than 36 characters, truncate it.
+		*/
+		const truncVal = (tooLong ? val.slice(0,48) + "…" : val);
 		/*
 			Create the <span>s for the variable's name and value.
 		*/
@@ -217,7 +233,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			+ (trail ? "<span class='variable-path " + (tempScope ? "temporary" : "global") + "'>" + escape(trail) + "</span> " : '')
 			+ escape(name + '')
 			+ (tempScope ? ("<span class='temporary-variable-scope'>" + tempScope + "</span>") : "") +
-			"</span><span class='variable-value'>" + val + "</span><span class='variable-buttons'>"
+			"</span><span class='variable-value'>" + truncVal + "</span><span class='variable-buttons'>"
 				+ (folddown ? "<tw-folddown tabindex=0>(source:)</tw-folddown>" : '')
 				+ "</span>"
 			+ (folddown ? "<div class='variable-contents panel-source' style='display:none'>" + escape(toSource(value)) + "</div>" : "")
@@ -231,7 +247,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		*/
 		.appendTo(variablesTable);
 
-		updateVariablesTabName();
+		updateVariablesTab();
 
 		/*
 			To display each entry inside an array, map or set, directly below the
@@ -252,6 +268,22 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			[...value].forEach((elem) => updateVariables("???", path.concat(name), elem, tempScope));
 		}
 	}
+	/*
+		Set up the "Copy all as (set:)" button.
+	*/
+	const inputElem = debugElement.find('.clipboard');
+	root.on('click', '.panel-variables-copy', () => {
+		let variableToValue = [];
+		for (let name in State.variables) {
+			if (!name.startsWith('TwineScript')) {
+				variableToValue.push(
+					"$" + name + " to " + toSource(State.variables[name])
+				);
+			}
+		}
+		inputElem.val("(set:" + variableToValue + ")")[0].select();
+		document.execCommand('copy');
+	});
 
 	const storyletsTable = debugElement.find('.panel-storylets');
 	/*
@@ -362,7 +394,6 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			}
 			else {
 				e.remove();
-				updateVariablesTabName();
 			}
 			/*
 				Since refresh() is called when the turn begins, no temporary variables should be
@@ -370,6 +401,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 				find them.
 			*/
 		});
+		updateVariablesTab();
 		/*
 			Now, add new variables that may not be present here, using the preceding
 			"updated" list.
@@ -392,7 +424,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 	*/
 	State.on('forward', refresh).on('back', refresh);
 
-	State.on('load', () => $('.panel-variables').empty());
+	State.on('load', () => $('.panel-variables-table').empty());
 
 	VarRef.on('set', (obj, name, value) => {
 		/*

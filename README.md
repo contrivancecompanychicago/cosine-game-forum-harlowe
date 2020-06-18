@@ -94,6 +94,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 #####Other
 
  * Added a debug mode panel listing which storylet passages are currently available, and their 'where' lambdas. This panel is only visible if you have `(storylet:)` macros in your story.
+ * The debug mode vaiables panel now has a "(source:)" button for each variable containing a complex value (i.e. not a string, boolean, number), letting you examine and copy that variable's value as Harlowe code.
+ * The debug mode variables panel now has a "Copy $ variables as (set:) call" button at the bottom, which copies to the clipboard a string of Harlowe code that will (set:) each global variable to their currently displayed value.
  * Now, whenever the first error of your story is displayed, debug mode will automatically, immediately enable itself, so you can begin debugging there and then.
  * The syntax highlighter no longer highlights syntactic elements inside strings. While this had some fringe benefit in cases where strings contained code to be printed, I've decided it's too distracting in more usual cases.
  * Added a `<noscript>` element to the output HTML, containing a sentence instructing that JavaScript should be enabled to play the story (as per SugarCube).

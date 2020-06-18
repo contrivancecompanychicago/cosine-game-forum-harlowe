@@ -186,6 +186,7 @@ html:not(.night) #preview tw-story { background-color:white; color:black }
 html.night .previewCodeButton { color:white; }
 #preview tw-debugger { position: absolute; padding: 0; min-height: 0; box-sizing:border-box; border-top:none; min-width: 80%; }
 #preview .panel-variables { border-top: solid black 2px; border-bottom: none; }
+#preview .panel-variables-empty { display: none; }
 
 /* Kludge for the (text-style:) macro */
 t-s::before { content: 'Example text'; }

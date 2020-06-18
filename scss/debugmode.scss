@@ -320,8 +320,24 @@ tw-debugger {
 		table {
 			border-spacing: 0px;
 		}
-
 	}
+	.panel-source {
+		font-family:monospace;
+		overflow-x:scroll;
+		white-space:pre;
+	}
+	.panel-variables-empty {
+		.panel-variables-table::before {
+			font-style:italic;
+			content:"~ No variables ~";
+			color:#888;
+			text-align:center;
+		}
+		.panel-variables-bottom {
+			display:none;
+		}
+	}
+
 	.variable-row {
 		@include flexbox;
 		@include flex-direction(row);
@@ -401,11 +417,6 @@ tw-debugger {
 			display:inline-block;
 			width:50%;
 		}
-	}
-	.panel-source {
-		font-family:monospace;
-		overflow-x:scroll;
-		white-space:pre;
 	}
 	.tabs {
 		padding-bottom: 0.5em;
