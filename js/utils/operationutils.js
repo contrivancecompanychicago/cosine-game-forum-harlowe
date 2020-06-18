@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils', 'internaltypes/twineerror'], ($, {impossible, nth, insensitiveName, permutations, toJSLiteral}, TwineError) => {
+define(['jquery','utils/naturalsort','utils', 'internaltypes/twineerror'], ($, NaturalSort, {impossible, nth, insensitiveName, permutations, toJSLiteral}, TwineError) => {
 	
 	/*
 		Some cached strings to save a few characters when this is compiled. Yes, these are Hungarian Notated... well spotted.
@@ -351,8 +351,12 @@ define(['jquery', 'utils', 'internaltypes/twineerror'], ($, {impossible, nth, in
 	/*
 		This is used to convert all possible user-storable data back into an executable
 		code serialisation, for use by Debug Mode and the (source:) macro.
+		This should never receive a TwineError.
 	*/
-	function toSource(obj, isProperty = false) {
+	function toSource(obj, isProperty) {
+		if (TwineError.containsError(obj)) {
+			impossible("toSource","received a TwineError");
+		}
 		if (typeof obj.TwineScript_ToSource === sFunction) {
 			return obj.TwineScript_ToSource();
 		}
@@ -373,19 +377,21 @@ define(['jquery', 'utils', 'internaltypes/twineerror'], ($, {impossible, nth, in
 				The conversion from 1-based to 0-based properties is not far under Harlowe's surface,
 				so it must be reversed here.
 			*/
-			return "(a:" + (isProperty ? obj.map(e => e+(e>0)) : obj).map(toSource) + ")";
+			return "(a:" + (isProperty === 'property' ? obj.map(e => e+(e>0)) : obj).map(toSource) + ")";
 		}
 		if (obj instanceof Map) {
-			return "(dm:" + Array.from(obj.entries()).map((e) => e.map(toSource)) + ")";
+			return "(dm:" + Array.from(obj.entries()).sort(
+					(a,b) => ([a[0],b[0]].sort(NaturalSort("en"))[0] === a[0] ? -1 : 1)
+				).map((e) => e.map(toSource)) + ")";
 		}
 		if (obj instanceof Set) {
-			return "(ds:" + [...obj].map(toSource) + ")";
+			return "(ds:" + Array.from(obj).sort(NaturalSort("en")).map(toSource) + ")";
 		}
 		/*
 			Numbers used as property indices need to be converted to "nth".
 		*/
-		if (typeof obj === sNumber && isProperty === true) {
-			return nth(obj+1);
+		if (typeof obj === sNumber && isProperty === 'property') {
+			return obj < 0 ? obj === -1 ? "last" : nth(-obj) + "last" : nth(obj+1);
 		}
 		/*
 			What remains should be only JS primitives.

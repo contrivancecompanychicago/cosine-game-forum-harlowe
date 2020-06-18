@@ -398,6 +398,14 @@ define(['jquery', 'utils'], ($, {matMul}) => {
 
 		TwineScript_ToSource() {
 			const hsl = !this.lch && RGBToHSL(this);
+			if (hsl && !hsl.h && !hsl.s) {
+				if (hsl.l === 1) {
+					return "white";
+				}
+				if (hsl.l === 0) {
+					return "black";
+				}
+			}
 			return "(" + (this.lch ? "lch" : "hsl") + ":"
 				+ (this.lch ? [this.lch.l, this.lch.c, this.lch.h] : [hsl.h, hsl.s, hsl.l])
 				+ (this.a !== 1 ? "," + this.a : "") + ")";

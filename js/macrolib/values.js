@@ -103,7 +103,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Added in: 1.0.0
 			#string
 		*/
-		(["text", "string", "str"],
+		(["str", "string", "text"],
 			/*
 				Since only primitives (and arrays) are passed into this, and we use
 				JS's default toString() for primitives, we don't need
@@ -116,12 +116,33 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 		/*d:
 			(source: Any) -> String
 
-			TBW
+			When given any data value, this will produce a string of Harlowe source code that can, when run, create
+			that value exactly.
+
+			Example usage:
+			* `(source: $voltage)` will, if $voltage contains the number 9, produce the string `"9"`.
+			* `(source: (str-repeated: 6, "HA"))` produces the string `'"HAHAHAHAHAHA"'` (which, you'll notice, is a string in a string).
+			* `(source: (click: ?hat))` produces the string `"(click:?hat)"`.
+			* `(source: (enchant: ?passage's hooks, $style))` will, if $style contained `(text-size:1.4)`, produce the
+			string `"(enchant:?passage's hooks,(text-size:1.4))"`.
+
+			Rationale:
+			Throughout development, you'll often find yourself toying and tinkering with the exact values of data your story uses,
+			such as to test a particular state of events, or to extract a particular procedurally-generated value. This macro, along
+			with Harlowe's normal code parsing actions, provides a basic two-way conversion between code and data that you can use as you please.
+
+			Details:
+			For most complex values, like changers and commands, this will produce a macro call. The whitespace between the values will
+			generally be absent, so `(source: (a:2,    3,   4))` produces `"(a:2,3,4)"`. Also, if you call a macro using one if its aliases,
+			such as (array:) for (a:), then the source will still use its "default" name. So, `(source: (array:1))` produces `"(a:1)"`.
+
+			See also:
+			(string:)
 
 			Added in: 3.2.0
 			#string
 		*/
-		("source", (_, val) => toSource(val), [Any])
+		("source", (_, val) => (TwineError.containsError(val)) ? val : toSource(val), [Any])
 
 		/*d:
 			(substring: String, Number, Number) -> String

@@ -467,8 +467,7 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 							*/
 							(function recur(token) {
 								/*
-									- String tokens have children so that the syntax highlighting can see into them somewhat, but
-									their contained "blockers" should be ignored.
+									- String tokens have residual children, so their contained "blockers" should be ignored.
 									- Hooks, of course, shouldn't be entered either.
 								*/
 								if (token.type !== "string" && token.type !== "hook") {

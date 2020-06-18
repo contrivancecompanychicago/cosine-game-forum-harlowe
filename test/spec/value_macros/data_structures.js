@@ -397,5 +397,64 @@ describe("data structure macros", function () {
 			expect("(count: (a:(a:2,3),(a:2,3)), (a:2,3))").markupToPrint('2');
 		});
 	});
+	describe("the (source:) macro", function() {
+		function sourceTest(val,result) {
+			expect("(print:'`'+(source:"+val+")+'`')").markupToPrint(result);
+		}
+		it("serialises basic types", function() {
+			sourceTest("1.56+1","2.56");
+			sourceTest("21s","21000");
+			sourceTest("'fo' + 'obar'","\"foobar\"");
+			sourceTest("not true","false");
+		});
+		it("serialises basic data structures, sorted if the structure isn't sequential", function() {
+			sourceTest("(a:2,(a:5))","(a:2,(a:5))");
+			sourceTest("(sorted:5,1,2,3,4)","(a:1,2,3,4,5)");
+			sourceTest("(a:(a:...(a:2,3,4)))'s 1st","(a:2,3,4)");
+
+			sourceTest("(dm:'foo',1,'bar',2)",'(dm:"bar",2,"foo",1)');
+			sourceTest("(dm:)","(dm:)");
+
+			sourceTest("(ds:5,1,2,3,4)","(ds:1,2,3,4,5)");
+			sourceTest("(ds:)","(ds:)");
+		});
+		it("serialises changers and combined changers", function() {
+			['(link:"foo")','(hidden:)','(text-indent:2)','(transition:"instant")','(if:true)',
+				'(text-indent:2)+(css:"display:block;")','(transition:"instant")+(transition-delay:20)',
+				'(replace:?foo\'s 1st)','(append:"bar")',"(prepend:?foo's last + ?bar's 3rdlast + ?baz's (a:2,5))"
+			].forEach(function(e){ sourceTest(e,e); });
+			sourceTest("(size:10)",'(text-size:10)');
+		});
+		it("serialises colours", function() {
+			sourceTest("#ff0009",'(hsl:358,1,0.5)');
+			sourceTest("(hsl:56,1,0.5,0.3)",'(hsl:56,1,0.5,0.3)');
+			sourceTest("(lch:0.6,80,122)",'(lch:0.6,80,122)');
+			sourceTest("black","black");
+			sourceTest("white","white");
+		});
+		it("serialises gradients", function() {
+			sourceTest("(gradient: 0, 0, black, 0.49, #ff0009, 0.5, white, 1, white)",'(gradient:0,0,black,0.49,(hsl:358,1,0.5),0.5,white,1,white)');
+		});
+		it("serialises commands", function() {
+			['(cycling-link:bind $foo,"bar","baz")','(click-goto:"qux","test")',
+				'(enchant:?foo,(transition:"instant")+(transition-delay:20))'
+			].forEach(function(e){ sourceTest(e,e); });
+			runPassage("(set:$baz to 4)");
+			sourceTest("(print:$baz)",'(print:4)');
+			sourceTest('(sequence-link:2bind $foo,"bar","baz")','(seq-link:2bind $foo,"bar","baz")');
+		});
+		it("serialises custom macros", function() {
+			sourceTest('(macro:boolean-type _ok,num-type _ng,[(output:(cond:_ok,_ng,1)])','(macro:boolean-type _ok,number-type _ng,[(output:(cond:_ok,_ng,1)])');
+			sourceTest('(macro:[])','(macro:[])');
+		});
+		it("serialises lambdas", function() {
+			[
+				'_item making _total via _total + (max: _item, 0)', '_item where _item\'s 1st is "A"', 'when $fuel > 8', '_item via _item + "s"', 'each _item'
+			].forEach(function(e){ sourceTest(e,e); });
+		});
+		it("doesn't serialise errors", function() {
+			expect('(source:"red"+2)').markupToError();
+		});
+	});
 });
 

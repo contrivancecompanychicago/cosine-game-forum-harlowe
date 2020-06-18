@@ -82,6 +82,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added an `(lch:)` macro (alias `(lcha:)`), an alternative colour creation macro (comparable to `(hsl:)`) that uses the LCH colour space (which is the CIELAB colour space, familiar to graphic designers, but expressed radially using a HSL-style hue angle).
  * Added `(complement:)`, a macro which takes a colour and produces its complement by rotating its LCH hue by 180 degrees.
  * Added `(palette:)`, a macro designed for rapid prototyping which produces a four-colour palette based on a given colour, for use with `(text-colour:)`, `(background:)` and `(enchant:)`.
+ * Added `(source:)`, a macro that can turn any data value into its source code representation. `(source: (text-style:"bold") + (click: ?hat's 1st))` produces the string `'(text-style:"bold")+(click:?hat's 1st)'`.
 
 #####Custom Macros
 
@@ -94,6 +95,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
  * Added a debug mode panel listing which storylet passages are currently available, and their 'where' lambdas. This panel is only visible if you have `(storylet:)` macros in your story.
  * Now, whenever the first error of your story is displayed, debug mode will automatically, immediately enable itself, so you can begin debugging there and then.
+ * The syntax highlighter no longer highlights syntactic elements inside strings. While this had some fringe benefit in cases where strings contained code to be printed, I've decided it's too distracting in more usual cases.
  * Added a `<noscript>` element to the output HTML, containing a sentence instructing that JavaScript should be enabled to play the story (as per SugarCube).
 
 ###3.1.0 changes:

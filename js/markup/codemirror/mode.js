@@ -49,22 +49,37 @@
 				tempVariable: [],
 				hook: [],
 				hookRef: [],
-				populate() {
+				clear() {
 					this.variable = [];
 					this.tempVariable = [];
 					this.hook = [];
 					this.hookRef = [];
-
-					const recur = (token) => {
-						if (token.type === "variable" || token.type === "tempVariable"
-								|| token.type === "hook" || token.type === "hookRef") {
-							this[token.type].push(token);
-						}
-						token.children.forEach(recur);
-					};
-					tree.children.forEach(recur);
 				}
 			};
+
+		function lexTreePostProcess(token) {
+			if (token.type === "variable" || token.type === "tempVariable"
+					|| token.type === "hook" || token.type === "hookRef") {
+				referenceTokens[token.type].push(token);
+			}
+			/*
+				Don't syntax-highlight the interiors of strings.
+			*/
+			if (token.type === "string") {
+				/*
+					Invalidate both the childAt cache and the children array.
+				*/
+				token.childAt = undefined;
+				token.children = [];
+			}
+			token.children.forEach(lexTreePostProcess);
+		}
+		function lexTree(str) {
+			const tree = lex(str);
+			referenceTokens.clear();
+			tree.children.forEach(lexTreePostProcess);
+			return tree;
+		}
 		
 		/*
 			This 'beforeChange' event handler applies a hack to CodeMirror to force it
@@ -181,8 +196,7 @@
 			/*
 				Use the Harlowe lexer to compute a full parse tree.
 			*/
-			tree = lex(doc.getValue());
-			referenceTokens.populate();
+			tree = lexTree(doc.getValue());
 
 			/*
 				Attach the all-important beforeChanged event, but make sure it's only attached once.
@@ -194,9 +208,7 @@
 			});
 			doc.on('change', () => {
 				const text = doc.getValue();
-				tree = lex(text);
-				// Populate the referential tokens caches.
-				referenceTokens.populate();
+				tree = lexTree(text);
 			});
 			doc.on('swapDoc', init);
 			doc.on('cursorActivity', cursorMarking);

@@ -140,11 +140,11 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 		const {dom} = section;
 		let ret = $();
 		/*
-			First, take the elements from all the previous hooks that
+			First, take the elements from all the hooks that
 			this was concatenated to. (For instance, [?a] + ?b's 1st)
 		*/
-		if (this.prev) {
-			ret = ret.add(hooks.call(this.prev, section));
+		if (this.next) {
+			ret = ret.add(hooks.call(this.next, section));
 		}
 		/*
 			If this has a selector itself (such as ?a + [?b]'s 1st), add those elements
@@ -281,14 +281,14 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 		if (!hookset) {
 			return [];
 		}
-		const {selector, property, prev} = hookset;
+		const {selector, property, next} = hookset;
 		// The hash of ?red + ?blue should equal that of ?blue + ?red. To do this,
-		// the prev's hash and this hookset's hash is added to an array, which is then sorted and returned.
+		// the next's hash and this hookset's hash is added to an array, which is then sorted and returned.
 		return [
 			JSON.stringify([
 				selector.type === "base" ? hash(selector.data) : Utils.insensitiveName(selector.data),
 				property
-			]), ...hash(prev)
+			]), ...hash(next)
 		].sort();
 	}
 	
@@ -334,7 +334,7 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 				Let's not bother printing out this hookset's entire heritage
 				if it's anything more than basic.
 			*/
-			if (this.property || this.prev) {
+			if (this.property || this.next) {
 				return "a complex hook name";
 			}
 			return "?" + this.selector.data + " (a hook name)";
@@ -358,10 +358,10 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 				ret += JSON.stringify(data);
 			}
 			else if (type === "base") {
-				ret += data.TwineScript_ToSource() + "'s " + toSource(this.property, true);
+				ret += data.TwineScript_ToSource() + "'s " + toSource(this.property, "property");
 			}
-			if (this.prev) {
-				ret += " + " + this.prev.TwineScript_ToSource();
+			if (this.next) {
+				ret += " + " + this.next.TwineScript_ToSource();
 			}
 			return ret;
 		},
@@ -373,17 +373,22 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 			/*
 				Make a copy of this HookSet to return.
 			*/
-			const clone = other.TwineScript_Clone();
+			const clone = this.TwineScript_Clone();
 			/*
-				Attach this to the other, producing a chain of [this] -> [clone].
+				Attach the other HookSet to the "tail" (the end of the
+				"next" chain) of this HookSet.
 			*/
-			clone.prev = this;
+			let tail = clone;
+			while (tail.next) {
+				tail = tail.next;
+			}
+			tail.next = other;
 			return clone;
 		},
 
 		/*
 			HookSets are identical if they have the same selector, properties (and if
-			a property is a slice, it is order-sensitive) and prev.
+			a property is a slice, it is order-sensitive) and next.
 		*/
 		TwineScript_is(other) {
 			return hash(this) + "" === hash(other) + "";
@@ -412,7 +417,7 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 		// passing in a section, and it doesn't make much sense to ever do so.
 
 		TwineScript_Clone() {
-			return HookSet.create(this.selector, this.property, this.prev);
+			return HookSet.create(this.selector, this.property, this.next);
 		},
 		
 		/*
@@ -423,21 +428,21 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 				{String|HookSet} data: a hook name, such as "flank" for ?flank, a bare search string,
 					or a HookSet from which the properties are being extracted.
 			{Array} property: a property to restrict the current set of hooks.
-			{HookSet} prev: a hook which has been +'d with this one.
+			{HookSet} next: a hook which has been +'d with this one.
 
 			Consider this diagram:
 
-			[prev]    [selector] [properties]
+			[next]    [selector] [properties]
 			(?apple + ?banana's  2ndlast)'s 2ndlast
 			[          base            ]   [properties]
 		*/
-		create(selector, property, prev = undefined) {
+		create(selector, property, next = undefined) {
 			return Object.assign(Object.create(this || HookSet), {
 				// Freezing the selector guarantees that,
 				// when TwineScript_Clone() passes it by value,
 				// no permutation is possible.
 				selector: Object.freeze(selector),
-				property, prev
+				property, next
 			});
 		},
 
