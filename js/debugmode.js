@@ -1,6 +1,6 @@
 "use strict";
 define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'engine', 'passages', 'section'],
-($, {escape,nth,storyElement}, State, VarRef, TwineError, {objectName, typeName, is, isObject, toSource}, Engine, Passages, Section) => (initialError, code) => {
+($, {escape,nth,storyElement}, State, VarRef, TwineError, {objectName, is, isObject, toSource}, Engine, Passages, Section) => (initialError, code) => {
 	/*
 		Debug Mode
 
@@ -219,7 +219,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		/*
 			Source code for objects can be viewed with a folddown button.
 		*/
-		const tooLong = val.length > 48;
+		const tooLong = val.length > 48 && !value.TwineScript_DebugName;
 		const folddown = typeof value === "object" || tooLong;
 		/*
 			If the value is greater than 36 characters, truncate it.

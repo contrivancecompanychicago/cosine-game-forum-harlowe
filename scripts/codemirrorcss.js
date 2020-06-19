@@ -8,10 +8,10 @@ const {min} = Math,
 	warmHookBG   = nestedBG(40, 100, 50),
 	coolHookBG   = nestedBG(220, 100, 50),
 	macroBG        = percent => nestedBG(320, 44, 50)(percent),
-	macroColour  = "color: hsla(320,44%,46%,1.0);",
-	invalid      = "color: hsla(0,67%,42%,1.0) !important; background-color: hsla(17,100%,50%,0.5) !important;",
+	invalid      = "background-color: hsla(17,100%,50%,0.5) !important;",
 	intangible   = "font-weight:100; color: hsla(0,0,0,0.5)",
-	colorRegExp  = /hsla\((\d+),\s*(\d+)%,\s*(\d+)%,\s*(\d+\.\d+)\)/g;
+	colorRegExp  = /hsla\((\d+),\s*(\d+)%,\s*(\d+)%,\s*(\d+\.\d+)\)/g,
+	typeColours  = require('../js/utils/typecolours');
 
 const versionClass = 'cm-harlowe-3-';
 /*
@@ -22,7 +22,7 @@ const outputFile = {
 	root: 'box-sizing:border-box;',
 
 	// The cursor token highlight should ignore the most common tokens, unwrapped text tokens.
-	["cursor:not([class^='" + versionClass + "text " + versionClass + "-root'])"]:
+	["cursor:not([class^='" + versionClass + "text " + versionClass + "root'])"]:
 		"border-bottom: 2px solid darkgray;",
 
 	CodeMirror: "padding: 0 !important",
@@ -51,24 +51,29 @@ const outputFile = {
 	//TODO: whitespace within collapsed
 	["error:not([class*='" + versionClass + "string'])"]:
 		invalid,
-	
-	macro:        macroBG(0.05),
-	"macro-2":    macroBG(0.1),
-	"macro-3":    macroBG(0.15),
-	"macro-4":    macroBG(0.2),
-	"macro-5":    macroBG(0.25),
-	"macro-6":    macroBG(0.3),
-	"macro-7":    macroBG(0.35),
-	"macro-8":    macroBG(0.4),
 
-	macroName:
-		"font-style:italic;" + macroColour,
+	"^=macroName":
+		"font-style:italic;",
+
+	"macroName-boolean":      typeColours.boolean,
+	"macroName-array":        typeColours.array,
+	"macroName-dataset":      typeColours.dataset,
+	"macroName-number":       typeColours.number,
+	"macroName-datamap":      typeColours.datamap,
+	"macroName-changer":      typeColours.changer,
+	"macroName-string":       typeColours.string,
+	"macroName-colour, macroName-gradient":
+		typeColours.colour,
+	"macroName-command, macroName-instant, macroName-metadata":
+		typeColours.command,
+	"macroName-custommacro, macroName-any":
+		typeColours.macro,
 
 	// The bottommost element is a macro open/close bracket
 	"^=macro ":
-		"font-weight:bold;" + macroColour,
+		"font-weight:bold;" + typeColours.macro,
 
-	comma: macroColour,
+	comma: typeColours.macro,
 
 	"bold, strong":
 		"font-weight:bold;",
@@ -102,24 +107,21 @@ const outputFile = {
 	"collapsed.hook-6":    coolHookBG(0.3),
 	"collapsed.hook-7":    coolHookBG(0.35),
 	"collapsed.hook-8":    coolHookBG(0.4),
-	
-	"twineLink:not(.text)":
-		"color: hsla(240,60%,50%,1.0);",
+
+	"twineLink:not(.text)": typeColours.command,
+
 	tag:
 		"color: hsla(240,34%,46%,1.0);",
 	
-	boolean:
-		"color: hsla(0,0%,38%,1.0);",
-	string:
-		"color: hsla(180,72%,30%,1.0);",
-	number:
-		"color: hsla(30,99%,32%,1.0);",
-	variable:
-		"color: hsla(200,100%,35%,1.0);",
-	tempVariable:
-		"color: hsla(200,70%,44%,1.0);",
-	hookRef:
-		"color: hsla(160,100%,25%,1.0);",
+	boolean:      typeColours.boolean,
+	string:       typeColours.string,
+	number:       typeColours.number,
+	variable:     typeColours.variable,
+	tempVariable: typeColours.tempVariable,
+	hookRef:      typeColours.hookRef,
+	datatype:     typeColours.datatype,
+	colour:       typeColours.colour,
+
 	"variableOccurrence, hookOccurrence":
 		"background: hsla(159,50%,75%,1.0) !important;",
 
@@ -139,7 +141,7 @@ const outputFile = {
 		"font-weight:bold; color: hsla(51,100%,30%,1.0);",
 	
 	"identifier, property, belongingProperty, itsProperty, belongingItProperty, belongingItOperator":
-		"color: #0076b2;",
+		typeColours.identifier,
 	
 	toString() {
 		return Object.keys(this).reduce((a,e) => {
@@ -178,14 +180,16 @@ const outputFile = {
 					}
 					return "." + versionClass + e;
 				});
-			let rule = selector.join(', ') + "{" + this[e] + "}";
+			a += selector.join(', ') + "{" + this[e] + "}";
 			/*
 				Now create the dark versions of anything that has a colour.
 			*/
-			if (rule.match(colorRegExp)) {
-				rule += ".theme-dark " + rule.replace(colorRegExp, (_, h,s,l,a) => "hsla(" + h + "," + min(100,(+s)*1.5) + "%," + min(100,(+l)*1.5) + "%," + a + ")");
+			if (this[e].match(colorRegExp)) {
+				a += selector.map(e => ".theme-dark " + e).join(', ') + "{"
+					+ this[e].replace(colorRegExp, (_, h,s,l,a) => "hsla(" + h + "," + min(100,(+s)*1.5) + "%," + (100-l) + "%," + a + ")")
+					+ "}";
 			}
-			return a + rule;
+			return a;
 		}, '');
 	},
 } + "";

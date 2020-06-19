@@ -484,7 +484,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			It's possible to add together changers, save them in variables, and use them in various locations
 			throughout your story. You may, after doing so, want to give a common name to each of those hooks that
 			have that variable attached, so that, for instance, the (append:) macro can act on them as one.
-			This changer can be added to those changers to allow the hooks to be named:
+			This changer can be added to those changers to allow the hooks to be named, like so.
 			`(font:"Museo Slab")+(hook: "title")`.
 			
 			Also, unlike the nametag syntax for hook names, (hook:) can be given any string expression:

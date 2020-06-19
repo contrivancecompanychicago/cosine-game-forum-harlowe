@@ -3,11 +3,21 @@
 const fs = require('fs');
 const unescape = require('lodash.unescape');
 const escape = require('lodash.escape');
+function insensitiveName(e) {
+	return e.toLowerCase().replace(/-|_/g, "");
+}
 
 /*
 	This generates end-user Harlowe macro and syntax documentation (in Markup).
 */
 const metadata = require('./metadata');
+const macros = metadata.Macro.shortDefs();
+const validMacros = Object.keys(macros).reduce((a,e)=>{
+	const macro = macros[e];
+	[macro.name, ...macro.aka].forEach(name => a[insensitiveName(name)] = macro);
+	return a;
+}, {});
+
 let outputFile = "";
 let navElement = "<nav><img src='icon.svg' width=96 height=96></img>";
 /*
@@ -82,7 +92,14 @@ outputFile = outputFile.replace(/<code>([^<]+)<\/code>(~?)/g, ({length}, code, n
 			if (token.type === "string") {
 				str = '';
 			}
-			return str + ' cm-harlowe-3-' + token.type;
+			str += (str.length ? ' ' : '') + 'cm-harlowe-3-' + token.type;
+			if (token.type === "macroName") {
+				const name = insensitiveName(token.text.slice(0,-1));
+				if (validMacros.hasOwnProperty(name)) {
+					str += "-" + validMacros[insensitiveName(token.text.slice(0,-1))].returnType.toLowerCase();
+				}
+			}
+			return str;
 		},'');
 	}
 	code = unescape(code);
@@ -149,13 +166,15 @@ nav img { display:block; margin: 0 auto;}
 html.night #night { background: #444 }
 html:not(.night) #day { background: #ccc }
 /* This flips the colours for most article elements, but flips them back if they have an explicit background. */
-html.night main, html.night nav, html.night tw-debugger, html.night main [style*=background] { filter: invert() hue-rotate(180deg); }
+html.night main, html.night nav, html.night main [style*=background] { filter: invert() hue-rotate(180deg); }
 html.night { background-color:black; }
 
 /* Main styles */
 .def_title { background:linear-gradient(180deg,white,white 70%,silver); border-bottom:1px solid silver; padding-bottom:5px; }
 .macro_signature { opacity:0.75 }
-.nav_macro_return_type { opacity:0.33; float:right; }
+.nav_macro_return_type { opacity:0.5; float:right; }
+.nav_macro_sig { display: none; font-style:italic; opacity:0.5; }
+a:hover > .nav_macro_sig { display: inline; }
 @media screen and (max-width: 1400px) { .nav_macro_return_type { display:none; } }
 @media screen and (max-width: 1600px) { .nav_macro_return_type { font-size:80% } }
 .nav_macro_aka { opacity: 0.75; font-size:90%; color:#3B8BBA; margin-left: 0.5em; font-style: italic; }
@@ -197,9 +216,6 @@ t-s::before { content: 'Example text'; }
 html.fullPreview main, html.fullPreview nav { opacity: 0.05; }
 html.fullPreview #preview, html.fullPreview #previewCode { width:95vw; }
 html.fullPreview #fullPreviewBar { right: 97vw; }
-
-/* Highlighting */
-${highlighting}
 
 /* Animations */
 ${animations}

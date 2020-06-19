@@ -15,9 +15,13 @@
 	const macros = "MACROS";
 
 	/*
-		Produce an array of the macro names, using both their names and their aliases.
+		Produce an object holding macro names, using both their names and their aliases.
 	*/
-	const validMacros = macros instanceof Object && Object.keys(macros).reduce((a,e)=>a.concat(macros[e].name, ...macros[e].aka),[]).map(insensitiveName);
+	const validMacros = macros instanceof Object && Object.keys(macros).reduce((a,e)=>{
+		const macro = macros[e];
+		[macro.name, ...macro.aka].forEach(name => a[insensitiveName(name)] = macro);
+		return a;
+	}, {});
 
 	/*
 		Import the TwineMarkup lexer function, and store it locally.
@@ -312,8 +316,17 @@
 							existant Harlowe macros.
 						*/
 						case "macroName":
-							if (validMacros.indexOf(insensitiveName(currentBranch[i].text.slice(0,-1))) === -1) {
+							const macroName = insensitiveName(currentBranch[i].text.slice(0,-1));
+							if (!validMacros.hasOwnProperty(macroName)) {
 								name += " harlowe-3-error";
+							}
+							else {
+								/*
+									Colourise macro names based on the macro's return type.
+									This is done by concatenating the cm-harlowe-3-macroName class
+									with an additional modifier containing the return type.
+								*/
+								name += "-" + validMacros[macroName].returnType.toLowerCase();
 							}
 							break;
 					}

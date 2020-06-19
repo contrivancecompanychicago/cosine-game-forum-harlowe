@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require('fs');
+const typeColours = require('../js/utils/typecolours');
 /*
 	This extracts Harlowe macro and syntax metadata by reading
 	/*d: delimited comments from the source files.
@@ -188,7 +189,7 @@ const
 
 		navLink(def) {
 			return `<li><a href="#${def.anchor}">${def.name}</a>
-				<span class='nav_macro_return_type'>${def.returnType}</span>${
+				<span class='nav_macro_return_type' style='${typeColours[def.returnType.toLowerCase()] || ''}'>${def.returnType}</span>${
 					def.aka.length ? `<div class='nav_macro_aka'>${def.aka.join(', ')}</div>`
 					: ''
 				}</li>`;
@@ -240,8 +241,8 @@ const
 		regExp: /^\s*\(([\w\-\d]+):([\s\w\.\,\[\]]*)\) -> ([\w]+)/,
 
 		navLink(def) {
-			return `<li><a href="#${def.anchor}">(${def.name}:)</a>
-				<span class='nav_macro_return_type'>${def.returnType}</span>${
+			return `<li><a href="#${def.anchor}">(${def.name}:<span class='nav_macro_sig'>${def.sig}</span>)</a>
+				<span class='nav_macro_return_type' style='${typeColours[def.returnType.toLowerCase()] || ''}'>${def.returnType}</span>${
 					def.aka.length ? `<div class='nav_macro_aka'>${def.aka.map(e => `(${e}:)`).join(', ')}</div>`
 					: ''
 				}</li>`;

@@ -317,7 +317,7 @@ define(['jquery', 'utils'], ($, {matMul}) => {
 		TwineScript_Print() {
 			const {r,g,b,a} = this.toRGBA();
 			return "<tw-colour style='background-color:rgba("
-				+ [r, g, b, a].join(',') + ");'></tw-colour>";
+				+ [r, g, b, a] + ");'></tw-colour>";
 		},
 		
 		TwineScript_is(other) {
