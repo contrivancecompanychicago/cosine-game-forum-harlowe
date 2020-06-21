@@ -284,6 +284,7 @@ define(['jquery', 'utils'], ($, {matMul}) => {
 	}
 
 	const Colour = Object.freeze({
+		TwineScript_TypeID:     "colour",
 		TwineScript_TypeName:   "a colour",
 		TwineScript_ObjectName: "a colour",
 

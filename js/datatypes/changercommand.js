@@ -16,8 +16,8 @@ define(['utils', 'utils/operationutils', 'internaltypes/changedescriptor', 'inte
 
 	const ChangerCommand = {
 		
-		changer: true,
-		
+		TwineScript_TypeID: "changer",
+
 		TwineScript_TypeName:
 			"a changer command",
 		

@@ -27,7 +27,10 @@
 		Import the TwineMarkup lexer function, and store it locally.
 	*/
 	let lex;
-	if(typeof define === 'function' && define.amd) {
+	if(typeof module === 'object') {
+		({lex} = require('../lexer'));
+	}
+	else if(typeof define === 'function' && define.amd) {
 		define('markup', [], (markup) => {
 			lex = markup.lex;
 		});
@@ -46,24 +49,24 @@
 	window.CodeMirror && CodeMirror.defineMode('harlowe-3', () => {
 		let cm, tree,
 			// These caches are used to implement special highlighting when the cursor
-			// rests on variables or hookRefs, such that all the other variable/hook
+			// rests on variables or hookNames, such that all the other variable/hook
 			// tokens are highlighted as well.
 			referenceTokens = {
 				variable: [],
 				tempVariable: [],
 				hook: [],
-				hookRef: [],
+				hookName: [],
 				clear() {
 					this.variable = [];
 					this.tempVariable = [];
 					this.hook = [];
-					this.hookRef = [];
+					this.hookName = [];
 				}
 			};
 
 		function lexTreePostProcess(token) {
 			if (token.type === "variable" || token.type === "tempVariable"
-					|| token.type === "hook" || token.type === "hookRef") {
+					|| token.type === "hook" || token.type === "hookName") {
 				referenceTokens[token.type].push(token);
 			}
 			/*
@@ -152,15 +155,15 @@
 				{className: 'cm-harlowe-3-cursor'}
 			));
 			/*
-				If the token is a variable or hookRef, then
+				If the token is a variable or hookName, then
 				highlight certain other instances in the text.
-				For variables, hooks and hookRefs, highlight all other occurrences of
+				For variables, hooks and hookNames, highlight all other occurrences of
 				the variable in the passage text.
 			*/
 			if (token.type === "variable" || token.type === "tempVariable"
-					|| token.type === "hookRef" || token.type === "hook") {
-				// <hooks| should highlight matching ?hookRefs.
-				const type = token.type === "hook" ? "hookRef" : token.type;
+					|| token.type === "hookName" || token.type === "hook") {
+				// <hooks| should highlight matching ?hookNames.
+				const type = token.type === "hook" ? "hookName" : token.type;
 				referenceTokens[type].forEach(e => {
 					if (e !== token && e.name === token.name) {
 						cursorMarks.push(doc.markText(
@@ -172,10 +175,10 @@
 				});
 			}
 			/*
-				Also for hookRefs and hooks, highlight the nametags of the
+				Also for hookNames and hooks, highlight the nametags of the
 				named hook(s) that match this one's name.
 			*/
-			if (token.type === "hookRef" || token.type === "hook") {
+			if (token.type === "hookName" || token.type === "hook") {
 				referenceTokens.hook.forEach(e => {
 					if (e !== token && e.name && e.name === token.name) {
 						const tagStart =

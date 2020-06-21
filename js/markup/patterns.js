@@ -939,9 +939,9 @@
 		tempVariable,
 		tempVariablePeek: "_",
 		
-		hookRef:
+		hookName:
 			"\\?(" + anyLetter + "+)\\b",
-		hookRefPeek: "?",
+		hookNamePeek: "?",
 		
 		/*
 			Artificial types (non-JS primitives, semantic sugar)

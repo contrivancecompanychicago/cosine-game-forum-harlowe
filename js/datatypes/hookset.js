@@ -340,6 +340,8 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 			return "?" + this.selector.data + " (a hook name)";
 		},
 
+		TwineScript_TypeID: "hookName",
+
 		TwineScript_TypeName: "a hook name (like ?this)",
 		/*
 			HookSets cannot be assigned to variables.

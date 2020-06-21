@@ -279,6 +279,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		let cd = ChangeDescriptor.create();
 
 		const ret = Object.assign({
+				TwineScript_TypeID:   "command",
 				TwineScript_ObjectName: "a (" + firstName + ":) command",
 				TwineScript_TypeName: "a (" + firstName + ":) command",
 				TwineScript_Print: () => "`[A (" + firstName + ":) command]`",

@@ -53,28 +53,7 @@ outputFile = require('marked')(outputFile);
 */
 let animations = require('child_process').execSync("sass --style compressed --scss ./scss/animations.scss");
 /*
-	Compile the <pre> using the CodeMirror mode.
-	First, obtain the CodeMirror highlighting CSS.
-*/
-let highlighting;
-global.document = {
-	querySelector(){},
-	createElement: () => ({
-		setAttribute(){},
-		set innerHTML(e) {
-			highlighting = e;
-		},
-	}),
-	head: { appendChild(){} },
-};
-global.window = global;
-
-require('../js/markup/codemirror/mode.js');
-if (highlighting === undefined) {
-	throw new Error("The kludge to import the CodeMirror mode's CSS didn't work.");
-}
-/*
-	Now, find the <code> elements and modify their contents.
+	Find the <code> elements and syntax-highlight their contents.
 */
 const {modes} = require('../js/markup/lexer.js');
 const {lex} = require('../js/markup/markup.js');

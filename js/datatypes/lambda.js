@@ -58,7 +58,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 		and understand how their macros work, you may find that they are very convenient.
 	*/
 	const Lambda = Object.freeze({
-		lambda: true,
+		TwineScript_TypeID: "lambda",
 		TwineScript_TypeName:   "a lambda",
 
 		get TwineScript_ObjectName() {

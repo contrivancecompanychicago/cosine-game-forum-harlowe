@@ -108,7 +108,7 @@ const outputFile = {
 	"collapsed.hook-7":    coolHookBG(0.35),
 	"collapsed.hook-8":    coolHookBG(0.4),
 
-	"twineLink:not(.text)": typeColours.command,
+	"twineLink:not(.text)": typeColours.twineLink,
 
 	tag:
 		"color: hsla(240,34%,46%,1.0);",
@@ -118,7 +118,7 @@ const outputFile = {
 	number:       typeColours.number,
 	variable:     typeColours.variable,
 	tempVariable: typeColours.tempVariable,
-	hookRef:      typeColours.hookRef,
+	hookName:     typeColours.hookName,
 	datatype:     typeColours.datatype,
 	colour:       typeColours.colour,
 

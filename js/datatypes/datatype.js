@@ -67,7 +67,7 @@ define([
 
 	const Datatype = Object.freeze({
 		
-		datatype: true,
+		TwineScript_TypeID: "datatype",
 		
 		TwineScript_TypeName: "a datatype",
 		// TwineScript_ObjectName is assigned in create().

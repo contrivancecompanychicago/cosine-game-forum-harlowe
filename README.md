@@ -96,6 +96,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a debug mode panel listing which storylet passages are currently available, and their 'where' lambdas. This panel is only visible if you have `(storylet:)` macros in your story.
  * The debug mode vaiables panel now has a "(source:)" button for each variable containing a complex value (i.e. not a string, boolean, number), letting you examine and copy that variable's value as Harlowe code.
  * The debug mode variables panel now has a "Copy $ variables as (set:) call" button at the bottom, which copies to the clipboard a string of Harlowe code that will (set:) each global variable to their currently displayed value.
+ * The debug view now reveals command macros and expressions, such as `(enchant:)`, which don't print anything and are normally hidden during play.
  * Now, whenever the first error of your story is displayed, debug mode will automatically, immediately enable itself, so you can begin debugging there and then.
  * The syntax highlighter no longer highlights syntactic elements inside strings. While this had some fringe benefit in cases where strings contained code to be printed, I've decided it's too distracting in more usual cases.
  * The syntax highlighter now colourises macro names based on their returned data type.
@@ -197,7 +198,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where same-precedence arithmetic operators (`+` and `-`, or `/` and `*`) had incorrect associativity (so, `3 - 5 + 2` was interpreted as `3 - (5 + 2)` instead of `(3 - 5) + 2`).
  * Temp variables finally work correctly with changers that defer a hook until some event occurs, like `(link:)`, `(click:)` and such. Now, you can reference temp variables inside the hook, such as in `(link:"Read")[It reads: _engraving]`, just as you can with other kinds of changers.
  * Fixed a bug where supplying multiple shortened `is` or `is not` comparisons, in a form such as `$a is $b and $c`, would produce an incorrect result.
- * Fixed a bug where the Debug View's `(set:)` messages were worded incorrectly when setting global variables.
+ * Fixed a bug where the debug view's `(set:)` messages were worded incorrectly when setting global variables.
  * A more useful error message is given if you write a link with no passage name (such as `[[Go->]]`).
  * Fixed a bug where you could + a changer, a hookname, or a colour to any arbitrary command, like a `(goto:)` command.
  * Fixed a bug where having a `(for:)` macro's lambda's `where` clause return something other than a boolean, such as in `(for: each _a where 127)[]`, wouldn't produce an error message.

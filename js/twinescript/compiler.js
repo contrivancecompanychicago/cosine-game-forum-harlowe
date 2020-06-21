@@ -293,7 +293,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 					+ toJSLiteral(token.name)
 					+ ")" + (isVarRef ? "" : ".get()");
 			}
-			else if (token.type === "hookRef") {
+			else if (token.type === "hookName") {
 				return "HookSet.create({type:'name', data:'" + token.name + "'}) ";
 			}
 			else if (token.type === "string") {

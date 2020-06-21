@@ -349,6 +349,28 @@ define(['jquery','utils/naturalsort','utils', 'internaltypes/twineerror'], ($, N
 	}
 
 	/*
+		This small function, unlike typeName, returns an internal ID corresponding to the data type of its input.
+		It is used exclusively for obtaining type IDs of data, so that debug mode can properly colour
+		<tw-expression>s with their returned type.
+	*/
+	function typeID(obj) {
+		const jsType = typeof obj;
+		if ([sBoolean,sString,sNumber].includes(jsType)) {
+			return jsType;
+		}
+		if (Array.isArray(obj)) {
+			return "array";
+		}
+		if (obj instanceof Map) {
+			return "datamap";
+		}
+		if (obj instanceof Set) {
+			return "dataset";
+		}
+		return obj.TwineScript_TypeID || "";
+	}
+
+	/*
 		This is used to convert all possible user-storable data back into an executable
 		code serialisation, for use by Debug Mode and the (source:) macro.
 		This should never receive a TwineError.
@@ -712,6 +734,7 @@ define(['jquery','utils/naturalsort','utils', 'internaltypes/twineerror'], ($, N
 		clone,
 		objectName,
 		typeName,
+		typeID,
 		toSource,
 		is,
 		contains,

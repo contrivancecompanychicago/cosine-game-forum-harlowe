@@ -504,7 +504,7 @@
 				*/
 				property: {
 					fn: textTokenFn("name"),
-					canFollow: ["variable", "hookRef", "property", "tempVariable", "colour",
+					canFollow: ["variable", "hookName", "property", "tempVariable", "colour",
 						"itsProperty", "belongingItProperty", "macro", "grouping", "string",
 						/*
 							These must also be included so that the correct error can be reported.
@@ -573,7 +573,7 @@
 					}),
 				},
 				
-				hookRef:  { fn: textTokenFn("name") },
+				hookName:  { fn: textTokenFn("name") },
 				
 				cssTime: {
 					fn: (match) => ({

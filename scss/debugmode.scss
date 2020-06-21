@@ -9,144 +9,51 @@
 	}
 
 	tw-expression {
+		display:inline-block !important;
 		
-		&[type=hookref] {
-			background-color: hsla(220, 10%, 50%, 0.15);
-			
-			/* Show the IDs of hooks */
-			&::after {
-				@include tiny-annotation();
-				content: "?" attr(name)
-			}
-		}
 		&[type=variable] {
-			background-color: hsla(30, 10%, 50%, 0.15);
-			
 			&::after {
 				@include tiny-annotation();
 				content: "$" attr(name)
 			}
 		}
 		&[type=tempVariable] {
-			background-color: hsla(30, 10%, 50%, 0.15);
-			
 			&::after {
 				@include tiny-annotation();
 				content: "_" attr(name)
 			}
 		}
-		&[type=macro] {
-			
-			/* Colours for generic macros */
-			&:nth-of-type(4n+0)     { background-color: hsla(80, 20%,50%,0.15); }
-			&:nth-of-type(2n+1)     { background-color: hsla(120,20%,50%,0.15); }
-			&:nth-of-type(4n+2)     { background-color: hsla(160,20%,50%,0.15); }
-			
-			/* Colours for specific macros */
-			&[name="for"],
-			&[name="loop"],
-			&[name="print"],
-			&[name="enchant"],
-			&[name="display"]       { background-color: hsla(200,100%,50%,0.1) !important; }
-			&[name="if"],
-			&[name="unless"],
-			&[name="elseif"],
-			&[name="else"]          {
-				/* (if:), (elseif:), (else:) and (unless:) have special hook colouring. */
-				&, & + tw-hook:not([name]) {
-					background-color: hsla(120,100%,50%,0.1) !important;
-				}
-			}
-			&[name="hidden"],
-			&.false                 {
-				background-color: hsla(0,  100%,50%,0.2) !important;
-				& + tw-hook:not([name]) {
-					display:none;
-				}
-			}
-			// Data
-			&[name="either"],
-			&[name="a"],
-			&[name="dm"],
-			&[name="ds"],
-			&[name="array"],
-			&[name^="sub"],
-			&[name="altered"],
-			&[name="count"],
-			&[name^="data"],
-			&[name="find"],
-			&[name$="ed"],
-			&[name$="-pass"],
-			&[name="range"],
-			&[name^="num"],
-			&[name^="str"],
-			&[name="text"],
-			&[name^="lower"],
-			&[name^="upper"],
-			&[name="words"],
-			&[name="ceil"],
-			&[name="floor"],
-			&[name="random"],
-			&[name="abs"],
-			&[name="cos"],
-			&[name="exp"],
-			&[name^="log"],
-			&[name="max"],
-			&[name="min"],
-			&[name="pow"],
-			&[name="sign"],
-			&[name="sin"],
-			&[name="sqrt"],
-			&[name="tan"],
-			&[name="round"],
-			&[name^="hsl"],
-			&[name^="rgb"]          { background-color: hsla(60, 100%,50%,0.2) !important; }
-			// State
-			&[name$="-game"],
-			&[name="move"],
-			&[name="put"],
-			&[name="set"]           { background-color: hsla(30, 100%,50%,0.2) !important; }
-			// Input
-			&[name^="link"],
-			&[name$="-link"],
-			&[name="dropdown"],
-			&[name^="click"],
-			&[name="goto"],
-			&[name="undo"],
-			&[name^="mouseo"]      { background-color: hsla(190,  75%,50%,0.2) !important; }
-			// Revision
-			&[name^="replace"],
-			&[name^="prepend"],
-			&[name^="append"],
-			&[name="show"],
-			&[name^="remove"]      { background-color: hsla(20,  75%,50%,0.2) !important; }
-			// Live
-			&[name="event"],
-			&[name="live"]         { background-color: hsla(240, 75%,50%,0.2) !important; }
-			// Enchantment
-			&[name="align"],
-			&[name^="colo"],
-			&[name="background"],
-			&[name="css"],
-			&[name="font"],
-			&[name="hook"],
-			&[name$="-style"],
-			&[name^="text-"],
-			&[name^="transition"],
-			&[name^="t8n"],
-			&[name="live"]         { background-color: hsla(45, 100%,50%,0.2) !important; }
-			
-			/* Show the macro call */
-			&::before
-			{
-				content: "(" attr(name) ":)";
-				padding: 0 0.5rem;
-				font-size: 1rem;
-				vertical-align: middle;
-				line-height: normal;
-				background-color:  inherit;
-				border: 1px solid rgba(255,255,255,0.5);
-			}
+		/* Colours for macro return types. These are hand-copied from typecolours.js, with different alpha */
+		&[return=boolean]    { background-color:hsla(0,0%,70%,0.2) }
+		&[return=array]      { background-color:hsla(0,100%,70%,0.2) }
+		&[return=dataset]    { background-color:hsla(30,100%,50%,0.2) }
+		&[return=number]     { background-color:hsla(30,100%,70%,0.2) }
+		&[return=datamap]    { background-color:hsla(60,100%,70%,0.2) }
+		&[return=changer]    { background-color:hsla(90,100%,70%,0.2) }
+		&[return=lambda]     { background-color:hsla(120,100%,70%,0.2) }
+		&[return=hookname]   { background-color:hsla(160,100%,70%,0.2) }
+		&[return=string]     { background-color:hsla(180,100%,70%,0.2) }
+		&[return=datatype]   { background-color:hsla(220,100%,70%,0.2) }
+		&[return=gradient],
+		&[return=colour]     { background-color:hsla(280,100%,70%,0.2) }
+		&[return=instant],
+		&[return=macro]      { background-color:hsla(320,80%,70%,0.2) }
+		&[return=command]    { background-color:hsla(240,100%,80%,0.2) }
+
+		/* False hooks have a special colour */
+		&.false {
+			background-color: hsla(0,100%,50%,0.2) !important;
+		}
+
+		/* Show the macro call */
+		&[type=macro]::before {
+			content: "(" attr(name) ":)";
+			padding: 0 0.5rem;
+			font-size: 1rem;
+			vertical-align: middle;
+			line-height: normal;
+			background-color:  inherit;
+			border: 1px solid rgba(255,255,255,0.5);
 		}
 	}
 

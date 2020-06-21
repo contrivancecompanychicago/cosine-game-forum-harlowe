@@ -12,17 +12,19 @@
 		datamap:     "color:hsla(60,100%,30%,1.0)",
 		changer:     "color:hsla(90,100%,30%,1.0)",
 		lambda:      "color:hsla(120,100%,30%,1.0)",
-		hookRef:     "color:hsla(160,100%,30%,1.0)",
+		hookName:    "color:hsla(160,100%,30%,1.0)",
 		string:      "color:hsla(180,100%,30%,1.0)",
 		identifier:  "color:hsla(200,80%,40%,1.0)",
 		variable:    "color:hsla(200,100%,30%,1.0)",
-		tempVariable:"color:hsla(200,70%,30%,1.0)",
-		datatype:    "color:hsla(220,100%,40%,1.0)",
+		tempVariable:"color:hsla(200,70%,20%,1.0)",
+		datatype:    "color:hsla(220,100%,30%,1.0)",
 		colour:      "color:hsla(280,100%,30%,1.0)",
 		macro:       "color:hsla(320,80%,30%,1.0)",
+		twineLink:   "color:hsla(240,100%,20%,1.0)"
 	};
 	Colours.gradient = Colours.colour;
-	Colours.instant = Colours.metadata = Colours.command = Colours.any = Colours.macro;
+	Colours.command = Colours.twineLink;
+	Colours.instant = Colours.metadata = Colours.any = Colours.customMacro = Colours.macro;
 
 	if(typeof module === 'object') {
 		module.exports = Colours;

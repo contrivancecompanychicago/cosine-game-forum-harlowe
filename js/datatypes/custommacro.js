@@ -34,6 +34,7 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 	const commandObjectName = "a custom command";
 	const makeCommandObject = cd => {
 		const ret = assign({
+			TwineScript_TypeID:   "command",
 			TwineScript_ObjectName: commandObjectName,
 			TwineScript_TypeName: commandObjectName,
 			TwineScript_Print: () => "`[" + commandObjectName + "]`",
@@ -133,6 +134,7 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 	};
 
 	return Object.freeze({
+		TwineScript_TypeID:   "macro",
 		TwineScript_TypeName: "a custom macro",
 		get TwineScript_ObjectName() {
 			return this.TwineScript_KnownName ? "the " + this.TwineScript_KnownName + " macro" : "a custom macro";

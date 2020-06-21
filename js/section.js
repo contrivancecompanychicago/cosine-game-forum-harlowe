@@ -16,7 +16,7 @@ define([
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier',
 ],
-($, Utils, Renderer, Environ, Operations, State, {printBuiltinValue,objectName}, {collapse}, ChangerCommand, HookSet, Colour, ChangeDescriptor, VarScope, TwineError, TwineNotifier) => {
+($, Utils, Renderer, Environ, Operations, State, {printBuiltinValue,objectName,typeID}, {collapse}, ChangerCommand, HookSet, Colour, ChangeDescriptor, VarScope, TwineError, TwineNotifier) => {
 
 	let Section;
 
@@ -318,6 +318,14 @@ define([
 			).render(expr.attr('title')));
 			return;
 		}
+
+		/*
+			Apply the return type attribute, used by debug mode, to the expression.
+			Note that this won't matter if the expr is replaced with an error later.
+			Also, since debug mode can be enabled at any time due to errors occurring,
+			we're doing this regardless of its current state.
+		*/
+		expr.attr('return', typeID(result));
 
 		/*
 			If the above loop wasn't entered at all (i.e. the result wasn't a changer) then an error may
@@ -824,9 +832,7 @@ define([
 
 				// A gentle debug notification to remind the writer how many loops the (for:) executed,
 				// which is especially helpful if it's 0.
-				/*if (Engine.options.debug) {
-					TwineNotifier.create(len + " loop" + (len !== 1 ? "s" : "")).render().prependTo(target);
-				}*/
+				TwineNotifier.create(len + " loop" + (len !== 1 ? "s" : "")).render().prependTo(target);
 
 				/*jshint -W083 */
 				if (len) {

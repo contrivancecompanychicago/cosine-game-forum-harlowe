@@ -132,6 +132,7 @@ define([
 				Return a plain unstorable value that prints out as "".
 			*/
 			return {
+				TwineScript_TypeID:       "instant",
 				TwineScript_TypeName:     "a (set:) operation",
 				TwineScript_ObjectName:   "a (set:) operation",
 				TwineScript_Unstorable: true,
@@ -199,6 +200,7 @@ define([
 				}
 			}
 			return {
+				TwineScript_TypeID:       "instant",
 				TwineScript_TypeName:     "a (put:) operation",
 				TwineScript_ObjectName:   "a (put:) operation",
 				TwineScript_Unstorable: true,
@@ -283,6 +285,7 @@ define([
 				}
 			}
 			return {
+				TwineScript_TypeID:       "instant",
 				TwineScript_TypeName:     "a (move:) operation",
 				TwineScript_ObjectName:   "a (move:) operation",
 				TwineScript_Unstorable: true,

@@ -21,6 +21,7 @@ define(['utils/operationutils'], ({toSource}) => {
 		element, but otherwise has no other features or capabilities and is intended solely for debugging purposes.
 	*/
 	const Gradient = Object.freeze({
+		TwineScript_TypeID:     "gradient",
 		TwineScript_TypeName:   "a gradient",
 		TwineScript_ObjectName: "a gradient",
 
