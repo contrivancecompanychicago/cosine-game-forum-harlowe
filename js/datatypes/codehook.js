@@ -1,5 +1,5 @@
 "use strict";
-define(['internaltypes/twineerror'], (TwineError) => {
+define(['internaltypes/twineerror', 'renderer'], (TwineError, {exec}) => {
 	/*d:
 		CodeHook data
 
@@ -27,8 +27,13 @@ define(['internaltypes/twineerror'], (TwineError) => {
 			To save on processing when running custom macros, CodeHooks store their pre-compiled HTML.
 			Passages could do this, too, but there isn't currently much call for it, since they're usually
 			visited only a few times.
+			Note that revived values from (loadgame:) don't have HTML, so they need to be
+			compiled anyway...
 		*/
 		create(source, html) {
+			if (!html) {
+				html = exec(source);
+			}
 			const error = TwineError.containsError(html);
 			if (error) {
 				return error;

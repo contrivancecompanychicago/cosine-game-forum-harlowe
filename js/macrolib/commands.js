@@ -938,7 +938,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 				/*
 					If this returns false, the save itself is drastically incorrect.
 				*/
-				const result = State.deserialise(saveData);
+				const result = State.deserialise(section, saveData);
 				if (result instanceof Error) {
 					/*
 						Since this could be an issue with multiple versions of the same story,

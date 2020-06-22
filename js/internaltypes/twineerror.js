@@ -57,7 +57,15 @@ define(['jquery', 'utils'], ($, {impossible, escape}) => {
 			if(!(explanation || type in errorExplanations)) {
 				impossible('TwineError.create','no error explanation given');
 			}
-			
+
+			/*
+				If it's not a user error, capitalise the message. This doesn't care about astral code points
+				because error messages shouldn't directly begin with user data, to my knowledge.
+			*/
+			if (type !== "user") {
+				message = message[0].toUpperCase() + message.slice(1);
+			}
+
 			return Object.assign(Object.create(this), {
 				/*
 					The type of the TwineError consists of one of the errorExplanations keys.

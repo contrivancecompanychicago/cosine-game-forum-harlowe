@@ -620,7 +620,7 @@
 			This returns the entire set of tokens, rooted in a "root"
 			token that has all of tokenMethods's methods.
 		*/
-		lex(src, initIndex) {
+		lex(src, initIndex, innerMode = 'start') {
 			return lex(new Token({
 				type:                 "root",
 				start:        initIndex || 0,
@@ -629,7 +629,7 @@
 				innerText:               src,
 				children:                 [],
 				childAt:                  {},
-				innerMode: Lexer.modes.start,
+				innerMode: Lexer.modes[innerMode],
 			}));
 		},
 		/*

@@ -56,15 +56,25 @@ describe("save macros", function() {
 			);
 			expect("(savegame:'1')").not.markupToError();
 		});
+		it("can save gradients", function() {
+			runPassage("(set:$c1 to (gradient:90,0,white,1,black))");
+			expect("(savegame:'1')").not.markupToError();
+		});
+		it("can save custom macros", function() {
+			runPassage(
+				"(set:$c1 to (macro: num-type _a, num-type _b, [(output:(max:_a,_b,200))]))"
+			);
+			expect("(savegame:'1')").not.markupToError();
+		});
 		it("works from the start of the game", function() {
 			expect("(savegame:'1','Filename')", "qux").not.markupToError();
 			
 			retrieveStoredState(storagePrefix('Saved Game') + "1");
 		});
 		it("stores lots of data", function() {
-			Array(200).join().split(',').forEach(function(_, e) {
-				runPassage("(set:$V" + e + " to " + e + ")","P"+e);
-			});
+			runPassage("(set:" + Array(200).join().split(',').map(function(_, e) {
+				return "$V" + e + " to " + e;
+			}) + ")");
 			expect("(savegame:'1','Filename')").not.markupToError();
 			
 			retrieveStoredState(storagePrefix('Saved Game') + "1");
@@ -139,6 +149,29 @@ describe("save macros", function() {
 					done();
 				}, 20);
 			});
+		});
+		it("can restore gradients", function(done) {
+			runPassage("(set:$c1 to (gradient:90,0,white,1,black))");
+			runPassage("(savegame:'1')");
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("(print:'`'+(source:$c1)+'`')").markupToPrint('(gradient:90,0,white,1,black)');
+				done();
+			}, 20);
+		});
+		it("can restore custom macros", function(done) {
+			runPassage(
+				"(set:$c1 to (macro: num-type _a, num-type _b, [(output:(max:_a,_b,200))]))"
+				+ "(set:$c2 to (macro: num-type _a, str-type _b, [(output:(str:($c1:_a,150))+_b)]))"
+			);
+			expect("(savegame:'1')").not.markupToError();
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("($c1:198,197)").markupToPrint('200');
+				expect("($c1:298,297)").markupToPrint('298');
+				expect("($c2:312,' bears')").markupToPrint('312 bears');
+				done();
+			},20);
 		});
 		it("produces a user-friendly prompt for deletion if the save data is invalid", function(done) {
 			runPassage("uno", "uno");

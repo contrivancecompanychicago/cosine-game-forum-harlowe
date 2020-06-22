@@ -1,6 +1,7 @@
 "use strict";
-define(['utils'], ({toJSLiteral, impossible}) => {
+define(['utils'], ({impossible}) => {
 	
+	const {stringify} = JSON;
 	/*
 		A module that handles the JIT compilation of TwineScript syntax tokens
 		(received from TwineMarkup) into Javascript code that calls Operations methods.
@@ -267,7 +268,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				should be abided.
 			*/
 			if (isVarRef && whitespaceError) {
-				return "TwineError.create('operation'," + toJSLiteral(whitespaceError) + ")";
+				return "TwineError.create('operation'," + stringify(whitespaceError) + ")";
 			}
 			return "";
 		}
@@ -279,18 +280,18 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			token = tokens[0];
 			if (token.type === "identifier") {
 				if (isVarRef) {
-					return "VarRef.create(Operations.Identifiers," + toJSLiteral(token.text) + ")";
+					return "VarRef.create(Operations.Identifiers," + stringify(token.text) + ")";
 				}
 				return "Operations.Identifiers." + token.text.toLowerCase() + " ";
 			}
 			else if (token.type === "variable") {
 				return "VarRef.create(State.variables,"
-					+ toJSLiteral(token.name)
+					+ stringify(token.name)
 					+ ")" + (isVarRef ? "" : ".get()");
 			}
 			else if (token.type === "tempVariable") {
 				return "VarRef.create(section.stack[0].tempVariables,"
-					+ toJSLiteral(token.name)
+					+ stringify(token.name)
 					+ ")" + (isVarRef ? "" : ".get()");
 			}
 			else if (token.type === "hookName") {
@@ -308,13 +309,13 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				/*
 					Slice off the opening [ and closing ] of the source.
 				*/
-				return "CodeHook.create(" + toJSLiteral(token.text.slice(1,-1)) + "," + toJSLiteral(token.html) + ")";
+				return "CodeHook.create(" + stringify(token.text.slice(1,-1)) + "," + stringify(token.html || '') + ")";
 			}
 			else if (token.type === "colour") {
-				return "Colour.create(" + toJSLiteral(token.colour) + ")";
+				return "Colour.create(" + stringify(token.colour) + ")";
 			}
 			else if (token.type === "datatype") {
-				return "Datatype.create(" + toJSLiteral(token.name) + ")";
+				return "Datatype.create(" + stringify(token.name) + ")";
 			}
 			/*
 				"blockedValue" tokens aren't created by the TwineMarkup tokeniser, but made from permuted macro
@@ -336,12 +337,12 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			*/
 			else if (token.type === "whitespace") {
 				if (isVarRef && whitespaceError) {
-					return "TwineError.create('operation'," + toJSLiteral(whitespaceError) + ")";
+					return "TwineError.create('operation'," + stringify(whitespaceError) + ")";
 				}
 			}
 			else if (token.type === "error") {
-				return "TwineError.create('syntax'," + toJSLiteral(token.message)
-					+ (token.explanation ? ", " + toJSLiteral(token.explanation) : "")
+				return "TwineError.create('syntax'," + stringify(token.message)
+					+ (token.explanation ? ", " + stringify(token.explanation) : "")
 				+ ")";
 			}
 		}
@@ -440,12 +441,12 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 					// Omitting the temp variable means that you must use "it"
 					|| "undefined")
 				+ ",";
-			midString = toJSLiteral(token.type)
+			midString = stringify(token.type)
 				+ ",";
-			right = toJSLiteral(compile(after))
+			right = stringify(compile(after))
 				+ ","
 				// Lambdas need to store their entire Harlowe source.
-				+ toJSLiteral(tokens.map(e => e.text).join(''))
+				+ stringify(tokens.map(e => e.text).join(''))
 				+ ")";
 		}
 		else if (type === "with" || type === "making" || type === "each") {
@@ -471,7 +472,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 					midString = compile(rightTokens, varRefArgs("right")).trim();
 					right = ",'where','true',"
 						// Lambdas need to store their entire Harlowe source.
-						+ toJSLiteral(tokens.map(e => e.text).join('')) + ")";
+						+ stringify(tokens.map(e => e.text).join('')) + ")";
 				}
 				// Other keywords can have a preceding temp variable, though.
 				else {
@@ -480,11 +481,11 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 							// Omitting the temp variable means that you must use "it"
 							|| "undefined")
 						+ ",";
-					midString = toJSLiteral(token.type)
+					midString = stringify(token.type)
 						+ ",";
-					right = toJSLiteral(rightTokens[1].name)
+					right = stringify(rightTokens[1].name)
 						// Lambdas need to store their entire Harlowe source.
-						+ "," + toJSLiteral(tokens.map(e => e.text).join(''))
+						+ "," + stringify(tokens.map(e => e.text).join(''))
 						+ ")";
 				}
 			}
@@ -558,7 +559,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			else if (leftIsComparison && !rightIsComparison) {
 				const
 					leftSide = leftIsComparison,
-					operator = toJSLiteral(compileComparisonOperator(leftSide));
+					operator = stringify(compileComparisonOperator(leftSide));
 
 				/*
 					The one operation for which this transformation cannot be allowed is "is not",
@@ -568,7 +569,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 					return ambiguityError;
 				}
 				right = "Operations.elidedComparisonOperator("
-					+ toJSLiteral(token.type) + ","
+					+ stringify(token.type) + ","
 					+ operator + ","
 					+ compile(after, {elidedComparison:type})
 					+ ")";
@@ -585,7 +586,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				*/
 				const rightSide = rightIsComparison,
 					rightIndex = tokens.indexOf(rightSide),
-					operator = toJSLiteral(reverseComparisonOperator(rightSide));
+					operator = stringify(reverseComparisonOperator(rightSide));
 
 				/*
 					Again, "is not" should not be transformed.
@@ -594,7 +595,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 					return ambiguityError;
 				}
 				right = "Operations.elidedComparisonOperator("
-					+ toJSLiteral(token.type) + ","
+					+ stringify(token.type) + ","
 					+ operator + ","
 					+ compile(before, {elidedComparison:type})
 					+ ")";
@@ -677,10 +678,10 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				+ compile(after, varRefArgs("right"))
 				+ ","
 				/*
-					Utils.toJSLiteral() is used to both escape the name
+					Utils.stringify() is used to both escape the name
 					string and wrap it in quotes.
 				*/
-				+ toJSLiteral(token.name) + ")"
+				+ stringify(token.name) + ")"
 				+ (isVarRef ? "" : ".get()");
 			midString = " ";
 			needsLeft = needsRight = false;
@@ -713,10 +714,10 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				+ compile(before, varRefArgs("left"))
 				+ ","
 				/*
-					Utils.toJSLiteral() is used to both escape the name
+					Utils.stringify() is used to both escape the name
 					string and wrap it in quotes.
 				*/
-				+ toJSLiteral(token.name) + ")"
+				+ stringify(token.name) + ")"
 				+ (isVarRef ? "" : ".get()");
 			midString = " ";
 			needsLeft = needsRight = false;
@@ -727,7 +728,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				there is no left subtoken (it is always Identifiers.it).
 			*/
 			left = "VarRef.create(Operations.Identifiers.it,"
-				+ toJSLiteral(token.name) + ").get()";
+				+ stringify(token.name) + ").get()";
 			midString = " ";
 			needsLeft = needsRight = false;
 		}
@@ -744,8 +745,8 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 				(link-goto:) token, in a manner similar to that in Renderer.
 			*/
 			midString = 'Macros.run("link-goto", [section,'
-				+ toJSLiteral(token.innerText) + ","
-				+ toJSLiteral(token.passage) + "])";
+				+ stringify(token.innerText) + ","
+				+ stringify(token.passage) + "])";
 			needsLeft = needsRight = false;
 		}
 		else if (type === "macro") {
@@ -852,7 +853,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 			}
 			else if (assignment) {
 				return "Operations.makeAssignmentRequest("
-					+ [left, right, toJSLiteral(assignment)]
+					+ [left, right, stringify(assignment)]
 					+ ")";
 			}
 			else if (possessive) {
@@ -864,7 +865,7 @@ define(['utils'], ({toJSLiteral, impossible}) => {
 					+ (isVarRef ? "" : ".get()");
 			}
 			else if (operation) {
-				return " Operations[" + toJSLiteral(operation) + "](" + left + "," + right + ") ";
+				return " Operations[" + stringify(operation) + "](" + left + "," + right + ") ";
 			}
 		}
 		/*

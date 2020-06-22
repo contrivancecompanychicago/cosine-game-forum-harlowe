@@ -1,6 +1,6 @@
 "use strict";
-define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerror', 'utils/operationutils'],
-({impossible}, Passages, ChangerCommand, TwineError, {objectName}) => {
+define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerror', 'utils/operationutils', 'markup', 'twinescript/compiler'],
+({impossible}, Passages, ChangerCommand, TwineError, {objectName,toSource}, {lex}, compile) => {
 	/*
 		State
 		Singleton controlling the running game state.
@@ -370,75 +370,18 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		These have a number of helper functions which are wrapped in this block.
 	*/
 	(()=>{
-		
+
 		/*
 			This helper checks if serialisation is possible for this data value.
-			Currently, most all native JS types are supported, but TwineScript
-			specific command objects aren't.
 		*/
-		function isSerialisable(variable) {
-			return (typeof variable === "number"
-				|| typeof variable === "boolean"
-				|| typeof variable === "string"
-				// Nulls shouldn't really ever appear in TwineScript, but technically they're allowed.
-				|| variable === null
-				|| Array.isArray(variable) && variable.every(isSerialisable)
-				|| variable instanceof Set && Array.from(variable).every(isSerialisable)
-				|| variable instanceof Map && Array.from(variable.values()).every(isSerialisable)
-				|| ChangerCommand.isPrototypeOf(variable));
+		function isSerialisable(obj) {
+			const jsType = typeof obj;
+			return !TwineError.containsError(obj) && (
+				typeof obj.TwineScript_ToSource === "function" || Array.isArray(obj) || obj instanceof Map
+					|| obj instanceof Set || jsType === "string" || jsType === "number" || jsType === "boolean"
+			);
 		}
-		
-		/*
-			This is provided to JSON.stringify(), allowing Maps, Sets
-			and Changers to be stringified, albeit in a bespoke fashion.
-		*/
-		function replacer(name, variable) {
-			if (variable instanceof Set) {
-				return {
-					'(dataset:)': Array.from(variable),
-				};
-			}
-			if (variable instanceof Map) {
-				return {
-					/*
-						Array.from(map) converts the variable to
-						an array of key-value pairs.
-					*/
-					'(datamap:)': Array.from(variable),
-				};
-			}
-			if (ChangerCommand.isPrototypeOf(variable)) {
-				return {
-					changer: {
-						name: variable.macroName,
-						params: variable.params,
-						next: variable.next,
-					}
-				};
-			}
-			return variable;
-		}
-		
-		/*
-			This is provided to JSON.parse(), allowing Maps and Sets to be
-			revived from the encoding method used above.
-		*/
-		function reviver(name, variable) {
-			if (variable && typeof variable === "object") {
-				if (Array.isArray(variable['(dataset:)'])) {
-					return new Set(variable['(dataset:)']);
-				}
-				if (Array.isArray(variable['(datamap:)'])) {
-					return new Map(variable['(datamap:)']);
-				}
-				if (variable.changer && typeof variable.changer === "object") {
-					const {name, params, next} = variable.changer;
-					return ChangerCommand.create(name, params, next);
-				}
-			}
-			return variable;
-		}
-		
+
 		/*
 			Serialise the game history, from the present backward (ignoring the redo cache)
 			into a JSON string.
@@ -487,7 +430,17 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				);
 			}
 			try {
-				return JSON.stringify(ret, replacer);
+				return JSON.stringify(ret, function(_,variable) {
+					/*
+						The timeline, which is an array of Moments with VariableStore objects, should be serialised
+						such that only the variables inside the VariableStore are converted to Harlowe strings
+						with toSource().
+					*/
+					if (this.TwineScript_VariableStore) {
+						return toSource(variable);
+					}
+					return variable;
+				});
 			}
 			catch(e) {
 				return false;
@@ -499,13 +452,13 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			Since an error with save data isn't necessarily an author error, the errors returned
 			by this function aren't TwineErrors.
 		*/
-		function deserialise(str) {
+		function deserialise(section, str) {
 			let newTimeline,
 				lastVariables = SystemVariables;
 			const genericError = "The save data is unintelligible.";
 			
 			try {
-				newTimeline = JSON.parse(str, reviver);
+				newTimeline = JSON.parse(str);
 			}
 			catch(e) {
 				return Error(genericError);
@@ -540,6 +493,16 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 					compatibility concerns.
 				*/
 				moment.variables = Object.assign(Object.create(lastVariables), moment.variables);
+				/*
+					Compile all of the variables (which are currently Harlowe code strings) back into Harlowe values.
+					Since this should only receive formerly-serialised data, we don't really need to care about the
+					scope of the eval().
+				*/
+				try {
+					Object.keys(moment.variables).forEach(key => moment.variables[key] = section.eval(compile(lex(moment.variables[key], 0, 'macro'))));
+				} catch(e) {
+					return Error(genericError);
+				}
 				
 				lastVariables = moment.variables;
 				/*

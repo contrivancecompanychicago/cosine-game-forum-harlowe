@@ -26,6 +26,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Now, consecutive line breaks (which Harlowe reduces the cumulative height of) at the start of a passage are no longer the wrong height while that passage transitions in. (To handle this, consecutive line breaks are now made into `<tw-consecutive-br>` elements instead of `<br data-cons>` elements.)
  * Now, `(dropdown:)` explicitly uses the background of its containing hook, instead of being transparent, which the Windows version of Chrome displays as white, regardless of text colour.
  * Now, align, horizontal rule, and column syntax in the editor no longer occupies two lines unexpectedly.
+ * `(save-game:)` can now save a greater range of variable data. Formerly, only changers, arrays, datamaps, datasets, booleans, strings and numbers could be stored in variables when you use `(save-game:)` - other values, such as commands, colours, gradients, or lambdas, would cause an error. Now, it should work with every kind of supported Harlowe value (i.e. those mentioned in the documentation) except user-created commands created with `(output-hook:)` (see below). But, this means that save data from 3.1.0 is no longer compatible with 3.2.0.
 
 ####Alterations
 

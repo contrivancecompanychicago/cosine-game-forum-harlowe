@@ -236,7 +236,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			"</span><span class='variable-value'>" + truncVal + "</span><span class='variable-buttons'>"
 				+ (folddown ? "<tw-folddown tabindex=0>(source:)</tw-folddown>" : '')
 				+ "</span>"
-			+ (folddown ? "<div class='variable-contents panel-source' style='display:none'>" + escape(toSource(value)) + "</div>" : "")
+			+ (folddown ? "<div class='variable-contents' style='display:none'>" + escape(toSource(value)) + "</div>" : "")
 		)
 		/*
 			Data structure entries are indented by their depth in the structure, to a maximum of 5 levels deep.

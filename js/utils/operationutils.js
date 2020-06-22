@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery','utils/naturalsort','utils', 'internaltypes/twineerror'], ($, NaturalSort, {impossible, nth, insensitiveName, permutations, toJSLiteral}, TwineError) => {
+define(['jquery','utils/naturalsort','utils', 'internaltypes/twineerror'], ($, NaturalSort, {impossible, nth, insensitiveName, permutations}, TwineError) => {
 	
 	/*
 		Some cached strings to save a few characters when this is compiled. Yes, these are Hungarian Notated... well spotted.
@@ -265,7 +265,7 @@ define(['jquery','utils/naturalsort','utils', 'internaltypes/twineerror'], ($, N
 			: obj instanceof Set ? "a dataset"
 			: typeof obj === sBoolean ? "the boolean value '" + obj + "'"
 			: (typeof obj === sString || typeof obj === sNumber)
-				? 'the ' + typeof obj + " " + toJSLiteral(obj)
+				? 'the ' + typeof obj + " " + JSON.stringify(obj)
 			: obj === undefined ? "an empty variable"
 			: "...whatever this is";
 	}
@@ -418,7 +418,7 @@ define(['jquery','utils/naturalsort','utils', 'internaltypes/twineerror'], ($, N
 		/*
 			What remains should be only JS primitives.
 		*/
-		return toJSLiteral(obj);
+		return JSON.stringify(obj);
 	}
 	
 	/*

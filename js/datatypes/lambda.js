@@ -1,5 +1,5 @@
 "use strict";
-define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltypes/twineerror'], ({toJSLiteral, plural}, {typeName, objectName, singleTypeCheck}, VarScope, TwineError) => {
+define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltypes/twineerror'], ({plural}, {typeName, objectName, singleTypeCheck}, VarScope, TwineError) => {
 	/*d:
 		Lambda data
 
@@ -204,7 +204,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 			This needs to have the macro's section passed in so that its JS code can be eval()'d in
 			the correct scope.
 		*/
-		apply(section, {loop:loopArg, pos:lambdaPos /*This must be 1-indexed*/, 'with':withArg, making:makingArg, fail:failArg, pass:passArg, ignoreVia, tempVariables}) {
+		apply(section, {loop:loopArg, pos:lambdaPos /*This must be 1-indexed*/, 'with':withArg, making:makingArg, ignoreVia, tempVariables}) {
 			/*
 				We run the JS code of this lambda, inserting the arguments by adding them to a tempVariables
 				object (if one wasn't provided). The temporary variable references in the code are compiled to
@@ -262,16 +262,15 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 			const ret = section.eval(
 				/*
 					If a lambda has a "where" (or "when") clause, then the "where" clause filters out
-					values. Filtered-out values are replaced by the failVal.
+					values. Filtered-out values are replaced by null (which .apply() consumers should handle themselves).
 					If a lambda has a "via" clause, then its result becomes the result of the
-					call. Otherwise, the passVal is used.
+					call. Otherwise, true is returned.
 				*/
 				('where' in this || 'when' in this)
 					? "Operations.where("
 						+ (this.where || this.when) + ","
-						+ (via || toJSLiteral(passArg)) + ","
-						+ toJSLiteral(failArg) + ")"
-					: (via || toJSLiteral(passArg))
+						+ (via || 'true') + ",null)"
+					: (via || 'true')
 			);
 			section.stack.shift();
 			return ret;
@@ -296,7 +295,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 				/*
 					Run the lambda, to determine whether to filter out this element.
 				*/
-				const passedFilter = this.apply(section, {loop:arg, pos:pos+1, pass:true, fail:false, ignoreVia:true, tempVariables});
+				const passedFilter = this.apply(section, {loop:arg, pos:pos+1, ignoreVia:true, tempVariables});
 				if ((error = TwineError.containsError(passedFilter))) {
 					return error;
 				}

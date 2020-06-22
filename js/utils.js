@@ -199,24 +199,6 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/polyfills'],
 		*/
 
 		/*
-			In some places, it's necessary to print numbers, strings and arrays of primitives
-			as JS literals, such as to incorporate them into partially compiled code.
-		*/
-		toJSLiteral(val) {
-			/*
-				Of course, JSON.stringify can handle the JS primitives that Harlowe uses, but
-				the JS exotic objects must be stringified manually like so.
-			*/
-			if (val instanceof Map) {
-				return "(new Map(" + Utils.toJSLiteral([...val.entries()]) + "))";
-			}
-			if (val instanceof Set) {
-				return "(new Set(" + Utils.toJSLiteral([...val.values()]) + "))";
-			}
-			return JSON.stringify(val);
-		},
-
-		/*
 			Takes a string argument, expressed as a CSS time,
 			and returns the time in milliseconds that it equals.
 

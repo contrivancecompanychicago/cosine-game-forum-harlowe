@@ -181,8 +181,8 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'section', 'engine', 'passa
 		});
 
 		// Set up the passage metadata
-		// (Yes, it's #awkward that Section.create needs a false dom like <p> to operate...)
-		const metadataErrors = Passages.loadMetadata(Section.create($('<p>')));
+		const tempSection = Section.create();
+		const metadataErrors = Passages.loadMetadata(tempSection);
 		if (metadataErrors.length) {
 			const d = dialog({
 				message: "These errors occurred when running the `(metadata:)` macro calls in this story's passages:<p></p>",
@@ -197,7 +197,7 @@ require(['jquery', 'debugmode', 'renderer', 'state', 'section', 'engine', 'passa
 		if (sessionData) {
 			// If deserialisation fails (i.e. it returned an Error instead of true),
 			// it means the sessionData is invalid. Just ignore it - it's only temporary data.
-			if (State.deserialise(sessionData) === true) {
+			if (State.deserialise(tempSection, sessionData) === true) {
 				// This is copied from (load-game:).
 				Engine.showPassage(State.passage, false /* stretchtext value */);
 				return;

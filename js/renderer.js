@@ -1,6 +1,6 @@
 "use strict";
 define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
-({escape, impossible, toJSLiteral, insensitiveName}, TwineMarkup, Compiler, TwineError) => {
+({escape, impossible, insensitiveName}, TwineMarkup, Compiler, TwineError) => {
 	/*
 		The Renderer takes the syntax tree from TwineMarkup and returns a HTML string.
 		
@@ -399,8 +399,8 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 							for debug mode display.
 						*/
 						const [linkGotoMacroToken] = TwineMarkup.lex("(link-goto:"
-							+ toJSLiteral(token.innerText) + ","
-							+ toJSLiteral(token.passage) + ")").children;
+							+ JSON.stringify(token.innerText) + ","
+							+ JSON.stringify(token.passage) + ")").children;
 
 						out += '<tw-expression type="macro" name="link-goto"'
 							// Debug mode: show the link syntax as a title.

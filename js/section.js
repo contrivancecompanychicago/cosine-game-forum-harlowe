@@ -552,11 +552,6 @@ define([
 			@return {Section} Object that inherits from this one.
 		*/
 		create(dom) {
-			// Just some overweening type-checking.
-			if(!(dom instanceof $ && dom.length === 1)) {
-				Utils.impossible('Section.create','called with no DOM element');
-			}
-			
 			/*
 				Install all of the non-circular properties.
 			*/

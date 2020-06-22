@@ -228,10 +228,13 @@ tw-debugger {
 			border-spacing: 0px;
 		}
 	}
-	.panel-source {
+	.panel-source, .variable-contents {
 		font-family:monospace;
 		overflow-x:scroll;
 		white-space:pre;
+	}
+	.variable-contents {
+		margin: 5px 0;
 	}
 	.panel-variables-empty {
 		.panel-variables-table::before {

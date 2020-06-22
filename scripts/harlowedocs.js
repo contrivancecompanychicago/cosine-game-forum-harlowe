@@ -82,15 +82,13 @@ outputFile = outputFile.replace(/<code>([^<]+)<\/code>(~?)/g, ({length}, code, n
 		},'');
 	}
 	code = unescape(code);
-	let ret = '', root, lastPos = 0;
+	let ret = '', root, lastPos = 0, modeStart;
 	// If the offset is inside the "Passage markup" section, OR is followed by a </pre>, use the normal mode.
 	// Otherwise, use the macro mode.
 	if (offset > sectionMarkupEnd && !outputFile.slice(offset + length).startsWith("</pre>")) {
-		modes.start = modes.macro;
-	} else {
-		modes.start = modes.markup;
+		modeStart = 'macro';
 	}
-	root = lex(code);
+	root = lex(code, 0, modeStart);
 	root.everyLeaf(token => {
 		while (token.start - root.start > lastPos) {
 			ret += `<span class="${makeCSSClasses(lastPos)}">${escape(code[lastPos])}</span>`;

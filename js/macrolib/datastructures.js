@@ -846,7 +846,7 @@ define([
 			Added in: 2.0.0
 			#data structure
 		*/
-		("altered", (section, lambda, ...args) => args.map((loop, pos) => lambda.apply(section, {loop, pos:pos+1, failArg: loop})),
+		("altered", (section, lambda, ...args) => args.map((loop, pos) => lambda.apply(section, {loop, pos:pos+1})),
 		[Lambda.TypeSignature('via'), zeroOrMore(Any)])
 		/*d:
 			(find: Lambda, [...Any]) -> Array
