@@ -439,6 +439,14 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 				if (error) {
 					return error;
 				}
+				/*
+					As an additional error, mistakenly attaching the wrong (t8n:) to a (link-goto:) macro will lead to
+					a helpful advisory error being emitted.
+				*/
+				if (cd.transition) {
+					const t = "transition";
+					return TwineError.create("datatype", "Please attach ("+t+"-depart:) or ("+t+"-arrive:) to a passage link, not ("+t+":).");
+				}
 
 				let source;
 				/*

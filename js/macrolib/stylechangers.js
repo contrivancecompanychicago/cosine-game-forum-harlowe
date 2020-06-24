@@ -610,6 +610,10 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			You can't combine transitions by adding them together, like you can with (text-style:) -
 			`(t8n:"dissolve")+(t8n:"shudder")` won't make a transition that simultaneously dissolve-fades and shudders.
 
+			While you can attach this to (link-show:) to change the transitions it uses, you can't use this macro to change
+			the passage transitions used by links or (link-goto:), and trying to do so will cause an error. Please use
+			(transition-depart:) or (transition-arrive:) for this purpose instead.
+
 			See also:
 			(text-style:), (transition-time:), (transition-delay:), (transition-skip:)
 

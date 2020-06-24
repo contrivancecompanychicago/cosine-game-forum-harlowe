@@ -758,7 +758,6 @@ define(['utils'], ({impossible}) => {
 			if(macroNameToken.type !== "macroName" && !variableCall) {
 				impossible('Compiler.compile', 'macro token had no macroName child token');
 			}
-			
 			midString = 'Macros.run' + (variableCall ? 'Custom' : '') + '('
 				+ (variableCall
 					? compile(macroNameToken)
@@ -781,13 +780,15 @@ define(['utils'], ({impossible}) => {
 					(That, of course, being the comma - (macro: 1,2,3) vs [1,2,3].)
 					This is currently true, but it is nonetheless a fairly bold assumption.
 				*/
-				+ compile(token.children.slice(1))
-				/*
-					There's an #awkward issue here: when lexing a custom macro, the variable is consumed,
-					but the trailing ":" isn't – it simply becomes loose text. So, that token (which is the
-					first token after this one) must be sliced off.
-				*/
-					.slice(+variableCall)
+				+ compile(token.children.slice(
+					1
+					/*
+						There's an #awkward issue here: when lexing a custom macro, the variable is consumed,
+						but the trailing ":" isn't – it simply becomes loose text. So, that token (which is the
+						first token after this one) must be sliced off.
+					*/
+					+ variableCall
+				))
 				+ '])';
 			needsLeft = needsRight = false;
 		}

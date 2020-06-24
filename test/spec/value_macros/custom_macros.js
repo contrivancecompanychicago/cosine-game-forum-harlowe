@@ -21,10 +21,16 @@ describe("custom macros", function() {
 		it("duplicate var names produces an error", function() {
 			expect("(set: $e to (macro:boolean-type _a, boolean-type _a))").markupToError();
 		});
+		it("typed vars can only be spread as the last variable", function() {
+			expect("(set: $e to (macro:str-type _a, ...str-type _b, num-type _c, [(output:1)]))").markupToError();
+			expect("(set: $e to (macro:str-type _a, ...str-type _b, ...num-type _c, [(output:1)]))").markupToError();
+			expect("(set: $e to (macro:...str-type _a, num-type _c, [(output:1)]))").markupToError();
+		});
 	});
 	describe("calling", function() {
 		beforeEach(function(){
 			runPassage("(set: $m to (macro:num-type _e, [(output:_e+10)]))");
+			runPassage("(set: $n to (macro:...num-type _e, [(output:_e)]))");
 		});
 		it("are called by writing a macro call with their variable in place of the name, and supplying arguments", function() {
 			expect("($m:5)").markupToPrint("15");
@@ -34,11 +40,19 @@ describe("custom macros", function() {
 			expect("($m:5,10)").markupToError();
 			expect("($m:)").markupToError();
 			expect("($m:1,2,3)").markupToError();
+			expect("($n:1,2,3,4,5,6,7,8)").not.markupToError();
+		});
+		it("values given to spread parameters become arrays", function() {
+			expect("(print:array matches ($n:1,2,3,4,5))").markupToPrint('true');
+		});
+		it("giving no values to spread parameters produces an empty array", function() {
+			expect("(print:array matches ($n:))").markupToPrint('true');
 		});
 		it("supplying the wrong type of arguments produces an error", function() {
 			expect("($m:'e')").markupToError();
 			expect("($m:(dm:'e',1))").markupToError();
 			expect("($m:true)").markupToError();
+			expect("($n:1,2,3,4,5,'e',6)").markupToError();
 		});
 		it("errors inside the custom macro are propagated outward", function() {
 			expect("(set: $m to (macro:num-type _e, [(output:_e+'f')]))($m:2)").markupToError();

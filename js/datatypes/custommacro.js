@@ -57,7 +57,7 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 		in which the body is executed, executes it, then returns the result.
 	*/
 	const macroEntryFn = (macro) => (section, ...args) => {
-		const {varNames, body} = macro;
+		const {varNames, params, body} = macro;
 		/*
 			The passed-in arguments to the custom macro become temp. variables
 			immediately.
@@ -67,7 +67,30 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 		const tempVariables = assign(create(VarScope), {
 			TwineScript_VariableStoreName: macro.TwineScript_ObjectName,
 		});
-		args.forEach((arg,i) => tempVariables[varNames[i]] = arg);
+		/*
+			Feed the values into the variables scope with the correct names, taking care to
+			make sure that rest params turn into arrays.
+		*/
+		let i = 0;
+		args.forEach((arg) => {
+			const name = varNames[i];
+			if (params[i].rest) {
+				tempVariables[name] = (tempVariables[name] || []).concat(arg);
+			}
+			else {
+				tempVariables[name] = arg;
+				i += 1;
+			}
+		});
+		/*
+			Of course, giving no values to a rest param is valid, too.
+		*/
+		if (args.length) {
+			i += 1;
+		}
+		if (params[i] && params[i].rest) {
+			tempVariables[varNames[i]] = [];
+		}
 
 		/*
 			Prepare the section stack by affixing the arguments, creating a sealed-off DOM to run the body,
@@ -146,6 +169,10 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 		},
 		TwineScript_Properties: ['params'],
 
+		TwineScript_Print() {
+			return "`[" + this.TwineScript_ObjectName + "]`";
+		},
+
 		TwineScript_ToSource() {
 			return "(macro:" + this.params.map(p => p.TwineScript_ToSource())
 				// This .concat() only adds a comma to the resulting string if params contained any other values.
@@ -161,7 +188,17 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 			const ret = Object.assign(Object.create(this), {
 				params,
 				varNames: params.map(p => p.varRef.propertyChain[0]),
-				typeSignature: params.map(p => p.datatype.toTypeSignatureObject()),
+				typeSignature: params.map(p => {
+					const type = p.datatype.toTypeSignatureObject({rest:p.rest});
+					/*
+						TypedVars, when "spread", become rest parameters. These should be translated
+						into the "zeroOrMore" pattern used by Macros.
+					*/
+					if (p.rest) {
+						return {pattern: "zero or more", innerType: type};
+					}
+					return type;
+				}),
 				body,
 				/*
 					knownName is assigned to whatever variable this data structure was last assigned to, by VarRef.set().

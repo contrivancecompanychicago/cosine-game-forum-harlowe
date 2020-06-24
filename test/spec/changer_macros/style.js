@@ -272,7 +272,11 @@ describe("style changer macros", function() {
 					var p = runPassage("|foo)[bar](t8n-time:12s)+("+name+":'pulse')(show:?foo)");
 					expect(p.find('[data-t8n="pulse"]').length).toBe(1);
 				});
-				it("changes the passage transitions of (link-show:)", function(done) {
+				it("errors if attached to (link-goto:)", function() {
+					expect("(t8n:'slide-right')(link-goto:'Test')").markupToError();
+					expect("(t8n:'slide-right')[[Test]]").markupToError();
+				});
+				it("changes the transitions of (link-show:)", function(done) {
 					var p = runPassage("[bar](foo|("+name+":'pulse')(link-show:'grault',?foo)");
 					p.find('tw-link').click();
 					setTimeout(function() {

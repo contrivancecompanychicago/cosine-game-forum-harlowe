@@ -33,7 +33,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		generative art, and so on. Being able to craft a personal language of macros in which to write the many algorithms such
 		games involve is essential to keeping your code succinct and readable.
 
-		Creating a custom macro:
+		Writing the parameters:
 
 		Custom macros consist of two structures: a set of data inputs (called *parameters*), and a body of code that creates the output.
 		Each of these is represented by two very specific data types, the TypedVar and the CodeHook.
@@ -44,7 +44,22 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		The datatypes are checked, and if they don't match (for instance, by incorrectly writing `($treasure: 155, "Gold Watch")`),
 		then an error will result. This ensures that incorrectly written custom macro calls are caught early, just like with built-in macros.
 
-		The CodeHook is where the code of your custom macro is written. You can (set:) temp variables in it, use (if:), (for:),
+		You might, on occasion, want to make a macro that can take an arbitrary amount of values, similar to certain built-in macros like `(a:)`,
+		`(altered:)`, and so forth. To do this, you can place the spread `...` syntax in front of a TypedVar. This turns it into a spread TypedVar,
+		which represents zero or more values of the same data type. Think of this as the opposite counterpart of the spread `...` syntax
+		in macro calls. Instead of turning one value (such as an array) into many spread-out values, this turns many values into a single array value.
+		A custom macro stored in $mean with `...num-type _n` can be called with `($mean:1,4,5,6)`, which sets _n to `(a:1,4,5,6)`. `($mean:2,3)` sets
+		_n to `(a:2,3)`, and `($mean:)` sets _n to `(a:)`. Note that because it takes every value at or after it, it must be the final TypedVar
+		of your custom macro.
+
+		```
+		(set: $mean to (macro: ...num-type _a, [(output:(folded:making _total via _total + it, ..._a) / _a's length)]))
+		One's 7 foot 4, one's 4 foot 7. Add 'em up and divide by two, ya get a regular ($mean:7 + 4/12, 4 + 7/12)-foot person.
+		```
+
+		Writing the code:
+
+		The CodeHook, conversely, is where the code of your custom macro is written. You can (set:) temp variables in it, use (if:), (for:),
 		(cond:) and so forth to run different sections of code, and output a final value using either (output:) or (output-hook:).
 		(Consult each of those macros' articles to learn the exact means of using them, and their differences.) The temp variables
 		specified by the TypedVars are automatically set with the passed-in data.
@@ -92,20 +107,26 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 				is how they semantically behave inside the code hook / macro body.
 			*/
 			if (!last) {
+				const ACM = "A custom macro";
 				if (parameters[i].varRef.object === State.variables) {
 					return TwineError.create("datatype",
-						"A custom macro's datatyped variables must be temp variables (with a '_'), not global variables (with a '$').",
+						ACM + "'s datatyped variables must be temp variables (with a '_'), not global variables (with a '$').",
 						"Write them with a _ sigil at the start instead of a $ sigil.");
 				}
 				if (parameters[i].varRef.propertyChain.length > 1) {
 					return TwineError.create("datatype",
-						"A custom macro's datatyped variables can't be properties inside a data structure."
+						ACM + "'s datatyped variables can't be properties inside a data structure."
+					);
+				}
+				if (parameters[i].rest && i !== parameters.length - 2) {
+					return TwineError.create("datatype",
+						ACM + " can only have one spread variable, and it must be its last variable."
 					);
 				}
 				const name = parameters[i].varRef.propertyChain[0];
 				if (names.includes(name)) {
 					return TwineError.create("datatype",
-						"A custom macro's datatyped variables can't both be named '" + name + "'."
+						ACM + "'s datatyped variables can't both be named '" + name + "'."
 					);
 				}
 				names.push(name);
