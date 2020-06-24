@@ -1,5 +1,84 @@
 
 /*** Debug mode ***/
+$zindex: 999999;
+
+.dom-debug-mode {
+	/*
+		CSS preview
+	*/
+	tw-story, tw-passage, tw-sidebar, tw-include, tw-hook, tw-expression, tw-link, tw-dialog, tw-columns, tw-column, tw-align {
+		$cssPreviewColour: hsl(320,80%,80%);
+		$cssPreviewColour2: hsl(30,100%,80%);
+		outline: 1px solid $cssPreviewColour;
+		min-height:32px;
+		display:block !important;
+		&::before {
+			position:absolute;
+			top:0;
+			left:0;
+			height:16px;
+			background-color: $cssPreviewColour;
+			color:black;
+			font-size:16px;
+			font-weight:normal;
+			font-style:normal;
+			font-family:monospace;
+			display:inline-block;
+			line-height:100%;
+			white-space:pre;
+			z-index: $zindex - 2;
+		}
+		&:hover {
+			outline: 1px solid  $cssPreviewColour2;
+			&::before {
+				background-color: $cssPreviewColour2;
+				transition: background-color 1s;
+			}
+		}
+	}
+	tw-passage, tw-include, tw-hook, tw-expression, tw-link, tw-dialog, tw-columns, tw-column, tw-align {
+		padding:1em;
+		margin:0;
+	}
+	tw-story::before {
+		content: "<tw-story tags=\"" attr(tags) "\">";
+	}
+	tw-passage::before {
+		top:-16px;
+		content: "<tw-passage tags=\"" attr(tags) "\">";
+	}
+	tw-sidebar::before {
+		top:-16px;
+		content: "<tw-sidebar>";
+	}
+	tw-hook::before {
+		content: "<tw-hook name=\"" attr(name) "\">";
+	}
+	tw-expression {
+		&::before {
+			content: "<tw-expression name=\"" attr(name) "\">";
+		}
+	}
+	tw-link::before {
+		content: "<tw-link name=\"" attr(name) "\">";
+	}
+	tw-dialog::before {
+		content: "<tw-dialog>";
+	}
+	tw-columns::before {
+		content: "<tw-columns>";
+	}
+	tw-column::before {
+		content: "<tw-column>";
+	}
+	tw-align::before {
+		content: "<tw-align>";
+	}
+	tw-include::before {
+		content: "<tw-include type=\"" attr(type) "\" title=\"" attr(title) "\">";
+	}
+}
+
 .debug-mode {
 	@mixin tiny-annotation() {
 		font-size: 0.8rem;
@@ -147,7 +226,6 @@
 	50%   { border-color: hsl(160,100%,70%); }
 }
 
-$zindex: 999999;
 $borderwidth: 2px;
 $borderradius: 0.5em;
 $background: white;
@@ -162,7 +240,7 @@ tw-debugger {
 	z-index: $zindex;
 	min-width: 10em;
 	min-height: 1em;
-	padding: 0em 1em 1em 1em;
+	padding: 0em 0.5em 0.5em 1em;
 
 	// Font
 	font-size: 1.25em;
@@ -228,27 +306,41 @@ tw-debugger {
 			border-spacing: 0px;
 		}
 	}
-	.panel-source, .variable-contents {
+	.panel-source, .panel-row-source {
 		font-family:monospace;
 		overflow-x:scroll;
 		white-space:pre;
+		flex-basis: 100%;
 	}
-	.variable-contents {
+	.panel-row-source {
 		margin: 5px 0;
 	}
-	.panel-variables-empty {
-		.panel-variables-table::before {
-			font-style:italic;
+	@mixin emptyMsg {
+		font-style:italic;
+		color:#888;
+		text-align:center;
+	}
+	.panel-variables {
+		.panel-rows:empty::before {
 			content:"~ No variables ~";
-			color:#888;
-			text-align:center;
+			@include emptyMsg();
 		}
-		.panel-variables-bottom {
+		.panel-rows:empty + .panel-variables-bottom {
 			display:none;
 		}
 	}
-
-	.variable-row {
+	.panel-variables-bottom {
+		padding-top:5px;
+	}
+	.panel-enchantments .panel-rows:empty::before {
+		content:"~ No enchantments ~";
+		@include emptyMsg();
+	}
+	.panel-errors .panel-rows:empty::before {
+		content:"~ No errors... for now. ~";
+		@include emptyMsg();
+	}
+	.variable-row, .enchantment-row {
 		@include flexbox;
 		@include flex-direction(row);
 		flex-shrink: 0;
@@ -256,22 +348,14 @@ tw-debugger {
 		&:nth-child(2n) {
 			background:#EEE;
 		}
-		.variable-name{
-			display:inline-block;
-			width:40%;
-		}
-		.variable-value {
-			display:inline-block;
-			width:40%;
-		}
-		.variable-buttons {
-			width: 20%;
-			display:inline-block;
-		}
+		min-height:1.5em;
+	}
+	.variable-row {
 		.variable-path {
 			opacity:0.4;
 		}
 		.temporary-variable-scope {
+			font-family:sans-serif;
 			opacity:0.8;
 			font-size:0.75em;
 			&::before {
@@ -284,21 +368,35 @@ tw-debugger {
 		.temporary::before {
 			content: "_";
 		}
-		.variable-contents {
-			flex-basis: 100%;
-			white-space: pre;
-		}
+	}
+	.variable-name, .enchantment-name {
+		color:#444;
+		font-family:monospace;
+		font-weight:bold;
+	}
+	.variable-name, .variable-value, .enchantment-name, .enchantment-value {
+		display:inline-block;
+		width:40%;
+	}
+	.panel-row-buttons {
+		width: 20%;
+		display:inline-block;
 	}
 	.error-row {
+		display:table-row;
 		background-color: hsla(312, 72%, 65%, 0.3);
 		&:nth-child(2n) {
 			background-color: hsla(312, 72%, 75%, 0.3);
 		}
 		* {
+			display:table-cell;
 			padding: 0.25em 0.5em;
 		}
 		.error-message {
 			cursor: help;
+		}
+		.error-passage {
+			color:#444;
 		}
 	}
 	.storylet-row {
@@ -317,7 +415,7 @@ tw-debugger {
 				background-color: hsla(160, 0%, 65%, 0.3);
 			}
 		}
-		&.storylet-error {
+		.storylet-error & {
 			background-color: hsla(312, 72%, 65%, 0.3);
 			&:nth-child(2n) {
 				background-color: hsla(312, 72%, 75%, 0.3);

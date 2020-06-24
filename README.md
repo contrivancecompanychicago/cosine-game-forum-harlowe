@@ -92,13 +92,18 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added CodeHooks, which are special kinds of hooks that go inside macro calls, rather than just in passage prose. These are used to write the inner code of custom macros. You can use `(if:)`, `(for:)`, `(set:)`, and most other macros inside one. Their contents are invisible at runtime - only the result produced by `(output:)` or `(output-hook:)` is visible - so you can comment your code by simply writing prose inside it.
  * Added a new operator, `-type`, which is used to define the parameters of custom macros. Place a datatype (such as `str` or `dm`) in front, and a temp variable after it (such as `str-type _name`) and you have a TypedVar, which is a variable name combined with a datatype. When you call a custom macro, each value provided to it is compared with the datatype, then placed in the temp variable when the CodeHook is run. `(set: $earthName to (macro: boolean-type _isFuture, [(output:(cond: _isFuture, "Terra","Earth"))]))` produces a custom macro that can be called by writing `($earthName: true)` or `($earthName: false)`, and produces an error when you write `($earthName: 2)`.
 
-#####Other
+#####Debug Mode
 
+ * Added a debug mode panel listing which enchantments are present in the passage, and the changers they contain. This highlights `(enchant:)` effects, as well as `(click:)`, `(mouseover:)` and `(mouseout:)`.
  * Added a debug mode panel listing which storylet passages are currently available, and their 'where' lambdas. This panel is only visible if you have `(storylet:)` macros in your story.
  * The debug mode vaiables panel now has a "(source:)" button for each variable containing a complex value (i.e. not a string, boolean, number), letting you examine and copy that variable's value as Harlowe code.
  * The debug mode variables panel now has a "Copy $ variables as (set:) call" button at the bottom, which copies to the clipboard a string of Harlowe code that will (set:) each global variable to their currently displayed value.
  * The debug view now reveals command macros and expressions, such as `(enchant:)`, which don't print anything and are normally hidden during play.
+ * Added an alternative debug view, "DOM view", which labels the unique elements on the page with their current HTML tag and a few relevant attributes, as well as spacing out the elements to better distinguish them. The elements that will be highlighted this way are `<tw-story>`, `<tw-passage>`, `<tw-sidebar>`, `<tw-include>`, `<tw-hook>`, `<tw-expression>`, `<tw-link>`, `<tw-dialog>`, `<tw-columns>`, `<tw-column>`, and `<tw-align>`.
  * Now, whenever the first error of your story is displayed, debug mode will automatically, immediately enable itself, so you can begin debugging there and then.
+
+#####Other
+
  * The syntax highlighter no longer highlights syntactic elements inside strings. While this had some fringe benefit in cases where strings contained code to be printed, I've decided it's too distracting in more usual cases.
  * The syntax highlighter now colourises macro names based on their returned data type.
  * Added a `<noscript>` element to the output HTML, containing a sentence instructing that JavaScript should be enabled to play the story (as per SugarCube).

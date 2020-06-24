@@ -541,6 +541,14 @@ define([
 		setTimeout(recursive, delay);
 	}
 
+
+	/*
+		Debug Mode event handlers (for adding and removing enchantments) are stored here by onEnchant().
+	*/
+	const eventHandlers = {
+		add: [], remove: [],
+	};
+
 	Section = {
 		/*
 			Creates a new Section which inherits from this one.
@@ -1062,6 +1070,28 @@ define([
 				*/
 				e.enchantScope();
 			});
+		},
+
+		/*
+			This is used exclusively by Debug Mode to add the handlers for adding and removing enchantments.
+
+			This is a static method shared by all Sections.
+		*/
+		on(event, fn) {
+			eventHandlers[event].push(fn);
+			return this;
+		},
+
+		addEnchantment(enchantment) {
+			this.enchantments.push(enchantment);
+			eventHandlers.add.forEach(fn => fn(this, enchantment));
+		},
+
+		removeEnchantment(enchantment) {
+			const index = this.enchantments.indexOf(enchantment);
+			this.enchantments.splice(index,1);
+			enchantment.disenchant();
+			eventHandlers.remove.forEach(fn => fn(this, enchantment));
 		},
 
 		/*

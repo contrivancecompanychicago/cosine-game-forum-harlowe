@@ -103,7 +103,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'passages', 'macros
 				[ChangerCommand.isPrototypeOf(changer) ? "changer" : "lambda"]: changer,
 				section,
 			});
-			section.enchantments.push(enchantment);
+			section.addEnchantment(enchantment);
 			/*
 				section.updateEnchantments() will be run automatically after
 				this has been executed, meaning we don't have to do it here.
@@ -466,9 +466,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'passages', 'macros
 								/*
 									Remove this enchantment from the Section's list.
 								*/
-								const index = desc.section.enchantments.indexOf(enchantData);
-								desc.section.enchantments.splice(index,1);
-								enchantData.disenchant();
+								desc.section.removeEnchantment(enchantData);
 							}
 							/*
 								If the enchantDesc has a "goto" property, then instead of filling the
@@ -508,11 +506,15 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'passages', 'macros
 					},
 					scope: selector,
 					section: desc.section,
+					/*
+						This name is used exclusively by Debug Mode.
+					*/
+					name,
 				});
 				/*
 					Add the above object to the section's enchantments.
 				*/
-				desc.section.enchantments.push(enchantData);
+				desc.section.addEnchantment(enchantData);
 				/*
 					Enchant the scope for the first time.
 				*/
@@ -711,7 +713,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'passages', 'macros
 		A separate click event needs to be defined for an .enchantment-clickblock wrapping <tw-story>, which is explained below.
 	*/
 	Utils.onStartup(() => {
-		interactionTypes.forEach(({enchantDesc}) => {
+		interactionTypes.forEach(({name, enchantDesc}) => {
 			if (enchantDesc.blockClassList) {
 				Utils.storyElement.on(
 					/*

@@ -20,15 +20,11 @@ describe("metadata macros", function() {
 		});
 	});
 	describe("the (open-storylets:) macro", function() {
-		afterEach(function() {
-			createStoryletsDebugTable();
-		});
 		it("returns a sorted array of passages with (storylet:) in their prose, whose lambda returns true", function() {
 			createPassage("**foobarbaz(storylet: when  true is true)**", "grault");
 			createPassage("|a>[(storylet: when  $a is 1)]", "garply");
 			createPassage("(storylet: when  true is false)", "corge");
 			createPassage("(storylet: when  $a is > 1)", "quux");
-			createStoryletsDebugTable();
 			runPassage("(set: $a to 1)");
 			expect("(for: each _a, ...(open-storylets:))[(print:_a's name) ]").markupToPrint("garply grault ");
 			runPassage("(set: $a to 2)");

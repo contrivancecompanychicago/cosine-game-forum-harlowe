@@ -915,6 +915,8 @@
 		/*
 			Property accesses
 		*/
+
+		validPropertyName,
 		
 		property,
 		propertyPeek: "'s",

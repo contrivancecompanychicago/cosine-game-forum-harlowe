@@ -22,7 +22,7 @@ require.config({
 		'jqueryplugins',
 	],
 });
-require(['jquery', 'debugmode', 'renderer', 'state', 'section', 'engine', 'passages', 'utils', 'utils/renderutils', 'internaltypes/twineerror', 'macros',
+require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', 'passages', 'utils', 'utils/renderutils', 'internaltypes/twineerror', 'macros',
 	'macrolib/values', 'macrolib/commands', 'macrolib/datastructures', 'macrolib/stylechangers', 'macrolib/enchantments', 'macrolib/metadata',
 	'macrolib/links', 'macrolib/custommacros', 'repl'],
 		($, DebugMode, Renderer, State, Section, Engine, Passages, Utils, {dialog}, TwineError) => {

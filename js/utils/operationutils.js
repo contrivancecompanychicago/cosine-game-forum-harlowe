@@ -1,5 +1,6 @@
 "use strict";
-define(['jquery','utils/naturalsort','utils', 'internaltypes/twineerror'], ($, NaturalSort, {impossible, nth, insensitiveName, permutations}, TwineError) => {
+define(['jquery','utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
+	($, NaturalSort, {impossible, nth, insensitiveName, permutations}, TwineError, {validPropertyName}) => {
 	
 	/*
 		Some cached strings to save a few characters when this is compiled. Yes, these are Hungarian Notated... well spotted.
@@ -414,6 +415,16 @@ define(['jquery','utils/naturalsort','utils', 'internaltypes/twineerror'], ($, N
 		*/
 		if (typeof obj === sNumber && isProperty === 'property') {
 			return obj < 0 ? obj === -1 ? "last" : nth(-obj) + "last" : nth(obj+1);
+		}
+		/*
+			String properties should, usually, be string literals wrapped in parens, but if it's
+			already a valid property name, don't do so.
+		*/
+		if (typeof obj === sString && isProperty === 'property') {
+			if (!RegExp(validPropertyName).test(obj)) {
+				return "(" + JSON.stringify(obj) + ")";
+			}
+			return obj;
 		}
 		/*
 			What remains should be only JS primitives.

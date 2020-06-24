@@ -90,7 +90,7 @@ dist/format.js: build/harlowe-min.js build/twinemarkup-min.js css
 	| $(call node_replace, $(css)) \
 	> dist/format.js
 
-examplestory = "{{STORY_DATA}}", "<tw-storydata startnode=1><tw-passagedata pid=1 name=Start>(metadata: \"foo\", 1)(enchant:?Page,(background:white)+(color:black))[[Next]]</tw-passagedata><tw-passagedata pid=2 name=Next>[[Last]]</tw-passagedata><tw-passagedata pid=3 name=Last>**Success**</tw-passagedata></tw-storydata>"
+examplestory = "{{STORY_DATA}}", "<tw-storydata startnode=1 options=debug><tw-passagedata pid=1 name=Start>(enchant:?Page,(background:white)+(color:black))[[Next]]</tw-passagedata><tw-passagedata pid=2 name=Next>[[Last]]</tw-passagedata><tw-passagedata pid=3 name=Last>**Success**</tw-passagedata></tw-storydata>"
 examplename = "{{STORY_NAME}}", "Example Output File"
 engine_raw = "{{HARLOWE}}", "<script title=\"Twine engine code\" data-main=\"harlowe\">" + read("build/harlowe-min.js") + "</script>\n"
 css_raw = "{{CSS}}", "<style title=\"Twine CSS\">" + read("build/harlowe-css.css") + "</style>"

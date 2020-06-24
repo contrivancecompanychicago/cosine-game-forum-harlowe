@@ -1352,7 +1352,7 @@ define([
 			if (err) {
 				return err;
 			}
-			return result.sort((a,b) => sort(a.get('name'), b.get('name')));
+			return result.map(clone).sort((a,b) => sort(a.get('name'), b.get('name')));
 		},
 		[optional(Lambda.TypeSignature('where'))])
 

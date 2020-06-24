@@ -19,10 +19,10 @@ define(['utils', 'utils/operationutils', 'internaltypes/changedescriptor', 'inte
 		TwineScript_TypeID: "changer",
 
 		TwineScript_TypeName:
-			"a changer command",
+			"a changer",
 		
 		TwineScript_Print() {
-			return "`[A (" + this.macroName + ":) command]`";
+			return "`[A (" + this.macroName + ":) changer]`";
 		},
 
 		TwineScript_ToSource() {
@@ -69,7 +69,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/changedescriptor', 'inte
 					with. In this way, composed ChangerCommands are linked lists.
 				*/
 				next,
-				TwineScript_ObjectName:   "a ("  + macroName + ":) command",
+				TwineScript_ObjectName:   "a ("  + macroName + ":) changer",
 			});
 		},
 		

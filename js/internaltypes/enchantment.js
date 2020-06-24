@@ -19,7 +19,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 			scope to enchant.
 		*/
 		create(descriptor) {
-			Utils.assertOnlyHas(descriptor, ['scope', 'section', 'attr', 'data', 'changer', 'functions', 'lambda']);
+			Utils.assertOnlyHas(descriptor, ['scope', 'section', 'attr', 'data', 'changer', 'functions', 'lambda', 'name']);
 
 			return Object.assign(Object.create(this), {
 				/*
