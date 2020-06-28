@@ -121,6 +121,17 @@ describe("save macros", function() {
 				done();
 			}, 20);
 		});
+		it("restores the saved game's typed variables", function(done) {
+			runPassage("(set:str-type $foo to 'A')", "uno");
+			runPassage("(set:$foo to it+'B')(savegame:'1','Filename')", "dos");
+			runPassage("(set:str-type $bar to 'C')", "tres");
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("(set:num-type $bar to 2)").not.markupToError();
+				expect("(set:num-type $foo to 2)").markupToError();
+				done();
+			}, 20);
+		});
 		it("can restore collection variables", function(done) {
 			runPassage(
 				"(set:$arr to (a:'egg'))" +

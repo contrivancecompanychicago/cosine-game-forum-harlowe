@@ -137,6 +137,17 @@ describe("interface macros", function(){
 						done();
 					},20);
 				});
+				it("respects typed variables", function(done) {
+					runPassage("(set: num-type $foo to 1)(set:_bar to 'qux')");
+					expect("("+name+": bind $foo, 'bar', 'baz', 'qux')").markupToError();
+
+					var p = runPassage("("+name+": bind $foo, 'bar', 'baz', 'qux')(set: num-type $foo to 1)");
+					p.find('tw-link').click();
+					setTimeout(function(){
+						expect(p.find('tw-error:not(.javascript)').length).toBe(1);
+						done();
+					},20);
+				});
 				it("works when saved in another passage", function() {
 					runPassage("(set:_bar to 'qux')(set:$foo to ("+name+":'_bar','foo'))");
 					expect('(set:_bar to "baz")$foo').markupToPrint("baz");

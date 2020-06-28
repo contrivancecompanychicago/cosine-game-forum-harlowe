@@ -35,6 +35,7 @@ describe("custom macros", function() {
 		it("are called by writing a macro call with their variable in place of the name, and supplying arguments", function() {
 			expect("($m:5)").markupToPrint("15");
 			expect("(print:($m:5)+5)").markupToPrint("20");
+			expect("(print:($m:10/5))").markupToPrint("12");
 		});
 		it("supplying the wrong number of arguments produces an error", function() {
 			expect("($m:5,10)").markupToError();
@@ -53,6 +54,10 @@ describe("custom macros", function() {
 			expect("($m:(dm:'e',1))").markupToError();
 			expect("($m:true)").markupToError();
 			expect("($n:1,2,3,4,5,'e',6)").markupToError();
+		});
+		it("variables are type-restricted", function() {
+			expect("(set: $m to (macro:num-type _e, [(set:_e to true)(output:_e)]))($m:2)").markupToError();
+			expect("(set:$g to (a:true), $m to (macro:num-type _e, [(move:$g's 1st into _e)(output:_e)]))($m:2)").markupToError();
 		});
 		it("errors inside the custom macro are propagated outward", function() {
 			expect("(set: $m to (macro:num-type _e, [(output:_e+'f')]))($m:2)").markupToError();

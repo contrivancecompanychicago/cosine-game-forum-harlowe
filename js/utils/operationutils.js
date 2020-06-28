@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery','utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
-	($, NaturalSort, {impossible, nth, insensitiveName, permutations}, TwineError, {validPropertyName}) => {
+define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
+	(NaturalSort, {impossible, nth, insensitiveName, permutations}, TwineError, {validPropertyName}) => {
 	
 	/*
 		Some cached strings to save a few characters when this is compiled. Yes, these are Hungarian Notated... well spotted.
@@ -17,6 +17,15 @@ define(['jquery','utils/naturalsort','utils', 'internaltypes/twineerror', 'patte
 	*/
 	function isObject(value) {
 		return !!value && (typeof value === sObject || typeof value === sFunction);
+	}
+
+	/*
+		Unlike $.isPlainObject, this checks if the object is directly descended from Object.prototype.
+		Pure objects are used for minor data that really, really doesn't need to be its own class:
+		HookSet property ranges, type descriptor patterns, changer params, etc.
+	*/
+	function isPureObject(obj) {
+		return obj && Object.getPrototypeOf(obj) === Object.prototype;
 	}
 	
 	/*
@@ -285,7 +294,7 @@ define(['jquery','utils/naturalsort','utils', 'internaltypes/twineerror', 'patte
 		@return {String}
 	*/
 	function typeName(obj) {
-		const plain = Object.getPrototypeOf(obj) === Object.prototype;
+		const plain = isPureObject(obj);
 		if (plain && obj.innerType) {
 			/*
 				Some type descriptors have a special name that isn't JUST the innerType's
@@ -387,7 +396,7 @@ define(['jquery','utils/naturalsort','utils', 'internaltypes/twineerror', 'patte
 			These property ranges, "1stto2ndlast" etc., are saved by HookSets,
 			and need to be serialised with them.
 		*/
-		if (Object.getPrototypeOf(obj) === Object.prototype && "first" in obj && "last" in obj) {
+		if (isPureObject(obj) && "first" in obj && "last" in obj) {
 			return (obj.first < 0 ? (obj.first !== -1 ? nth(-obj.first) : "") + "last" : nth(obj.first+1)) + "to"
 				+ (obj.last < 0 ? (obj.last !== -1 ? nth(-obj.last) : "") + "last" : nth(obj.last+1));
 		}
@@ -481,11 +490,10 @@ define(['jquery','utils/naturalsort','utils', 'internaltypes/twineerror', 'patte
 			return l.TwineScript_is(r);
 		}
 		/*
-			For plain objects (such as ChangerCommand params), compare structurally.
+			For plain objects (such as Changer params), compare structurally.
 		*/
 		if (l && typeof l === sObject && r && typeof r === sObject
-				&& Object.getPrototypeOf(l) === Object.prototype
-				&& Object.getPrototypeOf(r) === Object.prototype) {
+				&& isPureObject(l) && isPureObject(r)) {
 			return is(
 				Object.getOwnPropertyNames(l).map(name => [name, l[name]]),
 				Object.getOwnPropertyNames(r).map(name => [name, r[name]])
@@ -695,7 +703,7 @@ define(['jquery','utils/naturalsort','utils', 'internaltypes/twineerror', 'patte
 		else if (Array.isArray(value)) {
 			return value.map(printBuiltinValue) + "";
 		}
-		else if (value instanceof $) {
+		else if (value && typeof value.jquery === sString) {
 			return value;
 		}
 		/*
@@ -738,6 +746,7 @@ define(['jquery','utils/naturalsort','utils', 'internaltypes/twineerror', 'patte
 	
 	const OperationUtils = Object.freeze({
 		isObject,
+		isPureObject,
 		singleTypeCheck,
 		isValidDatamapName,
 		collectionType,

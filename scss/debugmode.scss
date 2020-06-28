@@ -362,21 +362,18 @@ tw-debugger {
 				content: " in ";
 			}
 		}
-		.global::before {
-			content: "$";
-		}
-		.temporary::before {
-			content: "_";
-		}
 	}
 	.variable-name, .enchantment-name {
-		color:#444;
 		font-family:monospace;
 		font-weight:bold;
 	}
 	.variable-name, .variable-value, .enchantment-name, .enchantment-value {
 		display:inline-block;
 		width:40%;
+	}
+	.variable-type {
+		color:#444;
+		font-weight:normal;
 	}
 	.panel-row-buttons {
 		width: 20%;

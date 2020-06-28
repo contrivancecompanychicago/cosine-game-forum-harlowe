@@ -146,7 +146,7 @@ define(['utils'], ({impossible}) => {
 			["comma"],
 			{rightAssociative: ["spread", "bind"]},
 			["to","into"],
-			["typeSignature"],
+			["typeSignature"], // the "-type" operator
 			["where", "when", "via"],
 			["with", "making", "each"],
 			["augmentedAssign"],

@@ -1,5 +1,5 @@
 "use strict";
-define(['utils'], ({assertMustHave}) => {
+define([], () => {
 	/*
 		AssignmentRequests represent an assignment statement. Different
 		macros may handle this request differently (for instance,
@@ -25,9 +25,11 @@ define(['utils'], ({assertMustHave}) => {
 		TwineScript_Unstorable: true,
 		
 		create(dest, src, operator) {
-			// Assert: dest is a varRef
-			assertMustHave(dest, ["varref"]);
-			
+			/*
+				AssignmentRequests currently cannot accept rest TypedVars. However, due to the compiler giving spread
+				higher precedence than "to" or "into", it's currently not possible for AssignmentRequests to be generated
+				that have spread TypedVars as their arguments anyway.
+			*/
 			return Object.assign(Object.create(this), {
 				dest:              dest,
 				src:               src,

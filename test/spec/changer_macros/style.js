@@ -262,7 +262,7 @@ describe("style changer macros", function() {
 					setTimeout(function() {
 						expect(p.find('[data-t8n="pulse"]').length).toBe(1);
 						done();
-					});
+					},20);
 				});
 				it("with (link:), doesn't transition the link in immediately", function() {
 					var p = runPassage("("+name+":'pulse')+(link:'grault')[garply]");
@@ -282,7 +282,7 @@ describe("style changer macros", function() {
 					setTimeout(function() {
 						expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
 						done();
-					});
+					},20);
 				});
 				['click','click-replace','click-append','click-prepend',
 				'mouseover','mouseover-replace','mouseover-append','mouseover-prepend'].forEach(function(name2) {
@@ -293,7 +293,7 @@ describe("style changer macros", function() {
 						setTimeout(function() {
 							expect(p.find('[data-t8n="pulse"]').length).toBe(1);
 							done();
-						});
+						},20);
 					});
 					it("with (" + name2 + ":), doesn't transition the link in immediately", function() {
 						var p = runPassage("foo("+name+":'pulse')("+name2+":'foo','grault')");
@@ -307,7 +307,7 @@ describe("style changer macros", function() {
 					setTimeout(function() {
 						expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
 						done();
-					});
+					},20);
 				});
 				it("changes the passage transitions of (undo:)", function(done) {
 					runPassage("foo","grault");
@@ -315,7 +315,7 @@ describe("style changer macros", function() {
 					setTimeout(function() {
 						expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
 						done();
-					});
+					},20);
 				});
 				['link-goto','link-undo','click-goto','mouseover-goto'].forEach(function(name2) {
 					var interaction = (name2 === 'mouseover-goto') ? "mouseenter" : "click";
@@ -328,7 +328,7 @@ describe("style changer macros", function() {
 							expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
 							done();
 						});
-					});
+					},20);
 				});
 				it("changes the passage transitions of (link-undo:)", function(done) {
 					runPassage("foo","grault");
@@ -337,7 +337,7 @@ describe("style changer macros", function() {
 					setTimeout(function() {
 						expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
 						done();
-					});
+					},20);
 				});
 				it("changes the passage transitions of ?Link", function(done) {
 					createPassage("foo","grault");
@@ -346,7 +346,7 @@ describe("style changer macros", function() {
 					setTimeout(function() {
 						expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
 						done();
-					});
+					},20);
 				});
 				if (name === "transition-arrive") {
 					describe("works when combined with (transition-depart:)", function() {
@@ -357,7 +357,7 @@ describe("style changer macros", function() {
 								expect($('tw-story tw-transition-container.transition-out[data-t8n="dissolve"]').length).toBe(1);
 								expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
 								done();
-							});
+							},20);
 						});
 						it("on (undo:)", function(done) {
 							runPassage("foo","grault");
@@ -366,7 +366,7 @@ describe("style changer macros", function() {
 								expect($('tw-story tw-transition-container.transition-out[data-t8n="dissolve"]').length).toBe(1);
 								expect($('tw-story tw-transition-container.transition-in[data-t8n="pulse"]').length).toBe(1);
 								done();
-							});
+							},20);
 						});
 						['link-goto','link-undo','click-goto','mouseover-goto'].forEach(function(name2) {
 							var interaction = (name2 === 'mouseover-goto') ? "mouseenter" : "click";
@@ -379,7 +379,7 @@ describe("style changer macros", function() {
 									expect($('tw-story tw-transition-container.transition-out[data-t8n="dissolve"]').length).toBe(1);
 									expect($('tw-story tw-transition-container.transition-in[data-t8n="pulse"]').length).toBe(1);
 									done();
-								});
+								},20);
 							});
 						});
 						it("with (enchant: ?Link)", function(done) {
@@ -390,7 +390,7 @@ describe("style changer macros", function() {
 								expect($('tw-story tw-transition-container.transition-out[data-t8n="dissolve"]').length).toBe(1);
 								expect($('tw-story tw-transition-container.transition-in[data-t8n="pulse"]').length).toBe(1);
 								done();
-							});
+							},20);
 						});
 					});
 				}

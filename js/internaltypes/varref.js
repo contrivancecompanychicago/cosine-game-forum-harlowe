@@ -1,6 +1,6 @@
 "use strict";
 define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'datatypes/hookset'],
-(State, TwineError, {impossible, andList, nth}, {isObject, isSequential, objectName, typeName, clone, isValidDatamapName, subset}, HookSet) => {
+(State, TwineError, {impossible, andList, nth}, {isObject, isSequential, objectName, typeName, clone, isValidDatamapName, subset, isPureObject}, HookSet) => {
 	/*
 		VarRefs are essentially objects pairing a chain of properties
 		with an initial variable reference - "$red's blue's gold" would be
@@ -269,41 +269,41 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 	}
 
 	/*
-		As Maps have a different means of accessing stored values
+		As Maps and other objects have a different means of accessing stored values
 		than arrays, these tiny utility functions are needed.
 		They have the slight bonus that they can fit into some .reduce() calls
 		below, which potentially offsets the cost of being re-created for each varRef.
 		
 		Note: strings cannot be passed in here as obj because of their UCS-2 .length:
-		you must pass Array.from(str) instead.
+		you must pass [...str] instead.
 	*/
 	function objectOrMapGet(obj, prop) {
 		if (obj === undefined) {
 			return obj;
-		} else if (obj instanceof Map
+		}
+		if (obj instanceof Map
 				/*
 					This should only be wrapped errors from wrapError(),
 					such as in "_foo of $corge" where _foo doesn't exist.
 				*/
-				|| obj.varref) {
+				|| VarRefProto.isPrototypeOf(obj)) {
 			return obj.get(prop);
-		} else {
-			if (isSequential(obj) && Number.isFinite(prop)) {
-				prop = convertNegativeProp(obj,prop);
-			}
-			if (prop === "any" || prop === "all") {
-				return createDeterminer(obj,prop);
-			}
-			if (obj.TwineScript_GetProperty) {
-				return obj.TwineScript_GetProperty(prop);
-			}
-			/*
-				This shouldn't be accessible to user-authored code... but I might as well leave it.
-			*/
-			const ret = obj[prop];
-			if (typeof ret !== "function") {
-				return ret;
-			}
+		}
+		if (isSequential(obj) && Number.isFinite(prop)) {
+			prop = convertNegativeProp(obj,prop);
+		}
+		if (prop === "any" || prop === "all") {
+			return createDeterminer(obj,prop);
+		}
+		if (obj.TwineScript_GetProperty) {
+			return obj.TwineScript_GetProperty(prop);
+		}
+		/*
+			This shouldn't be accessible to user-authored code... but I might as well leave it.
+		*/
+		const ret = obj[prop];
+		if (typeof ret !== "function") {
+			return ret;
 		}
 	}
 	
@@ -315,7 +315,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 	function propertyDebugName(prop) {
 		if (prop.computed) {
 			let {value} = prop;
-			if (value.varref) {
+			if (VarRefProto.isPrototypeOf(value)) {
 				value = value.get();
 			}
 			if (typeof value === "string") {
@@ -328,16 +328,34 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		}
 		return "'" + prop + "'";
 	}
-	
+
 	/*
 		Determine, before running objectOrMapSet, whether trying to
-		set this property will work. If not, create a TwineError.
+		set any value to this property will work. If not, create a TwineError.
 	*/
-	function canSet(obj, prop) {
+	function canSet(obj, prop, value) {
 		/*
 			First, variable stores.
 		*/
 		if (obj.TwineScript_VariableStore) {
+			/*
+				Currently, only variable stores have TypeDefs, and thus typed variables.
+				The following code performs the type-checking that the TypeDefs provide.
+			*/
+			if (obj.TwineScript_TypeDefs && prop in obj.TwineScript_TypeDefs) {
+				/*
+					This should never be called when prop is an array - the map() below should always sort it out.
+				*/
+				const type = obj.TwineScript_TypeDefs[prop];
+				if (!type.TwineScript_IsTypeOf(value)) {
+					return TwineError.create('operation',
+						"I can't set "
+						+ (obj === State.variables ? "$" : "_") + prop + " to " + typeName(value)
+						+ " because it's already been restricted to " + type.name + "-type data.",
+						"You can restrict a variable or data name by giving a typed variable to (set:) or (put:)."
+					);
+				}
+			}
 			return true;
 		}
 		/*
@@ -455,24 +473,11 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 	
 	/*
 		This helper function wraps a TwineError so that it can be a valid return
-		value for VarRefProto.create().
+		value for VarRefProto.create(), due to a number of its consumers being
+		ill-equipped to deal with errors there and then.
 	*/
 	function wrapError(error) {
-		/*
-			VarRefProto's return value is generally assumed to have these three
-			methods on it. By providing this dummy wrapper whenever an error
-			is returned, the error can be safely delivered when those expected
-			methods are called.
-		*/
-		function self() {
-			return error;
-		}
-		return {
-			get: self,
-			set: self,
-			delete: self,
-			varref: true,
-		};
+		return Object.assign(Object.create(VarRefProto), { error });
 	}
 
 	/*
@@ -543,7 +548,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		if (typeof obj === "string") {
 			obj = [...obj];
 		}
-		const result =  objectOrMapGet(obj, prop);
+		const result = objectOrMapGet(obj, prop);
 		/*
 			An additional error condition exists for get(): if the property
 			doesn't exist, don't just return undefined.
@@ -625,9 +630,13 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		The prototype object for VarRefs.
 	*/
 	VarRefProto = Object.freeze({
-		varref: true,
-		
 		get() {
+			/*
+				If this is an error-wrapped VarRef, return the wrapped error now.
+			*/
+			if (this.error) {
+				return this.error;
+			}
 			return get(this.deepestObject, this.compiledPropertyChain.slice(-1)[0],
 				/*
 					This is the original non-computed property. It is used only for
@@ -642,6 +651,12 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			preparation before the assignment is performed.
 		*/
 		set(value) {
+			/*
+				If this is an error-wrapped VarRef, return the wrapped error now.
+			*/
+			if (this.error) {
+				return this.error;
+			}
 			/*
 				Show an error if this request is attempting to assign to a value which isn't
 				stored in the variables or temp. variables.
@@ -670,7 +685,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				*/
 				let error;
 				if ((error = TwineError.containsError(value, object, property) || TwineError.containsError(
-						canSet(object, property)
+						canSet(object, property, value)
 					))) {
 					return error;
 				}
@@ -746,7 +761,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 						value.TwineScript_KnownName = this.TwineScript_ObjectName;
 					}
 					/*
-						If the property is an array of properties, and the value is an array also,
+						If the property is an array of properties, and the value is sequential also,
 						set each value to its matching property.
 						e.g. (set: $a's (a:2,1) to (a:2,3)) will set position 1 to 3, and position 2 to 1.
 					*/
@@ -783,6 +798,12 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			This is only used by the (move:) macro.
 		*/
 		delete() {
+			/*
+				If this is an error-wrapped VarRef, return the wrapped error now.
+			*/
+			if (this.error) {
+				return this.error;
+			}
 			return mutateRight.call(this, (value, [object, property], i) => {
 				/*
 					First, propagate errors from the preceding iteration, or from
@@ -856,6 +877,46 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		},
 
 		/*
+			Whenever a (set:), (put:) or (move:) has a TypedVar, that type definition needs to be registered in the TypeDefs store
+			for that variable's variable store.
+		*/
+		defineType(type) {
+			const {object, compiledPropertyChain} = this;
+			if (!object || !object.TwineScript_VariableStore || compiledPropertyChain.length !== 1 || !object.TwineScript_TypeDefs
+					// It shouldn't currently be possible to create a VarRef to a variable store whose first prop is an array,
+					// but, just in case...
+					|| Array.isArray(compiledPropertyChain[0])) {
+				return TwineError.create("unimplemented", "I can only restrict the datatypes of variables, not data names or anything else.");
+			}
+			/*
+				The TypeDefs property chain is constructed here.
+				Each stack frame's variables collection can have a TypeDefs object as an own-property.
+				However, unlike variables, its presence in a stack frame is optional, and only
+				added once it's first needed.
+			*/
+			const prop = compiledPropertyChain[0];
+			if (!Object.hasOwnProperty.call(object,"TwineScript_TypeDefs")) {
+				object.TwineScript_TypeDefs = Object.create(object.TwineScript_TypeDefs);
+			}
+			/*
+				Here is the check that this variable's type isn't being redefined, and the error.
+				Note that it is permitted to "redefine" to the exact same type.
+			*/
+			const defs = object.TwineScript_TypeDefs;
+			const existingType = defs[prop];
+			if (existingType && !existingType.TwineScript_is(type)) {
+				return TwineError.create("operation",
+					"I can't redefine the type of " + this.TwineScript_ObjectName
+					+ " to " + type.TwineScript_ObjectName
+					+ ", as it is already " + existingType.TwineScript_ObjectName + ".");
+			}
+			/*
+				Having done that, simply affix the type.
+			*/
+			defs[prop] = type;
+		},
+
+		/*
 			This small check is used by two-way VarBinds to determine if they need to update
 			whenever a VarRef "set" event is fired. The check is, simply, if the set object and
 			name match the lowest level of a VarRef's property chain.
@@ -907,7 +968,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 
 		TwineScript_ToSource() {
 			const debugName = (name, pos) => {
-				if (!pos && (this.object === State.variables || this.object.TwineScript_VariableStore))
+				if (!pos && (this.object.TwineScript_VariableStore))
 					return name;
 				return propertyDebugName(name);
 			};

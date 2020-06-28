@@ -10,28 +10,30 @@ define([
 	'passages',
 	'datatypes/lambda',
 	'datatypes/assignmentrequest',
+	'datatypes/typedvar',
+	'internaltypes/varref',
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier'],
-($, {shuffled}, NaturalSort, Macros, {objectName, typeName, subset, collectionType, isValidDatamapName, is, unique, clone, range}, State, Engine, Passages, Lambda, AssignmentRequest, TwineError, TwineNotifier) => {
+($, {shuffled}, NaturalSort, Macros, {objectName, typeName, subset, collectionType, isValidDatamapName, is, unique, clone, range}, State, Engine, Passages, Lambda, AssignmentRequest, TypedVar, VarRef, TwineError, TwineNotifier) => {
 	
 	const {optional, rest, either, zeroOrMore, Any, positiveInteger}   = Macros.TypeSignature;
 	
-	Macros.add
-		/*d:
-			VariableToValue data
-			
-			This is a special value that only (set:) and (put:) make use of.
-			It's created by joining a variable and a value with the `to` or `into` keywords:
-			`$emotion to 'flustered'` is an example of a VariableToValue. It exists primarily to
-			make (set:) and (put:) more readable.
-		*/
-		/*d:
-			Instant data
+	/*d:
+		VariableToValue data
+		
+		This is a special value that only (set:) and (put:) make use of.
+		It's created by joining a variable and a value with the `to` or `into` keywords:
+		`$emotion to 'flustered'` is an example of a VariableToValue. It exists primarily to
+		make (set:) and (put:) more readable.
+	*/
+	/*d:
+		Instant data
 
-			A few special macros in Harlowe perform actions immediately, as soon as they're evaluated.
-			These can be used in passages, but cannot have their values saved using (set:) or (put:),
-			or stored in data structures.
-		*/
+		A few special macros in Harlowe perform actions immediately, as soon as they're evaluated.
+		These can be used in passages, but cannot have their values saved using (set:) or (put:),
+		or stored in data structures.
+	*/
+	["set","put"].forEach(name =>
 		/*d:
 			(set: ...VariableToValue) -> Instant
 			
@@ -40,6 +42,8 @@ define([
 			Example usage:
 			* `(set: $battlecry to "Save a " + $favouritefood + " for me!")` sets a variable called $battlecry.
 			* `(set: _dist to $altitude - $enemyAltitude)` sets a temp variable called _dist.
+			* `(set: num-type $funds to 0)` sets a variable and restricts its type to numbers, preventing non-numbers
+			from ever being (set:) into it by accident.
 			
 			Rationale:
 			
@@ -73,6 +77,15 @@ define([
 			bare value to another value, like `(set: true to 2)` - then an error will be printed. This includes
 			modifying arrays - `(set: (a:2,3)'s 1st to 1)` is also an error.
 
+			A common source of errors in a story is when a variable holding one type of data is mistakenly overridden
+			with a different type of data, such as when putting `"1"` (the string "1") into a variable that should
+			hold numbers. A good way to guard against this is to make the variable a **typed variable**, which is permanently
+			restricted to a single datatype. The first time you set data to the variable, write `(set: num-type $days to 1)` to
+			permanently restrict $days to numbers. That way, if you accidentally put `"1"` into it, an error will appear
+			immediately, explaining the issue. Moreover, typed variables serve a code documentation purpose: they help
+			indicate and explain the purpose of a variable by showing what data is meant to be in it. You can use any
+			datatype before the `-type` syntax - see the article about datatype data for more details.
+
 			Due to the variable syntax potentially conflicting with dollar values (such as $1.50) in your story text,
 			variables cannot begin with a numeral.
 			
@@ -82,66 +95,6 @@ define([
 			Added in: 1.0.0
 			#basics 1
 		*/
-		("set", (_, ...assignmentRequests) => {
-			let debugMessage = "";
-			/*
-				This has to be a plain for-loop so that an early return
-				is possible.
-			*/
-			for(let i = 0; i < assignmentRequests.length; i+=1) {
-				const ar = assignmentRequests[i];
-				
-				if (ar.operator === "into") {
-					return TwineError.create("macrocall", "Please say 'to' when using the (set:) macro.");
-				}
-				let result;
-				/*
-					If ar.src is a VarRef, obtain its current value.
-					Note that this could differ from its value at compilation time -
-					in (set: $a to 1, $b to $a), the second $a has a different value to the first.
-				*/
-				if (ar.src && ar.src.varref) {
-					const get = ar.src.get();
-					let error;
-					if ((error = TwineError.containsError(get))) {
-						return error;
-					}
-					result = ar.dest.set(get);
-				}
-				else {
-					result = ar.dest.set(ar.src);
-				}
-				/*
-					If the setting caused an error to occur, abruptly return the error.
-				*/
-				if (TwineError.isPrototypeOf(result)) {
-					return result;
-				}
-				if (Engine.options.debug) {
-					// Add a semicolon only if a previous iteration appended a message.
-					debugMessage += (debugMessage ? "; " : "")
-						+ objectName(ar.dest)
-						+ " is now "
-						+ objectName(ar.src);
-				}
-			}
-
-			/*
-				There's nothing that can be done with the results of (set:) or (put:)
-				operations, except to display nothing when they're in bare passage text.
-				Return a plain unstorable value that prints out as "".
-			*/
-			return {
-				TwineScript_TypeID:       "instant",
-				TwineScript_TypeName:     "a (set:) operation",
-				TwineScript_ObjectName:   "a (set:) operation",
-				TwineScript_Unstorable: true,
-				// Being unstorable and not used by any other data strctures, this doesn't need a ToSource() function.
-				TwineScript_Print:        () => debugMessage && TwineNotifier.create(debugMessage).render()[0].outerHTML,
-			};
-		},
-		[rest(AssignmentRequest)])
-		
 		/*d:
 			(put: ...VariableToValue) -> Instant
 			
@@ -162,6 +115,9 @@ define([
 			Just as with (set:), a variable is changed using `(put: ` value `into` variable `)`. You can
 			also set multiple variables in a single (put:) by separating each VariableToValue
 			with commas: `(put: 2 into $batteries, 4 into $bottles)`, etc.
+
+			You can also use typed variables with (put:) - `(put: 1 into num-type $days)` permanently
+			restricts $days to numbers.
 			
 			`it` can also be used with (put:), but, interestingly, it's used on the right-hand side of
 			the expression: `(put: $eggs + 2 into it)`.
@@ -172,7 +128,7 @@ define([
 			Added in: 1.0.0
 			#basics 2
 		*/
-		("put", (_, ...assignmentRequests) => {
+		Macros.add(name, (_, ...assignmentRequests) => {
 			let debugMessage = "";
 			/*
 				This has to be a plain for-loop so that an early return
@@ -180,11 +136,36 @@ define([
 			*/
 			for(let i = 0; i < assignmentRequests.length; i+=1) {
 				const ar = assignmentRequests[i];
+				let result, error, dest = ar.dest, get = ar.src;
 				
-				if (ar.operator !== "into") {
+				if (ar.operator === "into" && name === "set") {
+					return TwineError.create("macrocall", "Please say 'to' when using the (set:) macro.");
+				}
+				else if (ar.operator !== "into" && name === "put") {
 					return TwineError.create("macrocall", "Please say 'into' when using the (put:) macro.");
 				}
-				let result = ar.dest.set(ar.src);
+				/*
+					If ar.src is a VarRef, obtain its current value.
+					Note that this could differ from its value at compilation time -
+					in (set: $a to 1, $b to $a), the second $a has a different value to the first.
+				*/
+				if (ar.src && VarRef.isPrototypeOf(ar.src)) {
+					get = ar.src.get();
+					if ((error = TwineError.containsError(get))) {
+						return error;
+					}
+				}
+				/*
+					If this is a TypedVar, then this (set:) is also a type declaration.
+				*/
+				if(TypedVar.isPrototypeOf(dest)) {
+					if ((error = TwineError.containsError(dest.defineType()))) {
+						return error;
+					}
+					// Unwrap the varRef from the TypedVar.
+					dest = dest.varRef;
+				}
+				result = dest.set(get);
 				/*
 					If the setting caused an error to occur, abruptly return the error.
 				*/
@@ -194,22 +175,30 @@ define([
 				if (Engine.options.debug) {
 					// Add a semicolon only if a previous iteration appended a message.
 					debugMessage += (debugMessage ? "; " : "")
-						+ objectName(ar.dest)
+						+ objectName(dest)
 						+ " is now "
 						+ objectName(ar.src);
 				}
 			}
+
+			/*
+				There's nothing that can be done with the results of (set:) or (put:)
+				operations, except to display nothing when they're in bare passage text.
+				Return a plain unstorable value that prints out as "".
+			*/
 			return {
 				TwineScript_TypeID:       "instant",
-				TwineScript_TypeName:     "a (put:) operation",
-				TwineScript_ObjectName:   "a (put:) operation",
+				TwineScript_TypeName:     "a (" + name + ":) operation",
+				TwineScript_ObjectName:   "a (" + name + ":) operation",
 				TwineScript_Unstorable: true,
 				// Being unstorable and not used by any other data strctures, this doesn't need a ToSource() function.
 				TwineScript_Print:        () => debugMessage && TwineNotifier.create(debugMessage).render()[0].outerHTML,
 			};
 		},
 		[rest(AssignmentRequest)])
-		
+	);
+
+	Macros.add
 		/*d:
 			(move: ...VariableToValue) -> Instant
 			
@@ -251,17 +240,28 @@ define([
 				if (ar.operator !== "into") {
 					return TwineError.create("macrocall", "Please say 'into' when using the (move:) macro.");
 				}
+				let result, error, dest = ar.dest;
+
+				/*
+					If this is a TypedVar, then this (move:) is also a type declaration.
+				*/
+				if(TypedVar.isPrototypeOf(dest)) {
+					if ((error = TwineError.containsError(dest.defineType()))) {
+						return error;
+					}
+					// Unwrap the varRef from the TypedVar.
+					dest = dest.varRef;
+				}
 				/*
 					If ar.src is a VarRef, then it's a variable, and its value
 					should be deleted when the assignment is completed.
 				*/
-				let result, error;
-				if (ar.src && ar.src.varref) {
+				if (ar.src && VarRef.isPrototypeOf(ar.src)) {
 					const get = ar.src.get();
 					if ((error = TwineError.containsError(get))) {
 						return error;
 					}
-					result = ar.dest.set(get);
+					result = dest.set(get);
 					if ((error = TwineError.containsError(result))) {
 						return error;
 					}
@@ -271,7 +271,7 @@ define([
 					/*
 						Otherwise, it's a plain value (such as seen in (move: 2 into $red)).
 					*/
-					result = ar.dest.set(ar.src);
+					result = dest.set(ar.src);
 					if ((error = TwineError.containsError(result))) {
 						return error;
 					}

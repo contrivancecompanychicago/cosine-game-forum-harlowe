@@ -79,6 +79,9 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		Currently, (macro:) code hooks do NOT have access to temp variables created outside of them. `(set: _name to "Fox", _aCustomMacro to (macro:[(output:_name)])) (_aCustomMacro:)`
 		will cause an error, because _name isn't accessible inside the _aCustomMacro macro. They do, however, have access to global variables (which begin with `$`).
 
+		Much like with typed variables given to (set:) or (put:), each temp variable associated with a TypedVars is restricted to the given data type. So,
+		`(macro:num-type _a,[(set:_a to 'text')(output:_a)]` will cause an error when run.
+
 		All custom macros must return some value. If no (output:) or (output-hook:) macros were run inside the code hook, an error will result.
 
 		See also:

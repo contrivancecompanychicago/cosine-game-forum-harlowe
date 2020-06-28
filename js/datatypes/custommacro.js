@@ -66,6 +66,7 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 		*/
 		const tempVariables = assign(create(VarScope), {
 			TwineScript_VariableStoreName: macro.TwineScript_ObjectName,
+			TwineScript_TypeDefs: create(null),
 		});
 		/*
 			Feed the values into the variables scope with the correct names, taking care to
@@ -74,6 +75,19 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 		let i = 0;
 		args.forEach((arg) => {
 			const name = varNames[i];
+			/*
+				Load up the runtime type constraints, first. Note that rests become arrays, so they must be
+				constrained as such... even though the array contents itself currently cannot.
+			*/
+			tempVariables.TwineScript_TypeDefs[name] = params[i].rest ?
+				/*
+					Due to a circular dependency, this module can't import Datatype. So, we obtain Datatype.create()
+					from the passed-in datatype's prototype chain. Yeah.
+				*/
+				params[i].datatype.create('array') : params[i].datatype;
+			/*
+				Now, load up the actual value.
+			*/
 			if (params[i].rest) {
 				tempVariables[name] = (tempVariables[name] || []).concat(arg);
 			}
@@ -90,6 +104,7 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 		}
 		if (params[i] && params[i].rest) {
 			tempVariables[varNames[i]] = [];
+			tempVariables.TwineScript_TypeDefs[name] = params[i].datatype.create('array');
 		}
 
 		/*
@@ -156,7 +171,7 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 		return output;
 	};
 
-	return Object.freeze({
+	const CustomMacro = Object.freeze({
 		TwineScript_TypeID:   "macro",
 		TwineScript_TypeName: "a custom macro",
 		get TwineScript_ObjectName() {
@@ -171,6 +186,14 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 
 		TwineScript_Print() {
 			return "`[" + this.TwineScript_ObjectName + "]`";
+		},
+
+		/*
+			As with Lambda.TwineScript_Clone(), this is rather naive, but should
+			be sufficient given macros shouldn't be mutatable from user code.
+		*/
+		TwineScript_Clone() {
+			return Object.assign(Object.create(CustomMacro), this);
 		},
 
 		TwineScript_ToSource() {
@@ -209,4 +232,5 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 			return ret;
 		},
 	});
+	return CustomMacro;
 });

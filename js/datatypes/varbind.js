@@ -97,16 +97,11 @@ define(['jquery', 'utils', 'utils/operationutils', 'internaltypes/varref', 'inte
 				Since "bind" is just another operator, this can't be picked up in compilation until now.
 			*/
 			if (!VarRef.isPrototypeOf(varRef)) {
-				/*
-					Wrapped errors (errors wrapped with .get() and .set() methods by VarRef)
-					should be unwrapped now.
-				*/
-				if (varRef.varref && TwineError.containsError(varRef.get())) {
-					return varRef.get();
-				}
 				return TwineError.create("operation", "I can only 'bind' a variable, not " + objectName(varRef) + ".");
 			}
-			
+			if (varRef.error) {
+				return varRef.error;
+			}
 			return Object.assign(Object.create(this), { varRef, bind });
 		},
 	});

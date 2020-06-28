@@ -696,7 +696,7 @@ define([
 					A new tempVariables frame is created, solely to have a different TwineScript_VariableStoreName, so that
 					errors occurring during evaluation have the correct name for this context.
 				*/
-				tempVariables: Object.assign(Object.create(VarScope), { TwineScript_VariableStoreName: evalName }),
+				tempVariables: Object.assign(Object.create(VarScope), { TwineScript_VariableStoreName: evalName, }),
 				/*
 					This string is used by storylet metadata macros like (storylet: when visits is 0),
 					which, when run via speculation by (open-storylets:), need "visits" to mean visits of

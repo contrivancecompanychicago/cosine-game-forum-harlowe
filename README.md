@@ -27,6 +27,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Now, `(dropdown:)` explicitly uses the background of its containing hook, instead of being transparent, which the Windows version of Chrome displays as white, regardless of text colour.
  * Now, align, horizontal rule, and column syntax in the editor no longer occupies two lines unexpectedly.
  * `(save-game:)` can now save a greater range of variable data. Formerly, only changers, arrays, datamaps, datasets, booleans, strings and numbers could be stored in variables when you use `(save-game:)` - other values, such as commands, colours, gradients, or lambdas, would cause an error. Now, it should work with every kind of supported Harlowe value (i.e. those mentioned in the documentation) except user-created commands created with `(output-hook:)` (see below). But, this means that save data from 3.1.0 is no longer compatible with 3.2.0.
+ * Improved an error message that could appear if you erroneously put the spread `...` syntax inside parentheses, such as `(...$arr)`.
 
 ####Alterations
 
@@ -60,6 +61,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added the HookName data name `visited` (as in `?passage's visited`), which allows you to select links that point to visited passages, and change the unique colour these links have.
  * Colours now have an alpha `a` data value, containing the alpha value given to the `(hsl:)` and `(rgb:)` macros - `(hsl: 130, 1, 0.5, 0.2)'s a` is 0.2.
  * Colours now have an `lch` data value, which contains a datamap of LCH color space values for that colour (corresponding to the numbers given to the new `(lch:)` macro). Because LCH's values conflict with HSL's, the LCH values are inside this datamap instead of directly accessible from the colour itself.
+ * As an error-checking feature, you can now force your story's variables to only ever hold certain datatypes, so that data of the wrong type can't be set to them. `(set: num-type $funds to 0)` will force an error to occur if a non-number is ever put into $funds, such as by `(set: $funds to "200")`. You can use this syntax with temp variables, too.
+ * Added the `lambda` and `macro` datatypes, and the `boolean` datatype can now be shortened to `bool`.
 
 #####Macros
 

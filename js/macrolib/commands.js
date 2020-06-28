@@ -290,6 +290,9 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 			The bound variable will be set to the first value as soon as the cycling link is displayed - so, even if the player doesn't
 			interact with the link at all, the variable will still have the intended value.
 
+			If the bound variable has already been given a type restriction (such as by `(set:num-type $candy)`), then, if that type isn't `string` or `str`, an error
+			will result.
+
 			If you use (replace:) to alter the text inside a (cycling-link:), such as `(cycling-link: bind $tattoo, "Star", "Feather")(replace:"Star")[Claw]`,
 			then the link's text will be changed, but the value assigned to the bound variable will *not* - $tattoo will still be "Star", and clicking the
 			link twice will return the link's text to "Star". This differs from (dropdown:)'s behaviour in this situation.
@@ -329,6 +332,9 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 
 			The bound variable will be set to the first value as soon as the sequence link is displayed - so, even if the player doesn't
 			interact with the link at all, the variable will still have the intended value.
+
+			If the bound variable has already been given a type restriction (such as by `(set:num-type $candy)`), then, if that type isn't `string` or `str`, an error
+			will result.
 
 			If you use (replace:) to alter the text inside a (seq-link:), such as `(seq-link: bind $candy, "Two candies", "One candy", "Some wrappers")(replace:"Two")[Five]`,
 			then the link's text will be changed, but the value assigned to the bound variable will *not* - $candy will still be "Two candies" until the link is clicked.

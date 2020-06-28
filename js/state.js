@@ -1,6 +1,7 @@
 "use strict";
 define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerror', 'utils/operationutils', 'markup', 'twinescript/compiler'],
 ({impossible}, Passages, ChangerCommand, TwineError, {objectName,toSource}, {lex}, compile) => {
+	const {assign, create} = Object;
 	/*
 		State
 		Singleton controlling the running game state.
@@ -31,7 +32,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 	/*
 		The root prototype for every Moment's variables collection.
 	*/
-	const SystemVariables = {
+	const SystemVariables = assign(create(null), {
 		/*
 			Note that it's not possible for userland TwineScript to directly access or
 			modify this base object.
@@ -39,11 +40,17 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		TwineScript_ObjectName: "this story's variables",
 
 		/*
+			This is the root prototype of every frame's variable type definitions. Inside a TypeDefs
+			is every variable name that this variables collection contains, mapped to a Harlowe datatype.
+		*/
+		TwineScript_TypeDefs: create(null),
+
+		/*
 			This is used to distinguish to (set:) that this is a variable store,
 			and assigning to its properties does affect game state.
 		*/
 		TwineScript_VariableStore: true,
-	};
+	});
 
 	/*
 		Prototype object for states remembered by the game.
@@ -69,13 +76,13 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			@param {Object} Variables to include in this moment.
 		*/
 		create(p, v) {
-			const ret = Object.create(Moment);
+			const ret = create(Moment);
 			ret.passage = p || "";
 			// Variables are stored as deltas of the previous state's variables.
 			// This is implemented using JS's prototype chain :o
-			// For the first moment, this becomes a call to Object.create(null),
+			// For the first moment, this becomes a call to create(null),
 			// keeping the prototype chain clean.
-			ret.variables = Object.assign(Object.create(this.variables), v);
+			ret.variables = assign(create(this.variables), v);
 			return ret;
 		}
 	};
@@ -159,7 +166,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 	/*
 		The current game's state.
 	*/
-	State = Object.assign({
+	State = assign({
 		/*
 			Getters/setters
 		*/
@@ -271,7 +278,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			timeline = timeline.slice(0,recent+1).concat(present);
 			recent += 1;
 			
-			// Create a new present
+			// create a new present
 			newPresent(newPassageName);
 			// Call the 'forward' event handler with this passage name.
 			eventHandlers.forward.forEach(fn => fn(newPassageName));
@@ -379,6 +386,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			return !TwineError.containsError(obj) && (
 				typeof obj.TwineScript_ToSource === "function" || Array.isArray(obj) || obj instanceof Map
 					|| obj instanceof Set || jsType === "string" || jsType === "number" || jsType === "boolean"
+					|| Object.isPrototypeOf.call(SystemVariables.TwineScript_TypeDefs, obj)
 			);
 		}
 
@@ -397,7 +405,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				where an unserialisable object was (set:) does NOT revert the
 				serialisability status.)
 
-				Create an array (of [var, value] pairs) that shows each variable that
+				create an array (of [var, value] pairs) that shows each variable that
 				couldn't be serialised at each particular turn.
 			*/
 			const serialisability = ret.map(
@@ -430,13 +438,28 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				);
 			}
 			try {
-				return JSON.stringify(ret, function(_,variable) {
+				return JSON.stringify(ret, function(name, variable) {
 					/*
 						The timeline, which is an array of Moments with VariableStore objects, should be serialised
 						such that only the variables inside the VariableStore are converted to Harlowe strings
 						with toSource().
 					*/
 					if (this.TwineScript_VariableStore) {
+						/*
+							Serialising the TypeDefs, which is the only VariableStore property
+							that isn't directly user-created, and is a plain JS object,
+							requires a little special-casing.
+						*/
+						if (name === "TwineScript_TypeDefs") {
+							return Object.keys(variable).reduce((a,key) => {
+								/*
+									Since the datatypes inside are Harlowe values,
+									they should be serialised to source as well.
+								*/
+								a[key] = toSource(variable[key]);
+								return a;
+							},{});
+						}
 						return toSource(variable);
 					}
 					return variable;
@@ -445,6 +468,18 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			catch(e) {
 				return false;
 			}
+		}
+
+		/*
+			A quick method to recompile objects whose values are Harlowe code strings, taken directly
+			from localStorage.
+			Since this should only receive formerly-serialised data, we don't really need to care about the
+			scope of the eval().
+		*/
+		function recompileValues(section, obj) {
+			Object.keys(obj).forEach(key =>
+				!key.startsWith("TwineScript_") && (obj[key] = section.eval(compile(lex(obj[key], 0, 'macro'))))
+			);
 		}
 		
 		/*
@@ -492,14 +527,33 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 					Recreate the variables prototype chain. This doesn't use setPrototypeOf() due to
 					compatibility concerns.
 				*/
-				moment.variables = Object.assign(Object.create(lastVariables), moment.variables);
+				moment.variables = assign(create(lastVariables), moment.variables);
+				/*
+					If the variables object has a TypeDefs object, that needs to be recompiled as well,
+					and have its own prototype chain re-established.
+				*/
+				if (Object.hasOwnProperty.call(moment.variables,'TwineScript_TypeDefs')) {
+					const typeDefs = (moment.variables.TwineScript_TypeDefs =
+						/*
+							Notice that even though TypeDefs are optional on variables objects, JS prototype semantics
+							mean that moment.variables.TwineScript_TypeDefs will always get the previous object in the chain.
+						*/
+						assign(create(lastVariables.TwineScript_TypeDefs), moment.variables.TwineScript_TypeDefs));
+					/*
+						Much like the variables, the datatypes are currently Harlowe code strings - though rather likely to be
+						literals like "number" or "datamap".
+					*/
+					try {
+						recompileValues(section, typeDefs);
+					} catch(e) {
+						return Error(genericError);
+					}
+				}
 				/*
 					Compile all of the variables (which are currently Harlowe code strings) back into Harlowe values.
-					Since this should only receive formerly-serialised data, we don't really need to care about the
-					scope of the eval().
 				*/
 				try {
-					Object.keys(moment.variables).forEach(key => moment.variables[key] = section.eval(compile(lex(moment.variables[key], 0, 'macro'))));
+					recompileValues(section, moment.variables);
 				} catch(e) {
 					return Error(genericError);
 				}
@@ -508,7 +562,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				/*
 					Re-establish the moment objects' prototype link to Moment.
 				*/
-				return Object.assign(Object.create(Moment), moment);
+				return assign(create(Moment), moment);
 			})).find(e => e instanceof Error))) {
 				return momentError;
 			}

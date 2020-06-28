@@ -4,9 +4,11 @@ define([
 	'state',
 	'datatypes/assignmentrequest',
 	'utils/operationutils',
+	'internaltypes/varref',
+	'datatypes/typedvar',
 	'internaltypes/twineerror',
 ],
-($, State, AssignmentRequest, {isObject, collectionType, is, isA, clone, unique, contains, matches, typeName, objectName}, TwineError) => {
+($, State, AssignmentRequest, {isObject, collectionType, is, isA, clone, unique, contains, matches, typeName, objectName}, VarRef, TypedVar, TwineError) => {
 	/*
 		Operation objects are a table of operations which TwineScript proxies
 		for/sugars over JavaScript. These include basic fixes like the elimination
@@ -106,10 +108,6 @@ define([
 			let error;
 			if ((error = TwineError.containsError(left, right))) {
 				return error;
-			}
-			// VarRefs cannot have operations performed on them.
-			if (left && left.varref) {
-				return TwineError.create("operation", "I can't give an expression a new value.");
 			}
 			/*
 				This checks that left and right are generally different types
@@ -555,6 +553,13 @@ define([
 			return {
 				value: val,
 				spreader: true,
+				/*
+					If a spreader is erroneously put in brackets (such as (...$arr)) then
+					it becomes isolated as an object, and thus observable.
+				*/
+				TwineScript_TypeName: "a spreaded '...' value",
+				TwineScript_ObjectName: "a spreaded '...' value",
+				TwineScript_Unstorable: true,
 			};
 		},
 
@@ -578,7 +583,7 @@ define([
 			/*
 				Also refuse if the dest is not, actually, a VarRef.
 			*/
-			if (!isObject(dest) || !("varref" in dest)) {
+			if (!isObject(dest) || !(VarRef.isPrototypeOf(dest) || TypedVar.isPrototypeOf(dest)))  {
 				return TwineError.create("operation",
 					"I can't store a new value inside "
 					+ objectName(dest)
@@ -607,7 +612,7 @@ define([
 			/*
 				If a non-varRef was passed in, a syntax error has occurred.
 			*/
-			if (!e.varref) {
+			if (!(VarRef.isPrototypeOf(e) || TypedVar.isPrototypeOf(e))) {
 				return TwineError.create("operation",
 					"I can't put a new value into "
 					+ objectName(e)

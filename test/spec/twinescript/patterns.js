@@ -8,23 +8,26 @@ describe("patterns", function() {
 		[2,"number","num"],
 		["'X'","string","str"],
 		['(a:)',"array"],
-		['true',"boolean"],
+		['true',"boolean","bool"],
 		['(dm:)',"datamap","dm"],
 		['(ds:)','dataset',"ds"],
 		['red','colour','color'],
+		['(_a where _a is 2)','lambda',undefined,'no structural equality'],
+		['(macro:[(output:1)])','macro',undefined,'no structural equality'],
 		['(gradient:90,0,red,1,white)','gradient']
 	];
 	describe("datatypes", function() {
 		it("are keywords matching permitted storable values", function() {
 			datatypes.forEach(function(name) {
-			var name2 = (
-				name === "dm" ? "datamap" :
-				name === "ds" ? "dataset" :
-				name === "num" ? "number" :
-				name === "str" ? "string" :
-				name === "color" ? "colour" :
-				name
-			);
+				var name2 = (
+					name === "dm" ? "datamap" :
+					name === "ds" ? "dataset" :
+					name === "num" ? "number" :
+					name === "str" ? "string" :
+					name === "color" ? "colour" :
+					name === "bool" ? "boolean" :
+					name
+				);
 				expect("(print:" + name +")").markupToPrint("[the " + name2 + " datatype]");
 			});
 		});
@@ -99,10 +102,13 @@ describe("patterns", function() {
 		});
 		typesAndValues.forEach(function(e) {
 			var value = e[0], type1 = e[1], type2 = e[2] || type1;
+			var structEq = e[3] !== 'no structural equality';
 
 			it("matches the " + type1 + " datatype inside arrays to a " + type1 + " in the same position", function() {
 				expect("(print: (a:" + type1 + ") matches (a:" + value + "))").markupToPrint("true");
-				expect("(print: (a:" + [type2,value,type1] + ") matches (a:" + [value,value,value] + "))").markupToPrint("true");
+				if (structEq) {
+					expect("(print: (a:" + [type2,value,type1] + ") matches (a:" + [value,value,value] + "))").markupToPrint("true");
+				}
 				expect("(print: (a:(a:(a:" + type2 + "))) matches (a:(a:(a:" + value + "))))").markupToPrint("true");
 
 				expect("(print: (a:" + type2 + ") matches (a:))").markupToPrint("false");

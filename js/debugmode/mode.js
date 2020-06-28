@@ -162,7 +162,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 	let localTempVariables = new Set();
 	const Variables = Panel.create({
 		className: "variables", tabName: "Variable",
-		rowAdd({name, path, value, tempScope}) {
+		rowAdd({name, path, value, tempScope, type}) {
 			/*
 				The debug name used defers to the TwineScript_DebugName if it exists,
 				and falls back to the objectName if not. Note that the TwineScript_DebugName can contain HTML structures
@@ -179,6 +179,10 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			if (path.length) {
 				trail = path.reduce((a,e) => a + e + "'s ", '');
 			}
+			/*
+				Typed variables should have their type restriction listed.
+			*/
+			const typeName = type ? toSource(type) : '';
 			/*
 				Source code for objects can be viewed with a folddown button.
 			*/
@@ -199,8 +203,9 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 				.css('padding-left', Math.min(5,path.length)+'em')
 				.append(
 					"<span class='variable-name " + (trail ? '' : tempScope ? "temporary" : "global") + "'>"
+					+ (typeName ? "<span class='variable-type'>" + typeName + '-type </span>' : '')
 					+ (trail ? "<span class='variable-path " + (tempScope ? "temporary" : "global") + "'>" + escape(trail) + "</span> " : '')
-					+ escape(name + '')
+					+ (tempScope ? "_" : "$") + escape(name + '')
 					+ (tempScope ? ("<span class='temporary-variable-scope'>" + tempScope + "</span>") : "") +
 					"</span><span class='variable-value'>" + truncVal + "</span><span class='panel-row-buttons'>"
 						+ (folddown ? "<tw-folddown tabindex=0>(source:)</tw-folddown>" : '')
@@ -218,6 +223,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 	*/
 	function updateVariables() {
 		const rows = [];
+		const globals = State.variables;
 		let count = rows.length;
 		/*
 			The following recursive function adds entries for each value inside arrays, maps, and sets.
@@ -231,7 +237,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 				return;
 			}
 			rows.push(row);
-			const path = row.path.concat(name);
+			const path = row.path.concat(row.name);
 			const {value, tempScope} = row;
 			if (Array.isArray(value)) {
 				value.forEach((elem,i) =>
@@ -253,10 +259,12 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 				);
 			}
 		}
-		for (let name in State.variables) {
+		for (let name in globals) {
 			if (!name.startsWith('TwineScript')) {
 				count += 1;
-				recursiveUpdateVariables({name, path:[], value:State.variables[name], tempScope:''});
+				recursiveUpdateVariables({name, path:[], value:globals[name], tempScope:'',
+					type: globals.TwineScript_TypeDefs && globals.TwineScript_TypeDefs[name]
+				});
 			}
 		}
 		/*
@@ -275,16 +283,21 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		/*
 			For a deep data structure (set:), VarRef.on will fire set callbacks for every object in the
 			chain: $a's b's c's d to 1 will produce 'set' callbacks for c, b, a and State.variables.
-			We only care about State.variables, the root.
+			We only care about the root variable store.
+		*/
+		/*
+			Since temp variables' variable stores are tied to sections and can't be easily accessed
+			from here, add their variable rows on each set() rather than getting updateVariables() to do it.
 		*/
 		if (obj !== State.variables && obj.TwineScript_VariableStoreName) {
 			const tempScope = obj.TwineScript_VariableStoreName;
+			const type = obj.TwineScript_TypeDefs && obj.TwineScript_TypeDefs[name];
 			/*
 				If a local variable was altered rather than added, then simply update its value.
 			*/
 			const row = localTempVariables.has(row => row.name === name && row.tempScope === tempScope);
 			if (!row) {
-				localTempVariables.add({name, path:[], value, tempScope});
+				localTempVariables.add({name, path:[], value, tempScope, type});
 			}
 			else {
 				row.value = value;

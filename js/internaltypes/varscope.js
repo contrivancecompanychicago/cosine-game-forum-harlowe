@@ -2,8 +2,8 @@
 define([], () => {
 	/*
 		VarScope.
-		This is a root prototype object which houses temporary variables, inside a Section's stack. At the moment, it
-		only possesses a single TwineScript meta-property.
+		This is a root prototype object which houses temporary variables, inside a Section's stack.
+		This isn't frozen so that its values can be overridden.
 	*/
 	
 	return {
@@ -17,5 +17,12 @@ define([], () => {
 			and assigning to its properties does affect game state.
 		*/
 		TwineScript_VariableStore: true,
+
+		/*
+			Also like story state, this has a TypeDefs object holding types for its variables, and is used
+			as the prototype for inheriting scopes' TypeDefs.
+		*/
+		TwineScript_TypeDefs: Object.create(null),
+
 	};
 });

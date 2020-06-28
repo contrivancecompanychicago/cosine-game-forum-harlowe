@@ -94,6 +94,45 @@ describe("variables", function() {
 			expect("(set: \"red\"'s 1st to \"r\")").markupToError();
 			expect("(set: (datamap:)'s 'E' to 1)").markupToError();
 		});
+		describe("when given typed variables", function() {
+			it("restricts the variable to the given data type", function() {
+				expect("(set: num-type $a to 1)$a").markupToPrint("1");
+				expect("(set: str-type $b to 'e')$b").markupToPrint("e");
+				expect("(set: num-type $c to 1)(set: num-type $c to 2)$c").markupToPrint("2");
+				expect("(set: num-type $d to 1)(set: $d to 'e')").markupToError();
+			});
+			it("can restrict existing variables", function() {
+				runPassage("(set: $a to 1)");
+				expect("(set: num-type $a to 2)$a").markupToPrint("2");
+			});
+			it("restricts the variable across turns", function() {
+				runPassage("(set: num-type $a to 1)");
+				expect("(set: $a to 2)$a").markupToPrint("2");
+				expect("(set: str-type $a to 'e')").markupToError();
+			});
+			it("doesn't pollute past turns", function() {
+				runPassage("(set: $a to 0)",'A');
+				runPassage("(set: $a to 1)(set:$c to 1)",'B');
+				runPassage("(set: num-type $a to 2)(set:$d to 1)",'C');
+				Engine.goBack();
+				expect("(set: str-type $a to 'A')$a").markupToPrint("A");
+			});
+			it("can restrict temp variables", function() {
+				runPassage("(set: num-type _a to 1)");
+				expect("(set: num-type _a to 2)").not.markupToError();
+				expect("(set: num-type _a to 2)(set: _a to 'e')").markupToError();
+				expect("(set: num-type _a to 2)[(set:str-type _b to 'e')](set:num-type _b to 2)").not.markupToError();
+				expect("(set: _a to 2)[(set:str-type _a to 'e')](set:num-type _a to 4)").not.markupToError();
+			});
+			it("currently can't type-restrict property accesses", function() {
+				runPassage("(set: array-type $a to (a:3))");
+				runPassage("(set: $a's 1st to 4')");
+				expect("(set: num-type $a's 1st to 2)").markupToError();
+			});
+			it("doesn't work with spread typed variables", function() {
+				expect("(set: ...num-type $a to 2)$a").markupToError();
+			});
+		});
 	});
 	describe("the (put:) macro", function() {
 		//TODO: Add more of the above tests.
@@ -101,6 +140,9 @@ describe("variables", function() {
 			expect("(put: 1 into (a:2)'s 1st)").markupToError();
 			expect("(put: \"r\" into \"red\"'s 1st)").markupToError();
 			expect("(put: 1 into (datamap:)'s 'E')").markupToError();
+		});
+		it("works with typed variables", function() {
+			expect("(put: 1 into num-type $a)$a").markupToPrint("1");
 		});
 	});
 	describe("bare variables in passage text", function() {

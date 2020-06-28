@@ -1,5 +1,5 @@
 "use strict";
-define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltypes/twineerror'], ({plural}, {typeName, objectName, singleTypeCheck}, VarScope, TwineError) => {
+define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref', 'internaltypes/twineerror'], ({plural}, {typeName, objectName, singleTypeCheck}, VarScope, VarRef, TwineError) => {
 	/*d:
 		Lambda data
 
@@ -79,7 +79,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 		TwineScript_is(other) {
 			/*
 				Lambdas are equal if their body is equivalent given parameter renaming
-				(a.k.a alpha equivalence)
+				(a.k.a. alpha equivalence)
 				TODO: Implement the above.
 			*/
 			return other === this;
@@ -106,6 +106,15 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 					+ clauses.concat('').join(" ...")
 					+ "\" lambda",
 			};
+		},
+
+		/*
+			I assume this is sufficient... despite their being a lot of data structures
+			attached to a lambda, including other lambdas, none of those should
+			be user-accessible.
+		*/
+		TwineScript_Clone() {
+			return Object.assign(Object.create(Lambda), this);
 		},
 
 		/*
@@ -164,7 +173,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 					compiled into an incorrect object, but we must deal with syntactic ambiguity in this way.
 				*/
 				if (subject !== undefined &&
-						(!subject || !subject.varref
+						(!subject || !VarRef.isPrototypeOf(subject)
 						// It must be a temp variable...
 						|| !VarScope.isPrototypeOf(subject.object)
 						// ...and not a property access on one.
