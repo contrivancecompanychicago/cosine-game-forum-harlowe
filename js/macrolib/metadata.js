@@ -7,6 +7,22 @@ define(['macros','renderer', 'utils/operationutils', 'datatypes/lambda', 'intern
 		because they attach metadata to the passage. These macros must appear at the very start of those passages, ahead of every other kind of macro.
 	*/
 	const {zeroOrMore, Any} = Macros.TypeSignature;
+
+
+	/*
+		The dual nature of metadata macros - that they aren't visible in the passage itself but
+		produce a value when run by Renderer's speculation - is illustrated here.
+		This object is returned by each metadata macro that is called outside of a speculative passage.
+	*/
+	const unstorableObject = (macroName) => ({
+		// Return a plain unstorable value that prints out as "".
+		TwineScript_TypeName:     "a (" + macroName + ":) macro",
+		TwineScript_ObjectName:   "a (" + macroName + ":) macro",
+		TwineScript_Unstorable:   true,
+		// Being unstorable and not used by any other data strctures, this doesn't need a ToSource() function.
+		TwineScript_Print:        String,
+	});
+
 	Macros.add
 		/*d:
 			(storylet: Lambda) -> Metadata
@@ -33,6 +49,10 @@ define(['macros','renderer', 'utils/operationutils', 'datatypes/lambda', 'intern
 			to create links elsewhere.
 
 			Details:
+			This macro adds a "storylet" data name to the (passages:) datamap for this passage, letting you access the passed-in lambda. In fact, you can use (metadata:)
+			in place of (storylet:) if you wish - `(storylet: when $hour is 12)` is actually just a shorthand for `(metadata:"storylet", when $hour is 12)`. (metadata:)
+			can be used instead if you're already using it to attach other data. if you use both (storylet:) and `(metadata: "storylet"`, an error will result.
+
 			Being a metadata macro, a (storylet:) macro call must appear in the passage *before* every other non-metadata macro in the passage, such as (set:) and (if:).
 			(This doesn't include macros inside a "header" tagged passage.) The recommended place to put it is at the top of the passage. This restriction is because
 			the (storylet:) call's lambda is only ever checked outside the passage. Variable-changing macros in the passage, such as (set:), are not run until the
@@ -43,31 +63,14 @@ define(['macros','renderer', 'utils/operationutils', 'datatypes/lambda', 'intern
 			(such as by `visits is 0`) allows you to make a storylet only be available once (because after that, it will have become visited). Also,
 			the "exits" identifier cannot be used here (because it's meaningless in this context).
 
-			Having multiple (storylet:) macros in a passage results in an error when (open-storylets:) is used.
-
 			See also:
-			(open-storylets:), (passages:), (event:)
+			(open-storylets:), (passages:), (event:), (metadata:)
 
 			Added in: 3.2.0
 			#storylet
 		*/
 		("storylet",
-			(section, lambda) => {
-				/*
-					The dual nature of metadata macros - that they aren't visible in the passage itself but
-					produce a value when run by Renderer's speculation - is illustrated here.
-				*/
-				return !section.stackTop.speculativePassage ?
-					// Return a plain unstorable value that prints out as "".
-					{
-						TwineScript_TypeName:     "a (storylet:) requirement",
-						TwineScript_ObjectName:   "a (storylet:) requirement",
-						TwineScript_Unstorable:   true,
-						TwineScript_Print:        String,
-					}
-					// Being a "when" lambda, there is no "it" object to iterate over, or a "pos".
-					: lambda.apply(section, {fail:false, pass:true});
-			},
+			(section, lambda) =>  !section.stackTop.speculativePassage ? unstorableObject('storylet') : lambda,
 			[Lambda.TypeSignature('when')]
 		)
 		/*d:
@@ -116,14 +119,7 @@ define(['macros','renderer', 'utils/operationutils', 'datatypes/lambda', 'intern
 		("metadata",
 			(section, ...args) => {
 				if (!section.stackTop.speculativePassage) {
-					return {
-						// Return a plain unstorable value that prints out as "".
-						TwineScript_TypeName:     "a (metadata:) macro",
-						TwineScript_ObjectName:   "a (metadata:) macro",
-						TwineScript_Unstorable:   true,
-						// Being unstorable and not used by any other data strctures, this doesn't need a ToSource() function.
-						TwineScript_Print:        String,
-					};
+					return unstorableObject('storylet');
 				}
 				let key;
 				const map = new Map();
@@ -143,21 +139,13 @@ define(['macros','renderer', 'utils/operationutils', 'datatypes/lambda', 'intern
 						key = element;
 					}
 					/*
-						Specific to (metadata:): passage metadata keys can't be named "tags", "source" or "name" in any case-sensitivity.
-					*/
-					else if (["tags","source","name"].includes(key.toLowerCase())) {
-						return TwineError.create("datatype",
-							"You can't use '" + key + "' as a (metadata:) data name."
-						);
-					}
-					/*
 						Key type-checking must be done here.
 					*/
 					else if ((error = TwineError.containsError(isValidDatamapName(map, key)))) {
 						return error;
 					}
 					/*
-						This syntax has a special restriction: you can't use the same key twice.
+						Of course, you can't use the same key twice.
 					*/
 					else if (map.has(key)) {
 						return TwineError.create("macrocall",
@@ -186,8 +174,7 @@ define(['macros','renderer', 'utils/operationutils', 'datatypes/lambda', 'intern
 				return map;
 			},
 			zeroOrMore(Any)
-		)
-		;
+		);
 
 	/*
 		Metadata macros need to be registered with Renderer, just like blockers.

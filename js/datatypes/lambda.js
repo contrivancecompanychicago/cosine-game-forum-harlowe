@@ -188,7 +188,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 				Add the source, or update the source to include this lambda's contents.
 				Either way, it's just an assignment.
 			*/
-			ret.source = source;
+			ret.source = source.trim();
 			/*
 				We add the new clause, then do some further error-checking afterwards.
 			*/

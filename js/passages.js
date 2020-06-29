@@ -18,10 +18,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 			Metadata macros (such as (storylet:)) need to be extracted and applied to the passage datamap itself.
 			The source is exclusively used by error messages and Debug Mode.
 		*/
-		const {
-			storylet, storyletSource,
-			metadata, metadataSource,
-		} = Renderer.preprocess(source);
+		const metadata = Renderer.preprocess(source);
 
 		return assign(new Map([
 			/*
@@ -45,14 +42,10 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 			TwineScript_TypeName: "a passage datamap",
 			TwineScript_ObjectName: "a passage datamap",
 			/*
-				The storylet code is attached in a manner inaccessible to user-side code.
-				Note that when code such as (passages:) passes this map to user-side code,
-				it should be a clone created by clone(), which would lack this own-property.
+				The following is a temporary store of metadata returned from Renderer.preprocess(),
+				which is crunched during loadMetadata() and removed.
 			*/
-			storyletCode: storylet,
-			storyletSource,
-			metadataCode: metadata,
-			metadataSource,
+			metadata,
 		});
 	}
 	
@@ -95,15 +88,9 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 				if (error) {
 					return error;
 				}
-				if (p.storyletCode) {
-					/*
-						The storylet code is already an error in one situation: when the passage had multiple (storylet:) macro calls in it,
-						forcing Renderer to create this error rather than return one call's code.
-					*/
-					if (TwineError.containsError(p.storyletCode)) {
-						return p.storyletCode;
-					}
-					const available = section.speculate(p.storyletCode, p.get('name'), "a (storylet:) macro");
+				const storylet = p.get('storylet');
+				if (storylet) {
+					const available = section.speculate(storylet, p.get('name'), "a (storylet:) macro");
 					if (TwineError.containsError(available)) {
 						/*
 							Alter the error's message to report the name of the passage from which it originated.
@@ -113,7 +100,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 							The original source code of the lambda is used as the error's source, instead of that of
 							the (open-storylets:) macro call.
 						*/
-						available.source = p.storyletSource;
+						available.source = storylet.TwineScript_ToSource();
 						return available;
 					}
 					if (available) {
@@ -144,27 +131,50 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 				are then returned as the function's only output.
 			*/
 			Passages.forEach(p => {
-				if (p.metadataCode) {
+				p.metadata && Object.keys(p.metadata).forEach((name) => {
 					/*
-						The storylet code is already an error in one situation: when the passage had multiple (storylet:) macro calls in it,
+						The storylet code is already an error in one situation: when the passage had multiple same-named metadata macro calls in it,
 						forcing Renderer to create this error rather than return one call's code.
 					*/
-					if (TwineError.containsError(p.metadataCode)) {
-						errors.push(p.metadataCode);
+					if (TwineError.containsError(p.metadata[name])) {
+						errors.push(p.metadata[name]);
+						return;
 					}
-					const metadata = section.speculate(p.metadataCode, p.get('name'), "a (metadata:) macro");
-					if (TwineError.containsError(metadata)) {
+					const {code,source} = p.metadata[name];
+					const result = section.speculate(code, p.get('name'), "a (" + name + ":) macro");
+					const passageErrorOpener = "In \"" + p.get('name') + "\":\n";
+					if (TwineError.containsError(result)) {
 						/*
 							As in getStorylets, the error's message is altered to list the passage name of origin, although
 							tweaked to account for the leading description in the metadata error dialog.
 						*/
-						metadata.message = "In \"" + p.get('name') + "\":\n" + metadata.message;
-						metadata.source = p.metadataSource;
-						errors.push(metadata);
+						result.message = passageErrorOpener + result.message;
+						result.source = source;
+						errors.push(result);
 						return;
 					}
-					metadata.forEach((v,k) => p.set(k,v));
-				}
+					/*
+						When attaching metadata to the passage datamap, make sure that, for instance, (storylet:) and (metadata: "storylet")
+						don't override each other.
+						This also indirectly ensures "tags", "name" and "source" are protected data names.
+					*/
+					function installResult(k,v) {
+						if (p.has(k)) {
+							errors.push(TwineError.create('syntax', "This passage's datamap already has a '" + JSON.stringify(k) + "' data name."));
+						}
+						else {
+							p.set(k,v);
+						}
+					}
+					/*
+						The (metadata:) macro emits a Map, whereas other properties like (storylet:) emit single values.
+					*/
+					(result instanceof Map ? result.forEach((v,k) => installResult(k,v)) : installResult(name, result));
+				});
+				/*
+					TBW
+				*/
+				p.metadata = undefined;
 			});
 			return errors;
 		},

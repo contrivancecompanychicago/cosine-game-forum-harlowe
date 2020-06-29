@@ -18,6 +18,32 @@ describe("metadata macros", function() {
 			expect("(storylet: when $a is true)(storylet: when $c is true)").not.markupToError();
 			expect("(if:true)[(storylet: when $a is true)]").not.markupToError();
 		});
+		it("errors at startup when a passage's (storylet:) appeared after a non-metadata macro", function() {
+			var errors;
+			errors = createPassage("(set: $b to 1)(storylet: when $b is 1)", "grault");
+			expect(errors.length).not.toBe(0);
+			errors = createPassage("(storylet: when $b is (a:))", "grault");
+			expect(errors.length).toBe(0);
+			errors = createPassage("(set: $b to 1)(storylet: when $b is 1)", "grault");
+			expect(errors.length).not.toBe(0);
+		});
+		it("errors at startup when a passage has two or more (storylet:) calls", function() {
+			var errors = createPassage("(storylet: when $a is true)(storylet: when $c is true)", "grault");
+			expect(errors.length).not.toBe(0);
+		});
+		it("errors at startup when a (storylet:) call overrides a (metadata:) call", function() {
+			var errors = createPassage("(storylet: when $a is true)(metadata: 'storylet', when $c is true)", "grault");
+			expect(errors.length).not.toBe(0);
+		});
+		it("errors at startup when it causes an error", function() {
+			var errors;
+			errors = createPassage("(storylet: where $a is true)", "grault");
+			expect(errors.length).not.toBe(0);
+		});
+		it("the lambda is accessible on the (passage:) datamap", function() {
+			createPassage("(storylet: when true)", "grault");
+			expect("(source:(passages: where its name is 'grault')'s 1st's storylet)").markupToPrint("when true");
+		});
 	});
 	describe("the (open-storylets:) macro", function() {
 		it("returns a sorted array of passages with (storylet:) in their prose, whose lambda returns true", function() {
@@ -31,25 +57,11 @@ describe("metadata macros", function() {
 			expect("(for: each _a, ...(open-storylets:))[(print:_a's name) ]").markupToPrint("grault quux ");
 			runPassage("(link-repeat:'garply')[(set:$a to 'a')]\n(link-repeat:'quux')[(set:$a to 2)]");
 		});
-		it("errors when a passage's (storylet:) appeared after a non-metadata macro", function() {
-			createPassage("(set: $b to 1)(storylet: when $b is 1)", "grault");
-			expect("(set: $a to (open-storylets:))").markupToError();
-			createPassage("(storylet: when $b is (a:))", "grault");
-			expect("(set: $a to (open-storylets:))").not.markupToError();
-			createPassage("(set: $b to 1)(storylet: when $b is 1)", "grault");
-			expect("(set: $a to (open-storylets:))").markupToError();
-		});
-		it("errors when a passage has two or more (storylet:) calls", function() {
-			createPassage("(storylet: when $a is true)(storylet: when $c is true)", "grault");
-			expect("(set: $a to (open-storylets:))").markupToError();
-		});
-		it("errors when a (storylet:) lambda causes an error", function() {
+		it("errors at runtime if a lambda causes an error", function() {
 			createPassage("(storylet: when $a is 3 + 'r')", "grault");
-			expect("(set: $a to (open-storylets:))").markupToError();
+			expect("(open-storylets:)").markupToError();
 			createPassage("(storylet: when it is 2)", "grault");
-			expect("(set: $b to (open-storylets:))").markupToError();
-			createPassage("(storylet: where $a is true)", "grault");
-			expect("(set: $c to (open-storylets:))").markupToError();
+			expect("(open-storylets:)").markupToError();
 		});
 		describe("when evaluating (storylet:) lambdas", function() {
 			it("'visits' refers to the containing passage itself", function() {

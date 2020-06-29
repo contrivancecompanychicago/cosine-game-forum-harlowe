@@ -37,7 +37,7 @@ else {
 <script role="script" type="text/twine-javascript">
 window.createPassage = function(text, name, tags) {
 	Passages.set(name, Passages.create($('<div name="' + name + '" tags="' + (Array.isArray(tags) ? tags : tags ? [tags] : []).join(' ') + '">').text(text)));
-	Passages.loadMetadata(Section.create($('<p>')));
+	return Passages.loadMetadata(Section.create($('<p>')));
 };
 window.goToPassage = function(text, name) {
 	Engine.goToPassage(text, name);

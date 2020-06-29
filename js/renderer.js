@@ -82,7 +82,7 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 			}
 			/*
 				For each macro:
-				if it's a metadata macro outside macro scope, get its lambda
+				if it's a metadata macro outside macro scope, get its call
 				if it's a metadata macro inside macro scope, error
 				if it's a non-metadata macro after a metadata macro outside macro scope, error
 			*/
@@ -95,34 +95,38 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 							If an error was already reported for this metadata name, don't replace it.
 						*/
 						if (TwineError.isPrototypeOf(metadata[token.name])) {
-							return metadata;
+							return;
 						}
 						/*
 							Metadata macros can't appear after non-metadata macros.
 						*/
 						if (afterNonMetadataMacro) {
 							metadata[token.name] = TwineError.create("syntax", 'The (' + token.name + ":) macro can't appear after non-metadata macros.");
-							return metadata;
+							return;
 						}
 						/*
 							Having two metadata macros of the same kind is an error. If there was already a match, produce a TwineError about it
 							and store it in that slot.
+							Technically we don't need this, because Passage.loadMetadata() raises a separate error if two metadata macros
+							override each other's data. But, this one is more incisively descriptive.
 						*/
 						if (metadata[token.name]) {
 							metadata[token.name] = TwineError.create("syntax", 'There is more than one (' + token.name + ":) macro.");
-							return metadata;
+							return;
 						}
-						/*
-							The matching macros are compiled into JS, which is later executed using
-							section.eval(), where the section has a stack.speculativePassage.
-						*/
-						metadata[token.name] = Compiler(token);
-						/*
-							For debug mode and error message display, the original source code of the macros needs to be returned and stored with them.
-							Of course, we could simply re-read the source from the passage itself, but that would be a bit of a waste of cognition
-							when we've got it available right here.
-						*/
-						metadata[token.name + "Source"] = token.text;
+						metadata[token.name] = {
+							/*
+								The matching macros are compiled into JS, which is later executed using
+								section.eval(), where the section has a stack.speculativePassage.
+							*/
+							code:   Compiler(token),
+							/*
+								For debug mode and error message display, the original source code of the macros needs to be returned and stored with them.
+								Of course, we could simply re-read the source from the passage itself, but that would be a bit of a waste of cognition
+								when we've got it available right here.
+							*/
+							source: token.text,
+						};
 					}
 					else {
 						afterNonMetadataMacro = true;

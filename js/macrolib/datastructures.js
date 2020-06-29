@@ -1219,6 +1219,7 @@ define([
 			| source | The source markup of the passage, exactly as you entered it in the Twine editor |
 			| name | The string name of this passage. |
 			| tags | An array of strings, which are the tags you gave to this passage. |
+			| storylet | If a (storylet:) call is in the passage, this holds the lambda for that call. Otherwise, it's absent. |
 
 			However, if the passage contained a (metadata:) macro call, then the data provided to that macro call will be added to that
 			passage's datamap. So, you can have any amount of author-defined data in it as well.
@@ -1268,6 +1269,7 @@ define([
 			| name | The string name of the passage. |
 			| source | The source markup of the passage, exactly as you entered it in the Twine editor |
 			| tags | An array of strings, which are the tags you gave to the passage. |
+			| storylet | If a (storylet:) call is in the passage, this holds the lambda for that call. Otherwise, it's absent. |
 
 			However, if the passage contained a (metadata:) macro call, then the data provided to that macro call will be added to that
 			passage's datamap. So, you can have any amount of author-defined data in it as well.
@@ -1302,7 +1304,7 @@ define([
 			(open-storylets: [Lambda]) -> Array
 			
 			Checks all of the (storylet:) macros in every passage, and provides an array of datamaps for every passage whose (storylet:) lambda returned true, sorted by passage name.
-			If a lambda was provided, the storylets are then filtered using it as a search test.
+			If a lambda was provided, the storylets are filtered using it as a search test.
 			
 			Example usage:
 			* `(for: each _p, ...(open-storylets:)'s 1stTo5th)[(link-goto: _p's name) - ]` creates passage links for the first five open storylets.
@@ -1321,6 +1323,7 @@ define([
 			| name | The string name of the passage. |
 			| source | The source markup of the passage, exactly as you entered it in the Twine editor |
 			| tags | An array of strings, which are the tags you gave to the passage. |
+			| storylet | The storylet condition lambda for this passage. |
 
 			As with all arrays, the (open-storylets:) array can be filtered using (filtered:), to, for instance, only contain passages with a certain tag.
 

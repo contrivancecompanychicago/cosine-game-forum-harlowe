@@ -11,12 +11,13 @@ define([
 	'datatypes/changercommand',
 	'datatypes/hookset',
 	'datatypes/colour',
+	'datatypes/lambda',
 	'internaltypes/changedescriptor',
 	'internaltypes/varscope',
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier',
 ],
-($, Utils, Renderer, Environ, Operations, State, {printBuiltinValue,objectName,typeID}, {collapse}, ChangerCommand, HookSet, Colour, ChangeDescriptor, VarScope, TwineError, TwineNotifier) => {
+($, Utils, Renderer, Environ, Operations, State, {printBuiltinValue,objectName,typeID}, {collapse}, ChangerCommand, HookSet, Colour, Lambda, ChangeDescriptor, VarScope, TwineError, TwineNotifier) => {
 
 	let Section;
 
@@ -705,7 +706,17 @@ define([
 				*/
 				speculativePassage,
 			});
-			const ret = this.eval(code);
+			/*
+				Passages can speculatively execute either code (that is, (metadata:) calls) or compiled lambdas
+				(that is, when storylet lambdas are run.)
+			*/
+			let ret;
+			if (Lambda.isPrototypeOf(code)) {
+				ret = code.apply(this, {fail:false, pass:true});
+			}
+			else {
+				ret = this.eval(code);
+			}
 			this.stack.shift();
 			return ret;
 		},

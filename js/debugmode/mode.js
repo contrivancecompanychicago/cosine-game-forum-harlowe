@@ -417,7 +417,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		const allStorylets = Passages.allStorylets();
 		Storylets.update(allStorylets.map(e => ({
 			name: e.get('name'),
-			storyletSource: e.storyletSource,
+			storyletSource: e.get('storylet').TwineScript_ToSource(),
 			active: !error && activeStorylets.some(map => map.get('name') === e.get('name')),
 		})), error ? 0 : activeStorylets.length);
 		/*
