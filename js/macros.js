@@ -407,8 +407,8 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			numberRange: (min = 0, max = Infinity) =>
 				({pattern: "range", range: arg => typeof arg === "number" && !Number.isNaN(arg) && arg >= min && arg <= max }),
 
-			positiveInteger:
-				{ pattern: "range", range: arg => typeof arg === "number" && !Number.isNaN(arg) && arg >= 1 && !(arg+'').includes('.') },
+			nonNegativeInteger:
+				{ pattern: "range", range: arg => typeof arg === "number" && !Number.isNaN(arg) && arg >= 0 && !(arg+'').includes('.') },
 
 			/*
 				This is used exclusively to provide custom error messages for particular

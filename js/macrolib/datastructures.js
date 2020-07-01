@@ -16,7 +16,7 @@ define([
 	'internaltypes/twinenotifier'],
 ($, {shuffled}, NaturalSort, Macros, {objectName, typeName, subset, collectionType, isValidDatamapName, is, unique, clone, range}, State, Engine, Passages, Lambda, AssignmentRequest, TypedVar, VarRef, TwineError, TwineNotifier) => {
 	
-	const {optional, rest, either, zeroOrMore, Any, positiveInteger}   = Macros.TypeSignature;
+	const {optional, rest, either, zeroOrMore, Any, nonNegativeInteger}   = Macros.TypeSignature;
 	
 	/*d:
 		VariableToValue data
@@ -40,10 +40,12 @@ define([
 			Stores data values in variables.
 			
 			Example usage:
-			* `(set: $battlecry to "Save a " + $favouritefood + " for me!")` sets a variable called $battlecry.
-			* `(set: _dist to $altitude - $enemyAltitude)` sets a temp variable called _dist.
+			* `(set: $battlecry to "Save a " + $favouritefood + " for me!")` creates a variable called $battlecry.
+			* `(set: _dist to $altitude - $enemyAltitude)` creates a temp variable called _dist.
 			* `(set: num-type $funds to 0)` sets a variable and restricts its type to numbers, preventing non-numbers
 			from ever being (set:) into it by accident.
+			* `(set: const-type $robotText to (font:"Courier New"))` sets a variable and makes it so it can't ever be set
+			to another value.
 			
 			Rationale:
 			
@@ -86,6 +88,12 @@ define([
 			indicate and explain the purpose of a variable by showing what data is meant to be in it. You can use any
 			datatype before the `-type` syntax - see the article about datatype data for more details.
 
+			In addition to just restricting a variable to a type, you may wish to specify that a variable should only hold one
+			value for the entire story - a style changer, for instance, or a datamap holding fixed values for a
+			procedural-generation algorithm. For these, you want to use the `const` (short for "constant") datatype.
+			Using this, the variable is guaranteed to constantly hold that value for the entirety of the story (or, if it's
+			a temp variable, the passage).
+
 			Due to the variable syntax potentially conflicting with dollar values (such as $1.50) in your story text,
 			variables cannot begin with a numeral.
 			
@@ -100,6 +108,14 @@ define([
 			
 			A left-to-right version of (set:) that requires the word `into` rather than `to`.
 			
+			Example usage:
+			* `(put: "Save a " + $favouritefood + " for me!" into $battlecry)` creates a variable called $battlecry.
+			* `(put: $altitude - $enemyAltitude into _dist)` creates a temp variable called _dist.
+			* `(put: 0 into num-type $funds)` sets a variable and restricts its type to numbers, preventing non-numbers
+			from ever being (put:) into it by accident.
+			* `(put: (font:"Courier New") into const-type $robotText)` sets a variable and makes it so it can't ever be set
+			to another value.
+
 			Rationale:
 			
 			This macro has an identical purpose to (set:) - it creates and changes variables.
@@ -117,7 +133,8 @@ define([
 			with commas: `(put: 2 into $batteries, 4 into $bottles)`, etc.
 
 			You can also use typed variables with (put:) - `(put: 1 into num-type $days)` permanently
-			restricts $days to numbers.
+			restricts $days to numbers. Consult the article about (set:) for more information about
+			typed variables.
 			
 			`it` can also be used with (put:), but, interestingly, it's used on the right-hand side of
 			the expression: `(put: $eggs + 2 into it)`.
@@ -206,7 +223,7 @@ define([
 			moving the value from the source to the destination.
 			
 			Example usage:
-			`(move: $arr's 1st into $var)`
+			* `(move: $arr's 1st into $var)`
 
 			Rationale:
 			You'll often use data structures such as arrays or datamaps as storage for values
@@ -217,10 +234,10 @@ define([
 			You must use the `into` keyword, like (put:), with this macro. This is because, like (put:),
 			the destination of the value is on the right, whereas the source is on the left.
 
-			You can also set multiple variables in a single (move:) by separating each VariableToValue
-			with commas: `(move: $a's 1st into $b, $a's 2nd into $c)`, etc.
+			As with (set:) and (put:), you can also change multiple variables in a single (move:) by
+			separating each VariableToValue with commas: `(move: $a's 1st into $b, $a's 2nd into $c)`, etc.
 
-			If the value you're accessing cannot be removed - for instance, if it's an array's `length` -
+			If the data value you're accessing cannot be removed - for instance, if it's an array's `length` -
 			then an error will be produced.
 
 			See also:
@@ -730,7 +747,8 @@ define([
 			simpler to write.
 			
 			Details:
-			An error will, of course, be produced if the number given is 0 or less, or contains a fraction.
+			An error will, of course, be produced if the number given is negative, or contains a fraction.
+			As of 3.2.0, however, it will no longer error if the number is 0.
 
 			If you wish to repeat a string multiple times, please use (str-repeated:).
 			
@@ -747,7 +765,7 @@ define([
 			}
 			return ret.map(clone);
 		},
-		[positiveInteger, rest(Any)])
+		[nonNegativeInteger, rest(Any)])
 
 		/*d:
 			(interlaced: Array, ...Array) -> Array

@@ -5,9 +5,8 @@ define([
 	'datatypes/gradient',
 	'datatypes/lambda',
 	'datatypes/custommacro',
-	'utils/operationutils',
-], (Changer, Colour, Gradient, Lambda, CustomMacro, {is}) => {
-	const {assign,create,freeze} = Object;
+], (Changer, Colour, Gradient, Lambda, CustomMacro) => {
+	const {assign,freeze} = Object;
 	const {floor,abs} = Math;
 	/*
 		A Pattern is the fundamental primitive in pattern-matching in Harlowe. A single Datatype
@@ -48,6 +47,7 @@ define([
 		| `even` | Only matches even numbers
 		| `odd` | Only matches odd numbers
 		| `empty` | Only matches these empty structures: `""` (the empty string), `(a:)`, `(dm:)` and `(ds:)`.
+		| `const` | Matches nothing; Use this only with (set:) to make constants
 
 		If you want to check if a variable's data is a certain type, then you can use the `is a` operator to do the comparison. To check if the data in $money is a number, write `$money is a num`.
 
@@ -101,7 +101,7 @@ define([
 
 		TwineScript_IsTypeOf(obj) {
 			const {name} = this;
-			return (typeIndex[name] ? typeIndex[name].typeOf(obj) : false);
+			return (typeIndex[name] ? typeIndex[name](obj) : false);
 		},
 
 		/*
@@ -110,11 +110,7 @@ define([
 			converted to that format when they're used for custom macros.
 		*/
 		toTypeSignatureObject() {
-			return typeIndex[this.name].sig ||
-				/*
-					TBW
-				*/
-				{ pattern: "range", range: typeIndex[this.name].typeOf };
+			return { pattern: "range", range: typeIndex[this.name] };
 		},
 
 		create(name) {
@@ -134,29 +130,33 @@ define([
 		},
 	};
 	/*
-		TBW
+		The typeOf functions for each datatype name. This needs to be define after Datatype so that the
+		"datatype" datatype can access it.
 	*/
 	typeIndex = {
-		array:    { sig: Array,     typeOf: Array.isArray, },
-		datamap:  { sig: Map,       typeOf: obj => obj instanceof Map },
-		dataset:  { sig: Set,       typeOf: obj => obj instanceof Set },
-		datatype: { sig: Datatype,  typeOf: obj => Datatype.isPrototypeOf(obj) },
-		changer:  { sig: Changer,   typeOf: obj => Changer.isPrototypeOf(obj) },
-		colour:   { sig: Colour,    typeOf: obj => Colour.isPrototypeOf(obj) },
-		gradient: { sig: Gradient,  typeOf: obj => Gradient.isPrototypeOf(obj) },
-		lambda:   { sig: Lambda,    typeOf: obj => Lambda.isPrototypeOf(obj) },
-		macro:    { sig:CustomMacro,typeOf: obj => CustomMacro.isPrototypeOf(obj) },
-		string:   { sig: String,    typeOf: obj => typeof obj === "string" },
-		number:   { sig: Number,    typeOf: obj => typeof obj === "number" },
-		boolean:  { sig: Boolean,   typeOf: obj => typeof obj === "boolean" },
+		array:    Array.isArray,
+		datamap:  obj => obj instanceof Map,
+		dataset:  obj => obj instanceof Set,
+		datatype: obj => Datatype.isPrototypeOf(obj),
+		changer:  obj => Changer.isPrototypeOf(obj),
+		colour:   obj => Colour.isPrototypeOf(obj),
+		gradient: obj => Gradient.isPrototypeOf(obj),
+		lambda:   obj => Lambda.isPrototypeOf(obj),
+		macro:    obj => CustomMacro.isPrototypeOf(obj),
+		string:   obj => typeof obj === "string",
+		number:   obj => typeof obj === "number",
+		boolean:  obj => typeof obj === "boolean",
 
-		even:     { typeOf: obj => !isNaN(obj) && (floor(abs(obj)) % 2 === 0) },
-		odd:      { typeOf: obj => !isNaN(obj) && (floor(abs(obj)) % 2 === 1) },
-		empty:    { typeOf: obj => (
+		even:     obj => !isNaN(obj) && (floor(abs(obj)) % 2 === 0),
+		odd:      obj => !isNaN(obj) && (floor(abs(obj)) % 2 === 1),
+		empty:    obj => (
 			obj instanceof Map || obj instanceof Set ? !obj.size :
 			Array.isArray(obj) || typeof obj === "string" ? !obj.length :
 			false
-		)},
+		),
+		/*
+			"const" is handled almost entirely as a special case inside VarRef.
+		*/
 	};
 	return freeze(Datatype);
 });

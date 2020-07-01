@@ -101,6 +101,15 @@ describe("variables", function() {
 				expect("(set: num-type $c to 1)(set: num-type $c to 2)$c").markupToPrint("2");
 				expect("(set: num-type $d to 1)(set: $d to 'e')").markupToError();
 			});
+			it("when given 'const', the variable can't be reassigned", function() {
+				['1','true','(a:)','""','(size:1)','(each _a)','red'].forEach(function(e) {
+					expect("(set: const-type $a to "+e+")").not.markupToError();
+					expect("(set: $a to "+e+")").markupToError();
+					clearState();
+				});
+				expect("(set: const-type $a to (a:2))").not.markupToError();
+				expect("(set: $a's 1st to 3)").markupToError();
+			});
 			it("can restrict existing variables", function() {
 				runPassage("(set: $a to 1)");
 				expect("(set: num-type $a to 2)$a").markupToPrint("2");

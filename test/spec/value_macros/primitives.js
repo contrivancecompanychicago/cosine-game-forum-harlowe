@@ -220,9 +220,9 @@ describe("primitive value macros", function() {
 			runPassage("(set: $b to (string-repeated:8,'x'))");
 			expect("(print: $b)").markupToPrint("xxxxxxxx");
 		});
-		it("produces an error if the number is smaller than 1", function() {
+		it("produces an error if the number is smaller than 0", function() {
 			expect("(string-repeated:-2,'grault'))").markupToError();
-			expect("(string-repeated:0,'grault'))").markupToError();
+			expect("(string-repeated:0,'grault'))").not.markupToError();
 		});
 		it("produces an error if the string is empty", function() {
 			expect("(string-repeated:2,'')").markupToError();

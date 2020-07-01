@@ -11,6 +11,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		Example usage:
 		```
 		(set: $healthSummary to (macro: dm-type _stats, [
+			This text inside the macro is not displayed during the game.
 			(set: _TheyAre to _stats's name + " is ")
 			Dead characters get a single, pithy line.
 			(if: _stats's HP <= 0)[(output: _TheyAre + "deceased.")]
@@ -36,20 +37,19 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		Writing the parameters:
 
 		Custom macros consist of two structures: a set of data inputs (called *parameters*), and a body of code that creates the output.
-		Each of these is represented by two very specific data types, the TypedVar and the CodeHook.
 
-		Each TypedVar consists of a datatype, the "-type" suffix, and a temp variable. When you, the author, call
-		the macro and give data at that TypedVar's position, it is put into the temp variable if it fits the datatype.
+		Each parameter consists of a datatype, the "-type" suffix, and a temp variable, just like typed variables created with (set:).
+		When you, the author, call the macro and give data at that parameter's position, it is put into the temp variable if it fits the datatype.
 		A macro stored in $treasure with `str-type _name, num-type price` can be called by `($treasure: "Gold Watch", 155)`.
 		The datatypes are checked, and if they don't match (for instance, by incorrectly writing `($treasure: 155, "Gold Watch")`),
 		then an error will result. This ensures that incorrectly written custom macro calls are caught early, just like with built-in macros.
 
 		You might, on occasion, want to make a macro that can take an arbitrary amount of values, similar to certain built-in macros like `(a:)`,
-		`(altered:)`, and so forth. To do this, you can place the spread `...` syntax in front of a TypedVar. This turns it into a spread TypedVar,
+		`(altered:)`, and so forth. To do this, you can place the spread `...` syntax in front of a parameter. This turns it into a spread parameter,
 		which represents zero or more values of the same data type. Think of this as the opposite counterpart of the spread `...` syntax
 		in macro calls. Instead of turning one value (such as an array) into many spread-out values, this turns many values into a single array value.
 		A custom macro stored in $mean with `...num-type _n` can be called with `($mean:1,4,5,6)`, which sets _n to `(a:1,4,5,6)`. `($mean:2,3)` sets
-		_n to `(a:2,3)`, and `($mean:)` sets _n to `(a:)`. Note that because it takes every value at or after it, it must be the final TypedVar
+		_n to `(a:2,3)`, and `($mean:)` sets _n to `(a:)`. Note that because it takes every value at or after it, it must be the final parameter
 		of your custom macro.
 
 		```
@@ -62,7 +62,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		The CodeHook, conversely, is where the code of your custom macro is written. You can (set:) temp variables in it, use (if:), (for:),
 		(cond:) and so forth to run different sections of code, and output a final value using either (output:) or (output-hook:).
 		(Consult each of those macros' articles to learn the exact means of using them, and their differences.) The temp variables
-		specified by the TypedVars are automatically set with the passed-in data.
+		specified by the typed variables are automatically set with the passed-in data.
 
 		Custom macros can be called like any other macro, by using the variable instead of a name: `($someCustomMacro:)` is how you would
 		call a custom macro stored in the variable $someCustomMacro, and `(_anotherCustomMacro:)` is how you would
@@ -73,13 +73,13 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 
 		Details:
 
-		You can, of course, have zero TypedVars, for a macro that needs no input values, and simply outputs a complicated (or randomised) value
+		You can, of course, have zero parameters, for a macro that needs no input values, and simply outputs a complicated (or randomised) value
 		by itself.
 
 		Currently, (macro:) code hooks do NOT have access to temp variables created outside of them. `(set: _name to "Fox", _aCustomMacro to (macro:[(output:_name)])) (_aCustomMacro:)`
 		will cause an error, because _name isn't accessible inside the _aCustomMacro macro. They do, however, have access to global variables (which begin with `$`).
 
-		Much like with typed variables given to (set:) or (put:), each temp variable associated with a TypedVars is restricted to the given data type. So,
+		Much like with typed variables given to (set:) or (put:), each temp variable associated with a parameter is restricted to the given data type. So,
 		`(macro:num-type _a,[(set:_a to 'text')(output:_a)]` will cause an error when run.
 
 		All custom macros must return some value. If no (output:) or (output-hook:) macros were run inside the code hook, an error will result.

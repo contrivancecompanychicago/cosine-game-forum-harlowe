@@ -68,9 +68,9 @@ describe("data structure macros", function () {
 			runPassage("(set: $b to (repeated:8,1))");
 			expect("(print: $b)").markupToPrint("1,1,1,1,1,1,1,1");
 		});
-		it("produces an error if the number is smaller than 1", function() {
+		it("produces an error if the number is smaller than 0", function() {
 			expect("(repeated:-2,1,2,3,4))").markupToError();
-			expect("(repeated:0,1,2,3,4))").markupToError();
+			expect("(repeated:0,1,2,3,4))").not.markupToError();
 		});
 	});
 	describe("the (interlaced:) macro", function() {

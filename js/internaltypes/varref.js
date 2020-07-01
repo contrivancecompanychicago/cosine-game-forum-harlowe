@@ -347,11 +347,23 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 					This should never be called when prop is an array - the map() below should always sort it out.
 				*/
 				const type = obj.TwineScript_TypeDefs[prop];
-				if (!type.TwineScript_IsTypeOf(value)) {
-					return TwineError.create('operation',
-						"I can't set "
-						+ (obj === State.variables ? "$" : "_") + prop + " to " + typeName(value)
-						+ " because it's already been restricted to " + type.name + "-type data.",
+				/*
+					Simply due to weariness, I've decided to simply hard-code the special case for the "const" datatype.
+				*/
+				if (type.name === "const") {
+					/*
+						Because, currently, only base variable store variables can be type-restricted
+						(as above) then get() isn't needed to check the variable's current contents.
+					*/
+					if (obj[prop] !== undefined) {
+						return TwineError.create("operation", "I can't alter " + (obj === State.variables ? "$" : "_") + prop
+							+ " because it's been restricted to a constant value.",
+							"This variable can't be changed for the rest of the story.");
+					}
+				}
+				else if (!type.TwineScript_IsTypeOf(value)) {
+					return TwineError.create('operation', "I can't set " + (obj === State.variables ? "$" : "_") + prop + " to " + typeName(value)
+						+ " because it's been restricted to " + type.name + "-type data.",
 						"You can restrict a variable or data name by giving a typed variable to (set:) or (put:)."
 					);
 				}
@@ -914,6 +926,14 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				Having done that, simply affix the type.
 			*/
 			defs[prop] = type;
+			/*
+				As a necessary special case, defining the const type should erase the currently contained
+				value, as it is about to be redefined to its true value in the containing (set:) that
+				called this method.
+			*/
+			if (type.name === "const") {
+				object[prop] = undefined;
+			}
 		},
 
 		/*

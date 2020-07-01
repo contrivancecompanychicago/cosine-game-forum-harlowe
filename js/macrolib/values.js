@@ -7,7 +7,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 	*/
 	
 	const
-		{rest, zeroOrMore, either, optional, insensitiveSet, numberRange, positiveInteger, percent, Any } = Macros.TypeSignature,
+		{rest, zeroOrMore, either, optional, insensitiveSet, numberRange, percent, nonNegativeInteger, Any } = Macros.TypeSignature,
 		{max,min,round} = Math;
 	
 	Macros.add
@@ -335,7 +335,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			`(str: ...(repeated: 14, "-+*+"))` is the same as `(str-repeated: 14, "-+*+")`.
 			
 			Details:
-			An error will, of course, be produced if the number given is 0 or less, or contains a fraction.
+			An error will, of course, be produced if the number given is negative, or contains a fraction.
+			As of 3.2.0, however, it will no longer error if the number is 0.
 			
 			See also:
 			(repeated:)
@@ -349,7 +350,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			}
 			return string.repeat(number);
 		},
-		[positiveInteger, String])
+		[nonNegativeInteger, String])
 		/*d:
 			(str-reversed: String) -> String
 			Also known as: (string-reversed:)
