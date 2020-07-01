@@ -348,8 +348,8 @@ define([
 					Consider a macro that uses lambdas, such as (altered:) - you give it a lambda, and then one or more data values, such as
 					in `(altered: via it + (str:pos), "A","B","C")`. When the lambda is processing "A", the pos identifier is 1, for "B" it's 2, and for
 					"C" it's 3. This can be used for a number of purposes. You can attach an ascending number to each data value, as in that example.
-					You can make only odd-numbered values be altered by using `(cond: pos % 2 is 0, it, it + (str:pos))`. You can make every third value
-					be followed by a comma, by using `(cond: pos % 3 is 2, it, it + ',')`.
+					You can make only odd-numbered values be altered by using `(cond: pos is an odd, it, it + (str:pos))` (which uses the "odd" datatype).
+					You can make every third value be followed by a comma, by using `(cond: pos % 3 is 2, it, it + ',')`.
 
 					Note that this only corresponds to the position of the values when given to the macro - if you use the `...` operator to spread arrays'
 					values into a macro, such as `(find: where it is > pos, ...$array1, ...$array2, ...$array3)`, then values from $array2 and $array3 will not

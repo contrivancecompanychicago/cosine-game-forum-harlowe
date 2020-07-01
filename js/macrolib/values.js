@@ -500,7 +500,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			#colour 2
 		*/
 		(["rgb","rgba"], (_, ...values) => Colour.create({r: values[0], g: values[1], b: values[2], a: values[3]}),
-		[numberRange(255), numberRange(255), numberRange(255), optional(percent)])
+		[numberRange(0,255), numberRange(0,255), numberRange(0,255), optional(percent)])
 
 		/*d:
 			(hsl: Number, Number, Number, [Number]) -> Colour
@@ -622,7 +622,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			}
 			return Colour.create({l, c, h, a});
 		},
-		[percent, numberRange(132), Number, optional(percent)])
+		[percent, numberRange(0,132), Number, optional(percent)])
 
 		/*d:
 			(complement: Colour) -> Colour

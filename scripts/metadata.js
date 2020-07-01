@@ -110,7 +110,7 @@ const
 	Changes = new Defs({
 		defName: "Change log",
 		defCode: "changes",
-		regExp: /^###(\d\.\d\.\d[^:]*):/,
+		regExp: /^### (\d\.\d\.\d[^:]*):/,
 
 		definition({input, 0:title, 1:name}) {
 			const slugName =  name.replace(/\s/g,'-').toLowerCase();
@@ -432,7 +432,7 @@ paths.forEach(function(path) {
 	let defs;
 	// .md files should be treated as entire single definitions
 	if (path === "README.md") {
-		defs = file.match(/###\d\.\d\.\d[^]*?\n(?=###[^#])/g).slice(0,2);
+		defs = file.match(/### \d\.\d\.\d[^]*?\n(?=###[^#])/g).slice(0,2);
 	} else if (path.endsWith('.md')) {
 		defs = [file];
 	} else {

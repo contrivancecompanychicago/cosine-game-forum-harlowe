@@ -114,7 +114,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 			A quick getter that provides every passage with storylet code.
 		*/
 		allStorylets() {
-			return [...Passages.values()].filter(e => e.storyletCode);
+			return [...Passages.values()].filter(e => e.get('storylet'));
 		},
 
 		/*

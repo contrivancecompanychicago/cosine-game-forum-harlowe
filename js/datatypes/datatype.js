@@ -5,7 +5,10 @@ define([
 	'datatypes/gradient',
 	'datatypes/lambda',
 	'datatypes/custommacro',
-], (Changer, Colour, Gradient, Lambda, CustomMacro) => {
+	'utils/operationutils',
+], (Changer, Colour, Gradient, Lambda, CustomMacro, {is}) => {
+	const {assign,create,freeze} = Object;
+	const {floor,abs} = Math;
 	/*
 		A Pattern is the fundamental primitive in pattern-matching in Harlowe. A single Datatype
 		is a pattern, and any data structure containing a Datatype is itself useful as a pattern.
@@ -36,8 +39,17 @@ define([
 		| `gradient` | Gradients
 		| `lambda` | Lambdas
 		| `macro` | CustomMacros
+		| `datatype` | Datatypes
 
-		If you want to check if a variable's data is a certain type  - then you can use these special values to do the comparison. To check if the data in $money is a number, write `$money is a num`.
+		In addition to the above, there are a few variations of these that only match a certain subset of each type.
+
+		| Value | Data type
+		|---
+		| `even` | Only matches even numbers
+		| `odd` | Only matches odd numbers
+		| `empty` | Only matches these empty structures: `""` (the empty string), `(a:)`, `(dm:)` and `(ds:)`.
+
+		If you want to check if a variable's data is a certain type, then you can use the `is a` operator to do the comparison. To check if the data in $money is a number, write `$money is a num`.
 
 		Warning: you must write `is a` - don't write `$money is num`, because `is` by itself checks if the left side exactly equals the right side, and `num` represents all numbers,
 		not the specific number contained in $money.
@@ -62,23 +74,9 @@ define([
 		| `is a`, `is an` | Similar to `matches`, but requires the right side to be just a type name. | `(a:2,3) is an array`, `4.1 is a number`
 		| `-type` | Produces a TypedVar, if a variable follows it. Note that there can't be any space between `-` and `type`. | `num-type $funds`
 	*/
+	let typeIndex;
 
-	const typeIndex = {
-		array:    { class: Array,     typeOf: Array.isArray, },
-		datamap:  { class: Map,       typeOf: obj => obj instanceof Map },
-		dataset:  { class: Set,       typeOf: obj => obj instanceof Set },
-		changer:  { class: Changer,   typeOf: obj => Changer.isPrototypeOf(obj) },
-		colour:   { class: Colour,    typeOf: obj => Colour.isPrototypeOf(obj) },
-		gradient: { class: Gradient,  typeOf: obj => Gradient.isPrototypeOf(obj) },
-		lambda:   { class: Lambda,    typeOf: obj => Lambda.isPrototypeOf(obj) },
-		macro:    { class:CustomMacro,typeOf: obj => CustomMacro.isPrototypeOf(obj) },
-		string:   { class: String,    typeOf: obj => typeof obj === "string" },
-		number:   { class: Number,    typeOf: obj => typeof obj === "number" },
-		boolean:  { class: Boolean,   typeOf: obj => typeof obj === "boolean" },
-		// Lambdas, AssignmentRequests and DataType are not included because they're not meant to be pattern-matched.
-	};
-
-	const Datatype = Object.freeze({
+	const Datatype = {
 		
 		TwineScript_TypeID: "datatype",
 		
@@ -112,7 +110,11 @@ define([
 			converted to that format when they're used for custom macros.
 		*/
 		toTypeSignatureObject() {
-			return typeIndex[this.name].class;
+			return typeIndex[this.name].sig ||
+				/*
+					TBW
+				*/
+				{ pattern: "range", range: typeIndex[this.name].typeOf };
 		},
 
 		create(name) {
@@ -128,8 +130,33 @@ define([
 				name === "bool" ? "boolean" :
 				name
 			);
-			return Object.assign(Object.create(this), { name, TwineScript_ObjectName: "the " + name + " datatype", });
+			return assign(Object.create(this), { name, TwineScript_ObjectName: "the " + name + " datatype", });
 		},
-	});
-	return Datatype;
+	};
+	/*
+		TBW
+	*/
+	typeIndex = {
+		array:    { sig: Array,     typeOf: Array.isArray, },
+		datamap:  { sig: Map,       typeOf: obj => obj instanceof Map },
+		dataset:  { sig: Set,       typeOf: obj => obj instanceof Set },
+		datatype: { sig: Datatype,  typeOf: obj => Datatype.isPrototypeOf(obj) },
+		changer:  { sig: Changer,   typeOf: obj => Changer.isPrototypeOf(obj) },
+		colour:   { sig: Colour,    typeOf: obj => Colour.isPrototypeOf(obj) },
+		gradient: { sig: Gradient,  typeOf: obj => Gradient.isPrototypeOf(obj) },
+		lambda:   { sig: Lambda,    typeOf: obj => Lambda.isPrototypeOf(obj) },
+		macro:    { sig:CustomMacro,typeOf: obj => CustomMacro.isPrototypeOf(obj) },
+		string:   { sig: String,    typeOf: obj => typeof obj === "string" },
+		number:   { sig: Number,    typeOf: obj => typeof obj === "number" },
+		boolean:  { sig: Boolean,   typeOf: obj => typeof obj === "boolean" },
+
+		even:     { typeOf: obj => !isNaN(obj) && (floor(abs(obj)) % 2 === 0) },
+		odd:      { typeOf: obj => !isNaN(obj) && (floor(abs(obj)) % 2 === 1) },
+		empty:    { typeOf: obj => (
+			obj instanceof Map || obj instanceof Set ? !obj.size :
+			Array.isArray(obj) || typeof obj === "string" ? !obj.length :
+			false
+		)},
+	};
+	return freeze(Datatype);
 });

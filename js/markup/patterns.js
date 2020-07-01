@@ -965,8 +965,9 @@
 		// Data types
 		datatype: either(
 			"array", "boolean", "bool", "changer", "colour",
-			"color", "command", "dm", "datamap", "ds", "dataset",
-			"gradient", "lambda", "macro", "number", "num", "string", "str"
+			"color", "command", "cond", "dm", "datamap", "ds", "dataset", "datatype",
+			"gradient", "empty", "even", "lambda", "macro", "number", "num", "odd",
+			"string", "str"
 		),
 		
 		/*

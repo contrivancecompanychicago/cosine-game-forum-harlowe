@@ -152,11 +152,10 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 				return type.innerType.includes(insensitiveName(arg));
 			}
 			/*
-				If the type expects a limited range of numbers, check if there's a match.
+				If the type expects a limited range defined by a function, check if there's a match.
 			*/
-			if (type.pattern === "number range" || type.pattern === "integer range") {
-				return jsType === sNumber && !Number.isNaN(arg) && arg >= type.min && arg <= type.max
-					&& (type.pattern !== "integer range" || !(arg + '').includes('.'));
+			if (type.pattern === "range") {
+				return type.range(arg);
 			}
 			/*
 				Otherwise, if this is a Wrapped signature, ignore the included

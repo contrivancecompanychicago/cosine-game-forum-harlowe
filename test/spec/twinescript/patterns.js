@@ -126,4 +126,24 @@ describe("patterns", function() {
 			});
 		});
 	});
+	describe("exotic datatypes", function() {
+		["'even' matches only even numbers", "'odd' matches only odd numbers"].forEach(function(e,i) {
+			var name = ['even','odd'][i];
+			it(e, function() {
+				expect("(set: $a to 2 is a "+name+")(print:$a)").markupToPrint(!i+'');
+				expect("(set: $a to 0 is a "+name+")(print:$a)").markupToPrint(!i+'');
+				expect("(set: $a to -2.1 is a "+name+")(print:$a)").markupToPrint(!i+'');
+				expect("(set: $a to -3 is a "+name+")(print:$a)").markupToPrint(!!i+'');
+				expect("(set: $a to -3.9 is a "+name+")(print:$a)").markupToPrint(!!i+'');
+			});
+		});
+		it("'empty' matches only empty structures", function() {
+			expect("(set: $a to (a:) is a empty)(print:$a)").markupToPrint("true");
+			expect("(set: $a to (dm:) is a empty)(print:$a)").markupToPrint("true");
+			expect("(set: $a to (ds:) is a empty)(print:$a)").markupToPrint("true");
+			expect("(set: $a to '' is a empty)(print:$a)").markupToPrint("true");
+			expect("(set: $a to (a:1) is a empty)(print:$a)").markupToPrint("false");
+			expect("(set: $a to ' ' is a empty)(print:$a)").markupToPrint("false");
+		});
+	});
 });

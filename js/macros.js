@@ -390,41 +390,25 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		*/
 		TypeSignature: {
 			
-			optional(type) {
-				return {pattern: "optional",         innerType: type };
-			},
+			optional: (type) => ({pattern: "optional", innerType: type }),
 			
-			zeroOrMore(type) {
-				return {pattern: "zero or more",     innerType: type };
-			},
+			zeroOrMore: (type) => ({pattern: "zero or more", innerType: type }),
 			
-			either(...innerType) {
-				return {pattern: "either",           innerType };
-			},
+			either: (...innerType) => ({pattern: "either", innerType }),
 			
-			rest(type) {
-				return {pattern: "rest",             innerType: type };
-			},
+			rest: (type) => ({pattern: "rest", innerType: type }),
 			
 			/*
 				Note that "innerType" here isn't actually a valid type, but simply a set of
 				recognised values. #awkward
 			*/
-			insensitiveSet(...values) {
-				return {pattern: "insensitive set",   innerType: values };
-			},
+			insensitiveSet: (...values) => ({pattern: "insensitive set",   innerType: values }),
 
-			numberRange(max) {
-				return {pattern: "number range", min: 0, max };
-			},
+			numberRange: (min = 0, max = Infinity) =>
+				({pattern: "range", range: arg => typeof arg === "number" && !Number.isNaN(arg) && arg >= min && arg <= max }),
 
-			positiveNumber: { pattern: "number range", min: 0.0001, max: Infinity },
-
-			nonNegativeNumber: { pattern: "number range", min: 0, max: Infinity },
-
-			positiveInteger: { pattern: "integer range", min: 1, max: Infinity },
-
-			percent: { pattern: "number range", min: 0, max: 1 },
+			positiveInteger:
+				{ pattern: "range", range: arg => typeof arg === "number" && !Number.isNaN(arg) && arg >= 1 && !(arg+'').includes('.') },
 
 			/*
 				This is used exclusively to provide custom error messages for particular
@@ -479,6 +463,15 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			return typeCheckAndRun('', obj, args);
 		},
 	};
+
+	/*
+		Some final commonly-used TypeSignatures.
+	*/
+	Object.assign(Macros.TypeSignature, {
+		positiveNumber:      Macros.TypeSignature.numberRange(0.0001, Infinity),
+		nonNegativeNumber:   Macros.TypeSignature.numberRange(0, Infinity),
+		percent:             Macros.TypeSignature.numberRange(0, 1),
+	});
 	
 	return Object.freeze(Macros);
 });

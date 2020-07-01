@@ -1,10 +1,10 @@
-#Harlowe - the default [Twine 2](https://github.com/klembot/twinejs) story format.
+# Harlowe - the default [Twine 2](https://github.com/klembot/twinejs) story format.
 
 Documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
-###3.2.0 changes (unreleased):
+### 3.2.0 changes (unreleased):
 
-####Bugfixes
+#### Bugfixes
 
  * Fixed a long-standing bug where continuous ranges for arrays, such as `(a: 1,2)'s 4thlasttolast`, wouldn't work correctly. (What that example should do is provide the entire array, as is consistent with Python.)
  * Fixed a long-standing bug where `(click: ?Passage)` and `(click: ?Sidebar)` just flat-out didn't work at all.
@@ -29,7 +29,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * `(save-game:)` can now save a greater range of variable data. Formerly, only changers, arrays, datamaps, datasets, booleans, strings and numbers could be stored in variables when you use `(save-game:)` - other values, such as commands, colours, gradients, or lambdas, would cause an error. Now, it should work with every kind of supported Harlowe value (i.e. those mentioned in the documentation) except user-created commands created with `(output-hook:)` (see below). But, this means that save data from 3.1.0 is no longer compatible with 3.2.0.
  * Improved an error message that could appear if you erroneously put the spread `...` syntax inside parentheses, such as `(...$arr)`.
 
-####Alterations
+#### Alterations
 
  * The behaviour of `(text-colour:)` regarding links has been changed. Formerly, `(text-colour:)` couldn't change the colour of links inside hooks unless it was used with `(enchant:)` and wasn't used with `?passage` or `?page`. This meant that changing the colour of individual links was, unintuitively, not possible without `(enchant:)`. Now, a simpler rule is in place: `(text-colour:)` will always change links' colours, unless it's used with `(enchant: ?passage)` or `(enchant:?page)`. (This exception means that all of `(enchant:)`'s behaviour is unchanged with this release.)
  * The behaviour for multiple `(click:)` macros affecting the same hook (such as in `|A>[B] (click: ?A)[1] (click: ?A)[2]`) has changed to be slightly more intuitive: formerly, as you clicked the hook, the last `(click:)` would activate first (so, `[2]` then `[1]`). Now, they activate from first to last. This also applies to `(mouseover:)` and `(mouseout:)`.
@@ -51,9 +51,9 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * `(rgb:)` now accepts fractional values for the R, G, and B components.
  * Made the syntax highlighting dark mode colours 50% brighter.
 
-####Additions
+#### Additions
 
-#####Coding
+##### Coding
 
  * Added the `is not in` operator - `$a is not in $b` is a more intelligible phrasing for `not ($a is in $b)`. (Currently, `contains` still doesn't have a negative equivalent.)
  * Added the `pos` identifier, which is used in lambdas to provide the position of the data value (from those passed into the macro) that the lambda is currently processing. `(altered: via it + pos, 0,0,5,0,0)` equals `(a:1,2,8,4,5)`.
@@ -63,8 +63,9 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Colours now have an `lch` data value, which contains a datamap of LCH color space values for that colour (corresponding to the numbers given to the new `(lch:)` macro). Because LCH's values conflict with HSL's, the LCH values are inside this datamap instead of directly accessible from the colour itself.
  * As an error-checking feature, you can now force your story's variables to only ever hold certain datatypes, so that data of the wrong type can't be set to them. `(set: num-type $funds to 0)` will force an error to occur if a non-number is ever put into $funds, such as by `(set: $funds to "200")`. You can use this syntax with temp variables, too.
  * Added the `lambda` and `macro` datatypes, and the `boolean` datatype can now be shortened to `bool`.
+ * Added the following datatypes: `even`, which matches only even numbers, `odd`, which matches only odd numbers, and `empty`, which matches only empty arrays, strings, datamaps and datasets.
 
-#####Macros
+##### Macros
 
  * Added some new macros, `(storylet:)` and `(open-storylets:)`, to support "storylets", an alternative way to link between groups of passages that's preferable for writing non-linear "episodic" interactive fiction. Instead of writing direct links between each episode, you instead write a requirement at the start of each episode, specifying (using a 'when' lambda) when would be the best time to let the player visit the passages. An example is `(storylet: when $season is "spring")`. Then, when you want the player to go to an episode, you use macros like `(open-storylets:)` to get a list of which storylet passages are available right now, and create links or other structures from there. Thanks to Emily Short for popularising the "storylet" design pattern.
  * Added a `(metadata:)` macro, which, when placed in a passage, adds values to the `(passage:)` datamap for that passage, allowing you to store any arbitrary data on it for your own use. This takes the same values as `(dm:)` - string names and data values in alternation.
@@ -89,14 +90,14 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added `(palette:)`, a macro designed for rapid prototyping which produces a four-colour palette based on a given colour, for use with `(text-colour:)`, `(background:)` and `(enchant:)`.
  * Added `(source:)`, a macro that can turn any data value into its source code representation. `(source: (text-style:"bold") + (click: ?hat's 1st))` produces the string `'(text-style:"bold")+(click:?hat's 1st)'`.
 
-#####Custom Macros
+##### Custom Macros
 
  * A new macro, `(macro:)`, allows you to write custom macros for Harlowe and store them in variables. `(set: $earthName to (macro: [(output:(either:"Terra","Earth"))]))` produces a custom macro that can be called by writing `($earthName:)`.
  * Added three macros, `(output:)`, `(output-hook:)` and `(error:)`, which are used to output final values for your custom macros. `(output:)` is used for macros that produce data values, such as `(min:)` or `(lowercase:)`, whereas `(output-hook:)` is used for macros that produce commands that display complicated markup, such as `(cycling-link:)`. `(error:)` can be used to output custom error messages.
  * Added CodeHooks, which are special kinds of hooks that go inside macro calls, rather than just in passage prose. These are used to write the inner code of custom macros. You can use `(if:)`, `(for:)`, `(set:)`, and most other macros inside one. Their contents are invisible at runtime - only the result produced by `(output:)` or `(output-hook:)` is visible - so you can comment your code by simply writing prose inside it.
  * Added a new operator, `-type`, which is used to define the parameters of custom macros. Place a datatype (such as `str` or `dm`) in front, and a temp variable after it (such as `str-type _name`) and you have a TypedVar, which is a variable name combined with a datatype. When you call a custom macro, each value provided to it is compared with the datatype, then placed in the temp variable when the CodeHook is run. `(set: $earthName to (macro: boolean-type _isFuture, [(output:(cond: _isFuture, "Terra","Earth"))]))` produces a custom macro that can be called by writing `($earthName: true)` or `($earthName: false)`, and produces an error when you write `($earthName: 2)`.
 
-#####Debug Mode
+##### Debug Mode
 
  * Added a debug mode panel listing which enchantments are present in the passage, and the changers they contain. This highlights `(enchant:)` effects, as well as `(click:)`, `(mouseover:)` and `(mouseout:)`.
  * Added a debug mode panel listing which storylet passages are currently available, and their 'where' lambdas. This panel is only visible if you have `(storylet:)` macros in your story.
@@ -106,15 +107,15 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added an alternative debug view, "DOM view", which labels the unique elements on the page with their current HTML tag and a few relevant attributes, as well as spacing out the elements to better distinguish them. The elements that will be highlighted this way are `<tw-story>`, `<tw-passage>`, `<tw-sidebar>`, `<tw-include>`, `<tw-hook>`, `<tw-expression>`, `<tw-link>`, `<tw-dialog>`, `<tw-columns>`, `<tw-column>`, and `<tw-align>`.
  * Now, whenever the first error of your story is displayed, debug mode will automatically, immediately enable itself, so you can begin debugging there and then.
 
-#####Other
+##### Other
 
  * The syntax highlighter no longer highlights syntactic elements inside strings. While this had some fringe benefit in cases where strings contained code to be printed, I've decided it's too distracting in more usual cases.
  * The syntax highlighter now colourises macro names based on their returned data type.
  * Added a `<noscript>` element to the output HTML, containing a sentence instructing that JavaScript should be enabled to play the story (as per SugarCube).
 
-###3.1.0 changes:
+### 3.1.0 changes (Sep 24, 2019):
 
-####Bugfixes
+#### Bugfixes
 
  * Fixed a bug where the CSS that makes sequences of consecutive line breaks cumulatively smaller in height was incorrectly being applied to non-consecutive `<br>`s that only had plain text between them - for instance, single line breaks separating words or phrases with no other formatting, or line breaks in the verbatim markup.
  * `(alert:)`, `(confirm:)` and `(prompt:)` no longer error when playing in certain browser environments, including testing within certain versions of the desktop Twine app itself. (For more details, see "Alterations".)
@@ -135,7 +136,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a limitation where certain commands (including `(show:)`, `(cycling-link:)`, `(enchant:)`, `(click-goto:)`, `(mouseover-goto:)`, `(mouseout-goto:)` and `(link-show:)`) wouldn't correctly interact with temp. variables or hook names after being `(set:)` into a variable in one passage and then used in another (although there's not very much utility in doing this).
  * Fixed a bug where the debug view notification messages for `(set:)`, `(move:)` and `(put:)` (that tell you what value the variable now contains) were not being produced.
 
-####Alterations
+#### Alterations
 
  * As you know, passage links can contain markup like `[[$passageVar]]`, and that markup is evaluated as if it were an expression to determine the correct passage name. But formerly, if there really was a passage whose named lined up exactly with the markup (in this example, a passage whose name literally was "$passageVar") then it wasn't (easily) possible to link to it. This is now changed, so Harlowe will always prioritise exact matches first, and these passages can be successfully linked to.
  * Furthermore, if a link's passage name is an exact match to a passage, then the markup inside that passage name will now be ignored. For instance, `[[//Bleah//]]` will, if it links to a passage, be rendered as "//Bleah//" instead of "Bleah" in italics, and `[[board_shorts]]` will no longer be considered to have a temp variable named `_shorts` inside it.
@@ -150,9 +151,9 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * The default CSS for `<pre>` elements now has a smaller `line-height`.
  * When a Javascript error in a story's user script is thrown, the stack trace in the resulting dialog is now more concise, no longer printing Harlowe engine stack frames.
 
-####Additions
+#### Additions
 
-#####Coding
+##### Coding
 
  * Added a `visits` identifier (aliased as `visit`) to join `it` and `time`. It equals the number of times the current passage was visited, including this visit. The purpose of this identifier is to make it easier to replicate the Twine 1 `<<once>>` macro, which only displayed text on the first visit to a passage, and whose absence was a long-standing weakness in Harlowe. Previously, it could be replicated using the rather cumbersome `(if: (passage:)'s name is not in (history:))`, but now, it can be replicated using `(if: visits is 1)`, which expresses the intent much better and approaches the original's brevity. Furthermore, it makes it much easier to specify hooks to display on third, fourth, or even-numbered visits, using `(if: visits is 3)`, `(if: visits % 2 is 0)` and so forth. The reason this is an identifier and not a macro (like `(passage:)`) is because I want identifiers to be used for small, "volatile" information that's specific only to the current context, such as `it` and `time`. (`(history:)`, in retrospect, could have been an identifier.)
  * Also added an `exits` identifier (aliased as `exit`), which equals the number of "exit" elements in the passage (links, `(mouseover:)` or `(mouseout:)` elements).
@@ -162,7 +163,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
    * `?hook's links` selects hyperlinks, similar to `?Link`, but only within the given hook.
  * Now, you can create consecutive subsets of arrays, strings and hooknames by writing two positions, such as `1st` and `3rd`, and joining them together with `to`, and using that as a data name - `$arr's 1stto3rd` is the same as `$arr's (a:1,2,3)`, and `"Jelly"'s 3rdlasttolast` is "lly". This is a more readable alternative to using arrays of positions. Note that, as with `2nd` etc., these are case-insensitive, so you can write these using the capitalisation `3rdlastToLast` if you wish. (Note that this isn't intended to replace subsets whose ranges are defined by variables, such as in `$a's (range:$p1, $p2)`.)
 
-#####Macros
+##### Macros
 
  * Added `(cond:)`, a macro similar to `(if:)` but which conditionally chooses between two data values, rather than hooks. `(cond: visits is 1, "Strange", "Familiar")` is "Strange" on the first visit and "Familiar" afterward. Since it's not a changer, you can use it in expressions within other macros freely. Additionally, you can add further conditions - `(cond: $gender is "masc", "god", $gender is "femme", "goddess", $gender is "pan", "goddex", "deity")` - to choose among several values precisely.
  * Added `(nth:)`, a macro that takes a sequence of values and chooses one at a given position, similar to the `'s` or `of` indexing syntax for arrays. `(nth: 2, $mary, $edith, $gwen)` is the same as `(a: $mary, $edith, $gwen)'s 2nd`. It serves as a more readable alternative to the indexing syntax in certain situations, such as using it with `visit` in cases like `(nth: visit, "hissing", "whirring", "clanking")`.
@@ -170,38 +171,38 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a `(passages:)` macro, which returns an array containing the `(passage:)` datamaps for every passage in the game, but also can be given a "where" lambda to filter that array.
  * Added a gradient data type, a `(gradient:)` macro, and a `gradient` datatype name. This can be used to quickly create special images called gradients, which are smooth linear fades between various colours. These are implemented using CSS `linear-gradient`s, and the `(gradient:)` macro has similar syntax to it. Currently, these can only be used with `(background:)`.
 
-#####Markup
+##### Markup
 
  * Added "unclosed hook" markup: `[==` (`[` followed by any number of `=`, similar to the aligner markup) is an opening bracket that automatically closes when the passage or enclosing hook ends, so you don't need to include the closing bracket yourself. This is inspired by the `<<continue>>` custom macro I wrote for Twine 1 (not to be confused with SugarCube's macro of the same name), and is designed for convenient use with changers that you may want to apply to the entire remainder of the passage, such as `(link:)`, `(event:)`, `(t8n:)` and such. `(link: "Next.")[=` replicates the behaviour of `<<continue "Next.">>` easily.
 
-#####Debug Mode
+##### Debug Mode
 
  * Added a new toggleale pane to the debug mode panel, "Source", which displays the current passage's source code. This is designed to supplement the "debug view" option, which shows the passage's current state, by letting you compare it to the original code. This pane currently has no syntax highlighting, such as that used in the Twine editor.
  * Added another toggleable pane, "Errors", which displays a record of every error that has been displayed in the story, so far, up to a limit of 500. This should be of assistance when dealing with errors inside `(live:)` hooks, or other hooks whose content appears and disappears abruptly.
  * The debug mode variables pane now lists the contents of datamaps, arrays and datasets, as separate rows.
  * Colours in the variables pane now have a colour swatch in their listing.
 
-###3.0.2 changes:
+### 3.0.2 changes (Apr 17, 2019):
 
-####Bugfixes
+#### Bugfixes
 
  * Fixed a startup bug that potentially caused `(dropdown:)` menus to stop affecting their bound variables for the rest of the game.
  * Now, `(alert:)`, `(prompt:)` and `(confirm:)` produce errors if they are used in a browser that doesn't support Javascript's `prompt()`, `alert()` or `confirm()` functions, instead of crashing the page.
  * Fixed the `(str:)` macro alias added in 3.0.0 mysteriously not actually having been added.
 
-###3.0.1 changes:
+### 3.0.1 changes (Apr 14, 2019):
 
-####Bugfixes
+#### Bugfixes
 
  * Fixed a bug where the SessionStorage state-preserving system introduced in 3.0.0 would interfere with the "Test story starting here" feature in the Twine editor.
 
-####Alterations:
+#### Alterations:
 
  * If the `(loadgame:)` macro encounters an error while loading save data (such as, a passage it refers to no longer exists in this version of the story) then a polite dialog box (a simple JavaScript `prompt()`) will appear suggesting that the save data might be outdated, and asking the reader whether or not the save data should be deleted.
 
-###3.0.0 changes:
+### 3.0.0 changes (Jan 11, 2019):
 
-####Bugfixes
+#### Bugfixes
 
  * Fixed a bug where the story crashes on startup if the page's URL contains a hash identifier that doesn't have "stories" in it (such as in `story.html#what`).
  * Fixed a bug where the story crashes on startup if, for some reason, localStorage exists but cannot be accessed.
@@ -214,7 +215,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where having a `(for:)` macro's lambda's `where` clause return something other than a boolean, such as in `(for: each _a where 127)[]`, wouldn't produce an error message.
  * Fixed a bug where `contains` would wrongly error if used to check if an empty string `""` contained anything.
 
-####Alterations
+#### Alterations
 
  * Now, when playing, the current game session will attempt to preserve itself across browser reloads and back-forward navigation using browser SessionStorage. This means that reloading the page (without closing the window or tab) should also automatically reload the player's position in the story, as if by `(load-game:)`. This does not apply when using `(reload:)`, however, which always returns the story to the beginning. If an error occurs while loading this data (such as, a passage it refers to no longer exists in this version of the story) then it will be silently ignored.
  * The `(replace:)`, `(append:)` and `(prepend:)` macros now no longer target any hooks or text that haven't been rendered yet - so, `(replace: "cool")[hot] cool water` won't work because the `(replace:)` runs before "cool water" has rendered, but `cool water (replace: "cool")[hot]` and something like `(link: "heat")[(replace: "cool")[hot]] cool water` will. This finally normalises what was formerly very inconsistent behaviour across these three macros - `(replace:)` couldn't target forthcoming hooks but could target later text, and `(append:)` and `(prepend:)` would do the others' behaviour on forthcoming hooks.
@@ -229,15 +230,15 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Various lambda macros that accept multiple values - namely `(for:)`, `(all-pass:)`, `(some-pass:)`, `(none-pass:)`, `(find:)`, and `(altered:)` - no longer error if no values are given after the lambda - for instance, `(for: each _a, ...$arr)[]` now no longer errors if `$arr` contains 0 elements.
  * Syntax highlighting: Tweaked a few colours to be more readable in dark mode, and removed the "smart quote" skewing to signify matching pairs of quote marks (as it was interfering with the cursor position sometimes).
 
-####Additions
+#### Additions
 
-#####Datatypes
+##### Datatypes
 
  * Added `is a` and `is an` operators, which can be used to determine what datatype a variable or piece of data is - `$message is a string` is true if the variable is a string. The datatype names are `number` or `num`, `string` or `str`, `boolean`, `array`, `datamap` or `dm`, `dataset` or `ds`, `command`, `changer`, and `color` or `colour`.
  * Added a `matches` operator, which functions similarly to `is a`, but can also be used to check if a data structure's shape resembles a pattern - a similar data structure with datatype names as "holes" in it. `(a: 2, 3) matches (a: num, num)` checks that the first array contains exactly two numbers. `(dm: "Faction", str) matches (dm: "Faction", "Slugbikers")` checks that the second datamap contains only one name with a string value. Nested patterns - `(a: (a: num), num, num)` - are also usable.
  * Added a `bind` operator, which is used to "bind" variables to certain interaction macros, like `(cycling-link:)`, described below.
 
-#####Macros
+##### Macros
 
  * You can now attach changers to command macros, including `(print:)`, `(display:)` and `(link-goto:)`, as well as regular passage links. This allows you to style them without needing to wrap them in a separate hook. (A subset of commands, like `(enchant:)` and `(stop:)`, still can't have changers attached, however.)
  * Added `(transition-depart:)` and `(transition-arrive:)` (aliases `(t8n-depart:)` and `(t8n-arrive:)`), macros which, along with an optional `(t8n-time:)`, allow you to finally change the passage transition used by links, by just attaching them to the front: `(t8n-depart:"dissolve")[[Think it over]]` will create a link that, when clicked, goes to the "Think it over" passage and fades out the current passage using a dissolve transition. These can be used in tandem for a number of interesting effects: `(t8n-depart:"dissolve")+(t8n-arrive:"pulse")[[That memory...]]` will work as expected. You can also use these with `(link-goto:)`, `(link-undo:)`, and work with `(enchant: ?Link)` too.
@@ -255,9 +256,9 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added `(link-show:)`, a link which, when clicked, shows the given hidden hooks, as if by `(show:)`. Just like `(show:)`, it can also have changers attached to it.
  * Added `(event:)`, a changer similar to `(live:)` which live-renders the hook only once, and only when the given lambda, which is run every 20ms, produces true. It accepts a "when" lambda, which is just a version of "where" that's grammaticaly appropriate for `(event:)`.
 
-###2.1.0 changes:
+### 2.1.0 changes (Dec 07, 2017):
 
-####Bugfixes
+#### Bugfixes
 
  * Now, using `(enchant:)` to change the `(text-colour:)` of `?Link` (normal links) will correctly override the default CSS link colour.
  * Fixed a bug where the alternative macro spellings `(text-color:)` and `(color:)` were displayed as erroneous in the editor.
@@ -265,30 +266,30 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Re-fixed the bug where `(pow:)` only accepted 1 value instead of 2, and also fixed `(sqrt:)` and the `(log:)` variants, which weren't working at all.
  * Fixed a parsing bug where `5*3-2`, without whitespace around the minus sign, would break the order of operations.
 
-####Alterations
+#### Alterations
 
  * Changed the `~~` markup to produce a strikethrough style using an `<s>` element, instead of a censor-bar style using a `<del>` element. The censor-bar style, which was used in all previous versions but not ever properly documented, was bugged to always be black even if the text colour was not black. It can be replicated in stories by simply using a `(background-colour:)` macro (preferably set to a variable) in its place.
  * Removed the default `line-height` CSS for `<h1>` and other header elements, because it was causing problems with line-wrapped headers.
 
-####Additions
+#### Additions
 
-#####Debug Mode
+##### Debug Mode
 
  * Added a button to hide/show the variables pane at will.
  * Reduced the maximum CSS height of the variables pane from 90vh (90% of the window's height) to 40vh.
  * Gave variable rows a flex-shrink of 0, which I'm told prevents rows from contracting to unreadability when the pane requires scrolling.
  * The variables pane should now also list temporary variables, and their locations. This currently only lists those that have been explicitly (set:) or (put:), and ignores those that are created inside (for:) loops.
 
-###2.0.1 changes:
+### 2.0.1 changes (Apr 26, 2017):
 
-####Bugfixes
+#### Bugfixes
 
  * Fixed a bug where `(enchant:)` applied to ?Page couldn't override CSS properties for `<tw-story>` (including the default background colour and colour).
  * Fixed a Passage Editor display bug where the left margin obscured the first letter of lines.
 
-###2.0.0 changes:
+### 2.0.0 changes (Feb 15, 2017):
 
-####Bugfixes
+#### Bugfixes
 
  * Fixed a bug where comparing a value with an error (such as `2 is (3 + 'X')`) would suppress the error.
  * Fixed a bug where subtracting non-subtractable values (such as booleans) wouldn't produce an error, instead implicitly converting the values to numbers, and potentially producing the Javascript value `NaN`.
@@ -312,9 +313,9 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Differing revision changers can be added together - `(append: ?name) + (prepend: ?title)`, for instance, no longer produces a changer which only prepends to both hooks.
  * Fixed various mistakes or vaguaries in numerous error messages.
 
-####Alterations
+#### Alterations
 
-#####Removed behaviour
+##### Removed behaviour
 
  * In order to simplify the purpose of hook names such as `?room`, you can no longer convert them to strings, `(set:)` their value, `(set:)` another variable to them, or use them bare in passage text. The `(replace:)` macro, among others, should be used to achieve most of these effects.
  * Using `contains` and `is in` on numbers and booleans (such as `12 contains 12`) will now produce an error. Formerly, doing so would test whether the number equalled the other value. (The rationale for this was that, since the statement `"a" contains "a"` is the same as `"a" is "a"`, then so should it be for numbers and booleans, which arguably "contain" only themselves. However, this seems to be masking certain kinds of errors when incorrect or uninitialised variables or properties were used).
@@ -323,13 +324,13 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Attaching invalid values to hooks, such as `(either:"String")[text]`, `(a:2,3,4)[text]` or `(set: $x to 1) $x[text]`, will now result in an error instead of printing both the value and the hook's contents.
  * Writing a URL in brackets, like `(http://...)`, will no longer be considered an invalid macro call. (To be precise, neither will any macro whose `:` is immediately followed by a `/`, so other protocol URLs are also capable of being written.)
 
-#####Markup
+##### Markup
 
  * Now, if you write `[text]` by itself, it will be treated as a hook, albeit with no name (it cannot be referenced like `?this`) and no attached changer commands. This, I believe, simplfies what square brackets "mean" in passage prose. Incidentally, temporary variables (see below) can be `(set:)` inside nameless unattached hooks without leaking out, so they do have some semantic meaning.
  * Now, you can attach changer macros to nametagged hooks: `(if: true) |moths>[Several moths!]`, for instance, is now valid. However, as with all hooks, trying to attach plain data, such as a number or an array, will cause an error.
  * Hook-attached macros may now have whitespace and line breaks between them and their hooks. This means that `(if: $x)  [text]` and such are now syntactically acceptable - the whitespace is removed, and the macro is treated as if directly attached. (This means that, if after a macro call you have plain passage text that resembles a hook, you'll have to use the verbatim markup to keep it from being interpreted as such.)
 
-#####Code
+##### Code
 
  * Now, when given expressions such as `$a < 4 and 5`, where `and` or `or` joins a non-boolean value with a comparison operation (`>`, `<=`, `is`, `contains`, etc.), Harlowe will now infer that you meant to write `$a < 4 and it < 5`, and treat the expression as that, instead of producing an error. This also applies to expressions like `$a and $b < 5`, which is inferred to be `5 > $a and it > $b`. This is a somewhat risky addition, but removes a common pitfall for new authors in writing expressions. (Observe that the above change does not apply when `and` or `or` joins a boolean - expressions like `$a < 4 and $visitedBasement`, where the latter variable contains a boolean, will continue to work as usual.)
    * However, this is forbidden with `is not`, because the meaning of expressions like `$a is not 4 and 5`, or `$a is not 4 or 5` is ambiguous in English, and thus error-prone. So, you'll have to write `$a is not 4 and is not 5` as usual.
@@ -345,7 +346,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Now, `debug-header` tagged passages are run after `header` tagged passages in debug mode, for consistency with the order of `debug-startup` and `startup`.
  * Link macros like `(link-replace:)` will now produce an error when given an empty string.
 
-#####HTML/CSS
+##### HTML/CSS
 
  * The default Harlowe colour scheme is now white text on black, in keeping with SugarCube and Sugarcane, rather than black text on white. The light colour scheme can be reinstated by putting `(enchant: ?page, (text-colour:black)+(background:white))` in a passage with the `header` tag.
  * The `<tw-story>` element is now kept inside whatever element originally enclosed it, instead of being moved to inside `<html>`.
@@ -357,15 +358,15 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Removed the CSS directives that reduce the font size based on the player's device width, because this functionality seems to be non-obvious to users, and can interfere with custom CSS in an unpleasant way.
  * Now, hooks and expressions which contain nothing (due to, for instance, having a false `(if:)` attached) will now have `display:none`, so that styling specific to their borders, etc. won't still be visible.
 
-####Additions
+#### Additions
 
-#####Markup
+##### Markup
 
  * Added column markup, which is, like aligner markup, a special single-line token indicating that the subsequent text should be separated into columns. They consist of a number of `|` marks, indicating the size of the column relative to the other columns, and a number of `=` marks surrounding it, indicating the size of the column's margins in CSS "em" units (which are about the width of a capital M). Separate each column's text with tokens like `|===` and `==||`, and end them with a final `|==|` token to return to normal page layout.
  * Now, it's possible to attach multiple changers to a single hook by joining them with `+`, even outside of a macro - `(text-style:'bold')+(align:'==>')+$robotFont[Text]` will apply `(text-style:'bold')`, `(align:'==>')` and the changer in the variable $robotFont, as if they had been added together in a single variable. Again, you can put whitespace between them – `(text-style:'bold') + (align:'==>') + $robotFont  [Text]` is equally valid, and causes the whitespace between each changer and the hook itself to be discarded.
  * Now, you can make hooks which are hidden when the passage is initially displayed, to be revealed when a macro (see below) is run. Simply replace the `<` and `>` symbol with a `(` or `)`. For example: `|h)[This hook is hidden]`. (You can think of this as being visually similar to comic speech balloons vs. thought balloons.) This is an alternative to the revision macros, and can be used in situations where the readability of the passage prose is improved by having hidden hooks alongside visible text, rather than separate `(replace:)` hooks. (Of course, the revision macros are still useful in a variety of other situations, including `header` passages.)
 
-#####Code
+##### Code
 
  * Arrays, strings and datasets now have special data names, `any`, and `all`, which can be used with comparison operators like `contains`, `is` and `<=` to compare every value inside them. For instance, you can now write `(a:1,2,3) contains all of (a:2,3)`, or `any of (a:3,2) <= 2`, or `"Fox" contains any of "aeiou"` (all of which are true). You can't use them anywhere else, though - `(set: all of $a to true)` is an error (and wouldn't be too useful anyway).
  * Now, certain hard-coded hook names will also select elements of the HTML page, letting you style the page using enchantment macros. `?page` selects the page element (to be precise, the `<tw-story>`), `?passage` selects the passage element (to be precise, the `<tw-passage>`), `?sidebar` selects the passage's sidebar containing undo/redo icons (`<tw-sidebar>`), and `?link` selects any links in the passage. (Note that if you use these names for yourself, such as `|passage>[]`, then they will, of course, be included in the selection.)
@@ -376,7 +377,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * You can now access sub-elements in hook names, as if they were an array: `(click: ?red's 1st)` will only affect the first such named hook in the passage, for instance, and you can also specify an array of positions, like `?red's (a:1,3,5)`. Unlike arrays, though, you can't access their `length`, nor can you spread them with `...`.
  * You can now add hook names together to affect both at the same time: `(click: ?red + ?blue's 1st)` will affect all hooks tagged `<red|`, as well as the first hook tagged `<blue|`.
 
-#####Macros
+##### Macros
 
  * Added `(undo:)`, a command similar to `(go-to:)` which performs the same function as the undo button in the default sidebar. Use it as an alternative to `(go-to: (history:)'s last)` which forgets the current turn as well as going back.
    * Also added a link shorthand of the above, `(link-undo:)`, which is used similarly to `(link-goto:)`.
@@ -397,9 +398,9 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added `(hover-style:)`, which, when given a style-altering changer, like `(hover-style:(text-color:green))`, makes its style only apply when the hook or expression is hovered over with the mouse pointer, and removed when hovering off.
  * Now, you can specify `"none"` as a `(text-style:)` and produce a changer which, when added to other `(text-style:)` combined changers, removes their styles.
 
-###1.2.4 changes:
+### 1.2.4 changes (Apr 26, 2017):
 
-####Bugfixes
+#### Bugfixes
 
  * `(random:)` now no longer incorrectly errors when given a single whole number instead of two.
  * `(alert:)`, `(open-url:)`, `(reload:)` and `(goto-url:)` now return empty strings rather than the non-Harlowe value `undefined` (or, for `(open-url:)` a Javascript Window object). This differs slightly from 2.0, which returns more useful command values.
@@ -408,9 +409,9 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
    * Fixed a bug where subtracting non-subtractable values (such as booleans) wouldn't produce an error, instead implicitly converting the values to numbers, and potentially producing the Javascript value `NaN`.
    * Fixed the bug where `(current-time:)` wouldn't pad the minutes value with a leading 0 when necessary, and '12' was printed as '0'.
 
-###1.2.3 changes:
+### 1.2.3 changes (Jan 17, 2017):
 
-####Bugfixes
+#### Bugfixes
 
  * Fixed a bug where the "outline" `(textstyle:)` option didn't have the correct text colour when no background colour was present, making it appear solid black.
  * Fixed a bug where changer commands couldn't be added together more than once without the possibility of some of the added commands being lost.
@@ -418,13 +419,13 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where the verbatim markup couldn't enclose a `]` inside a hook, a `}` inside the collapsing markup, or any of the formatting markup's closing tokens immediately after an opening token.
  * Fixed a bug where the Javascript in the resulting HTML files contained the Unicode non-character U+FFFE, causing encoding problems when the file is hosted on some older servers.
 
-####Alterations
+#### Alterations
 
  * Now, setting changer commands into variables no longer prevents the `(save-game:)` command from working.
 
-###1.2.2 changes:
+### 1.2.2 changes (Feb 16, 2016):
 
-####Bugfixes
+#### Bugfixes
 
  * Fixed a bug where the `(textstyle:)` options "shudder", "rumble" and "fade-in-out", as well as all of `(transition:)`'s options, didn't work at all.
  * Fixed a long-standing bug where `(mouseover:)` affected elements didn't have a visual indicator that they could be moused-over (a dotted underline).
@@ -434,19 +435,19 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a long-standing bug where spreading `...` datasets did not, in fact, arrange their values in sort order, but instead in parameter order.
  * Fixed a long-standing bug where a string containing an unmatched `)` inside a macro would abruptly terminate the macro.
 
-####Alterations
+#### Alterations
 
  * Giving an empty string to a macro that affects or alters all occurrences of the string in the passage text, such as `(replace:)` or `(click:)`, will now result in an error (because it otherwise won't affect any part of the passage).
 
-###1.2.1 changes:
+### 1.2.1 changes (Nov 20, 2015):
 
-####Bugfix
+#### Bugfix
 
  * Fixed a bug where `(if:)`, `(unless:)` and `(else-if:)` wouldn't correctly interact with subsequent `(else-if:)` and `(else:)` macro calls, breaking them. (Usage with boolean-valued macros such as `(either:)` was not affected.)
 
-###1.2.0 changes:
+### 1.2.0 changes (Nov 08, 2015):
 
-####Bugfixes
+#### Bugfixes
 
  * Fixed a bug where links created by `(click:)` not having a tabindex, and thus not being selectable with the tab key (a big issue for players who can't use the mouse).
  * Fixed a bug where `(align: "<==")` couldn't be used at all, even inside another aligned hook.
@@ -455,14 +456,14 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed `(move:)`'s inability to delete items from arrays.
  * `(move: ?a into $a)` will now, after copying their text into `$a`, clear the contents of all `?a` hooks.
 
-####Alterations
+#### Alterations
 
  * It is now an error to use `(set:)` or `(put:)` macros, as well as `to` constructs, in expression position: `(set: $a to (set: $b to 1))` is now an error, as is `(set: $a to ($b to 1))`.
  * Now, setting a markup string to a `?hookSet` will cause that markup to be rendered in the hookset, instead of being used as raw text. For instance, `(set: ?hookSet to "//Golly//")` will put "*Golly*" into the hookset, instead of "//Golly//".
     * Also, it is now an error to set a `?hookSet` to a non-string.
  * `(if:)`/`(unless:)`/`(elseif:)`/`(else:)` now evaluate to changer commands, rather than booleans. This means, among other things, that you can now compose them with other changers: `(set: $a to (text-style: "bold") + (if: $audible is true))`, for instance, will create a style that is bold, and also only appears if the $audible variable had, at that time, been true. (Note: Changing the $audible variable afterward will not change the effect of the `$a` style.)
 
-####Additions
+#### Additions
 
  * Now, authors can supply an array of property names to the "'s" and "of" property syntax to obtain a "slice" of the container. For instance, `(a: 'A','B','C')'s (a: 1,2)` will evaluate to a subarray of the first array, containing just 'A' and 'B'.
     * As well as creating subarrays, you can also get a slice of the values in a datamap - in effect, a subarray of the datamap's datavalues. You can do `(datamap:'Hat','Beret','Shoe','Clog','Sock','Long')'s (a: 'Hat','Sock')` to obtain an array `(a: 'Beret','Long')`.
@@ -472,9 +473,9 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * `(link-repeat:)` is similar to the above as well, but allows the link to be clicked multiple times, rerunning the markup and code within.
  * Also added `(link-replace:)` as an identical alias of the current `(link:)` macro, indicating how it differs from the others.
 
-###1.1.1 changes:
+### 1.1.1 changes (Jul 06, 2015):
 
-####Bugfixes
+#### Bugfixes
 
  * Fixed a bug where hand-coded `<audio>` elements inside transitioning-in passage elements (including the passage itself) would, when the transition concluded, be briefly detached from the DOM, and thus stop playing.
  * Now, save files should be properly namespaced with each story's unique IFID - stories in the same domain will no longer share save files.
@@ -483,9 +484,9 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where backslash-escapes in string literals stopped working (so `"The \"End\""` again produces the string `The "End"`). I don't really like this old method of escaping characters, because it hinders readability and isn't particularly scalable - but I let it be usable in 1.0.1, so it must persist until at least version 2.0.0.
  * Fixed a bug, related to the above, where the link syntax would break if the link text contained double-quote marks - such as `[["Stop her!"->Pursue]]`.
 
-###1.1.0 changes:
+### 1.1.0 changes (Jun 19, 2015):
 
-####Bugfixes
+#### Bugfixes
 
  * Fixed a bug where the arithmetic operators had the wrong precedence (all using left-to-right).
  * Fixed a somewhat long-standing bug where certain passage elements were improperly given transition attributes during rendering.
@@ -515,7 +516,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where enchantment event handlers (such as those for `(click:)`) could potentially fail to load.
  * Fixed a bug where the verbatim syntax (backticks) didn't preserve spaces at the front and end of it.
 
-####Alterations
+#### Alterations
 
  * Altered the collapsing whitespace syntax (`{` and `}`)'s handling of whitespace considerably.
     * Now, whitespace between multiple invisible elements, like `(set:)` macro calls, should be removed outright and not allowed to accumulate.
@@ -537,7 +538,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * The heading syntax no longer removes trailing `#` characters, or trims terminating whitespace. This brings it more into line with the bulleted and numbered list syntax.
  * Changed `(textstyle:)` and `(transition:)` to produce errors when given incorrect style or transition names.
 
-####New Features
+#### New Features
 
  * Added computed property indexing syntax. Properties on collections can now be accessed via a variant of the possessive syntax: `$a's (expression)`.
     * Using this syntax, you can supply numbers as 1-indexed indices to arrays and strings. So, `"Red"'s $i`, where `$i` is 1, would be the same as `"Red"'s 1st`. Note, however, that if `$i` was the string `"1st"`, it would also work too - but not if it was just the string `"1"`.
@@ -571,9 +572,9 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added `(datavalues:)`, which takes a single datamap, and returns an array containing all of the datamap's values, alphabetised by their names were.
  * It is now an error to begin a tagged hook (such as `(if:$a)[`) and not have a matching closing `]`.
 
-###1.0.1 changes:
+### 1.0.1 changes (Jan 01, 2015):
 
-####Bugfixes
+#### Bugfixes
 
 * The story stylesheet and Javascript should now be functioning again.
 * Fixed a bug where `(display:)`ed passage code wasn't unescaped from its HTML source.
@@ -588,18 +589,18 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 * Fixed a bug preventing the browser window from scrolling to the top on passage entry.
 * Fixed a bug where the header syntax didn't work on the first line of a passage.
 
-####Alterations
+#### Alterations
 
 * Characters in rendered passages are no longer individually wrapped in `<tw-char>` elements, due to it breaking RTL text. This means CSS that styles individual characters currently cannot be used.
 * Eliminated the ability to use property reference outside of macros - you can no longer do `$var's 1st`, etc. in plain passage text, without wrapping a `(print:)` around it.
 * You can no longer attach text named properties to arrays using property syntax (e.g. `(set: $a's Garply to "grault")`). Only `1st`, `2ndlast`, etc. are allowed.
 * Altered `is`, `is in` and `contains` to use compare-by-value. Now, instead of using JS's compare-by-reference semantics, Harlowe compares containers by value - that is, by checking if their contents are identical. This brings them into alignment with the copy-by-value semantics used by `(set:)` and such.
 
-####New Features
+#### New Features
 
 * Added the ability to property-reference arbitrary values, not just variables. This means that you can now use `(history:)'s last`, or `"Red"'s 1st` as expressions, without having to put the entity in a variable first.
 
-###Compilation
+### Compilation
 
 Harlowe is a story format file, called `format.js`, which is used by Twine 2. The Twine 2 program bundles this format with authored story code and assets to produce standalone HTML games.
 
