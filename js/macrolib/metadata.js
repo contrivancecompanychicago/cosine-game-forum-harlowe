@@ -27,8 +27,8 @@ define(['macros','renderer', 'utils/operationutils', 'datatypes/lambda', 'intern
 		/*d:
 			(storylet: Lambda) -> Metadata
 
-			When placed in a passage, it marks that passage as a storylet, using the lambda as the condition on which it's available, so that other macros,
-			like (open-storylets:), can see the passage.
+			When placed in a passage, it marks that passage as the beginning of a storylet, using the lambda as the condition upon which it's available to the player,
+			so that other macros, like (open-storylets:), can see and select the passage.
 
 			Example usage:
 

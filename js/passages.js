@@ -172,7 +172,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 					(result instanceof Map ? result.forEach((v,k) => installResult(k,v)) : installResult(name, result));
 				});
 				/*
-					TBW
+					Having dealt with the metadata, it's now safe to delete it from the passage.
 				*/
 				p.metadata = undefined;
 			});

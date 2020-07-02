@@ -113,7 +113,7 @@ html { font-size:110%; font-weight:lighter; background:white; font-family:Georgi
 @media screen and (max-width: 800px) { html { margin:0 6vw 4em 6vw !important; } }
 p { margin-top:1em; }
 strong,b { font-weight: bold; }
-a { color:#3B8BBA; }
+a { color:HSL(202, 70%, 35%); }
 a:hover, a:focus, a:active { color:#22516d; }
 table:not(.datamap) { background:#fafafa; border-bottom:1px solid #ccc; border-collapse:collapse; border-right:1px solid #ccc; border-spacing:0; font-size:1em; width:100%; }
 table:not(.datamap) tr { border-top:1px solid #ccc; }
@@ -181,6 +181,7 @@ html:not(.night) #preview tw-story { background-color:white; color:black }
 .previewCodeButton { font-size:200%; padding: 0.2rem 0.9rem; }
 html.night .previewCodeButton { color:white; }
 #preview tw-debugger { position: absolute; padding: 0; min-height: 0; box-sizing:border-box; border-top:none; min-width: 80%; }
+#preview .panel-variables-empty { display:none; }
 #preview .panel-variables { border-top: solid black 2px; border-bottom: none; }
 
 /* Kludge for the (text-style:) macro */

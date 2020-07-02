@@ -5,8 +5,7 @@ define([], () => {
 		This is a root prototype object which houses temporary variables, inside a Section's stack.
 		This isn't frozen so that its values can be overridden.
 	*/
-	
-	return {
+	return Object.seal({
 		/*
 			Note that it's not possible for userland TwineScript to directly access or
 			modify this base object.
@@ -24,5 +23,5 @@ define([], () => {
 		*/
 		TwineScript_TypeDefs: Object.create(null),
 
-	};
+	});
 });

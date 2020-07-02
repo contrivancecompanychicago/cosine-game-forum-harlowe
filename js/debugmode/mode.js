@@ -312,7 +312,13 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			<button class='panel-variables-copy'>Copy $ variables as (set:) call</button>
 			<input class='clipboard' type="text" style='opacity:0;pointer-events:none;position:absolute;'></input>
 		</div>`
-	);
+	)
+	/*
+		The Variables panel is visible initially.
+	*/
+	.removeAttr('hidden');
+	Variables.tab.addClass('enabled');
+
 	/*
 		Set up the "Copy all as (set:)" button.
 	*/

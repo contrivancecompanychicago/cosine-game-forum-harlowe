@@ -1,4 +1,4 @@
-Introduction: Three Fundamentals of Harlowe
+Introduction 4: Three fundamentals of Harlowe
 
 Harlowe is a markup language that you can apply to your Twine prose to make the prose interactive, non-linear, and game-like. This language's full contents of features may appear daunting, but all of its features revolve around the following three simple concepts, which, when understood, unlock understanding the rest of the language:
 
@@ -21,6 +21,7 @@ To use macros to change your story's prose, you must place that prose between br
 ```
 (if: $ringStolen)[The ring, as expected, is gone.]
 ```
+In the above example, an "if" statement is created by attaching the (if:) changer value to the square-bracketed hook.
 
 ###3. You can use anything that produces a value as if it was that value
 

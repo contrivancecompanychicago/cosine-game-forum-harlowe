@@ -327,8 +327,8 @@ describe("style changer macros", function() {
 						setTimeout(function() {
 							expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
 							done();
-						});
-					},20);
+						},20);
+					});
 				});
 				it("changes the passage transitions of (link-undo:)", function(done) {
 					runPassage("foo","grault");

@@ -138,6 +138,7 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 	*/
 	function hooks(section) {
 		const {dom} = section;
+		const notTwError = ":not(tw-error, tw-error *)";
 		let ret = $();
 		/*
 			First, take the elements from all the hooks that
@@ -192,7 +193,7 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 				*/
 				if (index === "chars") {
 					let arr = [];
-					for (let t of elements.textNodes()) {
+					for (let t of elements.textNodes(notTwError)) {
 						for (let c of textNodeToChars(t)) {
 							if (!c.textContent.match(realWhitespace)) {
 								arr.push(c);
@@ -222,7 +223,7 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 						Again, due to the cost of $().add(), this uses element arrays, and only converts to jQuery at the end.
 					*/
 					const lines = [[]];
-					elements.textNodes(":not(tw-sidebar):not(tw-sidebar *)").forEach(node => {
+					elements.textNodes(notTwError + ":not(tw-sidebar, tw-sidebar *)").forEach(node => {
 						if (brs.length && (node.compareDocumentPosition(brs[0]) & 2)) {
 							brs.shift();
 							lines.push([]);

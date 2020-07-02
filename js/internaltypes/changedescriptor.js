@@ -1,5 +1,6 @@
 "use strict";
 define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas, impossible, transitionIn}, {exec}, HookSet) => {
+	const {assign,keys,create,seal} = Object;
 	/*
 		When a new Section (generally a hook or expression) is about to be rendered,
 		a ChangeDescriptor is created and fed into all of the ChangerCommands which are
@@ -86,14 +87,15 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		summary() {
 			return [
 				"source", "innerSource", "enabled", "target", "append", "newTargets",
-				"transition", "transitionTime", "transitionDelay"
+				"transition", "transitionTime", "transitionDeferred", "transitionDelay",
+				"transitionSkip",
 			]
 			.filter(e => this.hasOwnProperty(e))
 			.concat([
 				this.attr.length && "attr",
 				this.styles.length && "styles",
-				Object.keys(this.loopVars).length && "loopVars",
-				Object.keys(this.data).length && "data",
+				keys(this.loopVars).length && "loopVars",
+				keys(this.data).length && "data",
 			].filter(Boolean));
 		},
 
@@ -105,7 +107,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 			(presumably composed) ChangerCommand as well.
 		*/
 		create(properties, changer) {
-			const ret = Object.assign(Object.create(this), {
+			const ret = assign(create(this), {
 					// Of course, we can't inherit array contents from the prototype chain,
 					// so we have to copy the arrays.
 					attr:          [].concat(this.attr          || []),
@@ -152,7 +154,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 							Dependent styles are function properties of the styles objects,
 							and this loop sifts through to separate them from independent styles.
 						*/
-						Object.keys(style).forEach(k => {
+						keys(style).forEach(k => {
 							const v = style[k];
 							a[+(typeof v === "function")][k] = v;
 						});
@@ -267,7 +269,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 					followed by (show:?a) should result in ?a appearing, instead of nothing happening. (And
 					(show:?b) shouldn't do anything, either.)
 				*/
-				ChangeDescriptor.create({target,data:Object.assign({}, data, {originalSource:source, hidden:true})}).update();
+				ChangeDescriptor.create({target,data:assign({}, data, {originalSource:source, hidden:true})}).update();
 				return $();
 			}
 
@@ -491,7 +493,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 			return dom;
 		}
 	};
-	changeDescriptorShape = Object.keys(ChangeDescriptor);
+	changeDescriptorShape = keys(ChangeDescriptor);
 	
-	return Object.seal(ChangeDescriptor);
+	return seal(ChangeDescriptor);
 });

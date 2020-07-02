@@ -51,26 +51,6 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 			*/
 			scope.forEach(section, (e, i) => {
 				/*
-					Create a fresh <tw-enchantment>, and wrap the elements in it.
-
-					It's a little odd that the generated wrapper must be retrieved
-					using a terminating .parent(), but oh well.
-				*/
-				const wrapping = e.wrap("<tw-enchantment>").parent();
-
-				/*
-					Apply the attr, data and functions now.
-				*/
-				if (attr) {
-					wrapping.attr(attr);
-				}
-				if (data) {
-					wrapping.data(data);
-				}
-				if (functions) {
-					functions.forEach(fn => fn(wrapping));
-				}
-				/*
 					Lambdas are given to enchantments exclusively through (enchant:). They override any
 					other changers (which shouldn't be on here anyway) and instead call the author-supplied
 					lambda with each part of the scope as a separate hook to sculpt a specific changer for that hook.
@@ -100,6 +80,29 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 					}
 				} else {
 					changer = this.changer;
+				}
+				/*
+					Decide if this enchantment needs a <tw-enchantment> wrapping. Usually it does,
+					but for transition-only enchantments, the <tw-transition-container> serves as
+					the wrapping itself. The condition for it being transition-only is:
+					no attr, no data, and the changer only contains transition-related properties.
+				*/
+				const noWrapping = (!attr && !data && (!changer || changer.summary().every(c => c.startsWith('transition'))));
+				/*
+					Create a fresh <tw-enchantment> if it is indeed necessary, and wrap the elements in it.
+				*/
+				const wrapping = noWrapping ? e : e.wrap("<tw-enchantment>").parent();
+				/*
+					Apply the attr, data and functions now.
+				*/
+				if (attr) {
+					wrapping.attr(attr);
+				}
+				if (data) {
+					wrapping.data(data);
+				}
+				if (functions) {
+					functions.forEach(fn => fn(wrapping));
 				}
 				if (changer) {
 					const cd = ChangeDescriptor.create({section, target:wrapping });
@@ -146,11 +149,12 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 					wrapping.find('[collapsing=false]').each(function() { $(this).removeAttr('collapsing'); });
 					collapse(wrapping);
 				}
-
 				/*
-					Store the wrapping in the enchantments list.
+					Store the wrapping in the enchantments list (but only if it's a real <tw-enchantment> wrapping).
 				*/
-				enchantmentsArr.push(wrapping);
+				if (!noWrapping) {
+					enchantmentsArr.push(wrapping);
+				}
 			});
 			/*
 				Replace this enchantment's enchanted elements jQuery with a new one.

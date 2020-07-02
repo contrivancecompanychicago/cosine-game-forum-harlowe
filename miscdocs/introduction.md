@@ -1,4 +1,4 @@
-Introduction: Some of what's new in 3.1
+Introduction 2: Some of what's new in 3.1
 
 Harlowe 3.1, ostensibly a minor release of Harlowe, nonetheless has a surprising amount of new features, which are summarised as follows:
 

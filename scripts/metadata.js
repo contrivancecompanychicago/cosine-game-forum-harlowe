@@ -124,9 +124,9 @@ const
 	Introduction = new Defs({
 		defName: "Introduction",
 		defCode: "introduction",
-		regExp: /^\s*Introduction: (.+?)\n/,
+		regExp: /^\s*Introduction (\d+): (.+?)\n/,
 
-		definition({input, 0:title, 1:name}) {
+		definition({input, 0:title, 1:categoryOrder, 2:name}) {
 			const slugName =  name.replace(/\s/g,'-').toLowerCase();
 			let text = input.trim().replace(title, "\n<h2 class='def_title introduction_title' id=introduction_" + slugName + ">"
 				+ "<a class='heading_link' href=#introduction_" + slugName + "></a>" + name + "</h2>\n");
@@ -137,7 +137,7 @@ const
 				{markupNames:true, macroNames:true}
 			);
 
-			this.defs[title] = { text, anchor: "introduction_" + slugName, name };
+			this.defs[title] = { text, anchor: "introduction_" + slugName, name, categoryOrder };
 		},
 	}),
 
