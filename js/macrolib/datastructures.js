@@ -14,7 +14,7 @@ define([
 	'internaltypes/varref',
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier'],
-($, {shuffled}, NaturalSort, Macros, {objectName, typeName, subset, collectionType, isValidDatamapName, is, unique, clone, range}, State, Engine, Passages, Lambda, AssignmentRequest, TypedVar, VarRef, TwineError, TwineNotifier) => {
+($, {shuffled, permutations}, NaturalSort, Macros, {objectName, typeName, subset, collectionType, isValidDatamapName, is, unique, clone, range}, State, Engine, Passages, Lambda, AssignmentRequest, TypedVar, VarRef, TwineError, TwineNotifier) => {
 	
 	const {optional, rest, either, zeroOrMore, Any, nonNegativeInteger}   = Macros.TypeSignature;
 	
@@ -818,6 +818,38 @@ define([
 			return ret;
 		},
 		[Array, rest(Array)])
+		/*
+			(permutations: ...Any) -> Array
+
+			When given a sequence of values, this produces an array containing each permutation of the order of those values, as
+			arrays.
+
+			Example usage:
+			* `(permutations: "☆", "♡", "∪")` produces `(a:(a:"☆","♡","∪"),(a:"♡","☆","∪"),(a:"∪","☆","♡"),(a:"☆","∪","♡"),(a:"♡","∪","☆"),(a:"∪","♡","☆"))`.
+
+			Rationale:
+			If you're writing an algorithm that cares about combinations of data, such as a procedurally generated puzzle or password, you may find that this macro has
+			a number of subtle uses. This macro by itself provides an easy way to check if a sequence of values contains exactly the same values as
+			another sequence, regardless of order. For instance, you can check if another array stored in `$array` contains exactly two 3s, two 2s and one 1 by
+			writing `(permutations:3,1,3,2,2) contains $array`, because if it was so, the array would be included among those permutations. You can't perform
+			this check by writing `(dataset:3,1,3,2,2) is (dataset:...$array)` because datasets, by design, don't hold multiples of a single value (such as 3).
+
+			Additionally, this macro can be combined with (filtered:) and (shuffled:) to help you find a permutation that matches certain criteria. For instance,
+			to find a random permutation of the numbers 0 to 5 that doesn't begin with 0, you can write
+			`1st of (shuffled: ...(filtered: where its 1st is not 0, ...(permutations:0,1,2,3,4)))`. While this could be performed by simply re-running
+			`(shuffled:0,1,2,3,4)` until it produced an array that didn't begin with 0, the code to check and re-run this would be much more complicated.
+
+			Details:
+			When given no values, this simply returns the empty array `(a:)`.
+
+			See also:
+			(shuffled:)
+
+			Added in: 3.2.0
+			#data structure
+		*/
+		("permutations", (_, ...values) => permutations(...values),
+		[rest(Any)])
 		;
 
 	Macros.add

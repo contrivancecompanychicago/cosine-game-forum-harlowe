@@ -134,6 +134,9 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/polyfills'],
 				result = [[...list]],
 				c = Array(length).fill(0);
 			let i = 1, k, p;
+			if (!length) {
+				return [];
+			}
 
 			while (i < length) {
 				if (c[i] < i) {
@@ -487,7 +490,10 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/polyfills'],
 				'animation-delay':   (transitionDelay - expedite) + "ms",
 			});
 			if (childrenInline) {
-				el.css('display','inline-block');
+				/*
+					If there are no element children of the container (only text), simply use 'inline'.
+				*/
+				el.css('display','inline' + (el.children().length ? '-block' : ''));
 			}
 			/*
 				Each frame, reduce the delay, and potentially reduce it further if this
@@ -537,7 +543,10 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/polyfills'],
 			});
 			
 			if (childrenInline) {
-				el.css('display','inline-block');
+				/*
+					If there are no element children of the container (only text), simply use 'inline'.
+				*/
+				el.css('display','inline' + (el.children().length ? '-block' : ''));
 			}
 			onTransitionComplete(el, transitionTime + transitionDelay - expedite, transitionSkip, (elapsedRealTime) => {
 				/*

@@ -1298,9 +1298,10 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			[nonNegativeNumber]
 		)
 		/*d:
-			(text-rotate: Number) -> Changer
+			(text-rotate-z: Number) -> Changer
+			Also known as: (text-rotate:)
 
-			This styling command visually rotates the attached hook clockwise by a given number of
+			This styling changer visually rotates the attached hook clockwise by a given number of
 			degrees. The rotational axis is in the centre of the hook.
 
 			Example usage:
@@ -1319,13 +1320,13 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			set to `inline-block`.
 
 			See also:
-			(text-style:)
+			(text-style:), (text-rotate-y:), (text-rotate-x:)
 
 			Added in: 1.0.0
 			#styling
 		*/
-		("text-rotate",
-			(_, rotation) => ChangerCommand.create("text-rotate", [rotation]),
+		(["text-rotate-z","text-rotate"],
+			(_, rotation) => ChangerCommand.create("text-rotate-z", [rotation]),
 			(d, rotation) => {
 				d.styles.push({display: 'inline-block', 'transform'() {
 					let currentTransform = $(this).css('transform') || '';
@@ -1333,6 +1334,104 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 						currentTransform = '';
 					}
 					return currentTransform + " rotate(" + rotation + "deg)";
+				}});
+				return d;
+			},
+			[Number]
+		)
+		/*d:
+			(text-rotate-y: Number) -> Changer
+
+			This styling changer visually rotates the attached hook clockwise, around the Y axis (vertical), by a given number of
+			degrees, making it appear to lean into the page. The rotational axis is in the centre of the hook.
+
+			Example usage:
+			```
+			(text-rotate-y:45)+(size:1.5)[ATE BREAKFAST!
+
+			READ THE NEWS!
+
+			FOUND A LOST SOCK!]
+			```
+			
+			Details:
+
+			The surrounding non-rotated text will behave as if the rotated text is still in its original position -
+			the horizontal space of its original length will be preserved, and text it overlaps with vertically will
+			ignore it.
+
+			A rotation of 90 degrees will, due to the rotational axis, cause the hook to disappear, appearing edge-on to the viewer.
+			A rotation of 180 degrees willreverse the hook, as if `(text-style:"mirror")` was applied.
+
+			Due to browser limitations, hooks using this macro will have its CSS `display` attribute
+			set to `inline-block`.
+
+			See also:
+			(text-style:), (text-rotate-z:), (text-rotate-x:)
+
+			Added in: 3.2.0
+			#styling
+		*/
+		("text-rotate-y",
+			(_, rotation) => ChangerCommand.create("text-rotate-y", [rotation]),
+			(d, rotation) => {
+				d.styles.push({display: 'inline-block', 'transform'() {
+					let currentTransform = $(this).css('transform') || '';
+					if (currentTransform === "none") {
+						currentTransform = '';
+					}
+					return currentTransform + " perspective(50vw) rotateY(" + rotation + "deg)";
+				}});
+				return d;
+			},
+			[Number]
+		)
+		/*d:
+			(text-rotate-x: Number) -> Changer
+
+			This styling changer visually rotates the attached hook clockwise, around the X axis (horizontal), by a given number of
+			degrees, making it appear to lean into the page. The rotational axis is in the centre of the hook.
+
+			Example usage:
+			```
+			(text-rotate-x:-45)[You feel a strange
+
+			lightness, as if you're
+
+			in an elevator that's
+
+			suddenly started
+
+			plunging rapidly.]
+			```
+			
+			Details:
+
+			The surrounding non-rotated text will behave as if the rotated text is still in its original position -
+			the horizontal space of its original length will be preserved, and text it overlaps with vertically will
+			ignore it.
+
+			A rotation of 90 degrees will, due to the rotational axis, cause the hook to disappear, appearing edge-on to the viewer.
+			A rotation of 180 degrees will, due to the rotational axis, flip the hook upside-down, as if `(text-style:"upside-down")` was applied.
+
+			Due to browser limitations, hooks using this macro will have its CSS `display` attribute
+			set to `inline-block`.
+
+			See also:
+			(text-style:), (text-rotate-y:), (text-rotate-z:)
+
+			Added in: 3.2.0
+			#styling
+		*/
+		("text-rotate-x",
+			(_, rotation) => ChangerCommand.create("text-rotate-x", [rotation]),
+			(d, rotation) => {
+				d.styles.push({display: 'inline-block', 'transform'() {
+					let currentTransform = $(this).css('transform') || '';
+					if (currentTransform === "none") {
+						currentTransform = '';
+					}
+					return currentTransform + " perspective(50vw) rotateX(" + rotation + "deg)";
 				}});
 				return d;
 			},
@@ -1441,7 +1540,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			* `(text-style: "italic", "emboss")[Richard Donahue, King for Hire]` makes the text italic and embossed.
 			
 			Rationale:
-			While Twine offers markup for common formatting styles like bold and italic, having these
+			While Harlowe offers markup for common formatting styles like bold and italic, having these
 			styles available from a command macro provides some extra benefits: it's possible, as with all
 			such style macros, to (set:) them into a variable, combine them with other commands, and re-use them
 			succinctly throughout the story (by using the variable in place of the macro).

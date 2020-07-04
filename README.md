@@ -91,8 +91,11 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added an `(lch:)` macro (alias `(lcha:)`), an alternative colour creation macro (comparable to `(hsl:)`) that uses the LCH colour space (which is the CIELAB colour space, familiar to graphic designers, but expressed radially using a HSL-style hue angle).
  * Added `(complement:)`, a macro which takes a colour and produces its complement by rotating its LCH hue by 180 degrees.
  * Added `(palette:)`, a macro designed for rapid prototyping which produces a four-colour palette based on a given colour, for use with `(text-colour:)`, `(background:)` and `(enchant:)`.
+ * Added `(permutations:)`, a macro that, when given a sequence of data, produces an array containing all possible arrangements of that data, in arrays.
  * Added `(source:)`, a macro that can turn any data value into its source code representation. `(source: (text-style:"bold") + (click: ?hat's 1st))` produces the string `'(text-style:"bold")+(click:?hat's 1st)'`.
+ * Added `(text-rotate-x:)` and `(text-rotate-y:)`, which are 3D versions of `(text-rotate:)`, rotating the hook around the X or Y axis, making it appear to lean into the page with perspective.
  * `(all-pass:)` can now be shortened to `(pass:)`. This alias is meant for cases when you only want to check a single value, like in `(pass: $noLetterE, "Gadsby")`, rather than a sequence of values.
+ * `(text-rotate:)` is aliased to `(text-rotate-z:)`, for consistency with the new macros.
 
 ##### Custom Macros
 

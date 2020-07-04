@@ -56,7 +56,9 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		of your custom macro.
 
 		```
-		(set: $mean to (macro: ...num-type _a, [(output:(folded:making _total via _total + it, ..._a) / _a's length)]))
+		(set: $mean to (macro: ...num-type _a, [
+			(output:(folded: _num making _total via _total + _num, ..._a) / _a's length)
+		]))
 		One's 7 foot 4, one's 4 foot 7. Add 'em up and divide by two, ya get a regular ($mean:7 + 4/12, 4 + 7/12)-foot person.
 		```
 

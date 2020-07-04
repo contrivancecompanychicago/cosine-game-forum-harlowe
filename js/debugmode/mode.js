@@ -324,7 +324,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 	/*
 		Set up the "Copy all as (set:)" button.
 	*/
-	const inputElem = debugElement.find('.clipboard');
+	const inputElem = Variables.panel.find('.clipboard');
 	root.on('click', '.panel-variables-copy', () => {
 		let variableToValue = [];
 		for (let name in State.variables) {
