@@ -576,7 +576,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 				if ((error = TwineError.containsError(loopVars))) {
 					return error;
 				}
-				d.loopVars[lambda.loop] = loopVars || [];
+				d.loopVars[lambda.loop.getName()] = loopVars || [];
 			},
 			[Lambda.TypeSignature('where'), zeroOrMore(Any)]
 		)

@@ -964,10 +964,10 @@
 
 		// Data types
 		datatype: either(
-			"array", "boolean", "bool", "changer", "colour", "color", "const",
+			"any", "array", "boolean", "bool", "changer", "colour", "color", "const",
 			"command", "cond", "dm", "datamap", "ds", "dataset", "datatype",
 			"gradient", "empty", "even", "lambda", "macro", "number", "num", "odd",
-			"string", "str"
+			"string", "str", "whitespace"
 		),
 		
 		/*
@@ -1024,7 +1024,6 @@
 		where:      "where" + wb,
 		when:       "when" + wb,
 		via:        "via" + wb,
-		with:       "with" + wb,
 		each:       "each" + wb,
 		augmentedAssign: either("\\+", "\\-", "\\*", "\\\/", "%") + "=",
 

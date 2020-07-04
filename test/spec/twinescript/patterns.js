@@ -137,6 +137,13 @@ describe("patterns", function() {
 				expect("(set: $a to -3.9 is a "+name+")(print:$a)").markupToPrint(!!i+'');
 			});
 		});
+		it("'whitespace' matches only whitespace", function() {
+			expect("(set: $a to '' is a whitespace)(print:$a)").markupToPrint("false");
+			expect("(set: $a to \"        .\" is a whitespace)(print:$a)").markupToPrint("false");
+			expect("(set: $a to 0 is a whitespace)(print:$a)").markupToPrint("false");
+			expect("(set: $a to '\t\t\n' is a whitespace)(print:$a)").markupToPrint("true");
+			expect("(set: $a to (str-repeated:5,' ') is a whitespace)(print:$a)").markupToPrint("true");
+		});
 		it("'empty' matches only empty structures", function() {
 			expect("(set: $a to (a:) is a empty)(print:$a)").markupToPrint("true");
 			expect("(set: $a to (dm:) is a empty)(print:$a)").markupToPrint("true");

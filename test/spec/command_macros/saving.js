@@ -198,7 +198,7 @@ describe("save macros", function() {
 			setTimeout(function() {
 				expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(0);
 				done();
-			},40);
+			},120);
 			//TODO: Test that the save data is actually deleted.
 		});
 	});

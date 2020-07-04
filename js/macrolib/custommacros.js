@@ -44,6 +44,9 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		The datatypes are checked, and if they don't match (for instance, by incorrectly writing `($treasure: 155, "Gold Watch")`),
 		then an error will result. This ensures that incorrectly written custom macro calls are caught early, just like with built-in macros.
 
+		If you wish to write a very general value-selection or data-structure macro, such as `(a:)` or `(either:)`, that can take any kind of data
+		value, you can write `any-type` for that parameter. However, using this is not recommended unless you genuinely need it.
+
 		You might, on occasion, want to make a macro that can take an arbitrary amount of values, similar to certain built-in macros like `(a:)`,
 		`(altered:)`, and so forth. To do this, you can place the spread `...` syntax in front of a parameter. This turns it into a spread parameter,
 		which represents zero or more values of the same data type. Think of this as the opposite counterpart of the spread `...` syntax

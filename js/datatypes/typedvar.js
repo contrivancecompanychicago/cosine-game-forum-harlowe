@@ -16,6 +16,13 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 
 		When a TypedVar is preceded with the `...` spread operator, such as in `...str-type _a`, then it becomes a spread typed variable, which represents an arbitrary
 		number of values. Giving multiple values of the given type at or after such a position will cause an array containing those values to be put into the named variable.
+		
+		Typed variables, when retrieved from a custom macro's "params" array, have two data names that you can examine.
+
+		| Data name | Example | Meaning
+		|---
+		| `name` | `$customMacro's params's 1st's name`, `name of 1st of params of $customMacro` | The name of the typed variable. `(num-type _grains)'s name` is `"grains"`.
+		| `datatype` | `$customMacro's params's 1st's datatype`, `datatype of 1st of params of $customMacro` | The datatype of the typed variable. `(num-type _grains)'s datatype` is `num`.
 
 		For more details, consult the (macro:) macro's article.
 	*/
@@ -30,13 +37,24 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 		TwineScript_ToSource() {
 			return this.datatype.TwineScript_ToSource() + "-type " + this.varRef.TwineScript_ToSource();
 		},
+		TwineScript_GetProperty(prop) {
+			return prop === "name" ? this.getName() : this[prop];
+		},
+		TwineScript_Properties: ['datatype', 'name'],
 
 		/*
-			The compiler requires that TypedVars, which can be used in place of an ordinary VarRef in a (set:) call,
-			also have a get() method.
+			The compiler requires that TypedVars, which can be used in place of an ordinary VarRef in a (set:) call, also have
+			a get() method (for setting the It identifier).
 		*/
 		get() {
 			return this.varRef.get(...arguments);
+		},
+		/*
+			Sharing a getName() interface with varRef allows TypedVars to be interchangeable with VarRefs when used in lambdas
+			and other places.
+		*/
+		getName() {
+			return this.varRef.getName();
 		},
 
 		/*

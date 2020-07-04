@@ -8,7 +8,6 @@ describe("live macros", function() {
 			expect("(event:1)[]").markupToError();
 			expect("(event: each _a,2)[]").markupToError();
 			expect("(event:_a via true,2)[]").markupToError();
-			expect("(event:_a with _b where _a is _b,2)[]").markupToError();
 			expect("(event:_a making _b where true,2)[]").markupToError();
 			expect("(event: when $a > 2)[]").not.markupToError();
 		});

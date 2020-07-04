@@ -204,8 +204,10 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 				.append(
 					"<span class='variable-name " + (trail ? '' : tempScope ? "temporary" : "global") + "'>"
 					+ (typeName ? "<span class='variable-type'>" + typeName + '-type </span>' : '')
-					+ (trail ? "<span class='variable-path " + (tempScope ? "temporary" : "global") + "'>" + escape(trail) + "</span> " : '')
-					+ (tempScope ? "_" : "$") + escape(name + '')
+					+ (trail ? "<span class='variable-path " + (tempScope ? "temporary" : "global") + "'>"
+						+ (tempScope ? "_" : "$")
+						+ escape(trail) + "</span> " : '')
+					+ (!trail ? (tempScope ? "_" : "$") : '') + escape(name + '')
 					+ (tempScope ? ("<span class='temporary-variable-scope'>" + tempScope + "</span>") : "") +
 					"</span><span class='variable-value'>" + truncVal + "</span><span class='panel-row-buttons'>"
 						+ (folddown ? "<tw-folddown tabindex=0>(source:)</tw-folddown>" : '')

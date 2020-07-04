@@ -31,11 +31,11 @@ In the above example, an "if" statement is created by attaching the (if:) change
 
 (lowercase: "VALID") This is valid.
 (lowercase: "VAL" + "ID") This is valid.
-(lowercase: "VAL" + (uppercase: "ID")) This is valid.
+(lowercase: "VAL" + (uppercase: "id")) This is valid.
 (lowercase: $text) This is valid.
 
-(transition:"slide-right")[Welcome back.] This is valid.
-$slide[Welcome back.] This is valid.
+(transition:"slide-right")[VALID] This is valid.
+$slide[VALID] This is valid.
 ```
 
 It is important, when you read example code in this documentation, not to assume that you're restricted to very specific ways of writing macros and expressions. Just because an example uses a variable, doesn't mean you can't instead use a plain value, or a macro that produces that value, in that exact same place. Variables and macros are interchangeable with the values they contain or produce – a variable containing a number can be used anywhere that a number could be used, as can a macro that produces a number. This means you have a wide range of expressiveness in writing your story's code - you can save values into variables simply to save having to write them in full repeatedly, and you can use data-choosing macros like (either:), (cond:), (nth:) and so forth nearly anywhere you want. Use whatever form is most suited to making your prose readable!

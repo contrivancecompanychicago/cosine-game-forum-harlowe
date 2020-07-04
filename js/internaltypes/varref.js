@@ -946,6 +946,13 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		},
 
 		/*
+			A quick way to retrieve the name of the root variable in the scope.
+		*/
+		getName() {
+			return this.compiledPropertyChain[0];
+		},
+
+		/*
 			This creator function accepts an object and a property chain.
 			But, it can also expand another VarRef that's passed into it.
 			This is almost always called by compiled TwineScript code.

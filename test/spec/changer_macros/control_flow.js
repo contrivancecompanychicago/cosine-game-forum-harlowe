@@ -253,12 +253,15 @@ describe("control flow macros", function() {
 			}
 			expect("(for: each _a)[]").not.markupToError();
 			expect("(for: _a via true,2)[]").markupToError();
-			expect("(for:_a with _b where _a is _b,2)[]").markupToError();
 			expect("(for:_a making _b where true,2)[]").markupToError();
 			expect("(for: _a where _a*2, 1)[]").markupToError();
 		});
 		it("errors if the 'where' lambda doesn't name the temp variable", function() {
 			expect("(for: where it > 2, 1,2,3)[]").markupToError();
+		});
+		it("errors if the lambda has a typed variable that doesn't match the values", function() {
+			expect("(for: each str-type _a, 1,2,3)[]").markupToError();
+			expect("(for: each num-type _a, 1,2,'e')[]").markupToError();
 		});
 		it("renders the attached hook's code once for each value", function() {
 			expect("(for: each _a, 1)[A]").markupToPrint("A");

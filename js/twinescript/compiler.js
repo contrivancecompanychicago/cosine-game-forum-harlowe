@@ -146,9 +146,9 @@ define(['utils'], ({impossible}) => {
 			["comma"],
 			{rightAssociative: ["spread", "bind"]},
 			["to","into"],
-			["typeSignature"], // the "-type" operator
 			["where", "when", "via"],
-			["with", "making", "each"],
+			["making", "each"],
+			["typeSignature"], // the "-type" operator
 			["augmentedAssign"],
 			["and", "or"],
 			["is", "isNot"],
@@ -449,45 +449,32 @@ define(['utils'], ({impossible}) => {
 				+ stringify(tokens.map(e => e.text).join(''))
 				+ ")";
 		}
-		else if (type === "with" || type === "making" || type === "each") {
+		else if (type === "making" || type === "each") {
 			/*
-				This token requires that whitespace + a temp variable be to the right of it.
-				(Hence, why "each" is included among them.)
+				The optional "each" keyword simply permits a lambda to be created using a bare
+				successive temp variable, without any other clauses. As such, it doesn't have a
+				temp variable preceding it, and its "clause" (the temp variable) is really its subject.
 			*/
-			const rightTokens = after;
-			if (![2,3].includes(rightTokens.length) || rightTokens[0].type !== "whitespace" || rightTokens[1].type !== "tempVariable"
-					|| (rightTokens[2] && rightTokens[2].type !== "whitespace")) {
-				left = "TwineError.create('operation','I need a temporary variable to the right of \\'";
-				midString = token.type;
-				right = "\\'.')";
+			if (type === "each") {
+				left = "Lambda.create(";
+				midString = compile(after, varRefArgs("right")).trim();
+				right = ",'where','true',"
+					// Lambdas need to store their entire Harlowe source.
+					+ stringify(tokens.map(e => e.text).join('')) + ")";
 			}
+			// Other keywords can have a preceding temp variable, though.
 			else {
-				/*
-					The optional "each" keyword simply permits a lambda to be created using a bare
-					successive temp variable, without any other clauses. As such, it doesn't have a
-					temp variable preceding it, and its "clause" (the temp variable) is really its subject.
-				*/
-				if (type === "each") {
-					left = "Lambda.create(";
-					midString = compile(rightTokens, varRefArgs("right")).trim();
-					right = ",'where','true',"
-						// Lambdas need to store their entire Harlowe source.
-						+ stringify(tokens.map(e => e.text).join('')) + ")";
-				}
-				// Other keywords can have a preceding temp variable, though.
-				else {
-					left = "Lambda.create("
-						+ (compile(before, {isVarRef:true, whitespaceError:null}).trim()
-							// Omitting the temp variable means that you must use "it"
-							|| "undefined")
-						+ ",";
-					midString = stringify(token.type)
-						+ ",";
-					right = stringify(rightTokens[1].name)
-						// Lambdas need to store their entire Harlowe source.
-						+ "," + stringify(tokens.map(e => e.text).join(''))
-						+ ")";
-				}
+				left = "Lambda.create("
+					+ (compile(before, {isVarRef:true, whitespaceError:null}).trim()
+						// Omitting the temp variable means that you must use "it"
+						|| "undefined")
+					+ ",";
+				midString = stringify(token.type)
+					+ ",";
+				right = compile(after, varRefArgs("right")).trim()
+					// Lambdas need to store their entire Harlowe source.
+					+ "," + stringify(tokens.map(e => e.text).join(''))
+					+ ")";
 			}
 		}
 		/*

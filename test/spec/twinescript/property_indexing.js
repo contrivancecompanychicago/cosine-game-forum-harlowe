@@ -195,6 +195,21 @@ describe("property indexing", function() {
 		});
 	});
 	describe("string indices", function() {
+		describe("for typed variables", function() {
+			it("'name' produces its name", function() {
+				expect("(print: (num-type _a)'s name)").markupToPrint('a');
+			});
+			it("'datatype' produces its datatype", function() {
+				expect("(print: (num-type _a)'s datatype is num)").markupToPrint('true');
+			});
+		});
+		describe("for custom macros", function() {
+			it("'params' produces an array of datatypes", function() {
+				expect("(print: (macro:boolean-type _foo, boolean-type _bar,[])'s params is an array)").markupToPrint('true');
+				expect("(print: (macro:boolean-type _foo, boolean-type _bar,[])'s params's 1st's name)").markupToPrint('foo');
+				expect("(print: (macro:boolean-type _foo, boolean-type _bar,[])'s params's 1st's datatype is boolean)").markupToPrint('true');
+			});
+		});
 		describe("for datamaps", function() {
 			it("access the keyed properties", function() {
 				expect('(print: (datamap:"A",1)\'s A)').markupToPrint('1');
@@ -387,7 +402,6 @@ describe("property indexing", function() {
 			['(text-size:2)',
 			'[(output:2)]',
 			'str',
-			'(str-type _a)',
 			'(bind _a)'].map(function(e) {
 				expect("(set:" + e + "'s bar to 2)").markupToError();
 				expect("(set:$foo to "+e+")(set:$foo's bar to 2)").markupToError();

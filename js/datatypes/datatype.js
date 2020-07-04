@@ -1,11 +1,12 @@
 "use strict";
 define([
+	'utils',
 	'datatypes/changercommand',
 	'datatypes/colour',
 	'datatypes/gradient',
 	'datatypes/lambda',
 	'datatypes/custommacro',
-], (Changer, Colour, Gradient, Lambda, CustomMacro) => {
+], ({realWhitespace}, Changer, Colour, Gradient, Lambda, CustomMacro) => {
 	const {assign,freeze} = Object;
 	const {floor,abs} = Math;
 	/*
@@ -47,7 +48,9 @@ define([
 		| `even` | Only matches even numbers
 		| `odd` | Only matches odd numbers
 		| `empty` | Only matches these empty structures: `""` (the empty string), `(a:)`, `(dm:)` and `(ds:)`.
-		| `const` | Matches nothing; Use this only with (set:) to make constants
+		| `whitespace` | Only matches strings containing only whitespace (spaces, newlines, and other kinds of space).
+		| `const` | Matches nothing; Use this only with (set:) to make constants.
+		| `any` | Matches anything; Use this only with (macro:) to make variables that accept any storable type.
 
 		If you want to check if a variable's data is a certain type, then you can use the `is a` operator to do the comparison. To check if the data in $money is a number, write `$money is a num`.
 
@@ -154,6 +157,8 @@ define([
 			Array.isArray(obj) || typeof obj === "string" ? !obj.length :
 			false
 		),
+		whitespace: obj => typeof obj === "string" && !!obj.match("^" + realWhitespace + "+$"),
+		any:      () => true,
 		/*
 			"const" is handled almost entirely as a special case inside VarRef.
 		*/

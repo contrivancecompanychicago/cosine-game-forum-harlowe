@@ -64,8 +64,9 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Colours now have an `lch` data value, which contains a datamap of LCH color space values for that colour (corresponding to the numbers given to the new `(lch:)` macro). Because LCH's values conflict with HSL's, the LCH values are inside this datamap instead of directly accessible from the colour itself.
  * As an error-checking feature, you can now force your story's variables to only ever hold certain datatypes, so that data of the wrong type can't be set to them. `(set: num-type $funds to 0)` will force an error to occur if a non-number is ever put into $funds, such as by `(set: $funds to "200")`. You can use this syntax with temp variables, too.
    * Additionally, you can force a variable to remain constant throughout the story using the new `const` datatype. `(set: const-type $robotText to (font:"Courier New"))` specifies that any further changes to $robotText should cause an error.
- * Added the `lambda` and `macro` datatypes, and the `boolean` datatype can now be shortened to `bool`.
- * Added the following datatypes: `even`, which matches only even numbers, `odd`, which matches only odd numbers, and `empty`, which matches only empty arrays, strings, datamaps and datasets.
+ * Lambdas' temp variables may now optionally have types as well, such as by writing `each str-type _name where _name contains "el"`. This checks that the correct types of data are given to the lambda.
+ * Added the `lambda` and `macro` datatypes (see below), and the `boolean` datatype can now be shortened to `bool`.
+ * Added the following datatypes: `even`, which matches only even numbers, `odd`, which matches only odd numbers, `whitespace`, which matches strings that only contain whitespace, and `empty`, which matches only empty arrays, strings, datamaps and datasets.
 
 ##### Macros
 
@@ -91,6 +92,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added `(complement:)`, a macro which takes a colour and produces its complement by rotating its LCH hue by 180 degrees.
  * Added `(palette:)`, a macro designed for rapid prototyping which produces a four-colour palette based on a given colour, for use with `(text-colour:)`, `(background:)` and `(enchant:)`.
  * Added `(source:)`, a macro that can turn any data value into its source code representation. `(source: (text-style:"bold") + (click: ?hat's 1st))` produces the string `'(text-style:"bold")+(click:?hat's 1st)'`.
+ * `(all-pass:)` can now be shortened to `(pass:)`. This alias is meant for cases when you only want to check a single value, like in `(pass: $noLetterE, "Gadsby")`, rather than a sequence of values.
 
 ##### Custom Macros
 

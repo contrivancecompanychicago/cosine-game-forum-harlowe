@@ -701,7 +701,7 @@
 			},
 			// As these consist of word characters, they cannot follow text nodes, lest they
 			// match subwords like "xxisxx".
-			["boolean", "is", "to", "into", "where", "when", "via", "with", "making", "each", "and", "or", "not",
+			["boolean", "is", "to", "into", "where", "when", "via", "making", "each", "and", "or", "not",
 			"isNot", "contains", "isIn", "isA", "isNotA", "isNotIn", "matches", "bind"].reduce((a, e) => {
 				a[e] = {
 					fn: emptyFn,

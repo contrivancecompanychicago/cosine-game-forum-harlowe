@@ -1,20 +1,24 @@
 describe("lambdas", function() {
 	'use strict';
-	it("consist of an optional temporary variable (with an optional 'each'), and clauses starting with 'making', 'where', 'when', 'via' or 'with'", function() {
-		expect("(print: _a where 2)").not.markupToError();
-		expect("(print: _a making _b)").not.markupToError();
-		expect("(print: _a via _a)").not.markupToError();
-		expect("(print: _a with _b)").not.markupToError();
-		expect("(print: each _a)").not.markupToError();
-		expect("(print: each _a where 2)").not.markupToError();
-		expect("(print: each _a making _b)").not.markupToError();
-		expect("(print: each _a via _a)").not.markupToError();
-		expect("(print: each _a with _b)").not.markupToError();
+	it("consist of an optional temporary or typed temp variable (with an optional 'each'), and clauses starting with 'making', 'where', 'when', or 'via'", function() {
+		["_a","num-type _a"].forEach(function(a) {
+			expect("(print: "+a+" where 2)").not.markupToError();
+			expect("(print: "+a+" making _b)").not.markupToError();
+			expect("(print: "+a+" via _a)").not.markupToError();
+			expect("(print: each "+a+")").not.markupToError();
+			expect("(print: each "+a+" where 2)").not.markupToError();
+			expect("(print: each "+a+" making num-type _b)").not.markupToError();
+			expect("(print: each "+a+" via _a)").not.markupToError();
+		});
 		expect("(print: where 2)").not.markupToError();
 		expect("(print: when 2)").not.markupToError();
 		expect("(print: making _B)").not.markupToError();
 		expect("(print: via _A)").not.markupToError();
-		expect("(print: with _B)").not.markupToError();
+
+		expect("(print: each 2)").markupToError();
+		expect("(print: 'e' where 2)").markupToError();
+		expect("(print: (a:) making _B)").markupToError();
+		expect("(print: 2 via _A)").markupToError();
 	});
 	it("cannot have 'each' without the temporary variable", function() {
 		expect("(print: each where true)").markupToError();
@@ -22,9 +26,8 @@ describe("lambdas", function() {
 	it("can be nested", function() {
 		expect("(print: _a via (_b where c))").not.markupToError();
 	});
-	it("'making' and 'with' clauses must have temporary variables following", function() {
+	it("'making' clauses must have temporary variables following", function() {
 		expect("(print: _a making (_a + 1))").markupToError();
-		expect("(print: _a with (_a + 1))").markupToError();
 	});
 	it("'where' and 'when' work with 'and'", function() {
 		expect("(print: where $a > 4 and $b > 3)").not.markupToError();
@@ -46,15 +49,13 @@ describe("lambdas", function() {
 		},20);
 	});
 	it("cannot have duplicate variable names", function() {
-		expect("(print: _a with _a)").markupToError();
 		expect("(print: _a making _a)").markupToError();
-		expect("(print: _a making _b with _b)").markupToError();
 	});
 	it("clauses can be in any order", function() {
-		expect("(print: _a with _b making _c via _c + _b where _a > 2)").not.markupToError();
-		expect("(print: _a making _c with _b where _a > 2 via _c + _b)").not.markupToError();
-		expect("(print: _a via _c + _b with _b making _c where _a > 2)").not.markupToError();
-		expect("(print: _a where _a > 2 making _c via _c + _b with _b)").not.markupToError();
+		expect("(print: _a making _c via _c where _a > 2)").not.markupToError();
+		expect("(print: _a making _c where _a > 2 via _c)").not.markupToError();
+		expect("(print: _a via _c making _c where _a > 2)").not.markupToError();
+		expect("(print: _a where _a > 2 making _c via _c)").not.markupToError();
 	});
 	//TODO: cannot have unused params
 });
@@ -69,9 +70,7 @@ describe("lambda macros", function() {
 			}
 			expect("(altered: each _a, 2)").markupToError();
 			expect("(altered: _a where _a*2, 2)").markupToError();
-			expect("(altered: _a with _b via _a*_b*2, 2)").markupToError();
 			expect("(altered: _a making _b via _a*_b*2, 2)").markupToError();
-			expect("(altered: _a via _a*2 with _b, 2)").markupToError();
 		});
 		it("applies the lambda to each of its additional arguments, producing an array", function() {
 			expect("(print: (altered: _a via _a*2, 1)'s 1st + 1)").markupToPrint("3");
@@ -95,6 +94,9 @@ describe("lambda macros", function() {
 		it("sets the 'it' identifier to the loop value", function() {
 			expect("(print: (altered: _a via it*2, 1)'s 1st + 1)").markupToPrint("3");
 		});
+		it("errors if the optional datatype doesn't match", function() {
+			expect("(print: (altered: str-type _a via it is not '2', 1))").markupToError();
+		});
 	});
 	describe("the (find:) macro", function() {
 		it("accepts a 'where' or 'each' lambda returning a boolean, plus zero or more other values", function() {
@@ -105,7 +107,6 @@ describe("lambda macros", function() {
 			}
 			expect("(find: each _a,2)").not.markupToError();
 			expect("(find:_a via true,2)").markupToError();
-			expect("(find:_a with _b where _a is _b,2)").markupToError();
 			expect("(find:_a making _b where true,2)").markupToError();
 		});
 		it("applies the lambda to each of its additional arguments, producing an array of those which produced true", function() {
@@ -123,6 +124,9 @@ describe("lambda macros", function() {
 		it("sets the 'it' identifier to the loop value", function() {
 			expect("(print: (find: _a where it > 2, 1,3)'s 1st + 1)").markupToPrint("4");
 		});
+		it("errors if the optional datatype doesn't match", function() {
+			expect("(print: (find: str-type _a where it is not '2', 1))").markupToError();
+		});
 	});
 	describe("the (all-pass:) macro", function() {
 		it("accepts a 'where'  or 'each' lambda, plus zero or more other values", function() {
@@ -133,13 +137,15 @@ describe("lambda macros", function() {
 			}
 			expect("(all-pass: each _a, 1)").not.markupToError();
 			expect("(all-pass: _a via true,2)").markupToError();
-			expect("(all-pass:_a with _b where _a is _b,2)").markupToError();
 			expect("(all-pass:_a making _b where true,2)").markupToError();
 		});
 		it("applies the lambda to each of its additional arguments, producing true if all produced true", function() {
 			expect("(print: (all-pass: _a where _a>2, 3,5,7))").markupToPrint("true");
 			expect("(print: (all-pass: _a where _a>2, 1,2,3,4,5))").markupToPrint("false");
 			expect("(set: $a to 3)(print: (all-pass: _a where _a < $a, 1,2))").markupToPrint("true");
+		});
+		it("is aliased as (pass:)", function() {
+			expect("(print: (pass: _a where _a>2, 3,5,7))").markupToPrint("true");
 		});
 		it("returns true if no other values are given", function() {
 			expect("(print: (all-pass: _a where _a*2 > 10))").markupToPrint("true");
@@ -162,6 +168,9 @@ describe("lambda macros", function() {
 				+'(set: $bar to (all-pass: _baz where "qux" of _foo of $corge contains _baz, 3,4,5))'
 				+'(print: $bar)').markupToPrint('true');
 		});
+		it("errors if the optional datatype doesn't match", function() {
+			expect("(print: (all-pass: str-type _a where it is not '2', 1))").markupToError();
+		});
 		it("temp variables are dynamically scoped", function() {
 			runPassage('(set: _foo to "baz", $corge to (dm:"foo",(a:1,2,3,4,5)))(set:$lam to _baz where _foo of $corge contains _baz)');
 			expect('(set: _foo to "foo")(set: $bar to (all-pass: $lam, 3,4,5))(print: $bar)').markupToPrint('true');
@@ -176,7 +185,6 @@ describe("lambda macros", function() {
 			}
 			expect("(some-pass: each _a,1)").not.markupToError();
 			expect("(some-pass: _a via true,2)").markupToError();
-			expect("(some-pass:_a with _b where _a is _b,2)").markupToError();
 			expect("(some-pass:_a making _b where true,2)").markupToError();
 		});
 		it("applies the lambda to each of its additional arguments, producing false if all produced false", function() {
@@ -203,7 +211,6 @@ describe("lambda macros", function() {
 			}
 			expect("(none-pass: each _a,1)").not.markupToError();
 			expect("(none-pass: _a via true,2)").markupToError();
-			expect("(none-pass:_a with _b where _a is _b,2)").markupToError();
 			expect("(none-pass:_a making _b where true,2)").markupToError();
 		});
 		it("applies the lambda to each of its additional arguments, producing true if all produced false", function() {
@@ -244,7 +251,10 @@ describe("lambda macros", function() {
 		});
 		it("produces an error if 'it' is used", function() {
 			expect("(print: (folded: _a making _total via _total + _a where it > 2, 2, 4, 7))").markupToError();
-			//expect("(print: (folded: _a making _total via _total + it, 2, 4, 7))").markupToError();
+			expect("(print: (folded: _a making _total via _total + it, 2, 4, 7))").markupToError();
+		});
+		it("errors if the optional datatypes don't match", function() {
+			expect("(print: (folded: str-type _a making str-type _total via _total + _a, 2, 4, 7))").markupToError();
 		});
 		it("if one iteration errors, the result is an error", function() {
 			expect("(folded: _a making _total via _a + _total, 2, '4', 7)").markupToError();

@@ -921,6 +921,7 @@ define([
 		[Lambda.TypeSignature('where'), zeroOrMore(Any)])
 		/*d:
 			(all-pass: Lambda, [...Any]) -> Boolean
+			Also known as: (pass:)
 
 			This takes a "where" lambda and a series of values, and evaluates to true if the lambda, when run using each value, never evaluated to false.
 
@@ -935,6 +936,10 @@ define([
 
 			The (all-pass:) macro lets you perform these checks easily using a lambda, identical to that used with (find:) - simply write a "temp variable
 			`where` a condition" expression, and every value will be put into the temp variable one by one, and the condition checked for each.
+
+			Additionally, you can use (all-pass:) just to run a single "where" lambda against a single value - for instance, as a variation of
+			(if:). This is permitted, too - simply write the lambda and the single value. For those cases, you may wish to write it as (pass:),
+			a shorthand form that visually indicates that you're only checking one value rather than "all".
 
 			Details:
 			Of course, if any condition should cause an error, such as checking if a number contains a number, then the error will appear.
@@ -955,7 +960,7 @@ define([
 			Added in: 2.0.0
 			#data structure
 		*/
-		("all-pass", (section, lambda, ...args) => {
+		(["all-pass", "pass"], (section, lambda, ...args) => {
 			const ret = lambda.filter(section, args);
 			return TwineError.containsError(ret) || ret.length === args.length;
 		},
@@ -999,8 +1004,9 @@ define([
 
 			Example usage:
 			* `(folded: _enemy making _allHP via _allHP + _enemy's hp, ...$enemies)` will first set _allHP to $enemies's 1st's hp, then add the remaining hp values in $enemies to it.
+			Then it will return the number in _allHP.
 			* `(folded: _name making _allNames via _allNames + "/" + _name, ...(history: ))` will create a string of every passage name in the (history:) array,
-			separated by a forward slash.
+			separated by a forward slash. Then it will return the string in _allNames.
 
 			Rationale:
 			The (for:) macro, while intended to display multiple copies of a hook, can also be used to run a single macro call multiple times. You may
@@ -1020,7 +1026,7 @@ define([
 			```
 			CURRENT DISK PATH: (folded: _name making _allNames via _allNames + "/" + _name, ...(history: ), "here")
 			```
-			This macro uses a lambda (which is the "temp variable `making` another temp variable `via` expression" expression) to run the
+			This macro uses a "making" lambda (which is the "temp variable `making` another temp variable `via` expression" expression) to run the
 			expression using every provided value, much like those repeated (set:) calls.
 
 			If you need to perform this operation at various different times in your story, you may wish to (set:) the lambda into a variable,

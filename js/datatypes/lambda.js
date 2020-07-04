@@ -35,11 +35,16 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 		like (link-repeat:), a (live:) macro, or anything else). This really shouln't be called a "lambda", but you can perhaps think of it in
 		terms of it filtering moments in time that pass or fail the condition.
 
-		Lambdas use temp variables as "placeholders" for the actual values. For instance, in `(find: _num where _num > 2, 5,6,0)`,
+		Lambdas use temp variables to hold the actual values. For instance, in `(find: _num where _num > 2, 5,6,0)`,
 		the temp variable `_num` is used to mean each individual value given to the macro, in turn. It will be 5, 6 and 0, respectively.
 		Importantly, this will *not* alter any existing temp variable called `_num` - the inside of a lambda can be thought
 		of as a hook, so just as the inner `_x` in `(set: _x to 1) |a>[ (set:_x to 2) ]` is different from the outer `_x`, the `_num` in the
 		lambda will not affect any other `_num`.
+
+		If you want to be extra watchful for errors and mistyped data (and if you're working on a big project, you should!), you can include a datatype
+		with each variable, such as by writing `str-type _a where _a contains 'e'` instead of `_a where _a contains 'e'`, to make it a TypedVar.
+		You may notice that `_a contains 'e'` would also be true if `_a` was `(a:'e')` rather than, as intended, a string. Adding `str-type`
+		allows such an error to be found and reported early, and results in a less confusing error message.
 
 		You can use the "it" shorthand to save on having to write the temporary variable's name multiple times.
 		`_num where _num > 2` can be rewritten as`_num where it > 2`. Not only that, but you can even save on naming the temporary
@@ -64,7 +69,6 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 		get TwineScript_ObjectName() {
 			return "a \""
 				+ (("making" in this) ? "making ... " : "")
-				+ (("with" in this) ? "with ... " : "")
 				+ (("where" in this) ? "where ... " : "")
 				+ (("when" in this) ? "when ... " : "")
 				+ (("via" in this) ? "via ... " : "")
@@ -118,14 +122,36 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 		},
 
 		/*
-			Lambdas consist of five clauses: the loop variable's name, the 'making' variable's name,
-			the 'with' variable's name, the 'where' clause (and its special 'when' variant), and the 'via' clause.
+			Lambdas consist of five clauses: the loop variable, the 'making' variable,
+			the 'where' clause (and its special 'when' variant), and the 'via' clause.
 
 			Lambdas are constructed by joining one of these clauses with a subject (which is either another
-			lambda - thus adding their clauses - or a temp variable).
+			lambda - thus adding their clauses - or a temp variable or typed variable).
 		*/
 		create(subject, clauseType, clause, source) {
 			let ret;
+			const tempVariableMsg = "temp variable, or typed temp variable";
+
+			/*
+				This function quickly checks that a variable object (either subject or 'making' clause) given to this lambda is valid.
+			*/
+			function validVariable(subject) {
+				/*
+					If the subject is a typed variable (which we can't actually strictly type-check due to a circular dependency)
+					then pull out its variable. Otherwise, use the subject itself.
+				*/
+				const variable = (subject && subject.varRef ? subject.varRef : subject);
+				return (variable === undefined ||
+						(variable && VarRef.isPrototypeOf(variable)
+						// It must be a temp variable...
+						&& VarScope.isPrototypeOf(variable.object)
+						// ...and not a property access on one.
+						&& variable.propertyChain.length === 1));
+			}
+
+			if (clauseType === "making" && !validVariable(clause)) {
+				return TwineError.create('syntax','I need a ' + tempVariableMsg + ', to the right of \'' + clauseType + '\', not ' + objectName(clause) + '.');
+			}
 			/*
 				Firstly, if the subject is an error, propagate it.
 			*/
@@ -163,26 +189,18 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 				*/
 				if (clauseType === "when" && subject !== undefined) {
 					return TwineError.create('syntax',
-						"A 'when' lambda shouldn't begin with a temporary variable (just use 'when' followed by the condition).");
+						"A 'when' lambda shouldn't begin with a temp variable (just use 'when' followed by the condition).");
+				}
+
+				if (!validVariable(subject)) {
+					return TwineError.create('syntax', "This lambda needs to start with a single " + tempVariableMsg + ", not " + objectName(subject) + '.');
 				}
 				/*
-					If the subject is a temporary variable or undefined (and it's a mistake if it's not), create a fresh
+					If the subject is a temporary variable, typed variable, or undefined (and it's a mistake if it's not), create a fresh
 					lambda object with only a "loop" property.
-
-					It's a tad unfortunate that the preceding token before this lambda is already
-					compiled into an incorrect object, but we must deal with syntactic ambiguity in this way.
 				*/
-				if (subject !== undefined &&
-						(!subject || !VarRef.isPrototypeOf(subject)
-						// It must be a temp variable...
-						|| !VarScope.isPrototypeOf(subject.object)
-						// ...and not a property access on one.
-						|| subject.propertyChain.length > 1)) {
-					return TwineError.create('syntax', "This lambda needs to start with a single temporary variable.");
-				}
 				ret = Object.create(this);
-				// Extract the variable name from the TempVar, and make that the 'loop' variable name.
-				ret.loop = (subject ? subject.propertyChain[0] : "");
+				ret.loop = (subject || "");
 			}
 			/*
 				Add the source, or update the source to include this lambda's contents.
@@ -194,12 +212,12 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 			*/
 			ret[clauseType] = clause;
 			/*
-				The "making", "with" or "loop" variables' names must always be unique.
+				The "making" or "loop" variables' names must always be unique.
 				Note: like regular variables, temp variables are not case-insensitive.
 			*/
-			const nonunique = [ret.making, ret.with, ret.loop].filter((e,i,a)=>e && a.indexOf(e) !== i);
-			if (nonunique.length) {
-				return TwineError.create('syntax', 'This lambda has two variables named \'' + nonunique[0] + '\'.',
+			const nonunique = ret.making && (ret.making.getName() === (ret.loop && ret.loop.getName()));
+			if (nonunique) {
+				return TwineError.create('syntax', 'This lambda has two variables named \'' + ret.loop.getName() + '\'.',
 					'Lambdas should have all-unique parameter names.');
 			}
 			/*
@@ -213,18 +231,44 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 			This needs to have the macro's section passed in so that its JS code can be eval()'d in
 			the correct scope.
 		*/
-		apply(section, {loop:loopArg, pos:lambdaPos /*This must be 1-indexed*/, 'with':withArg, making:makingArg, ignoreVia, tempVariables}) {
+		apply(section, {loop:loopArg, pos:lambdaPos /*This must be 1-indexed*/, making:makingArg, ignoreVia, tempVariables}) {
 			/*
 				We run the JS code of this lambda, inserting the arguments by adding them to a tempVariables
 				object (if one wasn't provided). The temporary variable references in the code are compiled to
 				VarRefs for tempVariables.
 			*/
 			tempVariables = tempVariables || Object.create(section.stack.length ? section.stackTop.tempVariables : VarScope);
-			[
-				[this.loop, loopArg],
-				[this.with, withArg],
-				[this.making, makingArg],
-			].forEach(([name, arg]) => name && (tempVariables[name] = arg));
+
+			/*
+				This function assigns the value for a variable for this iteration, and retrieves any
+				type errors resulting from it (if the variable was typed).
+			*/
+			function setArgument(variable, arg) {
+				if (variable) {
+					/*
+						If the variable is a typed variable (which we can't actually strictly type-check due to a circular dependency)
+						then we perform a more formal defineType() and set() call to assign it to the scope.
+					*/
+					if ("datatype" in variable && "varRef" in variable) {
+						/*
+							Create new VarRefs that use this tempVariable scope as a base.
+						*/
+						const ref = variable.varRef.create(tempVariables, variable.varRef.propertyChain);
+						ref.defineType(variable.datatype);
+						const error = ref.set(arg);
+						if (TwineError.containsError(error)) {
+							return error;
+						}
+					}
+					else {
+						tempVariables[variable.getName()] = arg;
+					}
+				}
+			}
+			const error = setArgument(this.loop, loopArg) || setArgument(this.making, makingArg);
+			if (TwineError.containsError(error)) {
+				return error;
+			}
 
 			/*
 				The stackTop, if it exists, may have a speculativePassage or something
@@ -241,12 +285,12 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 
 			const Operations = section.eval("Operations");
 			/*
-				If this lambda has no "making" or "with" clauses (and isn't a "when" lambda), then the "it"
+				If this lambda has no "making" clauses (and isn't a "when" lambda), then the "it"
 				keyword is set to the loop arg. Note that this doesn't require the presence of
 				this.loop - if it is omitted, then you can only access the loop var in the "where"
 				clause using "it".
 			*/
-			if (loopArg && !this.with && !this.making && !this.when) {
+			if (loopArg && !this.making && !this.when) {
 				Operations.initialiseIt(loopArg);
 			}
 			/*
