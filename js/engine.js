@@ -80,7 +80,7 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 	function showPassage (name, displayOptions = {}) {
 		// Confirm that the options object only contains
 		// what this function recognises.
-		Utils.assertOnlyHas(displayOptions, ["stretch", "transitionIn", "transitionOut", "transitionTime"]);
+		Utils.assertOnlyHas(displayOptions, ["stretch", "transition"]);
 
 		const
 			// The passage
@@ -97,16 +97,15 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 			{
 				// Whether or not this should be a stretchtext transition
 				stretch,
-				// The transition to use to remove the passage. This is
-				// of course only used when stretchtext is false.
-				transitionOut: transitionOutName,
-
-				transitionIn: transitionInName,
-				transitionTime,
+				// The transition definition object.
+				transition: {
+					depart: depart = "instant",
+					arrive: arrive = "dissolve",
+					departOrigin,
+					arriveOrigin,
+					time,
+				} = {},
 			} = displayOptions;
-
-		transitionOutName = transitionOutName || "instant";
-		transitionInName = transitionInName || "dissolve";
 
 		/*
 			If the story has a <tw-enchantment> around it (which could have been placed)
@@ -137,23 +136,44 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 		}
 		
 		/*
-			Because rendering a passage is a somewhat intensive DOM manipulation,
-			the <tw-story> is detached before and reattached after.
-		*/
-		story.detach();
-		
-		/*
 			Find out how many tw-passage elements there are currently in the
 			destination element.
 		*/
 		const oldPassages = story.children(passageSelector).not(".transition-out, .transition-out *");
+
+		const tags = (passageData.get('tags') || []).join(' ');
+		const newPassage = createPassageElement();
+
+		/*
+			The departOrigin and arriveOrigin values can be functions that produce CSS property strings,
+			similar to jQuery .css() objects. While Utils.transitionIn() can handle these, they sadly
+			must be run before the element is detached from the DOM, as these functions tend to use .offset().
+		*/
+		if (typeof departOrigin === "function") {
+			departOrigin = departOrigin.call(oldPassages);
+		}
+		if (typeof arriveOrigin === "function") {
+			arriveOrigin = arriveOrigin.call(newPassage);
+		}
 		
+		/*
+			Because rendering a passage is a somewhat intensive DOM manipulation,
+			the <tw-story> is detached before and reattached after.
+		*/
+		story.detach();
+
+		/*
+			Make the passage's tags visible in the DOM, on both the <tw-passage> and
+			the <tw-story>, for user CSS availability.
+		*/
+		newPassage.appendTo(story).attr({tags});
+
 		/*
 			If this isn't a stretchtext transition, send away all of the
 			old passage instances.
 		*/
-		if (!stretch && transitionOutName) {
-			transitionOut(oldPassages, transitionOutName, transitionTime);
+		if (!stretch && depart) {
+			transitionOut(oldPassages, depart, time, 0, 0, 0, departOrigin);
 			/*
 				This extra adjustment is separate from the transitionOut method,
 				as it should only apply to the block-level elements that are
@@ -163,14 +183,6 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 			*/
 			oldPassages.css('position','absolute');
 		}
-		
-		/*
-			Make the passage's tags visible in the DOM, on both the <tw-passage> and
-			the <tw-story>, for user CSS availability.
-		*/
-		const tags = (passageData.get('tags') || []).join(' ');
-		const newPassage = createPassageElement().appendTo(story)
-			.attr({tags});
 
 		/*
 			Only the most recent passage's tags are present on the <tw-story>.
@@ -321,7 +333,7 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 				as well as this basic, default ChangeDescriptor-like object
 				supplying the transition.
 			*/
-			{ transition: transitionInName, transitionTime }
+			{ transition: arrive, transitionTime: time, transitionOrigin: arriveOrigin }
 		);
 		
 		/*

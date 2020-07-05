@@ -73,28 +73,25 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 				Iterate through each <tw-enchantment> and update these variables.
 				(A .each() loop is easier when working with a jQuery compared to a .reduce().)
 			*/
-			let transitionOut = expression.data('t8nDepart');
-			let transitionIn = expression.data('t8nArrive');
-			let transitionTime = expression.data('t8nTime');
+
+			let transition = Object.assign({}, expression.data('passageT8n') || {});
 			/*
 				$().find() SHOULD return the tw-enchantments in ascending depth order.
 			*/
 			expression.find('tw-enchantment').each((_,e) => {
-				transitionOut = $(e).data('t8nDepart') || transitionOut;
-				transitionIn = $(e).data('t8nArrive') || transitionIn;
-				transitionTime = $(e).data('t8nTime') !== undefined ? $(e).data('t8nTime') : transitionTime;
+				Object.assign(transition, $(e).data('passageT8n') || {});
 			});
 
 			if (next) {
 				// TODO: stretchtext
-				Engine.goToPassage(next, { transitionOut, transitionIn, transitionTime });
+				Engine.goToPassage(next, { transition });
 				return;
 			}
 			/*
 				Or, a (link-undo:) link.
 			*/
 			if (link.is('[undo]')) {
-				Engine.goBack({ transitionOut, transitionIn, transitionTime });
+				Engine.goBack({ transition });
 				return;
 			}
 		}
@@ -758,7 +755,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 					a blocking macro like (prompt:) is active, or a different (go-to:) was activated.
 					Much as in doExpressions() in section.renderInto(), we can check for an early exit via the DOM.
 				*/
-				desc.section.whenUnblocked(() => Engine.goToPassage(passageName, { transitionOut: desc.data.t8nDepart, transitionIn: desc.data.t8nArrive }) );
+				desc.section.whenUnblocked(() => Engine.goToPassage(passageName, {
+					transition: desc.data.passageT8n,
+				}) );
 			};
 		},
 		[String, optional(String)]

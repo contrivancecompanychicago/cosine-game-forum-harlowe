@@ -29,11 +29,11 @@ $time: 0.8s;
 /* Shudder */
 [data-t8n^=shudder] {
 	&.transition-in {
-		display: inline-block;
+		display: inline-block !important;
 		@include animation(shudder-in $time);
 	}
 	&.transition-out {
-		display: inline-block;
+		display: inline-block !important;
 		@include animation(shudder-in $time reverse);
 	}
 }
@@ -41,11 +41,11 @@ $time: 0.8s;
 /* Rumble */
 [data-t8n^=rumble] {
 	&.transition-in {
-		display: inline-block;
+		display: inline-block !important;
 		@include animation(rumble-in $time);
 	}
 	&.transition-out {
-		display: inline-block;
+		display: inline-block !important;
 		@include animation(rumble-in $time reverse);
 	}
 }
@@ -61,11 +61,23 @@ $time: 0.8s;
 [data-t8n^=pulse] {
 	&.transition-in {
 		@include animation(pulse $time);
-		display:inline-block;
+		display:inline-block !important;
 	}
 	&.transition-out {
 		@include animation(pulse $time reverse);
-		display:inline-block;
+		display:inline-block !important;
+	}
+}
+
+/* Zoom */
+[data-t8n^=zoom] {
+	&.transition-in {
+		@include animation(zoom-in $time);
+		display:inline-block !important;
+	}
+	&.transition-out {
+		@include animation(zoom-in $time reverse);
+		display:inline-block !important;
 	}
 }
 
@@ -78,41 +90,41 @@ $time: 0.8s;
 [data-t8n^=slideleft] {
 	&.transition-in {
 		@include animation(slide-left $time);
-		display:inline-block;
+		display:inline-block !important;
 	}
 	&.transition-out {
 		@include animation(slide-right $time reverse);
-		display:inline-block;
+		display:inline-block !important;
 	}
 }
 [data-t8n^=slideright] {
 	&.transition-in {
 		@include animation(slide-right $time);
-		display:inline-block;
+		display:inline-block !important;
 	}
 	&.transition-out {
 		@include animation(slide-left $time reverse);
-		display:inline-block;
+		display:inline-block !important;
 	}
 }
 [data-t8n^=slideup] {
 	&.transition-in {
 		@include animation(slide-up $time);
-		display:inline-block;
+		display:inline-block !important;
 	}
 	&.transition-out {
 		@include animation(slide-down $time reverse);
-		display:inline-block;
+		display:inline-block !important;
 	}
 }
 [data-t8n^=slidedown] {
 	&.transition-in {
 		@include animation(slide-down $time);
-		display:inline-block;
+		display:inline-block !important;
 	}
 	&.transition-out {
 		@include animation(slide-up $time reverse);
-		display:inline-block;
+		display:inline-block !important;
 	}
 }
 
@@ -124,16 +136,4 @@ $time: 0.8s;
 	&.transition-out {
 		@include animation(flicker $time reverse);
 	}
-}
-
-/* Modifiers */
-[data-t8n$=fast] {
-	animation-duration: $time/2;
-	-webkit-animation-duration: $time/2;
-}
-
-/* Modifiers */
-[data-t8n$=slow] {
-	animation-duration: $time*2;
-	-webkit-animation-duration: $time*2;
 }

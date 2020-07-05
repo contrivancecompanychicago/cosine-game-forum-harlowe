@@ -49,7 +49,11 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/polyfills'],
 			And, the same for mouse buttons.
 		*/
 		buttonsHeld = {},
-		buttonsHeldCount = 0;
+		buttonsHeldCount = 0,
+		/*
+			Finally, mouse coordinates.
+		*/
+		mouseCoords = {};
 
 	let Utils;
 	/*
@@ -71,6 +75,10 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/polyfills'],
 			key ? (keysHeldCount += 1) : (buttonsHeldCount += 1);
 		}
 		map[which] = down;
+	})
+	.on('mousemove', ({pageX, pageY}) => {
+		mouseCoords.x = pageX;
+		mouseCoords.y = pageY;
 	});
 
 	/*
@@ -313,6 +321,11 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/polyfills'],
 			Provides access to the buttonsHeld map, which tracks button input.
 		*/
 		buttonsDown: (...buttons) => buttons.every(b => buttonsHeld[b]),
+
+		/*
+			Provides very direct access to mouseCoords.
+		*/
+		mouseCoords,
 		
 		/*
 			Element utilities
@@ -459,7 +472,65 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/polyfills'],
 		/*
 			Transition an element out.
 		*/
-		transitionOut(el, transIndex, transitionTime, transitionDelay = 0, transitionSkip = 0, expedite = 0) {
+		transitionOut(el, transIndex, transitionTime, transitionDelay = 0, transitionSkip = 0, expedite = 0, transitionOrigin = undefined) {
+			/*
+				Quick early exit.
+			*/
+			if (el.length === 0) {
+				return;
+			}
+			transitionTime = transitionTime || defaultTransitionTime(transIndex);
+
+			const childrenInline = Utils.childrenProbablyInline(el),
+				/*
+					If the element is not a tw-hook or tw-passage, we must
+					wrap it in a temporary element first, which can thus be
+					animated using CSS.
+				*/
+				mustWrap =
+					el.length > 1 || !childrenInline ||
+					!['tw-hook','tw-passage'].includes(el.tag());
+			/*
+				As mentioned above, we must, in some cases, wrap the nodes in containers.
+			*/
+			if (mustWrap) {
+				el = el.wrapAll('<tw-transition-container>').parent();
+			}
+			/*
+				Now, apply the transition.
+				The transitionOrigin must be applied before the rest of the attributeds, as it may
+				be a function.
+			*/
+			if (transitionOrigin) {
+				el.css('transform-origin', transitionOrigin);
+			}
+			el.attr("data-t8n", transIndex).addClass("transition-out").css({
+				'animation-duration': transitionTime + "ms",
+				'animation-delay':   (transitionDelay - expedite) + "ms",
+			});
+
+			if (childrenInline) {
+				/*
+					If there are no element children of the container (only text), simply use 'inline'.
+				*/
+				el.css('display','inline' + (el.children().length ? '-block' : ''));
+			}
+			/*
+				Each frame, reduce the delay, and potentially reduce it further if this
+				transition can be skipped and an input is being held.
+			*/
+			onTransitionComplete(el, transitionTime + transitionDelay - expedite, transitionSkip, () => {
+				/*
+					As a transition-out, all that needs to be done at the end is remove the element.
+				*/
+				el.remove();
+			});
+		},
+
+		/*
+			Transition an element in.
+		*/
+		transitionIn(el, transIndex, transitionTime, transitionDelay = 0, transitionSkip = 0, expedite = 0, transitionOrigin = undefined) {
 			/*
 				Quick early exit.
 			*/
@@ -484,59 +555,12 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/polyfills'],
 			}
 			/*
 				Now, apply the transition.
+				The transitionOrigin must be applied before the rest of the attributeds, as it may
+				be a function.
 			*/
-			el.attr("data-t8n", transIndex).addClass("transition-out").css({
-				'animation-duration': transitionTime + "ms",
-				'animation-delay':   (transitionDelay - expedite) + "ms",
-			});
-			if (childrenInline) {
-				/*
-					If there are no element children of the container (only text), simply use 'inline'.
-				*/
-				el.css('display','inline' + (el.children().length ? '-block' : ''));
+			if (transitionOrigin) {
+				el.css('transform-origin', transitionOrigin);
 			}
-			/*
-				Each frame, reduce the delay, and potentially reduce it further if this
-				transition can be skipped and an input is being held.
-			*/
-			onTransitionComplete(el, transitionTime + transitionDelay - expedite, transitionSkip, () => {
-				/*
-					As a transition-out, all that needs to be done at the end is remove the element.
-				*/
-				el.remove();
-			});
-		},
-
-		/*
-			Transition an element in.
-		*/
-		transitionIn(el, transIndex, transitionTime, transitionDelay = 0, transitionSkip = 0, expedite = 0) {
-			/*
-				Quick early exit.
-			*/
-			if (el.length === 0) {
-				return;
-			}
-			transitionTime = transitionTime || defaultTransitionTime(transIndex);
-			const childrenInline = Utils.childrenProbablyInline(el),
-				/*
-					If the element is not a tw-hook or tw-passage, we must
-					wrap it in a temporary element first, which can thus be
-					animated using CSS.
-				*/
-				mustWrap =
-					el.length > 1 || !childrenInline ||
-					!['tw-hook','tw-passage'].includes(el.tag());
-			/*
-				As mentioned above, we must, in some cases, wrap the nodes in containers.
-			*/
-			if (mustWrap) {
-				el = el.wrapAll('<tw-transition-container>').parent();
-			}
-			/*
-				Now, perform the transition by assigning these attributes
-				and letting the built-in CSS take over.
-			*/
 			el.attr("data-t8n", transIndex).addClass("transition-in").css({
 				'animation-duration': transitionTime + "ms",
 				'animation-delay':   (transitionDelay - expedite) + "ms",

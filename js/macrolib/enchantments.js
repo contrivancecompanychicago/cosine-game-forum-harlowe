@@ -475,8 +475,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'passages', 'macros
 							*/
 							if (enchantDesc.goto) {
 								Engine.goToPassage(enchantDesc.goto, {
-									transitionOut: enchantDesc.transitionOut,
-									transitionIn: enchantDesc.transitionIn,
+									transition: enchantDesc.transition,
 								});
 								return;
 							}
@@ -937,8 +936,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'passages', 'macros
 				*/
 				const [,makeEnchanter] = newEnchantmentMacroFns(Object.assign({}, interactionType.enchantDesc, {
 					goto: passage,
-					transitionOut: desc.data.t8nDepart,
-					transitionIn: desc.data.t8nArrive,
+					transition: desc.data.passageT8n,
 				}), name);
 				makeEnchanter({section}, HookSet.from(selector));
 				return Object.assign(desc, { source: '' });

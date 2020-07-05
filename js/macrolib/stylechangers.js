@@ -97,7 +97,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 	/*
 		A list of valid transition names. Used by (transition:).
 	*/
-	const validT8ns = ["instant", "dissolve", "rumble", "shudder", "pulse", "flicker", "slideleft", "slideright", "slideup", "slidedown"];
+	const validT8ns = ["instant", "dissolve", "rumble", "shudder", "pulse", "zoom", "flicker", "slideleft", "slideright", "slideup", "slidedown"];
 	const validBorders = ['dotted','dashed','solid','double','groove','ridge', 'inset','outset','none'];
 	Macros.addChanger
 		/*d:
@@ -603,6 +603,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			* "slide-top" (causes the hook to slide in from the top)
 			* "slide-bottom" (causes the hook to slide in from the bottom)
 			* "pulse" (causes the hook to instantly appear while pulsating rapidly)
+			* "zoom" (causes the hook to scale up from the mouse pointer)
 			
 			All transitions are 0.8 seconds long, unless a (transition-time:) changer is added
 			to the changer.
@@ -624,6 +625,12 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			(_, name) => ChangerCommand.create("transition", [Utils.insensitiveName(name)]),
 			(d, name) => {
 				d.transition     = name;
+				if (name === "zoom") {
+					d.transitionOrigin = function() {
+						const el = $(this), {left, top} = el.offset();
+						return (Utils.mouseCoords.x - left) + "px " + (Utils.mouseCoords.y - top) + "px";
+					};
+				}
 				return d;
 			},
 			[insensitiveSet(...validT8ns)]
@@ -661,7 +668,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 					transition and a differently-timed passage transition should be low (and can be worked around
 					using wrapper hooks anyway).
 				*/
-				d.data.t8nTime       = time;
+				d.data.passageT8n = Object.assign(d.data.passageT8n || {}, { time });
 				return d;
 			},
 			[positiveNumber]
@@ -763,6 +770,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			* "slide-right" (causes the passage to slide in from the right)
 			* "slide-left" (causes the passage to slide in from the left)
 			* "pulse" (causes the passage to disappear while pulsating rapidly)
+			* "zoom" (causes the passage to shrink down toward the mouse pointer)
 
 			Attaching this macro to a hook that isn't a passage link won't do anything (no error message will be produced).
 
@@ -778,7 +786,13 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 		(["transition-depart", "t8n-depart"],
 			(_, name) => ChangerCommand.create("transition-depart", [Utils.insensitiveName(name)]),
 			(d, name) => {
-				d.data.t8nDepart = name;
+				d.data.passageT8n = Object.assign(d.data.passageT8n || {}, { depart:name });
+				if (name === "zoom") {
+					d.data.passageT8n.departOrigin = function() {
+						const el = $(this), {left, top} = el.offset();
+						return (Utils.mouseCoords.x - left) + "px " + (Utils.mouseCoords.y - top) + "px";
+					};
+				}
 				return d;
 			},
 			[insensitiveSet(...validT8ns)]
@@ -807,6 +821,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			* "slide-right" (causes the passage to slide in from the right)
 			* "slide-left" (causes the passage to slide in from the left)
 			* "pulse" (causes the passage to disappear while pulsating rapidly)
+			* "zoom" (causes the passage to scale up from the mouse pointer)
 
 			Attaching this macro to a hook that isn't a passage link won't do anything (no error message will be produced).
 
@@ -822,7 +837,17 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 		(["transition-arrive", "t8n-arrive"],
 			(_, name) => ChangerCommand.create("transition-arrive", [Utils.insensitiveName(name)]),
 			(d, name) => {
-				d.data.t8nArrive = name;
+				d.data.passageT8n = Object.assign(d.data.passageT8n || {}, { arrive:name });
+				if (name === "zoom") {
+					d.data.passageT8n.arriveOrigin = function() {
+						const el = $(this), {left, top} = el.offset(), height = el.height();
+						return {
+							'transform-origin': ((Utils.mouseCoords.x - left) * 100 / el.width()) + "% "
+								+ ((Utils.mouseCoords.y - top) * 100 / height + "%"),
+							height: height + "px",
+						};
+					};
+				}
 				return d;
 			},
 			[insensitiveSet(...validT8ns)]

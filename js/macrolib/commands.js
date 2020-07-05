@@ -188,7 +188,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 					So, the change of passage must be deferred until just after
 					the passage has ceased rendering.
 				*/
-				requestAnimationFrame(()=> Engine.goToPassage(name, { transitionOut: cd.data.t8nDepart, transitionIn: cd.data.t8nArrive }));
+				requestAnimationFrame(()=> Engine.goToPassage(name, { transition: cd.data.passageT8n }));
 				/*
 					Blocking the passage immediately ceases rendering; note that this should never get unblocked.
 				*/
@@ -242,7 +242,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 					just after the passage has ceased rendering, to avoid <tw-story> being
 					detached twice.
 				*/
-				requestAnimationFrame(()=> Engine.goBack({ transitionOut: cd.data.t8nDepart, transitionIn: cd.data.t8nArrive }));
+				requestAnimationFrame(()=> Engine.goBack({ transition: cd.data.passageT8n }));
 				/*
 					As with the (goto:) macro, "blocked" signals to Section's runExpression() to cease evaluation.
 				*/

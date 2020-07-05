@@ -96,6 +96,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added `(text-rotate-x:)` and `(text-rotate-y:)`, which are 3D versions of `(text-rotate:)`, rotating the hook around the X or Y axis, making it appear to lean into the page with perspective.
  * `(all-pass:)` can now be shortened to `(pass:)`. This alias is meant for cases when you only want to check a single value, like in `(pass: $noLetterE, "Gadsby")`, rather than a sequence of values.
  * `(text-rotate:)` is aliased to `(text-rotate-z:)`, for consistency with the new macros.
+ * The following transitions have been added:
+   * "zoom", which makes the transitioning entity zoom in or out from the mouse cursor's position (or the last place the touch device was touched).
 
 ##### Custom Macros
 

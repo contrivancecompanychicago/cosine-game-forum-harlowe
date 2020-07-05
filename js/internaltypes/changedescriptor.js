@@ -40,7 +40,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		// {String} [transition]      Which built-in transition to use.
 		transition:       "",
 		
-		// {Number|Null} [transitionTime]  The duration of the transition, in ms, or null if the default speed should be used.
+		// {Number} [transitionTime]  The duration of the transition, in ms, or null if the default speed should be used.
 		transitionTime:   null,
 
 		// {Boolean} [transitionDeferred]  Whether or not the transition given above should not be used, but saved for an interaction element
@@ -53,6 +53,9 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 
 		// {Number} [transitionSkip]  If a keyboard key or mouse button is held down, skip this many milliseconds in the transition.
 		transitionSkip:   0,
+
+		// {Function|String} [transitionOrigin] A jQuery .css()-compatible property that makes a "transform-origin" value for this element as it transitions.
+		transitionOrigin: null,
 
 		// {Object} [loopVars]        An object of {temp variable : values array} pairs, which the source should loop over.
 		//                            Used only by (for:)
@@ -88,7 +91,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 			return [
 				"source", "innerSource", "enabled", "target", "append", "newTargets",
 				"transition", "transitionTime", "transitionDeferred", "transitionDelay",
-				"transitionSkip",
+				"transitionSkip", "transitionOrigin",
 			]
 			.filter(e => this.hasOwnProperty(e))
 			.concat([
@@ -230,7 +233,8 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 						This delta expedites the animation - if it's expedited past its natural end,
 						it's as if it isn't re-animated (which it shouldn't).
 					*/
-					ts ? Date.now() - ts : 0
+					ts ? Date.now() - ts : 0,
+					this.transitionOrigin
 				);
 			}
 		},
@@ -486,7 +490,8 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 					transition, transitionTime, this.transitionDelay, this.transitionSkip,
 					// expedite should always be 0 for changeDescriptors that have their render() called, but,
 					// for consistency...
-					this.expedite
+					this.expedite,
+					this.transitionOrigin
 				);
 			}
 			

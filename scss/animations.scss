@@ -67,6 +67,11 @@
 	to  { @include transform(scale(1,1)) }
 }
 
+@include keyframes(zoom-in) {
+	0%  { @include transform(scale(0,0)) }
+	to  { @include transform(scale(1,1)) }
+}
+
 @include keyframes(shudder-in) {
 	0%, to {        @include transform(translateX(0em));    }
 	5%, 25%, 45% {  @include transform(translateX(-1em));   }
