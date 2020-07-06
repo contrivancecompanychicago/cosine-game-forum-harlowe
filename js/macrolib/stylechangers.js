@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
-($, Macros, Utils, Colour, Gradient, ChangerCommand, Lambda, ChangeDescriptor, TwineError) => {
+define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'datatypes/gradient', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
+($, Macros, Utils, {geomParse, geomStringRegExp}, Colour, Gradient, ChangerCommand, Lambda, ChangeDescriptor, TwineError) => {
 
 	/*
 		Built-in hook style changer macros.
@@ -40,7 +40,7 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 		```
 	*/
 	const
-		{either, wrapped, optional, Any, zeroOrMore, rest, insensitiveSet, positiveNumber, nonNegativeNumber} = Macros.TypeSignature,
+		{either, wrapped, optional, Any, zeroOrMore, rest, insensitiveSet, positiveNumber, positiveInteger, nonNegativeNumber} = Macros.TypeSignature,
 		IfTypeSignature = [wrapped(Boolean, "If you gave a number, you may instead want to check that the number is not 0. "
 			+ "If you gave a string, you may instead want to check that the string is not \"\".")];
 
@@ -1946,12 +1946,14 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 		The first value you give to this macro is a "sizing line" similar to the aligner and column markup - a sequence of zero or
 		more `=` signs, then a sequence of characters (preferably "X"), then zero or more `=` signs. Think of this string as a visual
 		depiction of the box's horizontal proportions - the `=` signs are the space to the left and right, and the characters in
-		the middle are the box itself.
+		the middle are the box itself. If you wish to specify that the box should take up the full width, you must provide
+		just a single character, like "X" - anything more will cause an error.
 
 		The second, optional value is a height, in text lines. This size varies based on the font size of the containing element,
 		which is adjustible with (text-size:) and other changers. The hook will be given a CSS `height` value of `1em` multiplied
 		by the number of lines given. If you need to reposition the hook vertically, consider using (float-box:) instead. if no
-		height is given, then it will use a height large enough to display all of the lines, as usual.
+		height is given, then it will use a height large enough to display all of the lines, as usual. If a non-whole number is
+		given, an error will be produced.
 
 		The "containing element" is whatever structure contains the hook. If it's inside column markup, the containing column is the
 		element. If it's inside another hook (including a hook that also has (box:) attached), that hook is the element. Usually,
@@ -2014,15 +2016,6 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 		Added in: 3.2.0
 		#styling
 	*/
-	const geomStringRegExp = /^(=*)([^=]+)=*$/;
-	const geomParse = str => {
-		const length = str.length;
-		const [matched, left, inner] = (geomStringRegExp.exec(str) || []);
-		if (!matched) {
-			return {marginLeft:0, size:0};
-		}
-		return {marginLeft: (left.length/length)*100, size: (inner.length/length)*100};
-	};
 
 	['box','float-box'].forEach(name => Macros.addChanger(name,
 		/*
@@ -2030,17 +2023,20 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			argument is a string for one macro and a number for another, so checks are necessary to distinguish them.
 		*/
 		(_, widthStr, height) => {
-			const widthErr = widthStr.search(geomStringRegExp) === -1;
-			const heightErr = (name === "float-box" && height.search(geomStringRegExp) === -1);
+			const widthErr = widthStr.search(geomStringRegExp) === -1
+				/*
+					A rather uncomfortable check needs to be made here: because widthStrs can have zero "=" signs
+					on either side, and a middle portion consisting of essentially anything, the default text box
+					could be confused for it, unless all 100%-width strings are prohibited to just single characters.
+				*/
+				|| (widthStr.length > 1 && !widthStr.includes('='));
+			const heightErr = name === "float-box" && (height.search(geomStringRegExp) === -1
+				|| (height.length > 1 && !height.includes('=')));
 			if (widthErr || heightErr) {
 				return TwineError.create("datatype", 'The (' + name + ':) macro requires a sizing line'
 						+ '("==X==", "==X", "=XXXX=" etc.) be provided, not "' + (widthErr ? widthStr : height) + '".');
 			}
-			if (name === "box" && (height <= 0)) {
-				return TwineError.create("datatype", 'The (' + name + ':) macro requires a positive number, not '
-					+ height + '.');
-			}
-			return ChangerCommand.create(name, [widthStr, height]);
+			return ChangerCommand.create(name, [widthStr, height].filter(e => e !== undefined));
 		},
 		(d, widthStr, height) => {
 			const {marginLeft,size} = geomParse(widthStr);
@@ -2078,6 +2074,6 @@ define(['jquery','macros', 'utils', 'datatypes/colour', 'datatypes/gradient', 'd
 			d.styles.push(styles);
 			return d;
 		},
-		[String, name === "box" ? optional(Number) : String]
+		[String, name === "box" ? optional(positiveInteger) : String]
 	));
 });

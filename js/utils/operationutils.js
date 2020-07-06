@@ -324,20 +324,19 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		/*
 			Number ranges have more precise descriptions.
 		*/
-		else if (plain && obj.pattern && obj.pattern.endsWith(" range")) {
+		else if (plain && obj.pattern && obj.pattern === "range") {
 			const {min,max} = obj;
 			return "a" +
 				// This construction assumes that the minimum will always be 0, 1 or >0.
 				(
 					min > 0 ? " positive" : ""
 				) + (
-					obj.pattern === "integer range" ? " whole" : ""
+					obj.integer ? " whole" : ""
 				) + " number" + (
 					min === 0 ? " between 0 and " + max :
 					max < Infinity ? " up to " + max : ""
 				);
 		}
-		
 		return (
 			/*
 				Second, if it's a global constructor, simply return its name in lowercase.

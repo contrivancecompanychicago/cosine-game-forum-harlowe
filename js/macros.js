@@ -405,10 +405,13 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			insensitiveSet: (...values) => ({pattern: "insensitive set",   innerType: values }),
 
 			numberRange: (min = 0, max = Infinity) =>
-				({pattern: "range", range: arg => typeof arg === "number" && !Number.isNaN(arg) && arg >= min && arg <= max }),
+				({pattern: "range", min, max, range: arg => typeof arg === "number" && !Number.isNaN(arg) && arg >= min && arg <= max }),
 
 			nonNegativeInteger:
-				{ pattern: "range", range: arg => typeof arg === "number" && !Number.isNaN(arg) && arg >= 0 && !(arg+'').includes('.') },
+				{ pattern: "range", integer: true, min:0, max: Infinity, range: arg => typeof arg === "number" && !Number.isNaN(arg) && arg >= 0 && !(arg+'').includes('.') },
+
+			positiveInteger:
+				{ pattern: "range", integer: true, min:1, max: Infinity, range: arg => typeof arg === "number" && !Number.isNaN(arg) && arg >= 1 && !(arg+'').includes('.') },
 
 			/*
 				This is used exclusively to provide custom error messages for particular

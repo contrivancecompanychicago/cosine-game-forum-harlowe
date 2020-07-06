@@ -490,6 +490,20 @@ define(['jquery', 'utils', 'renderer'], function($, Utils, Renderer) {
 		*/
 		elem[0] && supportsNormalize() && elem[0].normalize();
 	}
+
+	/*
+		A RegExp and parser for "geometry strings", strings of = signs and other characters which define
+		geometric dimensions for a box-type element. Used by macros with "box" in their title.
+	*/
+	const geomStringRegExp = /^(=*)([^=]+)=*$/;
+	function geomParse(str) {
+		const length = str.length;
+		const [matched, left, inner] = (geomStringRegExp.exec(str) || []);
+		if (!matched) {
+			return {marginLeft:0, size:0};
+		}
+		return {marginLeft: (left.length/length)*100, size: (inner.length/length)*100};
+	}
 	
-	return Object.freeze({dialog, realWhitespace, textNodeToChars, findTextInNodes, collapse});
+	return Object.freeze({dialog, realWhitespace, textNodeToChars, findTextInNodes, collapse, geomStringRegExp, geomParse });
 });

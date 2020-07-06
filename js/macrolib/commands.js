@@ -1,6 +1,6 @@
 "use strict";
 define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 'internaltypes/twineerror', 'datatypes/hookset', 'datatypes/lambda', 'datatypes/varbind', 'utils/operationutils', 'utils/renderutils'],
-($, requestAnimationFrame, Macros, Utils, State, Passages, Renderer, Engine, TwineError, HookSet, Lambda, VarBind, {printBuiltinValue}, {dialog}) => {
+($, requestAnimationFrame, Macros, Utils, State, Passages, Renderer, Engine, TwineError, HookSet, Lambda, VarBind, {printBuiltinValue}, {dialog, geomParse, geomStringRegExp}) => {
 	
 	/*d:
 		Command data
@@ -19,7 +19,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 		by applying (t8n-depart:) and (t8n-arrive:). (Note that since normal passage links are identical to the
 		(link-goto:) macro, you can also attach changers to passage links.)
 	*/
-	const {Any, rest, either, optional} = Macros.TypeSignature;
+	const {Any, rest, either, optional, positiveInteger} = Macros.TypeSignature;
 	const {assign} = Object;
 
 	/*
@@ -300,7 +300,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 			If only one string was given to this macro, an error will be produced.
 
 			Added in: 3.0.0
-			#input
+			#input 1
 		*/
 		/*d:
 			(seq-link: [Bind], ...String) -> Command
@@ -342,7 +342,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 			If only one string was given to this macro, an error will be produced.
 
 			Added in: 3.2.0
-			#input
+			#input 2
 		*/
 		[["cycling-link"],["seq-link","sequence-link"]].forEach((name, seq) => Macros.addCommand(name,
 			(...labels) => {
@@ -606,7 +606,6 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 						the error (to nobody).
 					*/
 					dropdownMenu.replaceWith(result.render(value));
-					return;
 				}
 			};
 			/*
@@ -639,6 +638,286 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 			return assign(cd, { source, append: "replace", });
 		},
 		[VarBind, String, rest(String)]);
+
+	/*
+		This is the shared handler for (input-box:) and (force-input-box:).
+	*/
+	Utils.onStartup(() => $(Utils.storyElement).on(
+		/*
+			The jQuery event namespace is "input-box-macro".
+		*/
+		"input.input-box-macro",
+		"textarea",
+		function inputBoxEvent() {
+			const inputBox = $(this),
+				/*
+					The data should be stored on the nearest surrounding <tw-expression>.
+				*/
+				event = inputBox.closest('tw-expression').data('inputBoxEvent');
+			if (event) {
+				event(inputBox);
+			}
+		}
+	));
+
+	/*d:
+		(input-box: [VarBind], String, [Number], [String]) -> Command
+
+		A command macro that creates a text input box of the given position, width and height, allowing the player
+		to input any amount of text, which can optionally be automatically stored in a variable.
+
+		Example usage:
+		* `(input-box: "=X=")` creates an input box that's 33% of the passage width, centered, and 3 lines tall.
+		* `(input-box: "XXX=", 5)` creates an input box that's 75% of the passage width, positioned left, and 5 lines tall.
+		* `(input-box: bind $code, "XXX=", 5)` creates an input box that's the same as above, but whenever it's edited, the text is stored
+		in the $code variable.
+		* `(input-box: bind $code, "XXX=", 5, "10 PRINT 'HELLO'")` creates an input box that's the same as above, but initially contains
+		the text `"10 PRINT 'HELLO'"`.
+
+		Rationale:
+		While there are other means of accepting player text input into the story, such as the (prompt:) macro, you may desire an input region
+		that is integrated more naturally into the passage's visual design, and which allows a greater quantity of text to be inputted. This macro
+		offers that functionality.
+
+		Details:
+		Most of the values you can give to this macro are optional. The only mandatory value is the sizing line, which is the same kind of
+		line given to (box:) - a sequence of zero or more `=` signs, then a sequence of characters (preferably "X"), then zero or
+		more `=` signs. Think of this string as a visual depiction of the box's horizontal proportions - the `=` signs are the space to
+		the left and right, and the characters in the middle are the box itself. Also, to avoid ambiguity with the second string given to this macro,
+		a string representing 100% width (no margins) must be a single character, such as just "X".
+
+		The optional number, which must come directly after the sizing line, is a height, in text lines. If this is absent, the box will be sized to 3
+		lines. Note, however, that this macro creates a `<textarea>` element, which, in some browsers, can be dynamically resized by the reader by
+		clicking and dragging the lower-right corner - so your passage's layout should take into account the possibility of the input box changing size
+		dramatically.
+
+		This macro accepts two-way binds using the `2bind` syntax. These will cause the box's contents to always match the current value of the bound
+		variable, and automatically update itself whenever any other macro changes it. However, if the variable no longer contains a string then
+		it won't update - for instance, if the variable becomes the number 23, the box won't update.
+
+		If the bound variable isn't two-way, the variable will be set to the box's contents as soon as it is displayed - so, it will become the optional
+		initial text string, or, if it wasn't given, an empty string.
+
+		If the bound variable has already been given a type restriction (such as by `(set:num-type $candy)`), then, if that type isn't `string` or
+		`str`, an error will result.
+
+		The optional initial text string given to this macro will *not* be parsed as markup, but inserted into the box verbatim - so, giving
+		`"''CURRENT SAVINGS'': $lifeSavings"` will not cause the $lifeSavings variable's contents to be printed into the box, nor will "CURRENT SAVINGS"
+		be in boldface.
+
+		See also:
+		(force-input-box:), (prompt:)
+
+		Added in: 3.2.0
+		#input 3
+	*/
+	/*d:
+		(force-input-box: [VarBind], String, [Number], String) -> Command
+
+		A command macro that creates an empty text input box of the given position, width and height, which appears to offer the
+		player a means to input text, but instead replaces every keypress inside it with characters from a pre-set string that's
+		relevant to the story.
+
+		Example usage:
+		* `(force-input-box: "=X=", "I'm sorry, father. I've failed you.")` creates an input box that's 33% of the passage width, centered,
+		and which forces the player to type the string "I'm sorry, father. I've failed you.".
+
+		Rationale:
+		There are times when, for narrative reasons, you want the player, in the role of a character, to type text into a diegetic textbox, or make
+		a seemingly "spontaneous" dialogue reply, but are unable to actually permit the player to type anything they want, as the story you're telling calls for
+		specific dialogue or text at this point. While you could simply offer a "pretend" textbox using the (box:) macro, that can't actually be typed into, this
+		macro offers an interesting and unexpected alternative: a textbox that tricks the player into thinking they can type anything, only to change the text to fit
+		your narrative letter-by-letter as they type it.
+
+		This interface element has very potent and unsettling symbolism - the player suddenly being unable to trust their own keyboard to relay their words gives a
+		strong feeling of unreality and loss of control, and as such, it is advised that, unless you wish to leverage that symbolism for horror purposes, you
+		should perhaps prepare the player for this element's eccentricity with some accompanying text. Besides that, giving the player the tactile sense of typing words
+		can help them occupy the role of their viewpoint character in situations where it's called for, such as a story revolving around text messaging or chat clients.
+
+		Details:
+		Unlike (input-box:), the final string is mandatory, as it holds the text that the input box will contain as the player "types" it in.
+
+		The first string you give to this macro is a "sizing line" identical to that accepted by (box:) and (input-box:) - consult their documentation for more
+		information about those lines.
+
+		The optional number, which must come directly after the sizing line, is a height, in text lines. If this is absent, the box will be sized to 3
+		lines. Note, however, that this macro creates a `<textarea>` element, which, in some browsers, can be dynamically resized by the reader by
+		clicking and dragging the lower-right corner - so your passage's layout should take into account the possibility of the input box changing size
+		dramatically.
+
+		Because you already know what the text in the box will become, you may feel there's no need to have a bound variable. However, you might wish to bind a temporary
+		variable, and then check using a live macro when that variable has become filled with the full string, thus indicating that the player has read it. Otherwise,
+		there is no mechanism to ensure that the player actually type out the entire string.
+
+		If the bound variable is two-way, and it contains a string, then, when the input box appears, a number of fixed text characters equal to the string's length will be
+		inserted into the input box automatically, and then the variable will update to match. Otherwise, if the bound variable is one-way, the variable will simply
+		become an empty string (and then be updated to match the box's contents whenever the player "types" into it).
+
+		See also:
+		(input-box:), (prompt:), (box:)
+
+		Added in: 3.2.0
+		#input 4
+	*/
+	["input-box", "force-input-box"].forEach(name => Macros.addCommand(name,
+		(...args) => {
+			/*
+				This somewhat contrived set of checks discerns meaning from the passed-in arguments.
+			*/
+			const
+				varBindProvided = VarBind.isPrototypeOf(args[0]),
+				heightProvided = typeof args[1 + varBindProvided] === "number",
+				textProvided = typeof args[1 + varBindProvided + heightProvided] === "string",
+				widthStr = args[+varBindProvided];
+
+			/*
+				First type-check: that the string given is a sizing line.
+			*/
+			if (typeof widthStr !== "string" || widthStr.search(geomStringRegExp) === -1
+					/*
+						A rather uncomfortable check needs to be made here: because widthStrs can have zero "=" signs
+						on either side, and a middle portion consisting of essentially anything, the default text box
+						could be confused for it, unless all 100%-width strings are prohibited to just single characters.
+					*/
+					|| (!widthStr.includes("=") && widthStr.length > 1)) {
+				return TwineError.create("datatype", 'The (' + name + ':) macro requires a sizing line'
+						+ '("==X==", "==X", "=XXXX=" etc.) be provided, not ' + JSON.stringify(widthStr) + '.');
+			}
+			/*
+				Second type-check: that (force-input-box:) does, indeed, receive a string.
+			*/
+			if (name === "force-input-box" && !textProvided) {
+				return TwineError.create("datatype", 'The (' + name + ':) macro requires a string of text to forcibly input.');
+			}
+			/*
+				Remaining type-checks: that there are no other values than the given optional values.
+			*/
+			const intendedLength = 1 + varBindProvided + heightProvided + textProvided;
+			if (args.length > intendedLength) {
+				return TwineError.create("datatype", "An incorrect combination of values was given to this (" + name + ":) macro.");
+			}
+		},
+		(cd, _, ...args) => {
+			const
+				force = name === "force-input-box",
+				/*
+					Again, these contrived lines extract which of the three optional values were given.
+				*/
+				varBindProvided = VarBind.isPrototypeOf(args[0]),
+				heightProvided = typeof args[1 + varBindProvided] === "number",
+				/*
+					Now the values are actually extracted and computed.
+				*/
+				bind = varBindProvided && args[0],
+				height = heightProvided ? args[1 + varBindProvided] : 3,
+				{marginLeft,size} = geomParse(args[+varBindProvided]);
+
+			let text = (typeof args[1 + varBindProvided + heightProvided] === "string") ? args[1 + varBindProvided + heightProvided] : '',
+				/*
+					(force-input-box:)es have no initial text, UNLESS they're bound to a string variable (see below).
+				*/
+				initialText = force ? '' : text;
+
+			if (bind.bind === "two way") {
+				/*
+					If double-binding is present, change the provided text to match the variable, if it
+					already holds text.
+				*/
+				cd.attr.push({"data-2bind": true});
+				const bindValue = bind.varRef.get();
+				if (typeof bindValue === "string") {
+					initialText = force ? text.slice(0, bindValue.length) : bindValue;
+					/*
+						The 2-way bind is met by a third bind: that of the (force-input-box:) itself,
+						changing the variable's string and the <textarea>'s all at once.
+					*/
+					const result = bind.set(initialText);
+					if (TwineError.containsError(result)) {
+						return result;
+					}
+				}
+				/*
+					This event is called by a handler installed in VarBind.js. Every variable set causes
+					this to fire - if it was the bound variable, then try to update the textarea
+					to match the variable (if it's a string).
+					Also note that the passed-in jQuery is not the <textarea>, but the containing <tw-expression>
+					with the [data-2bind] attribute.
+				*/
+				cd.data.twoWayBindEvent = (expr, obj, name) => {
+					if (bind.varRef.matches(obj,name)) {
+						const value = bind.varRef.get();
+						if (typeof value === "string") {
+							expr.find('textarea').val(force ? text.slice(0, value.length) : value);
+						}
+					}
+				};
+			}
+			else if (bind) {
+				/*
+					For normal binds, do the reverse, even before player input has been received.
+				*/
+				const result = bind.set(force ? '' : text);
+				if (TwineError.containsError(result)) {
+					return result;
+				}
+				if (!force) {
+					cd.data.inputBoxEvent = (textarea) => {
+						const value = textarea.val();
+						const result = bind.set(value);
+						if (TwineError.containsError(result)) {
+							textarea.replaceWith(result.render(value));
+						}
+					};
+				}
+			}
+			/*
+				The <textarea> is created with its height directly feeding into its rows value.
+			*/
+			let source = '<textarea style="margin-left:' + marginLeft + "%;width:" + size + '%" rows=' + height + '>'
+				/*
+					HTML-escape the passed-in text, which is apparently all that's necessary.
+					(force-input-box:)es, of course, start with no text inside.
+				*/
+				+ Utils.escape(initialText) + '</textarea>';
+			/*
+				The (force-input-box:) has a different event to (input-box:) - updating the contents on its
+				own terms (that is, with the canned text string.)
+			*/
+			if (force) {
+				/*
+					Once again, Harlowe represents strings in code points, which is not how .split() represents them,
+					so Array.from() must split the string instead.
+				*/
+				const codePoints = Array.from(text);
+				cd.data.inputBoxEvent = (textarea) => {
+					/*
+						While we could track the length of inputted characters ourselves, this is less likely to
+						desynchronise from displayed reality.
+					*/
+					const {length} = textarea.val();
+					const value = codePoints.slice(0, length).join('');
+					textarea.val(value);
+					/*
+						Because (force-input-box:) can't use the previous inputBoxEvent, keeping
+						the bound variable updated needs to be done here, too.
+					*/
+					if (bind) {
+						const result = bind.set(value);
+						if (TwineError.containsError(result)) {
+							textarea.replaceWith(result.render(value));
+						}
+					}
+					return true;
+				};
+			}
+			/*
+				Like (box:), this needs display:block so that it can take up an entire row.
+			*/
+			cd.styles.push({ display: 'block' });
+			return assign(cd, { source, append: "replace", });
+		},
+		[either(VarBind, String), optional(either(positiveInteger,String)), optional(either(positiveInteger,String)), optional(String)])
+	);
 
 	/*d:
 		(show: ...HookName) -> Command

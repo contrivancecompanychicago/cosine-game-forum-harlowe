@@ -425,6 +425,14 @@ describe("data structure macros", function () {
 			].forEach(function(e){ sourceTest(e,e); });
 			sourceTest("(size:10)",'(text-size:10)');
 		});
+		it("serialises changers and commands with optional arguments", function() {
+			expect("(set: $a to (source: (seq-link:bind $foo,'A','B')))").not.markupToError();
+			expect("(set: $a to (source: (seq-link:'A','B')))").not.markupToError();
+			expect("(set: $a to (source: (box:'A')))").not.markupToError();
+			expect("(set: $a to (source: (box:'A',1)))").not.markupToError();
+			expect("(set: $a to (source: (linkgoto:'A')))").not.markupToError();
+			expect("(set: $a to (source: (linkgoto:'A','B')))").not.markupToError();
+		});
 		it("serialises colours", function() {
 			sourceTest("#ff0009",'(hsl:358,1,0.5)');
 			sourceTest("(hsl:56,1,0.5,0.3)",'(hsl:56,1,0.5,0.3)');

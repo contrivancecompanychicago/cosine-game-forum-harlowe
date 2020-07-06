@@ -777,6 +777,7 @@ describe("style changer macros", function() {
 		});
 		it("errors if not given a valid vertical size", function() {
 			expect("(box:'=X=',0)[]").markupToError();
+			expect("(box:'=X=',11.1)[]").markupToError();
 			expect("(box:'=X=',-0.1)[]").markupToError();
 		});
 		it("gives the hook the specified margins, width, height (if given), as well as display:block", function() {
@@ -784,7 +785,7 @@ describe("style changer macros", function() {
 				['=XX=', 25, 50, 4],
 				['X===', 0, 25, 1],
 				['X===', 0, 25, ''],
-				['==XXXXXXXX', 20, 80, 3.5],
+				['==XXXXXXXX', 20, 80, 3],
 			].forEach(function(a) {
 				var code = a[0], marginLeft=a[1], width=a[2], height=a[3];
 

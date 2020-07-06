@@ -328,4 +328,127 @@ describe("interface macros", function(){
 			});
 		});
 	});
+	["input-box","force-input-box"].forEach(function(name, force) {
+		describe("the ("+name+":) macro", function() {
+			if (!force) {
+				it("accepts a sizing string, plus three optional values", function() {
+					expect("("+name+":'XX==')").not.markupToError();
+					expect("("+name+":bind _a,'XX==')").not.markupToError();
+					expect("("+name+":'XX==',2)").not.markupToError();
+					expect("("+name+":'XX==','Foo')").not.markupToError();
+					expect("("+name+":bind _a,'XX==',2)").not.markupToError();
+					expect("("+name+":bind _a,'XX==','Foo')").not.markupToError();
+					expect("("+name+":bind _a,'XX==',2,'Foo')").not.markupToError();
+
+					expect("("+name+":'Foo')").markupToError();
+					expect("("+name+":bind _a, 'Foo')").markupToError();
+					expect("("+name+":'XX==',2,2)").markupToError();
+					expect("("+name+":'XX==','Foo','Bar')").markupToError();
+					expect("("+name+":'XX==','Foo',2)").markupToError();
+					expect("("+name+":bind _a,'XX==',2,2)").markupToError();
+					expect("("+name+":bind _a,'XX==','Foo','Bar')").markupToError();
+					expect("("+name+":bind _a)").markupToError();
+					expect("("+name+":bind _a, 2)").markupToError();
+					expect("("+name+":bind _a, 2,2)").markupToError();
+				});
+			}
+			else {
+				it("accepts a sizing string and text, plus an optional height number between", function() {
+					expect("("+name+":'XX==')").markupToError();
+					expect("("+name+":'Foo')").markupToError();
+					expect("("+name+":bind _a,'XX==')").markupToError();
+					expect("("+name+":'XX==',2)").markupToError();
+
+					expect("("+name+":'XX==','Foo')").not.markupToError();
+					expect("("+name+":'XX==',2,'Foo')").not.markupToError();
+				});
+			}
+			it("errors if the height string isn't a positive integer", function() {
+				expect("("+name+":bind _a,'X',2.1)").markupToError();
+				expect("("+name+":bind _a,'X',0)").markupToError();
+				expect("("+name+":bind _a,'X',-2)").markupToError();
+			});
+			it("creates a <textarea> element", function() {
+				var p = runPassage("("+name+":\"XXX===\",3,'Foo')");
+				expect(p.find('textarea').length).toBe(1);
+			});
+			if (!force) {
+				it("fills the <textarea> with the given initial text", function() {
+					var p = runPassage("("+name+":\"XXX===\",3,'Foo')");
+					expect(p.find('textarea').val()).toBe("Foo");
+				});
+			}
+			it("gives the hook the specified margins, width, and rows (if given), as well as display:block", function() {
+				[
+					['=XX=', 25, 50, 4],
+					['X===', 0, 25, 1],
+					['X===', 0, 25, ''],
+					['==XXXXXXXX', 20, 80, 3],
+				].forEach(function(a) {
+					var code = a[0], marginLeft=a[1], width=a[2], height=a[3];
+
+					var t = runPassage("("+name+":'" + code + "', " + height + ",'Foo')[]").find('textarea');
+					var s = t.attr('style');
+					expect(s).toMatch(RegExp("margin-left:\\s*"+marginLeft+"%"));
+					expect(s).toMatch(RegExp("\\bwidth:\\s*"+width+"%"));
+					if (!height) {
+						expect(t.attr('rows')).not.toBe(height+'');
+					}
+					else {
+						expect(t.attr('rows')).toBe(height+'');
+					}
+					expect(t.parent().attr('style')).toMatch(/display:\s*block/);
+				});
+			});
+			if (!force) {
+				it("if bound, sets the bound variable when the <textarea> is edited", function() {
+					var t = runPassage("("+name+":bind $foo, \"XXX===\",3,'Foo')").find('textarea');
+					t.val('Bar').trigger('input');
+					expect("$foo").markupToPrint("Bar");
+				});
+				it("if one-way-bound, sets the bound variable on entry", function() {
+					runPassage("("+name+":bind $foo, \"XXX===\",3,'Foo')");
+					expect("$foo").markupToPrint("Foo");
+				});
+				it("if two-way-bound, updates the <textarea> on entry", function() {
+					runPassage("(set:$foo to 'Baz')");
+					var t = runPassage("("+name+":2bind $foo, \"XXX===\",3,'Foo')").find('textarea');
+					expect(t.val()).toBe('Baz');
+				});
+				it("if two-way-bound, updates the <textarea> when the variable updates", function(done) {
+					var p = runPassage("("+name+":2bind $foo, \"XXX===\",3,'Foo')(link:'X')[(set:$foo to 'Baz')]")
+					p.find('tw-hook tw-link').click();
+					setTimeout(function(){
+						expect(p.find('textarea').val()).toBe("Baz");
+						done();
+					},20);
+				});
+			}
+			else {
+				it("when text is input, its characters are changed to those of the provided string", function() {
+					var t = runPassage("("+name+":bind $foo, \"XXX===\",3,'quxquuxcorge')").find('textarea');
+					expect(t.val('foobar').trigger('input').val()).toBe('quxquu');
+				});
+				it("if one-way-bound, sets the bound variable when the <textarea> is edited", function() {
+					var t = runPassage("("+name+":bind $foo, \"XXX===\",3,'quxquuxcorge')").find('textarea');
+					t.val('Foo').trigger('input');
+					expect("$foo").markupToPrint("qux");
+				});
+				it("if two-way-bound, updates the <textarea> and variable on entry", function() {
+					runPassage("(set:$foo to 'Baz')");
+					var t = runPassage("("+name+":2bind $foo, \"XXX===\",3,'quxquuxcorge')").find('textarea');
+					expect(t.val()).toBe('qux');
+					expect("$foo").markupToPrint("qux");
+				});
+				it("if two-way-bound, updates the <textarea> when the variable updates", function(done) {
+					var p = runPassage("("+name+":2bind $foo, \"XXX===\",3,'quxquuxcorge')(link:'X')[(set:$foo to 'Baz')]");
+					p.find('tw-hook tw-link').click();
+					setTimeout(function(){
+						expect(p.find('textarea').val()).toBe("qux");
+						done();
+					},20);
+				});
+			}
+		});
+	});
 });

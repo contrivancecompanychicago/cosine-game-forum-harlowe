@@ -101,6 +101,17 @@ tw-story {
 		border-style:solid;
 		padding: 2px;
 	}
+	/*
+		These are created by (input-box:).
+	*/
+	textarea {
+		background-color: transparent;
+		font:inherit;
+		color:inherit;
+		border-color:inherit;
+		border-style:solid;
+		padding: 2px;
+	}
 
 	/*
 		This animation for the <noscript> element should ideally prevent a "flash of unstyled content" where the
