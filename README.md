@@ -96,6 +96,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a `(text-rotate-x:)` and `(text-rotate-y:)`, which are 3D versions of `(text-rotate:)`, rotating the hook around the X or Y axis, making it appear to lean into the page with perspective.
  * Added an `(input-box:)` macro, which places a `<textarea>` element in the passage, sized using the same values given to the `(box:)` macro, and optionally bound to a variable.
  * Added a `(force-input-box:)` macro, designed for linear narratives, that creates what seems to be a normal `(input-box:)`, but which, when typed into, instantly replaces the entered text with portions of a predefined string.
+ * Added a `(datatype:)` macro, which produces the datatype that matches the given value, if it exists.
  * `(all-pass:)` can now be shortened to `(pass:)`. This alias is meant for cases when you only want to check a single value, like in `(pass: $noLetterE, "Gadsby")`, rather than a sequence of values.
  * `(text-rotate:)` is aliased to `(text-rotate-z:)`, for consistency with the new macros.
  * The following transitions have been added:

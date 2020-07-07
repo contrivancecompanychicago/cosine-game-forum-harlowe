@@ -1,6 +1,6 @@
 "use strict";
-define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatypes/gradient', 'internaltypes/twineerror'],
-(Macros, {realWhitespace, nth, anyRealLetter}, {subset, objectName, clone, toSource}, Colour, Gradient, TwineError) => {
+define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatypes/gradient', 'datatypes/datatype', 'internaltypes/twineerror'],
+(Macros, {realWhitespace, nth, anyRealLetter}, {subset, objectName, clone, toSource}, Colour, Gradient, Datatype, TwineError) => {
 	/*
 		Built-in value macros.
 		These macros manipulate the primitive values - boolean, string, number.
@@ -142,7 +142,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Added in: 3.2.0
 			#string
 		*/
-		("source", (_, val) => (TwineError.containsError(val)) ? val : toSource(val), [Any])
+		("source", (_, val) => toSource(val), [Any])
 
 		/*d:
 			(substring: String, Number, Number) -> String
@@ -459,6 +459,37 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			return +expr;
 		},
 		[String])
+
+		/*d:
+			(datatype: Any) -> Datatype
+
+			This macro takes any storeable value, and produces a datatype that matches it.
+
+			Example usage:
+			* `(if: _theirName matches (datatype:_myName))` checks whether or not $theirName is the same type as
+			$myName.
+			* `(altered: (datatype:_input)-type _n via _n + _input, ..._values)` creates a lambda that only accepts data with the same type
+			as that of the _input variable, and runs (altered:) with it.
+
+			Rationale:
+			This isn't a macro you're likely to commonly use, because most of the time, you have exact knowledge of the
+			types of data you use throughout your story. But, this can be helpful in custom macros created with (macro:), if they
+			have any `any-type` parameters. Being able to identify the exact type that such a value is allows you to give types to other
+			data based on that type.
+
+			Details:
+			The only types that this will return are "general" types, like `string`, `number`, `boolean` and such. More specific types
+			like `even`, or descriptive types like `empty`, will not be returned, even if it's given a value that matches those types.
+
+			if there isn't a known datatype value for the given data (for instance, if you give it a HookName) then an error will be produced.
+
+			See also:
+			(macro:)
+
+			Added in: 3.2.0
+			#custom macros 5
+		*/
+		("datatype", (_, value) => Datatype.from(value), [Any])
 
 		/*d:
 			(rgb: Number, Number, Number, [Number]) -> Colour

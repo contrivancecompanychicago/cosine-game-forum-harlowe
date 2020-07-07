@@ -142,9 +142,6 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/polyfills'],
 				result = [[...list]],
 				c = Array(length).fill(0);
 			let i = 1, k, p;
-			if (!length) {
-				return [];
-			}
 
 			while (i < length) {
 				if (c[i] < i) {

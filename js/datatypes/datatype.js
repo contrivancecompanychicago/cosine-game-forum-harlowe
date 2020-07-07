@@ -1,13 +1,15 @@
 "use strict";
 define([
 	'utils',
+	'utils/operationutils',
 	'datatypes/changercommand',
 	'datatypes/colour',
 	'datatypes/gradient',
 	'datatypes/lambda',
 	'datatypes/custommacro',
-], ({realWhitespace}, Changer, Colour, Gradient, Lambda, CustomMacro) => {
-	const {assign,freeze} = Object;
+	'internaltypes/twineerror',
+], ({realWhitespace}, {objectName}, Changer, Colour, Gradient, Lambda, CustomMacro, TwineError) => {
+	const {assign,freeze,keys} = Object;
 	const {floor,abs} = Math;
 	/*
 		A Pattern is the fundamental primitive in pattern-matching in Harlowe. A single Datatype
@@ -77,7 +79,7 @@ define([
 		| `is a`, `is an` | Similar to `matches`, but requires the right side to be just a type name. | `(a:2,3) is an array`, `4.1 is a number`
 		| `-type` | Produces a TypedVar, if a variable follows it. Note that there can't be any space between `-` and `type`. | `num-type $funds`
 	*/
-	let typeIndex;
+	let typeIndex, basicTypeIndex;
 
 	const Datatype = {
 		
@@ -131,12 +133,24 @@ define([
 			);
 			return assign(Object.create(this), { name, TwineScript_ObjectName: "the " + name + " datatype", });
 		},
+
+		/*
+			Used exclusively for the (datatype:) macro, this maps values to basic (i.e. not "even" or "odd" or the like) datatypes.
+		*/
+		from(value) {
+			const typeName = keys(basicTypeIndex).find(name => basicTypeIndex[name](value));
+			/*
+				In the unlikely event that this was given a value that doesn't have a corresponding type, just drop an error message.
+				This should never actually be displayed, but just in case some JS value is given to it somehow...
+			*/
+			return typeName ? Datatype.create(typeName) : TwineError.create("datatype", objectName(value) + " doesn't correspond to a datatype value.");
+		},
 	};
 	/*
-		The typeOf functions for each datatype name. This needs to be define after Datatype so that the
-		"datatype" datatype can access it.
+		The typeOf functions for each datatype name, stored in two objects for the benefit of .from().
+		This needs to be defined after Datatype so that the "datatype" datatype can access it.
 	*/
-	typeIndex = {
+	basicTypeIndex = {
 		array:    Array.isArray,
 		datamap:  obj => obj instanceof Map,
 		dataset:  obj => obj instanceof Set,
@@ -149,7 +163,9 @@ define([
 		string:   obj => typeof obj === "string",
 		number:   obj => typeof obj === "number",
 		boolean:  obj => typeof obj === "boolean",
+	};
 
+	typeIndex = assign({}, basicTypeIndex, {
 		even:     obj => !isNaN(obj) && (floor(abs(obj)) % 2 === 0),
 		odd:      obj => !isNaN(obj) && (floor(abs(obj)) % 2 === 1),
 		empty:    obj => (
@@ -162,6 +178,6 @@ define([
 		/*
 			"const" is handled almost entirely as a special case inside VarRef.
 		*/
-	};
+	});
 	return freeze(Datatype);
 });

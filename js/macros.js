@@ -120,6 +120,10 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			let type = typeSignature[ind];
 			const arg = args[ind];
 
+			/*
+				This is where the majority of errors are propagated, freeing up individual macros from the burden of
+				doing so.
+			*/
 			if (TwineError.containsError(arg)) {
 				return arg;
 			}

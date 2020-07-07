@@ -367,6 +367,15 @@ describe("data structure macros", function () {
 				+"(set:$a's 1st to 4)(print: $a is in $b)").markupToPrint("false");
 		});
 	});
+	describe("the (permutations:) macro", function() {
+		it("returns the permutations of the given input values", function() {
+			expect('(print:(permutations: "☆", "♡", "∪") is (a:(a:"☆","♡","∪"),(a:"♡","☆","∪"),(a:"∪","☆","♡"),(a:"☆","∪","♡"),(a:"♡","∪","☆"),(a:"∪","♡","☆")))').markupToPrint('true');
+			expect('(print:(permutations: (size:1.5)) is (a:(a:(size:1.5))))').markupToPrint('true');
+		});
+		it("returns an empty array when given no values", function() {
+			expect('(print:(permutations:) is (a:))').markupToPrint('true');
+		});
+	});
 	describe("the (count:) macro", function() {
 		it("accepts 1 string or array argument, then arguments of any valid value", function() {
 			expect("(count:)").markupToError();

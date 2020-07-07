@@ -848,8 +848,7 @@ define([
 			Added in: 3.2.0
 			#data structure
 		*/
-		("permutations", (_, ...values) => permutations(...values),
-		[rest(Any)])
+		("permutations", (_, ...values) =>  !values.length ? [] : permutations(...values), [zeroOrMore(Any)])
 		;
 
 	Macros.add
@@ -1292,13 +1291,8 @@ define([
 			Added in: 1.1.0
 			#game state
 		*/
-		("passage", (_, passageName) => {
-			if (TwineError.containsError(passageName)) {
-				return passageName;
-			}
-			return clone(Passages.get(passageName || State.passage))
-				|| TwineError.create('macrocall', "There's no passage named '" + passageName + "' in this story.");
-		},
+		("passage", (_, passageName) => clone(Passages.get(passageName || State.passage))
+			|| TwineError.create('macrocall', "There's no passage named '" + passageName + "' in this story."),
 		[optional(String)])
 
 		/*d:
@@ -1342,9 +1336,6 @@ define([
 			#game state
 		*/
 		("passages", (section, lambda) => {
-			if (TwineError.containsError(lambda)) {
-				return lambda;
-			}
 			const sort = NaturalSort("en"),
 				values = [...Passages.values()].map(e => clone(e));
 			const result = (lambda ? lambda.filter(section, values) : values);
@@ -1401,9 +1392,6 @@ define([
 			*/
 			if (section.stackTop.evaluateOnly) {
 				return TwineError.create("macrocall", "(open-storylets:) can't be used in " + section.stackTop.evaluateOnly + ".");
-			}
-			if (TwineError.containsError(lambda)) {
-				return lambda;
 			}
 			const sort = NaturalSort("en"),
 				result = Passages.getStorylets(section, lambda),

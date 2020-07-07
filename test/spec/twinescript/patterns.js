@@ -1,7 +1,7 @@
 describe("patterns", function() {
 	'use strict';
 	var datatypes = ["array", "boolean", "changer", "colour", "gradient",
-		"color", "command", "dm", "datamap", "ds", "dataset",
+		"color", "command", "dm", "datamap", "ds", "dataset", "datatype",
 		"number", "num", "string", "str"];
 
 	var typesAndValues = [
@@ -12,6 +12,7 @@ describe("patterns", function() {
 		['(dm:)',"datamap","dm"],
 		['(ds:)','dataset',"ds"],
 		['red','colour','color'],
+		['str','datatype',undefined],
 		['(_a where _a is 2)','lambda',undefined,'no structural equality'],
 		['(macro:[(output:1)])','macro',undefined,'no structural equality'],
 		['(gradient:90,0,red,1,white)','gradient']
@@ -43,7 +44,7 @@ describe("patterns", function() {
 		typesAndValues.forEach(function(e) {
 			datatypes.forEach(function(name) {
 				expect("(print:" + e[0] + " " + op + " " + name + ")")
-					.markupToPrint(((op !== "is not a") === (name === e[1] || name === e[2])) + '');
+					.markupToPrint(((op !== "is not a") === ((name === e[1] || name === e[2]) && (name !== "datatype" || op !== "matches"))) + '');
 			});
 		});
 	}
@@ -106,7 +107,7 @@ describe("patterns", function() {
 
 			it("matches the " + type1 + " datatype inside arrays to a " + type1 + " in the same position", function() {
 				expect("(print: (a:" + type1 + ") matches (a:" + value + "))").markupToPrint("true");
-				if (structEq) {
+				if (structEq && type1 !== "datatype") {
 					expect("(print: (a:" + [type2,value,type1] + ") matches (a:" + [value,value,value] + "))").markupToPrint("true");
 				}
 				expect("(print: (a:(a:(a:" + type2 + "))) matches (a:(a:(a:" + value + "))))").markupToPrint("true");
@@ -114,7 +115,6 @@ describe("patterns", function() {
 				expect("(print: (a:" + type2 + ") matches (a:))").markupToPrint("false");
 				expect("(print: (a:" + type1 + ") matches (a:(a:" + value + ")))").markupToPrint((type1 === "array")+'');
 				expect("(print: (a:" + type1 + ",3," + type1 + ") matches (a:3,2,4))").markupToPrint("false");
-				expect("(print: " + type1 + " matches " + type1 + ")").markupToPrint("false");
 			});
 			it("matches the " + type1 + " datatype inside datamaps to a " + type1 + " in the same position", function() {
 				expect("(print: (dm: 'A', " + type1 + ") matches (dm: 'A', " + value + "))").markupToPrint("true");
@@ -151,6 +151,17 @@ describe("patterns", function() {
 			expect("(set: $a to '' is a empty)(print:$a)").markupToPrint("true");
 			expect("(set: $a to (a:1) is a empty)(print:$a)").markupToPrint("false");
 			expect("(set: $a to ' ' is a empty)(print:$a)").markupToPrint("false");
+		});
+	});
+	describe("(datatype:)", function() {
+		it("takes most kinds of data, and produces a datatype that matches it", function() {
+			typesAndValues.forEach(function(e) {
+				expect("(print:(datatype:" + e[0] + ") is " + e[1] + ")").markupToPrint("true");
+			});
+		});
+		it("errors if given data that has no matching type", function() {
+			expect("(print:(datatype:?hook))").markupToError();
+			expect("(print:(datatype:[foobar]))").markupToError();
 		});
 	});
 });

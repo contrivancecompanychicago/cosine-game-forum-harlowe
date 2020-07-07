@@ -416,7 +416,7 @@ describe("interface macros", function(){
 					expect(t.val()).toBe('Baz');
 				});
 				it("if two-way-bound, updates the <textarea> when the variable updates", function(done) {
-					var p = runPassage("("+name+":2bind $foo, \"XXX===\",3,'Foo')(link:'X')[(set:$foo to 'Baz')]")
+					var p = runPassage("("+name+":2bind $foo, \"XXX===\",3,'Foo')(link:'X')[(set:$foo to 'Baz')]");
 					p.find('tw-hook tw-link').click();
 					setTimeout(function(){
 						expect(p.find('textarea').val()).toBe("Baz");
