@@ -21,8 +21,8 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 
 		| Data name | Example | Meaning
 		|---
-		| `name` | `$customMacro's params's 1st's name`, `name of 1st of params of $customMacro` | The name of the typed variable. `(num-type _grains)'s name` is `"grains"`.
-		| `datatype` | `$customMacro's params's 1st's datatype`, `datatype of 1st of params of $customMacro` | The datatype of the typed variable. `(num-type _grains)'s datatype` is `num`.
+		| `name` | `$customMac's params's 1st's name`, `name of 1st of params of $customMac` | The name of the typed variable. `(num-type _grains)'s name` is `"grains"`.
+		| `datatype` | `$customMac's params's 1st's datatype`, `datatype of 1st of params of $customMac` | The datatype of the typed variable. `(num-type _grains)'s datatype` is `num`.
 
 		For more details, consult the (macro:) macro's article.
 	*/

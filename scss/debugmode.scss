@@ -310,7 +310,7 @@ tw-debugger {
 		font-family:monospace;
 		overflow-x:scroll;
 		white-space:pre;
-		flex-basis: 100%;
+		@include flex-basis(100%);
 	}
 	.panel-row-source {
 		margin: 5px 0;
@@ -343,8 +343,8 @@ tw-debugger {
 	.variable-row, .enchantment-row {
 		@include flexbox;
 		@include flex-direction(row);
-		flex-shrink: 0;
-		flex-wrap:wrap;
+		@include flex-shrink(0);
+		@include flex-wrap(wrap);
 		&:nth-child(2n) {
 			background:#EEE;
 		}
@@ -400,7 +400,7 @@ tw-debugger {
 	.storylet-row {
 		@include flexbox;
 		@include flex-direction(row);
-		flex-shrink: 0;
+		@include flex-shrink(0);
 		background-color: hsla(160, 42%, 85%, 0.3);
 		&:nth-child(2n) {
 			background-color: hsla(160, 42%, 65%, 0.3);

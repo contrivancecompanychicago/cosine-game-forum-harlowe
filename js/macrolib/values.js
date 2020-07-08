@@ -137,7 +137,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			such as (array:) for (a:), then the source will still use its "default" name. So, `(source: (array:1))` produces `"(a:1)"`.
 
 			See also:
-			(string:)
+			(datatype:)
 
 			Added in: 3.2.0
 			#string
@@ -484,7 +484,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			if there isn't a known datatype value for the given data (for instance, if you give it a HookName) then an error will be produced.
 
 			See also:
-			(macro:)
+			(source:)
 
 			Added in: 3.2.0
 			#custom macros 5

@@ -182,10 +182,11 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 					"not enough values" error.
 				*/
 				if (arg === undefined) {
+					const mandatory = typeSignature.filter(e => !(e.pattern === "optional" || e.pattern === "zero or more")).length;
 					return TwineError.create(
 						"datatype",
 						name + " needs "
-							+ plural((typeSignature.length - ind), "more value") + ".",
+							+ plural((mandatory - ind), "more value") + ".",
 						signatureInfo
 					);
 				}

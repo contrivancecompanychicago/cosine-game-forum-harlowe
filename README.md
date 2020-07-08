@@ -23,11 +23,13 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where `(hover-style:)` combined with a link changer such as `(link:)` would cause the specified hover style, after the link was clicked, to permanently persist on the hook.
  * Fixed a bug where `(hover-style:)` couldn't actually override the default hover colour for links of any kind, due to a CSS conflict.
  * Fixed a bug where trying to use datanames with certain unusual types of data (changers, commands, datatypes) would give a bad Javascript error message instead of the intended error message.
+ * Fixed a bug where the CSS used to position the new pure HTML dialogs didn't work on certain old browser versions.
  * Now, consecutive line breaks (which Harlowe reduces the cumulative height of) at the start of a passage are no longer the wrong height while that passage transitions in. (To handle this, consecutive line breaks are now made into `<tw-consecutive-br>` elements instead of `<br data-cons>` elements.)
  * Now, `(dropdown:)` explicitly uses the background of its containing hook, instead of being transparent, which the Windows version of Chrome displays as white, regardless of text colour.
  * Now, align, horizontal rule, and column syntax in the editor no longer occupies two lines unexpectedly.
  * `(save-game:)` can now save a greater range of variable data. Formerly, only changers, arrays, datamaps, datasets, booleans, strings and numbers could be stored in variables when you use `(save-game:)` - other values, such as commands, colours, gradients, or lambdas, would cause an error. Now, it should work with every kind of supported Harlowe value (i.e. those mentioned in the documentation) except user-created commands created with `(output-hook:)` (see below). But, this means that save data from 3.1.0 is no longer compatible with 3.2.0.
  * Improved an error message that could appear if you erroneously put the spread `...` syntax inside parentheses, such as `(...$arr)`.
+ * Altered the error message that appears when you don't give macros "enough values", which wouldn't properly exclude optional values.
 
 #### Alterations
 
@@ -49,6 +51,9 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * `(mouseover:)`, `(mouseout:)` and their related macros, which use mouse-hovering input that isn't possible on touch devices, will now fall back to simply being activated by clicks/touches on touch devices.
  * After much fretting and fussing, I've decided to un-deprecate `(subarray:)` and `(substring:)`, because my intended subsequence syntax - `$a's 1stTo2ndlast` and `$a's (range: $b, $c)` - has a not-uncommon edge case where it fails - when `$c` in the preceding example is negative - and I've abandoned plans to alter it to accommodate this case. This un-deprecation changes nothing about how they behaved, but the documentation has been rewritten to include them.
  * Slightly adjusted the animation of `(text-style:"rumble")` and `(text-style:"shudder")` so that the text shifts position from its centre, rather than its left edge.
+ * `(all-pass:)` can now be shortened to `(pass:)`. This alias is meant for cases when you only want to check a single value, like in `(pass: $noLetterE, "Gadsby")`, rather than a sequence of values.
+ * `(text-rotate:)` is aliased to `(text-rotate-z:)`, for consistency with the new macros below.
+ * `(alert:)` has been renamed to `(dialog:)`, retaining the original name `(alert:)` as an alias for it. Moreover, it can now accept any amount of link text, as well as a bound variable to set to the text of whichever link you click. Also, changers like `(t8n:)` can now be attached to the `(dialog:)` macro.
  * `(rgb:)` now accepts fractional values for the R, G, and B components.
  * Made the syntax highlighting dark mode colours 50% brighter.
 
@@ -97,8 +102,6 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added an `(input-box:)` macro, which places a `<textarea>` element in the passage, sized using the same values given to the `(box:)` macro, and optionally bound to a variable.
  * Added a `(force-input-box:)` macro, designed for linear narratives, that creates what seems to be a normal `(input-box:)`, but which, when typed into, instantly replaces the entered text with portions of a predefined string.
  * Added a `(datatype:)` macro, which produces the datatype that matches the given value, if it exists.
- * `(all-pass:)` can now be shortened to `(pass:)`. This alias is meant for cases when you only want to check a single value, like in `(pass: $noLetterE, "Gadsby")`, rather than a sequence of values.
- * `(text-rotate:)` is aliased to `(text-rotate-z:)`, for consistency with the new macros.
  * The following transitions have been added:
    * "zoom", which makes the transitioning entity zoom in or out from the mouse cursor's position (or the last place the touch device was touched).
 

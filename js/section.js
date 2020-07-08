@@ -394,6 +394,11 @@ define([
 			*/
 			else if (result === "blocked") {
 				this.stackTop.blocked = true;
+				/*
+					This #awkward reinjection of JS blocker code is the only way to get errors back from a command (i.e. not a value macro)
+					that blocked the section, and put them in the original initiating <tw-expression>.
+				*/
+				expr.attr('js', "section.blockedValue()");
 				return;
 			}
 			else if (result) {

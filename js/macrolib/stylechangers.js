@@ -11,7 +11,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 	/*d:
 		Changer data
 		
-		Changer commands (changers) are similar to ordinary commands, but they only have an effect when they're attached to hooks,
+		Changers are similar to commands, but they only have an effect when they're attached to hooks,
 		passage links and commands, and modify them in some manner. Macros that work like this include (text-style:), (font:),
 		(t8n:), (text-rotate:), (hook:), (click:), (link:), (for:), (if:), and more.
 
@@ -21,7 +21,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		(t8n-depart: "dissolve")[[Return to the present]]
 		```
 
-		You can save changer commands into variables, and re-use them many times in your story:
+		You can save changers into variables, and re-use them many times in your story:
 		```
 		(set: $robotic to (font:'Courier New'))
 		$robotic[Hi, it's me. Your clanky, cold friend.]
@@ -546,7 +546,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			array data being looped over. You can use the (range:) macro with it instead: `(for: each _i, ...(range:1,10))`, and
 			not use the temp variable inside the hook at all.
 
-			As it is a changer macro, (for:)'s value is a changer command which can be stored in a variable - this command stores all
+			As it is a changer macro, (for:)'s value is a changer which can be stored in a variable - this command stores all
 			of the values originally given to it, and won't reflect any changes to the values, or their container arrays, since then.
 
 			Alternatives:

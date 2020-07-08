@@ -189,15 +189,22 @@ describe("basic command macros", function() {
 			});
 		});
 	});
-	describe("the (alert:) macro", function() {
-		it("requires 1 or 2 string arguments", function() {
-			expect("(alert:)").markupToError();
-			expect("(alert:1)").markupToError();
-			expect("(alert:'e')").not.markupToError();
-			expect("(alert:'e','f')").not.markupToError();
+	describe("the (dialog:) macro", function() {
+		it("requires many string arguments, and an optional bound variable", function() {
+			expect("(dialog:)").markupToError();
+			expect("(dialog:1)").markupToError();
+			expect("(dialog:bind _a)").markupToError();
+			expect("(dialog:'e')").not.markupToError();
+			expect("(dialog:'e','f')").not.markupToError();
+			expect("(dialog:'e','f','g','h','i','j')").not.markupToError();
+			expect("(dialog:bind _a, 'e','f','g','h','i','j')").not.markupToError();
+			expect("(dialog:bind _a, 'e')").not.markupToError();
+		});
+		it("is aliased as (alert:)", function() {
+			expect("(print: (alert:'a') is (alert:'a'))").not.markupToError();
 		});
 		it("produces a command which creates a dialog with a backdrop, the given string, and an 'OK' close link", function(done) {
-			runPassage("(alert:'Gooball')");
+			runPassage("(dialog:'Gooball')");
 			expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(1);
 			expect($("tw-dialog").contents().first().text()).toBe("Gooball");
 			expect($("tw-dialog").find('tw-link').text()).toBe("OK");
@@ -208,20 +215,45 @@ describe("basic command macros", function() {
 			},20);
 		});
 		it("evaluates to a command object that can't be +'d", function() {
-			expect("(print: (alert:'a') + (alert:'b'))").markupToError();
+			expect("(print: (dialog:'a') + (dialog:'b'))").markupToError();
 		});
 		it("can be (set:) into a variable", function() {
-			runPassage("(set: $x to (alert:'Gooball'))");
+			runPassage("(set: $x to (dialog:'Gooball'))");
 			expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(0);
 			runPassage("$x");
 			expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(1);
 		});
-		it("changes the links' text if the optional string is given", function() {
-			runPassage("(alert:'baz','foo')");
+		it("changes the links' text if link strings are given", function() {
+			runPassage("(dialog:'baz','foo')");
 			expect($("tw-dialog tw-link").last().text()).toBe("foo");
 		});
-		it("errors if the optional string is blank", function() {
-			expect("(alert:'baz','')").markupToError();
+		it("errors if a link string is blank", function() {
+			expect("(dialog:'baz','')").markupToError();
+			expect("(dialog:'baz','foo','','qux')").markupToError();
+			expect("(dialog:bind _a, 'baz','foo','')").markupToError();
+		});
+		it("when given a bound variable, sets the variable to the clicked link text", function(done) {
+			runPassage("(dialog:bind $x, 'Foo', 'Bar', 'Baz', 'Qux')");
+			$($("tw-dialog").find('tw-link').get(-2)).click();
+			setTimeout(function() {
+				expect("$x").markupToPrint("Baz");
+				done();
+			},20);
+		});
+		it("when given a bound variable, errors if it's restricted to a non-string type", function(done) {
+			runPassage("(set:num-type $x to 1)(dialog:bind $x, 'Foo')");
+			$("tw-dialog").find('tw-link').click();
+			setTimeout(function() {
+				expect($("tw-story").find("tw-error:not(.javascript)").length).toBe(1);
+				done();
+			},20);
+		});
+		it("can have changers attached", function(done) {
+			runPassage("(text-rotate:20)(dialog:'baz','foo')");
+			setTimeout(function() {
+				expect($('tw-dialog').attr('style')).toMatch(/rotate\(20deg\)/);
+				done();
+			},20);
 		});
 	});
 

@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 'internaltypes/twineerror', 'datatypes/hookset', 'datatypes/lambda', 'datatypes/varbind', 'utils/operationutils', 'utils/renderutils'],
-($, requestAnimationFrame, Macros, Utils, State, Passages, Renderer, Engine, TwineError, HookSet, Lambda, VarBind, {printBuiltinValue}, {dialog, geomParse, geomStringRegExp}) => {
+define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 'internaltypes/twineerror', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/lambda', 'datatypes/varbind', 'utils/operationutils', 'utils/renderutils'],
+($, requestAnimationFrame, Macros, Utils, State, Passages, Renderer, Engine, TwineError, HookSet, CodeHook, Lambda, VarBind, {printBuiltinValue}, {dialog, geomParse, geomStringRegExp}) => {
 	
 	/*d:
 		Command data
@@ -19,7 +19,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 		by applying (t8n-depart:) and (t8n-arrive:). (Note that since normal passage links are identical to the
 		(link-goto:) macro, you can also attach changers to passage links.)
 	*/
-	const {Any, rest, either, optional, positiveInteger} = Macros.TypeSignature;
+	const {Any, rest, either, optional, zeroOrMore, positiveInteger} = Macros.TypeSignature;
 	const {assign} = Object;
 
 	/*
@@ -88,7 +88,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 			
 			Details:
 			It is capable of printing things which (str:) cannot convert to a string,
-			such as changer commands - but these will usually become bare descriptive
+			such as changers - but these will usually become bare descriptive
 			text like `[A (font: ) command]`. You may find this useful for debugging purposes.
 			
 			This command can be stored in a variable instead of being performed immediately.
@@ -1077,6 +1077,12 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 		[rest(HookSet)])
 	);
 
+	/*
+		This is a shared error message for (confirm:) and (prompt:).
+	*/
+	const dialogError = evalOnly => ["I can't use a dialog macro in " + evalOnly + ".",
+		"Please rewrite this without putting such macros here."];
+
 	Macros.addCommand
 		/*d:
 			(hide: ...HookName) -> Command
@@ -1234,20 +1240,20 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 							message: "Sorry to interrupt... The story tried to load saved data, but there was a problem.\n"
 								+ result.message
 								+ "\n\nThat data might have been saved from a different version of this story. Should I delete it?"
-								+ "\n(Type 'delete' and choose OK to delete it.)"
+								+ "\n(Type 'delete' and choose Yes to delete it.)"
 								+ "\n\nEither way, the story will now continue without loading the data.",
 							defaultValue: "",
-							cancelCallback: () => section.unblock(),
-							confirmCallback() {
-								if ("delete" === d.find('input').last().val()) {
-									localStorage.removeItem(storagePrefix("Saved Game") + slotName);
-								}
-								section.unblock();
-							},
+							buttons: [
+								{name:"Yes", confirm:true, callback: () => {
+									if ("delete" === d.find('input').last().val()) {
+										localStorage.removeItem(storagePrefix("Saved Game") + slotName);
+									}
+									section.unblock('');
+								}},
+								{name:"No", cancel:true, callback: () => section.unblock()},
+							],
 						});
 					Utils.storyElement.append(d);
-					// Regrettably, this arbitrary timeout seems to be the only reliable way to focus the <input>.
-					setTimeout(() => d.find('input').last().focus(), 100);
 					return "blocked";
 				}
 				requestAnimationFrame(Engine.showPassage.bind(Engine, State.passage, false /* stretchtext value */));
@@ -1255,48 +1261,108 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 			[String], false)
 
 		/*d:
-			(alert: String, [String]) -> Command
+			(dialog: [VarBind], String, ...String) -> Command
+			Also known as: (alert:)
 
-			This macro produces a command that, when evaluated, shows a pop-up dialog box with the given
-			string displayed, and a link (whose text can also be provided) to dismiss it.
+			A command that, when used, displays a pop-up dialog box with the given string displayed, and a number of links labeled with
+			the remaining other strings. When one of the links is clicked to dismiss the dialog, it evaluates to the string text of that clicked
+			link. If an optional bound variable is provided, that variable is updated to match the pressed button.
 
 			Example usage:
-			```
-			(alert:"Beyond this point, things get serious. Grab a snack and buckle up.", "Sure.")
-			```
+			* `(dialog: "Beyond this point, things get serious. Grab a snack and buckle up.", "Sure.")`
+			* `(dialog: bind $defund, "Which department will you defund?", "Law Enforcement", "Education", "Health", "Public Housing")`
+
+			Rationale:
+			It may seem counterintuitive for such a heavily text-based medium as a hypertext story to have a need for dialog boxes, but they can serve as
+			places to include auxiliary text that's contextually separate from the passage's themes, such as brief updates on characters, tasks and goals, or
+			momentary asides on incidental world details. because they darken and cover the screen when they appear, they are also very useful for
+			displaying and offering especially climactic actions or decisions, such as an irreversible ethical choice.
+
+			While there are other dialog box-producing macros, namely (prompt:) and (confirm:), those are meant purely for input-gathering purposes.
+			This is designed to be the most general-use dialog-producing macro, allowing any number of links, and optionally binding the clicked link to a variable.
 
 			Details:
-			The dialog that is produced is implemented entirely in HTML. User CSS stylesheets can be used to
-			style it, and (enchant:) macros that affect ?Link can affect the dialog links.
+			The dialog that is produced is implemented entirely in HTML. User CSS stylesheets can be used to style it, and (enchant:) macros that affect ?Link can
+			affect the dialog links.
 
 			In Harlowe versions prior to 3.1.0, this macro used the built-in `alert()` function of the browser, but to
 			support certain newer browsers that no longer offer this function, the macro was changed.
 
-			If no string is given for the "OK" link's text, it will default to "OK". Giving an empty string for it
-			will cause an error (because that link must be clickable for the dialog to work).
+			If no button strings are given, a single link reading "OK" will be used. Giving empty strings for any of the links will cause an error.
 
-			When the dialog is on-screen, the entire game is essentially "paused" - until it is dismissed,
-			no further computations are performed, links can't be clicked, and (live:) and (event:) macros
-			shouldn't fire.
+			When the dialog is on-screen, the entire game is essentially "paused" - until it is dismissed, no further computations are performed, links can't be clicked,
+			and (live:) and (event:) macros shouldn't fire.
 
-			This macro can't have changers attached - attempting to do so will produce an error.
+			For obvious reasons, you cannot supply a two-way bound variable to this macro. Doing so will cause an error to result.
+
+			From version 3.2.0 on, it is possible to attach changers to this command. `(t8n:'slide-up')+(text-rotate-x:25)(dialog:"EMAIL SENT!")`, for instance, produces a dialog
+			that's tilted upward, and which slides upward when it appears.
 
 			See also:
-			(prompt:), (confirm:)
+			(alert:), (cycling-link:), (prompt:), (confirm:)
 
 			Added in: 1.0.0
-			#popup
+			#popup 1
 		*/
-		("alert",
-			() => {},
-			(/* no cd because this is attachable:false */ section, message, confirmButton) => {
-				if (confirmButton === "") {
-					return TwineError.create("datatype", "The text for (alert:)'s link can't be blank.");
+		(["dialog","alert"],
+			(varBind, message, ...buttons) => {
+				if (VarBind.isPrototypeOf(varBind)) {
+					if (varBind.bind === "two way") {
+						return TwineError.create("datatype", "(dialog:) shouldn't be given two-way bound variables.");
+					}
+					/*
+						The type signature isn't good enough to specify that this needs a VarRef and a string, so this
+						small check is necessary.
+					*/
+					if (message === undefined) {
+						return TwineError.create("datatype", "(dialog:) needs a message string to display.");
+					}
 				}
-				Utils.storyElement.append(dialog({section, message, confirmButton, defaultValue:false, cancelCallback: () => section.unblock()}));
-				section.stackTop.blocked = true;
+				else if (message !== undefined) {
+					buttons.unshift(message);
+				}
+				const blank = buttons.findIndex(e => e === "");
+				if (blank > -1) {
+					return TwineError.create("datatype", "(dialog:)'s " + Utils.nth(blank+1) + " link text shouldn't be an empty string.");
+				}
 			},
-			[String, optional(String)], false)
+			(cd, section, varBind, message, ...buttons) => {
+				/*
+					If a bound variable wasn't supplied, awkwardly shimmy all the values to the left.
+				*/
+				if (!VarBind.isPrototypeOf(varBind)) {
+					if (message !== undefined) {
+						buttons.unshift(message);
+					}
+					message = varBind;
+					varBind = undefined;
+				}
+				/*
+					If there are no button names given, default to a single "OK" button.
+				*/
+				if (!buttons.length) {
+					buttons = ["OK"];
+				}
+				/*
+					Create the dialog, passing in the ChangeDescriptor, to be used when rendering the string.
+				*/
+				Utils.storyElement.append(dialog({
+					section, message, cd,
+					buttons: buttons.map(b => ({
+						name: b,
+						callback() {
+							/*
+								VarBind.set() only returns either undefined, or a TwineError (see: mutateRight in VarRef).
+								And, since .unblock() will place the TwineError where it should go (in the blockedValues
+								stack), this line is sufficient to pass through any resulting TypedVar errors.
+							*/
+							section.unblock((varBind && varBind.set(b)) || '');
+						},
+					})),
+				}));
+				return "blocked";
+			},
+			[either(VarBind, String), zeroOrMore(String)])
 
 		/*d:
 			(open-url: String) -> Command
@@ -1557,22 +1623,22 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 					evaluation context, such as a link's text, or a (storylet:) macro.
 				*/
 				if (section.stackTop && section.stackTop.evaluateOnly) {
-					return TwineError.create("macrocall",
-						"I can't use a macro like (prompt:) or (confirm:) in " + section.stackTop.evaluateOnly + ".",
-						"Please rewrite this without putting such macros here."
-					);
+					return TwineError.create("macrocall", ...dialogError(section.stackTop.evaluateOnly));
 				}
 				if (confirmButton === "") {
 					return TwineError.create("datatype", "The text for (prompt:)'s confirm link can't be blank.");
 				}
 				const d = dialog({
-					section, message, cancelButton, confirmButton, defaultValue,
-					cancelCallback() {
-						section.unblock(defaultValue);
-					},
-					confirmCallback() {
-						section.unblock(d.find('input').last().val());
-					},
+					section, message, defaultValue,
+					buttons:[{
+						name: confirmButton || "OK",
+						confirm: true,
+						callback: () => section.unblock(d.find('input').last().val()),
+					},{
+						name: cancelButton || "Cancel",
+						cancel: true,
+						callback: () => section.unblock(defaultValue),
+					}],
 				});
 				Utils.storyElement.append(d);
 				// Regrettably, this arbitrary timeout seems to be the only reliable way to focus the <input>.
@@ -1615,21 +1681,24 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 		*/
 		("confirm",
 			(section, message, cancelButton, confirmButton) => {
-				/*
-					As with (prompt:), we need an extra check here.
-				*/
 				if (section.stackTop && section.stackTop.evaluateOnly) {
-					return TwineError.create("macrocall",
-						"I can't use a macro like (prompt:) or (confirm:) in " + section.stackTop.evaluateOnly + ".",
-						"Please rewrite this without putting such macros here."
-					);
+					return TwineError.create("macrocall", ...dialogError(section.stackTop.evaluateOnly));
 				}
 				if (confirmButton === "") {
 					return TwineError.create("datatype", "The text for (confirm:)'s confirm link can't be blank.");
 				}
 				Utils.storyElement.append(dialog({
-					section, message, cancelButton, confirmButton,
-					defaultValue: false, cancelCallback: () => section.unblock(false), confirmCallback: () => section.unblock(true)
+					section, message,
+					defaultValue: false,
+					buttons:[{
+						name: confirmButton || "OK",
+						confirm: true,
+						callback: () => section.unblock(true),
+					},{
+						name: cancelButton || "Cancel",
+						cancel: true,
+						callback: () => section.unblock(false),
+					}],
 				}));
 			},
 			[String, optional(String), optional(String)])

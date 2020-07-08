@@ -1,11 +1,11 @@
 "use strict";
-define(['jquery', 'utils', 'renderer'], function($, Utils, Renderer) {
+define(['jquery', 'utils', 'renderer', 'datatypes/codehook'], function($, Utils, Renderer, CodeHook) {
 	/*
 		This is used to create dialogs for the (prompt:), (confirm:) and (alert:) macros, as well as
 		the warning dialog for (loadgame:). This may be expanded in the future to offer more author-facing
 		customisability.
 	*/
-	function dialog({section, message = '', defaultValue, cancelCallback = $.noop, confirmCallback, cancelButton = "Cancel", confirmButton = "OK"}) {
+	function dialog({section, cd, message = '', defaultValue, buttons = [{name:"OK", confirm:true, callback: Object}] }) {
 		const ret = $(Renderer.exec("<tw-backdrop><tw-dialog>"
 			+ '<div style="text-align:center;margin:0 auto">\n'
 			/*
@@ -14,16 +14,18 @@ define(['jquery', 'utils', 'renderer'], function($, Utils, Renderer) {
 			*/
 			+ ((defaultValue || defaultValue === "") ?
 				"<input type=text style='display:block'></input>\n" : "")
-			+ '</div><div style="text-align:right">'
+			+ '</div><tw-dialog-links>'
 			/*
 				The confirmCallback is used to differentiate (alert:) from (confirm:). Its presence
 				causes a second "Cancel" link to appear next to "OK".
 			*/
-			+ (confirmCallback && cancelButton ?
-				"<span style='width:75%;margin-right:1em'><tw-link tabindex=0>" + confirmButton + "</tw-link></span>"
-					+ "<span style='width:25%;margin-left:1em'><tw-link tabindex=0>" + cancelButton + "</tw-link></span>"
-				: "<tw-link tabindex=0>" + confirmButton + "</tw-link>")
-			+ "</div></tw-dialog></tw-backdrop>"));
+			+ (buttons.length
+					? buttons.reduce((code, {name}, i) => code + "<span style='margin:0 "
+						+ (i === 0 ? "0.5em 0 0" : i === buttons.length-1 ? "0 0 0.5em" : '0.5em') + "'><tw-link tabindex=0>" + name + "</tw-link></span>", '')
+					: "<tw-link tabindex=0>" + buttons[0].name + "</tw-link>"
+				)
+			+ "</tw-dialog-links></tw-dialog></tw-backdrop>"));
+		const dialog = ret.find('tw-dialog');
 		/*
 			The user-provided text is rendered separately from the rest of the dialog, so that injection bugs, such as
 			inserting closing </tw-dialog> tags, are harder to bring about.
@@ -31,35 +33,57 @@ define(['jquery', 'utils', 'renderer'], function($, Utils, Renderer) {
 			such as in Harlowe.js).
 		*/
 		if (section) {
-			section.renderInto(message, ret.find('tw-dialog'), {append:"prepend"});
+			/*
+				CodeHooks could be passed into here from various dialog macros. For now, the protocol is to simply convert it to
+				its stored source.
+			*/
+			if (CodeHook.isPrototypeOf(message)) {
+				message = message.source;
+			}
+			section.renderInto(message, dialog, Object.assign({}, cd, {append:"prepend"}));
+			/*
+				The following is a rather unfortunate kludge: because the <tw-dialog> has already been rendered, a (t8n:)
+				attached to the (dialog:) (hence, on the ChangeDescriptor) can't wrap it, despite intuitively seeming like it
+				should. So, we forcibly extract the <tw-transition-container>
+				and wrap the <tw-dialog> in it.
+			*/
+			const t8nContainer = cd && cd.transition && ret.find('tw-dialog > tw-transition-container');
+			if (t8nContainer && t8nContainer.length) {
+				t8nContainer.appendTo(ret).append(dialog.prepend(t8nContainer.contents().detach()));
+			}
 		}
 		else {
-			ret.find('tw-dialog').prepend(Renderer.exec(message));
+			dialog.prepend(Renderer.exec(message));
 		}
 
 		/*
 			The passed-in defaultValue string, if non-empty, is used as the input element's initial value.
 		*/
 		if (defaultValue) {
-			ret.find('input').last().val(defaultValue)
+			const inputEl = ret.find('input').last();
+			inputEl.val(defaultValue)
 				// Pressing Enter should submit the given string.
 				.on('keypress', ({which}) => {
 					if (which === 13) {
 						ret.remove();
-						confirmCallback ? confirmCallback(): cancelCallback();
+						/*
+							Find any button with the internal "confirm" boolean, and run its callback.
+						*/
+						buttons.filter(b => b.confirm).forEach(b => b.callback());
 					}
 				});
+			// Regrettably, this arbitrary timeout seems to be the only reliable way to focus the <input>.
+			setTimeout(() => inputEl.focus(), 100);
 		}
 
 		/*
 			Finally, set up the callbacks. All of them remove the dialog from the DOM automatically,
 			to save the consumer from having to do it.
 		*/
-		ret.find('tw-link').last().on('click', () => { ret.remove(); cancelCallback(); });
 
-		if (confirmCallback) {
-			$(ret.find('tw-link').get(-2)).on('click', () => { ret.remove(); confirmCallback(); });
-		}
+		buttons.reverse().forEach((b, i) => {
+			$(ret.find('tw-link').get(-i-1)).on('click', () => { ret.remove(); b.callback(); });
+		});
 
 		return ret;
 	}
