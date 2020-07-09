@@ -56,7 +56,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		if (isSequential(obj)) {
 			let match;
 			const youCanOnlyAccess = "You can only access position strings/numbers ('4th', 'last', '2ndlast', (2), etc.) or slices ('1stTo2ndlast', '3rdTo5th'), ";
-			
+			const noZeroth = "You can't access the '0th' or '0thlast' position of " + objectName(obj) + ".";
 			/*
 				Number properties are treated differently from strings by sequentials:
 				the number 1 is treated the same as the string "1st", and so forth.
@@ -82,7 +82,9 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				There's no real problem with this.
 			*/
 			else if (typeof prop === "string" && (match = /^(\d+)(?:st|[nr]d|th)last$/i.exec(prop))) {
-				// TODO: error for "0th"
+				if (match[1] === "0") {
+					return TwineError.create("property", noZeroth);
+				}
 				/*
 					obj.length cannot be trusted here: if it's an astral-plane
 					string, then it will be incorrect. So, just pass a negative index
@@ -92,7 +94,9 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				prop = -match[1];
 			}
 			else if (typeof prop === "string" && (match = /^(\d+)(?:st|[nr]d|th)$/i.exec(prop))) {
-				// TODO: error for "0thlast"
+				if (match[1] === "0") {
+					return TwineError.create("property", noZeroth);
+				}
 				/*
 					It's actually important that prop remains a number and not a string:
 					a few operations (such as canSet()) use the type of the props to
@@ -126,6 +130,20 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				prop = -1;
 			}
 			/*
+				So that things like (move:) and typed variables still sensibly work, "random" is compiled into a random index here,
+				rather than at get-time.
+			*/
+			else if (prop === "random") {
+				if (!obj.length) {
+					return TwineError.create("property", "I can't get a random value from "
+						+ objectName(obj) + ", because it's empty");
+				}
+				/*
+					Again, to get the true code point length of strings, Array.from() is called for.
+				*/
+				prop = Math.random() * Array.from(obj).length | 0;
+			}
+			/*
 				HookSets should be the only sequential with additional string properties.
 			*/
 			else if (HookSet.isPrototypeOf(obj) && !HookSet.TwineScript_Properties.includes(prop)) {
@@ -133,8 +151,8 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 					+ andList(HookSet.TwineScript_Properties.map(p => "'" + p + "'"))
 					+ " of " + objectName(obj) + ", not " + objectName(prop) + ".");
 			}
-			else if (!["length","any","all"].includes(prop) && !HookSet.isPrototypeOf(obj)) {
-				return TwineError.create("property", youCanOnlyAccess + "'length', 'any' and 'all'"
+			else if (!["length","any","all","random"].includes(prop) && !HookSet.isPrototypeOf(obj)) {
+				return TwineError.create("property", youCanOnlyAccess + "'length', 'any', 'all' and 'random'"
 					+ " of " + objectName(obj) + ", not " + objectName(prop) + ".");
 			}
 		}
@@ -586,9 +604,9 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			}
 			if (Array.isArray(obj) && typeof prop === "number") {
 				return TwineError.create("property", "This array of " + (obj.length+1) + " elements doesn't have a "
-				+ propertyDebugName(originalProp)
-				+ " element.",
-				obj.length ? "It contains: " + andList(obj.map(objectName)) + '.' : "The array is empty.");
+					+ propertyDebugName(originalProp)
+					+ " element.",
+					obj.length ? "It contains: " + andList(obj.map(objectName)) + '.' : "The array is empty.");
 			}
 			const keys = Array.from(typeof obj.keys === "function" && obj.keys());
 			return TwineError.create("property", "I can't find a "

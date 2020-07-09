@@ -30,6 +30,8 @@ describe("property indexing", function() {
 			it("overshot indexes error", function() {
 				expect('(print: "𐌎ed"\'s 9th)').markupToError();
 				expect('(print: "𐌎ed"\'s 5thlast)').markupToError();
+				expect('(print: "𐌎ed"\'s 0th)').markupToError();
+				expect('(print: "𐌎ed"\'s 0thlast)').markupToError();
 			});
 			it("'1stto2ndlast', '2ndlastto5th', etc. accesses a continuous subset", function() {
 				expect('(print: "𐌎ed"\'s 1stto2ndlast)').markupToPrint("𐌎e");
@@ -88,6 +90,8 @@ describe("property indexing", function() {
 			it("overshot indexes error", function() {
 				expect('(print: (a:"R","e","d")\'s 9th)').markupToError();
 				expect('(print: (a:"R","e","d")\'s 5thlast)').markupToError();
+				expect('(print: (a:"R","e","d")\'s 0th)').markupToError();
+				expect('(print: (a:"R","e","d")\'s 0thlast)').markupToError();
 			});
 			it("'1stto2ndlast', '2ndlastto5th', etc. accesses a continuous subset", function() {
 				expect('(print: (a:"R","e","d")\'s 1stto2ndlast)').markupToPrint("R,e");
@@ -181,6 +185,10 @@ describe("property indexing", function() {
 			});
 			it("cannot be assigned to", function() {
 				expect("|a>[](set:$a's 1st to (a:1,2))").markupToError();
+			});
+			it("'0th' is an error", function() {
+				expect('(replace: ?a\'s 0th)[]').markupToError();
+				expect('(replace: ?a\'s 0thlast)[]').markupToError();
 			});
 		});
 		it("cannot be used with other values", function() {

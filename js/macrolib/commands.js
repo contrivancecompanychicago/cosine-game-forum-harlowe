@@ -719,7 +719,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 		relevant to the story.
 
 		Example usage:
-		* `(force-input-box: "=X=", "I'm sorry, father. I've failed you.")` creates an input box that's 33% of the passage width, centered,
+		* `(force-input-box: "XX=", "I'm sorry, father. I've failed you.")` creates an input box that's 33% of the passage width, centered,
 		and which forces the player to type the string "I'm sorry, father. I've failed you.".
 
 		Rationale:

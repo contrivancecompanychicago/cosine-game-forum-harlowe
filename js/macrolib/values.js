@@ -53,8 +53,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			| `is not in` | Evaluates to `true` if the right string does not contain the left string. | `"Blood" is not in "Stone`
 			| `'s` | Obtaining the character or substring at the right numeric position. | `"YO"'s 1st` (is "Y")<br>`"PS"'s (2)` (is "S")<br>`"ear"'s (a: 2,3)` (is "ar")
 			| `of` | Obtaining the character at the left numeric position. | `1st of "YO"` (is "Y")<br>`(2) of "PS"` (is "S")<br>`(a: 2,3) of "ear"` (is "ar")
-			| `matches` | Evaluates to boolean `true` if one side is a string and the other is an identical string or `str` or `string` | `"Contract" matches str`
-			| `is a`, `is an` | Evaluates to boolean `true` if the right side is `string` or `str` and the left side is a string. | `"Contract" is a str`
+			| `matches` | Evaluates to boolean `true` if the left side describes the right side. | `"Contract" matches str`, `"E" matches "E"`
+			| `is a`, `is an` | Evaluates to boolean `true` if the right side describes the left side. | `"Boo" is a string`, `"   " is a whitespace`, `"" is an empty`
 			
 			And, here are the data names that can be used with strings.
 
@@ -64,6 +64,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			| `1stto3rd`, `4thlastto2ndlast` etc. | `"aeiou"'s 2ndto5th` | A substring containing only the characters between the given positions (such as the first, second and third for `1stto3rd`). This does NOT cause an error if it passes the bounds of the string - so `"Power"'s 3rdto9th` is `"wer"`.
 			| `length` | `"Penny"'s length` | The length (number of characters) in the string.
 			| `any`, `all` | `all of "aeiou" is not "y"` | Usable only with comparison operators, these allow all or any of the characters to be quickly compared.
+			| `random` | A random character in the string. | `"aeiou"'s random` (is `"a"`, `"e"`, `"i"`, `"o"` or `"u"`).
 			| Arrays of numbers, such as `(a:3,5)` | `$str's (a:1,-1)` | A substring containing just the characters at the given positions in the string.
 
 		*/

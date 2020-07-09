@@ -994,7 +994,7 @@
 		*/
 		
 		is:        "is" + notBefore(mws + "not" + wb, mws + "an?" + wb, mws + "in" + wb, mws + "<", mws + ">") + wb,
-		isNot:     "is" + mws + "not" + notBefore(mws + either("a","in") + wb) + wb,
+		isNot:     "is" + mws + "not" + notBefore(mws + either("an?","in") + wb) + wb,
 		isA:       "is" + mws + "an?" + wb,
 		isNotA:    "is" + mws + "not" + mws + "an?" + wb,
 		matches:   "matches" + mws,

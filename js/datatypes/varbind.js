@@ -60,6 +60,10 @@ define(['jquery', 'utils', 'utils/operationutils', 'internaltypes/varref', 'inte
 		|---
 		| `bind` | Binds the named variable on the right. | `bind $weapon`, `bind _hat`, `bind $profile's age`
 		| `2bind` | Double-binds the named variable on the right. | `2bind $weapon`, `2bind _hat`, `2bind $profile's age`
+
+		If you bind an array's `random` data name (a data name which normally provides a random value) then Harlowe will pick a random position,
+		and retain that position for the duration of the bound variable's usage. So, if it picks the 3rd position, the macro using the bound
+		variable will be consistently bound to the 3rd position's value.
 	*/
 	const VarBind = Object.freeze({
 		/*

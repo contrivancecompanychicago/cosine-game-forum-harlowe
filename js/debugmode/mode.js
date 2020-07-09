@@ -473,6 +473,12 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 	});
 	const onError = (error, code) => {
 		/*
+			Do NOT put it in the error console if it's a propagated error.
+		*/
+		if (error.type === "propagated") {
+			return;
+		}
+		/*
 			Emergency: if 500+ errors would be present in the table, remove the top one so that the error DOM
 			doesn't become too overloaded. Then, insert the row.
 		*/

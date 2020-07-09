@@ -441,10 +441,14 @@ paths.forEach(function(path) {
 		if (!defs) {
 			return;
 		}
-		defs = defs.map((e) =>
-			// Remove the /*d: and */ markers, whitespace, and tabs.
-			e.replace(/\t/g,'').slice(4,-2).trim()
-		)
+		defs = defs.map((e) => {
+			// Remove the /*d: and */ markers, whitespace, and nonessential tabs.
+			e = e.slice(4,-2);
+			// Obtain the default indentation based on the first line.
+			const tabs = /\t+/.exec(e)[0].length;
+			return e.replace(RegExp('\\n\\t{' + tabs + '}','g'),'\n').trim();
+
+		})
 	}
 	defs.forEach((defText) => {
 		let match;

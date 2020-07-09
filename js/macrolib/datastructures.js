@@ -219,8 +219,8 @@ define([
 		/*d:
 			(move: ...VariableToValue) -> Instant
 			
-			A variant of (put:) that deletes the source value after copying it - in effect
-			moving the value from the source to the destination.
+			A variant of (put:) that, if transferring data from a data structure, deletes the source value
+			after copying it - in effect moving the value from the source to the destination.
 			
 			Example usage:
 			* `(move: $arr's 1st into $var)`
@@ -239,6 +239,18 @@ define([
 
 			If the data value you're accessing cannot be removed - for instance, if it's an array's `length` -
 			then an error will be produced.
+
+			This macro works very well with the `random` data value of arrays: `(move: $deck's random into $card)`
+			will remove a random value from $deck and put it into $card. Thus, you can use arrays as random "decks"
+			of values that you can draw from and use once in your story.
+
+			Note that this will only delete the data from the source if the source is inside a data structure.
+			Moving from variable to variable, such as by `(move:$p into $q)`, won't cause $p to be deleted.
+
+			Just as with (set:) or (put:), typed variables can also be used with the destination variable of (move:).
+			Writing `(move: $enemies's 1st into dm-type $currentEnemy)` will move a datamap from $enemies's 1st and
+			put it into $currentEnemy, while also restricting $currentEnemy to datamap data for the rest of the story.
+			Note that if $enemies's 1st is not, in fact, a datamap, an error will result.
 
 			See also:
 			(put:), (set:)
@@ -389,7 +401,7 @@ define([
 			| `'s` | Obtains the item at the right numeric position, or the `length`, `any` or `all` values. | `(a:"Y","Z")'s 1st` (is "Y")<br>`(a:4,5)'s (2)` (is 5)<br>`(a:5,5,5)'s length` (is 3)
 			| `of` | Obtains the item at the left numeric position, or the `length`, `any` or `all` values. | `1st of (a:"Y","O")` (is "Y")<br>`(2) of (a:"P","S")` (is "S")<br>`length of (a:5,5,5)` (is 3)
 			| `matches` | Evaluates to boolean `true` if the array on one side matches the pattern on the other. | `(a:2,3) matches (a: num, num)`, `(a: array) matches (a:(a: ))`
-			| `is a`, `is an` | Evaluates to boolean `true` if the right side is `array` and the left side is an array. | `(a:2,3) is an array`
+			| `is a`, `is an` | Evaluates to boolean `true` if the right side describes the left side. | `(a:2,3) is an array`, `(a:) is an empty`
 			
 			And, here are the data names that can be used with arrays.
 
@@ -398,6 +410,7 @@ define([
 			| `1st`,`2nd`,`last`, etc. | `(a:1,2)'s last`, `1st of (a:1,2)` | A single value at the given position in the array. This causes an error if it's past the bounds of the array,
 			| `1stto3rd`, `4thlastto2ndlast` etc. | `(a:1,2,3,4,5)'s 2ndto5th` | A subarray containing only the values between the given positions (such as the first, second and third for `1stto3rd`). This does NOT cause an error if it passes the bounds of the array - so `(a:1,2,3)'s 2ndto5th` is `(a:2,3)`.
 			| `length` | `(a:'G','H')'s length` | The length (number of data values) in the array.
+			| `random` | `(a:"a","e","i","o","u")'s random` (is `"a"`, `"e"`, `"i"`, `"o"` or `"u"`). | A random value in the array.
 			| `any`, `all` | `all of (a:1,2) < 3` | Usable only with comparison operators, these allow all or any of the values to be quickly compared.
 			| Arrays of numbers, such as `(a:3,5)` | `$array's (a:1,-1)` | A subarray containing just the data values at the given positions in the array.
 		*/
@@ -539,30 +552,32 @@ define([
 		/*d:
 			(shuffled: Any, ...Any) -> Array
 			
-			Similar to (a:), except that it randomly rearranges the elements
-			instead of placing them in the given order.
+			Similar to (a:), this producws an array of the given values, except that it randomly rearranges the elements instead
+			of placing them in the given order.
 			
 			Example usage:
 			```
-			(set: $a to (shuffled: 1,2,3,4,5,6))
-			(print: $a)
+			(if: $condiments is not an array)[(set: $condiments to (shuffled: "mustard", "mayo", "chili sauce", "salsa"))]
+			You reach into the fridge and grab... (nth: visits, ...$condiments)? OK.
 			```
 			
 			Rationale:
 			If you're making a particularly random story, you'll often want to create a 'deck'
-			of random descriptions, elements, etc. that are only used once. That is to say, you'll want
-			to put them in a random order in an array, preserving that random order
-			for the duration of a game.
+			of random descriptions, elements, etc. that you can use repeatedly. That is to say, you'll want
+			to put them in a random order in an array, preserving that random order for the duration of a game.
 			
 			The (either:) macro is useful for selecting an element from an array randomly
-			(if you use the spread `...` syntax), but isn't very helpful for this particular problem.
-			The (shuffled:) macro is the solution: it takes elements and returns a randomly-ordered array that
+			(if you use the spread `...` syntax), but isn't very helpful for this particular problem. Additionally,
+			the `random` data name of arrays can be used to retrieve a random value, and can remove that value using
+			(move:), but it isn't as effective if you want that value to remain in the deck after being used.
+
+			The (shuffled:) macro is another solution: it takes elements and returns a randomly-ordered array that
 			can be used as you please.
 			
 			Details:
 			To ensure that it's being used correctly, this macro requires two or more items -
 			providing just one (or none) will cause an error to be presented.
-			
+
 			See also:
 			(a:), (either:), (rotated:)
 			
@@ -957,13 +972,14 @@ define([
 			This takes a "where" lambda and a series of values, and evaluates to true if the lambda, when run using each value, never evaluated to false.
 
 			Example usage:
-			* `(all-pass: _num where _num > 1 and _num < 14, 6, 8, 12, 10, 9)` is true.
+			* `(all-pass: _num where _num > 1 and < 14, 6, 8, 12, 10, 9)` is the same as `all of (a:6, 8, 12, 10, 9) > 1 and < 14`.
 			* `(all-pass: _room where "Egg" is not in _room's objs, ...$rooms)` is true if each datamap in $rooms doesn't have the string `"Egg"` in its "objs".
 
 			Rationale:
-			While the `contains` and `is in` operators can be used to quickly check if a sequence of values contains an exact value or values, you'll
-			often find yourself wanting to check that the values in a sequence merely resemble a kind of value - for instance, that they're positive
-			numbers, or strings beginning with "E".
+			The `contains` and `is in` operators can be used to quickly check if a sequence of values contains an exact value or values, and, combined with the
+			`all` and `any` data names, can check that the values in a sequence merely resemble a kind of value - for instance, that they're positive
+			numbers, or strings beginning with "E". But, they are times when you're writing the same check over and over, like `is an empty or is a whitespace`,
+			or something more complicated, and would like the ability to store the check in a lambda and reuse it.
 
 			The (all-pass:) macro lets you perform these checks easily using a lambda, identical to that used with (find:) - simply write a "temp variable
 			`where` a condition" expression, and every value will be put into the temp variable one by one, and the condition checked for each.

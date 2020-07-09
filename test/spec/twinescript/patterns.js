@@ -44,7 +44,7 @@ describe("patterns", function() {
 		typesAndValues.forEach(function(e) {
 			datatypes.forEach(function(name) {
 				expect("(print:" + e[0] + " " + op + " " + name + ")")
-					.markupToPrint(((op !== "is not a") === ((name === e[1] || name === e[2]) && (name !== "datatype" || op !== "matches"))) + '');
+					.markupToPrint((op.startsWith("is not a") !== ((name === e[1] || name === e[2]) && (name !== "datatype" || op !== "matches"))) + '');
 			});
 		});
 	}
@@ -55,8 +55,9 @@ describe("patterns", function() {
 		it("can also be written as 'is an'", function() {
 			isATest("is an");
 		});
-		it("can be negated using the form 'is not a'", function() {
+		it("can be negated using the form 'is not a' or 'is not an'", function() {
 			isATest("is not a");
+			isATest("is not an");
 		});
 		it("errors when the right side is not a datatype", function() {
 			expect("(print: 2 is a 2)").markupToError();

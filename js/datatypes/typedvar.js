@@ -7,9 +7,10 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 		which can only be set to a string. You can add the `-type` suffix to anything that contains a datatype - `$leonsKickassDatatype-type _option` is valid
 		if $leonsKickassDatatype contains a datatype.
 
-		Typed variables are used in two places – (set:), (put:) and (move:) can be given typed variables in place of normal variables to restrict that variable
+		Typed variables are used in several places – (set:), (put:) and (move:) can be given typed variables in place of normal variables to restrict that variable
 		to the given type, and ensure all future uses of that variable maintain that restriction. Typed variables are also used by the (macro:) macro to specify
-		the input data for your custom macros, and ensure users of that macro maintain those restrictions.
+		the input data for your custom macros, and ensure users of that macro maintain those restrictions. Finally, typed temp variables can be used in lambdas, to
+		guarantee that the lambda is being used with the correct type of data.
 
 		The ability to restrict the type of data that your variables and custom macros receive is a great assistance in debugging your stories,
 		as well as understanding what the variable or macro is and does - especially if they were written by someone else and imported into the project.
@@ -24,7 +25,7 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 		| `name` | `$customMac's params's 1st's name`, `name of 1st of params of $customMac` | The name of the typed variable. `(num-type _grains)'s name` is `"grains"`.
 		| `datatype` | `$customMac's params's 1st's datatype`, `datatype of 1st of params of $customMac` | The datatype of the typed variable. `(num-type _grains)'s datatype` is `num`.
 
-		For more details, consult the (macro:) macro's article.
+		For more details, consult the (set:) and (macro:) articles.
 	*/
 	return Object.freeze({
 		TwineScript_TypeName: "a typed variable",

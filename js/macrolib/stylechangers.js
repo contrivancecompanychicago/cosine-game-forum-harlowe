@@ -1581,8 +1581,12 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			| "none"           | <t-s></t-s> | 
 			| "bold"           | <t-s style="font-weight:bold"></t-s> | 
 			| "italic"         | <t-s style="font-style:italic"></t-s> | 
-			| "underline"      | <t-s style="text-decoration: underline"></t-s> | "strike"
-			| "strike"         | <t-s style="text-decoration: line-through"></t-s> | "underline"
+			| "underline"      | <t-s style="text-decoration: underline"></t-s> | "double-underline", "wavy-underline", "strike", "double-strike", "wavy-strike"
+			| "double-underline" | <t-s style="text-decoration: underline;text-decoration-style:double"></t-s> | "underline", "wavy-underline","strike", "double-strike", "wavy-strike"
+			| "wavy-underline" | <t-s style="text-decoration: underline;text-decoration-style:wavy"></t-s> | "underline", "double-underline", "strike", "double-strike", "wavy-strike"
+			| "strike"         | <t-s style="text-decoration: line-through"></t-s> | "underline", "double-underline", "wavy-underline", "double-strike", "wavy-strike"
+			| "double-strike"  | <t-s style="text-decoration: line-through;text-decoration-style:double"></t-s> | "underline", "double-underline", "wavy-underline", "strike", "wavy-strike"
+			| "wavy-strike"    | <t-s style="text-decoration: line-through;text-decoration-style:wavy"></t-s> | "underline", "double-underline", "wavy-underline", "strike", "double-strike"
 			| "superscript"    | <t-s style="vertical-align:super;font-size:.83em"></t-s> | "subscript"
 			| "subscript"      | <t-s style="vertical-align:sub;font-size:.83em"></t-s> | "superscript"
 			| "mark"           | <t-s style="background-color: hsla(60, 100%, 50%, 0.6)"></t-s> | (background-color:)
@@ -1596,23 +1600,26 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			| "smear"          | <t-s style="text-shadow: 0em 0em 0.02em black, -0.2em 0em 0.5em black, 0.2em 0em 0.5em black; color:transparent"></t-s> | "outline", "shadow", "emboss", "blur", "blurrier"
 			| "mirror"         | <t-s style="display:inline-block;transform:scaleX(-1)"></t-s> | "upside-down"
 			| "upside-down"    | <t-s style="display:inline-block;transform:scaleY(-1)"></t-s> | "mirror"
-			| "blink"          | <t-s style="animation:fade-in-out 1s steps(1,end) infinite alternate"></t-s> | "fade-in-out", "rumble", "shudder", "sway", "buoy"
-			| "fade-in-out"    | <t-s style="animation:fade-in-out 2s ease-in-out infinite alternate"></t-s> | "blink", "rumble", "shudder", "sway", "buoy"
-			| "rumble"         | <t-s style="display:inline-block;animation:rumble linear 0.1s 0s infinite"></t-s> | "blink", "fade-in-out", "shudder", "sway", "buoy"
-			| "shudder"        | <t-s style="display:inline-block;animation:shudder linear 0.1s 0s infinite"></t-s> | "blink", "fade-in-out", "rumble", "sway", "buoy"
-			| "sway"           | <t-s style="display:inline-block;animation:sway 5s linear 0s infinite"></t-s> | "blink", "fade-in-out", "rumble", "shudder", "buoy"
-			| "buoy"           | <t-s style="display:inline-block;animation:buoy 5s linear 0s infinite"></t-s> | "blink", "fade-in-out", "rumble", "shudder", "sway"
+			| "blink"          | <t-s style="animation:fade-in-out 1s steps(1,end) infinite alternate"></t-s> | "fade-in-out"
+			| "fade-in-out"    | <t-s style="animation:fade-in-out 2s ease-in-out infinite alternate"></t-s> | "blink"
+			| "rumble"         | <t-s style="display:inline-block;animation:rumble linear 0.1s 0s infinite"></t-s> | "sway", "fidget"
+			| "shudder"        | <t-s style="display:inline-block;animation:shudder linear 0.1s 0s infinite"></t-s> | "buoy", "fidget"
+			| "sway"           | <t-s style="display:inline-block;animation:sway 5s linear 0s infinite"></t-s> | "rumble", "buoy", "fidget"
+			| "buoy"           | <t-s style="display:inline-block;animation:buoy 5s linear 0s infinite"></t-s> | "shudder", "sway", "fidget"
+			| "fidget"         | <t-s style="display:inline-block;animation:fidget 60s linear 0s infinite"></t-s> | "rumble", "shudder", "sway", "buoy"
 			
 			You can use the "none" style to remove an existing style from a combined changer.
 
 			Due to browser limitations, combining many of these changers won't work exactly as intended – `(text-style: "underline", "strike")`, for instance,
 			will cause only the latter of the two to be applied, in this case "strike". These incompatibilities are listed in the table above.
 			
-			Also due to browser limitations, hooks using "mirror", "upside-down", "sway", "buoy", "rumble" or "shudder" will have their CSS `display`
-			attribute set to `inline-block`.
+			Also due to browser limitations, hooks using "mirror" or "upside-down" will have their CSS `display` attribute set to `inline-block`.
 
-			Note that the animations of "rumble" and "shudder" are particularly intense, and may induce frustration or illness in
+			Note that the animations "rumble" and "shudder" are particularly intense, and may induce frustration or illness in
 			motion-sensitive readers. Take care when using them.
+
+			Finally, "doublestrike" and "scribble" will be replaced with "strike" when run on Internet Explorer, as will "double-underline" and
+			"wavy-underline" be replaced with "underline".
 
 			See also:
 			(css:)
@@ -1642,6 +1649,8 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 						italic:       { 'font-style': 'italic' },
 						underline:    { 'text-decoration': 'underline' },
 						strike:       { 'text-decoration': 'line-through' },
+						doublestrike: { 'text-decoration': 'line-through', 'text-decoration-style': 'double' },
+						scribble:     { 'text-decoration': 'line-through', 'text-decoration-style': 'wavy' },
 						superscript:  { 'vertical-align': 'super', 'font-size': '.83em' },
 						subscript:    { 'vertical-align': 'sub', 'font-size': '.83em' },
 						blink: {
@@ -1650,7 +1659,6 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 						},
 						shudder: {
 							animation: "shudder linear 0.1s 0s infinite",
-							display: "inline-block",
 						},
 						mark: {
 							'background-color': 'hsla(60, 100%, 50%, 0.6)',
@@ -1716,15 +1724,17 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 						},
 						rumble: {
 							animation: "rumble linear 0.1s 0s infinite",
-							display: "inline-block",
 						},
 						sway: {
 							animation: "sway linear 2.5s 0s infinite",
-							display: "inline-block",
 						},
 						buoy: {
 							animation: "buoy linear 2.5s 0s infinite",
-							display: "inline-block",
+						},
+						fidget: {
+							animation() {
+								return "fidget linear 60s " + (-Math.random()*60) + "s infinite" + (Math.random()<0.5 ? " reverse" : "");
+							},
 						},
 					});
 				

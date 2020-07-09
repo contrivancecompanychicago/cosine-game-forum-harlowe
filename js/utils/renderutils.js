@@ -6,15 +6,14 @@ define(['jquery', 'utils', 'renderer', 'datatypes/codehook'], function($, Utils,
 		customisability.
 	*/
 	function dialog({section, cd, message = '', defaultValue, buttons = [{name:"OK", confirm:true, callback: Object}] }) {
-		const ret = $(Renderer.exec("<tw-backdrop><tw-dialog>"
-			+ '<div style="text-align:center;margin:0 auto">\n'
+		const ret = $("<tw-backdrop><tw-dialog>"
 			/*
 				The defaultValue denotes that it should have a text input element, and provide
 				the element's final contents to the confirmCallback.
 			*/
 			+ ((defaultValue || defaultValue === "") ?
-				"<input type=text style='display:block'></input>\n" : "")
-			+ '</div><tw-dialog-links>'
+				"<input type=text style='display:block;margin:0 auto'></input>\n" : "")
+			+ '<tw-dialog-links>'
 			/*
 				The confirmCallback is used to differentiate (alert:) from (confirm:). Its presence
 				causes a second "Cancel" link to appear next to "OK".
@@ -24,7 +23,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/codehook'], function($, Utils,
 						+ (i === 0 ? "0.5em 0 0" : i === buttons.length-1 ? "0 0 0.5em" : '0.5em') + "'><tw-link tabindex=0>" + name + "</tw-link></span>", '')
 					: "<tw-link tabindex=0>" + buttons[0].name + "</tw-link>"
 				)
-			+ "</tw-dialog-links></tw-dialog></tw-backdrop>"));
+			+ "</tw-dialog-links></tw-dialog></tw-backdrop>");
 		const dialog = ret.find('tw-dialog');
 		/*
 			The user-provided text is rendered separately from the rest of the dialog, so that injection bugs, such as

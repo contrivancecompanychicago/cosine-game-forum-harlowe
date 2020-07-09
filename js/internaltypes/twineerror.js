@@ -30,6 +30,7 @@ define(['jquery', 'utils'], ($, {impossible, escape}) => {
 		unimplemented: "I currently don't have this particular feature. I'm sorry.",
 		javascript:    "This error message was reported by your browser's Javascript engine. "
 			+ "I don't understand it either, but it usually means that an expression was badly written.",
+		propagated:    "This error occurred elsewhere in your story, but is being displayed here for your convenience.",
 		user:          "This is a custom error created by (error:). It usually means you used a custom macro incorrectly.",
 	},
 

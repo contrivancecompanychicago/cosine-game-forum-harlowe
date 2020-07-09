@@ -166,7 +166,7 @@ beforeEach(function() {
 		markupToPrint: Object.bind(Object,{
 			compare: function(a,e) {
 				var result = (runPassage(a).find('br').replaceWith(document.createTextNode('\n')).end().text() || '');
-				if (result === e) {
+				if (e instanceof RegExp ? e.exec(result) : result === e) {
 					return { pass: true,  message: "Expected markup '" + a + "' not to print '" + e + "'" };
 				} else {
 					return { pass: false, message: "Expected markup '" + a + "' to print '" + e + "', not '" + result + "'" };

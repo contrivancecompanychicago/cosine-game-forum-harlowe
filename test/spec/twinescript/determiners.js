@@ -211,4 +211,24 @@ describe("determiners", function() {
 			});
 		});
 	});
+	describe("the 'random' data name", function() {
+		it("obtains a random value from arrays", function() {
+			expect("(print: random of (a:6,8,9))").markupToPrint(/^[689]$/);
+			expect("(print: (a:165)'s random)").markupToPrint("165");
+		});
+		it("obtains a random character from strings", function() {
+			expect("(print: random of 'ERIS')").markupToPrint(/^[ERIS]$/);
+			expect("(print: ('e')'s random)").markupToPrint("e");
+			expect("(print: ('𐌎')'s random)").markupToPrint("𐌎");
+		});
+		it("works with (move:)", function() {
+			for(var i = 0; i < 10; i+=1) {
+				expect("(set:$a to (a:6,8,9))(move:$a's random into $b)(print:$a)").markupToPrint(/^(6,8|8,9|6,9)$/);
+			}
+		});
+		it("errors if given empty structures", function() {
+			expect("(print: random of '')").markupToError();
+			expect("(print: random of (a:))").markupToError();
+		});
+	});
 });

@@ -15,7 +15,7 @@ define(['utils/operationutils'], ({toSource}) => {
 		| Data name | Example | Meaning
 		|---
 		| `angle` | `$grad's angle` | The angle, a number from 0 to 359. If a value outside this range was given to `(gradient:)`, this will return that value wrapped to this range.
-		| `stops` | `$colour's stops` | An array of the gradient's colour-stops. Each stop is a datamap containing "percent" and "colour" data names. <br>`(gradient: 90, 0.2, blue, 0.8, white)'s stops` is `(a:(dm: "percent", 0.2, "colour", blue), (dm: "percent", 0.8, "colour", white))`.
+		| `stops` | `$grad's stops` | An array of the gradient's colour-stops. Each stop is a datamap containing "percent" and "colour" data names. <br>`(gradient: 90, 0.2, blue, 0.8, white)'s stops` is `(a:(dm: "percent", 0.2, "colour", blue), (dm: "percent", 0.8, "colour", white))`.
 
 		Gradients, when used in passage prose or given to (print:), produce a square swatch containing the gradient. This is a `<tw-colour>`
 		element, but otherwise has no other features or capabilities and is intended solely for debugging purposes.

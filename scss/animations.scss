@@ -33,23 +33,27 @@
 }
 
 @include keyframes(rumble) {
-	25% { @include transform(translateY(-0.1em)) }
-	75% { @include transform(translateY(0.1em)) }
+	25% { top: -0.1em; }
+	75% { top: 0.1em; }
+	0%,to { top: 0px; }
 }
 
 @include keyframes(shudder) {
-	25% { @include transform(translateX(0.1em)) }
-	75% { @include transform(translateX(-0.1em)) }
+	25% { left: 0.1em; }
+	75% { left: -0.1em; }
+	0%,to { left: 0px; }
 }
 
 @include keyframes(buoy) {
-	25% { @include transform(translateY(0.25em)) }
-	75% { @include transform(translateY(-0.25em)) }
+	25% { top: 0.25em; }
+	75% { top: -0.25em; }
+	0%,to { top: 0px; }
 }
 
 @include keyframes(sway) {
-	25% { @include transform(translateX(0.25em)) }
-	75% { @include transform(translateX(-0.25em)) }
+	25% { left: 0.25em; }
+	75% { left: -0.25em; }
+	0%,to { left: 0px; }
 }
 
 /* The following are used for (transition:)s only */
@@ -90,6 +94,14 @@
 	75% {           @include transform(translateY(0.6em));  }
 	85% {           @include transform(translateY(-0.2em)); }
 	95% {           @include transform(translateY(0.2em));  }
+}
+
+@include keyframes(fidget) {
+	0%, 8.1%, 82.1%, 31.1%, 38.1%, 44.1%, 40.1%, 47.1%, 74.1%, 16.1%, 27.1%, 72.1%, 24.1%, 95.1%, 6.1%, 36.1%, 20.1%, 4.1%, 91.1%, 14.1%, 87.1%, to { left: 0px; top: 0px; }
+	8%, 82%, 31%, 38%, 44%  { left:-1px;   }
+	40%, 47%, 74%, 16%, 27% { left:1px;    }
+	72%, 24%, 95%, 6%, 36%  { top:-1px;    }
+	20%, 4%, 91%, 14%, 87%  { top:1px;     }
 }
 
 @include keyframes(slide-right) {

@@ -12,6 +12,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a long-standing bug where hooks that had `(transition:)` transitions would restart their transition animations whenever the containing passage finished transitioning in. Previously, the only way to overcome this was to make the passage transition using `(transition-arrive:"instant")`.
  * Fixed a long-standing bug where strings containing HookName syntax (such as `"?pear"`) were considered identical to actual hooknames (such as `?pear`).
  * Fixed a bug where the default CSS for `(click: ?Page)` (a blue border around the page) wasn't visible. (Now, an `::after` pseudo-element is created for the enchantment, so that the border displays above all the page content.)
+ * Fixed a bug where typing `is not an` instead of `is not a` (such as in `$wallet is not an array`) would cause an error.
+ * Now, trying to access the `0th` or `0thlast` value in an array or string produces an error.
  * Now, `(mouseover:)` and `(mouseout:)` should work correctly with ?Page, ?Passage, and ?Sidebar.
  * Fixed a bug where `(for:)` would emit infinite loop errors if 50 or more elements were given to it.
  * Fixed a long-standing bug where clicking the sidebar "undo" and "redo" icons would cause `(click:?Page)` in the preceding or following passages to automatically fire, even though you didn't actually click them.
@@ -47,6 +49,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * The default CSS for `(mouseover:)` and `(mouseout:)` (a dotted gray border and translucent cyan border, respectively) has been brightened slightly to be more visible.
  * Reworded the error message produced by trying to get an array element that's outside the array's length (such as `(a: 1,2)'s 5th`).
  * Removed unused, undocumented CSS for the following (also unused) elements: `<tw-outline>`, `<tw-shadow>`, `<tw-emboss>`, `<tw-condense>`, `<tw-expand>`, `<tw-blur>`, `<tw-blurrier>`, `<tw-smear>`, `<tw-mirror>`, `<tw-upside-down>`, `<tw-fade-in-out>`, `<tw-rumble>`, `<tw-shudder>`, and `<tw-shudder-in>`. The CSS applied to these was mostly functionally identical to their corresponding `(textstyle:)` styling.
+ * The `(text-style:)` styles "rumble" and "shudder" no longer need to set `display:inline-block` on the hook.
  * Now, attaching `(transition:)` to a passage link instead of `(transition-depart:)` or `(transition-arrive:)` will cause an error instead of doing nothing.
  * `(mouseover:)`, `(mouseout:)` and their related macros, which use mouse-hovering input that isn't possible on touch devices, will now fall back to simply being activated by clicks/touches on touch devices.
  * After much fretting and fussing, I've decided to un-deprecate `(subarray:)` and `(substring:)`, because my intended subsequence syntax - `$a's 1stTo2ndlast` and `$a's (range: $b, $c)` - has a not-uncommon edge case where it fails - when `$c` in the preceding example is negative - and I've abandoned plans to alter it to accommodate this case. This un-deprecation changes nothing about how they behaved, but the documentation has been rewritten to include them.
@@ -70,8 +73,9 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * As an error-checking feature, you can now force your story's variables to only ever hold certain datatypes, so that data of the wrong type can't be set to them. `(set: num-type $funds to 0)` will force an error to occur if a non-number is ever put into $funds, such as by `(set: $funds to "200")`. You can use this syntax with temp variables, too.
    * Additionally, you can force a variable to remain constant throughout the story using the new `const` datatype. `(set: const-type $robotText to (font:"Courier New"))` specifies that any further changes to $robotText should cause an error.
  * Lambdas' temp variables may now optionally have types as well, such as by writing `each str-type _name where _name contains "el"`. This checks that the correct types of data are given to the lambda.
+ * Arrays and strings now have a `random` data name, which retrieves a random value from these structures. `(a:5,8,9)'s random` produces 5, 8 or 9. This works well with the `(move:)` macro, allowing you to randomly move values out of an array without necessarily needing to use `(shuffled:)`.
  * Added the `lambda` and `macro` datatypes (see below), and the `boolean` datatype can now be shortened to `bool`.
- * Added the following datatypes: `even`, which matches only even numbers, `odd`, which matches only odd numbers, `whitespace`, which matches strings that only contain whitespace, and `empty`, which matches only empty arrays, strings, datamaps and datasets.
+ * Added the following special datatypes: `even`, which matches only even numbers, `odd`, which matches only odd numbers, `whitespace`, which matches strings that only contain whitespace, and `empty`, which matches only empty arrays, strings, datamaps and datasets.
 
 ##### Macros
 
@@ -88,7 +92,6 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a `(text-indent:)` changer macro, which applies a leading indent to the attached hook, and can be applied to each line in the passage using, for example, `(enchant:?passage's lines, (text-indent:12))`.
  * Added a `(rotated-to:)` macro, a variation of `(rotated:)` which, rather than rotating the values by a given number, takes a lambda and rotates them until the first one that matches the lambda is at the front. `(rotated-to:where it > 3, 1,2,3,4)` produces `(a:4,1,2,3)`.
  * `(text-style:)` now lets you provide multiple style names, as a shortcut to combining multiple changers. `(text-style:"italic","outline")` is the same as `(text-style:"italic")+(text-style:"outline")`.
- * Added two more styles to `(text-style:)`, "buoy" and "sway", which are slow, gentle movement animations to serve as counterparts to "rumble" and "shudder".
  * Added a `(box:)` changer macro, which turns the attached hook into a box with given width and horizontal margins, a height scaling with window height, and a scroll bar if its contained prose exceeds its height.
  * Added a `(float-box:)` changer macro, a variant of `(box:)` which turns the hook into a separate pane floating on the window, using `position:fixed`. These have an explicit vertical position as well as horizontal position.
  * Added the changer macros `(border:)`, `(border-size:)`, and `(border-colour:)` (aliases `(b4r:)`, `(b4r-size:)`, `(b4r-colour:)`) which add and adjust CSS borders for hooks. `(border:)` will automatically make the attached hook have `display:inline-block`, so that it remains rectangular and the border can properly enclose it.
@@ -102,7 +105,11 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added an `(input-box:)` macro, which places a `<textarea>` element in the passage, sized using the same values given to the `(box:)` macro, and optionally bound to a variable.
  * Added a `(force-input-box:)` macro, designed for linear narratives, that creates what seems to be a normal `(input-box:)`, but which, when typed into, instantly replaces the entered text with portions of a predefined string.
  * Added a `(datatype:)` macro, which produces the datatype that matches the given value, if it exists.
- * The following transitions have been added:
+ * The following `(text-style:)` styles have been added:
+   * "double-underline", "wavy-underline", "double-strike" and "wavy-strike", which are variants of "underline" and "strike". Be aware these will not work in Internet Explorer.
+   * "fidget", which jolts the hook by one pixel in cardinal directions pseudorandomly.
+   * "buoy" and "sway", which are slow, gentle movement animations to serve as counterparts to "rumble" and "shudder".
+ * The following `(transition:)` transitions have been added:
    * "zoom", which makes the transitioning entity zoom in or out from the mouse cursor's position (or the last place the touch device was touched).
 
 ##### Custom Macros

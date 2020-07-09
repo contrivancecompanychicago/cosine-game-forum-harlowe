@@ -149,7 +149,7 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 
 		if (errors.length) {
 			//TODO: attach the DOM and view it with a given button.
-			return TwineError.create('custommacro','These errors occurred when running ' + macro.TwineScript_ObjectName + ':\n' + errors);
+			return TwineError.create('propagated','These errors occurred when running ' + macro.TwineScript_ObjectName + ':\n' + errors);
 		}
 
 		/*

@@ -201,7 +201,7 @@ describe("basic command macros", function() {
 			expect("(dialog:bind _a, 'e')").not.markupToError();
 		});
 		it("is aliased as (alert:)", function() {
-			expect("(print: (alert:'a') is (alert:'a'))").not.markupToError();
+			expect("(print: (alert:'a') is (dialog:'a'))").not.markupToError();
 		});
 		it("produces a command which creates a dialog with a backdrop, the given string, and an 'OK' close link", function(done) {
 			runPassage("(dialog:'Gooball')");
