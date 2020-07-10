@@ -12,7 +12,7 @@ define(['jquery'], ($) => {
 			tabUpdate is an overridable function for updting the tab's name.
 		*/
 		create({className, rowAdd, rowCheck, tabName, tabUpdate}) {
-			const panel = $(`<div class='panel panel-${className}' hidden><div class='panel-rows'></div></div>`);
+			const panel = $(`<div class='panel panel-${className}' hidden><table class='panel-rows'></table></div>`);
 			const tab = $(`<button class='tab tab-${className}'>0 ${tabName}s</button>`);
 			tab.click(() => {
 				tab.toggleClass('enabled');

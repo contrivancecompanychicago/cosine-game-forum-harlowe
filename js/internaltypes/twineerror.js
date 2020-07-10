@@ -13,7 +13,10 @@ define(['jquery', 'utils'], ($, Utils) => {
 	$(document.documentElement).on('click', 'tw-folddown', ({target}) => {
 		target = $(target);
 		target.toggleClass('open');
-		(target.next().length) ? target.next().toggle() : target.parent().next().toggle();
+		while(target && !target.next().length) {
+			target = target.parent();
+		}
+		target && target.next().toggle();
 	});
 	
 	/*

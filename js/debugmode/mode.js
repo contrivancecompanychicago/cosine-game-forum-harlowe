@@ -14,12 +14,31 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 	const debugElement = $(`<tw-debugger>
 		<div class='panel panel-errors' hidden><table></table></div>
 		<div class='tabs'></div>
-		Turns: <select class='turns' disabled></select><button class='show-invisibles'>Debug View</button><button class='show-dom'>DOM View</button>
+		<label style='user-select:none'>Turns: </label><select class='turns' disabled></select><button class='show-invisibles'>Debug View</button><button class='show-dom'>DOM View</button>
+		<div class='resizer'>
 		</tw-debugger>`);
 	const debugTabs = debugElement.find('.tabs');
 	const showDOM = debugElement.find('.show-dom');
 	const showInvisibles = debugElement.find('.show-invisibles');
 	const turnsDropdown = debugElement.find('.turns');
+	/*
+		Set up the resizer area.
+	*/
+	debugElement.find('.resizer').mousedown(e => {
+		// It must be the left mouse button.
+		if (e.which !== 1) {
+			return true;
+		}
+		e.stopPropagation();
+		const { pageX:oldPageX } = e;
+		const oldWidth = debugElement.width();
+		root.on('mousemove.debugger-resizer', ({pageX}) => {
+			debugElement.width(`${oldWidth + oldPageX - pageX|0}px`);
+		})
+		.on('mouseup.debugger-resizer', () => {
+			root.off('.debugger-resizer');
+		});
+	});
 	/*
 		Set up the "Debug View" button, which toggles debug mode CSS (showing <tw-expression> elements and such)
 		when clicked. It uses the class 'debug-mode' on <tw-story> to reveal it.
@@ -202,17 +221,27 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 				*/
 				.css('padding-left', Math.min(5,path.length)+'em')
 				.append(
-					"<span class='variable-name " + (trail ? '' : tempScope ? "temporary" : "global") + "'>"
-					+ (typeName ? "<span class='variable-type'>" + typeName + '-type </span>' : '')
-					+ (trail ? "<span class='variable-path " + (tempScope ? "temporary" : "global") + "'>"
-						+ (tempScope ? "_" : "$")
-						+ escape(trail) + "</span> " : '')
-					+ (!trail ? (tempScope ? "_" : "$") : '') + escape(name + '')
-					+ (tempScope ? ("<span class='temporary-variable-scope'>" + tempScope + "</span>") : "") +
-					"</span><span class='variable-value'>" + truncVal + "</span><span class='panel-row-buttons'>"
-						+ (folddown ? "<tw-folddown tabindex=0>(source:)</tw-folddown>" : '')
-						+ "</span>"
-					+ (folddown ? "<div class='panel-row-source' style='display:none'>" + escape(toSource(value)) + "</div>" : "")
+					// Variable type
+					"<td class='variable-type'>" + (typeName ? typeName + '-type ' : '') + '</td>',
+					// Variable name
+					"<td class='variable-name'>"
+						+ (trail ? "<span class='variable-path'>"
+							+ (tempScope ? "_" : "$")
+							+ escape(trail) + "</span> " : '')
+						+ (!trail ? (tempScope ? "_" : "$") : '') + escape(name + '') + "</td>",
+					// Variable Scope
+					"<td class='temporary-variable-scope'>" + (tempScope || '') + "</td>",
+					// Value
+					"<td class='variable-value'>" + truncVal + "</td><td class='panel-row-buttons'>"
+						+ (folddown ? "<tw-folddown tabindex=0>(source:) </tw-folddown>" : '')
+					+ "</td>"
+				).add(
+					/*
+						Only uses <tr> because:
+						A. it doesn't disrupt the :nth-of-type() styling used for variable rows.
+						B. it needs to hold a <td> with colspan, whose effect isn't available to CSS.
+					*/
+					folddown ? "<tr class='variable-row panel-row-source' style='display:none'><td colspan='5'>" + escape(toSource(value)) + "</td></tr>" : ""
 				);
 		},
 		rowCheck({name, path, tempScope}, row) {
@@ -373,13 +402,15 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			return $('<div class="enchantment-row">')
 				.data('enchantment',enchantment)
 				.append(
-					"<span class='enchantment-name'>" + toSource(scope)
-					+ "</span><span class='enchantment-value'>"
-					+ val + "</span>"
-					+ (changer ? "<span class='panel-row-buttons'>"
+					"<td class='enchantment-name'>" + toSource(scope)
+					+ "</td><td class='enchantment-value'>"
+					+ val + "</td>"
+					+ (changer ? "<td class='panel-row-buttons'>"
 						+ "<tw-folddown tabindex=0>(source:)</tw-folddown>"
-						+ "</span><div class='panel-row-source' style='display:none'>" + escape(toSource(changer))
-					: "") + "</div>"
+						+ "</td>"
+					: "")
+				).add(
+					changer ? "<tr class='panel-row-source' style='display:none'><td colspan='3'>" + escape(toSource(changer)) + "</td></tr>" : ''
 				);
 		},
 		rowCheck(enchantment, row) {
@@ -405,14 +436,14 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		className: "storylets", tabName: "Storylet",
 		rowAdd({name, active, storyletSource}) {
 
-			return $(`<div class="storylet-row ${!active ? 'storylet-closed' : ''}">`)
+			return $(`<tr class="storylet-row ${!active ? 'storylet-closed' : ''}">`)
 				.attr('data-name', name)
 				/*
 					Create the <span>s for the storylet's name and lambda.
 				*/
 				.append(
-					"<span class='storylet-name'>" + name
-					+ "</span><span class='storylet-lambda'>" + storyletSource + "</span>"
+					"<td class='storylet-name'>" + name
+					+ "</td><td class='storylet-lambda'>" + storyletSource + "</td>"
 				);
 		},
 		rowCheck({name}, row) {
@@ -494,10 +525,10 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		if (Errors.panelRows.children().length > 500) {
 			Errors.panelRows.children(':first-child').remove();
 		}
-		const elem = $('<div class="error-row">'
-			+ '<span class="error-passage">' + State.passage + '</span>'
-			+ '<span class="error-message">' + error.message + '</span>'
-			+ '</div>');
+		const elem = $('<tr class="error-row">'
+			+ '<td class="error-passage">' + State.passage + '</td>'
+			+ '<td class="error-message">' + error.message + '</td>'
+			+ '</tr>');
 		elem.find('.error-message').attr('title', code);
 		Errors.panelRows.append(elem);
 		Errors.tabUpdate(Errors.panelRows.children().length);

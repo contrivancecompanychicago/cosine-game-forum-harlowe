@@ -302,9 +302,6 @@ tw-debugger {
 		&:empty, &[hidden] {
 			display:none;
 		}
-		table {
-			border-spacing: 0px;
-		}
 	}
 	.panel-source, .panel-row-source {
 		font-family:monospace;
@@ -320,17 +317,24 @@ tw-debugger {
 		color:#888;
 		text-align:center;
 	}
-	.panel-variables {
-		.panel-rows:empty::before {
-			content:"~ No variables ~";
-			@include emptyMsg();
-		}
-		.panel-rows:empty + .panel-variables-bottom {
-			display:none;
+	.panel-rows {
+		width:100%;
+		overflow-x:scroll;
+		> * {
+			display:table-row;
+			// nth-of=type() is necessary, as there are interstitial rows (<tr> instead of <div>) that represent
+			// the (source:) of the previous row, which should be ignored with respect to row colouring.
+			&:nth-of-type(2n) {
+				background:#EEE;
+			}
 		}
 	}
-	.panel-variables-bottom {
-		padding-top:5px;
+	.panel-row-buttons {
+		text-align: right;
+	}
+	.panel-variables .panel-rows:empty::before {
+		content:"~ No variables ~";
+		@include emptyMsg();
 	}
 	.panel-enchantments .panel-rows:empty::before {
 		content:"~ No enchantments ~";
@@ -340,53 +344,42 @@ tw-debugger {
 		content:"~ No errors... for now. ~";
 		@include emptyMsg();
 	}
-	.variable-row, .enchantment-row {
-		@include flexbox;
-		@include flex-direction(row);
-		@include flex-shrink(0);
-		@include flex-wrap(wrap);
-		&:nth-child(2n) {
-			background:#EEE;
-		}
+	.panel-rows:empty + .panel-variables-bottom {
+		display:none;
+	}
+	.panel-variables-bottom {
+		padding-top:5px;
+	}
+	.enchantment-row {
 		min-height:1.5em;
 	}
-	.variable-row {
-		.variable-path {
-			opacity:0.4;
-		}
-		.temporary-variable-scope {
-			font-family:sans-serif;
-			font-weight:normal;
-			opacity:0.8;
-			font-size:0.75em;
-			&::before {
-				content: " in ";
-			}
+	.variable-path {
+		opacity:0.4;
+	}
+	.temporary-variable-scope {
+		font-family:sans-serif;
+		font-weight:normal;
+		opacity:0.8;
+		font-size:0.75em;
+		&:not(:empty)::before {
+			content: " in ";
 		}
 	}
 	.variable-name, .enchantment-name {
 		font-family:monospace;
 		font-weight:bold;
 	}
-	.variable-name, .variable-value, .enchantment-name, .enchantment-value {
-		display:inline-block;
-		width:40%;
-	}
 	.variable-type {
 		color:#444;
 		font-weight:normal;
 	}
-	.panel-row-buttons {
-		width: 20%;
-		display:inline-block;
-	}
 	.error-row {
 		display:table-row;
 		background-color: hsla(312, 72%, 65%, 0.3);
-		&:nth-child(2n) {
+		&:nth-of-type(2n) {
 			background-color: hsla(312, 72%, 75%, 0.3);
 		}
-		* {
+		> * {
 			display:table-cell;
 			padding: 0.25em 0.5em;
 		}
@@ -398,9 +391,6 @@ tw-debugger {
 		}
 	}
 	.storylet-row {
-		@include flexbox;
-		@include flex-direction(row);
-		@include flex-shrink(0);
 		background-color: hsla(160, 42%, 85%, 0.3);
 		&:nth-child(2n) {
 			background-color: hsla(160, 42%, 65%, 0.3);
@@ -430,6 +420,16 @@ tw-debugger {
 	.tab {
 		border-radius: 0px 0px 0.5em 0.5em;
 		border-top: none;
+	}
+	.resizer {
+		position: absolute;
+		height: 3em;
+		border-left: 2px solid #ccc;
+		border-right: 2px solid #ccc;
+		top: 10px;
+		left: 4px;
+		width: 8px;
+		cursor: ew-resize;
 	}
 }
 

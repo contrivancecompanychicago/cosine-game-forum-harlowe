@@ -122,6 +122,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 ##### Debug Mode
 
+ * Added a draggable area that, when clicked and dragged, lets you resize the debug mode panel horizontally.
  * Added a debug mode panel listing which enchantments are present in the passage, and the changers they contain. This highlights `(enchant:)` effects, as well as `(click:)`, `(mouseover:)` and `(mouseout:)`.
  * Added a debug mode panel listing which storylet passages are currently available, and their 'where' lambdas. This panel is only visible if you have `(storylet:)` macros in your story.
  * The debug mode vaiables panel now has a "(source:)" button for each variable containing a complex value (i.e. not a string, boolean, number), letting you examine and copy that variable's value as Harlowe code.
