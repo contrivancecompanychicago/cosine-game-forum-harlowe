@@ -58,10 +58,6 @@
 
 /* The following are used for (transition:)s only */
 
-@include keyframes(box-flash) {
-	0% { background-color: white; color: white; }
-}
-
 @include keyframes(pulse) {
 	0%  { @include transform(scale(0,0)) }
 	20% { @include transform(scale(1.2,1.2)) }

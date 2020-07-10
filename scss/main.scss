@@ -195,7 +195,7 @@ tw-error-explanation {
 	font-size: 0.8rem;
 	line-height: 1rem;
 }
-tw-folddown {
+tw-open-button, tw-folddown {
 	cursor: pointer;
 	line-height: 0em;
 	border-radius: 1px;
@@ -203,12 +203,17 @@ tw-folddown {
 	font-size: 0.8rem;
 	margin: 0 0.4rem;
 	padding:2px;
+}
+tw-folddown {
 	&::after {
 		content: "\25b6";
 	}
 	&.open::after {
 		content: "\25bc";
 	}
+}
+tw-open-button::after {
+	content: "Open";
 }
 tw-notifier {
 	border-radius: 0.2em;

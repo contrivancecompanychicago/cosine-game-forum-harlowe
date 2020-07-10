@@ -60,8 +60,9 @@ describe("custom macros", function() {
 			expect("(set:$g to (a:true), $m to (macro:num-type _e, [(move:$g's 1st into _e)(output:_e)]))($m:2)").markupToError();
 		});
 		it("errors inside the custom macro are propagated outward", function() {
-			expect("(set: $m to (macro:num-type _e, [(output:_e+'f')]))($m:2)").markupToError();
-			expect("(set: $n to (macro:num-type _e, [(output:($m:_e))]))($n:2)").markupToError();
+			runPassage("(set: $o to (macro:num-type _e, [(output:_e*10)]))");
+			expect("(set: $m to (macro:num-type _e, [(set:_g to _e+1)(output:_e+'f')]))($m:2)").markupToError();
+			expect("(set: $n to (macro:num-type _e, [(set:_g to _e+1)(output:($m:($o:_e)))]))($n:2)").markupToError();
 		});
 		it("global variables can be accessed inside the code hook", function() {
 			expect("(set:$foo to 'bar')(set: $m to (macro:[(output:$foo)]))($m:)").markupToPrint('bar');

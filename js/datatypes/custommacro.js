@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varscope', 'internaltypes/twineerror'], ($, {escape}, ChangeDescriptor, VarScope, TwineError) => {
+define(['jquery','utils','utils/operationutils','internaltypes/changedescriptor', 'internaltypes/varref', 'internaltypes/varscope', 'internaltypes/twineerror', 'internaltypes/twinenotifier'], ($, {escape}, {objectName}, ChangeDescriptor, VarRef, VarScope, TwineError, TwineNotifier) => {
 	const {assign,create} = Object;
 	/*d:
 		CustomMacro data
@@ -57,6 +57,11 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 		in which the body is executed, executes it, then returns the result.
 	*/
 	const macroEntryFn = (macro) => (section, ...args) => {
+		/*
+			First, increment the "called" value for this macro, which is used just below.
+		*/
+		macro.called += 1;
+
 		const {varNames, params, body} = macro;
 		/*
 			The passed-in arguments to the custom macro become temp. variables
@@ -65,15 +70,20 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 			custom macro. So, closures do not exist in Harlowe custom macros at this time.
 		*/
 		const tempVariables = assign(create(VarScope), {
-			TwineScript_VariableStoreName: macro.TwineScript_ObjectName,
+			TwineScript_VariableStoreName: macro.TwineScript_ObjectName + " call #" + macro.called,
 			TwineScript_TypeDefs: create(null),
 		});
+		/*
+			Whenever an error occurs, the DOM may be displayed. When that happens, TwineNotifiers displaying the input variables
+			should be added to the start of the DOM.
+		*/
+		const notifiers = [];
 		/*
 			Feed the values into the variables scope with the correct names, taking care to
 			make sure that rest params turn into arrays.
 		*/
 		let i = 0;
-		args.forEach((arg) => {
+		args.forEach((arg, argIndex) => {
 			const name = varNames[i];
 			/*
 				Load up the runtime type constraints, first. Note that rests become arrays, so they must be
@@ -87,14 +97,28 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 				params[i].datatype.create('array') : params[i].datatype;
 			/*
 				Now, load up the actual value.
+				This uses VarRef.set() instead of a straight assignment to invoke
+				the VarRef 'set' event, as well as updating the TwineScript_KnownName of the value.
 			*/
+			const ref = VarRef.create(tempVariables, name);
 			if (params[i].rest) {
-				tempVariables[name] = (tempVariables[name] || []).concat(arg);
+				/*
+					Because each .set() activates the 'set' event for VarRef, which includes Debug Mode's
+					DOM updating, we need to only use .set() on the final iteration.
+				*/
+				const newArray = (tempVariables[name] || []).concat(arg);
+				if (argIndex < args.length-1) {
+					tempVariables[name] = newArray;
+					return;
+				} else {
+					ref.set(newArray);
+				}
 			}
 			else {
-				tempVariables[name] = arg;
+				ref.set(arg);
 				i += 1;
 			}
+			notifiers.push(TwineNotifier.create(objectName(ref) + " is now " + objectName(tempVariables[name])));
 		});
 		/*
 			Of course, giving no values to a rest param is valid, too.
@@ -103,7 +127,7 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 			i += 1;
 		}
 		if (params[i] && params[i].rest) {
-			tempVariables[varNames[i]] = [];
+			VarRef.create(tempVariables, varNames[i]).set([]);
 			tempVariables.TwineScript_TypeDefs[name] = params[i].datatype.create('array');
 		}
 
@@ -113,6 +137,7 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 			The stack frame itself needs to be in a variable because .execute() will pop it off the stackTop.
 		*/
 		let output, dom = $('<p>').append(body.html);
+
 		section.stack.unshift({
 			tempVariables,
 			dom,
@@ -139,17 +164,15 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 		/*
 			If errors resulted from this execution, extract and return those instead of the output.
 		*/
-		const errors = dom.find('tw-error').get().map(e =>
-			/*
-				This makes use of the fact that rendered TwineErrors have the original error stashed on them, so that
-				Section.evaluateTwineMarkup() can de-render them after the fact.
-			*/
-			$(e).data('TwineError').message
-		).join('\n');
+		const errors = dom.find('tw-error');
 
 		if (errors.length) {
-			//TODO: attach the DOM and view it with a given button.
-			return TwineError.create('propagated','These errors occurred when running ' + macro.TwineScript_ObjectName + ':\n' + errors);
+			/*
+				Attach all those saved-up notifiers to the DOM.
+			*/
+			dom.prepend(notifiers.map(n => n.render()),"<br>");
+			return TwineError.create('propagated', errors.length + ' error' + (errors.length > 1 ? 's' : '') + ' occurred when running ' + macro.TwineScript_ObjectName + '.',
+				undefined, dom);
 		}
 
 		/*
@@ -210,6 +233,12 @@ define(['jquery','utils','internaltypes/changedescriptor', 'internaltypes/varsco
 		create(params, body) {
 			const ret = Object.assign(Object.create(this), {
 				params,
+				/*
+					The number of times this has been called throughout the whole story. Used
+					entirely by the tempVariables scope of custom macro calls, to make
+					Debug Mode's variables pane more informative.
+				*/
+				called: 0,
 				varNames: params.map(p => p.varRef.propertyChain[0]),
 				typeSignature: params.map(p => {
 					const type = p.datatype.toTypeSignatureObject({rest:p.rest});

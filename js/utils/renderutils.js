@@ -1,11 +1,11 @@
 "use strict";
-define(['jquery', 'utils', 'renderer', 'datatypes/codehook'], function($, Utils, Renderer, CodeHook) {
+define(['jquery', 'utils', 'renderer'], function($, Utils, Renderer) {
 	/*
 		This is used to create dialogs for the (prompt:), (confirm:) and (alert:) macros, as well as
 		the warning dialog for (loadgame:). This may be expanded in the future to offer more author-facing
 		customisability.
 	*/
-	function dialog({section, cd, message = '', defaultValue, buttons = [{name:"OK", confirm:true, callback: Object}] }) {
+	function dialog({section, cd, message = '', defaultValue, buttons = [{name:"OK", confirm:true, callback: Object}] } = {}) {
 		const ret = $("<tw-backdrop><tw-dialog>"
 			/*
 				The defaultValue denotes that it should have a text input element, and provide
@@ -32,13 +32,6 @@ define(['jquery', 'utils', 'renderer', 'datatypes/codehook'], function($, Utils,
 			such as in Harlowe.js).
 		*/
 		if (section) {
-			/*
-				CodeHooks could be passed into here from various dialog macros. For now, the protocol is to simply convert it to
-				its stored source.
-			*/
-			if (CodeHook.isPrototypeOf(message)) {
-				message = message.source;
-			}
 			section.renderInto(message, dialog, Object.assign({}, cd, {append:"prepend"}));
 			/*
 				The following is a rather unfortunate kludge: because the <tw-dialog> has already been rendered, a (t8n:)

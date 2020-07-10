@@ -1,5 +1,6 @@
 "use strict";
-define(['jquery', 'utils'], ($, {impossible, escape}) => {
+define(['jquery', 'utils'], ($, Utils) => {
+	const {impossible, escape} = Utils;
 	/*
 		TwineErrors are errors created by the TwineScript runtime. They are supplied with as much
 		information as they can, in order to give the author sufficient assistance in
@@ -48,7 +49,7 @@ define(['jquery', 'utils'], ($, {impossible, escape}) => {
 			Normally, the type by itself suggests a rudimentary explanation from the above dict.
 			But, a different explanation can be provided by the caller, if they choose.
 		*/
-		create(type, message, explanation) {
+		create(type, message, explanation, innerDOM) {
 			if (!message || typeof message !== "string") {
 				impossible("TwineError.create", "has a bad message string");
 			}
@@ -81,6 +82,11 @@ define(['jquery', 'utils'], ($, {impossible, escape}) => {
 					original passage).
 				*/
 				source: undefined,
+				/*
+					This is exclusively for propagated errors, allowing you to see into the
+					hidden code hook from which the error transpired.
+				*/
+				innerDOM,
 			});
 		},
 		
@@ -150,6 +156,36 @@ define(['jquery', 'utils'], ($, {impossible, escape}) => {
 				*/
 				explanationButton = $("<tw-folddown tabindex=0>");
 			
+			/*
+				If there's an inner DOM, create a button to show a dialog with that DOM displayed inside,
+				so that it can be inspected.
+				The button's text is controlled by a CSS "content" attribute for <tw-error-dom>.
+			*/
+			if (this.innerDOM) {
+				$("<tw-open-button>").on('click', () => {
+					/*
+						Due to a circular dependency, RenderUtils sadly can't be used here.
+						So, simply create a barebones dialog from pure DOM nodes.
+					*/
+					const dialog = $("<tw-backdrop><tw-dialog></tw-backdrop>");
+					dialog.find('tw-dialog').prepend(
+						this.innerDOM,
+						$('<tw-link tabindex=0>OK</tw-link>').on('click', () => {
+							/*
+								The innerDOM needs to be explicitly detached because any errors inside
+								will have their events removed by the .remove() of their parent.
+							*/
+							this.innerDOM.detach();
+							dialog.remove();
+						}).wrap('<tw-dialog-links>').parent()
+					);
+					/*
+						This has to be a prepend, so that inner errors' dialogs cover the current dialog.
+					*/
+					Utils.storyElement.prepend(dialog);
+				})
+				.appendTo(errorElement);
+			}
 			errorElement.append(explanationButton).append(explanationElement);
 
 			/*

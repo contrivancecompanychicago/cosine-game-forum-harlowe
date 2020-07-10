@@ -196,7 +196,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 				Create the <span>s for the variable's name and value.
 			*/
 			return $('<div class="variable-row">')
-				.attr('data-name', name).attr('data-path', path+'')
+				.attr('data-name', name).attr('data-path', path+'').attr('data-scope', tempScope || '')
 				/*
 					Data structure entries are indented by their depth in the structure, to a maximum of 5 levels deep.
 				*/
@@ -215,8 +215,8 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 					+ (folddown ? "<div class='panel-row-source' style='display:none'>" + escape(toSource(value)) + "</div>" : "")
 				);
 		},
-		rowCheck({name, path}, row) {
-			return row.attr('data-name') === name && row.attr('data-path') === (path+'');
+		rowCheck({name, path, tempScope}, row) {
+			return row.attr('data-name') === name && row.attr('data-path') === (path+'') && row.attr('data-scope') === tempScope;
 		},
 	});
 	/*
@@ -281,9 +281,14 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		*/
 		Variables.panel[(count ? 'remove' : 'add') + 'Class']('panel-variables-empty');
 	}
+	/*
+		This is defined far below.
+	*/
+	let updateStorylets;
+
 	VarRef.on('set', (obj, name, value) => {
 		/*
-			For a deep data structure (set:), VarRef.on will fire set callbacks for every object in the
+			For a deep data structure (set:), VarRef.on will fire "set" callbacks for every object in the
 			chain: $a's b's c's d to 1 will produce 'set' callbacks for c, b, a and State.variables.
 			We only care about the root variable store.
 		*/
@@ -306,8 +311,12 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			}
 		}
 		updateVariables();
+		updateStorylets();
 	})
-	.on('delete', updateVariables);
+	.on('delete', () => {
+		updateVariables();
+		updateStorylets();
+	});
 
 	Variables.panel.append(
 		`<div class='panel-variables-bottom'>
@@ -414,7 +423,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		The Storylets tab is hidden if there are no Storylets.
 	*/
 	Storylets.tab.hide();
-	function updateStorylets() {
+	updateStorylets = () => {
 		const activeStorylets = Passages.getStorylets(storyletSection);
 		const error = (TwineError.containsError(activeStorylets));
 		/*
@@ -436,8 +445,8 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		if (allStorylets.length) {
 			Storylets.tab.show();
 		}
-	}
-	VarRef.on('set', updateStorylets).on('delete', updateStorylets);
+	};
+	/* The above function is called by VarRef.on('set') earlier. */
 
 	/*
 		Set up the
