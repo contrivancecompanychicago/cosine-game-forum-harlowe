@@ -308,6 +308,8 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 
 			This macro is essentially identical in behaviour to `(if:false)`, but reads better.
 
+			This macro takes no values - each changer value it produces is the same.
+
 			See also:
 			(if:), (hook:), (show:)
 
@@ -317,6 +319,42 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		("hidden",
 			() => ChangerCommand.create("hidden"),
 			(d) => d.enabled = false,
+			null
+		)
+
+		/*d:
+			(verbatim:) -> Changer
+			Also known as: (v6m:)
+
+			When attached to a hook or command, the markup inside that would normally be rendered into HTML
+			is instead presented as plain text, as if the verbatim markup was used on it.
+
+			Example usage:
+			* ``(v6m: )[ \(`A`)/ ]`` prints a kaomoji without fear of its source being interpreted as markup.
+			* `(v6m: )(print:(source:$playerInfo))` prints the source of the datamap in $playerInfo, without re-rendering it.
+
+			Rationale:
+			Harlowe conveniently allows you to print strings containing markup and variables, such as `"Your rank is ''$rank''"`, rendering
+			them as if they were written directly in the passage. However, there are many situations where you would prefer not to do so,
+			and where you can't conveniently wrap that content in the verbatim markup. Chief among these is player-inputted text: since
+			players can write valid Harlowe markup into (prompt:) and (input-box:) elements, displaying such text could cause no end of
+			disaster for your story. Additionally, since this text can also include unmatched verbatim markup, attempting to encase it
+			in verbatim markup is non-trivially difficult. This macro provides an easier way to guarantee that the markup, if present, is not
+			rendered.
+
+			In addition, you may want to write a hook without having to worry about the task of placing its contents inside verbatim markup,
+			or write a hook containing textual references to HTML or Harlowe code. Even if it turns out to be unnecessary, having this macro
+			on hand can be reassuring.
+
+			Details:
+			This macro takes no values - each changer value it produces is the same.
+
+			Added in: 3.2.0
+			#basics 15
+		*/
+		(["verbatim","v6m"],
+			() => ChangerCommand.create("verbatim"),
+			(d) => d.verbatim = true,
 			null
 		)
 

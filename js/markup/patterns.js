@@ -601,6 +601,9 @@
 			
 			There's no hard limit to the amount of graves you can use to enclose the text.
 
+			If you want to make an entire hook to be displayed verbatim, without its markup being rendered,
+			you can attach the (verbatim:) changer.
+
 			#extra
 		*/
 		/*

@@ -65,7 +65,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		Writing the code:
 
 		The CodeHook, conversely, is where the code of your custom macro is written. You can (set:) temp variables in it, use (if:), (for:),
-		(cond:) and so forth to run different sections of code, and output a final value using either (output:) or (output-hook:).
+		(cond:), and so forth to run different sections of code, and output a final value using either (output:) or (output-hook:).
 		(Consult each of those macros' articles to learn the exact means of using them, and their differences.) The temp variables
 		specified by the typed variables are automatically set with the passed-in data.
 
@@ -75,6 +75,10 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 
 		If you want to use a custom macro throughout your story, the best place to create it is in a "startup" tagged passage. This will aid
 		in testing your story, as those passages' contents are always run first, regardless of the starting passage.
+
+		Normally, players can't see inside code hooks, but if an error occurs inside a custom macro, the error message will have an "Open" button
+		allowing the code hook's interior to be viewed. You can take advantage of this by adding (print:) commands inside the code hook, showing
+		you what certain variables contain at certain places in the hook.
 
 		Details:
 

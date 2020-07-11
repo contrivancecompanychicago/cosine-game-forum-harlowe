@@ -137,6 +137,9 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			generally be absent, so `(source: (a:2,    3,   4))` produces `"(a:2,3,4)"`. Also, if you call a macro using one if its aliases,
 			such as (array:) for (a:), then the source will still use its "default" name. So, `(source: (array:1))` produces `"(a:1)"`.
 
+			Note that you can't easily print the string returned by (source:), because, funnily enough, Harlowe will immediately
+			re-render it. You can use (verbatim-print:) to print it without it being rendered.
+
 			See also:
 			(datatype:)
 

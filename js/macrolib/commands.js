@@ -21,6 +21,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 	*/
 	const {Any, rest, either, optional, zeroOrMore, positiveInteger} = Macros.TypeSignature;
 	const {assign} = Object;
+	const {noop} = $;
 
 	/*
 		As localstorage keys are shared across domains, this prefix, using the current story's IFID,
@@ -103,15 +104,24 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 			```
 			will still result in the text `Count Dracula`. This is not particularly useful
 			compared to just setting `$p` to a string, but is available nonetheless.
+
+			Note that, once stored in a variable, a (print:) command is not a string. So, you
+			can't provide it to (upperfirst:) and other such macros. `(upperfirst: (print: $name))`
+			will produce an error. However, if $name contains a string, you can provide it to
+			(upperfirst:) before giving it to (print:), such as `(print: (upperfirst: $name))`.
+
+			If you need this command to print strings without the markup in the string
+			being rendered, you may use the (verbatim:) changer to change the command, or
+			use the (verbatim-print:) variant instead.
 			
 			See also:
-			(str:), (display:)
+			(str:), (display:), (verbatim-print:)
 
 			Added in: 1.0.0
 			#basics 4
 		*/
 		("print",
-			() => {},
+			noop,
 			(cd, _, val) =>
 				/*
 					The printBuiltinValue() call can call commands' TwineScript_Print() method,
@@ -119,6 +129,48 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 					do not execute the command prematurely.
 				*/
 				assign(cd, { source: printBuiltinValue(val) }),
+			[Any])
+
+		/*d:
+			(verbatim-print: Any) -> Command
+			Also known as: (v6m-print:)
+
+			A convenient combination of (verbatim:) and (print:), this prints out any single argument given to
+			it, as text, but without rendering the resulting text as markup.
+
+			Example usage:
+			* `(v6m-print: (source: $textChanger))` prints out the source of the value stored in $textChanger.
+			* `(set: $name to (v6m-print: (prompt: "Enter your name:")))` prompts the player for their name, then
+			stores a command that displays that name verbatim whenever it's printed.
+
+			Rationale:
+			In practice, this is functionally identical to a (verbatim:) changer attached to a (print:) command. However, one major
+			difference is that this can be stored in a variable and used in passage prose by itself, without having to
+			attach the changer each time. This scenario is especially useful when dealing with player-inputted text:
+			rather than having to display it with two macros each time, you can simply save this command in a variable
+			and use that variable.
+
+			Details:
+			As with (print:), once text is given to this command, there's no easy way to extract it from the command value
+			without using (source:). So, you can't provide it to (upperfirst:) and other such macros.
+			`(upperfirst: (verbatim-print: $name))` will produce an error. Instead, convert the original string
+			using (upperfirst:) before giving it to (verbatim-print:).
+			
+			See also:
+			(verbatim:), (print:)
+
+			Added in: 3.2.0
+			#basics 16
+		*/
+		(["verbatim-print", "v6m-print"],
+			noop,
+			(cd, _, val) =>
+				/*
+					The printBuiltinValue() call can call commands' TwineScript_Print() method,
+					so it must be withheld until here, so that wordings like (set: $x to (print:(goto:'X')))
+					do not execute the command prematurely.
+				*/
+				assign(cd, { verbatim:true, source: printBuiltinValue(val) }),
 			[Any])
 
 		/*d:
@@ -232,7 +284,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 			#links
 		*/
 		("undo",
-			() => {},
+			noop,
 			(cd) => {
 				if (State.pastLength < 1) {
 					return TwineError.create("macrocall", "I can't (undo:) on the first turn.");
@@ -705,6 +757,11 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 		`"''CURRENT SAVINGS'': $lifeSavings"` will not cause the $lifeSavings variable's contents to be printed into the box, nor will "CURRENT SAVINGS"
 		be in boldface.
 
+		A note about player-submitted strings: because most string-printing functionality in Harlowe (the (print:) macro, and putting variable names
+		in bare passage prose) will attempt to render markup inside the strings, a player may cause disaster for your story by placing Harlowe markup
+		inside an (input-box:) bound variable, which, when displayed, produces either an error or some effect that undermines the story. In order to
+		display those strings safely, you may use either the verbatim markup, the (verbatim:) changer, or (verbatim-print:).
+
 		See also:
 		(force-input-box:), (prompt:)
 
@@ -1041,7 +1098,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 		#revision
 	*/
 	["show","rerun"].forEach(name => Macros.addCommand(name,
-		() => {},
+		noop,
 		(cd, section, ...hooks) => {
 			hooks.forEach(hook => hook.forEach(section, elem => {
 				const data = elem.data('hidden');
@@ -1117,7 +1174,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 			#showing and hiding
 		*/
 		("hide",
-			() => {},
+			noop,
 			(cd, section, ...hooks) => {
 
 				hooks.forEach(hook => hook.forEach(section, elem => {
@@ -1171,8 +1228,8 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 			within a hook.
 		*/
 		("stop",
-			() => {},
-			() => {},
+			noop,
+			noop,
 			[], false)
 
 		/*d:
@@ -1218,7 +1275,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 			#saving
 		*/
 		("load-game",
-			() => {},
+			noop,
 			(/* no cd because this is attachable:false */ section, slotName) => {
 				const saveData = localStorage.getItem(storagePrefix("Saved Game") + slotName);
 				
@@ -1392,7 +1449,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 			#url
 		*/
 		("open-url",
-			() => {},
+			noop,
 			(/* no cd because this is attachable:false */ _, text) => {
 				window.open(text, '');
 			},
@@ -1420,7 +1477,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 			#url
 		*/
 		("reload",
-			() => {},
+			noop,
 			(/* no cd because this is attachable:false */ ) => {
 				if (State.pastLength < 1) {
 					return TwineError.create("infinite", "I mustn't (reload:) the page in the starting passage.");
@@ -1460,7 +1517,7 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 			#url
 		*/
 		("goto-url",
-			() => {},
+			noop,
 			(/* no cd because this is attachable:false */ _, url)=>{
 				window.location.assign(url);
 			},
@@ -1608,6 +1665,12 @@ define(['jquery', 'requestAnimationFrame', 'macros', 'utils', 'state', 'passages
 			When the dialog is on-screen, the entire game is essentially "paused" - until it is dismissed,
 			no further computations are performed, links can't be clicked, and (live:) and (event:) macros
 			shouldn't fire.
+
+			A note about player-submitted strings: because most string-printing functionality in Harlowe (the (print:) macro,
+			and putting variable names in bare passage prose) will attempt to render markup inside the strings, a player
+			may cause disaster for your story by placing Harlowe markup inside a (prompt:) string, which, when displayed,
+			produces either an error or some effect that undermines the story. In order to display those strings
+			safely, you may use either the verbatim markup, the (verbatim:) changer, or (verbatim-print:).
 
 			See also:
 			(alert:), (confirm:)

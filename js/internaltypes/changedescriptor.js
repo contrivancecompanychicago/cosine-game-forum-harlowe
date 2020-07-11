@@ -27,6 +27,9 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		
 		// {Boolean} enabled          Whether or not this code is enabled. (Disabled code won't be used until something enables it).
 		enabled:          true,
+
+		// {Boolean} verbatim         Whether to render the source at all, or display it verbatim.
+		verbatim:         false,
 		
 		// {jQuery|HookSet} target    Where to render the source, if not the hookElement.
 		target:           null,
@@ -89,7 +92,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		*/
 		summary() {
 			return [
-				"source", "innerSource", "enabled", "target", "append", "newTargets",
+				"source", "innerSource", "enabled", "verbatim", "target", "append", "newTargets",
 				"transition", "transitionTime", "transitionDeferred", "transitionDelay",
 				"transitionSkip", "transitionOrigin",
 			]
@@ -425,7 +428,8 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 				Notice also that the entire expression is wrapped in $():
 				a jQuery must be returned by this method, and $(false)
 				conveniently evaluates to $(). Otherwise, it converts the
-				array returned by $.parseHTML into a jQuery.
+				array returned by $.parseHTML into a jQuery (unless, of course,
+				this has been changed with (verbatim:))
 				
 				This has to be run as close to insertion as possible because of
 				the possibility of <script> elements being present - 
@@ -435,7 +439,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 			*/
 			
 			dom = $(source &&
-				$.parseHTML(exec(source), document, true));
+				(this.verbatim ? new Text(source) : $.parseHTML(exec(source), document, true)));
 			
 			/*
 				Now, insert the DOM structure into the target element.
