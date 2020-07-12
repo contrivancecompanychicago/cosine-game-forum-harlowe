@@ -26,13 +26,14 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		(set: $robotic to (font:'Courier New'))
 		$robotic[Hi, it's me. Your clanky, cold friend.]
 		```
-		Alternatively, you may prefer to use the (enchant:) macro to accomplish the same thing using only hook names:
+		Alternatively, you may prefer to use the (change:) or (enchant:) macro to accomplish the same thing using only hook names:
 		```
 		|robotic>[Hi, it's me. Your clanky, cold friend.]
-		(enchant: ?robotic, (font:'Courier New'))
+		(change: ?robotic, (font:'Courier New'))
 		```
 		Changers can be combined using the `+` operator: `(text-colour: red) + (font: "Courier New")[This text is red Courier New.]`
-		styles the text using both changers at once. These combined changers, too, can be saved in variables or used with (enchant:).
+		styles the text using both changers at once. These combined changers, too, can be saved in variables or used with (change:)
+		or (enchant:).
 		```
 		(set: _alertText to (font:"Courier New") + (text-style: "buoy")+(text-colour:"#e74"))
 		_alertText[Social alert: no one read the emails you sent yesterday.]
@@ -1239,7 +1240,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			the (background:) macro.
 
 			This macro will change the colour of links inside the contained hook, with one exception: using
-			(enchant:) to enchant the entire passage (via `?passage` or `?page`) with (text-colour:)
+			(change:) to change the entire passage (via `?passage` or `?page`) with (text-colour:)
 			will NOT affect links. This is to allow you to re-style the entire story without having to lose
 			the distinct colour of links compared to passage text. You can change the colour of all links using
 			an explicit `(enchant: ?link, (text-colour: $color))`.
@@ -1329,7 +1330,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			Rationale:
 			Indentation of initial letters has long been used in typesetting as a means of helping the human eye distinguish paragraphs of
 			text from each other. While you can use line breaks to separate paragraphs, this often takes up an uncomfortable amount of vertical space,
-			and can be unsuitable for long sections of prose. This macro can be used to provide indentation to single hooks, or, using (enchant:),
+			and can be unsuitable for long sections of prose. This macro can be used to provide indentation to single hooks, or, using (change:),
 			to every line in a passage.
 
 			Details:
@@ -1806,7 +1807,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 
 			Rationale:
 			While the collapsing whitespace markup allows specific sections of passage prose to be collapsed, there are times when you want
-			this functionality available as a changer, such as to style the whole page using (enchant:), or to add it to another changer.
+			this functionality available as a changer, such as to style the whole page using (change:), or to add it to another changer.
 			This macro provides that functionality.
 
 			Details:
@@ -1816,7 +1817,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 
 			There is no way to reverse this whitespace-collapsing effect - it is permanently removed.
 
-			When this is used with (enchant:) to affect an existing hook, its excess whitespace will be deleted immediately, with no transition.
+			When this is used with (change:) or (enchant:) to affect an existing hook, its excess whitespace will be deleted immediately, with no transition.
 			Moreover, the whitespace-collapsing effect is ongoing, not just a once-off effect. This becomes clear when you consider
 			the following code.
 			```
@@ -2015,7 +2016,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		the characters that comprise the sizing string: `(box:"=XxxxXxxxXxxxX=", 0.25)`, for instance, makes it easier to discern that
 		the box is 13/15th of the available width.
 
-		You can use this with (enchant:) and `?passage` to affect the placement of the passage in the page.
+		You can use this with (change:) and `?passage` to affect the placement of the passage in the page.
 
 		The resulting hook has the CSS attributes "display:block", "overflow-y:auto", and "box-sizing:content-box". Additionally,
 		the hook will have 'padding:1em', unless another padding value has been applied to it (such as via (css:)).

@@ -1,29 +1,49 @@
 describe("enchantment macros", function () {
 	'use strict';
-	describe("(enchant:)", function() {
-		it("accepts either a string or a hook reference, followed by a changer command or a 'via' lambda", function() {
-			expect("(print:(enchant:?foo, (font:'Skia')))").not.markupToError();
-			expect("(print:(enchant:'baz', (font:'Skia')))").not.markupToError();
-			expect("(print:(enchant:?foo, via (font:'Skia')))").not.markupToError();
-			expect("(print:(enchant:'baz', via (font:'Skia')))").not.markupToError();
+	["enchant","change"].forEach(function(name) {
+		describe("("+name+":)", function() {
+			it("accepts either a string or a hook reference, followed by a changer command or a 'via' lambda", function() {
+				expect("(print:("+name+":?foo, (font:'Skia')))").not.markupToError();
+				expect("(print:("+name+":'baz', (font:'Skia')))").not.markupToError();
+				expect("(print:("+name+":?foo, via (font:'Skia')))").not.markupToError();
+				expect("(print:("+name+":'baz', via (font:'Skia')))").not.markupToError();
 
-			expect("(print:(enchant:?foo))").markupToError();
-			expect("(print:(enchant:(font:'Skia')))").markupToError();
-			expect("(print:(enchant:'baz'))").markupToError();
-			expect("(print:(enchant:(font:'Skia'), 'baz'))").markupToError();
-			expect("(print:(enchant:(font:'Skia'), where (font:'Skia')))").markupToError();
+				expect("(print:("+name+":?foo))").markupToError();
+				expect("(print:("+name+":(font:'Skia')))").markupToError();
+				expect("(print:("+name+":'baz'))").markupToError();
+				expect("(print:("+name+":(font:'Skia'), 'baz'))").markupToError();
+				expect("(print:("+name+":(font:'Skia'), where (font:'Skia')))").markupToError();
+			});
+			it("errors when the changer contains a revision command", function() {
+				expect("[]<foo|("+name+":?foo,(append:?baz))").markupToError();
+			});
+			it("errors when the 'via' lambda returns a non-changer or a revision command", function() {
+				expect("[]<foo|("+name+":?foo, via 2)").markupToError();
+				expect("[]<foo|("+name+":?foo, via (append:?baz))").markupToError();
+			});
+			it("doesn't error when given (link:) changers", function() {
+				expect("[]<foo|("+name+":?foo, (link:'bar'))").not.markupToError();
+			});
+			if (name === "change") {
+				it("only changes hooks earlier than it", function() {
+					var p = runPassage("[]<foo|(change:?foo,(color:'#800000'))[]<foo|");
+					expect(p.find('tw-hook:first-child').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+				});
+			} else {
+				it("enchants hooks everywhere", function() {
+					var p = runPassage("[]<foo|(enchant:?foo,(color:'#800000'))[]<foo|");
+					expect(p.find('tw-hook:first-child').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+					expect(p.find('tw-hook:last-child').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+				});
+				it("changes hooks when they're added to the passage", function() {
+					var p = runPassage("[]<foo|(enchant:?foo,(color:'#800000'))(link:'X')[ []<foo|]");
+					expect(p.find('tw-hook:first-child').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+					p.find('tw-link').click();
+					expect(p.find(':last-child > tw-hook').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+				});
+			}
+			//TODO: write more basic functionality tests comparable to (click:)'s
 		});
-		it("errors when the changer contains a revision command", function() {
-			expect("[]<foo|(enchant:?foo,(append:?baz))").markupToError();
-		});
-		it("errors when the 'via' lambda returns a non-changer or a revision command", function() {
-			expect("[]<foo|(enchant:?foo, via 2)").markupToError();
-			expect("[]<foo|(enchant:?foo, via (append:?baz))").markupToError();
-		});
-		it("doesn't error when given (link:) changers", function() {
-			expect("[]<foo|(enchant:?foo, (link:'bar'))").not.markupToError();
-		});
-		//TODO: write more basic functionality tests comparable to (click:)'s
 	});
 	describe("enchanting ?Link", function() {
 		it("wraps each <tw-link> in a <tw-enchantment>", function(done) {

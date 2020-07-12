@@ -228,7 +228,7 @@
 
 			Example usage:
 			```
-			(enchant:?passage, (text-size:0.6))
+			(change:?passage, (text-size:0.6))
 			|==
 			This is in the leftmost column, which has a right margin of about 2 letters wide.
 			    =|||=
@@ -243,7 +243,7 @@
 
 			You can create nested columns by enclosing the inner set of columns in an unnamed hook, like so.
 			```
-			(enchant:?passage, (text-size:0.6))
+			(change:?passage, (text-size:0.6))
 			|==
 			This is the outer left column.
 			==|
@@ -296,7 +296,7 @@
 
 			Links can be customised by attaching changer macros, like (transition-depart:) or (text-style:). Just
 			place one in front of the link, like so: `(t8n-depart:"dissolve")[[Recall that day]]` - or attach a variable containing
-			one: `$memory[[Recall that day]]`. You can also customise every link in the passage using (enchant:) and ?Link.
+			one: `$memory[[Recall that day]]`. You can also customise every link in the passage using (change:) or (enchant:), and ?Link.
 
 			This syntax is not the only way to create links – there are many link macros, such as (link:), which can
 			be used to make more versatile hyperlinks in your story.
@@ -646,7 +646,7 @@
 			collapsed, even if it is commanded to replace text outside of the markup.
 
 			You may apply this collapsing effect to specific hooks using the (collapse:) macro. In particular,
-			if you wish for the entire page's whitespace to collapse, consider using (enchant:) and (collapse:).
+			if you wish for the entire passage's whitespace to collapse, consider using (change: ?passage) and (collapse:).
 
 			If you only want to remove specific line breaks, consider the escaped line break markup.
 
@@ -698,7 +698,7 @@
 			Built in names:
 
 			There are four special built-in hook names, ?Page, ?Passage, ?Sidebar, and ?Link, which, in addition to selecting named hooks,
-			also affect parts of the page that you can't normally style with macros. They can be styled using the (enchant:) macro.
+			also affect parts of the page that you can't normally style with macros. They can be styled using the (change:) or (enchant:) macros.
 
 			* `?Page` selects the page element (to be precise, the `<tw-story>` element) and using it with the (background:) macro lets you
 			change the background of the entire page.

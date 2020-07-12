@@ -9,17 +9,14 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'passages', 'macros
 	*/
 
 	/*d:
-		(enchant: HookName or String, Changer or Lambda) -> Command
+		(change: HookName or String, Changer or Lambda) -> Command
 
-		Applies a changer (or a "via" lambda producing a changer) to every occurrence of a hook or string in a passage, and continues
-		applying that changer to any further occurrences that are made to appear in the same passage later.
+		Applies a changer (or a "via" lambda producing a changer) to every occurrence of a hook or string in a passage, once.
 
 		Example usage:
-		* `(enchant: "gold", (text-colour: yellow) + (text-style:'bold'))` makes all occurrences of "gold" in the text be bold and yellow.
-		* `(enchant: ?passage's chars, via (text-color:(hsl: pos * 10, 1, 0.5)))` colours all of the characters in the passage in a
+		* `(change: "gold", (text-colour: yellow) + (text-style:'bold'))` makes all prior occurrences of "gold" in the text be bold and yellow.
+		* `(change: ?passage's chars, via (text-color:(hsl: pos * 10, 1, 0.5)))` colours all of the characters in the passage in a
 		rainbow pattern.
-		* `(enchant: ?passage's chars, via (t8n-delay:pos * 30) + (t8n:'instant'))` causes the passage's characters to "type out" when the
-		player first visits, such as in a visual novel or other such computer game.
 
 		Rationale:
 		While changers allow you to style or transform certain hooks in a passage, it can be tedious and error-prone to attach them to every
@@ -30,89 +27,139 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'passages', 'macros
 		_ghost[Awoo]
 		_ghost[Ooooh]
 		```
-		Nevertheless, this can prove undesirable: you may want to remove the _ghost styling later in development, which would
+		Nevertheless, this can prove undesirable: you may want to not use the _ghost styling later in development, which would
 		force you to remove the attached variables to avoid producing an error; you may want to only style a single word or phrase,
-		and find it inconvenient to place it in a hook; you may simply not like having code, like that (set:) macro,
-		be at the start of your passage; you may not want to keep track of which variables hold which changers, given the possibility (if
-		you're using normal variables) that they could be changed previously in the story.
+		and find it inconvenient to place it in a hook; you may simply not like dedicating variables to storing changers, or in placing
+		(set:) macros at the start of your passage's prose.
 
-		Instead, you can give the hooks the name "ghost", and then (enchant:) them afterward like so:
+		Instead, you can give the hooks the name "ghost", and then (change:) them afterward like so:
 		```
 		|ghost>[Awoo]
 		|ghost>[Ooooh]
-		(enchant: ?ghost, (text-style:'outline'))
+		(change: ?ghost, (text-style:'outline'))
 		```
-		The final (enchant:) macro can target words instead of hooks, much like (click:) - simply provide a string instead of a hook name.
 
-		This macro works well in "header" tagged passages - using a lot of (enchant:) commands to style certain words or parts of
-		every passage, you can essentially write a "styling language" for your story, where certain hook names "mean" certain colours or
-		behaviour. (This is loosely comparable to using CSS to style class names, but exclusively uses macros.)
-
-		If a "via" lambda is supplied to (enchant:) instead of a changer, then that lambda can compute a changer dynamically, based on specifics of
-		each hook that's enchanted. For instance, `(enchant: "O", via (text-style:(cond: its pos % 2 is 0, 'bold', 'none')))`
+		This has a few advantages. As it ties the changer styling to a hook name rather than a variable, the (change:) can be removed later without causing errors.
+		Placing the (change:) at the end of the passage can also make the passage's source more readable, the textual content being closer to the top.
 
 		Details:
-		Unlike the (replace:), (append:) and (prepend:) macros, this macro can affect text and hooks that appear after it. This is because it creates
-		an ongoing effect, giving a style to hooks and making them retain it, whereas those replacement macros can be considered single, immediate commands.
+		The (change:) macro can target plain text instead of hooks, much like (click:) - simply provide a string instead of a hook name.
+		If a "via" lambda is supplied to (change:) instead of a changer, then that lambda can compute a changer dynamically, based on specifics of
+		each hook that's enchanted. For instance, `(change: "O", via (text-style:(cond: its pos % 2 is 0, 'bold', 'none')))`
 
-		As with (click:), the "enchantment" affects the text produced by (display:) macros, and any hooks changed by (replace:) etc. in the future,
-		until the player makes their next turn.
+		Like the (replace:), (append:) and (prepend:) macros, this macro does not affect text and hooks that appear after it, as it is an immediate
+		command that only affects what has already been rendered. For an alternative version of this macro which does affect hooks and text after it,
+		see (enchant:).
 
-		The built-in hook names, ?Page, ?Passage, ?Sidebar and ?Link, can be targeted by this macro, and can be styled on a per-passage basis this way.
+		The built-in hook names, ?Page, ?Passage, ?Sidebar and ?Link, as well as their data names like `chars` or `lines`, can be targeted by this macro,
+		and can be styled on a per-passage basis this way.
 
 		Using (text-colour:) with this macro will let you change the colour of links inside the indicated hook, with one exception:
-		using (enchant:) to enchant the entire passage (via `?passage` or `?page`) with (text-colour:) will NOT affect links. This is to allow you
+		using (change:) to change the entire passage (via `?passage` or `?page`) with (text-colour:) will NOT affect links. This is to allow you
 		to re-style the entire story without having to lose the distinct colour of links compared to passage text. You can change the colour of all links using
-		an explicit `(enchant: ?link, (text-colour: $color))`.
+		an explicit `(change: ?link, (text-colour: $color))`.
 
-		You can use (enchant:) with (transition:) to add transitions to hooks or text elsewhere in the same passage – however, if those hooks or words have already appeared,
-		they won't abruptly animate. For example, `(event: when time > 2s)[(enchant:"Riddles", (t8n:"Shudder"))]` adds an (enchant:) macro call to the passage
-		after 2 seconds, and won't affect instances of the word "Riddles" that are already in the passage.
+		You can use (change:) with (transition:) to add transitions to hooks or text elsewhere in the same passage – however, if the (change:) macro is
+		run after the passage was initially rendered, the transitions will begin animating in the middle of their usual animations, or, if enough time
+		has passed, won't run at all. For example, `(event: when time > 2s)[(change:"Riddles", (t8n:"Shudder")+(t8n-time:3s))]` will
+		apply a 3-second transition to each instance of the word "Riddles" in the passage, but since 2 seconds have already passed since those words were
+		rendered, only the last 1 second of the transition will be visible.
 
-		You cannot use (enchant:) with (link:) or any of its relatives – because the enchanted hook or text is already in the passage, the link can't appear.
+		You cannot use (change:) with (link:) or any of its relatives – because the enchanted hook or text is already in the passage, the link can't appear.
 
 		See also:
-		(click:)
+		(enchant:), (replace:)
+
+		Added in: 3.2.0
+		#basics
+	*/
+	/*d:
+		(enchant: HookName or String, Changer or Lambda) -> Command
+
+		Applies a changer (or a "via" lambda producing a changer) to every occurrence of a hook or string in a passage, and continues
+		applying that changer to any further occurrences that are made to appear in the same passage later.
+
+		Example usage:
+		* `(enchant: "gold", (text-colour: yellow) + (text-style:'bold'))` makes all occurrences of "gold" in the text be bold and yellow.
+		* `(enchant: ?passage's chars, via (t8n-delay:pos * 30) + (t8n:'instant'))` causes the passage's characters to "type out" when the
+		player first visits, such as in a visual novel or other such computer game. Unlike (change:), this works well with instances of
+		`(click:?page)[==` later in the passage.
+
+		Rationale:
+		This is a special version of (change:) which doesn't just perform a single transformation of a set of hooks or text - rather,
+		like (click:), it creates an ongoing effect that constantly checks and reapplies the changers whenever new hooks or text are inserted into
+		the passage, persisting until you navigate to another passage. Consider the following:
+		```
+		(enchant: ?ghost, (text-style:'outline'))
+		|ghost>[Awooo]
+		(link:">Wait.")[|ghost>[Oooowooo]]
+		```
+		If this were a (change:) command, the second hook revealed by the (link:) wouldn't be affected, as it is inserted into the passage after
+		it's finished rendering. The (enchant:) macro allows you to guarantee that every hook or bit of text that you want the changer to affect
+		is constantly affected.
+
+		Details:
+		The (enchant:) macro takes the same values as (change:) - a string can be given instead of a hook name, and a lambda can be given instead of
+		a changer. See (change:)'s article for more details about these.
+
+		This macro works well in "header" or "footer" tagged passages - using a lot of (enchant:) commands to style certain words or parts of
+		every passage, you can essentially write a "styling language" for your story, where certain hook names "mean" certain colours or
+		behaviour. (This is loosely comparable to using CSS to style HTML class names, but exclusively uses macros.)
+
+		When targeting ?Page, ?Passage and ?Sidebar, there is generally no difference between using (enchant:) and using (change:), as there (usually)
+		aren't any other hooks with those names in the passage.
+
+		Like (change:), you cannot use (enchant:) with (link:) or any of its relatives.
+
+		See also:
+		(click:), (change:)
 
 		Added in: 2.0.0
 		#basics
 	*/
-	Macros.addCommand("enchant",
-		(scope, changer) => {
-			/*
-				First, test the changer to confirm it contains no revision macros.
-			*/
-			if (ChangerCommand.isPrototypeOf(changer)) {
-				const summary = changer.summary();
-				if (summary.includes('newTargets') || summary.includes('target')) {
-					return TwineError.create(
-						"datatype",
-						"The changer given to (enchant:) can't include a revision command like (replace:) or (append:)."
-					);
-				}
-			}
-		},
-		(section, scope, changer) => {
-			const enchantment = Enchantment.create({
-				scope: HookSet.from(scope),
+	["enchant", "change"].forEach((name) => {
+		Macros.addCommand(name,
+			(scope, changer) => {
 				/*
-					Because the changer provided to this macro could actually be a "via" lambda that produces changers,
-					Enchantment has both "lambda" and "changer" properties to distinguish them.
-					We make the distinction here.
+					First, test the changer to confirm it contains no revision macros.
 				*/
-				[ChangerCommand.isPrototypeOf(changer) ? "changer" : "lambda"]: changer,
-				section,
-			});
-			section.addEnchantment(enchantment);
-			/*
-				section.updateEnchantments() will be run automatically after
-				this has been executed, meaning we don't have to do it here.
-			*/
-			return "";
-		},
-		[either(HookSet,String), either(ChangerCommand, Lambda.TypeSignature('via'))],
-		false // Can't have attachments.
-	);
+				if (ChangerCommand.isPrototypeOf(changer)) {
+					const summary = changer.summary();
+					if (summary.includes('newTargets') || summary.includes('target')) {
+						return TwineError.create(
+							"datatype",
+							"The changer given to (" + name + ":) can't include a revision changer like (replace:) or (append:)."
+						);
+					}
+				}
+			},
+			(section, scope, changer) => {
+				const enchantment = Enchantment.create({
+					scope: HookSet.from(scope),
+					/*
+						Because the changer provided to this macro could actually be a "via" lambda that produces changers,
+						Enchantment has both "lambda" and "changer" properties to distinguish them.
+						We make the distinction here.
+					*/
+					[ChangerCommand.isPrototypeOf(changer) ? "changer" : "lambda"]: changer,
+					section,
+				});
+				if (name === "enchant") {
+					/*
+						section.updateEnchantments() will be run automatically after
+						this has been executed, meaning we don't have to do it here.
+					*/
+					section.addEnchantment(enchantment);
+				}
+				else {
+					enchantment.enchantScope();
+				}
+				return "";
+			},
+			[either(HookSet,String), either(ChangerCommand, Lambda.TypeSignature('via'))],
+			false // Can't have attachments.
+		);
+	});
 
 	/*
 		Revision macros produce ChangerCommands that redirect where the attached hook's
