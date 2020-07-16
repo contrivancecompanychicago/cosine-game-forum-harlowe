@@ -514,6 +514,9 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		*/
 		if (container || container === "") {
 			if (typeof container === sString) {
+				if (typeof obj !== sString) {
+					return TwineError.create("operation", objectName(container) + " can only contain strings, not " + objectName(obj) + ".");
+				}
 				return container.includes(obj);
 			}
 			if(Array.isArray(container)) {

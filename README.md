@@ -10,6 +10,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a long-standing bug where `(click: ?Passage)` and `(click: ?Sidebar)` just flat-out didn't work at all.
  * Fixed a long-standing bug where lambdas would produce an incorrect duplicate-name error if the temp variables used with their clauses contained capital letters.
  * Fixed a long-standing bug where hooks that had `(transition:)` transitions would restart their transition animations whenever the containing passage finished transitioning in. Previously, the only way to overcome this was to make the passage transition using `(transition-arrive:"instant")`.
+ * Fixed a long-standing bug where you couldn't use the column markup to create empty columns by placing two column markup lines in succession, without an intervening blank line.
  * Fixed a long-standing bug where strings containing HookName syntax (such as `"?pear"`) were considered identical to actual hooknames (such as `?pear`).
  * Fixed a bug where the default CSS for `(click: ?Page)` (a blue border around the page) wasn't visible. (Now, an `::after` pseudo-element is created for the enchantment, so that the border displays above all the page content.)
  * Fixed a bug where typing `is not an` instead of `is not a` (such as in `$wallet is not an array`) would cause an error.
@@ -32,6 +33,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * `(save-game:)` can now save a greater range of variable data. Formerly, only changers, arrays, datamaps, datasets, booleans, strings and numbers could be stored in variables when you use `(save-game:)` - other values, such as commands, colours, gradients, or lambdas, would cause an error. Now, it should work with every kind of supported Harlowe value (i.e. those mentioned in the documentation) except user-created commands created with `(output-hook:)` (see below). But, this means that save data from 3.1.0 is no longer compatible with 3.2.0.
  * Improved an error message that could appear if you erroneously put the spread `...` syntax inside parentheses, such as `(...$arr)`.
  * Altered the error message that appears when you don't give macros "enough values", which wouldn't properly exclude optional values.
+ * Fixed some error messages, involving accessing an invalid data value of a string, which would refer to the string as "an array".
 
 #### Alterations
 
@@ -39,6 +41,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * The behaviour for multiple `(click:)` macros affecting the same hook (such as in `|A>[B] (click: ?A)[1] (click: ?A)[2]`) has changed to be slightly more intuitive: formerly, as you clicked the hook, the last `(click:)` would activate first (so, `[2]` then `[1]`). Now, they activate from first to last. This also applies to `(mouseover:)` and `(mouseout:)`.
  * Now, the text input box in `(prompt:)` is wider, and is auto-focused when the dialog appears, allowing the player to type into it without having to click it.
  * `(hook:)` now gives an error if it's given an empty string.
+ * Now, `contains`, `is in` and `is not in` will emit an error if it's used to check if a string contains a non-string value, such as a number or boolean. This brings it into consistency with a few other operations, like trying to set a string's `1st` to something other than a single character.
  * The `(str-repeated:)` and `(repeated:)` macros now no longer error if the given number of repetitions is 0. (They will return empty strings and arrays, respectively.)
  * Now, `?hook's links` will contain the hook itself, if it's a link, or has been given a link changer or enchantment.
  * Now, pressing Return or Enter in a `(prompt:)` text input box should submit the text, as if "OK" was clicked.
@@ -64,7 +67,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 ##### Coding
 
- * Added the `is not in` operator - `$a is not in $b` is a more intelligible phrasing for `not ($a is in $b)`. (Currently, `contains` still doesn't have a negative equivalent.)
+ * Added negated versions of several operators. You may now write `is not in`, `is not a`, `does not contain` and `does not match` as more intelligible negations of `is in`, `contains` and `matches`.
  * Added the `pos` identifier, which is used in lambdas to provide the position of the data value (from those passed into the macro) that the lambda is currently processing. `(altered: via it + pos, 0,0,5,0,0)` equals `(a:1,2,8,4,5)`.
  * Added `2bind`, a "two-way bind" variation of `bind` which causes the `(cycling-link:)`, `(seq-link:)` (See below) and `(dropdown:)` macros to automatically match the current value of the bound variable, and update itself whenever another macro changes the variable.
  * Added the HookName data name `visited` (as in `?passage's visited`), which allows you to select links that point to visited passages, and change the unique colour these links have.
@@ -74,6 +77,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
    * Additionally, you can force a variable to remain constant throughout the story using the new `const` datatype. `(set: const-type $robotText to (font:"Courier New"))` specifies that any further changes to $robotText should cause an error.
  * Lambdas' temp variables may now optionally have types as well, such as by writing `each str-type _name where _name contains "el"`. This checks that the correct types of data are given to the lambda.
  * Arrays and strings now have a `random` data name, which retrieves a random value from these structures. `(a:5,8,9)'s random` produces 5, 8 or 9. This works well with the `(move:)` macro, allowing you to randomly move values out of an array without necessarily needing to use `(shuffled:)`.
+ * Arrays and strings now have `start` and `end` data names, which are designed to be used with `is` and `matches`. You can check if a string or array begins or ends with a certain other string or subarray by writing, for instance, `start of "Gossamer" is "Goss"`.
  * Added the `lambda` and `macro` datatypes (see below), and the `boolean` datatype can now be shortened to `bool`.
  * Added the following special datatypes: `even`, which matches only even numbers, `odd`, which matches only odd numbers, `whitespace`, which matches strings that only contain whitespace, and `empty`, which matches only empty arrays, strings, datamaps and datasets.
 

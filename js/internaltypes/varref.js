@@ -51,7 +51,8 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			last: antonym of 1st.
 			2ndlast, 3rdlast: reverse indices.
 			1stTo2ndlast, 3rdlastToLast: slices.
-			any, all: produce special "determiner" objects used for comparison operations.
+			random: random index.
+			any, all, start, end: produce special "determiner" objects used for comparison operations.
 		*/
 		if (isSequential(obj)) {
 			let match;
@@ -151,8 +152,8 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 					+ andList(HookSet.TwineScript_Properties.map(p => "'" + p + "'"))
 					+ " of " + objectName(obj) + ", not " + objectName(prop) + ".");
 			}
-			else if (!["length","any","all","random"].includes(prop) && !HookSet.isPrototypeOf(obj)) {
-				return TwineError.create("property", youCanOnlyAccess + "'length', 'any', 'all' and 'random'"
+			else if (!["length","any","all","start","end","random"].includes(prop) && !HookSet.isPrototypeOf(obj)) {
+				return TwineError.create("property", youCanOnlyAccess + "'length', 'any', 'all', 'start', 'end', and 'random'"
 					+ " of " + objectName(obj) + ", not " + objectName(prop) + ".");
 			}
 		}
@@ -267,7 +268,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 
 	/*
 		This helper creates a determiner, which is a special object returned
-		from a sequence's "any" or "all" properties, and, when used in comparison
+		from a sequence's "any", "all", "start" or "end" properties, and, when used in comparison
 		operations like "contains" and ">", allows all of the sequence's elements
 		to be compared succinctly.
 	*/
@@ -276,7 +277,17 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 
 		return {
 			determiner: prop,
+			/*
+				The "any" and "all" determiners require the ability to extract code points
+				from strings at will.
+			*/
 			array: [...obj],
+			/*
+				The "start" and "end" determiners require the ability to reconstruct
+				string determiners into their original string value. Storing it here
+				saves that computation.
+			*/
+			string: typeof obj === "string" && obj,
 			TwineScript_ObjectName: name + objectName(obj),
 			TwineScript_TypeName: name + "a data structure",
 			TwineScript_Unstorable: true,
@@ -307,11 +318,21 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				|| VarRefProto.isPrototypeOf(obj)) {
 			return obj.get(prop);
 		}
+		if (prop === "any" || prop === "all" || prop === "start" || prop === "end") {
+			return createDeterminer(obj,prop);
+		}
+		/*
+			Due to Javascript's regrettable use of UCS-2 for string access,
+			astral plane glyphs won't be correctly regarded as single characters,
+			unless the following kludge is employed.
+			This must be placed after the createDeterminer() branch,
+			and before the convertNegativeProp() branch.
+		*/
+		if (typeof obj === "string") {
+			obj = [...obj];
+		}
 		if (isSequential(obj) && Number.isFinite(prop)) {
 			prop = convertNegativeProp(obj,prop);
-		}
-		if (prop === "any" || prop === "all") {
-			return createDeterminer(obj,prop);
 		}
 		if (obj.TwineScript_GetProperty) {
 			return obj.TwineScript_GetProperty(prop);
@@ -414,10 +435,11 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				Unlike in JavaScript, you can't change the length of
 				an array or string - it's fixed.
 			*/
-			if(["length","any","all"].includes(prop)) {
+			if(["length","random","any","all","start","end"].includes(prop)) {
 				return TwineError.create(
 					"operation",
-					"I can't forcibly alter the '" + prop + "' of " + objectName(obj) + "."
+					"I can't forcibly alter the '" + prop + "' of " + objectName(obj) + ".",
+					prop === "start" || prop === "end" ? "Alter the values at actual positions, like 1st or 2ndlast, rather than just the '" + prop + "'." : undefined
 				);
 			}
 			/*
@@ -569,14 +591,6 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 					Strings, when subsetted, produce another string rather than an array.
 				*/
 				[typeof obj === "string" ? "join" : "valueOf"]("");
-		}
-		/*
-			Due to Javascript's regrettable use of UCS-2 for string access,
-			astral plane glyphs won't be correctly regarded as single characters,
-			unless the following kludge is employed.
-		*/
-		if (typeof obj === "string") {
-			obj = [...obj];
 		}
 		const result = objectOrMapGet(obj, prop);
 		/*

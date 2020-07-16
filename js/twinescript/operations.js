@@ -98,7 +98,6 @@ define([
 	/*
 		Converts a function to type-check its two arguments before
 		execution, and thus suppress JS type coercion.
-		@return {Function}
 	*/
 	function doNotCoerce(fn) {
 		return (left, right) => {
@@ -133,35 +132,82 @@ define([
 	}
 	
 	/*
-		Converts a function to handle determiners ("any", "all") and to set It after it is done.
-		@return {Function}
+		Converts a function to handle "any", "all", "start" or "end" determiners and to set It after it is done.
+		disallowStartEnd: if present, "start" or "end" can't be used with this operation.
+		negative: this was wrapped by negativeComparisonOp. Used only for "start" or "end" determiner computation.
 	*/
-	function comparisonOp(fn) {
+	function comparisonOp(fn, disallowStartEnd, negative = false) {
 		const compare = (left, right) => {
 			let error;
 			if ((error = TwineError.containsError(left, right))) {
 				return error;
 			}
 			It = left;
-			if (left.determiner) {
-				const all = left.determiner === "all";
+			let [determinerValue, otherValue] = left.determiner ? [left,right] : right.determiner ? [right,left] : [];
+			if (determinerValue) {
+				const { determiner } = determinerValue;
+				/*
+					The "start" and "end" determiners are implemented here. They involve progressively marching through each subsequence from the start
+					or end of the value, and comparing to the other side until a true (or, if negated, false) match is found.
+				*/
+				if (determiner === "start" || determiner === "end") {
+					if (disallowStartEnd) {
+						return TwineError.create("operation", "I can't use '" + disallowStartEnd + "' with the 'start' or 'end' of " + objectName(determinerValue) + ".");
+					}
+					if (otherValue.determiner) {
+						/*
+							Because comparing two "start" or "end" determiners is rather pointless (since the empty sequence matches both)
+							an error message is also produced for doing so.
+						*/
+						if (otherValue.determiner === "start" || otherValue.determiner === "end") {
+							return TwineError.create("operation", "I can't compare one value's 'start' or 'end' with another value's 'start' or 'end'.",
+								"Please change one of them to use an exact range, such as '1stto4th' or '2ndlasttolast'."
+							);
+						}
+						/*
+							Now the other side is an "any" or "all" determiner. Swap the determiners' order, because "start of X [op] all of Y" only
+							functions correctly if the "all" is unwound before the "start", i.e. each value in "all" is separately run
+							against each value in the "start", instead of vice-versa.
+						*/
+						[determinerValue, otherValue] = [otherValue, determinerValue];
+					}
+					/*
+						Iterate through the value, using the string forms of strings or the array forms of arrays.
+					*/
+					const seq = determinerValue.string || determinerValue.array;
+					for (let i = 0; i < seq.length+1; i += 1) {
+						const slice =
+							/*
+								Base case: The "start" and "end" of values should compare positively to the empty sequence, which
+								we produce by this slightly sly constructor call. This is also why the +1 is attached to the loop definition above.
+							*/
+							!i ? seq.constructor() :
+							determiner === "end" ? seq.slice(-i) : seq.slice(0,i);
+
+						const result = determinerValue === left ? compare(slice, right) : compare(left, slice);
+						if ((error = TwineError.containsError(result))) {
+							return error;
+						}
+						/*
+							As above, negated operators like "is not in" need to operate until false is encountered, not true.
+						*/
+						if (result !== negative) {
+							return result;
+						}
+					}
+					return negative;
+				}
+				/*
+					All that remains are the "any" and "all" determiners.
+				*/
+				const all = determiner === "all";
 				/*
 					Normally we'd use Array#every and Array#some here, but we also need
 					to pull out any TwineErrors which are produced doing each of these
 					comparisons. So, these looping methods are expanded as follows.
 				*/
-				return left.array.reduce((result, e) => {
-					let error, next = compare(e, right);
-					if ((error = TwineError.containsError(result, next))) {
-						return error;
-					}
-					return (all ? result && next : result || next);
-				}, all);
-			}
-			else if (right.determiner) {
-				const all = right.determiner === "all";
-				return right.array.reduce((result, e) => {
-					let error, next = compare(left, e);
+				return determinerValue.array.reduce((result, e) => {
+					let error, next = determinerValue === left ? compare(e, right) : compare(left, e);
 					if ((error = TwineError.containsError(result, next))) {
 						return error;
 					}
@@ -171,6 +217,17 @@ define([
 			return fn(left, right);
 		};
 		return compare;
+	}
+
+	/*
+		This produces an inverted version of the comparisonOp, for use with "is not in" and such,
+		but which also doesn't accidentally devour thrown TwineErrors.
+	*/
+	function negativeComparisonOp(fn, disallowStartEnd) {
+		return comparisonOp((l, r) => {
+			const ret = fn(l,r);
+			return TwineError.containsError(ret) ? ret : !ret;
+		}, disallowStartEnd, true);
 	}
 
 	const andOrNotMessage =
@@ -499,32 +556,35 @@ define([
 			return l % r;
 		}), "modulus"),
 		
-		"<":  comparisonOp( onlyPrimitives("number", doNotCoerce((l,r) => l <  r), "do < to")),
-		">":  comparisonOp( onlyPrimitives("number", doNotCoerce((l,r) => l >  r), "do > to")),
-		"<=": comparisonOp( onlyPrimitives("number", doNotCoerce((l,r) => l <= r), "do <= to")),
-		">=": comparisonOp( onlyPrimitives("number", doNotCoerce((l,r) => l >= r), "do >= to")),
+		/*
+			The right sides of these wrapped calls are names of this operation, for both onlyPrimitives() and comparisonOp().
+		*/
+		"<":  comparisonOp(onlyPrimitives("number", doNotCoerce((l,r) => l <  r), "do < to"), "<"),
+		">":  comparisonOp(onlyPrimitives("number", doNotCoerce((l,r) => l >  r), "do > to"), ">"),
+		"<=": comparisonOp(onlyPrimitives("number", doNotCoerce((l,r) => l <= r), "do <= to"), "<="),
+		">=": comparisonOp(onlyPrimitives("number", doNotCoerce((l,r) => l >= r), "do >= to"), ">="),
 		
 		is: comparisonOp(is),
-		
-		isNot: comparisonOp((l,r) => !Operations.is(l,r)),
-		contains: comparisonOp(contains),
-		isIn: comparisonOp((l,r) => contains(r,l)),
-		isNotIn: comparisonOp((l,r) => {
-			const ret = contains(r,l);
-			return TwineError.containsError(ret) ? ret : !ret;
-		}),
+		isNot: negativeComparisonOp(is),
+		contains: comparisonOp(contains, "contains"),
+		doesNotContain: negativeComparisonOp(contains, "does not contain"),
+		isIn: comparisonOp((l,r) => contains(r,l), "is in"),
+		isNotIn: negativeComparisonOp((l,r) => contains(r,l), "is not in"),
 
-		isA: comparisonOp(isA),
-		isNotA: comparisonOp((l,r) => !isA(l,r)),
+		isA: comparisonOp(isA, "is a"),
+		isNotA: negativeComparisonOp(isA, "is not a"),
 
 		/*
 			"typifies", the reverse of "is a", is currently not a user-exposed operator, but this is
 			required so that the compiler can process elided comparisons like "$a is not a number or string".
 		*/
 		typifies: comparisonOp((l,r) => isA(r,l)),
-		untypifies: comparisonOp((l,r) => !isA(r,l)),
-
+		untypifies: negativeComparisonOp((l,r) => isA(r,l)),
+		/*
+			"matches", conversely, is symmetrical.
+		*/
 		matches: comparisonOp(matches),
+		doesNotMatch: negativeComparisonOp(matches),
 		
 		/*
 			The only user-produced value which is passed into this operation is the bool -

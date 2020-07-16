@@ -35,6 +35,12 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			in place of a single position: `"Dogs"'s (a: 2,4)` is "os". And, you can create a substring of consecutive positions by
 			specifying just the start and end position as a data name: `"Ducks"'s 1stto3rd` is "Duc", and `"Rags"'s 2ndlasttolast` is "gs".
 
+			If you want to check if a string contains any of another string's characters (without needing to be in the
+			same order), or all of them, special `any` and `all` data names are available for use with the `is` and `is not` operators - `any of $name is "aeiouAEIOU"`,
+			checks if the string contains any English vowels, in either capitalisation. If you want to check if a string starts or ends with with a
+			certain sequence of values, `start` and `end` data names can be used in a similar way - `start of $addr is "http://"` is the same as
+			`$addr's 1stto7th is "http://"` (but somewhat easier to write), and `end of $angelName is "iel"` is the same as `$angelName's 3rdlasttolast is "iel"`.
+
 			Also, you can use the `contains` and `is in` operators to see if a certain string is contained within another: `"mother"
 			contains "moth"` is true, as is `"a" is in "a"`. Again, like arrays, strings have special `any` and `all` data names which
 			can be used with `contains` and `is in` to check all their characters - `all of $string is not "w"` is true if the string doesn't
@@ -49,12 +55,15 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			| `is` | Evaluates to boolean `true` if both sides are equal, otherwise `false`. | `$name is "Frederika"`<br>`any of "Buxom" is "x"`
 			| `is not` | Evaluates to boolean `true` if both sides are not equal, otherwise `false`. | `$friends is not $enemies`<br>`all of "Gadsby" is not "e"`
 			| `contains` | Evaluates to boolean `true` if the left side contains the right side, otherwise `false`. | `"Fear" contains "ear"`
+			| `does not contain` | Evaluates to boolean `true` if the left side does not contain the right side, otherwise `false`. | `"Fear" does not contain "Bee"`
 			| `is in` | Checking if the right string contains the left string, otherwise `false`. | `"ugh" is in "Through"`
 			| `is not in` | Evaluates to `true` if the right string does not contain the left string. | `"Blood" is not in "Stone`
 			| `'s` | Obtaining the character or substring at the right numeric position. | `"YO"'s 1st` (is "Y")<br>`"PS"'s (2)` (is "S")<br>`"ear"'s (a: 2,3)` (is "ar")
 			| `of` | Obtaining the character at the left numeric position. | `1st of "YO"` (is "Y")<br>`(2) of "PS"` (is "S")<br>`(a: 2,3) of "ear"` (is "ar")
-			| `matches` | Evaluates to boolean `true` if the left side describes the right side. | `"Contract" matches str`, `"E" matches "E"`
-			| `is a`, `is an` | Evaluates to boolean `true` if the right side describes the left side. | `"Boo" is a string`, `"   " is a whitespace`, `"" is an empty`
+			| `matches` | Evaluates to boolean `true` if the left side describes the right side. | `str matches "Contract"`, `"E" matches "E"`
+			| `does not match` | Evaluates to boolean `true` if the left side does not describe the right side. | `str does not match "Minotaur"`, `"3" does not match "Three"`
+			| `is a`, `is an` | Evaluates to boolean `true` if the right side is a datatype describing the left side. | `"Boo" is a string`, `"   " is a whitespace`, `"" is an empty`
+			| `is not a`, `is not an` | Evaluates to boolean `true` if the right side does not describe the left side. | `"Boo" is not an empty`, `"" is not a whitespace`
 			
 			And, here are the data names that can be used with strings.
 
@@ -64,6 +73,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			| `1stto3rd`, `4thlastto2ndlast` etc. | `"aeiou"'s 2ndto5th` | A substring containing only the characters between the given positions (such as the first, second and third for `1stto3rd`). This does NOT cause an error if it passes the bounds of the string - so `"Power"'s 3rdto9th` is `"wer"`.
 			| `length` | `"Penny"'s length` | The length (number of characters) in the string.
 			| `any`, `all` | `all of "aeiou" is not "y"` | Usable only with comparison operators, these allow all or any of the characters to be quickly compared.
+			| `start`, `end` | `start of $addr is "http://"`, `end of $angelName is "iel"` | Usable only with the `is`, `is not`, `matches` and `does not match` operators, these allow you to compare the start or end of strings without having to specify an exact range of characters to compare.
 			| `random` | A random character in the string. | `"aeiou"'s random` (is `"a"`, `"e"`, `"i"`, `"o"` or `"u"`).
 			| Arrays of numbers, such as `(a:3,5)` | `$str's (a:1,-1)` | A substring containing just the characters at the given positions in the string.
 
@@ -411,8 +421,10 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			| `<=`~ | Evaluates to boolean `true` if the left side is less than or equal to the right side, otherwise `false`. | `65 <= $age`
 			| `is` | Evaluates to boolean `true` if both sides are equal, otherwise `false`. | `$agendaPoints is 2`
 			| `is not` | Evaluates to boolean `true` if both sides are not equal, otherwise `false`. | `$agendaPoints is not 0`
-			| `matches` | Evaluates to boolean `true` if one side is a number and the other is an identical number or `num` or `number` | `$bytes matches $dataUsage`
-			| `is a`, `is an` | Evaluates to boolean `true` if the right side is `num` or `number` and the left side is a number. | `$credits is a num`
+			| `matches` | Evaluates to boolean `true` if one side describes the other. | `$bytes matches 165`, `odd matches 3`
+			| `does not match` | Evaluates to boolean `true` if one side does not describe the other. | `$coins does not match odd`
+			| `is a`, `is an` | Evaluates to boolean  `true` if the right side is a datatype describing the left side | `$credits is a num`, `2 is an even`
+			| `is not a`, `is not an` | Evaluates to boolean `true` if the right side does not describe the left side. | `0 is not an odd`, `13 is not an even`
 
 			You can only perform these operations (apart from `is`) on two pieces of data if they're both numbers. Adding the
 			string "5" to the number 2 would produce an error, and not the number 7 nor the string "52". You must
@@ -470,7 +482,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			This macro takes any storeable value, and produces a datatype that matches it.
 
 			Example usage:
-			* `(if: _theirName matches (datatype:_myName))` checks whether or not $theirName is the same type as
+			* `(if: _theirName is a (datatype:_myName))` checks whether or not $theirName is the same type as
 			$myName.
 			* `(altered: (datatype:_input)-type _n via _n + _input, ..._values)` creates a lambda that only accepts data with the same type
 			as that of the _input variable, and runs (altered:) with it.
@@ -995,6 +1007,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			| `is` | Evaluates to `true` if both sides are equal, otherwise `false`. | `$bullets is 5`
 			| `is not` | Evaluates to `true` if both sides are not equal. | `$friends is not $enemies`
 			| `contains` | Evaluates to `true` if the left side contains the right side. | `"Fear" contains "ear"`
+			| `does not contain` | Evaluates to `true` if the left side does not contain the right side. | `"Fear" does not contain "eet"`
 			| `is in` | Evaluates to `true` if the right side contains the left side. | `"ugh" is in "Through"`
 			| `>` | Evaluates to `true` if the left side is greater than the right side. | `$money > 3.75`
 			| `>=` | Evaluates to `true` if the left side is greater than or equal to the right side. | `$apples >= $carrots + 5`
@@ -1003,8 +1016,10 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			| `and` | Evaluates to `true` if both sides evaluates to `true`. | `$hasFriends and $hasFamily`
 			| `or` | Evaluates to `true` if either side is `true`. | `$fruit or $vegetable`
 			| `not` | Flips a `true` value to a `false` value, and vice versa. | `not $stabbed`
-			| `matches` | Evaluates to boolean `true` if one side is a boolean and the other is an identical boolean or `boolean` | `boolean matches true`
+			| `matches` | Evaluates to `true` if one side is a pattern or datatype describing the other. | `boolean matches true`
+			| `does not match` | Evaluates to `true` if one side does not describe the other. | `boolean does not match "true"`
 			| `is a`, `is an` | Evaluates to boolean `true` if the right side is `boolean` and the left side is a boolean. | `$wiretapped is a boolean`
+			| `is not a`, `is not an` | Evaluates to boolean `true` if the right side does not describe the left side. | `"Boo" is not an empty`, `2 is not an odd`
 			
 			Conditions can quickly become complicated. The best way to keep things straight is to use parentheses to
 			group things.

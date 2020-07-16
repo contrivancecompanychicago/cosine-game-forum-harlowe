@@ -43,8 +43,11 @@ describe("patterns", function() {
 	function isATest(op) {
 		typesAndValues.forEach(function(e) {
 			datatypes.forEach(function(name) {
-				expect("(print:" + e[0] + " " + op + " " + name + ")")
-					.markupToPrint((op.startsWith("is not a") !== ((name === e[1] || name === e[2]) && (name !== "datatype" || op !== "matches"))) + '');
+				// e[1] and e[2] are datatypes that e[0] is.
+				// They don't fit, however, if the datatype is "datatype" and the operation is "matches"
+				var matchingType = (name === e[1] || name === e[2]) && (name !== "datatype" || !op.includes("match"));
+
+				expect("(print:" + e[0] + " " + op + " " + name + ")").markupToPrint((op.includes(" not ") !== matchingType) + '');
 			});
 		});
 	}
@@ -86,44 +89,48 @@ describe("patterns", function() {
 			expect("(print: 2 is not a number and string)").markupToError();
 		});
 	});
-	describe("the 'matches' operator", function() {
-		it("when given data that doesn't contain datatypes, behaves like 'is'", function() {
-			expect("(print: 2 matches 2)").markupToPrint("true");
-			expect("(print: '2' matches '2')").markupToPrint("true");
-			expect("(print: 2 matches '2')").markupToPrint("false");
-			expect("(print: 1 matches true)").markupToPrint("false");
-			expect("(print: (a:2,3,4) matches (a:2,3,4))").markupToPrint("true");
-			expect("(print: (a:2,3,4) matches (a:2,3,5))").markupToPrint("false");
-			expect("(print: (datamap:'a',2,'b',4) matches (datamap:'b',4,'a',2))").markupToPrint("true");
-			expect("(print: (datamap:'a',2,'b',4) matches (datamap:'b',4,'a',3))").markupToPrint("false");
-			expect("(print: (dataset:2,3,4) matches (dataset:2,3,4))").markupToPrint("true");
-			expect("(print: (dataset:2,3,4) matches (dataset:2,3,4,5))").markupToPrint("false");
-		});
-		it("when given single datatypes, behaves like 'is a'", function() {
-			isATest("matches");
-		});
-		typesAndValues.forEach(function(e) {
-			var value = e[0], type1 = e[1], type2 = e[2] || type1;
-			var structEq = e[3] !== 'no structural equality';
-
-			it("matches the " + type1 + " datatype inside arrays to a " + type1 + " in the same position", function() {
-				expect("(print: (a:" + type1 + ") matches (a:" + value + "))").markupToPrint("true");
-				if (structEq && type1 !== "datatype") {
-					expect("(print: (a:" + [type2,value,type1] + ") matches (a:" + [value,value,value] + "))").markupToPrint("true");
-				}
-				expect("(print: (a:(a:(a:" + type2 + "))) matches (a:(a:(a:" + value + "))))").markupToPrint("true");
-
-				expect("(print: (a:" + type2 + ") matches (a:))").markupToPrint("false");
-				expect("(print: (a:" + type1 + ") matches (a:(a:" + value + ")))").markupToPrint((type1 === "array")+'');
-				expect("(print: (a:" + type1 + ",3," + type1 + ") matches (a:3,2,4))").markupToPrint("false");
+	['matches','does not match'].forEach(function(name, negative) {
+		var pTrue = !negative+'';
+		var pFalse = !!negative+'';
+		describe("the '"+name+"' operator", function() {
+			it("when given data that doesn't contain datatypes, behaves like 'is'", function() {
+				expect("(print: 2 "+name+" 2)").markupToPrint(pTrue);
+				expect("(print: '2' "+name+" '2')").markupToPrint(pTrue);
+				expect("(print: 2 "+name+" '2')").markupToPrint(pFalse);
+				expect("(print: 1 "+name+" true)").markupToPrint(pFalse);
+				expect("(print: (a:2,3,4) "+name+" (a:2,3,4))").markupToPrint(pTrue);
+				expect("(print: (a:2,3,4) "+name+" (a:2,3,5))").markupToPrint(pFalse);
+				expect("(print: (datamap:'a',2,'b',4) "+name+" (datamap:'b',4,'a',2))").markupToPrint(pTrue);
+				expect("(print: (datamap:'a',2,'b',4) "+name+" (datamap:'b',4,'a',3))").markupToPrint(pFalse);
+				expect("(print: (dataset:2,3,4) "+name+" (dataset:2,3,4))").markupToPrint(pTrue);
+				expect("(print: (dataset:2,3,4) "+name+" (dataset:2,3,4,5))").markupToPrint(pFalse);
 			});
-			it("matches the " + type1 + " datatype inside datamaps to a " + type1 + " in the same position", function() {
-				expect("(print: (dm: 'A', " + type1 + ") matches (dm: 'A', " + value + "))").markupToPrint("true");
-				expect("(print: (dm: " + ['"A"',type1,'"B"',type2,'"C"',"(a:" + type1 + ")"] +
-					") matches (dm:" + ['"A"',value,'"B"',value,'"C"',"(a:" + value + ")"] + "))").markupToPrint("true");
+			it("when given single datatypes, behaves like 'is a'", function() {
+				isATest(name);
 			});
-			it("matches the " + type1 + " datatype inside datasets to a " + type1 + " regardless of position", function() {
-				expect("(print: (ds:" + [type1,'"Y"',false] + ") matches (ds:" + ['"Y"',false,value] + "))").markupToPrint("true");
+			typesAndValues.forEach(function(e) {
+				var value = e[0], type1 = e[1], type2 = e[2] || type1;
+				var structEq = e[3] !== 'no structural equality';
+
+				it("matches the " + type1 + " datatype inside arrays to a " + type1 + " in the same position", function() {
+					expect("(print: (a:" + type1 + ") "+name+" (a:" + value + "))").markupToPrint(pTrue);
+					if (structEq && type1 !== "datatype") {
+						expect("(print: (a:" + [type2,value,type1] + ") "+name+" (a:" + [value,value,value] + "))").markupToPrint(pTrue);
+					}
+					expect("(print: (a:(a:(a:" + type2 + "))) "+name+" (a:(a:(a:" + value + "))))").markupToPrint(pTrue);
+
+					expect("(print: (a:" + type2 + ") "+name+" (a:))").markupToPrint(pFalse);
+					expect("(print: (a:" + type1 + ") "+name+" (a:(a:" + value + ")))").markupToPrint(((type1 === "array") !== negative)+'');
+					expect("(print: (a:" + type1 + ",3," + type1 + ") "+name+" (a:3,2,4))").markupToPrint(pFalse);
+				});
+				it("matches the " + type1 + " datatype inside datamaps to a " + type1 + " in the same position", function() {
+					expect("(print: (dm: 'A', " + type1 + ") "+name+" (dm: 'A', " + value + "))").markupToPrint(pTrue);
+					expect("(print: (dm: " + ['"A"',type1,'"B"',type2,'"C"',"(a:" + type1 + ")"] +
+						") "+name+" (dm:" + ['"A"',value,'"B"',value,'"C"',"(a:" + value + ")"] + "))").markupToPrint(pTrue);
+				});
+				it("matches the " + type1 + " datatype inside datasets to a " + type1 + " regardless of position", function() {
+					expect("(print: (ds:" + [type1,'"Y"',false] + ") "+name+" (ds:" + ['"Y"',false,value] + "))").markupToPrint(pTrue);
+				});
 			});
 		});
 	});

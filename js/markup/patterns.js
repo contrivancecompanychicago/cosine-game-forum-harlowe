@@ -1000,7 +1000,8 @@
 		isNot:     "is" + mws + "not" + notBefore(mws + either("an?","in") + wb) + wb,
 		isA:       "is" + mws + "an?" + wb,
 		isNotA:    "is" + mws + "not" + mws + "an?" + wb,
-		matches:   "matches" + mws,
+		matches:   "matches" + wb,
+		doesNotMatch: "does" + mws + "not" + mws + "match" + wb,
 		// "matches" has no "contains" equivalent, but you can use "any of $c matches t"
 		
 		and:       "and" + wb,
@@ -1009,9 +1010,10 @@
 		
 		inequality: "((?:is(?:" + mws + "not)?" + ws + ")*)(" + either("<(?!=)", "<=", ">(?!=)", ">=") + ")",
 		
-		isIn:       "is" + mws + "in" + wb,
-		contains:   "contains" + wb,
-		isNotIn:    "is" + mws + "not" + mws + "in" + wb,
+		isIn:            "is" + mws + "in" + wb,
+		contains:        "contains" + wb,
+		doesNotContain:  "does" + mws + "not" + mws + "contain" + wb,
+		isNotIn:         "is" + mws + "not" + mws + "in" + wb,
 		
 		addition:          escape("+")      + notBefore("="),
 		subtraction:       escape("-")      + notBefore("=","type"),

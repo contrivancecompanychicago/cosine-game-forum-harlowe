@@ -20,6 +20,10 @@ describe("column syntax", function() {
 		var column = runPassage("==|garply\n|==grault\n|==|corge").find('tw-column');
 		expect(column.length).toBe(0);
 	});
+	it("can follow one another in succession", function() {
+		var column = runPassage("==|\n|==\n|==|").find('tw-column');
+		expect(column.length).toBe(2);
+	});
 	it("works with only one column", function() {
 		var column = runPassage("=====|\ngarply\n|==|\ngrault").find('tw-column');
 		expect(column.length).toBe(1);

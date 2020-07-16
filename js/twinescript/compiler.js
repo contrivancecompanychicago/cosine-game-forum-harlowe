@@ -152,9 +152,8 @@ define(['utils'], ({impossible}) => {
 			["augmentedAssign"],
 			["and", "or"],
 			["is", "isNot"],
-			["contains", "isIn", "isNotIn"],
-			["isA", "isNotA"],
-			["matches"],
+			["contains", "doesNotContain", "isIn", "isNotIn"],
+			["isA", "isNotA", "matches", "doesNotMatch"],
 			["inequality"],
 			["addition", "subtraction"],
 			["multiplication", "division"],
@@ -223,6 +222,7 @@ define(['utils'], ({impossible}) => {
 			'>=':     '<=',
 			'<=':     '>=',
 			contains: "isIn",
+			doesNotContain: "isNotIn",
 			isIn:     "contains",
 			isA:      "typifies",
 			typifies: "isA",
@@ -234,7 +234,8 @@ define(['utils'], ({impossible}) => {
 	/*
 		A helper that shows which types of operator tokens are comparisons.
 	*/
-	const comparisonOpTypes = ['inequality','is','isNot','isIn','contains','isNotIn','isA','typifies','isNotA','untypifies','matches'];
+	const comparisonOpTypes = ['inequality','is','isNot','isIn','contains','doesNotContain',
+		'isNotIn','isA','typifies','isNotA','untypifies','matches','doesNotMatch'];
 	
 	/*
 		This takes an array from TwineMarkup, rooted at an expression,

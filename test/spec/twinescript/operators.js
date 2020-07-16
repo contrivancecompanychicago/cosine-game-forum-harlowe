@@ -536,64 +536,67 @@ describe("twinescript operators", function () {
 			expect("(print: typeof xxisxx)").markupToPrint("undefined");
 		});
 	});
-	describe("the 'contains' operator", function () {
-		it("errors when used on non-string primitives", function() {
-			expect("(print: 1 contains 1)").markupToError();
-			expect("(print: true contains true)").markupToError();
-			expect("(set: $a to 0)(print: $a contains 1)").markupToError();
-			expect("(set: $a to true)(print: $a contains true)").markupToError();
-		});
-		it("checks for substrings in strings", function (){
-			expect("(print: 'Bee' contains 'Be')").markupToPrint("true");
-			expect("(print: 'Bee' contains 'Bee')").markupToPrint("true");
-			expect("(print: 'Bee' contains 'eeB')").markupToPrint("false");
-			expect("(print: '' contains 'Be')").markupToPrint("false");
-		});
-		it("checks for elements in arrays", function (){
-			expect("(print: (a:'Bee') contains 'Bee')").markupToPrint("true");
-			expect("(print: (a: 2) contains 2)").markupToPrint("true");
-			expect("(print: (a:'Bee') contains 'eeB')").markupToPrint("false");
-			expect("(print: (a:) contains 'eeB')").markupToPrint("false");
-		});
-		it("checks for keys in datamaps", function (){
-			expect("(print: (datamap:'Bee',1) contains 'Bee')").markupToPrint("true");
-			expect("(print: (datamap:'Bee',1) contains 1)").markupToPrint("false");
-			expect("(print: (datamap:) contains 'Bee')").markupToPrint("false");
-		});
-		it("checks for elements in datasets", function (){
-			expect("(print: (dataset:'Bee','Boo') contains 'Bee')").markupToPrint("true");
-			expect("(print: (dataset:'Bee','Boo') contains 'ooB')").markupToPrint("false");
-			expect("(print: (dataset:) contains 'ooB')").markupToPrint("false");
-		});
-		it("can be used as an expression", function (){
-			expect("(print: 'Bee' contains 'Be' is true)").markupToPrint("true");
-			expect("(print: 'Bee' contains 'eeB' is false)").markupToPrint("true");
-		});
-		it("compares nested arrays by value", function (){
-			expect("(print: (a:(a:)) contains (a:))").markupToPrint("true");
-			expect("(print: (a:(a:2,3,4)) contains (a:2,3,4))").markupToPrint("true");
-		});
-		it("compares nested datamaps by value", function (){
-			expect("(print: (a:(datamap:)) contains (datamap:))").markupToPrint("true");
-			expect("(print: (a:(datamap:'a',2,'b',4)) contains (datamap:'b',4,'a',2))").markupToPrint("true");
-		});
-		it("compares nested datasets by value", function (){
-			expect("(print: (a:(dataset:)) contains (dataset:))").markupToPrint("true");
-			expect("(print: (a:(dataset:2,3,4)) contains (dataset:2,3,4))").markupToPrint("true");
-		});
-		it("won't be matched from within text", function (){
-			expect("(print: typeof xxcontainsxx)").markupToPrint("undefined");
-		});
-		it("has correct order of operations with 'to' and 'into'", function (){
-			expect("(set: $a to 'a' contains 'b')(print:$a)").markupToPrint("false");
-			expect("(put: 'a' contains 'b' into $a)(print:$a)").markupToPrint("false");
-			expect("(set: $a to 'bc' contains 'b')(print:$a)").markupToPrint("true");
-			expect("(put: 'bc' contains 'b' into $a)(print:$a)").markupToPrint("true");
-		});
-		it("can compare variables as the subject of 'to' and 'into'", function (){
-			runPassage("(set:$a to 'a')");
-			expect("(set: $b to $a contains $a)(print:$b)").markupToPrint("true");
-			expect("(put: $a contains $a into $b)(print:$b)").markupToPrint("true");
+	['contains','does not contain'].forEach(function(name, not) {
+		describe("the '"+name+"' operator", function () {
+			it("errors when used on non-string primitives", function() {
+				expect("(print: 1 "+name+" 1)").markupToError();
+				expect("(print: true "+name+" true)").markupToError();
+				expect("(set: $a to 0)(print: $a "+name+" 1)").markupToError();
+				expect("(set: $a to true)(print: $a "+name+" true)").markupToError();
+			});
+			it("checks for substrings in strings", function (){
+				expect("(print: 'Bee' "+name+" 'Be')").markupToPrint(!not + '');
+				expect("(print: 'Bee' "+name+" 'Bee')").markupToPrint(!not + '');
+				expect("(print: 'Bee' "+name+" '')").markupToPrint(!not + '');
+				expect("(print: 'Bee' "+name+" 'eeB')").markupToPrint(!!not + '');
+				expect("(print: '' "+name+" 'Be')").markupToPrint(!!not + '');
+			});
+			it("errors when the left side is a string and the right side is not", function() {
+				expect("(print: '1' "+name+" 1)").markupToError();
+			});
+			it("checks for elements in arrays", function (){
+				expect("(print: (a:'Bee') "+name+" 'Bee')").markupToPrint(!not + '');
+				expect("(print: (a: 2) "+name+" 2)").markupToPrint(!not + '');
+				expect("(print: (a:'Bee') "+name+" 'eeB')").markupToPrint(!!not + '');
+				expect("(print: (a:) "+name+" 'eeB')").markupToPrint(!!not + '');
+			});
+			it("checks for keys in datamaps", function (){
+				expect("(print: (datamap:'Bee',1) "+name+" 'Bee')").markupToPrint(!not + '');
+				expect("(print: (datamap:'Bee',1) "+name+" 1)").markupToPrint(!!not + '');
+				expect("(print: (datamap:) "+name+" 'Bee')").markupToPrint(!!not + '');
+			});
+			it("checks for elements in datasets", function (){
+				expect("(print: (dataset:'Bee','Boo') "+name+" 'Bee')").markupToPrint(!not + '');
+				expect("(print: (dataset:'Bee','Boo') "+name+" 'ooB')").markupToPrint(!!not + '');
+				expect("(print: (dataset:) "+name+" 'ooB')").markupToPrint(!!not + '');
+			});
+			it("can be used as an expression", function (){
+				expect("(print: 'Bee' "+name+" 'Be' is true)").markupToPrint(!not + '');
+				expect("(print: 'Bee' "+name+" 'eeB' is false)").markupToPrint(!not + '');
+			});
+			it("compares nested arrays by value", function (){
+				expect("(print: (a:(a:)) "+name+" (a:))").markupToPrint(!not + '');
+				expect("(print: (a:(a:2,3,4)) "+name+" (a:2,3,4))").markupToPrint(!not + '');
+			});
+			it("compares nested datamaps by value", function (){
+				expect("(print: (a:(datamap:)) "+name+" (datamap:))").markupToPrint(!not + '');
+				expect("(print: (a:(datamap:'a',2,'b',4)) "+name+" (datamap:'b',4,'a',2))").markupToPrint(!not + '');
+			});
+			it("compares nested datasets by value", function (){
+				expect("(print: (a:(dataset:)) "+name+" (dataset:))").markupToPrint(!not + '');
+				expect("(print: (a:(dataset:2,3,4)) "+name+" (dataset:2,3,4))").markupToPrint(!not + '');
+			});
+			if(!not) {
+					it("won't be matched from within text", function (){
+					expect("(print: typeof xxcontainsxx)").markupToPrint("undefined");
+				});
+			}
+			it("has correct order of operations with 'to' and 'into'", function (){
+				expect("(set: $a to 'a' "+name+" 'b')(print:$a)").markupToPrint(!!not + '');
+				expect("(put: 'a' "+name+" 'b' into $a)(print:$a)").markupToPrint(!!not + '');
+				expect("(set: $a to 'bc' "+name+" 'b')(print:$a)").markupToPrint(!not + '');
+				expect("(put: 'bc' "+name+" 'b' into $a)(print:$a)").markupToPrint(!not + '');
+			});
 		});
 	});
 	['is in','is not in'].forEach(function(name, not) {
@@ -608,6 +611,9 @@ describe("twinescript operators", function () {
 				expect("(print: 'Be' " + name + " 'Bee')").markupToPrint(!not + '');
 				expect("(print: 'Bee' " + name + " 'Bee')").markupToPrint(!not + '');
 				expect("(print: 'Bee' " + name + " 'eeB')").markupToPrint(!!not + '');
+			});
+			it("errors when the right side is a string and the left side is not", function() {
+				expect("(print: 1 " + name + " '1')").markupToError();
 			});
 			it("checks for elements in arrays", function (){
 				expect("(print: 'Bee' " + name + " (a:'Bee'))").markupToPrint(!not + '');

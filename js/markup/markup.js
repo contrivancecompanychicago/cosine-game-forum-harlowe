@@ -243,7 +243,7 @@
 			All block rules have a single specific canFollow and cannotFollow.
 		*/
 		keys(blockRules).forEach((key) => {
-			blockRules[key].canFollow = [null, "br", "hr", "bulleted", "numbered", "heading", "align", "escapedLine"];
+			blockRules[key].canFollow = [null, "br", "hr", "bulleted", "numbered", "heading", "align", "column", "escapedLine"];
 			blockRules[key].cannotFollow = ["text"];
 		});
 		
@@ -702,7 +702,7 @@
 			// As these consist of word characters, they cannot follow text nodes, lest they
 			// match subwords like "xxisxx".
 			["boolean", "is", "to", "into", "where", "when", "via", "making", "each", "and", "or", "not",
-			"isNot", "contains", "isIn", "isA", "isNotA", "isNotIn", "matches", "bind"].reduce((a, e) => {
+			"isNot", "contains", "doesNotContain", "isIn", "isA", "isNotA", "isNotIn", "matches", "doesNotMatch", "bind"].reduce((a, e) => {
 				a[e] = {
 					fn: emptyFn,
 					cannotFollow: ["text"],

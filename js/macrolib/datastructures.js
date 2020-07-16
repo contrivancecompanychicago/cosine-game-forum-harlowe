@@ -355,14 +355,17 @@ define([
 			If you want to check if an array contains some, or all of the values, in another array (without needing to be in the
 			same order), you can compare with a special `any` or `all` name on the other array: `$array contains any of (a:2,4,6)`,
 			and `$array contains all of (a:2,4,6)` will check if `$array` contains some, or all, of the numbers 2, 4 and 6.
+			If you want to check if an array starts or ends with with a certain sequence of values, `start` and `end` data names
+			can be used with `is` and `is not` - `$array's start is (a:2,4)` is the same as `$array's 1stto2nd is (a:2,4)`, and
+			`$array's end is (a:3,6,9)` is the same as `$array's 3rdlasttolast is (a:3,6,9)`.
 
 			(Incidentally, `any` and `all` can also be used with other operators, like `is`, `is not`, `>`, `<`, `>=`, and `<=`,
 			to compare every value in the array with a number or other value. For instance, `all of (a:2,4) >= 2` is true, as is
 			`any of (a:2,4) >= 4`.)
 
 			For a more thorough check of the contents of an array, you can use `matches` and a datatype pattern. For instance,
-			`$array matches (a: num, num)` lets you check that $array contains exactly two numbers, and `$array matches (a: 2,
-			num)` lets you check that $array contains only 2 followed by another number. See the datatype article for more details.
+			`$array matches (a: num, num)` lets you check that $array contains exactly two numbers, and `$array's start matches (a: 2,
+			num)` lets you check that $array starts with 2 followed by another number. See the datatype article for more details.
 			
 			Arrays may be joined by adding them together: `(a: 1, 2) + (a: 3, 4)` is the same as `(a: 1, 2, 3, 4)`.
 			You can only join arrays to other arrays. To add a bare value to the front or back of an array, you must
@@ -393,6 +396,7 @@ define([
 			| `is` | Evaluates to boolean `true` if both sides contain equal items in an equal order, otherwise `false`. | `(a:1,2) is (a:1,2)` (is true)
 			| `is not` | Evaluates to `true` if both sides differ in items or ordering. | `(a:4,5) is not (a:5,4)` (is true)
 			| `contains` | Evaluates to `true` if the left side contains the right side. | `(a:"Ape") contains "Ape"`<br>`(a:(a:99)) contains (a:99)`<br>`(a:1,2) contains any of (a:2,3)`<br>`(a:1,2) contains all of (a:2,1)`
+			| `does not contain` | Evaluates to `true` if the left side does not contain the right side. | `(a:"Ape") does not contain "Egg"`
 			| `is in` | Evaluates to `true` if the right side contains the left side. | `"Ape" is in (a:"Ape")`<br>`(a:99) is in (a:(a:99))`<br>`any of (a:2,3) is in (a:1,2)`<br>`all of (a:2,1) is in (a:1,2)`
 			| `is not in` | Evaluates to `true` if the right side does not contain the left side. | `"Blood" is not in (a:"Sweat","Tears")`<br>`(a:98) is not in (a:(a:99))`<br>`any of (a:3,2) is not in (a:1,2)`
 			| `+` | Joins arrays. | `(a:1,2) + (a:1,2)` (is `(a:1,2,1,2)`)
@@ -401,8 +405,10 @@ define([
 			| `'s` | Obtains the item at the right numeric position, or the `length`, `any` or `all` values. | `(a:"Y","Z")'s 1st` (is "Y")<br>`(a:4,5)'s (2)` (is 5)<br>`(a:5,5,5)'s length` (is 3)
 			| `of` | Obtains the item at the left numeric position, or the `length`, `any` or `all` values. | `1st of (a:"Y","O")` (is "Y")<br>`(2) of (a:"P","S")` (is "S")<br>`length of (a:5,5,5)` (is 3)
 			| `matches` | Evaluates to boolean `true` if the array on one side matches the pattern on the other. | `(a:2,3) matches (a: num, num)`, `(a: array) matches (a:(a: ))`
-			| `is a`, `is an` | Evaluates to boolean `true` if the right side describes the left side. | `(a:2,3) is an array`, `(a:) is an empty`
-			
+			| `does not match` | Evaluates to boolean `true` if the array on one side does not match the pattern on the other. | `(a:2,3) does not match (a: num)`, `(a: str) does not match (a:(a:'Egg'))`
+			| `is a`, `is an` | Evaluates to boolean `true` if the right side is a datatype describing the left side. | `(a:2,3) is an array`, `(a:) is an empty`
+			| `is not a`, `is not an` | Evaluates to boolean `true` if the right side is a datatype that does not describe the left side. | `(a:2,3) is not an empty`
+
 			And, here are the data names that can be used with arrays.
 
 			| Data name | Example | Meaning
@@ -412,6 +418,7 @@ define([
 			| `length` | `(a:'G','H')'s length` | The length (number of data values) in the array.
 			| `random` | `(a:"a","e","i","o","u")'s random` (is `"a"`, `"e"`, `"i"`, `"o"` or `"u"`). | A random value in the array.
 			| `any`, `all` | `all of (a:1,2) < 3` | Usable only with comparison operators, these allow all or any of the values to be quickly compared.
+			| `start`, `end` | `start of (a:1,2,3,4) is (a:1,2)`, `(a:1,2,3,4)'s end is not (a:2,4)` | Usable only with the `is`, `is not`, `matches` and `does not match` operators, these allow you to compare the start or end of arrays without having to specify an exact range of values to compare.
 			| Arrays of numbers, such as `(a:3,5)` | `$array's (a:1,-1)` | A subarray containing just the data values at the given positions in the array.
 		*/
 		/*d:
@@ -1524,13 +1531,16 @@ define([
 			| `is` | Evaluates to boolean `true` if both sides contain equal names and values, otherwise `false`. | `(dm:"HP",5) is (dm:"HP",5)` (is true)
 			| `is not` | Evaluates to `true` if both sides differ in items or ordering. | `(dm:"HP",5) is not (dm:"HP",4)` (is true)<br>`(dm:"HP",5) is not (dm:"MP",5)` (is true)
 			| `contains` | Evaluates to `true` if the left side contains the name on the right.<br>(To check that a datamap contains a value, try using `contains` with (datavalues:)) | `(dm:"HP",5) contains "HP"` (is true)<br>`(dm:"HP",5) contains 5` (is false)
+			| `does not contain` | Evaluates to `true` if the left side does not contain the name on the right. | `(dm:"HP",5) does not contain "MP"` (is true)
 			| `is in` | Evaluates to `true` if the right side contains the name on the left. | `"HP" is in (dm:"HP",5)` (is true)
 			| `is not in` | Evaluates to `true` if the right side does not contain the name on the left. | `"XP" is not in (dm:"HP",5)` (is true)
 			| `+` | Joins datamaps, using the right side's value whenever both sides contain the same name. | `(dm:"HP",5) + (dm:"MP",5)`
 			| `'s` | Obtaining the value using the name on the right. | `(dm:"love",155)'s love` (is 155).
 			| `of` | Obtaining the value using the name on the left. | `love of (dm:"love",155)` (is 155).
 			| `matches` | Evaluates to boolean `true` if the datamap on one side matches the pattern on the other. | `(dm:"Love",2,"Fear",4) matches (dm: "Love", num, "Fear", num)`
-			| `is a`, `is an` | Evaluates to boolean `true` if the right side is `dm` or `datamap`, and the left side is a datamap. | `(dm:'a',1) is a datamap`
+			| `does not match` | Evaluates to boolean `true` if the datamap on one side does not match the pattern on the other. | `(dm:"Love",2,"Fear",4) matches (dm: "Joy", num, "Sorrow", num)`
+			| `is a`, `is an` | Evaluates to boolean `true` if the right side is a datatype that describes the left side. | `(dm:'a',1) is a datamap`
+			| `is not a`, `is not an` | Evaluates to boolean `true` if the right side is a datatype that does not describe the left side. | `(dm:'a',1) is not an empty`
 		*/
 		/*d:
 			(dm: [...Any]) -> Datamap
@@ -1676,13 +1686,16 @@ define([
 			| `is` | Evaluates to boolean `true` if both sides contain equal items, otherwise `false`. | `(ds:1,2) is (ds 2,1)` (is true)
 			| `is not` | Evaluates to `true` if both sides differ in items. | `(ds:5,4) is not (ds:5)` (is true)
 			| `contains` | Evaluates to `true` if the left side contains the right side. | `(ds:"Ape") contains "Ape"`<br>`(ds:(ds:99)) contains (ds:99)`<br>`(ds: 1,2,3) contains all of (a:2,3)`<br>`(ds: 1,2,3) contains any of (a:3,4)`
+			| `does not contain` | Evaluates to `true` if the left side does not contain the right side. | `(ds:"Ape") does not contain "Egg"`
 			| `is in` | Evaluates to `true` if the right side contains the left side. | `"Ape" is in (ds:"Ape")`<br>`(a:3,4) is in (ds:1,2,3)`
 			| `is not in` | Evaluates to `true` if the right side does not contain the left side. | `"Hope" is not in (ds:"Famine","Plague","Pollution")`
 			| `+` | Joins datasets. | `(ds:1,2,3) + (ds:1,2,4)` (is `(ds:1,2,3,4)`)
 			| `-` | Subtracts datasets. | `(ds:1,2,3) - (ds:1,3)` (is `(ds:2)`)
 			| `...` | When used in a macro call, it separates each value in the right side.<br>The dataset's values are sorted before they are spread out.| `(a: 0, ...(ds:1,2,3,4), 5)` (is `(a:0,1,2,3,4,5)`)
-			| `matches` | Evaluates to boolean `true` if the dataset on one side matches the pattern on the other. | `(ds:2,3) matches (a: 3, num)`, `(ds: array) matches (ds:(a: ))`
-			| `is a`, `is an` | Evaluates to boolean `true` if the right side is `ds` or `dataset` and the left side is a dataset. | `(ds:2,3) is a dataset`
+			| `matches` | Evaluates to boolean `true` if the dataset on one side matches the pattern on the other. | `(ds:2,3) matches (ds: 3, num)`, `(ds: array) matches (ds:(a: ))`
+			| `does not match` | Evaluates to boolean `true` if the dataset on one side does not match the pattern on the other. | `(ds:2,3) does not match (a: 3, str)`, `(ds: array) does not match (ds:2)`
+			| `is a`, `is an` | Evaluates to boolean `true` if the right side is a datatype that describes the left side. | `(ds:2,3) is a dataset`
+			| `is not a`, `is not an` | Evaluates to boolean `true` if the right side is a datatype that does not describe the left side. | `(ds:2,3) is an empty`
 		*/
 		/*d:
 			(ds: [...Any]) -> Dataset
