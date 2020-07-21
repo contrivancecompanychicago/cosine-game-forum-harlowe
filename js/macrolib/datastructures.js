@@ -153,48 +153,17 @@ define([
 			*/
 			for(let i = 0; i < assignmentRequests.length; i+=1) {
 				const ar = assignmentRequests[i];
-				let result, error, dest = ar.dest, get = ar.src;
-				
+
 				if (ar.operator === "into" && name === "set") {
 					return TwineError.create("macrocall", "Please say 'to' when using the (set:) macro.");
 				}
 				else if (ar.operator !== "into" && name === "put") {
 					return TwineError.create("macrocall", "Please say 'into' when using the (put:) macro.");
 				}
-				/*
-					If ar.src is a VarRef, obtain its current value.
-					Note that this could differ from its value at compilation time -
-					in (set: $a to 1, $b to $a), the second $a has a different value to the first.
-				*/
-				if (ar.src && VarRef.isPrototypeOf(ar.src)) {
-					get = ar.src.get();
-					if ((error = TwineError.containsError(get))) {
-						return error;
-					}
-				}
-				/*
-					If this is a TypedVar, then this (set:) is also a type declaration.
-				*/
-				if(TypedVar.isPrototypeOf(dest)) {
-					if ((error = TwineError.containsError(dest.defineType()))) {
-						return error;
-					}
-					// Unwrap the varRef from the TypedVar.
-					dest = dest.varRef;
-				}
-				result = dest.set(get);
-				/*
-					If the setting caused an error to occur, abruptly return the error.
-				*/
-				if (TwineError.isPrototypeOf(result)) {
-					return result;
-				}
-				if (Engine.options.debug) {
-					// Add a semicolon only if a previous iteration appended a message.
-					debugMessage += (debugMessage ? "; " : "")
-						+ objectName(dest)
-						+ " is now "
-						+ objectName(ar.src);
+
+				const debugMessage = ar.set();
+				if (TwineError.containsError(debugMessage)) {
+					return debugMessage;
 				}
 			}
 
@@ -209,7 +178,7 @@ define([
 				TwineScript_ObjectName:   "a (" + name + ":) operation",
 				TwineScript_Unstorable: true,
 				// Being unstorable and not used by any other data strctures, this doesn't need a ToSource() function.
-				TwineScript_Print:        () => debugMessage && TwineNotifier.create(debugMessage).render()[0].outerHTML,
+				TwineScript_Print:        () => Engine.options.debug && debugMessage && TwineNotifier.create(debugMessage).render()[0].outerHTML,
 			};
 		},
 		[rest(AssignmentRequest)])
@@ -269,48 +238,10 @@ define([
 				if (ar.operator !== "into") {
 					return TwineError.create("macrocall", "Please say 'into' when using the (move:) macro.");
 				}
-				let result, error, dest = ar.dest;
 
-				/*
-					If this is a TypedVar, then this (move:) is also a type declaration.
-				*/
-				if(TypedVar.isPrototypeOf(dest)) {
-					if ((error = TwineError.containsError(dest.defineType()))) {
-						return error;
-					}
-					// Unwrap the varRef from the TypedVar.
-					dest = dest.varRef;
-				}
-				/*
-					If ar.src is a VarRef, then it's a variable, and its value
-					should be deleted when the assignment is completed.
-				*/
-				if (ar.src && VarRef.isPrototypeOf(ar.src)) {
-					const get = ar.src.get();
-					if ((error = TwineError.containsError(get))) {
-						return error;
-					}
-					result = dest.set(get);
-					if ((error = TwineError.containsError(result))) {
-						return error;
-					}
-					ar.src.delete();
-				}
-				else {
-					/*
-						Otherwise, it's a plain value (such as seen in (move: 2 into $red)).
-					*/
-					result = dest.set(ar.src);
-					if ((error = TwineError.containsError(result))) {
-						return error;
-					}
-				}
-				if (Engine.options.debug) {
-					// Add a semicolon only if a previous iteration appended a message.
-					debugMessage += (debugMessage ? "; " : "")
-						+ objectName(ar.dest)
-						+ " is now "
-						+ objectName(ar.src);
+				const debugMessage = ar.set(true);
+				if (TwineError.containsError(debugMessage)) {
+					return debugMessage;
 				}
 			}
 			return {
@@ -319,7 +250,7 @@ define([
 				TwineScript_ObjectName:   "a (move:) operation",
 				TwineScript_Unstorable: true,
 				// Being unstorable and not used by any other data strctures, this doesn't need a ToSource() function.
-				TwineScript_Print:        () => debugMessage && TwineNotifier.create(debugMessage).render()[0].outerHTML,
+				TwineScript_Print:        () => Engine.options.debug && debugMessage && TwineNotifier.create(debugMessage).render()[0].outerHTML,
 			};
 		},
 		[rest(AssignmentRequest)])
@@ -453,7 +384,12 @@ define([
 			Added in: 1.0.0
 			#data structure 1
 		*/
-		(["a", "array"], (_, ...args) => args, zeroOrMore(Any))
+		(["a", "array"], (_, ...args) => args, zeroOrMore(
+			/*
+				This fearsome hack allows arrays created with *just* (a:) to hold TypedVars, even though those have
+				TwineScript_Unstorable and can't be stored inside variables.
+			*/
+			either(Any, TypedVar)))
 		
 		/*d:
 			(range: Number, Number) -> Array
@@ -1650,7 +1586,12 @@ define([
 			}
 			return map;
 		},
-		zeroOrMore(Any))
+		zeroOrMore(
+			/*
+				The same type signature hack for (a:), allowing TypedVars to be used for destructuring patterns in the destination
+				side of (set:), is also present here.
+			*/
+			either(Any, TypedVar)))
 		
 		/*
 			DATASET MACROS

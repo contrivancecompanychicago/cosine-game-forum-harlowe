@@ -115,10 +115,10 @@ p { margin-top:1em; }
 strong,b { font-weight: bold; }
 a { color:HSL(202, 70%, 35%); }
 a:hover, a:focus, a:active { color:#22516d; }
-table:not(.datamap) { background:#fafafa; border-bottom:1px solid #ccc; border-collapse:collapse; border-right:1px solid #ccc; border-spacing:0; font-size:1em; width:100%; }
-table:not(.datamap) tr { border-top:1px solid #ccc; }
-table:not(.datamap) tr:nth-child(2n),thead { background:#eee; }
-table:not(.datamap) th,table:not(.datamap) td { border-left:1px solid #ccc; padding:4px; text-align:left; }
+table:not(.datamap):not(.panel-rows) { background:#fafafa; border-bottom:1px solid #ccc; border-collapse:collapse; border-right:1px solid #ccc; border-spacing:0; font-size:1em; width:100%; }
+table:not(.datamap):not(.panel-rows) tr { border-top:1px solid #ccc; }
+table:not(.datamap):not(.panel-rows) tr:nth-child(2n),thead { background:#eee; }
+table:not(.datamap):not(.panel-rows) th,table:not(.datamap):not(.panel-rows) td { border-left:1px solid #ccc; padding:4px; text-align:left; }
 tfoot { background:#e3e3e3; }
 body>:not(#preview) h1,body>:not(#preview) h2,body>:not(#preview) h3,body>:not(#preview) h4,body>:not(#preview) h5,body>:not(#preview) h6 { border-bottom:solid 1px #ddd; font-weight:400; line-height:1em; margin:0; padding-top:1rem; }
 body>:not(#preview) h4,body>:not(#preview) h5,body>:not(#preview) h6 { font-weight:700; }

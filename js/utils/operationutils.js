@@ -322,9 +322,15 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 			return typeName(obj.innerType);
 		}
 		/*
-			Number ranges have more precise descriptions.
+			Number and patterns ranges have more precise descriptions.
 		*/
 		else if (plain && obj.pattern && obj.pattern === "range") {
+			/*
+				Custom patterns have special names which should be used for self-description.
+			*/
+			if (obj.name) {
+				return obj.name;
+			}
 			const {min,max} = obj;
 			return "a" +
 				// This construction assumes that the minimum will always be 0, 1 or >0.
@@ -550,7 +556,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 	}
 
 	/*
-		Pattern-matching is fully implmented by this function. It's essentially the same as structural equality
+		Single-value pattern-matching is implmented by this function. It's essentially the same as structural equality
 		checks, except that when datatype names appears, the other side is compared using "is a". This allows
 		them to act as loose matches for values.
 	*/

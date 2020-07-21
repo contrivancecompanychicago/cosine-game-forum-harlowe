@@ -79,7 +79,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Arrays and strings now have a `random` data name, which retrieves a random value from these structures. `(a:5,8,9)'s random` produces 5, 8 or 9. This works well with the `(move:)` macro, allowing you to randomly move values out of an array without necessarily needing to use `(shuffled:)`.
  * Arrays and strings now have `start` and `end` data names, which are designed to be used with `is` and `matches`. You can check if a string or array begins or ends with a certain other string or subarray by writing, for instance, `start of "Gossamer" is "Goss"`.
  * Added the `lambda` and `macro` datatypes (see below), and the `boolean` datatype can now be shortened to `bool`.
- * Added the following special datatypes: `even`, which matches only even numbers, `odd`, which matches only odd numbers, `whitespace`, which matches strings that only contain whitespace, and `empty`, which matches only empty arrays, strings, datamaps and datasets.
+ * Added the following special datatypes: `even`, which matches only even numbers, `odd`, which matches only odd numbers, `integer` (alias `int`) which matches only whole numbers, `alphanumeric` (alias `alnum`), which matches strings that only contain letters and numbers, `whitespace`, which matches strings that only contain whitespace, `lowercase` and `uppercase`, which match single lowercase or uppercase characters, `newline`, which matches only a newline character, and `empty`, which matches only empty arrays, strings, datamaps and datasets.
 
 ##### Macros
 

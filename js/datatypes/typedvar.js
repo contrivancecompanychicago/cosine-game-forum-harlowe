@@ -28,12 +28,22 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 		For more details, consult the (set:) and (macro:) articles.
 	*/
 	return Object.freeze({
-		TwineScript_TypeName: "a typed variable",
+		TwineScript_TypeName: "a typed variable pattern",
 		get TwineScript_ObjectName() {
 			return this.TwineScript_ToSource();
 		},
 
+		TwineScript_Print() {
+			return "`[A typed variable pattern]`";
+		},
 		TwineScript_Unstorable: true,
+
+		/*
+			Typed variables are immutable data.
+		*/
+		TwineScript_Clone() {
+			return this;
+		},
 
 		TwineScript_ToSource() {
 			return this.datatype.TwineScript_ToSource() + "-type " + this.varRef.TwineScript_ToSource();
@@ -42,6 +52,13 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 			return prop === "name" ? this.getName() : this[prop];
 		},
 		TwineScript_Properties: ['datatype', 'name'],
+
+		/*
+			The presence of this property allows TypedVars to be used in "matches" patterns.
+		*/
+		TwineScript_IsTypeOf(val) {
+			return this.datatype.TwineScript_IsTypeOf(val);
+		},
 
 		/*
 			The compiler requires that TypedVars, which can be used in place of an ordinary VarRef in a (set:) call, also have

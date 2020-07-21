@@ -8,8 +8,8 @@ define([
 	'datatypes/lambda',
 	'datatypes/custommacro',
 	'internaltypes/twineerror',
-], ({realWhitespace}, {objectName}, Changer, Colour, Gradient, Lambda, CustomMacro, TwineError) => {
-	const {assign,freeze,keys} = Object;
+], ({realWhitespace, anyRealLetter}, {objectName, toSource}, Changer, Colour, Gradient, Lambda, CustomMacro, TwineError) => {
+	const {assign,seal,keys} = Object;
 	const {floor,abs} = Math;
 	/*
 		A Pattern is the fundamental primitive in pattern-matching in Harlowe. A single Datatype
@@ -47,10 +47,15 @@ define([
 
 		| Value | Data type
 		|---
-		| `even` | Only matches even numbers
-		| `odd` | Only matches odd numbers
+		| `even` | Only matches even numbers.
+		| `odd` | Only matches odd numbers.
+		| `integer`, `int` | Only matches whole numbers (numbers with no fractional component, and which are positive or negative).
 		| `empty` | Only matches these empty structures: `""` (the empty string), `(a:)`, `(dm:)` and `(ds:)`.
 		| `whitespace` | Only matches strings containing only whitespace (spaces, newlines, and other kinds of space).
+		| `lowercase` | Only matches strings containing only lowercase characters. Lowercase characters are characters that change when put through (uppercase:).
+		| `uppercase` | Only matches strings containing only uppercase characters. Uppercase characters are characters that change when put through (lowercase:).
+		| `alphanumeric`, `alnum` | Only matches strings containing only alphanumeric characters (letters and numbers).
+		| `newline` | Only matches newline characters.
 		| `const` | Matches nothing; Use this only with (set:) to make constants.
 		| `any` | Matches anything; Use this only with (macro:) to make variables that accept any storable type.
 
@@ -68,8 +73,8 @@ define([
 		Some more examples.
 
 		* `(datamap:'a',2,'b',4) matches (datamap:'b',num,'a',num))` is true.
-		* `(a: 2, 3, 4) matches (a: 2, num, num)` is true. (Patterns can have exact values in them, which must be equal in the matching data).
-		* `(a: (a: 2), (a: 4)) matches (a: (a: num), (a: num))` is true.
+		* `(a: 2, 3, 4) matches (a: 2, int, int)` is true. (Patterns can have exact values in them, which must be equal in the matching data).
+		* `(a: (a: 2), (a: 4)) matches (a: (a: num), (a: even))` is true.
 
 		To summarise, the datatype operators are the following.
 
@@ -86,7 +91,6 @@ define([
 		TwineScript_TypeID: "datatype",
 		
 		TwineScript_TypeName: "a datatype",
-		// TwineScript_ObjectName is assigned in create().
 
 		TwineScript_Print() {
 			return "`[" + this.TwineScript_ObjectName + "]`";
@@ -123,15 +127,20 @@ define([
 				Some type names have shorthands that should be expanded.
 			*/
 			name = (
-				name === "dm" ? "datamap" :
-				name === "ds" ? "dataset" :
-				name === "num" ? "number" :
-				name === "str" ? "string" :
+				name === "dm"    ? "datamap" :
+				name === "ds"    ? "dataset" :
+				name === "num"   ? "number" :
+				name === "str"   ? "string" :
 				name === "color" ? "colour" :
-				name === "bool" ? "boolean" :
+				name === "bool"  ? "boolean" :
+				name === "alnum" ? "alphanumeric" :
+				name === "int"   ? "integer" :
 				name
 			);
-			return assign(Object.create(this), { name, TwineScript_ObjectName: "the " + name + " datatype", });
+			const ret = Object.create(this);
+			ret.name = name;
+			ret.TwineScript_ObjectName = "the " + ret.name + " datatype";
+			return ret;
 		},
 
 		/*
@@ -173,11 +182,18 @@ define([
 			Array.isArray(obj) || typeof obj === "string" ? !obj.length :
 			false
 		),
-		whitespace: obj => typeof obj === "string" && !!obj.match("^" + realWhitespace + "+$"),
+		uppercase:    obj => typeof obj === "string" && obj.length !== 0 && [...obj].every(char => char !== char.toLowerCase()),
+		lowercase:    obj => typeof obj === "string" && obj.length !== 0 && [...obj].every(char => char !== char.toUpperCase()),
+		integer:      obj => typeof obj === "number" && obj === (obj|0),
+		whitespace:   obj => typeof obj === "string" && !!obj.match("^" + realWhitespace + "+$"),
+		alphanumeric: obj => typeof obj === "string" && !!obj.match("^" + anyRealLetter + "+$"),
+		newline:      obj => obj === "\n" || obj === "\r" || obj === "\r\n",
 		any:      () => true,
 		/*
-			"const" is handled almost entirely as a special case inside VarRef.
+			"const" is handled almost entirely as a special case inside VarRef. This
+			function is used only for destructuring.
 		*/
+		const:    () => true,
 	});
-	return freeze(Datatype);
+	return seal(Datatype);
 });

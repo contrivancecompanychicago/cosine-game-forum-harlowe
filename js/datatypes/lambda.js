@@ -58,7 +58,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 		and then use $printStats with the (folded:) macro in different places, such as `(folded: $statsReadout, ...(dataentries: $playerStats))`
 		for displaying the player's stats, `(folded: $statsReadout, ...(dataentries: $monsterStats))` for a monster's stats, etc.
 
-		Lambdas are named after the lambda calculus, and the "lambda" keyword used in many popular programming languages.
+		Lambdas are named after the lambda calculus, and the ["lambda"](https://en.wikipedia.org/wiki/Anonymous_function) keyword used in many popular programming languages.
 		They may seem complicated, but as long as you think of them as just a special way of writing a repeating instruction,
 		and understand how their macros work, you may find that they are very convenient.
 	*/

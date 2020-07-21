@@ -640,16 +640,6 @@ define([
 				return error;
 			}
 			
-			/*
-				Also refuse if the dest is not, actually, a VarRef.
-			*/
-			if (!isObject(dest) || !(VarRef.isPrototypeOf(dest) || TypedVar.isPrototypeOf(dest)))  {
-				return TwineError.create("operation",
-					"I can't store a new value inside "
-					+ objectName(dest)
-					+ ".");
-			}
-			
 			// The input is all clear, it seems.
 			return AssignmentRequest.create(dest, src, operator);
 		},
@@ -657,27 +647,19 @@ define([
 		/*
 			This helper function sets the It identifier to a passed-in VarRef,
 			while returning the original VarRef.
-			It's used for easy compilation of assignment requests.
+			This can't be combined with makeAssignmentRequest, because the 'it'
+			identifier is often immediately used by the second argument of makeAssignmentRequest,
+			such as in "(set:$b to its 1st)", which compiles to:
+
+			Operations.makeAssignmentRequest(Operations.setIt(VarRef.create(State.variables,"b")),VarRef.create(Operations.Identifiers.it,"1st").get())
 		*/
 		setIt(e) {
 			/*
-				Propagate any errors passed in, as usual for these operations.
-				Note that this does NOT handle errors returned in
-				wrappers by VarRef.create(), because those should only be unwrapped
-				when the compiler tries to .get() them.
-			*/
-			if (TwineError.containsError(e)) {
-				return e;
-			}
-			/*
-				If a non-varRef was passed in, a syntax error has occurred.
+				Only set the it identifier if the given value is a VarRef or TypedVar.
+				Notice that this also returns errors.
 			*/
 			if (!(VarRef.isPrototypeOf(e) || TypedVar.isPrototypeOf(e))) {
-				return TwineError.create("operation",
-					"I can't put a new value into "
-					+ objectName(e)
-					+ "."
-				);
+				return e;
 			}
 			return (It = e.get()), e;
 		},

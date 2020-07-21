@@ -120,7 +120,7 @@ describe("patterns", function() {
 					expect("(print: (a:(a:(a:" + type2 + "))) "+name+" (a:(a:(a:" + value + "))))").markupToPrint(pTrue);
 
 					expect("(print: (a:" + type2 + ") "+name+" (a:))").markupToPrint(pFalse);
-					expect("(print: (a:" + type1 + ") "+name+" (a:(a:" + value + ")))").markupToPrint(((type1 === "array") !== negative)+'');
+					expect("(print: (a:" + type1 + ") "+name+" (a:(a:" + value + ")))").markupToPrint(((type1 === "array") !== Boolean(negative))+'');
 					expect("(print: (a:" + type1 + ",3," + type1 + ") "+name+" (a:3,2,4))").markupToPrint(pFalse);
 				});
 				it("matches the " + type1 + " datatype inside datamaps to a " + type1 + " in the same position", function() {
@@ -152,6 +152,35 @@ describe("patterns", function() {
 			expect("(set: $a to '\t\t\n' is a whitespace)(print:$a)").markupToPrint("true");
 			expect("(set: $a to (str-repeated:5,' ') is a whitespace)(print:$a)").markupToPrint("true");
 		});
+		it("'integer' or 'int' matches integers", function() {
+			expect("(set: $a to 2.1 is a integer)(print:$a)").markupToPrint("false");
+			expect("(set: $a to \"2\" is a integer)(print:$a)").markupToPrint("false");
+			expect("(set: $a to 2 is a integer)(print:$a)").markupToPrint("true");
+			expect("(set: $a to 2 is a int)(print:$a)").markupToPrint("true");
+			expect("(set: $a to -10002 is a int)(print:$a)").markupToPrint("true");
+			expect("(set: $a to -10002.1 is a int)(print:$a)").markupToPrint("false");
+		});
+		it("'alphanumeric' or 'alnum' matches alphanumeric characters", function() {
+			expect("(set: $a to '' is a alnum)(print:$a)").markupToPrint("false");
+			expect("(set: $a to \"E-G\" is a alnum)(print:$a)").markupToPrint("false");
+			expect("(set: $a to 'EűG2' is a alnum)(print:$a)").markupToPrint("true");
+			expect("(set: $a to 'EűG2' is a alphanumeric)(print:$a)").markupToPrint("true");
+			expect("(set: $a to 'EűG2\n' is a alphanumeric)(print:$a)").markupToPrint("false");
+		});
+		it("'uppercase' or 'lowercase' matches cased characters", function() {
+			expect("(set: $a to '' is a uppercase)(print:$a)").markupToPrint("false");
+			expect("(set: $a to 'ӜEAR' is a uppercase)(print:$a)").markupToPrint("true");
+			expect("(set: $a to 'ӝear' is a lowercase)(print:$a)").markupToPrint("true");
+			expect("(set: $a to 'ӜEAr' is a uppercase)(print:$a)").markupToPrint("false");
+			expect("(set: $a to 'ӝeaR' is a lowercase)(print:$a)").markupToPrint("false");
+		});
+		it("'newline' matches newlines", function() {
+			expect("(set: $a to '\\r\\n' is a newline)(print:$a)").markupToPrint("true");
+			expect("(set: $a to '\\n' is a newline)(print:$a)").markupToPrint("true");
+			expect("(set: $a to '\\r' is a newline)(print:$a)").markupToPrint("true");
+			expect("(set: $a to last of 'Red\n' is a newline)(print:$a)").markupToPrint("true");
+			expect("(set: $a to '' is a newline)(print:$a)").markupToPrint("false");
+		});
 		it("'empty' matches only empty structures", function() {
 			expect("(set: $a to (a:) is a empty)(print:$a)").markupToPrint("true");
 			expect("(set: $a to (dm:) is a empty)(print:$a)").markupToPrint("true");
@@ -170,6 +199,79 @@ describe("patterns", function() {
 		it("errors if given data that has no matching type", function() {
 			expect("(print:(datatype:?hook))").markupToError();
 			expect("(print:(datatype:[foobar]))").markupToError();
+		});
+	});
+	describe("destructuring assignment", function() {
+		describe("when given an array pattern assignment request", function() {
+			it("sets the typed variable in the pattern to their matching values", function() {
+				[
+					["(a:num-type $a)", "(a:2)"],
+					["(a:5,num,num,num-type $a,num)","(a:5,4,3,2,1)"],
+					["(a:(a:num,num-type $a),num)","(a:(a:1,2),3)"],
+				].forEach(function(arr) {
+					expect("(set: "+arr[0]+" to "+arr[1]+")$a").markupToPrint("2");
+					expect("(put: "+arr[1]+" into "+arr[0]+")$a").markupToPrint("2");
+				});
+			});
+			it("can set multiple variables at once", function() {
+				expect("(set: (a:num-type $a, num-type $b) to (a:2,3))$a $b").markupToPrint("2 3");
+				expect("(set: (a:num,num-type $c, (a:num-type _d)) to (a:2,3,(a:4)))$c _d").markupToPrint("3 4");
+			});
+			it("works with (move:)", function() {
+				expect("(set:$c to (a:1,2,3,4,5,6))" +
+					"(move: $c into (a:1,num-type $red, num-type $blue))$red $blue").markupToPrint("2 3");
+				expect("$c").markupToPrint("1,4,5,6");
+			});
+			it("does not alter the value of 'it'", function() {
+				expect("(set:$c to 'foo')" +
+					"(set: (a:num-type $red, num-type $blue) to (a:2,it))$red $blue").markupToPrint("2 0");
+			});
+			it("can be used to exchange variables", function() {
+				runPassage("(set: (a:num-type $a, num-type $b, num-type $c) to (a:2,3,4))");
+				expect("(set: (a:num-type $a, num-type $b, num-type $c) to (a:$c,$b,$a))$a $b $c").markupToPrint("4 3 2");
+			});
+			it("errors if the pattern doesn't match", function() {
+				expect("(set: (a:5,num,num,num-type $a,num) to (a:6,4,3,2,1))$a").markupToError();
+				expect("(set: (a:5,num,num,num-type $a,num) to (a:5,4,'3',2,1))$a").markupToError();
+				expect("(set: (a:num-type $a,num,num) to (a:5,4))$a").markupToError();
+				expect("(set: (a:(a:num,num-type $a),num) to (a:(a:1),3))$a").markupToError();
+			});
+			it("doesn't error if the source structure has more values than the pattern", function() {
+				expect("(set: (a:num-type $a) to (a:5,4,3,2,1))$a").markupToPrint("5");
+			});
+		});
+		describe("when given a datamap pattern assignment request", function() {
+			it("sets the typed variable in the pattern to their matching values", function() {
+				[
+					["(dm:'foo',num-type $a)", "(dm:'foo',2)"],
+					["(dm:'foo',5,'bar',num-type $a,'baz',3)","(dm:'foo',5,'baz',3,'bar',2)"],
+					["(dm:'foo',5,'bar',(dm:'foo',num-type $a))","(dm:'foo',5,'bar',(dm:'foo',2))"],
+				].forEach(function(arr) {
+					expect("(set: "+arr[0]+" to "+arr[1]+")$a").markupToPrint("2");
+					expect("(put: "+arr[1]+" into "+arr[0]+")$a").markupToPrint("2");
+				});
+			});
+			it("can set multiple variables at once", function() {
+				expect("(set: (dm:'foo',num-type $a,'bar',num-type $b) to (dm:'foo',2,'bar',3))$a $b").markupToPrint("2 3");
+				expect("(set: (dm:'baz',num-type $c,'qux',(dm:'foo',num-type _d)) to (dm:'baz',3,'qux',(dm:'foo', 4)))$c _d").markupToPrint("3 4");
+			});
+			it("works with (move:)", function() {
+				expect("(set:$c to (dm:'foo',3,'bar',2))" +
+					"(move: $c into (dm:'foo',num-type $blue,'bar',num-type $red))$red $blue").markupToPrint("2 3");
+				expect("(print:$c contains 'foo')").markupToPrint("false");
+			});
+			it("does not alter the value of 'it'", function() {
+				expect("(set:$c to 'foo')" +
+					"(set: (dm:'foo',num-type $red,'bar',num-type $blue) to (dm:'foo',2,'bar',it))$red $blue").markupToPrint("2 0");
+			});
+			it("errors if the pattern doesn't match", function() {
+				expect("(set: (dm:'foo',num-type $a,'bar',num-type $b) to (dm:'foo',2,'baz',3))").markupToError();
+				expect("(set: (dm:'foo',num-type $a,'bar',str-type $b) to (dm:'foo',2,'baz',3))").markupToError();
+				expect("(set: (dm:'foo',2,'bar',num-type $b) to (dm:'foo',4,'bar',1))").markupToError();
+			});
+			it("doesn't error if the source structure has more values than the pattern", function() {
+				expect("(set: (dm:'foo',num-type $a) to (dm:'foo',5,'qux',4,'baz',3))$a").markupToPrint("5");
+			});
 		});
 	});
 });

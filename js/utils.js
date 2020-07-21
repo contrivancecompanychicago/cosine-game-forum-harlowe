@@ -21,7 +21,15 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/polyfills'],
 
 		// Certain HTML elements cannot have their parents unwrapped: <audio>, for instance,
 		// will break if it is ever detached from the DOM.
-		nonDetachableElements = ["audio",];
+		nonDetachableElements = ["audio",],
+
+		// These produce long RegExp strings of every lowercase/uppercase character, defined as "any character in
+		// the Basic Multilingual Plane which doesn't round-trip through toUpperCase/toLowerCase".
+		// Note that this is computed based on the player's locale, which is coincidentally consistent with (uppercase:),
+		// (lowercase:), and the 'uppercase' and 'lowercase' datatypes.
+		[anyUppercase, anyLowercase] = ["toLowerCase","toUpperCase"].map(name => "[" + Array.from(Array(0xDFFF)).map((_,i) => i)
+			.filter(e => String.fromCharCode(e) !== String.fromCharCode(e)[name]())
+			.map((e,i,a) => (e === a[i-1]+1 && e === a[i+1]-1) ? '-' : String.fromCharCode(e)).join('').replace(/\-+/g, '-') + "]");
 
 	/*
 		Hard-coded default time for transitions, in milliseconds.
@@ -258,6 +266,8 @@ define(['jquery', 'requestAnimationFrame', 'markup', 'utils/polyfills'],
 
 		// This handles alphanumeric ranges not covered by \w. Doesn't include hyphens or underscores.
 		anyRealLetter:  "[\\dA-Za-z\\u00c0-\\u00de\\u00df-\\u00ff\\u0150\\u0170\\u0151\\u0171\\uD800-\\uDFFF]",
+
+		anyUppercase, anyLowercase,
 
 		/*
 			HTML utilities

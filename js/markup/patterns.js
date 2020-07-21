@@ -967,10 +967,10 @@
 
 		// Data types
 		datatype: either(
-			"any", "array", "boolean", "bool", "changer", "colour", "color", "const",
-			"command", "cond", "dm", "datamap", "ds", "dataset", "datatype",
-			"gradient", "empty", "even", "lambda", "macro", "number", "num", "odd",
-			"string", "str", "whitespace"
+			"alnum", "alphanumeric", "any", "array", "bool(?:ean)?", "changer", "colou?r", "const",
+			"command", "dm", "data" + either("map","type","set"), "ds",
+			"gradient", "empty", "even", "int" + notBefore('o') + "(?:eger)?", "lambda", "lowercase", "macro", "newline",
+			"num(?:ber)?", "odd", "str(?:ing)?", "uppercase", "whitespace"
 		),
 		
 		/*

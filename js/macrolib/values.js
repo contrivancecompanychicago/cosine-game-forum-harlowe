@@ -36,16 +36,18 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			specifying just the start and end position as a data name: `"Ducks"'s 1stto3rd` is "Duc", and `"Rags"'s 2ndlasttolast` is "gs".
 
 			If you want to check if a string contains any of another string's characters (without needing to be in the
-			same order), or all of them, special `any` and `all` data names are available for use with the `is` and `is not` operators - `any of $name is "aeiouAEIOU"`,
-			checks if the string contains any English vowels, in either capitalisation. If you want to check if a string starts or ends with with a
-			certain sequence of values, `start` and `end` data names can be used in a similar way - `start of $addr is "http://"` is the same as
-			`$addr's 1stto7th is "http://"` (but somewhat easier to write), and `end of $angelName is "iel"` is the same as `$angelName's 3rdlasttolast is "iel"`.
+			same order), or all of them, special `any` and `all` data names are available for use with the `is`, `is not`, `matches` and `is a`
+			operators - `all of $name is "A"` checks if the variable consists only of capital "A"'s, and `any of $name is a whitespace` checks
+			if any of the variable's characters is a whitespace character (using the special "whitespace" datatype).
 
-			Also, you can use the `contains` and `is in` operators to see if a certain string is contained within another: `"mother"
-			contains "moth"` is true, as is `"a" is in "a"`. Again, like arrays, strings have special `any` and `all` data names which
-			can be used with `contains` and `is in` to check all their characters - `all of $string is not "w"` is true if the string doesn't
-			contain "w", and `$string contains any of "aeiou"` is true if the string contains those five letters.
-			The opposite of the `is in` operator is `is not in` - `"w" is not in $string` is another way to phrase the above.
+			You can use the `contains` and `is in` operators to see if a certain string is contained within another: `"mother"
+			contains "moth"` is true, as is `"a" is in "a"`. Again, `any` and `all` can be used with `contains` and `is in` to check all their
+			characters - `all of $string is not "w"` is true if the string doesn't contain "w", and `$string contains any of "aeiou"` is true
+			if the string contains those five letters. The opposite of the `is in` operator is `is not in` - `"w" is not in $string` is another way to phrase the above.
+
+			If you want to check if a string specifically starts or ends with with a certain substring, `start` and `end` data names can be used in a
+			similar way to `any` and `all` - `start of $addr is "http://"` is the same as `$addr's 1stto7th is "http://"` (but somewhat easier to write), and
+			`end of $angelName is "iel"` is the same as `$angelName's 3rdlasttolast is "iel"`.
 
 			Here is a table listing the aforementioned operations you can perform on strings, as well as a few others.
 
@@ -60,7 +62,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			| `is not in` | Evaluates to `true` if the right string does not contain the left string. | `"Blood" is not in "Stone`
 			| `'s` | Obtaining the character or substring at the right numeric position. | `"YO"'s 1st` (is "Y")<br>`"PS"'s (2)` (is "S")<br>`"ear"'s (a: 2,3)` (is "ar")
 			| `of` | Obtaining the character at the left numeric position. | `1st of "YO"` (is "Y")<br>`(2) of "PS"` (is "S")<br>`(a: 2,3) of "ear"` (is "ar")
-			| `matches` | Evaluates to boolean `true` if the left side describes the right side. | `str matches "Contract"`, `"E" matches "E"`
+			| `matches` | Evaluates to boolean `true` if the left side describes the right side. | `str matches "Contract"`, `any of "RED" matches "E"`
 			| `does not match` | Evaluates to boolean `true` if the left side does not describe the right side. | `str does not match "Minotaur"`, `"3" does not match "Three"`
 			| `is a`, `is an` | Evaluates to boolean `true` if the right side is a datatype describing the left side. | `"Boo" is a string`, `"   " is a whitespace`, `"" is an empty`
 			| `is not a`, `is not an` | Evaluates to boolean `true` if the right side does not describe the left side. | `"Boo" is not an empty`, `"" is not a whitespace`
