@@ -24,6 +24,7 @@ define(['jquery', 'utils'], ($, {matMul}) => {
 		| `white` | <span style='background:#fff;color:black'>#fff</span>
 		| `black` | <span style='background:#000;color:white'>#000</span>
 		| `grey` or `gray` | <span style='background:#888;color:white'>#888</span>
+		| `transparent` | <span>transparent</span>
 
 		(These colours were chosen to be visually pleasing when used as both background colours and text colours, without
 		the glaring intensity that certain HTML colours, like pure #f00 red, are known to exhibit.)
@@ -35,7 +36,8 @@ define(['jquery', 'utils'], ($, {matMul}) => {
 
 		If you want to quickly obtain a colour which is the blending of two others, you can blend them
 		using the `+` operator: `red + orange + white` produces a blend of red and orange, tinted
-		white. `#a4e + black` is a dim purple.
+		white. `#a4e + black` is a dim purple. Note that the `transparent` built-in value allows you to make colours
+		partly transparent by blending them with it.
 
 		Like datamaps, colour values have a few read-only data names, which let you examine the **r**ed, **g**reen and **b**lue
 		components that make up the colour, as well as its **h**ue, **s**aturation and **l**ightness, its **a**lpha transparency,

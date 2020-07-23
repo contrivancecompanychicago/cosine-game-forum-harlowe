@@ -733,12 +733,24 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 					))) {
 					return error;
 				}
+
+				/*
+					Produce an error if the value is "unstorable", OR if it contains an unstorable.
+				*/
+				const containsUnstorable = value => {
+					return value && (value.TwineScript_Unstorable || (value instanceof Map && [...value.values()].some(containsUnstorable))
+						|| (value instanceof Set && [...value].some(containsUnstorable)));
+				};
+				if (containsUnstorable(value)) {
+					return TwineError.create("operation", objectName(value) + " can't be stored.");
+				}
+
 				/*
 					Produce an error if the value is "unstorable".
-				*/
+				*
 				if (value && value.TwineScript_Unstorable) {
 					return TwineError.create("operation", typeName(value) + " can't be stored.");
-				}
+				}*/
 
 				/*
 					Only attempt to clone the object if it's not the final iteration.

@@ -3,7 +3,7 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 	/*d:
 		TypedVar data
 
-		Typed variables combine a datatype and a variable, joined by adding the `-type` suffix to the datatype. `str-type _name` defines a typed variable, _name,
+		Typed variables combine a datatype and the name of a variable, joined by adding the `-type` suffix to the datatype. `str-type _name` defines a typed variable, _name,
 		which can only be set to a string. You can add the `-type` suffix to anything that contains a datatype - `$leonsKickassDatatype-type _option` is valid
 		if $leonsKickassDatatype contains a datatype.
 
@@ -28,13 +28,13 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 		For more details, consult the (set:) and (macro:) articles.
 	*/
 	return Object.freeze({
-		TwineScript_TypeName: "a typed variable pattern",
+		TwineScript_TypeName: "a typed variable name",
 		get TwineScript_ObjectName() {
 			return this.TwineScript_ToSource();
 		},
 
 		TwineScript_Print() {
-			return "`[A typed variable pattern]`";
+			return "`[A typed variable name]`";
 		},
 		TwineScript_Unstorable: true,
 

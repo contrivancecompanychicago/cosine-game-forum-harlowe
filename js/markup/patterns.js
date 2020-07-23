@@ -959,7 +959,7 @@
 			either(
 				"Red", "Orange", "Yellow", "Lime", "Green",
 				"Cyan", "Aqua", "Blue", "Navy", "Purple",
-				"Fuchsia", "Magenta","White", "Gray", "Grey", "Black"
+				"Fuchsia", "Magenta","White", "Gray", "Grey", "Black", "Transparent"
 			),
 			// Hexadecimal
 			"#[\\dA-Fa-f]{3}(?:[\\dA-Fa-f]{3})?"

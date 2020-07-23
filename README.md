@@ -33,7 +33,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * `(save-game:)` can now save a greater range of variable data. Formerly, only changers, arrays, datamaps, datasets, booleans, strings and numbers could be stored in variables when you use `(save-game:)` - other values, such as commands, colours, gradients, or lambdas, would cause an error. Now, it should work with every kind of supported Harlowe value (i.e. those mentioned in the documentation) except user-created commands created with `(output-hook:)` (see below). But, this means that save data from 3.1.0 is no longer compatible with 3.2.0.
  * Improved an error message that could appear if you erroneously put the spread `...` syntax inside parentheses, such as `(...$arr)`.
  * Altered the error message that appears when you don't give macros "enough values", which wouldn't properly exclude optional values.
- * Fixed some error messages, involving accessing an invalid data value of a string, which would refer to the string as "an array".
+ * Fixed some error messages involving accessing an invalid data value of a string, which would refer to the string as "an array".
+ * Fixed a long-standing bug that caused error messages for certain invalid operators (such as unsupported SugarCube operators) to be replaced with an incorrect message.
 
 #### Alterations
 
@@ -80,6 +81,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Arrays and strings now have `start` and `end` data names, which are designed to be used with `is` and `matches`. You can check if a string or array begins or ends with a certain other string or subarray by writing, for instance, `start of "Gossamer" is "Goss"`.
  * Added the `lambda` and `macro` datatypes (see below), and the `boolean` datatype can now be shortened to `bool`.
  * Added the following special datatypes: `even`, which matches only even numbers, `odd`, which matches only odd numbers, `integer` (alias `int`) which matches only whole numbers, `alphanumeric` (alias `alnum`), which matches strings that only contain letters and numbers, `whitespace`, which matches strings that only contain whitespace, `lowercase` and `uppercase`, which match single lowercase or uppercase characters, `newline`, which matches only a newline character, and `empty`, which matches only empty arrays, strings, datamaps and datasets.
+ * Added a `transparent` built-in colour value.
 
 ##### Macros
 

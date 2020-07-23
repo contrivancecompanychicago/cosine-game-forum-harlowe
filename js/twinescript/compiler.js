@@ -279,26 +279,27 @@ define(['utils'], ({impossible}) => {
 		*/
 		if (tokens.length === 1) {
 			token = tokens[0];
-			if (token.type === "identifier") {
+			const {type} = token;
+			if (type === "identifier") {
 				if (isVarRef) {
 					return "VarRef.create(Operations.Identifiers," + stringify(token.text) + ")";
 				}
 				return "Operations.Identifiers." + token.text.toLowerCase() + " ";
 			}
-			else if (token.type === "variable") {
+			else if (type === "variable") {
 				return "VarRef.create(State.variables,"
 					+ stringify(token.name)
 					+ ")" + (isVarRef ? "" : ".get()");
 			}
-			else if (token.type === "tempVariable") {
+			else if (type === "tempVariable") {
 				return "VarRef.create(section.stack[0].tempVariables,"
 					+ stringify(token.name)
 					+ ")" + (isVarRef ? "" : ".get()");
 			}
-			else if (token.type === "hookName") {
+			else if (type === "hookName") {
 				return "HookSet.create({type:'name', data:'" + token.name + "'}) ";
 			}
-			else if (token.type === "string") {
+			else if (type === "string") {
 				/*
 					Note that this is entirely reliant on the fact that TwineScript string
 					literals are currently exactly equal to JS string literals (minus template
@@ -306,45 +307,40 @@ define(['utils'], ({impossible}) => {
 				*/
 				return token.text.replace(/\n/g, "\\n");
 			}
-			else if (token.type === "hook") {
+			else if (type === "hook") {
 				/*
 					Slice off the opening [ and closing ] of the source.
 				*/
 				return "CodeHook.create(" + stringify(token.text.slice(1,-1)) + "," + stringify(token.html || '') + ")";
 			}
-			else if (token.type === "colour") {
+			else if (type === "colour") {
 				return "Colour.create(" + stringify(token.colour) + ")";
 			}
-			else if (token.type === "datatype") {
+			else if (type === "datatype") {
 				return "Datatype.create(" + stringify(token.name) + ")";
 			}
 			/*
 				"blockedValue" tokens aren't created by the TwineMarkup tokeniser, but made from permuted macro
 				tokens by Renderer.
 			*/
-			else if (token.type === "blockedValue") {
+			else if (type === "blockedValue") {
 				return "section.blockedValue()";
 			}
 			/*
 				Root tokens are usually never passed in, but let's
 				harmlessly handle them anyway.
 			*/
-			else if (token.type === "root") {
+			else if (type === "root") {
 				return compile(token.children);
 			}
 			/*
 				Whitespace is usually harmless, but if it's meant as a VarRef,
 				it's almost certainly a mistake.
 			*/
-			else if (token.type === "whitespace") {
+			else if (type === "whitespace") {
 				if (isVarRef && whitespaceError) {
 					return "TwineError.create('operation'," + stringify(whitespaceError) + ")";
 				}
-			}
-			else if (token.type === "error") {
-				return "TwineError.create('syntax'," + stringify(token.message)
-					+ (token.explanation ? ", " + stringify(token.explanation) : "")
-				+ ")";
 			}
 		}
 
@@ -360,6 +356,8 @@ define(['utils'], ({impossible}) => {
 		*/
 		const varRefArgs = (side) => ({isVarRef:true, whitespaceError:`I need usable data to be on the ${side} of "${token.text}".`});
 
+		const MUST = "must", MUSTNT = "mustn't", MAY = "may";
+		const Operations = "Operations", dotCreate = ".create(";
 		let
 			/*
 				These hold the returned compilations of the tokens
@@ -368,18 +366,16 @@ define(['utils'], ({impossible}) => {
 			*/
 			left, right,
 			/*
-				Setting values to either of these variables
-				determines the code to emit:
-				- for midString, a plain JS infix operation between left and right;
-				- for operation, an Operations method call with left and right as arguments.
-				- for assignment, an AssignmentRequest.
-				- for possessive, a special VarRef.create() call.
+				Construct code using these three type-specific partition strings. Note that, when assigning to these,
+				left and right should NOT have any extraneous code attached to them; the "needsLeft" and "needsRight"
+				error checking code expects that left remains "" if there are no left tokens, and that
+				right remains "" if there are no right tokens.
 			*/
-			midString, operation, assignment, possessive,
+			openString = '', midString = '', closeString = '',
 			/*
 				Some operators should present a simple error when one of their sides is missing.
 			*/
-			needsLeft = true, needsRight = true,
+			needsLeft = MUST, needsRight = MUST,
 			/*
 				Some JS operators, like >, don't automatically work when the other side
 				is absent, even when people expect them to. e.g. $var > 3 and < 5 (which is
@@ -401,51 +397,52 @@ define(['utils'], ({impossible}) => {
 			/*
 				Unlike Javascript, Harlowe allows trailing commas in calls.
 			*/
-			needsRight = false;
+			needsRight = MAY;
 		}
 		else if (type === "spread") {
 			/*
 				Whether or not this actually makes sense as a "mid"string
 				is probably easily disputed.
 			*/
-			midString = "Operations.makeSpreader(";
-			right = compile(after) + ")";
-			needsLeft = false;
+			openString = Operations + ".makeSpreader(";
+			closeString = ")";
+			needsLeft = MUSTNT;
 		}
 		else if (type === "bind") {
-			midString = "VarBind.create(";
-			right = compile(after, varRefArgs("right"))
-				+ (token.text.startsWith('2') ? ",'two way'" : '')
-				+ ")";
-			needsLeft = false;
+			openString = "VarBind" + dotCreate;
+			right = compile(after, varRefArgs("right"));
+			closeString = (token.text.startsWith('2') ? ",'two way'" : '') + ")";
+			needsLeft = MUSTNT;
 		}
 		else if (type === "to") {
-			assignment = "to";
+			openString = Operations + ".makeAssignmentRequest(" + Operations + ".setIt(";
 			right = compile(after, varRefArgs("right"));
-			left  = "Operations.setIt(" + compile(before, varRefArgs("left")) + ")";
+			midString = "),";
+			left = compile(before, varRefArgs("left"));
+			closeString = ",'to')";
 		}
 		else if (type === "into") {
-			assignment = "into";
+			openString = Operations + ".makeAssignmentRequest(";
 			// varRefArgs uses the syntactic left, which isn't the compiler's left.
 			right = compile(before, varRefArgs("left"));
-			left  = "Operations.setIt(" + compile(after, varRefArgs("right")) + ")";
+			midString = "," + Operations + ".setIt(";
+			left  = compile(after, varRefArgs("right"));
+			closeString = "),'into')";
 		}
 		else if (type === "typeSignature") {
-			left = "TypedVar.create(";
-			midString = compile(before) + ",";
-			right = compile(after, varRefArgs("right"))
-				+ ")";
+			openString = "TypedVar" + dotCreate;
+			midString = ",";
+			right = compile(after, varRefArgs("right"));
+			closeString = ")";
 		}
 		else if (type === "where" || type === "when" || type === "via") {
-			left = "Lambda.create("
-				+ (compile(before, {isVarRef:true, whitespaceError:null}).trim()
+			openString = "Lambda" + dotCreate;
+			left = (compile(before, {isVarRef:true, whitespaceError:null}).trim()
 					// Omitting the temp variable means that you must use "it"
-					|| "undefined")
-				+ ",";
-			midString = stringify(token.type)
-				+ ",";
-			right = stringify(compile(after))
-				+ ","
+					|| "undefined");
+			midString = "," + stringify(token.type) + ",";
+			right = stringify(compile(after));
+			closeString = ","
 				// Lambdas need to store their entire Harlowe source.
 				+ stringify(tokens.map(e => e.text).join(''))
 				+ ")";
@@ -457,24 +454,24 @@ define(['utils'], ({impossible}) => {
 				temp variable preceding it, and its "clause" (the temp variable) is really its subject.
 			*/
 			if (type === "each") {
-				left = "Lambda.create(";
-				midString = compile(after, varRefArgs("right")).trim();
-				right = ",'where','true',"
+				openString = "Lambda" + dotCreate;
+				right = compile(after, varRefArgs("right")).trim();
+				closeString = ",'where','true',"
 					// Lambdas need to store their entire Harlowe source.
 					+ stringify(tokens.map(e => e.text).join('')) + ")";
+				needsLeft = MAY;
 			}
 			// Other keywords can have a preceding temp variable, though.
 			else {
-				left = "Lambda.create("
-					+ (compile(before, {isVarRef:true, whitespaceError:null}).trim()
+				openString = "Lambda" + dotCreate;
+				left = (compile(before, {isVarRef:true, whitespaceError:null}).trim()
 						// Omitting the temp variable means that you must use "it"
-						|| "undefined")
-					+ ",";
-				midString = stringify(token.type)
-					+ ",";
-				right = compile(after, varRefArgs("right")).trim()
+						|| "undefined");
+				midString = "," + stringify(token.type) + ",";
+				right = compile(after, varRefArgs("right")).trim();
+				closeString = ","
 					// Lambdas need to store their entire Harlowe source.
-					+ "," + stringify(tokens.map(e => e.text).join(''))
+					+ stringify(tokens.map(e => e.text).join(''))
 					+ ")";
 			}
 		}
@@ -483,8 +480,8 @@ define(['utils'], ({impossible}) => {
 			one can do (set: $x to it+1), and += is sort of an overly abstract token.
 		*/
 		else if (type === "augmentedAssign") {
-			assignment = token.operator;
-			left  = compile(before, varRefArgs("left"));
+			openString = Operations + ".makeAssignmentRequest(";
+			left = compile(before, varRefArgs("left"));
 			/*
 				This line converts the "b" in "a += b" into "a + b" (for instance),
 				thus partially de-sugaring the augmented assignment.
@@ -494,9 +491,11 @@ define(['utils'], ({impossible}) => {
 				Note also that this assumes the token's assignment property corresponds to
 				a binary-arity Operation method name.
 			*/
-			right = "Operations['" + assignment + "']("
+			midString = ",";
+			right = "Operations[" + stringify(token.operator) + "]("
 				+ (compile(before) + ","
 				+  compile(after)) + ")";
+			closeString = "," + stringify(token.operator) + ")";
 		}
 		/*
 			The following are the logical arithmetic operators.
@@ -527,16 +526,18 @@ define(['utils'], ({impossible}) => {
 					+ type + "\" is grammatically ambiguous',"
 					+ "'Maybe try rewriting this as \"__ is not __ " + type + " __ is not __\"') ";
 
-			operation = token.type;
+			openString = Operations + "." + type + "(";
+			midString = ",";
+			closeString = ")";
+
 			/*
 				If elidedComparison is a matching type, then this token is a continuation of an elided
 				comparison, such as "3 < 4 and [5 and 6]".
 				Simply add the left and right side as arguments to elidedComparisonOperator().
 			*/
 			if (elidedComparison === token.type) {
-				operation = '';
+				openString = closeString = '';
 				left  = (compile(before, {isVarRef, elidedComparison})).trim();
-				midString = ",";
 				right = (compile(after, {elidedComparison})).trim();
 			}
 			/*
@@ -609,13 +610,24 @@ define(['utils'], ({impossible}) => {
 						...tokens.slice(i + 1, rightIndex),
 					]);
 			}
+			/*
+				Note for comparison operations:
+				If two variables are being compared (such as $a < $y or $b contains $c)
+				and the comparison operation is in potential VarRef position
+				(such as (set: $x to $a < $y)) then don't compile the variables into VarRefs
+				(because comparison operations can't, and shouldn't, process VarRefs instead of values.)
+			*/
+			isVarRef = false;
 		}
 		/*
 			The following are the comparison operators.
 		*/
 		else if (comparisonOpTypes.includes(type)) {
 			implicitLeftIt = true;
-			operation = compileComparisonOperator(token);
+			isVarRef = false;
+			openString = Operations + "[" + stringify(compileComparisonOperator(token)) + "](";
+			midString = ",";
+			closeString = ")";
 		}
 		else if (type === "addition" || type === "subtraction") {
 			/*
@@ -636,55 +648,62 @@ define(['utils'], ({impossible}) => {
 				token.type = ({ addition: "positive", subtraction: "negative" }[type]);
 				return compile(tokens, {isVarRef, whitespaceError, elidedComparison, testNeedsRight});
 			}
-			else {
-				operation = token.text;
-			}
+			isVarRef = false;
+			openString = Operations + "[" + stringify(token.text) + "](";
+			midString = ",";
+			closeString = ")";
 		}
 		else if (type === "multiplication" || type === "division") {
-			operation = token.text;
+			isVarRef = false;
+			openString = Operations + "[" + stringify(token.text) + "](";
+			midString = ",";
+			closeString = ")";
 		}
 		else if (type === "positive" || type === "negative") {
-			operation = "*";
+			isVarRef = false;
 			left = (type === "negative" ? "-1" : "1");
+			openString = Operations + "['*'](";
+			midString = ",";
+			closeString = ")";
 		}
 		else if (type === "not") {
-			midString = " ";
-			right = "Operations.not("
-				+ compile(after)
-				+ ")";
-			needsLeft = false;
+			openString = Operations + ".not(";
+			right = compile(after);
+			closeString = ")";
+			needsLeft = MAY;
 		}
 		else if (type === "belongingProperty") {
 			/*
-				As with the preceding case, we need to manually wrap the variable side
+				As with the "property" case, we need to manually wrap the variable side
 				inside the Operations.get() call, while leaving the other side as is.
 			*/
-			right = "VarRef.create("
-				/*
-					belongingProperties place the variable on the right.
-				*/
-				+ compile(after, varRefArgs("right"))
-				+ ","
+			openString = "VarRef" + dotCreate;
+			/*
+				belongingProperties place the variable on the right.
+			*/
+			right = compile(after, varRefArgs("right"));
+			closeString = ","
 				/*
 					Utils.stringify() is used to both escape the name
 					string and wrap it in quotes.
 				*/
 				+ stringify(token.name) + ")"
 				+ (isVarRef ? "" : ".get()");
-			midString = " ";
-			needsLeft = needsRight = false;
+			needsLeft = MAY;
 		}
 		else if (type === "belongingOperator" || type === "belongingItOperator") {
 			if (token.type.includes("It")) {
-				right = "Operations.Identifiers.it";
-				needsRight = false;
+				left = "Operations.Identifiers.it";
 			}
 			else {
 				// Since, as with belonging properties, the variable is on the right,
 				// we must compile the right side as a varref.
-				right = compile(after, varRefArgs("right"));
+				left = compile(after, varRefArgs("right"));
 			}
-			possessive = "belonging";
+			right = compile(before);
+			openString = "VarRef.create(";
+			midString = ",{computed:true,value:";
+			closeString = "})" + (isVarRef ? "" : ".get()");
 		}
 		/*
 			Notice that this one is right-associative instead of left-associative.
@@ -698,17 +717,16 @@ define(['utils'], ({impossible}) => {
 				This is somewhat tricky - we need to manually wrap the left side
 				inside the Operations.get() call, while leaving the right side as is.
 			*/
-			left = "VarRef.create("
-				+ compile(before, varRefArgs("left"))
-				+ ","
+			openString = "VarRef.create(";
+			left = compile(before, varRefArgs("left"));
+			closeString = ","
 				/*
 					Utils.stringify() is used to both escape the name
 					string and wrap it in quotes.
 				*/
 				+ stringify(token.name) + ")"
 				+ (isVarRef ? "" : ".get()");
-			midString = " ";
-			needsLeft = needsRight = false;
+			needsRight = MAY;
 		}
 		else if (type === "itsProperty" || type === "belongingItProperty") {
 			/*
@@ -718,14 +736,16 @@ define(['utils'], ({impossible}) => {
 			left = "VarRef.create(Operations.Identifiers.it,"
 				+ stringify(token.name) + ").get()";
 			midString = " ";
-			needsLeft = needsRight = false;
+			needsLeft = needsRight = MAY;
 		}
 		else if (type === "possessiveOperator" || type === "itsOperator") {
 			if (token.type.includes("it")) {
 				left = "Operations.Identifiers.it";
-				needsLeft = false;
+				needsLeft = MAY;
 			}
-			possessive = "possessive";
+			openString = "VarRef.create(";
+			midString = ",{computed:true,value:";
+			closeString = "})" + (isVarRef ? "" : ".get()");
 		}
 		else if (type === "twineLink") {
 			/*
@@ -735,7 +755,7 @@ define(['utils'], ({impossible}) => {
 			midString = 'Macros.run("link-goto", [section,'
 				+ stringify(token.innerText) + ","
 				+ stringify(token.passage) + "])";
-			needsLeft = needsRight = false;
+			needsLeft = needsRight = MUSTNT;
 		}
 		else if (type === "macro") {
 			/*
@@ -778,11 +798,16 @@ define(['utils'], ({impossible}) => {
 					+ variableCall
 				))
 				+ '])';
-			needsLeft = needsRight = false;
+			needsLeft = needsRight = MUSTNT;
 		}
 		else if (type === "grouping") {
 			midString = "(" + compile(token.children, {isVarRef}) + ")";
-			needsLeft = needsRight = false;
+			needsLeft = needsRight = MUSTNT;
+		}
+		else if (type === "error") {
+			return "TwineError.create('syntax'," + stringify(token.message)
+				+ (token.explanation ? ", " + stringify(token.explanation) : "")
+			+ ")";
 		}
 		/*
 			If a token was found, we can recursively
@@ -790,32 +815,24 @@ define(['utils'], ({impossible}) => {
 		*/
 		if (i > -1) {
 			/*
-				If two variables are being compared (such as $a < $y or $b contains $c)
-				and the comparison operation is in potential VarRef position
-				(such as (set: $x to $a < $y)) then don't compile the variables into VarRefs
-				(because comparison operations can't, and shouldn't, process VarRefs instead of values.)
-			*/
-			if (operation) {
-				isVarRef = false;
-			}
-			/*
 				Any of the comparisons above could have provided specific
 				values for left and right, but usually they will just be
 				the tokens to the left and right of the matched one.
 			*/
-			left  = left  || (compile(before, {isVarRef})).trim();
-			right = right || (compile(after)).trim();
+			left  = (left  || compile(before, {isVarRef})).trim();
+			right = (right || compile(after)).trim();
 			/*
 				The compiler should implicitly insert the "it" keyword when the
 				left-hand-side of a comparison operator was omitted.
 			*/
 			if (implicitLeftIt && !(left)) {
-				left = " Operations.Identifiers.it ";
+				left = "Operations.Identifiers.it";
 			}
 			/*
-				If there is no implicitLeftIt, produce an error message.
+				If a value is missing from the left or right, and it MUST be there,
+				produce an error message.
 			*/
-			if ((needsLeft && !left) || (needsRight && !right)) {
+			if ((needsLeft === MUST && !left) || (needsRight === MUST && !right)) {
 				/*
 					testNeedsRight, used only by the "addition" and "subtraction" branches,
 					indicates that this compile() is purely speculative,
@@ -829,33 +846,23 @@ define(['utils'], ({impossible}) => {
 					Otherwise, create the error object for end-user examination.
 				*/
 				return "TwineError.create('operation','I need some code to be "
-					+ (needsLeft ? "left " : "")
-					+ (needsLeft && needsRight ? "and " : "")
-					+ (needsRight ? "right " : "")
-					+ "of "
-					+ '"' + token.text + '"'
-					+ "')";
+					+ (needsLeft === MUST ? "left " : "")
+					+ (needsLeft === MUST && needsRight === MUST ? "and " : "")
+					+ (needsRight === MUST ? "right " : "")
+					+ 'of "' + token.text + '"' + "')";
 			}
-
-			if (midString) {
-				return left + midString + right;
+			/*
+				Conversely, if a value is present at the left or right, and it MUSTN'T be there,
+				produce an error message.
+			*/
+			if ((needsLeft === MUSTNT && left) || (needsRight === MUSTNT && right)) {
+				return "TwineError.create('operation','There can't be code to the "
+					+ (needsLeft === MUSTNT ? "left " : "")
+					+ (needsLeft === MUSTNT && needsRight === MUSTNT ? "or " : "")
+					+ (needsRight === MUSTNT ? "right " : "")
+					+ 'of "' + token.text + '"' + "')";
 			}
-			else if (assignment) {
-				return "Operations.makeAssignmentRequest("
-					+ [left, right, stringify(assignment)]
-					+ ")";
-			}
-			else if (possessive) {
-				return "VarRef.create("
-					+ (possessive === "belonging" ? right : left)
-					+ ",{computed:true,value:"
-					+ (possessive === "belonging" ? left : right)
-					+ "})"
-					+ (isVarRef ? "" : ".get()");
-			}
-			else if (operation) {
-				return " Operations[" + stringify(operation) + "](" + left + "," + right + ") ";
-			}
+			return openString + left + midString + right + closeString;
 		}
 		/*
 			Base case: just convert the tokens back into text.
