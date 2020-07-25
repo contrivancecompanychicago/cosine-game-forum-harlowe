@@ -178,11 +178,11 @@ tw-error {
 	cursor: help;
 	white-space:pre-wrap;
 	&.error {
-		background-color: hsla(312, 72%, 55%, 0.4); // A demure pink
+		background-color: hsla(312, 72%, 55%, 0.6); // A demure pink
 		color:$color;
 	}
 	&.warning {
-		background-color: hsla(30, 72%, 55%, 0.4); // A stained orange
+		background-color: hsla(30, 72%, 55%, 0.6); // A stained orange
 		color:$color;
 		display: none; // Only available in debug mode.
 		.debug-mode & {
@@ -203,6 +203,7 @@ tw-open-button, tw-folddown {
 	font-size: 0.8rem;
 	margin: 0 0.4rem;
 	padding:2px;
+	white-space:pre;
 }
 tw-folddown {
 	&::after {

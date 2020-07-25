@@ -38,14 +38,16 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 
 		Custom macros consist of two structures: a set of data inputs (called *parameters*), and a body of code that creates the output.
 
-		Each parameter consists of a datatype, the "-type" suffix, and a temp variable, just like typed variables created with (set:).
+		Each parameter consists of a datatype or pattern of data, the "-type" suffix, and a temp variable, just like typed temp variables created with (set:).
 		When you, the author, call the macro and give data at that parameter's position, it is put into the temp variable if it fits the datatype.
 		A macro stored in $treasure with `str-type _name, num-type price` can be called by `($treasure: "Gold Watch", 155)`.
-		The datatypes are checked, and if they don't match (for instance, by incorrectly writing `($treasure: 155, "Gold Watch")`),
+		The types are checked, and if they don't match (for instance, by incorrectly writing `($treasure: 155, "Gold Watch")`),
 		then an error will result. This ensures that incorrectly written custom macro calls are caught early, just like with built-in macros.
 
-		If you wish to write a very general value-selection or data-structure macro, such as `(a:)` or `(either:)`, that can take any kind of data
-		value, you can write `any-type` for that parameter. However, using this is not recommended unless you genuinely need it.
+		As with TypedVars used in other places, you can use a complex data structure as the "type" of the variable - `(a:number, number)-type _coords`
+		specifies a parameter that requires an array of two numbers. If you wish to write a very general value-selection or data-structure macro,
+		such as `(a:)` or `(either:)`, that can take any kind of data value, you can write `any-type` for that parameter. However, using `any-type` is
+		not recommended unless you genuinely need it, as you miss out on the ability to catch wrong-type errors.
 
 		You might, on occasion, want to make a macro that can take an arbitrary amount of values, similar to certain built-in macros like `(a:)`,
 		`(altered:)`, and so forth. To do this, you can place the spread `...` syntax in front of a parameter. This turns it into a spread parameter,

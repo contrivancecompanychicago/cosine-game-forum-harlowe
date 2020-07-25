@@ -1,13 +1,12 @@
 "use strict";
-define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'internaltypes/twineerror'], ({objectName}, Datatype, VarRef, TwineError) => {
+define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'internaltypes/twineerror'], ({objectName, typeName, matches, isUnstorable}, Datatype, VarRef, TwineError) => {
 	/*d:
 		TypedVar data
 
-		Typed variables combine a datatype and the name of a variable, joined by adding the `-type` suffix to the datatype. `str-type _name` defines a typed variable, _name,
-		which can only be set to a string. You can add the `-type` suffix to anything that contains a datatype - `$leonsKickassDatatype-type _option` is valid
-		if $leonsKickassDatatype contains a datatype.
+		Typed variable names combine a datatype or a pattern of data, and the name of a variable, joined by adding the `-type` suffix to the datatype. `str-type _name` defines
+		a typed variable, _name, which can only be set to a string. `(a: number)-type $a` defines a typed variable, $a, which can only be set to an array with 1 number value inside.
 
-		Typed variables are used in several places – (set:), (put:) and (move:) can be given typed variables in place of normal variables to restrict that variable
+		Typed variable names are used in several places – (set:), (put:) and (move:) can be given typed variables in place of normal variables to restrict that variable
 		to the given type, and ensure all future uses of that variable maintain that restriction. Typed variables are also used by the (macro:) macro to specify
 		the input data for your custom macros, and ensure users of that macro maintain those restrictions. Finally, typed temp variables can be used in lambdas, to
 		guarantee that the lambda is being used with the correct type of data.
@@ -15,8 +14,9 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 		The ability to restrict the type of data that your variables and custom macros receive is a great assistance in debugging your stories,
 		as well as understanding what the variable or macro is and does - especially if they were written by someone else and imported into the project.
 
-		When a TypedVar is preceded with the `...` spread operator, such as in `...str-type _a`, then it becomes a spread typed variable, which represents an arbitrary
-		number of values. Giving multiple values of the given type at or after such a position will cause an array containing those values to be put into the named variable.
+		TypedVars used with the (macro:) macro support an additional feature. When a TypedVar is a plain datatype name preceded with the `...` spread operator, such as in `...str-type _a`,
+		then it becomes a spread typed variable, which represents an arbitrary number of values. Giving multiple values of the given type at or after such a position will cause an array
+		containing those values to be put into the named variable.
 		
 		Typed variables, when retrieved from a custom macro's "params" array, have two data names that you can examine.
 
@@ -36,7 +36,6 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 		TwineScript_Print() {
 			return "`[A typed variable name]`";
 		},
-		TwineScript_Unstorable: true,
 
 		/*
 			Typed variables are immutable data.
@@ -57,7 +56,7 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 			The presence of this property allows TypedVars to be used in "matches" patterns.
 		*/
 		TwineScript_IsTypeOf(val) {
-			return this.datatype.TwineScript_IsTypeOf(val);
+			return matches(this.datatype, val);
 		},
 
 		/*
@@ -79,7 +78,9 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 			A convenience method that allows a TypedVar to directly define the type for its variable.
 		*/
 		defineType() {
-			return this.varRef.defineType(this.datatype);
+			if (this.datatype.name !== "any") {
+				return this.varRef.defineType(this.datatype);
+			}
 		},
 		
 		create(datatype, varRef) {
@@ -88,18 +89,15 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 				here.
 			*/
 			let error;
-			if ((error = TwineError.containsError(varRef) || TwineError.containsError(datatype))) {
+			if ((error = TwineError.containsError(varRef) || TwineError.containsError(datatype) ||
+					/*
+						This handles wrapped VarRef errors (those created by VarRef.create()).
+					*/
+					varRef.error)) {
 				return error;
 			}
-			/*
-				Additionally, here we must perform type-checking for the "-type" operator.
-				These checks are for: non-varrefs, error varrefs, and property accesses.
-			*/
-			if (!VarRef.isPrototypeOf(varRef) || varRef.error || varRef.propertyChain.length !== 1) {
-				return TwineError.create("operation", "I can't set the datatype of anything other than a single variable or temp variable.");
-			}
-			if (!Datatype.isPrototypeOf(datatype)) {
-				return TwineError.create("syntax", "The -type syntax should only have a datatype name on the left side of it, not " + objectName(datatype) + '.');
+			if (isUnstorable(datatype)) {
+				return TwineError.create("syntax", "The -type syntax can't have " + typeName(datatype) + ' to its left.');
 			}
 			return Object.assign(Object.create(this), {
 				datatype,

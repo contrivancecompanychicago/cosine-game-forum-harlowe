@@ -45,6 +45,14 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 			*/
 			"";
 	}
+
+	/*
+		Used to check if a collection contains unstorable values.
+	*/
+	function isUnstorable(value) {
+		return value && (value.TwineScript_Unstorable || (value instanceof Map && [...value.values()].some(isUnstorable))
+				|| (value instanceof Set && [...value].some(isUnstorable)));
+	}
 	
 	/*
 		Next a quick function that determines if a datamap property name is valid.
@@ -562,13 +570,18 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 	*/
 	function matches(l, r) {
 		/*
-			Mainly for readability, the datatype checks are done first.
+			Mainly for readability, the datatype checks are done first. Note that if both sides are datatypes,
+			then this should return true if either side matches the other.
 		*/
+		let datatypeMatch = false;
 		if (l && typeof l.TwineScript_IsTypeOf === sFunction) {
-			return l.TwineScript_IsTypeOf(r);
+			datatypeMatch |= l.TwineScript_IsTypeOf(r);
 		}
 		if (r && typeof r.TwineScript_IsTypeOf === sFunction) {
-			return r.TwineScript_IsTypeOf(l);
+			datatypeMatch |= r.TwineScript_IsTypeOf(l);
+		}
+		if (datatypeMatch) {
+			return true;
 		}
 		/*
 			All subsequent code strongly resembles is(), because matching is close
@@ -758,6 +771,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		isValidDatamapName,
 		collectionType,
 		isSequential,
+		isUnstorable,
 		clone,
 		objectName,
 		typeName,

@@ -46,6 +46,9 @@ define([
 			from ever being (set:) into it by accident.
 			* `(set: const-type $robotText to (font:"Courier New"))` sets a variable and makes it so it can't ever be set
 			to another value.
+			* `(set: (a: _mainPath, _sidePath, _backPath) to (a:"north","northeast","south"))` sets three temp variables (by overwriting)
+			each variable in the array on the left with its matching value in the array on the right.
+			* `(set: (dm: "Maths", _Maths, "Science", _Science) to $characterStats)` is the same as `(set: _Maths to $characterStats's Maths, _Science to $characterStats's Science)`.
 			
 			Rationale:
 			
@@ -74,10 +77,45 @@ define([
 			You can also use `it` in expressions on the right-side of `to`. Much as in other
 			expressions, it's a shorthand for what's on the left side: `(set: $vases to it + 1)`
 			is a shorthand for `(set: $vases to $vases + 1)`.
+
+			Due to the variable syntax potentially conflicting with dollar values (such as $1.50) in your story text,
+			variables cannot begin with a numeral.
+
+			Destructuring:
+
+			As of Harlowe 3.2.0, you can extract multiple values from an array or datamap at once, and set them into
+			multiple variables, by placing a matching data structure on the left of `to` containing variables at
+			the positions of those values. For instance, `(set: (a: $x, 2, $y) to (a: 1, 2, 3))` sets $x to 1 and $y to 3,
+			and `(set: (dm: "A", $x, "B", $y) to (dm: "B", 3, "A", 1))` sets $x to 1 and $y to 3. Harlowe checks that each value on the left side has a
+			value that matches it (using the same rules as the `matches` operator) on the right side, and overwrites the left side with the
+			right side, causing the variables at various positions in the left side to be overwritten with values from the
+			right. This is known as **de-structuring**. (Remember that datamaps' "positions" are determined by their datanames, not their locations
+			in the (dm:) macro that created them, as, unlike arrays, they are not sequential.)
+
+			Note that the left side's data structure can have any number of nested data structures inside it.
+			`(set: (a: (a: $x), 2, (dm: "A", $y)) to (a: (a: 1), 2, (dm: "A", 3)))` also sets $x to 1 and $y to 3. If you need to reach deeply
+			into a data structure (such as one produced by (passages:), (saved-games:) or (open-storylets:)) to get a certain set of values,
+			this can come in handy.
+
+			You may have noticed that the data structures on the left side may have values that aren't variable names, such as the 2 in the
+			preceding example. These can be used as error-checking values -if a matching value isn't present on the right side at that same position,
+			then an error will be reported. To ensure that the right side does indeed contain the values you expect it to, you may include these
+			values in the left side. Of course, you may want to simply enforce that a value of a given datatype is in that position, rather a specific
+			value - this can be done by placing a datatype name at that position, like `num` or `str` or `empty`. Consult the datatype article for more
+			information on datatype names.
+
+			As you may have also noticed, this syntax is convenient for extracting values from the left side of arrays. But, what if you wish to only select
+			values from the middle, or to skip certain values without putting them in variables? You could use a value or a datamap name at that position,
+			such as by writing `(set: (a: num, $y, $x) to $array)` - though, if you aren't even certain of the data types that could be at those positions,
+			you may find the special `any` data type to be a big help - `(set: (a: any, $y, $x) to $array)` sets $x to the 3rd value in $array and $y to the
+			2nd value, without needing to worry about what the first value might be.
 			
-			If the destination isn't something that can be changed - for instance, if you're trying to set a
-			bare value to another value, like `(set: true to 2)` - then an error will be printed. This includes
-			modifying arrays - `(set: (a:2,3)'s 1st to 1)` is also an error.
+			If the destination doesn't contain any variables - for instance, if you write `(set: (a:2,3)'s 1st to 1)`,
+			or `(set: true to 2)` - then an error will be printed.
+
+			For obvious reasons, destructuring can't be used with datasets - you'll have to convert them to arrays on the right side.
+
+			Typed variables:
 
 			A common source of errors in a story is when a variable holding one type of data is mistakenly overridden
 			with a different type of data, such as when putting `"1"` (the string "1") into a variable that should
@@ -94,9 +132,10 @@ define([
 			Using this, the variable is guaranteed to constantly hold that value for the entirety of the story (or, if it's
 			a temp variable, the passage).
 
-			Due to the variable syntax potentially conflicting with dollar values (such as $1.50) in your story text,
-			variables cannot begin with a numeral.
-			
+			This syntax can be combined with de-structuring - simply place the typed variable where a normal variable would be
+			within a data structure. `(set: (a: num, num-type $y, num-type $x) to $array)` not only sets $y and $x, but it also
+			restricts them to number data, all in one statement.
+
 			See also:
 			(push:), (move:)
 
@@ -131,6 +170,10 @@ define([
 			Just as with (set:), a variable is changed using `(put: ` value `into` variable `)`. You can
 			also set multiple variables in a single (put:) by separating each VariableToValue
 			with commas: `(put: 2 into $batteries, 4 into $bottles)`, etc.
+
+			De-structuring also works, although you will need to remember that the left side of a (set:) is
+			the right side of a (put:) - `(set: (a: any, $y, $x) to $array)` would be written as
+			`(put: $array into (a: any, $y, $x))`.
 
 			You can also use typed variables with (put:) - `(put: 1 into num-type $days)` permanently
 			restricts $days to numbers. Consult the article about (set:) for more information about
@@ -204,7 +247,9 @@ define([
 			the destination of the value is on the right, whereas the source is on the left.
 
 			As with (set:) and (put:), you can also change multiple variables in a single (move:) by
-			separating each VariableToValue with commas: `(move: $a's 1st into $b, $a's 2nd into $c)`, etc.
+			separating each VariableToValue with commas: `(move: $a's 1st into $b, $a's 2nd into $c)`, etc. Also,
+			destructuring syntax (described in detail in (set:)'s article) works with (move:) as well - `(move: $array into (a: $x, $y))`
+			will cause only the first and second values of $array to be moved into $x and $y.
 
 			If the data value you're accessing cannot be removed - for instance, if it's an array's `length` -
 			then an error will be produced.
@@ -384,12 +429,7 @@ define([
 			Added in: 1.0.0
 			#data structure 1
 		*/
-		(["a", "array"], (_, ...args) => args, zeroOrMore(
-			/*
-				This fearsome hack allows arrays created with *just* (a:) to hold TypedVars, even though those have
-				TwineScript_Unstorable and can't be stored inside variables.
-			*/
-			either(Any, TypedVar)))
+		(["a", "array"], (_, ...args) => args, zeroOrMore(Any))
 		
 		/*d:
 			(range: Number, Number) -> Array
@@ -1586,12 +1626,7 @@ define([
 			}
 			return map;
 		},
-		zeroOrMore(
-			/*
-				The same type signature hack for (a:), allowing TypedVars to be used for destructuring patterns in the destination
-				side of (set:), is also present here.
-			*/
-			either(Any, TypedVar)))
+		zeroOrMore(Any))
 		
 		/*
 			DATASET MACROS

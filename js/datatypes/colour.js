@@ -93,7 +93,14 @@ define(['jquery', 'utils'], ($, {matMul}) => {
 			return cssNameCache[colourName];
 		}
 		let colour = $("<p>").css("background-color", colourName).css("background-color");
-		if (!colour.startsWith('rgb')) {
+		/*
+			"transparent" is the only built-in Harlowe colour which can't be represented by
+			hex form (and which isn't converted to it during compilation).
+		*/
+		if (colour === "transparent") {
+			colour = { r:0, g:0, b:0, a:0 };
+		}
+		else if (!colour.startsWith('rgb')) {
 			colour = { r:192, g:192, b:192 };
 		}
 		else {

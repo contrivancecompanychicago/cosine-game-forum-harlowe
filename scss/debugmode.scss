@@ -322,11 +322,11 @@ tw-debugger {
 		overflow-x:scroll;
 		> * {
 			display:table-row;
-			// nth-of=type() is necessary, as there are interstitial rows (<tr> instead of <div>) that represent
-			// the (source:) of the previous row, which should be ignored with respect to row colouring.
-			&:nth-of-type(2n) {
-				background:#EEE;
-			}
+		}
+		// nth-of=type() is necessary, as there are interstitial rows (<tr> instead of <div>) that represent
+		// the (source:) of the previous row, which should be ignored with respect to row colouring.
+		> div:nth-of-type(2n) {
+			background:#EEE;
 		}
 	}
 	.panel-row-buttons {

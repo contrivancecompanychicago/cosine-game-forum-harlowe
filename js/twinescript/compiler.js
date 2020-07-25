@@ -244,7 +244,9 @@ define(['utils'], ({impossible}) => {
 		@param {Array} The tokens array.
 		@param {Object} Some flags to carry down recursive calls to compile()
 			{Boolean} isVarRef: whether or not this value should be compiled to a VarRef
-			{String} [whitespaceError]: if isVarRef is true and this is given, this is used as an error
+			{Boolean} isTypedVar: whether or not this value should be compiled to an any-type TypedVar if it's a variable.
+				Should only be true for the left-side of 'to' and right-side of 'into'.
+			{String} [whitespaceError]: if isVarRef or isTypedVar is true and this is given, this is used as an error
 				to be returned if the token was just whitespace.
 			{String} [elidedComparison]: whether or not this is part of an elided comparison
 				inside an "and" or "or" operation, like "3 < 4 and 5".
@@ -254,7 +256,9 @@ define(['utils'], ({impossible}) => {
 				the TwineError compiled code.
 		@return {String} String of Javascript code.
 	*/
-	function compile(tokens, {isVarRef, whitespaceError, elidedComparison, testNeedsRight} = {}) {
+	function compile(tokens, {isVarRef, isTypedVar, whitespaceError, elidedComparison, testNeedsRight} = {}) {
+		const Operations = "Operations", dotCreate = ".create(", It = Operations + ".Identifiers.it";
+
 		// Convert tokens to a 1-size array if it's just a single non-array.
 		tokens = [].concat(tokens);
 		/*
@@ -269,7 +273,7 @@ define(['utils'], ({impossible}) => {
 				should be abided.
 			*/
 			if (isVarRef && whitespaceError) {
-				return "TwineError.create('operation'," + stringify(whitespaceError) + ")";
+				return "TwineError" + dotCreate + "'operation'," + stringify(whitespaceError) + ")";
 			}
 			return "";
 		}
@@ -282,22 +286,21 @@ define(['utils'], ({impossible}) => {
 			const {type} = token;
 			if (type === "identifier") {
 				if (isVarRef) {
-					return "VarRef.create(Operations.Identifiers," + stringify(token.text) + ")";
+					return "VarRef" + dotCreate + "Operations.Identifiers," + stringify(token.text) + ")";
 				}
 				return "Operations.Identifiers." + token.text.toLowerCase() + " ";
 			}
-			else if (type === "variable") {
-				return "VarRef.create(State.variables,"
+			else if (type === "variable" || type === "tempVariable") {
+				const ret = "VarRef" + dotCreate + (type === "tempVariable" ? "section.stackTop.tempV" : "State.v") + "ariables,"
 					+ stringify(token.name)
-					+ ")" + (isVarRef ? "" : ".get()");
-			}
-			else if (type === "tempVariable") {
-				return "VarRef.create(section.stack[0].tempVariables,"
-					+ stringify(token.name)
-					+ ")" + (isVarRef ? "" : ".get()");
+					+ ")" + (isVarRef || isTypedVar ? "" : ".get()");
+				if (isTypedVar) {
+					return "TypedVar" + dotCreate + "Datatype" + dotCreate + "'any')," + ret + ")";
+				}
+				return ret;
 			}
 			else if (type === "hookName") {
-				return "HookSet.create({type:'name', data:'" + token.name + "'}) ";
+				return "HookSet" + dotCreate + "{type:'name', data:'" + token.name + "'}) ";
 			}
 			else if (type === "string") {
 				/*
@@ -311,13 +314,13 @@ define(['utils'], ({impossible}) => {
 				/*
 					Slice off the opening [ and closing ] of the source.
 				*/
-				return "CodeHook.create(" + stringify(token.text.slice(1,-1)) + "," + stringify(token.html || '') + ")";
+				return "CodeHook" + dotCreate + stringify(token.text.slice(1,-1)) + "," + stringify(token.html || '') + ")";
 			}
 			else if (type === "colour") {
-				return "Colour.create(" + stringify(token.colour) + ")";
+				return "Colour" + dotCreate + stringify(token.colour) + ")";
 			}
 			else if (type === "datatype") {
-				return "Datatype.create(" + stringify(token.name) + ")";
+				return "Datatype" + dotCreate + stringify(token.name) + ")";
 			}
 			/*
 				"blockedValue" tokens aren't created by the TwineMarkup tokeniser, but made from permuted macro
@@ -339,7 +342,7 @@ define(['utils'], ({impossible}) => {
 			*/
 			else if (type === "whitespace") {
 				if (isVarRef && whitespaceError) {
-					return "TwineError.create('operation'," + stringify(whitespaceError) + ")";
+					return "TwineError" + dotCreate + "'operation'," + stringify(whitespaceError) + ")";
 				}
 			}
 		}
@@ -354,10 +357,9 @@ define(['utils'], ({impossible}) => {
 		/*
 			This helper creates arguments for recursive compile() calls whose results should be VarRefs.
 		*/
-		const varRefArgs = (side) => ({isVarRef:true, whitespaceError:`I need usable data to be on the ${side} of "${token.text}".`});
+		const varRefArgs = (side, isTypedVar) => ({isVarRef:true, isTypedVar, whitespaceError:`I need usable data to be on the ${side} of "${token.text}".`});
 
 		const MUST = "must", MUSTNT = "mustn't", MAY = "may";
-		const Operations = "Operations", dotCreate = ".create(";
 		let
 			/*
 				These hold the returned compilations of the tokens
@@ -418,7 +420,7 @@ define(['utils'], ({impossible}) => {
 			openString = Operations + ".makeAssignmentRequest(" + Operations + ".setIt(";
 			right = compile(after, varRefArgs("right"));
 			midString = "),";
-			left = compile(before, varRefArgs("left"));
+			left = compile(before, varRefArgs("left", true));
 			closeString = ",'to')";
 		}
 		else if (type === "into") {
@@ -426,7 +428,7 @@ define(['utils'], ({impossible}) => {
 			// varRefArgs uses the syntactic left, which isn't the compiler's left.
 			right = compile(before, varRefArgs("left"));
 			midString = "," + Operations + ".setIt(";
-			left  = compile(after, varRefArgs("right"));
+			left  = compile(after, varRefArgs("right", true));
 			closeString = "),'into')";
 		}
 		else if (type === "typeSignature") {
@@ -434,6 +436,11 @@ define(['utils'], ({impossible}) => {
 			midString = ",";
 			right = compile(after, varRefArgs("right"));
 			closeString = ")";
+			/*
+				Because this is already being compiled into a TypedVar, the variable on the right does not need
+				to be compiled into a TypedVar as well.
+			*/
+			isTypedVar = false;
 		}
 		else if (type === "where" || type === "when" || type === "via") {
 			openString = "Lambda" + dotCreate;
@@ -693,7 +700,7 @@ define(['utils'], ({impossible}) => {
 		}
 		else if (type === "belongingOperator" || type === "belongingItOperator") {
 			if (token.type.includes("It")) {
-				left = "Operations.Identifiers.it";
+				left = It;
 			}
 			else {
 				// Since, as with belonging properties, the variable is on the right,
@@ -717,7 +724,7 @@ define(['utils'], ({impossible}) => {
 				This is somewhat tricky - we need to manually wrap the left side
 				inside the Operations.get() call, while leaving the right side as is.
 			*/
-			openString = "VarRef.create(";
+			openString = "VarRef" + dotCreate;
 			left = compile(before, varRefArgs("left"));
 			closeString = ","
 				/*
@@ -733,19 +740,30 @@ define(['utils'], ({impossible}) => {
 				This is actually identical to the above, but with the difference that
 				there is no left subtoken (it is always Identifiers.it).
 			*/
-			left = "VarRef.create(Operations.Identifiers.it,"
-				+ stringify(token.name) + ").get()";
-			midString = " ";
+			openString = "VarRef" + dotCreate;
+			left = It;
+			closeString = ","
+				/*
+					Utils.stringify() is used to both escape the name
+					string and wrap it in quotes.
+				*/
+				+ stringify(token.name) + ")"
+				+ (isVarRef ? "" : ".get()");
 			needsLeft = needsRight = MAY;
 		}
 		else if (type === "possessiveOperator" || type === "itsOperator") {
 			if (token.type.includes("it")) {
-				left = "Operations.Identifiers.it";
+				left = It;
 				needsLeft = MAY;
 			}
-			openString = "VarRef.create(";
+			openString = "VarRef" + dotCreate;
 			midString = ",{computed:true,value:";
 			closeString = "})" + (isVarRef ? "" : ".get()");
+			/*
+				The left side should not be compiled into a TypedVar even if it's in position - for instance,
+				num-type $a's ('foo') shouldn't compile "num-type $a" into a TypedVar.
+			*/
+			isTypedVar = false;
 		}
 		else if (type === "twineLink") {
 			/*
@@ -796,7 +814,12 @@ define(['utils'], ({impossible}) => {
 						first token after this one) must be sliced off.
 					*/
 					+ variableCall
-				))
+				),
+				/*
+					To allow destructuring patterns to work, macros in destructuring position should
+					compile all of their contained VarRefs to TypedVars.
+				*/
+				{isTypedVar})
 				+ '])';
 			needsLeft = needsRight = MUSTNT;
 		}
@@ -805,7 +828,7 @@ define(['utils'], ({impossible}) => {
 			needsLeft = needsRight = MUSTNT;
 		}
 		else if (type === "error") {
-			return "TwineError.create('syntax'," + stringify(token.message)
+			return "TwineError" + dotCreate + "'syntax'," + stringify(token.message)
 				+ (token.explanation ? ", " + stringify(token.explanation) : "")
 			+ ")";
 		}
@@ -819,14 +842,14 @@ define(['utils'], ({impossible}) => {
 				values for left and right, but usually they will just be
 				the tokens to the left and right of the matched one.
 			*/
-			left  = (left  || compile(before, {isVarRef})).trim();
+			left  = (left  || compile(before, {isVarRef, isTypedVar})).trim();
 			right = (right || compile(after)).trim();
 			/*
 				The compiler should implicitly insert the "it" keyword when the
 				left-hand-side of a comparison operator was omitted.
 			*/
 			if (implicitLeftIt && !(left)) {
-				left = "Operations.Identifiers.it";
+				left = It;
 			}
 			/*
 				If a value is missing from the left or right, and it MUST be there,
@@ -845,7 +868,7 @@ define(['utils'], ({impossible}) => {
 				/*
 					Otherwise, create the error object for end-user examination.
 				*/
-				return "TwineError.create('operation','I need some code to be "
+				return "TwineError" + dotCreate + "'operation','I need some code to be "
 					+ (needsLeft === MUST ? "left " : "")
 					+ (needsLeft === MUST && needsRight === MUST ? "and " : "")
 					+ (needsRight === MUST ? "right " : "")
@@ -856,7 +879,7 @@ define(['utils'], ({impossible}) => {
 				produce an error message.
 			*/
 			if ((needsLeft === MUSTNT && left) || (needsRight === MUSTNT && right)) {
-				return "TwineError.create('operation','There can't be code to the "
+				return "TwineError" + dotCreate + "'operation','There can't be code to the "
 					+ (needsLeft === MUSTNT ? "left " : "")
 					+ (needsLeft === MUSTNT && needsRight === MUSTNT ? "or " : "")
 					+ (needsRight === MUSTNT ? "right " : "")
@@ -875,7 +898,7 @@ define(['utils'], ({impossible}) => {
 			return (('value' in tokens[0] ? tokens[0].value : tokens[0].text) + "").trim() || " ";
 		}
 		else {
-			return tokens.reduce((a, token) => a + compile(token, {isVarRef}), "");
+			return tokens.reduce((a, token) => a + compile(token, {isVarRef, isTypedVar}), "");
 		}
 		return "";
 	}

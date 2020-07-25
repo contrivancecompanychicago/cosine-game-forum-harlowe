@@ -12,7 +12,7 @@ describe("patterns", function() {
 		['(dm:)',"datamap","dm"],
 		['(ds:)','dataset',"ds"],
 		['red','colour','color'],
-		['str','datatype',undefined],
+		['whitespace','datatype',undefined],
 		['(_a where _a is 2)','lambda',undefined,'no structural equality'],
 		['(macro:[(output:1)])','macro',undefined,'no structural equality'],
 		['(gradient:90,0,red,1,white)','gradient']
@@ -43,9 +43,12 @@ describe("patterns", function() {
 	function isATest(op) {
 		typesAndValues.forEach(function(e) {
 			datatypes.forEach(function(name) {
+				if (name === "datatype" && op.includes("match")) {
+					return;
+				}
 				// e[1] and e[2] are datatypes that e[0] is.
 				// They don't fit, however, if the datatype is "datatype" and the operation is "matches"
-				var matchingType = (name === e[1] || name === e[2]) && (name !== "datatype" || !op.includes("match"));
+				var matchingType = (name === e[1] || name === e[2]);
 
 				expect("(print:" + e[0] + " " + op + " " + name + ")").markupToPrint((op.includes(" not ") !== matchingType) + '');
 			});
@@ -203,8 +206,9 @@ describe("patterns", function() {
 	});
 	describe("destructuring assignment", function() {
 		describe("when given an array pattern assignment request", function() {
-			it("sets the typed variable in the pattern to their matching values", function() {
+			it("sets the variable in the pattern to their matching values", function() {
 				[
+					["(a:$a)", "(a:2)"],
 					["(a:num-type $a)", "(a:2)"],
 					["(a:5,num,num,num-type $a,num)","(a:5,4,3,2,1)"],
 					["(a:(a:num,num-type $a),num)","(a:(a:1,2),3)"],

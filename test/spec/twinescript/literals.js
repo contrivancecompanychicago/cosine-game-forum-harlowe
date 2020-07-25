@@ -115,6 +115,7 @@ describe("twinescript literals", function() {
 				expectColourToBe(colour, "#" + mapping[colour]);
 				expectColourToBe(colour.toUpperCase(), "#" + mapping[colour]);
 			});
+			expect(runPassage("(print:transparent)").find('tw-colour')).toHaveBackgroundColour('rgba(0,0,0,0)');
 		});
 		it("can contain close-brackets", function() {
 			expect('(print: ")")').markupToPrint(")");

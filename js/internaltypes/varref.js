@@ -1,6 +1,6 @@
 "use strict";
 define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'datatypes/hookset'],
-(State, TwineError, {impossible, andList, nth}, {isObject, isSequential, objectName, typeName, clone, isValidDatamapName, subset, isPureObject}, HookSet) => {
+(State, TwineError, {impossible, andList, nth}, {isObject, toSource, isSequential, objectName, typeName, clone, isValidDatamapName, subset, isPureObject, isUnstorable, matches}, HookSet) => {
 	/*
 		VarRefs are essentially objects pairing a chain of properties
 		with an initial variable reference - "$red's blue's gold" would be
@@ -400,9 +400,9 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 							"This variable can't be changed for the rest of the story.");
 					}
 				}
-				else if (!type.TwineScript_IsTypeOf(value)) {
+				else if (!matches(type,value)) {
 					return TwineError.create('operation', "I can't set " + (obj === State.variables ? "$" : "_") + prop + " to " + typeName(value)
-						+ " because it's been restricted to " + type.name + "-type data.",
+						+ " because it's been restricted to " + toSource(type) + "-type data.",
 						"You can restrict a variable or data name by giving a typed variable to (set:) or (put:)."
 					);
 				}
@@ -737,20 +737,9 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				/*
 					Produce an error if the value is "unstorable", OR if it contains an unstorable.
 				*/
-				const containsUnstorable = value => {
-					return value && (value.TwineScript_Unstorable || (value instanceof Map && [...value.values()].some(containsUnstorable))
-						|| (value instanceof Set && [...value].some(containsUnstorable)));
-				};
-				if (containsUnstorable(value)) {
+				if (isUnstorable(value)) {
 					return TwineError.create("operation", objectName(value) + " can't be stored.");
 				}
-
-				/*
-					Produce an error if the value is "unstorable".
-				*
-				if (value && value.TwineScript_Unstorable) {
-					return TwineError.create("operation", typeName(value) + " can't be stored.");
-				}*/
 
 				/*
 					Only attempt to clone the object if it's not the final iteration.
@@ -938,10 +927,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		*/
 		defineType(type) {
 			const {object, compiledPropertyChain} = this;
-			if (!object || !object.TwineScript_VariableStore || compiledPropertyChain.length !== 1 || !object.TwineScript_TypeDefs
-					// It shouldn't currently be possible to create a VarRef to a variable store whose first prop is an array,
-					// but, just in case...
-					|| Array.isArray(compiledPropertyChain[0])) {
+			if (!object || !object.TwineScript_VariableStore || compiledPropertyChain.length !== 1 || !object.TwineScript_TypeDefs) {
 				return TwineError.create("unimplemented", "I can only restrict the datatypes of variables, not data names or anything else.");
 			}
 			/*
@@ -1023,7 +1009,9 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				propertyChain = object.propertyChain.concat(propertyChain);
 				object = object.object;
 			}
-
+			/*
+				If the passed-in object is a TypedVar, expand the propertyChain
+			*/
 			const {compiledPropertyChain, deepestObject} = compilePropertyChain(object, propertyChain);
 			if ((error = TwineError.containsError(compiledPropertyChain, deepestObject))) {
 				return wrapError(error);
