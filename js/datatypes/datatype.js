@@ -25,7 +25,7 @@ define([
 		do so. They can be used to perform one-off checks using the `is a` and `matches` operators, and can be combined with variables to make TypedVars, variables that
 		are restricted to a certain type and that automatically perform these checks for you.
 
-		All of the datatypes are as follows.
+		The built-in datatypes are as follows.
 
 		| Value | Data type
 		|---
@@ -57,7 +57,9 @@ define([
 		| `alphanumeric`, `alnum` | Only matches strings containing only alphanumeric characters (letters and numbers).
 		| `newline` | Only matches newline characters.
 		| `const` | Matches nothing; Use this only with (set:) to make constants.
-		| `any` | Matches anything; Use this only with (macro:) to make variables that accept any storable type.
+		| `any` | Matches anything; Use this with (macro:) to make variables that accept any storable type, or with (set:) inside data structure patterns.
+
+		Finally, custom string datatypes can be created using a suite of macros, starting with (p:).
 
 		If you want to check if a variable's data is a certain type, then you can use the `is a` operator to do the comparison. To check if the data in $money is a number, write `$money is a num`.
 
@@ -75,6 +77,7 @@ define([
 		* `(datamap:'a',2,'b',4) matches (datamap:'b',num,'a',num))` is true.
 		* `(a: 2, 3, 4) matches (a: 2, int, int)` is true. (Patterns can have exact values in them, which must be equal in the matching data).
 		* `(a: (a: 2), (a: 4)) matches (a: (a: num), (a: even))` is true.
+		* `(p: (p-many:"A"), "!")` matches "AAAAAAAA!"` is true.
 
 		To summarise, the datatype operators are the following.
 

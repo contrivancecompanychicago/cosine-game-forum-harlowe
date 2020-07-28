@@ -10,7 +10,8 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 
 		Example usage:
 		```
-		(set: $healthSummary to (macro: dm-type _stats, [
+		(set: $charSheet to (dm: "name", str, "HP", num, "poison", num, "heartbreak", bool))
+		(set: $healthSummary to (macro: $charSheet-type _stats, [
 			This text inside the macro is not displayed during the game.
 			(set: _TheyAre to _stats's name + " is ")
 			Dead characters get a single, pithy line.
@@ -170,6 +171,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 
 	/*d:
 		(output: Any) -> Instant
+		Also known as: (out:)
 
 		Use this macro inside a (macro:)'s CodeHook to output the value that the macro produces.
 
@@ -204,7 +206,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		Added in: 3.2.0
 		#custom macros 2
 	*/
-	addCommand("output", () => {}, ({stack}, any) => {
+	addCommand(["output", "out"], () => {}, ({stack}, any) => {
 		/*
 			If this errors, then the error will be returned now.
 		*/

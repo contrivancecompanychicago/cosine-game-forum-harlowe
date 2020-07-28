@@ -58,6 +58,7 @@ const outputFile = {
 	"macroName-boolean":      typeColours.boolean,
 	"macroName-array":        typeColours.array,
 	"macroName-dataset":      typeColours.dataset,
+	"macroName-datatype":     typeColours.datatype,
 	"macroName-number":       typeColours.number,
 	"macroName-datamap":      typeColours.datamap,
 	"macroName-changer":      typeColours.changer,

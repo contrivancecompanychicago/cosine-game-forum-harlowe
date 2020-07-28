@@ -166,7 +166,7 @@ pre { display:inline; }
 .previewButton { background:inherit; color:inherit; cursor:pointer; position:absolute; right: 0px; bottom: 0px; padding:0.1rem 0.3rem; border-top:1px solid #888; border-left:1px solid #888; }
 .previewButton::after { content:"▶"; }
 .previewButton:hover { background: #ccc }
-:not(pre) > code { background:hsla(0,0%,100%,0.75); border:1px dotted #888; display:inline; padding:1px; white-space:nowrap; font-size:1rem; }
+:not(pre) > code { background:hsla(0,0%,100%,0.75); border:1px dotted #888; display:inline; padding:1px; white-space:pre-wrap; font-size:1rem; }
 table:not(.datamap) :not(pre) > code { white-space: pre-wrap; }
 /* Heading links */
 .heading_link::before { content: "§"; display:inline-block; margin-left:-25px; padding-right:10px; color:black; font-weight:100; visibility:hidden; text-decoration:none; }

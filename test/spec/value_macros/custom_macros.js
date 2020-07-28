@@ -81,6 +81,9 @@ describe("custom macros", function() {
 			expect("(set: $foo to 'bar', $e to (macro:[(output:'')(set:$foo to 'baz')]))($e:)$foo").markupToPrint("bar");
 			expect("(set: $e to (macro:[(output:'bar')(output:'baz')]))($e:)").markupToPrint("bar");
 		});
+		it("is aliased as (out:)", function() {
+			expect("(set: $e to (macro:[(out:'bar')]))($e:)").markupToPrint("bar");
+		});
 		it("can't be used outside of a custom macro", function() {
 			expect("(output:'baz')").markupToError();
 			expect("(set: $e to (macro:[(output:(output:'baz'))]))($e:)").markupToError();

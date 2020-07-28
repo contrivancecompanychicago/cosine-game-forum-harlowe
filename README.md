@@ -75,6 +75,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added the HookName data name `visited` (as in `?passage's visited`), which allows you to select links that point to visited passages, and change the unique colour these links have.
  * Colours now have an alpha `a` data value, containing the alpha value given to the `(hsl:)` and `(rgb:)` macros - `(hsl: 130, 1, 0.5, 0.2)'s a` is 0.2.
  * Colours now have an `lch` data value, which contains a datamap of LCH color space values for that colour (corresponding to the numbers given to the new `(lch:)` macro). Because LCH's values conflict with HSL's, the LCH values are inside this datamap instead of directly accessible from the colour itself.
+ * `(text-style:)` now lets you provide multiple style names, as a shortcut to combining multiple changers. `(text-style:"italic","outline")` is the same as `(text-style:"italic")+(text-style:"outline")`.=
  * The `(set:)`, `(put:)` and `(move:)` macros now support "destructuring", a means of assigning multiple values from an array or datamap into multiple variables at once. You can now write something like `(set: (a:$x, $y, (a:$z)) to (a:1,2,(a:3)))`, and the array on the right will overwrite the array on the left, causing $x to become 1, $y to become 2, and $z to become 3, without needing to write multiple `to` statements. You may also put values or datatypes at positions in the left side, such as in `(set: (a:1,2,$x) to (a:1,2,3))`, to check that the right side indeed has matching values at those positions, and to cause an error if they do not.
  * As an error-checking feature, you can now force your story's variables to only ever hold certain datatypes, so that data of the wrong type can't be set to them. `(set: num-type $funds to 0)` will, for the rest of the story, cause an error to occur if a non-number is ever put into $funds, such as by `(set: $funds to "200")`. This not only works with plain datatypes, but with complex data structures, using the `matches` operator's rules: `(set: (a:str,str)-type $b to (a:'1','1'))` will cause an error to occur if any data that doesn't match `(a:str,str)` is put into $b. You can use this syntax with temp variables and destructuring, too.
    * Additionally, you can force a variable to remain constant throughout the story using the new `const` datatype. `(set: const-type $robotText to (font:"Courier New"))` specifies that any further changes to $robotText should cause an error.
@@ -87,41 +88,62 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 ##### Macros
 
+###### Metadata
+
  * Added some new macros, `(storylet:)` and `(open-storylets:)`, to support "storylets", an alternative way to link between groups of passages that's preferable for writing non-linear "episodic" interactive fiction. Instead of writing direct links between each episode, you instead write a requirement at the start of each episode, specifying (using a 'when' lambda) when would be the best time to let the player visit the passages. An example is `(storylet: when $season is "spring")`. Then, when you want the player to go to an episode, you use macros like `(open-storylets:)` to get a list of which storylet passages are available right now, and create links or other structures from there. Thanks to Emily Short for popularising the "storylet" design pattern.
  * Added a `(metadata:)` macro, which, when placed in a passage, adds values to the `(passage:)` datamap for that passage, allowing you to store any arbitrary data on it for your own use. This takes the same values as `(dm:)` - string names and data values in alternation.
+
+###### Colours
+
+ * Added an `(lch:)` macro (alias `(lcha:)`), an alternative colour creation macro (comparable to `(hsl:)`) that uses the LCH colour space (which is the CIELAB colour space, familiar to graphic designers, but expressed radially using a HSL-style hue angle).
+ * Added a `(complement:)` macro, which takes a colour and produces its complement by rotating its LCH hue by 180 degrees.
+ * Added a `(palette:)` macro, designed for rapid prototyping, which produces a four-colour palette based on a given colour, for use with `(text-colour:)`, `(background:)` and `(enchant:)`.
+
+###### Data Structures
+
+ * Added a `(permutations:)` macro, which, when given a sequence of data, produces an array containing all possible arrangements of that data, in arrays.
+ * Added a `(source:)` macro, which can turn any data value into its source code representation. `(source: (text-style:"bold") + (click: ?hat's 1st))` produces the string `'(text-style:"bold")+(click:?hat's 1st)'`.
+ * Added a `(rotated-to:)` macro, a variation of `(rotated:)` which, rather than rotating the values by a given number, takes a lambda and rotates them until the first one that matches the lambda is at the front. `(rotated-to:where it > 3, 1,2,3,4)` produces `(a:4,1,2,3)`.
+
+###### Datatypes
+
+ * Added several macros that, when used together, let you construct custom string datatypes called "string patterns" that match very specific kinds of strings. These are roughly comparable to regular expressions in other programming languages.
+   * `(p:)` takes a sequence of strings or string datatypes, and produces a datatype that only matches strings that match the entire sequence, in order.
+   * `(p-either:)` takes one or more strings or string datatypes, and produces a datatype that only matches strings that match any one of the values.
+   * `(p-opt:)` is a variation of `(p:)` that optionally matches the sequence - it matches strings that match the sequence, or are empty.
+   * `(p-many:)` is a variation of `(p:)` that matches strings that match the sequence many times. You can specify the minimum and/or maximum amount of times the string can match the sequence.
+ * Added a `(datatype:)` macro, which produces the datatype that matches the given value, if it exists.
+
+###### Changers
+
  * Added a variation of the `(enchant:)` macro, called `(change:)`, which simply applies the given changers once, without creating an ongoing effect that causes additional inserted text to be affected by it.
- * Added a `(link-rerun:)` macro, which is similar to `(link-repeat:)`, but which replaces the hook on each click rather than appending to it.
- * Added a `(rerun:)` macro, which replaces a given hook with its original source, eliminating any changes made to it by `(replace:)` or other macros. This also runs any macros inside the hook an additional time.
- * Added a `(hide:)` macro, which removes the contents of a given hook from the passage, but allows the `(show:)` macro to restore the contents later. Hooks hidden with `(hide:)` will not re-run any containing macros when `(show:)` is used on them later.
- * Added a `(seq-link:)` macro, a variation of `(cycling-link:)` which does not cycle - it simply turns into plain text on the final string.
  * Added a `(text-size:)` style changer macro (also known as `(size:)`) that scales the attached hook's font size and line height by the given multiplier.
  * Added a `(transition-delay:)` macro (also known as `(t8n-delay:)`) which adds an initial delay to transitions before they begin animating. This can only enchant hooks, not links.
  * Added a `(transition-skip:)` macro (also known as `(t8n-skip:)`) which, when included with a transition, allows the player to speed up the transition by a given number of milliseconds per frame, by holding down any keyboard key, mouse button or touching the screen.
  * Added a `(collapsed:)` changer macro, which causes the attached hook's whitespace to collapse, as if by the `{` and `}` collapsing whitespace markup. This can also be used with `(enchant:)`.
  * Added a `(verbatim:)` changer macro (alias `(v6m:)`), which causes the attached hook or command to be printed verbatim, as if by the verbatim markup.
- * Added a `(verbatim-print:)` command macro (alias `(v6m-print:)`), a combination of `(verbatim:)` and `(print:)`. This is designed especially for printing player-inputted strings that may, for whatever reason, contain markup.
  * Added a `(text-indent:)` changer macro, which applies a leading indent to the attached hook, and can be applied to each line in the passage using, for example, `(enchant:?passage's lines, (text-indent:12))`.
- * Added a `(rotated-to:)` macro, a variation of `(rotated:)` which, rather than rotating the values by a given number, takes a lambda and rotates them until the first one that matches the lambda is at the front. `(rotated-to:where it > 3, 1,2,3,4)` produces `(a:4,1,2,3)`.
- * `(text-style:)` now lets you provide multiple style names, as a shortcut to combining multiple changers. `(text-style:"italic","outline")` is the same as `(text-style:"italic")+(text-style:"outline")`.
  * Added a `(box:)` changer macro, which turns the attached hook into a box with given width and horizontal margins, a height scaling with window height, and a scroll bar if its contained prose exceeds its height.
  * Added a `(float-box:)` changer macro, a variant of `(box:)` which turns the hook into a separate pane floating on the window, using `position:fixed`. These have an explicit vertical position as well as horizontal position.
+ * Added a `(text-rotate-x:)` and `(text-rotate-y:)`, which are 3D versions of `(text-rotate:)`, rotating the hook around the X or Y axis, making it appear to lean into the page with perspective.
  * Added the changer macros `(border:)`, `(border-size:)`, and `(border-colour:)` (aliases `(b4r:)`, `(b4r-size:)`, `(b4r-colour:)`) which add and adjust CSS borders for hooks. `(border:)` will automatically make the attached hook have `display:inline-block`, so that it remains rectangular and the border can properly enclose it.
  * Added a `(corner-radius:)` macro, which rounds the corners of the hook (using the CSS "border-radius" property, which, despite its name, works on elements without borders). It will also add padding, proportional to the amount of corner rounding, so that the corners don't encroach on the inner text.
- * Added an `(lch:)` macro (alias `(lcha:)`), an alternative colour creation macro (comparable to `(hsl:)`) that uses the LCH colour space (which is the CIELAB colour space, familiar to graphic designers, but expressed radially using a HSL-style hue angle).
- * Added a `(complement:)` macro, which takes a colour and produces its complement by rotating its LCH hue by 180 degrees.
- * Added a `(palette:)` macro, designed for rapid prototyping, which produces a four-colour palette based on a given colour, for use with `(text-colour:)`, `(background:)` and `(enchant:)`.
- * Added a `(permutations:)` macro, which, when given a sequence of data, produces an array containing all possible arrangements of that data, in arrays.
- * Added a `(source:)` macro, which can turn any data value into its source code representation. `(source: (text-style:"bold") + (click: ?hat's 1st))` produces the string `'(text-style:"bold")+(click:?hat's 1st)'`.
- * Added a `(text-rotate-x:)` and `(text-rotate-y:)`, which are 3D versions of `(text-rotate:)`, rotating the hook around the X or Y axis, making it appear to lean into the page with perspective.
- * Added an `(input-box:)` macro, which places a `<textarea>` element in the passage, sized using the same values given to the `(box:)` macro, and optionally bound to a variable.
- * Added a `(force-input-box:)` macro, designed for linear narratives, that creates what seems to be a normal `(input-box:)`, but which, when typed into, instantly replaces the entered text with portions of a predefined string.
- * Added a `(datatype:)` macro, which produces the datatype that matches the given value, if it exists.
  * The following `(text-style:)` styles have been added:
    * "double-underline", "wavy-underline", "double-strike" and "wavy-strike", which are variants of "underline" and "strike". Be aware these will not work in Internet Explorer.
    * "fidget", which jolts the hook by one pixel in cardinal directions pseudorandomly.
    * "buoy" and "sway", which are slow, gentle movement animations to serve as counterparts to "rumble" and "shudder".
  * The following `(transition:)` transitions have been added:
    * "zoom", which makes the transitioning entity zoom in or out from the mouse cursor's position (or the last place the touch device was touched).
+
+###### Commands
+
+ * Added an `(input-box:)` macro, which places a `<textarea>` element in the passage, sized using the same values given to the `(box:)` macro, and optionally bound to a variable.
+ * Added a `(force-input-box:)` macro, designed for linear narratives, that creates what seems to be a normal `(input-box:)`, but which, when typed into, instantly replaces the entered text with portions of a predefined string.
+ * Added a `(link-rerun:)` macro, which is similar to `(link-repeat:)`, but which replaces the hook on each click rather than appending to it.
+ * Added a `(rerun:)` macro, which replaces a given hook with its original source, eliminating any changes made to it by `(replace:)` or other macros. This also runs any macros inside the hook an additional time.
+ * Added a `(hide:)` macro, which removes the contents of a given hook from the passage, but allows the `(show:)` macro to restore the contents later. Hooks hidden with `(hide:)` will not re-run any containing macros when `(show:)` is used on them later.
+ * Added a `(seq-link:)` macro, a variation of `(cycling-link:)` which does not cycle - it simply turns into plain text on the final string.
+ * Added a `(verbatim-print:)` command macro (alias `(v6m-print:)`), a combination of `(verbatim:)` and `(print:)`. This is designed especially for printing player-inputted strings that may, for whatever reason, contain markup.
 
 ##### Custom Macros
 

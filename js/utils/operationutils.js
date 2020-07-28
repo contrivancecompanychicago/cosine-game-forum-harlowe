@@ -575,10 +575,22 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		*/
 		let datatypeMatch = false;
 		if (l && typeof l.TwineScript_IsTypeOf === sFunction) {
-			datatypeMatch |= l.TwineScript_IsTypeOf(r);
+			/*
+				The only TwineScript_IsTypeOf havers that can produce an error are (p-opt:) and its ilk.
+				Nevertheless, we must be prepared for it.
+			*/
+			const isTypeOf = l.TwineScript_IsTypeOf(r);
+			if (TwineError.containsError(isTypeOf)) {
+				return isTypeOf;
+			}
+			datatypeMatch |= isTypeOf;
 		}
 		if (r && typeof r.TwineScript_IsTypeOf === sFunction) {
-			datatypeMatch |= r.TwineScript_IsTypeOf(l);
+			const isTypeOf = r.TwineScript_IsTypeOf(l);
+			if (TwineError.containsError(isTypeOf)) {
+				return isTypeOf;
+			}
+			datatypeMatch |= isTypeOf;
 		}
 		if (datatypeMatch) {
 			return true;

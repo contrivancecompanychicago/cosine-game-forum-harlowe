@@ -49,6 +49,7 @@ define([
 			* `(set: (a: _mainPath, _sidePath, _backPath) to (a:"north","northeast","south"))` sets three temp variables (by overwriting)
 			each variable in the array on the left with its matching value in the array on the right.
 			* `(set: (dm: "Maths", _Maths, "Science", _Science) to $characterStats)` is the same as `(set: _Maths to $characterStats's Maths, _Science to $characterStats's Science)`.
+			* `(set: (p-either:"Ms.","Mr.","Mx.")-type $charTitle to "Mx.")` sets a variable that can only hold the strings "Mr.", "Ms." or "Mx.".
 			
 			Rationale:
 			
@@ -314,9 +315,9 @@ define([
 			use an array containing these values.
 			
 			Arrays are one of the two major "data structures" you can use in Harlowe. The other, datamaps,
-			are created with (dm:). Generally, you want to use arrays when you're dealing with values that
-			directly correspond to *numbers*, and whose *order* and *position* relative to each other matter.
-			If you instead need to refer to values by a name, and don't care about their order, a datamap is best used.
+			are created with (dm:). Generally, you want to use arrays when you're dealing with values whose *order*
+			and *position* relative to each other matter. If you instead need to refer to values by a name, and
+			don't care about their order, a datamap is best used.
 			
 			You can refer to and extract data at certain positions inside arrays using `1st`, `2nd`, `3rd`, and so forth:
 			`$array's 1st`, also written as `1st of $array`, refers to the value in the first position. Additionally, you can

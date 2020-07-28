@@ -193,6 +193,89 @@ describe("patterns", function() {
 			expect("(set: $a to ' ' is a empty)(print:$a)").markupToPrint("false");
 		});
 	});
+	describe("string pattern macros", function() {
+		function basicTest(name, arg, canBeUsedAlone) {
+			if (arguments.length < 3) {
+				canBeUsedAlone = true;
+			}
+			it("accepts multiple strings or string datatypes", function() {
+				['alphanumeric','lowercase','uppercase','whitespace','str'].forEach(function(type) {
+					expect("(print: (" + name + ":" + type + "))").not.markupToError();
+					expect("(print: (" + name + ":" + type + ",'2','2','2'))").not.markupToError();
+				});
+				expect("(print: (" + name + ":num))").markupToError();
+				expect("(print: (" + name + ":'2'))").not.markupToError();
+				expect("(print: (" + name + ":(p:'foo','bar'),(p:'baz','qux')))").not.markupToError();
+				expect("(print: (" + name + ":2))").markupToError();
+				expect("(print: (" + name + ":))").markupToError();
+			});
+			if (name === 'p') {
+				return;
+			}
+			it("works inside (p:)", function() {
+				expect("(print: (p:'red',whitespace,'blue',(" + name + ":" + arg + ")) matches 'red blue green')").markupToPrint('true');
+			});
+			if (!canBeUsedAlone) {
+				it("can't be used alone", function() {
+					expect("(print: (" + name + ":" + arg + ") matches 'red blue green')").markupToError();
+				});
+			}
+		}
+		describe("(p:)", function() {
+			basicTest("p");
+			it("matches strings matching the sequence", function() {
+				expect("(print: (p:'red','blue') matches 'redblue')").markupToPrint('true');
+				expect("(print: (p:'red','blue') does not match 'xredxblue' and it does not match 'xredbluex' and it does not match 'redbluexx')").markupToPrint('true');
+			});
+			it("works with the string datatype", function() {
+				expect("(print: (p:string,'red','blue',string) matches 'redblue' and 'xredbluex' and 'xxredblue' and 'redbluexx')").markupToPrint('true');
+			});
+		});
+		describe("(p-many:)", function() {
+			basicTest("p-many", 'whitespace,"green"');
+			it("matches strings matching the sequence, repeated any positive number of times", function() {
+				expect("(print: (pmany:'r','b') matches 'rbrbrbrb' and 'rbrb' and 'rb')").markupToPrint('true');
+				expect("(print: (pmany:'r','b') does not match 'r' and it does not match 'redrb' and it does not match '')").markupToPrint('true');
+			});
+			it("takes optional min and max numbers limiting the number of matches, including zero", function() {
+				expect("(print: (pmany:2, 'r','b') matches 'rbrb' and it does not match 'rb' and it matches 'rbrbrbrb')").markupToPrint('true');
+				expect("(print: (pmany:2,4, 'r','b') matches 'rbrbrb' and it does not match 'rb' and it matches 'rbrbrbrb' and it does not match 'rbrbrbrbrb')").markupToPrint('true');
+				expect("(print: (p:'g',(p-many:0,whitespace,'r'),'b') matches 'g r r r r r rb' and 'g rb' and 'gb')").markupToPrint('true');
+			});
+			it("errors if the numbers are negative, or if the max number is smaller than the min number", function() {
+				expect("(print: (pmany:-2, 'r','b'))").markupToError();
+				expect("(print: (pmany:4,3, 'r','b'))").markupToError();
+			});
+			it("when used in (p:), it matches the sequence for the greatest possible number of repetitions", function() {
+				expect("(print: (p:'g',(p-many:whitespace,'r'),'b') matches 'g r r r r r rb')").markupToPrint('true');
+			});
+		});
+		describe("(p-either:)", function() {
+			basicTest("p-either", '(p:whitespace,"green")');
+			it("matches strings matching any of the arguments", function() {
+				expect("(print: (p-either:'red','blue') matches 'red' and 'blue')").markupToPrint('true');
+				expect("(print: (p-either:'red','blue') does not match 'blu' and it does not match 'reb')").markupToPrint('true');
+			});
+		});
+		describe("(p-opt:)", function() {
+			basicTest("p-opt", '" green"');
+			it("matches the sequence, or the empty string", function() {
+				expect("(print: (popt:'r','b') matches '' and 'rb')").markupToPrint('true');
+				expect("(print: (popt:'r','b') does not match 'r' and it does not match 'rbrb')").markupToPrint('true');
+			});
+			it("when used in (p:), it matches an optional occurrence of the sequence", function() {
+				expect("(print: (p:'red',(p-opt:whitespace,'blue'),'green') matches 'red bluegreen' and 'redgreen')").markupToPrint('true');
+				expect("(print: (p:'red',(p-opt:whitespace,'blue'),'green') does not match 'red blackgreen')").markupToPrint('true');
+			});
+		});
+		/*describe("(p-not-before:)", function() {
+			basicTest("p-not-before", '"black"),(p:" green"', false);
+			it("when used in (p:), it matches if the sequence does not appear at that spot", function() {
+				expect("(print: (p:'red',(p-not-before:whitespace,'blue'),string) matches 'redblue green' and 'redgreen' and 'red')").markupToPrint('true');
+				expect("(print: (p:'red',(p-not-before:whitespace,'blue'),string) does not match 'red bluegreen')").markupToPrint('true');
+			});
+		});*/
+	});
 	describe("(datatype:)", function() {
 		it("takes most kinds of data, and produces a datatype that matches it", function() {
 			typesAndValues.forEach(function(e) {

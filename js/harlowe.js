@@ -23,7 +23,7 @@ require.config({
 	],
 });
 require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', 'passages', 'utils', 'utils/renderutils', 'internaltypes/twineerror', 'macros',
-	'macrolib/values', 'macrolib/commands', 'macrolib/datastructures', 'macrolib/stylechangers', 'macrolib/enchantments', 'macrolib/metadata',
+	'macrolib/values', 'macrolib/commands', 'macrolib/datastructures', 'macrolib/stylechangers', 'macrolib/enchantments', 'macrolib/metadata', 'macrolib/patterns',
 	'macrolib/links', 'macrolib/custommacros', 'repl'],
 		($, DebugMode, Renderer, State, Section, Engine, Passages, Utils, {dialog}, TwineError) => {
 	/*
