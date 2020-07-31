@@ -1,5 +1,5 @@
 "use strict";
-define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'internaltypes/twineerror'], ({objectName, typeName, matches, isUnstorable}, Datatype, VarRef, TwineError) => {
+define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'internaltypes/twineerror'], ({objectName, typeName, matches, unstorableValue}, Datatype, VarRef, TwineError) => {
 	/*d:
 		TypedVar data
 
@@ -27,7 +27,7 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 
 		For more details, consult the (set:) and (macro:) articles.
 	*/
-	return Object.freeze({
+	const TypedVar = Object.freeze({
 		TwineScript_TypeName: "a typed variable name",
 		get TwineScript_ObjectName() {
 			return this.TwineScript_ToSource();
@@ -36,6 +36,8 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 		TwineScript_Print() {
 			return "`[A typed variable name]`";
 		},
+
+		TwineScript_Unstorable: true,
 
 		/*
 			Typed variables are immutable data.
@@ -96,8 +98,13 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 					varRef.error)) {
 				return error;
 			}
-			if (isUnstorable(datatype)) {
-				return TwineError.create("syntax", "The -type syntax can't have " + typeName(datatype) + ' to its left.');
+			/*
+				TypedVars can only have storable data as datatypes, like "(a:num,num)-type $a". The exception is, of course, structures containing TypedVars
+				themselves, such as (p: "Red", alnum-type _a), which should still be permitted.
+			*/
+			const unstorable = unstorableValue(datatype);
+			if (unstorable && !TypedVar.isPrototypeOf(unstorable)) {
+				return TwineError.create("syntax", "The -type syntax can't have " + typeName(unstorable) + ' to its left.');
 			}
 			return Object.assign(Object.create(this), {
 				datatype,
@@ -106,4 +113,5 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 			});
 		},
 	});
+	return TypedVar;
 });

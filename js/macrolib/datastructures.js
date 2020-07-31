@@ -50,7 +50,8 @@ define([
 			each variable in the array on the left with its matching value in the array on the right.
 			* `(set: (dm: "Maths", _Maths, "Science", _Science) to $characterStats)` is the same as `(set: _Maths to $characterStats's Maths, _Science to $characterStats's Science)`.
 			* `(set: (p-either:"Ms.","Mr.","Mx.")-type $charTitle to "Mx.")` sets a variable that can only hold the strings "Mr.", "Ms." or "Mx.".
-			
+			* `(set: (p:"The ", str-type _job) to "The Safecracker")` uses de-structuring to extract the string "Safecracker" from the value, and puts it in the variable _job.
+
 			Rationale:
 			
 			Variables are data storage for your game. You can store data values under special names
@@ -84,7 +85,7 @@ define([
 
 			Destructuring:
 
-			As of Harlowe 3.2.0, you can extract multiple values from an array or datamap at once, and set them into
+			As of Harlowe 3.2.0, you can extract multiple values from an array, datamap or string, at once, and set them into
 			multiple variables, by placing a matching data structure on the left of `to` containing variables at
 			the positions of those values. For instance, `(set: (a: $x, 2, $y) to (a: 1, 2, 3))` sets $x to 1 and $y to 3,
 			and `(set: (dm: "A", $x, "B", $y) to (dm: "B", 3, "A", 1))` sets $x to 1 and $y to 3. Harlowe checks that each value on the left side has a
@@ -92,6 +93,13 @@ define([
 			right side, causing the variables at various positions in the left side to be overwritten with values from the
 			right. This is known as **de-structuring**. (Remember that datamaps' "positions" are determined by their datanames, not their locations
 			in the (dm:) macro that created them, as, unlike arrays, they are not sequential.)
+
+			For extracting substrings from strings, use the (p:) macro and its related macros to construct a string pattern, resembling
+			array patterns. For instance, `(set: (p: (p-either: "Silt", "Mud", "Peat", "Slime")-type _element, " ", (p-either: "Ball", "Blast", "Shot", "Beam")-type _shape) to "Slime Ball")`
+			extracts the words "Slime" and "Ball" from the value, and puts them in the _element and _shape temp variables. Note that
+			when this is done, the _element variable is restricted to `(p-either: "Silt", "Mud", "Peat", "Slime")-type` data, so putting
+			any other kind of string into it will cause an error. Generally, it's recommended to use temp variables for string destructuring, and then,
+			if you need more general variables to hold the extracted substrings, place them in a less restricted variable afterward.
 
 			Note that the left side's data structure can have any number of nested data structures inside it.
 			`(set: (a: (a: $x), 2, (dm: "A", $y)) to (a: (a: 1), 2, (dm: "A", 3)))` also sets $x to 1 and $y to 3. If you need to reach deeply
@@ -110,11 +118,13 @@ define([
 			such as by writing `(set: (a: num, $y, $x) to $array)` - though, if you aren't even certain of the data types that could be at those positions,
 			you may find the special `any` data type to be a big help - `(set: (a: any, $y, $x) to $array)` sets $x to the 3rd value in $array and $y to the
 			2nd value, without needing to worry about what the first value might be.
+
+			(When dealing with string patterns, the equivalent of `any` is simply `str`, as strings can't contain non-string data.)
 			
 			If the destination doesn't contain any variables - for instance, if you write `(set: (a:2,3)'s 1st to 1)`,
 			or `(set: true to 2)` - then an error will be printed.
 
-			For obvious reasons, destructuring can't be used with datasets - you'll have to convert them to arrays on the right side.
+			For obvious reasons, de-structuring can't be used with datasets - you'll have to convert them to arrays on the right side.
 
 			Typed variables:
 
@@ -430,7 +440,13 @@ define([
 			Added in: 1.0.0
 			#data structure 1
 		*/
-		(["a", "array"], (_, ...args) => args, zeroOrMore(Any))
+		(["a", "array"], (_, ...args) => args, zeroOrMore(
+			/*
+				In order for destructuring patterns to be syntactically permitted, (a:) needs to allow TypedVars
+				in addition to "Any", even though TypedVars have TwineScript_Unstorable and can't be (set:) as data.
+			*/
+			either(TypedVar, Any)
+		))
 		
 		/*d:
 			(range: Number, Number) -> Array
@@ -1627,7 +1643,13 @@ define([
 			}
 			return map;
 		},
-		zeroOrMore(Any))
+		zeroOrMore(
+			/*
+				In order for destructuring patterns to be syntactically permitted, (dm:) needs to allow TypedVars
+				in addition to "Any", even though TypedVars have TwineScript_Unstorable and can't be (set:) as data.
+			*/
+			either(TypedVar, Any)
+		))
 		
 		/*
 			DATASET MACROS

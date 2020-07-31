@@ -461,7 +461,7 @@ describe("data structure macros", function () {
 			sourceTest('(sequence-link:2bind $foo,"bar","baz")','(seq-link:2bind $foo,"bar","baz")');
 		});
 		it("serialises custom macros", function() {
-			sourceTest('(macro:boolean-type _ok,num-type _ng,[(output:(cond:_ok,_ng,1)])','(macro:boolean-type _ok,number-type _ng,[(output:(cond:_ok,_ng,1)])');
+			sourceTest('(macro:boolean-type _ok,num-type _ng,[(output:(cond:_ok,_ng,1)])','(macro:bool-type _ok,num-type _ng,[(output:(cond:_ok,_ng,1)])');
 			sourceTest('(macro:[])','(macro:[])');
 		});
 		it("serialises lambdas", function() {

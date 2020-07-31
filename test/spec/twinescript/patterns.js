@@ -1,6 +1,7 @@
 describe("patterns", function() {
 	'use strict';
-	var datatypes = ["array", "boolean", "changer", "colour", "gradient",
+	// Only the basic datatypes should be represented here.
+		var datatypes = ["array", "boolean", "changer", "colour", "gradient",
 		"color", "command", "dm", "datamap", "ds", "dataset", "datatype",
 		"number", "num", "string", "str"];
 
@@ -20,13 +21,16 @@ describe("patterns", function() {
 	describe("datatypes", function() {
 		it("are keywords matching permitted storable values", function() {
 			datatypes.forEach(function(name) {
+				// This needs to correspond with a similar statement in datatype.js
 				var name2 = (
-					name === "dm" ? "datamap" :
-					name === "ds" ? "dataset" :
-					name === "num" ? "number" :
-					name === "str" ? "string" :
-					name === "color" ? "colour" :
-					name === "bool" ? "boolean" :
+					name === "datamap"  ? "dm" :
+					name === "dataset"  ? "ds" :
+					name === "number"   ? "num" :
+					name === "string"   ? "str" :
+					name === "color"    ? "colour" :
+					name === "boolean"  ? "bool" :
+					name === "alphanumeric" ? "alnum" :
+					name === "integer"  ? "int" :
 					name
 				);
 				expect("(print:" + name +")").markupToPrint("[the " + name2 + " datatype]");
@@ -169,6 +173,13 @@ describe("patterns", function() {
 			expect("(set: $a to 'EűG2' is a alnum)(print:$a)").markupToPrint("true");
 			expect("(set: $a to 'EűG2' is a alphanumeric)(print:$a)").markupToPrint("true");
 			expect("(set: $a to 'EűG2\n' is a alphanumeric)(print:$a)").markupToPrint("false");
+		});
+		it("'digit' matches alphanumeric characters", function() {
+			expect("(set: $a to '' is a digit)(print:$a)").markupToPrint("false");
+			expect("(set: $a to \"EGG\" is a digit)(print:$a)").markupToPrint("false");
+			expect("(set: $a to '2' is a digit)(print:$a)").markupToPrint("true");
+			expect("(set: $a to '1234567890' is a digit)(print:$a)").markupToPrint("true");
+			expect("(set: $a to '2\n' is a digit)(print:$a)").markupToPrint("false");
 		});
 		it("'uppercase' or 'lowercase' matches cased characters", function() {
 			expect("(set: $a to '' is a uppercase)(print:$a)").markupToPrint("false");
@@ -326,6 +337,9 @@ describe("patterns", function() {
 			it("doesn't error if the source structure has more values than the pattern", function() {
 				expect("(set: (a:num-type $a) to (a:5,4,3,2,1))$a").markupToPrint("5");
 			});
+			it("array patterns can't be (set:) as data", function() {
+				expect("(set: $a to  (a:num-type $a))$a").markupToError();
+			});
 		});
 		describe("when given a datamap pattern assignment request", function() {
 			it("sets the typed variable in the pattern to their matching values", function() {
@@ -358,6 +372,51 @@ describe("patterns", function() {
 			});
 			it("doesn't error if the source structure has more values than the pattern", function() {
 				expect("(set: (dm:'foo',num-type $a) to (dm:'foo',5,'qux',4,'baz',3))$a").markupToPrint("5");
+			});
+			it("datamap patterns can't be (set:) as data", function() {
+				expect("(set: $a to  (dm:'foo',num-type $a))$a").markupToError();
+			});
+		});
+		describe("when given a string pattern assignment request", function() {
+			it("sets the variable in the pattern to their matching values", function() {
+				[
+					["(p:'baz', str-type _a)", "'bazfoo'"],
+					["(p:'f',(p-many:'o'))-type _a", "'foo'"],
+					["(p:(p-either:'baz','qux'),str-type _a)","'quxfoo'"],
+					["(p:(p-either:'baz','qux'),str-type _a)","'bazfoo'"],
+				].forEach(function(arr) {
+					expect("(set: "+arr[0]+" to "+arr[1]+")_a").markupToPrint("foo");
+					expect("(put: "+arr[1]+" into "+arr[0]+")_a").markupToPrint("foo");
+				});
+			});
+			it("can set multiple variables at once", function() {
+				expect("(set: (p: (p-many:alnum)-type $a, whitespace, (p-many:alnum)-type $b, whitespace, alnum-type $c) to 'foo bar 2')$a $b $c").markupToPrint("foo bar 2");
+				expect("(set: (p: (p-many:alnum)-type $a, whitespace, (p-many:alnum)-type $b, (p:whitespace, alnum-type $c)) to 'foo bar 2')$a $b $c").markupToPrint("foo bar 2");
+			});
+			it("works with (p-opt:)", function() {
+				expect("(set: (p: 'x', (p-opt:'y')-type _a, 'z') to 'xyz')_a").markupToPrint("y");
+				expect("(set: (p: 'x', (p-opt:'y')-type _a, 'z') to 'xz')_a").markupToPrint("");
+			});
+			it("works with (p-many:)", function() {
+				expect("(set: (p: 'x', (p-many:alnum)-type _a, 'z') to 'xyyyz')_a").markupToPrint('yyy');
+			});
+			it("works with nested typed vars", function() {
+				expect("(set: (p: 'x', (p:alnum-type _a,'yy')-type _b, 'z') to 'xyyyz')_a _b").markupToPrint('y yyy');
+			});
+			it("can't use typed vars inside optional patterns", function() {
+				expect("(set: (p: 'x', (p-many:alnum-type _a), 'z') to 'xyyyz')_a").markupToError();
+				expect("(set: (p: 'x', (p-many:alnum-type _a), 'z') to 'xabcz')_a").markupToError();
+				expect("(set: (p: 'x', (p-opt:alnum-type _a), 'z') to 'xyz')_a").markupToError();
+				expect("(set: (p: 'x', (p-opt:alnum-type _a), 'z') to 'xz')_a").markupToError();
+				expect("(set: (p: 'x', (p-many:0,alnum-type _a), 'z') to 'xz')_a").markupToError();
+				expect("(set: (p: 'x', (p-either:'-',alnum-type _a), 'z') to 'x-z')_a").markupToError();
+			});
+			it("errors if nothing in the pattern matches", function() {
+				expect("(set: (p:'baz', str-type _a) to 121)").markupToError();
+				expect("(set: (p:'baz', str-type _a) to 'foobar')").markupToError();
+			});
+			xit("string patterns can't be (set:) as data", function() {
+				expect("(set: $a to  (p:'foo',digit-type $a))$a").markupToError();
 			});
 		});
 	});

@@ -1,6 +1,6 @@
 "use strict";
 define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'datatypes/hookset'],
-(State, TwineError, {impossible, andList, nth}, {isObject, toSource, isSequential, objectName, typeName, clone, isValidDatamapName, subset, isPureObject, isUnstorable, matches}, HookSet) => {
+(State, TwineError, {impossible, andList, nth}, {isObject, toSource, isSequential, objectName, typeName, clone, isValidDatamapName, subset, isPureObject, collectionType, unstorableValue, matches}, HookSet) => {
 	/*
 		VarRefs are essentially objects pairing a chain of properties
 		with an initial variable reference - "$red's blue's gold" would be
@@ -737,8 +737,10 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				/*
 					Produce an error if the value is "unstorable", OR if it contains an unstorable.
 				*/
-				if (isUnstorable(value)) {
-					return TwineError.create("operation", objectName(value) + " can't be stored.");
+				let unstorable;
+				if ((unstorable = unstorableValue(value))) {
+					return TwineError.create("operation", objectName(value) + " can't be stored"
+						+ (collectionType(value) ? " because it holds " + objectName(unstorable) + "." : ''));
 				}
 
 				/*

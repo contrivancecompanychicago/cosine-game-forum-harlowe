@@ -76,14 +76,23 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Colours now have an alpha `a` data value, containing the alpha value given to the `(hsl:)` and `(rgb:)` macros - `(hsl: 130, 1, 0.5, 0.2)'s a` is 0.2.
  * Colours now have an `lch` data value, which contains a datamap of LCH color space values for that colour (corresponding to the numbers given to the new `(lch:)` macro). Because LCH's values conflict with HSL's, the LCH values are inside this datamap instead of directly accessible from the colour itself.
  * `(text-style:)` now lets you provide multiple style names, as a shortcut to combining multiple changers. `(text-style:"italic","outline")` is the same as `(text-style:"italic")+(text-style:"outline")`.=
- * The `(set:)`, `(put:)` and `(move:)` macros now support "destructuring", a means of assigning multiple values from an array or datamap into multiple variables at once. You can now write something like `(set: (a:$x, $y, (a:$z)) to (a:1,2,(a:3)))`, and the array on the right will overwrite the array on the left, causing $x to become 1, $y to become 2, and $z to become 3, without needing to write multiple `to` statements. You may also put values or datatypes at positions in the left side, such as in `(set: (a:1,2,$x) to (a:1,2,3))`, to check that the right side indeed has matching values at those positions, and to cause an error if they do not.
+ * The `(set:)`, `(put:)` and `(move:)` macros now support "de-structuring", a means of assigning multiple values from an array, datamap or string into multiple variables at once. You can now write something like `(set: (a:$x, $y, (a:$z)) to (a:1,2,(a:3)))`, and the array on the right will overwrite the array on the left, causing $x to become 1, $y to become 2, and $z to become 3, without needing to write multiple `to` statements. You may also put values or datatypes at positions in the left side, such as in `(set: (a:1,2,$x) to (a:1,2,3))`, to check that the right side indeed has matching values at those positions, and to cause an error if they do not.
  * As an error-checking feature, you can now force your story's variables to only ever hold certain datatypes, so that data of the wrong type can't be set to them. `(set: num-type $funds to 0)` will, for the rest of the story, cause an error to occur if a non-number is ever put into $funds, such as by `(set: $funds to "200")`. This not only works with plain datatypes, but with complex data structures, using the `matches` operator's rules: `(set: (a:str,str)-type $b to (a:'1','1'))` will cause an error to occur if any data that doesn't match `(a:str,str)` is put into $b. You can use this syntax with temp variables and destructuring, too.
    * Additionally, you can force a variable to remain constant throughout the story using the new `const` datatype. `(set: const-type $robotText to (font:"Courier New"))` specifies that any further changes to $robotText should cause an error.
  * Lambdas' temp variables may now optionally have types as well, such as by writing `each str-type _name where _name contains "el"`. This checks that the correct types of data are given to the lambda.
  * Arrays and strings now have a `random` data name, which retrieves a random value from these structures. `(a:5,8,9)'s random` produces 5, 8 or 9. This works well with the `(move:)` macro, allowing you to randomly move values out of an array without necessarily needing to use `(shuffled:)`.
  * Arrays and strings now have `start` and `end` data names, which are designed to be used with `is` and `matches`. You can check if a string or array begins or ends with a certain other string or subarray by writing, for instance, `start of "Gossamer" is "Goss"`.
  * Added the `lambda` and `macro` datatypes (see below), and the `boolean` datatype can now be shortened to `bool`.
- * Added the following special datatypes: `even`, which matches only even numbers, `odd`, which matches only odd numbers, `integer` (alias `int`) which matches only whole numbers, `alphanumeric` (alias `alnum`), which matches strings that only contain letters and numbers, `whitespace`, which matches strings that only contain whitespace, `lowercase` and `uppercase`, which match single lowercase or uppercase characters, `newline`, which matches only a newline character, and `empty`, which matches only empty arrays, strings, datamaps and datasets.
+ * Added the following special datatypes:
+   * `even`, which matches only even numbers.
+   * `odd`, which matches only odd numbers.
+   * `integer` (alias `int`) which matches only whole numbers.
+   * `alphanumeric` (alias `alnum`), which matches strings that only contain letters and numbers.
+   * `digit`, which matches strings that only contain digits.
+   * `whitespace`, which matches strings that only contain whitespace.
+   * `lowercase` and `uppercase`, which match single lowercase or uppercase characters.
+   * `newline`, which matches only a newline character.
+   * `empty`, which matches only empty arrays, strings, datamaps and datasets.
  * Added a `transparent` built-in colour value.
 
 ##### Macros
@@ -107,11 +116,12 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 ###### Datatypes
 
- * Added several macros that, when used together, let you construct custom string datatypes called "string patterns" that match very specific kinds of strings. These are roughly comparable to regular expressions in other programming languages.
+ * Added several macros that, when used together, let you construct custom string datatypes called "string patterns" that match very specific kinds of strings. These are roughly comparable to regular expressions in other programming languages. 
    * `(p:)` takes a sequence of strings or string datatypes, and produces a datatype that only matches strings that match the entire sequence, in order.
    * `(p-either:)` takes one or more strings or string datatypes, and produces a datatype that only matches strings that match any one of the values.
    * `(p-opt:)` is a variation of `(p:)` that optionally matches the sequence - it matches strings that match the sequence, or are empty.
    * `(p-many:)` is a variation of `(p:)` that matches strings that match the sequence many times. You can specify the minimum and/or maximum amount of times the string can match the sequence.
+ * You can also use the preceding macros as de-structuring patterns by using them with the `-type` syntax. For instance, `(set: (p: (p-opt:"Dr. "), (p: str-type _firstName, whitespace, str-type _lastName)-type _fullName) to "Dr. Iris Cornea")` creates three variables, _firstName, _lastName and _fullName, from a single string.
  * Added a `(datatype:)` macro, which produces the datatype that matches the given value, if it exists.
 
 ###### Changers

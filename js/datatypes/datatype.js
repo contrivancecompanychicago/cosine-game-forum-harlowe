@@ -55,6 +55,7 @@ define([
 		| `lowercase` | Only matches strings containing only lowercase characters. Lowercase characters are characters that change when put through (uppercase:).
 		| `uppercase` | Only matches strings containing only uppercase characters. Uppercase characters are characters that change when put through (lowercase:).
 		| `alphanumeric`, `alnum` | Only matches strings containing only alphanumeric characters (letters and numbers).
+		| `digit` | Only matches strings containing only the characters '0', '1', '2', '3', '4', '5', '6', '7', '8', and '9'.
 		| `newline` | Only matches newline characters.
 		| `const` | Matches nothing; Use this only with (set:) to make constants.
 		| `any` | Matches anything; Use this with (macro:) to make variables that accept any storable type, or with (set:) inside data structure patterns.
@@ -128,16 +129,17 @@ define([
 		create(name) {
 			/*
 				Some type names have shorthands that should be expanded.
+				Generally, the abbreviated datatype is considered the 'canonical' name.
 			*/
 			name = (
-				name === "dm"    ? "datamap" :
-				name === "ds"    ? "dataset" :
-				name === "num"   ? "number" :
-				name === "str"   ? "string" :
-				name === "color" ? "colour" :
-				name === "bool"  ? "boolean" :
-				name === "alnum" ? "alphanumeric" :
-				name === "int"   ? "integer" :
+				name === "datamap"  ? "dm" :
+				name === "dataset"  ? "ds" :
+				name === "number"   ? "num" :
+				name === "string"   ? "str" :
+				name === "color"    ? "colour" :
+				name === "boolean"  ? "bool" :
+				name === "alphanumeric" ? "alnum" :
+				name === "integer"  ? "int" :
 				name
 			);
 			const ret = Object.create(this);
@@ -164,19 +166,21 @@ define([
 	*/
 	basicTypeIndex = {
 		array:    Array.isArray,
-		datamap:  obj => obj instanceof Map,
-		dataset:  obj => obj instanceof Set,
+		dm:       obj => obj instanceof Map,
+		ds:       obj => obj instanceof Set,
 		datatype: obj => Datatype.isPrototypeOf(obj),
 		changer:  obj => Changer.isPrototypeOf(obj),
 		colour:   obj => Colour.isPrototypeOf(obj),
 		gradient: obj => Gradient.isPrototypeOf(obj),
 		lambda:   obj => Lambda.isPrototypeOf(obj),
 		macro:    obj => CustomMacro.isPrototypeOf(obj),
-		string:   obj => typeof obj === "string",
-		number:   obj => typeof obj === "number",
-		boolean:  obj => typeof obj === "boolean",
+		str:      obj => typeof obj === "string",
+		num:      obj => typeof obj === "number",
+		bool:     obj => typeof obj === "boolean",
 	};
-
+	/*
+		These are kept separate from basicTypeIndex so that Datatype.from() doesn't have to deal with them.
+	*/
 	typeIndex = assign({}, basicTypeIndex, {
 		even:     obj => !isNaN(obj) && (floor(abs(obj)) % 2 === 0),
 		odd:      obj => !isNaN(obj) && (floor(abs(obj)) % 2 === 1),
@@ -187,9 +191,10 @@ define([
 		),
 		uppercase:    obj => typeof obj === "string" && obj.length !== 0 && [...obj].every(char => char !== char.toLowerCase()),
 		lowercase:    obj => typeof obj === "string" && obj.length !== 0 && [...obj].every(char => char !== char.toUpperCase()),
-		integer:      obj => typeof obj === "number" && obj === (obj|0),
+		int:          obj => typeof obj === "number" && obj === (obj|0),
 		whitespace:   obj => typeof obj === "string" && !!obj.match("^" + realWhitespace + "+$"),
-		alphanumeric: obj => typeof obj === "string" && !!obj.match("^" + anyRealLetter + "+$"),
+		digit:        obj => typeof obj === "string" && !!obj.match(/^\d+$/),
+		alnum:        obj => typeof obj === "string" && !!obj.match("^" + anyRealLetter + "+$"),
 		newline:      obj => obj === "\n" || obj === "\r" || obj === "\r\n",
 		any:      () => true,
 		/*

@@ -52,7 +52,7 @@ define(['utils/operationutils','datatypes/typedvar','internaltypes/varref','inte
 			*/
 			const discrepancy = (pattern.length - value.length);
 			if (discrepancy > 0) {
-				return required && TwineError.create("operation", "I can't destructure this array because it needs " + (discrepancy) +
+				return required && TwineError.create("operation", "I can't de-structure this array because it needs " + (discrepancy) +
 					" more value" + (discrepancy > 0 ? "s" : "") + ".");
 			}
 			/*
@@ -73,7 +73,7 @@ define(['utils/operationutils','datatypes/typedvar','internaltypes/varref','inte
 		if (pattern instanceof Map && value instanceof Map) {
 			for (let [k,p] of pattern.entries()) {
 				if (!value.has(k)) {
-					return required && TwineError.create("operation", "I can't destructure this datamap because it needs a '" + k + "' data name.");
+					return required && TwineError.create("operation", "I can't de-structure this datamap because it needs a '" + k + "' data name.");
 				}
 				ret = ret.concat(destructure(p,
 					VarRef.isPrototypeOf(src) ? VarRef.create(src, k) : value.get(k)));
@@ -86,11 +86,17 @@ define(['utils/operationutils','datatypes/typedvar','internaltypes/varref','inte
 		*/
 		if (TypedVar.isPrototypeOf(pattern)) {
 			/*
+				Pattern datatypes can, themselves, be the subject of a TypedVar, such as in "(p:str,'!')-type _a".
+			*/
+			if (typeof pattern.datatype.destructure === "function") {
+				return [{ dest:pattern, value, src }].concat(pattern.datatype.destructure(value));
+			}
+			/*
 				Currently, the 'const' datatype silently passes this test, while failing later in set(). This should
 				probably be changed to checking the const restriction here and now, as it is in varref.js.
 			*/
 			if (!matches(value, pattern.datatype)) {
-				return [required && TwineError.create("operation", "I can't destructure " + objectName(value) + " into "
+				return [required && TwineError.create("operation", "I can't de-structure " + objectName(value) + " into "
 					+ pattern.varRef.TwineScript_ToSource() + " because it doesn't match " + objectName(pattern.datatype) + ".")];
 			}
 			//TODO: implement support for spread TypedVars.
@@ -108,11 +114,18 @@ define(['utils/operationutils','datatypes/typedvar','internaltypes/varref','inte
 				src, });
 		}
 		/*
+			Pattern datatypes appear to be opaque data, but have their own destructure() method in which they use their
+			internal RegExp to obtain matches from the value.
+		*/
+		if (typeof pattern.destructure === "function") {
+			return ret.concat(pattern.destructure(value));
+		}
+		/*
 			Finally, plain values in the destructuring pattern should be matched using matches(), to check if the entire pattern should be
 			invalidated or not.
 		*/
 		if (!matches(value, pattern)) {
-			return required && TwineError.create("operation", "I tried to destructure, but " + objectName(pattern) +
+			return required && TwineError.create("operation", "I tried to de-structure, but " + objectName(pattern) +
 				" value in the pattern didn't match " + objectName(value) + ".");
 		}
 		return ret;
@@ -177,7 +190,7 @@ define(['utils/operationutils','datatypes/typedvar','internaltypes/varref','inte
 					Using the specially-stashed src, delete the source value if this was called by a (move:) macro.
 					Note that this is only performed if no error occurred.
 				*/
-				else if (andDelete) {
+				else if (andDelete && src) {
 					src.delete();
 				}
 				/*

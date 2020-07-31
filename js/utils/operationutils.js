@@ -47,11 +47,13 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 	}
 
 	/*
-		Used to check if a collection contains unstorable values.
+		Used to retrieve any unstorable value from a data structure.
 	*/
-	function isUnstorable(value) {
-		return value && (value.TwineScript_Unstorable || (value instanceof Map && [...value.values()].some(isUnstorable))
-				|| (value instanceof Set && [...value].some(isUnstorable)));
+	function unstorableValue(value) {
+		return (value && value.TwineScript_Unstorable && value)
+			|| (Array.isArray(value) && value.find(unstorableValue))
+			|| (value instanceof Map && [...value.values()].find(unstorableValue))
+			|| (value instanceof Set && [...value].find(unstorableValue));
 	}
 	
 	/*
@@ -783,7 +785,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		isValidDatamapName,
 		collectionType,
 		isSequential,
-		isUnstorable,
+		unstorableValue,
 		clone,
 		objectName,
 		typeName,

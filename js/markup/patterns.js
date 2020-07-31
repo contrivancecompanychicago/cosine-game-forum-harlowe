@@ -898,6 +898,13 @@
 			of its values into the macro call by using the `...` operator: `(either: ...$array)` will act as if every value in
 			$array was placed in the (either:) macro call separately
 
+			Historical note:
+
+			You might notice that the majority of Harlowe macros are not, strictly speaking, [macros in the computer-science sense](https://en.wikipedia.org/wiki/Macro_%28computer_science%29), but are
+			more like functions. This is purely due to historical circumstance - the original Twine 1 story format, Jonah, was based on [TiddlyWiki](https://tiddlywiki.com/)'s engine,
+			which features parameterised transclusions called "macros". These are closer to computer-science macros in that they actually transclude markup directly into the
+			tiddler (TiddlyWiki's term for "passage"). Thus, only Harlowe command macros like (display:) can really be considered "proper" macros.
+
 			#coding 1
 		*/
 		macroFront: macro.opener + before(macro.name),
@@ -968,7 +975,7 @@
 		// Data types
 		datatype: either(
 			"alnum", "alphanumeric", "any", "array", "bool(?:ean)?", "changer", "colou?r", "const",
-			"command", "dm", "data" + either("map","type","set"), "ds",
+			"command", "dm", "data" + either("map","type","set"), "ds", "digit",
 			"gradient", "empty", "even", "int" + notBefore('o') + "(?:eger)?", "lambda", "lowercase", "macro", "newline",
 			"num(?:ber)?", "odd", "str(?:ing)?", "uppercase", "whitespace"
 		),
