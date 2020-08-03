@@ -1,5 +1,5 @@
 "use strict";
-define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'internaltypes/twineerror'], ({objectName, typeName, matches, unstorableValue}, Datatype, VarRef, TwineError) => {
+define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'internaltypes/twineerror'], ({typeName, matches, unstorableValue}, Datatype, VarRef, TwineError) => {
 	/*d:
 		TypedVar data
 

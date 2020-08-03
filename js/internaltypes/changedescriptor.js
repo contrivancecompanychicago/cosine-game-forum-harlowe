@@ -439,7 +439,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 			*/
 			
 			dom = $(source &&
-				(this.verbatim ? new Text(source) : $.parseHTML(exec(source), document, true)));
+				(this.verbatim ? document.createTextNode(source) : $.parseHTML(exec(source), document, true)));
 			
 			/*
 				Now, insert the DOM structure into the target element.

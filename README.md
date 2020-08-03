@@ -35,6 +35,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Altered the error message that appears when you don't give macros "enough values", which wouldn't properly exclude optional values.
  * Fixed some error messages involving accessing an invalid data value of a string, which would refer to the string as "an array".
  * Fixed a long-standing bug that caused error messages for certain invalid operators (such as unsupported SugarCube operators) to be replaced with an incorrect message.
+ * Fixed a couple of crashes under Internet Explorer 10.
 
 #### Alterations
 

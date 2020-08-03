@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internaltypes/twineerror'], ($, NaturalSort, {unescape,onStartup,insensitiveName}, TwineMarkup, Renderer, TwineError) => {
+define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internaltypes/twineerror'], ($, NaturalSort, {unescape,onStartup}, TwineMarkup, Renderer, TwineError) => {
 	const {assign} = Object;
 	/*
 		Passages

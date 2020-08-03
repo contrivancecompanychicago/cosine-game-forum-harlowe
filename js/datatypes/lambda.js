@@ -1,5 +1,5 @@
 "use strict";
-define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref', 'internaltypes/twineerror'], ({plural}, {typeName, objectName, singleTypeCheck}, VarScope, VarRef, TwineError) => {
+define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref', 'internaltypes/twineerror'], ({objectName}, VarScope, VarRef, TwineError) => {
 	/*d:
 		Lambda data
 

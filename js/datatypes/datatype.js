@@ -8,7 +8,7 @@ define([
 	'datatypes/lambda',
 	'datatypes/custommacro',
 	'internaltypes/twineerror',
-], ({realWhitespace, anyRealLetter}, {objectName, toSource}, Changer, Colour, Gradient, Lambda, CustomMacro, TwineError) => {
+], ({realWhitespace, anyRealLetter}, {objectName}, Changer, Colour, Gradient, Lambda, CustomMacro, TwineError) => {
 	const {assign,seal,keys} = Object;
 	const {floor,abs} = Math;
 	/*

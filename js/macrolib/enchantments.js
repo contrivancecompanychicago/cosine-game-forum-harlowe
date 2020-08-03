@@ -759,7 +759,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'passages', 'macros
 		A separate click event needs to be defined for an .enchantment-clickblock wrapping <tw-story>, which is explained below.
 	*/
 	Utils.onStartup(() => {
-		interactionTypes.forEach(({name, enchantDesc}) => {
+		interactionTypes.forEach(({enchantDesc}) => {
 			if (enchantDesc.blockClassList) {
 				Utils.storyElement.on(
 					/*

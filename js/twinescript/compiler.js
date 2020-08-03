@@ -900,7 +900,6 @@ define(['utils'], ({impossible}) => {
 		else {
 			return tokens.reduce((a, token) => a + compile(token, {isVarRef, isTypedVar}), "");
 		}
-		return "";
 	}
 	
 	return compile;

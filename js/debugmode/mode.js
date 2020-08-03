@@ -1,6 +1,6 @@
 "use strict";
 define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'engine', 'passages', 'section', 'debugmode/panel'],
-($, {escape,nth,storyElement}, State, VarRef, TwineError, {objectName, is, isObject, toSource}, Engine, Passages, Section, Panel) => (initialError, code) => {
+($, {escape,nth,storyElement}, State, VarRef, TwineError, {objectName, isObject, toSource}, Engine, Passages, Section, Panel) => (initialError, code) => {
 	/*
 		Debug Mode
 

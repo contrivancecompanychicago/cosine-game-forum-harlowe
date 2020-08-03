@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'requestAnimationFrame', 'markup', 'utils/polyfills'],
-($, requestAnimationFrame) => {
+define(['jquery', 'markup', 'utils/polyfills'],
+($) => {
 
 	const
 		// These two are used by childrenProbablyInline (see below).

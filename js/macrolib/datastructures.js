@@ -14,7 +14,7 @@ define([
 	'internaltypes/varref',
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier'],
-($, {shuffled, permutations}, NaturalSort, Macros, {objectName, typeName, subset, collectionType, isValidDatamapName, is, unique, clone, range}, State, Engine, Passages, Lambda, AssignmentRequest, TypedVar, VarRef, TwineError, TwineNotifier) => {
+($, {shuffled, permutations}, NaturalSort, Macros, {objectName, subset, collectionType, isValidDatamapName, is, unique, clone, range}, State, Engine, Passages, Lambda, AssignmentRequest, TypedVar, VarRef, TwineError, TwineNotifier) => {
 	
 	const {optional, rest, either, zeroOrMore, Any, nonNegativeInteger}   = Macros.TypeSignature;
 	

@@ -8,7 +8,7 @@ define([
 	'datatypes/typedvar',
 	'internaltypes/twineerror',
 ],
-($, State, AssignmentRequest, {isObject, collectionType, is, isA, clone, unique, contains, matches, typeName, objectName}, VarRef, TypedVar, TwineError) => {
+($, State, AssignmentRequest, {isObject, collectionType, is, isA, clone, unique, contains, matches, objectName}, VarRef, TypedVar, TwineError) => {
 	/*
 		Operation objects are a table of operations which TwineScript proxies
 		for/sugars over JavaScript. These include basic fixes like the elimination

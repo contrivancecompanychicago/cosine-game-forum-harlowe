@@ -25,4 +25,8 @@ define([], function() {
 			return false;
 		};
 	}
+	/*
+		This leverages ES6-Shim to make Babel's slice syntax polyfill not crash IE10.
+	*/
+	(!window.Symbol) && window.Symbol = { iterator: '_es6-shim iterator_', };
 });
