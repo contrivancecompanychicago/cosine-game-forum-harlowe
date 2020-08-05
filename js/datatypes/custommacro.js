@@ -89,7 +89,7 @@ define(['jquery','utils/operationutils','internaltypes/changedescriptor', 'inter
 				Load up the runtime type constraints, first. Note that rests become arrays, so they must be
 				constrained as such... even though the array contents itself currently cannot.
 			*/
-			tempVariables.TwineScript_TypeDefs[name] = params[i].rest ?
+			tempVariables.TwineScript_TypeDefs[name] = params[i].datatype.rest ?
 				/*
 					Due to a circular dependency, this module can't import Datatype. So, we obtain Datatype.create()
 					from the passed-in datatype's prototype chain. Yeah.
@@ -101,7 +101,7 @@ define(['jquery','utils/operationutils','internaltypes/changedescriptor', 'inter
 				the VarRef 'set' event, as well as updating the TwineScript_KnownName of the value.
 			*/
 			const ref = VarRef.create(tempVariables, name);
-			if (params[i].rest) {
+			if (params[i].datatype.rest) {
 				/*
 					Because each .set() activates the 'set' event for VarRef, which includes Debug Mode's
 					DOM updating, we need to only use .set() on the final iteration.
@@ -126,7 +126,7 @@ define(['jquery','utils/operationutils','internaltypes/changedescriptor', 'inter
 		if (args.length) {
 			i += 1;
 		}
-		if (params[i] && params[i].rest) {
+		if (params[i] && params[i].datatype.rest) {
 			VarRef.create(tempVariables, varNames[i]).set([]);
 			tempVariables.TwineScript_TypeDefs[name] = params[i].datatype.create('array');
 		}

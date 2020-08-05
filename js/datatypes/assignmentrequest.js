@@ -126,7 +126,7 @@ define(['utils/operationutils','datatypes/typedvar','internaltypes/varref','inte
 		*/
 		if (!matches(value, pattern)) {
 			return required && TwineError.create("operation", "I tried to de-structure, but " + objectName(pattern) +
-				" value in the pattern didn't match " + objectName(value) + ".");
+				" in the pattern didn't match " + objectName(value) + ".");
 		}
 		return ret;
 	}

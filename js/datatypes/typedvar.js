@@ -1,5 +1,6 @@
 "use strict";
 define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'internaltypes/twineerror'], ({typeName, matches, unstorableValue}, Datatype, VarRef, TwineError) => {
+	const {freeze,assign,create} = Object;
 	/*d:
 		TypedVar data
 
@@ -27,7 +28,7 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 
 		For more details, consult the (set:) and (macro:) articles.
 	*/
-	const TypedVar = Object.freeze({
+	const TypedVar = freeze({
 		TwineScript_TypeName: "a typed variable name",
 		get TwineScript_ObjectName() {
 			return this.TwineScript_ToSource();
@@ -43,7 +44,10 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 			Typed variables are immutable data.
 		*/
 		TwineScript_Clone() {
-			return this;
+			return assign(create(TypedVar), {
+				datatype: this.datatype.TwineScript_Clone(),
+				varRef: this.varRef,
+			});
 		},
 
 		TwineScript_ToSource() {
@@ -106,10 +110,9 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 			if (unstorable && !TypedVar.isPrototypeOf(unstorable)) {
 				return TwineError.create("syntax", "The -type syntax can't have " + typeName(unstorable) + ' to its left.');
 			}
-			return Object.assign(Object.create(this), {
+			return assign(create(this), {
 				datatype,
 				varRef,
-				rest: false,
 			});
 		},
 	});

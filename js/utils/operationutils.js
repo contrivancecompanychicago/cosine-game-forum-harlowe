@@ -598,11 +598,45 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 			return true;
 		}
 		/*
-			All subsequent code strongly resembles is(), because matching is close
+			All subsequent code resembles is(), because matching is close
 			to equality except where datatype values are concerned.
 		*/
 		if (Array.isArray(l) && Array.isArray(r)) {
-			return l.length === r.length && l.every((e,i) => matches(e,r[i]));
+			/*
+				In order to properly compare spread datatypes, each value of each side must
+				be compared in non-uniform fashion to values on the other side.
+			*/
+			let leftInd = 0, rightInd = 0, ret = true;
+			while (ret && leftInd < l.length && rightInd < r.length) {
+				let left = l[leftInd], right = r[rightInd];
+				/*
+					The matching algorithm is as follows:
+					If the two compared values don't match:
+					- if neither is a rest, fail
+					- if one is a rest, advance past it
+					Otherwise:
+					- advance past each non-rest
+				*/
+				if (left.rest) {
+					while (rightInd < r.length && matches(left, right)) {
+						rightInd += 1;
+						right = r[rightInd];
+					}
+					leftInd += 1;
+				} else if (right.rest) {
+					while (leftInd < l.length && matches(left, right)) {
+						leftInd += 1;
+						left = l[leftInd];
+					}
+					rightInd += 1;
+				} else if (!matches(left, right)) {
+					ret = false;
+				} else {
+					leftInd += 1;
+					rightInd += 1;
+				}
+			}
+			return ret && leftInd >= l.length && rightInd >= r.length;
 		}
 		/*
 			Again, Maps are reduced to arrays for comparison purposes.

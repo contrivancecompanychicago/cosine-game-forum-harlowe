@@ -497,17 +497,69 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 
 			Details:
 			The only types that this will return are "general" types, like `string`, `number`, `boolean` and such. More specific types
-			like `even`, or descriptive types like `empty`, will not be returned, even if it's given a value that matches those types.
+			like `even`, or descriptive types like `empty`, will not be returned, even if it's given a value that matches those types. Nor will
+			spread datatypes be returned - even if a given string consists only of, say, digits, then `...digits` won't be returned instead of `str`.
 
 			if there isn't a known datatype value for the given data (for instance, if you give it a HookName) then an error will be produced.
 
 			See also:
-			(source:)
+			(source:), (datapattern:)
 
 			Added in: 3.2.0
 			#custom macros 5
 		*/
 		("datatype", (_, value) => Datatype.from(value), [Any])
+
+		/*d:
+			(datapattern: Any) -> Any
+
+			This takes any storeable value, and produces a datatype that matches it, in a manner similar to (datatype:). However, when given an array or datamap,
+			it creates an array or datamap with its values replaced with their datatypes, which can be used as a more accurate pattern with `matches` or (set:) elsewhere.
+
+			Example usage:
+			* `(datapattern: (a:15,45))` produces `(a:num,num)`.
+			* `(datapattern: (passage:))` produces `(dm:"name",str,"source",str,"tags",(a:str))` (as long as the passage has no metadata macros in it).
+			* `$coordinate matches (datapattern: (a:15,45))` checks if $coordinate is an array of exactly two numbers. 
+			* `(datapattern: $value) matches $value2` checks if $value2 exactly matches the structure of $value.
+
+			Details:
+			The (datatype:) macro is useful for examining and comparing the datatypes of values, but when dealing with arrays and datamaps, each of which can have radically
+			different purposes and meanings throughout your story, that macro only produces `array` or `dm` when given them, which isn't too helpful when checking
+			if one array is similar to another. This macro produces a more precise result - an array or datamap with datatypes replacing its values - which is compatible with
+			the `matches` operator, the (set:) macro, parameters of the (macro:) macro, and other places where datatypes are useful.
+
+			Details:
+			This won't return structures containing spread datatypes, even if those could plausibly describe the passed-in data structure - an array with 26 numbers in it will,
+			when given to this macro, produce an array containing `num` 26 times, no more or less.
+
+			Note that this does not produce any string patterns, like those produced by (p:) - any string given to this will still result in `str` being returned.
+
+			See also:
+			(source:), (datatype:)
+
+			Added in: 3.2.0
+			#custom macros 6
+		*/
+		("datapattern", (_, data) => {
+			return (function recur(data) {
+				let ret, error;
+				if (Array.isArray(data)) {
+					ret = data.map(recur);
+				}
+				else if (data instanceof Map) {
+					ret = new Map();
+					[...data].forEach(([k,v]) => ret.set(k, recur(v)));
+				}
+				else {
+					ret = Datatype.from(data);
+				}
+				if ((error = TwineError.containsError(ret))) {
+					return error;
+				}
+				return ret;
+			}(data));
+		},
+		[Any])
 
 		/*d:
 			(rgb: Number, Number, Number, [Number]) -> Colour

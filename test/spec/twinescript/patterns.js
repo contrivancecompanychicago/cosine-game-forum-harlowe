@@ -130,6 +130,26 @@ describe("patterns", function() {
 					expect("(print: (a:" + type1 + ") "+name+" (a:(a:" + value + ")))").markupToPrint(((type1 === "array") !== Boolean(negative))+'');
 					expect("(print: (a:" + type1 + ",3," + type1 + ") "+name+" (a:3,2,4))").markupToPrint(pFalse);
 				});
+				it("matches spread " + type1 + " datatype inside arrays to any number of " + type1 + "s in the same position", function() {
+					// Spread -> Value
+					expect("(print: (a: ..." + type1 + ") "+name+" (a:" + value + "))").markupToPrint(pTrue);
+					expect("(print: (a: ..." + type1 + ") "+name+" (a:" + Array(7).fill(value) + "))").markupToPrint(pTrue);
+					expect("(print: (a: ..." + type1 + ") "+name+" (a:(size:1)))").markupToPrint(pFalse);
+					expect("(print: (a: ..." + type1 + ") "+name+" (a:(size:1)," + value + "))").markupToPrint(pFalse);
+					// Value -> Spread
+					expect("(print: (a: " + value + ") "+name+" (a: ..." + type1 + "))").markupToPrint(pTrue);
+					expect("(print: (a: " + Array(7).fill(value) + ") "+name+" (a: ..." + type1 + "))").markupToPrint(pTrue);
+					// Spread -> Spread
+					expect("(print: (a: ..." + type1 + ") "+name+" (a:..." + type1 + "))").markupToPrint(pTrue);
+					// Spread, Value, -> Spreads, Value
+					expect("(print: (a: ..." + type1 + ",(size:1)) "+name+" (a:..." + type1 + ",..." + type1 + ",(size:1)))").markupToPrint(pTrue);
+					// Spreads -> Values
+					expect("(print: (a: ..." + type1 + ", ...changer, ..." + type1 + ") "+name+" (a:" + Array(2).fill(value) + ",(size:1)," + Array(4).fill(value) + "))").markupToPrint(pTrue);
+					// Spread, Values -> Values, Spread
+					if (type1 !== "datatype") {
+						expect("(print: (a: ..." + type1 + ", (size:1), (size:1)) "+name+" (a:" + Array(6).fill(value) + ",...changer))").markupToPrint(pTrue);
+					}
+				});
 				it("matches the " + type1 + " datatype inside datamaps to a " + type1 + " in the same position", function() {
 					expect("(print: (dm: 'A', " + type1 + ") "+name+" (dm: 'A', " + value + "))").markupToPrint(pTrue);
 					expect("(print: (dm: " + ['"A"',type1,'"B"',type2,'"C"',"(a:" + type1 + ")"] +
@@ -152,12 +172,15 @@ describe("patterns", function() {
 				expect("(set: $a to -3.9 is a "+name+")(print:$a)").markupToPrint(!!i+'');
 			});
 		});
-		it("'whitespace' matches only whitespace", function() {
+		it("'whitespace' matches only single whitespace", function() {
 			expect("(set: $a to '' is a whitespace)(print:$a)").markupToPrint("false");
-			expect("(set: $a to \"        .\" is a whitespace)(print:$a)").markupToPrint("false");
+			expect("(set: $a to ' ' is a whitespace)(print:$a)").markupToPrint("true");
+			expect("(set: $a to '  ' is a whitespace)(print:$a)").markupToPrint("false");
+			expect("(set: $a to '  ' is a ...whitespace)(print:$a)").markupToPrint("true");
+			expect("(set: $a to \"        .\" is a ...whitespace)(print:$a)").markupToPrint("false");
 			expect("(set: $a to 0 is a whitespace)(print:$a)").markupToPrint("false");
-			expect("(set: $a to '\t\t\n' is a whitespace)(print:$a)").markupToPrint("true");
-			expect("(set: $a to (str-repeated:5,' ') is a whitespace)(print:$a)").markupToPrint("true");
+			expect("(set: $a to '\t\t\n' is a ...whitespace)(print:$a)").markupToPrint("true");
+			expect("(set: $a to (str-repeated:5,' ') is a ...whitespace)(print:$a)").markupToPrint("true");
 		});
 		it("'integer' or 'int' matches integers", function() {
 			expect("(set: $a to 2.1 is a integer)(print:$a)").markupToPrint("false");
@@ -167,26 +190,32 @@ describe("patterns", function() {
 			expect("(set: $a to -10002 is a int)(print:$a)").markupToPrint("true");
 			expect("(set: $a to -10002.1 is a int)(print:$a)").markupToPrint("false");
 		});
-		it("'alphanumeric' or 'alnum' matches alphanumeric characters", function() {
+		it("'alphanumeric' or 'alnum' matches single alphanumeric characters", function() {
 			expect("(set: $a to '' is a alnum)(print:$a)").markupToPrint("false");
-			expect("(set: $a to \"E-G\" is a alnum)(print:$a)").markupToPrint("false");
-			expect("(set: $a to 'EűG2' is a alnum)(print:$a)").markupToPrint("true");
-			expect("(set: $a to 'EűG2' is a alphanumeric)(print:$a)").markupToPrint("true");
-			expect("(set: $a to 'EűG2\n' is a alphanumeric)(print:$a)").markupToPrint("false");
+			expect("(set: $a to 'EűG2' is a alnum)(print:$a)").markupToPrint("false");
+			expect("(set: $a to 'EűG2' is a ...alnum)(print:$a)").markupToPrint("true");
+			expect("(set: $a to \"E-G\" is a ...alnum)(print:$a)").markupToPrint("false");
+			expect("(set: $a to 'EűG2' is a ...alphanumeric)(print:$a)").markupToPrint("true");
+			expect("(set: $a to 'EűG2\n' is a ...alphanumeric)(print:$a)").markupToPrint("false");
 		});
-		it("'digit' matches alphanumeric characters", function() {
+		it("'digit' matches digit characters", function() {
 			expect("(set: $a to '' is a digit)(print:$a)").markupToPrint("false");
 			expect("(set: $a to \"EGG\" is a digit)(print:$a)").markupToPrint("false");
 			expect("(set: $a to '2' is a digit)(print:$a)").markupToPrint("true");
-			expect("(set: $a to '1234567890' is a digit)(print:$a)").markupToPrint("true");
+			expect("(set: $a to '1234567890' is a digit)(print:$a)").markupToPrint("false");
+			expect("(set: $a to '1234567890' is a ...digit)(print:$a)").markupToPrint("true");
 			expect("(set: $a to '2\n' is a digit)(print:$a)").markupToPrint("false");
 		});
-		it("'uppercase' or 'lowercase' matches cased characters", function() {
+		it("'uppercase' or 'lowercase' matches single cased characters", function() {
 			expect("(set: $a to '' is a uppercase)(print:$a)").markupToPrint("false");
-			expect("(set: $a to 'ӜEAR' is a uppercase)(print:$a)").markupToPrint("true");
-			expect("(set: $a to 'ӝear' is a lowercase)(print:$a)").markupToPrint("true");
-			expect("(set: $a to 'ӜEAr' is a uppercase)(print:$a)").markupToPrint("false");
-			expect("(set: $a to 'ӝeaR' is a lowercase)(print:$a)").markupToPrint("false");
+			expect("(set: $a to 'Ӝ' is a uppercase)(print:$a)").markupToPrint("true");
+			expect("(set: $a to 'ӝ' is a lowercase)(print:$a)").markupToPrint("true");
+			expect("(set: $a to 'ӜEAR' is a uppercase)(print:$a)").markupToPrint("false");
+			expect("(set: $a to 'ӝear' is a lowercase)(print:$a)").markupToPrint("false");
+			expect("(set: $a to 'ӜEAR' is a ...uppercase)(print:$a)").markupToPrint("true");
+			expect("(set: $a to 'ӝear' is a ...lowercase)(print:$a)").markupToPrint("true");
+			expect("(set: $a to 'ӜEAr' is a ...uppercase)(print:$a)").markupToPrint("false");
+			expect("(set: $a to 'ӝeaR' is a ...lowercase)(print:$a)").markupToPrint("false");
 		});
 		it("'newline' matches newlines", function() {
 			expect("(set: $a to '\\r\\n' is a newline)(print:$a)").markupToPrint("true");
@@ -205,6 +234,13 @@ describe("patterns", function() {
 		});
 	});
 	describe("string pattern macros", function() {
+		var stringTypes = [
+			['uppercase','A'],
+			['lowercase','a'],
+			['digit','3'],
+			['whitespace',' '],
+			['newline','\n']
+		];
 		function basicTest(name, arg, canBeUsedAlone) {
 			if (arguments.length < 3) {
 				canBeUsedAlone = true;
@@ -238,8 +274,16 @@ describe("patterns", function() {
 				expect("(print: (p:'red','blue') matches 'redblue')").markupToPrint('true');
 				expect("(print: (p:'red','blue') does not match 'xredxblue' and it does not match 'xredbluex' and it does not match 'redbluexx')").markupToPrint('true');
 			});
-			it("works with the string datatype", function() {
+			it("works with the string datatypes", function() {
 				expect("(print: (p:string,'red','blue',string) matches 'redblue' and 'xredbluex' and 'xxredblue' and 'redbluexx')").markupToPrint('true');
+				stringTypes.forEach(function(e) {
+					expect("(print: (p:" + e[0] + ",'red','blue'," + e[0] + ") matches '" + e[1] + "redblue" + e[1] + "')").markupToPrint('true');
+				});
+			});
+			it("works with spread string datatype", function() {
+				stringTypes.forEach(function(e) {
+					expect("(print: (p:..." + e[0] + ",'red','blue',..." + e[0] + ") matches '" + e[1].repeat(3) + "redblue" + e[1].repeat(6) + "')").markupToPrint('true');
+				});
 			});
 		});
 		describe("(p-many:)", function() {
@@ -296,6 +340,26 @@ describe("patterns", function() {
 		it("errors if given data that has no matching type", function() {
 			expect("(print:(datatype:?hook))").markupToError();
 			expect("(print:(datatype:[foobar]))").markupToError();
+		});
+	});
+	describe("the (datapattern:) macro", function() {
+		it("takes most kinds of data, and produces a datatype that matches it", function() {
+			typesAndValues.filter(function(e) {
+				return e[1] !== "array" && e[1] !== "datamap";
+			}).forEach(function(e) {
+				expect("(print:(datapattern:" + e[0] + ") is " + e[1] + ")").markupToPrint("true");
+			});
+		});
+		it("when given an array, it converts each value into its datapattern", function() {
+			expect("(verbatim-print:(source:(datapattern:(a:2,(a:'4'),true))))").markupToPrint("(a:num,(a:str),bool)");
+			expect("(verbatim-print:(source:(datapattern:(a:(ds:)))))").markupToPrint("(a:ds)");
+		});
+		it("when given a datamap, it converts each value into its datapattern", function() {
+			expect("(verbatim-print:(source:(datapattern:(dm:'foo',2,'qux',(dm:'bar','4'),'baz',true))))").markupToPrint('(dm:"baz",bool,"foo",num,"qux",(dm:"bar",str))');
+		});
+		it("errors if given data that has no matching type", function() {
+			expect("(print:(datapattern:?hook))").markupToError();
+			expect("(print:(datapattern:[foobar]))").markupToError();
 		});
 	});
 	describe("destructuring assignment", function() {
@@ -392,6 +456,12 @@ describe("patterns", function() {
 			it("can set multiple variables at once", function() {
 				expect("(set: (p: (p-many:alnum)-type $a, whitespace, (p-many:alnum)-type $b, whitespace, alnum-type $c) to 'foo bar 2')$a $b $c").markupToPrint("foo bar 2");
 				expect("(set: (p: (p-many:alnum)-type $a, whitespace, (p-many:alnum)-type $b, (p:whitespace, alnum-type $c)) to 'foo bar 2')$a $b $c").markupToPrint("foo bar 2");
+			});
+			it("works with spread datatypes", function() {
+				expect("(set: ...digit-type $z to '0041')$z").markupToPrint('0041');
+				expect("(set: (p: '$', ...digit-type $a) to '$12800')$a").markupToPrint('12800');
+				expect("(set: (p: alnum-type $b, '-', ...digit) to 'A-800')$b").markupToPrint('A');
+				expect("(set: ...(p: ':', digit)-type $c to ':4:5:6')$c").markupToPrint(':4:5:6');
 			});
 			it("works with (p-opt:)", function() {
 				expect("(set: (p: 'x', (p-opt:'y')-type _a, 'z') to 'xyz')_a").markupToPrint("y");

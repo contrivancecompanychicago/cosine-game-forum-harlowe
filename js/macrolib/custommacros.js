@@ -51,12 +51,12 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		not recommended unless you genuinely need it, as you miss out on the ability to catch wrong-type errors.
 
 		You might, on occasion, want to make a macro that can take an arbitrary amount of values, similar to certain built-in macros like `(a:)`,
-		`(altered:)`, and so forth. To do this, you can place the spread `...` syntax in front of a parameter. This turns it into a spread parameter,
-		which represents zero or more values of the same data type. Think of this as the opposite counterpart of the spread `...` syntax
-		in macro calls. Instead of turning one value (such as an array) into many spread-out values, this turns many values into a single array value.
-		A custom macro stored in $mean with `...num-type _n` can be called with `($mean:1,4,5,6)`, which sets _n to `(a:1,4,5,6)`. `($mean:2,3)` sets
-		_n to `(a:2,3)`, and `($mean:)` sets _n to `(a:)`. Note that because it takes every value at or after it, it must be the final parameter
-		of your custom macro.
+		`(altered:)`, and so forth. To do this, you can place the spread `...` syntax in front of a parameter's datatype. Just as a spread datatype
+		matches zero or more values when it is used with the `matches` operator, a spread parameter represents zero or more values of the same data type
+		that you give to a macro call. Think of this as the opposite counterpart of the spread `...` syntax in macro calls. Instead of turning one value
+		(such as an array) into many spread-out values, this turns many values into a single array value. A custom macro stored in $mean with `...num-type _n` can be called
+		with `($mean:1,4,5,6)`, which sets _n to `(a:1,4,5,6)`. `($mean:2,3)` sets _n to `(a:2,3)`, and `($mean:)` sets _n to `(a:)`. Note that
+		because it takes every value at or after it, it must be the final parameter	of your custom macro.
 
 		```
 		(set: $mean to (macro: ...num-type _a, [
@@ -133,7 +133,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 						ACM + "'s datatyped variables can't be properties inside a data structure."
 					);
 				}
-				if (parameters[i].rest && i !== parameters.length - 2) {
+				if (parameters[i].datatype.rest && i !== parameters.length - 2) {
 					return TwineError.create("datatype",
 						ACM + " can only have one spread variable, and it must be its last variable."
 					);

@@ -144,7 +144,6 @@ define(['utils'], ({impossible}) => {
 		[
 			["error"],
 			["comma"],
-			{rightAssociative: ["spread", "bind"]},
 			["to","into"],
 			["where", "when", "via"],
 			["making", "each"],
@@ -157,6 +156,7 @@ define(['utils'], ({impossible}) => {
 			["inequality"],
 			["addition", "subtraction"],
 			["multiplication", "division"],
+			{rightAssociative: ["spread", "bind"]},
 			/*
 				"positive" and "negative" are never emitted by the lexer, and are only
 				created by converting "addition" and "subtraction" in compile().
@@ -408,7 +408,7 @@ define(['utils'], ({impossible}) => {
 			*/
 			openString = Operations + ".makeSpreader(";
 			closeString = ")";
-			needsLeft = MUSTNT;
+			needsLeft = MAY;
 		}
 		else if (type === "bind") {
 			openString = "VarBind" + dotCreate;

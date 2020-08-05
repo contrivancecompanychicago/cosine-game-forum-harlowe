@@ -73,6 +73,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added negated versions of several operators. You may now write `is not in`, `is not a`, `does not contain` and `does not match` as more intelligible negations of `is in`, `contains` and `matches`.
  * Added the `pos` identifier, which is used in lambdas to provide the position of the data value (from those passed into the macro) that the lambda is currently processing. `(altered: via it + pos, 0,0,5,0,0)` equals `(a:1,2,8,4,5)`.
  * Added `2bind`, a "two-way bind" variation of `bind` which causes the `(cycling-link:)`, `(seq-link:)` (See below) and `(dropdown:)` macros to automatically match the current value of the bound variable, and update itself whenever another macro changes the variable.
+ * Datatypes can now be converted into "spread datatypes" using `...`, such as by writing `...str`. This allows the datatype, inside arrays or string patterns (see below), to match zero or more values of that type. `(a: ...str)` can match `(a:"Oat")`, `(a:"Oat","Wheat")` or `(a:"Oat","Wheat","Maize")`.
  * Added the HookName data name `visited` (as in `?passage's visited`), which allows you to select links that point to visited passages, and change the unique colour these links have.
  * Colours now have an alpha `a` data value, containing the alpha value given to the `(hsl:)` and `(rgb:)` macros - `(hsl: 130, 1, 0.5, 0.2)'s a` is 0.2.
  * Colours now have an `lch` data value, which contains a datamap of LCH color space values for that colour (corresponding to the numbers given to the new `(lch:)` macro). Because LCH's values conflict with HSL's, the LCH values are inside this datamap instead of directly accessible from the colour itself.
@@ -123,7 +124,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
    * `(p-opt:)` is a variation of `(p:)` that optionally matches the sequence - it matches strings that match the sequence, or are empty.
    * `(p-many:)` is a variation of `(p:)` that matches strings that match the sequence many times. You can specify the minimum and/or maximum amount of times the string can match the sequence.
  * You can also use the preceding macros as de-structuring patterns by using them with the `-type` syntax. For instance, `(set: (p: (p-opt:"Dr. "), (p: str-type _firstName, whitespace, str-type _lastName)-type _fullName) to "Dr. Iris Cornea")` creates three variables, _firstName, _lastName and _fullName, from a single string.
- * Added a `(datatype:)` macro, which produces the datatype that matches the given value, if it exists.
+ * Added `(datatype:)` and `(datapattern)` macros. `(datatype:)` produces the datatype that matches the given value, if it exists. `(datapattern)` is a variation that, when given arrays or datamaps, produces a data pattern that can be used with the `matches` operator, among other things, to check if the structure of one value matches the other. `(datapattern: (passage:))` produces `(dm:"name",str,"source",str,"tags",(a:str))`.
 
 ###### Changers
 

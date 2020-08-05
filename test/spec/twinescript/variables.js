@@ -138,8 +138,9 @@ describe("variables", function() {
 				runPassage("(set: $a's 1st to 4')");
 				expect("(set: num-type $a's 1st to 2)").markupToError();
 			});
-			it("doesn't work with spread typed variables", function() {
-				expect("(set: ...num-type $a to 2)$a").markupToError();
+			it("works with spread typed variables", function() {
+				expect("(set: ...num-type $a to 2)$a").markupToPrint('2');
+				expect("(set: ...whitespace-type $b to '    ')$b").markupToPrint('    ');
 			});
 		});
 	});

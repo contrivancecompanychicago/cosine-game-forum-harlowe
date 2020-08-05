@@ -1,6 +1,7 @@
 "use strict";
-define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 'internaltypes/twineerror', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/lambda', 'datatypes/varbind', 'utils/operationutils', 'utils/renderutils'],
-($, Macros, Utils, State, Passages, Renderer, Engine, TwineError, HookSet, CodeHook, Lambda, VarBind, {printBuiltinValue}, {dialog, geomParse, geomStringRegExp}) => {
+define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 'internaltypes/twineerror',
+	'internaltypes/twinenotifier', 'datatypes/assignmentrequest', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/lambda', 'datatypes/varbind', 'utils/operationutils', 'utils/renderutils'],
+($, Macros, Utils, State, Passages, Renderer, Engine, TwineError, TwineNotifier, AssignmentRequest, HookSet, CodeHook, Lambda, VarBind, {printBuiltinValue}, {dialog, geomParse, geomStringRegExp}) => {
 	
 	/*d:
 		Command data
@@ -31,6 +32,298 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		return "(" + text + " " + Engine.options.ifid + ") ";
 	}
 	
+	/*d:
+		VariableToValue data
+		
+		This is a special value that only (set:) and (put:) make use of.
+		It's created by joining a value and a variable (or a TypedVar, or data structure containing TypedVars) with the `to` or `into` keywords:
+		`$emotion to 'flustered'` is an example of a VariableToValue. It exists primarily to make (set:) and (put:) more readable.
+	*/
+	/*d:
+		Instant data
+
+		A few special macros in Harlowe perform actions immediately, as soon as they're evaluated.
+		These can be used in passages, but cannot have their values saved using (set:) or (put:),
+		or stored in data structures.
+	*/
+	["set","put"].forEach(name =>
+		/*d:
+			(set: ...VariableToValue) -> Instant
+			
+			Stores data values in variables.
+			
+			Example usage:
+			* `(set: $battlecry to "Save a " + $favouritefood + " for me!")` creates a variable called $battlecry.
+			* `(set: _dist to $altitude - $enemyAltitude)` creates a temp variable called _dist.
+			* `(set: num-type $funds to 0)` sets a variable and restricts its type to numbers, preventing non-numbers
+			from ever being (set:) into it by accident.
+			* `(set: const-type $robotText to (font:"Courier New"))` sets a variable and makes it so it can't ever be set
+			to another value.
+			* `(set: (a: _mainPath, _sidePath, _backPath) to (a:"north","northeast","south"))` sets three temp variables (by overwriting)
+			each variable in the array on the left with its matching value in the array on the right.
+			* `(set: (dm: "Maths", _Maths, "Science", _Science) to $characterStats)` is the same as `(set: _Maths to $characterStats's Maths, _Science to $characterStats's Science)`.
+			* `(set: (p-either:"Ms.","Mr.","Mx.")-type $charTitle to "Mx.")` sets a variable that can only hold the strings "Mr.", "Ms." or "Mx.".
+			* `(set: (p:"The ", str-type _job) to "The Safecracker")` uses de-structuring to extract the string "Safecracker" from the value, and puts it in the variable _job.
+
+			Rationale:
+			
+			Variables are data storage for your game. You can store data values under special names
+			of your choosing, and refer to them later.
+
+			There are two kinds of variables. Normal variables, whose names begin with `$`, persist between passages,
+			and should be used to store data that will be needed throughout the entire game. Temp variables,
+			whose names begin with `_`, only exist inside the hook or passage that they're first (set:), and
+			are forgotten after the hook or passage ends. You should use temp variables if you're writing passage
+			code that mustn't accidentally affect any other passages' variables (by using (set:) on a variable name
+			that someone else was using for something different). This can be essential in collaborative work
+			with other authors working on the same story independently, or when writing code to be used in multiple stories.
+			
+			Variables have many purposes: keeping track of what the player has accomplished,
+			managing some other state of the story, storing hook styles and changers, and
+			other such things. You can display variables by putting them in passage text,
+			attach them to hooks, and create and change them using the (set:) and (put:) macros.
+			
+			Details:
+			
+			In its basic form, a variable is created or changed using `(set: ` variable `to` value `)`.
+			You can also set multiple variables in a single (set:) by separating each VariableToValue
+			with commas: `(set: $weapon to 'hands', $armour to 'naked')`, etc.
+			
+			You can also use `it` in expressions on the right-side of `to`. Much as in other
+			expressions, it's a shorthand for what's on the left side: `(set: $vases to it + 1)`
+			is a shorthand for `(set: $vases to $vases + 1)`.
+
+			Due to the variable syntax potentially conflicting with dollar values (such as $1.50) in your story text,
+			variables cannot begin with a numeral.
+
+			Destructuring:
+
+			As of Harlowe 3.2.0, you can extract multiple values from an array, datamap or string, at once, and set them into
+			multiple variables, by placing a matching data structure on the left of `to` containing variables at
+			the positions of those values. For instance, `(set: (a: $x, 2, $y) to (a: 1, 2, 3))` sets $x to 1 and $y to 3,
+			and `(set: (dm: "A", $x, "B", $y) to (dm: "B", 3, "A", 1))` sets $x to 1 and $y to 3. Harlowe checks that each value on the left side has a
+			value that matches it (using the same rules as the `matches` operator) on the right side, and overwrites the left side with the
+			right side, causing the variables at various positions in the left side to be overwritten with values from the
+			right. This is known as **de-structuring**. (Remember that datamaps' "positions" are determined by their datanames, not their locations
+			in the (dm:) macro that created them, as, unlike arrays, they are not sequential.)
+
+			For extracting substrings from strings, use the (p:) macro and its related macros to construct a string pattern, resembling
+			array patterns. For instance, `(set: (p: (p-either: "Silt", "Mud", "Peat", "Slime")-type _element, " ", (p-either: "Ball", "Blast", "Shot", "Beam")-type _shape) to "Slime Ball")`
+			extracts the words "Slime" and "Ball" from the value, and puts them in the _element and _shape temp variables. Note that
+			when this is done, the _element variable is restricted to `(p-either: "Silt", "Mud", "Peat", "Slime")-type` data, so putting
+			any other kind of string into it will cause an error. Generally, it's recommended to use temp variables for string destructuring, and then,
+			if you need more general variables to hold the extracted substrings, place them in a less restricted variable afterward.
+
+			Note that the left side's data structure can have any number of nested data structures inside it.
+			`(set: (a: (a: $x), 2, (dm: "A", $y)) to (a: (a: 1), 2, (dm: "A", 3)))` also sets $x to 1 and $y to 3. If you need to reach deeply
+			into a data structure (such as one produced by (passages:), (saved-games:) or (open-storylets:)) to get a certain set of values,
+			this can come in handy.
+
+			You may have noticed that the data structures on the left side may have values that aren't variable names, such as the 2 in the
+			preceding example. These can be used as error-checking values -if a matching value isn't present on the right side at that same position,
+			then an error will be reported. To ensure that the right side does indeed contain the values you expect it to, you may include these
+			values in the left side. Of course, you may want to simply enforce that a value of a given datatype is in that position, rather a specific
+			value - this can be done by placing a datatype name at that position, like `num` or `str` or `empty`. Consult the datatype article for more
+			information on datatype names.
+
+			As you may have also noticed, this syntax is convenient for extracting values from the left side of arrays. But, what if you wish to only select
+			values from the middle, or to skip certain values without putting them in variables? You could use a value or a datamap name at that position,
+			such as by writing `(set: (a: num, $y, $x) to $array)` - though, if you aren't even certain of the data types that could be at those positions,
+			you may find the special `any` data type to be a big help - `(set: (a: any, $y, $x) to $array)` sets $x to the 3rd value in $array and $y to the
+			2nd value, without needing to worry about what the first value might be.
+
+			(When dealing with string patterns, the equivalent of `any` is simply `str`, as strings can't contain non-string data.)
+			
+			If the destination doesn't contain any variables - for instance, if you write `(set: (a:2,3)'s 1st to 1)`,
+			or `(set: true to 2)` - then an error will be printed.
+
+			For obvious reasons, de-structuring can't be used with datasets - you'll have to convert them to arrays on the right side.
+
+			Typed variables:
+
+			A common source of errors in a story is when a variable holding one type of data is mistakenly overridden
+			with a different type of data, such as when putting `"1"` (the string "1") into a variable that should
+			hold numbers. A good way to guard against this is to make the variable a **typed variable**, which is permanently
+			restricted to a single datatype. The first time you set data to the variable, write `(set: num-type $days to 1)` to
+			permanently restrict $days to numbers. That way, if you accidentally put `"1"` into it, an error will appear
+			immediately, explaining the issue. Moreover, typed variables serve a code documentation purpose: they help
+			indicate and explain the purpose of a variable by showing what data is meant to be in it. You can use any
+			datatype before the `-type` syntax - see the article about datatype data for more details.
+
+			In addition to just restricting a variable to a type, you may wish to specify that a variable should only hold one
+			value for the entire story - a style changer, for instance, or a datamap holding fixed values for a
+			procedural-generation algorithm. For these, you want to use the `const` (short for "constant") datatype.
+			Using this, the variable is guaranteed to constantly hold that value for the entirety of the story (or, if it's
+			a temp variable, the passage).
+
+			This syntax can be combined with de-structuring - simply place the typed variable where a normal variable would be
+			within a data structure. `(set: (a: num, num-type $y, num-type $x) to $array)` not only sets $y and $x, but it also
+			restricts them to number data, all in one statement.
+
+			See also:
+			(push:), (move:)
+
+			Added in: 1.0.0
+			#basics 1
+		*/
+		/*d:
+			(put: ...VariableToValue) -> Instant
+			
+			A left-to-right version of (set:) that requires the word `into` rather than `to`.
+			
+			Example usage:
+			* `(put: "Save a " + $favouritefood + " for me!" into $battlecry)` creates a variable called $battlecry.
+			* `(put: $altitude - $enemyAltitude into _dist)` creates a temp variable called _dist.
+			* `(put: 0 into num-type $funds)` sets a variable and restricts its type to numbers, preventing non-numbers
+			from ever being (put:) into it by accident.
+			* `(put: (font:"Courier New") into const-type $robotText)` sets a variable and makes it so it can't ever be set
+			to another value.
+
+			Rationale:
+			
+			This macro has an identical purpose to (set:) - it creates and changes variables.
+			For a basic explanation, see the rationale for (set:).
+			
+			Almost every programming language has a (set:) construct, and most of these place the
+			variable on the left-hand-side. However, a minority, such as HyperTalk, place the variable
+			on the right. Harlowe allows both to be used, depending on personal preference. (set:) reads
+			as `(set: ` variable `to` value `)`, and (put:) reads as `(put: ` value `into` variable `)`.
+			
+			Details:
+			
+			Just as with (set:), a variable is changed using `(put: ` value `into` variable `)`. You can
+			also set multiple variables in a single (put:) by separating each VariableToValue
+			with commas: `(put: 2 into $batteries, 4 into $bottles)`, etc.
+
+			De-structuring also works, although you will need to remember that the left side of a (set:) is
+			the right side of a (put:) - `(set: (a: any, $y, $x) to $array)` would be written as
+			`(put: $array into (a: any, $y, $x))`.
+
+			You can also use typed variables with (put:) - `(put: 1 into num-type $days)` permanently
+			restricts $days to numbers. Consult the article about (set:) for more information about
+			typed variables.
+			
+			`it` can also be used with (put:), but, interestingly, it's used on the right-hand side of
+			the expression: `(put: $eggs + 2 into it)`.
+
+			See also:
+			(set:), (move:)
+
+			Added in: 1.0.0
+			#basics 2
+		*/
+		Macros.add(name, (_, ...assignmentRequests) => {
+			let debugMessage = "";
+			/*
+				This has to be a plain for-loop so that an early return
+				is possible.
+			*/
+			for(let i = 0; i < assignmentRequests.length; i+=1) {
+				const ar = assignmentRequests[i];
+
+				if (ar.operator === "into" && name === "set") {
+					return TwineError.create("macrocall", "Please say 'to' when using the (set:) macro.");
+				}
+				else if (ar.operator !== "into" && name === "put") {
+					return TwineError.create("macrocall", "Please say 'into' when using the (put:) macro.");
+				}
+
+				const debugMessage = ar.set();
+				if (TwineError.containsError(debugMessage)) {
+					return debugMessage;
+				}
+			}
+
+			/*
+				There's nothing that can be done with the results of (set:) or (put:)
+				operations, except to display nothing when they're in bare passage text.
+				Return a plain unstorable value that prints out as "".
+			*/
+			return {
+				TwineScript_TypeID:       "instant",
+				TwineScript_TypeName:     "a (" + name + ":) operation",
+				TwineScript_ObjectName:   "a (" + name + ":) operation",
+				TwineScript_Unstorable: true,
+				// Being unstorable and not used by any other data strctures, this doesn't need a ToSource() function.
+				TwineScript_Print:        () => Engine.options.debug && debugMessage && TwineNotifier.create(debugMessage).render()[0].outerHTML,
+			};
+		},
+		[rest(AssignmentRequest)])
+	);
+
+	Macros.add
+		/*d:
+			(move: ...VariableToValue) -> Instant
+			
+			A variant of (put:) that, if transferring data from a data structure, deletes the source value
+			after copying it - in effect moving the value from the source to the destination.
+			
+			Example usage:
+			* `(move: $arr's 1st into $var)`
+
+			Rationale:
+			You'll often use data structures such as arrays or datamaps as storage for values
+			that you'll only use once, such as a list of names to print out. When it comes time
+			to use them, you can remove it from the structure and retrieve it in one go.
+
+			Details:
+			You must use the `into` keyword, like (put:), with this macro. This is because, like (put:),
+			the destination of the value is on the right, whereas the source is on the left.
+
+			As with (set:) and (put:), you can also change multiple variables in a single (move:) by
+			separating each VariableToValue with commas: `(move: $a's 1st into $b, $a's 2nd into $c)`, etc. Also,
+			destructuring syntax (described in detail in (set:)'s article) works with (move:) as well - `(move: $array into (a: $x, $y))`
+			will cause only the first and second values of $array to be moved into $x and $y.
+
+			If the data value you're accessing cannot be removed - for instance, if it's an array's `length` -
+			then an error will be produced.
+
+			This macro works very well with the `random` data value of arrays: `(move: $deck's random into $card)`
+			will remove a random value from $deck and put it into $card. Thus, you can use arrays as random "decks"
+			of values that you can draw from and use once in your story.
+
+			Note that this will only delete the data from the source if the source is inside a data structure.
+			Moving from variable to variable, such as by `(move:$p into $q)`, won't cause $p to be deleted.
+
+			Just as with (set:) or (put:), typed variables can also be used with the destination variable of (move:).
+			Writing `(move: $enemies's 1st into dm-type $currentEnemy)` will move a datamap from $enemies's 1st and
+			put it into $currentEnemy, while also restricting $currentEnemy to datamap data for the rest of the story.
+			Note that if $enemies's 1st is not, in fact, a datamap, an error will result.
+
+			See also:
+			(put:), (set:)
+
+			Added in: 1.0.0
+			#basics 3
+		*/
+		("move", (_, ...assignmentRequests) => {
+			let debugMessage = "";
+			/*
+				This has to be a plain for-loop so that an early return
+				is possible.
+			*/
+			for(let i = 0; i < assignmentRequests.length; i+=1) {
+				const ar = assignmentRequests[i];
+				if (ar.operator !== "into") {
+					return TwineError.create("macrocall", "Please say 'into' when using the (move:) macro.");
+				}
+
+				const debugMessage = ar.set(true);
+				if (TwineError.containsError(debugMessage)) {
+					return debugMessage;
+				}
+			}
+			return {
+				TwineScript_TypeID:       "instant",
+				TwineScript_TypeName:     "a (move:) operation",
+				TwineScript_ObjectName:   "a (move:) operation",
+				TwineScript_Unstorable: true,
+				// Being unstorable and not used by any other data strctures, this doesn't need a ToSource() function.
+				TwineScript_Print:        () => Engine.options.debug && debugMessage && TwineNotifier.create(debugMessage).render()[0].outerHTML,
+			};
+		},
+		[rest(AssignmentRequest)]);
+
 	Macros.addCommand
 		/*d:
 			(display: String) -> Command

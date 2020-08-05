@@ -6,9 +6,10 @@ define([
 	'utils/operationutils',
 	'internaltypes/varref',
 	'datatypes/typedvar',
+	'datatypes/datatype',
 	'internaltypes/twineerror',
 ],
-($, State, AssignmentRequest, {isObject, collectionType, is, isA, clone, unique, contains, matches, objectName}, VarRef, TypedVar, TwineError) => {
+($, State, AssignmentRequest, {isObject, collectionType, is, isA, clone, unique, contains, matches, objectName}, VarRef, TypedVar, Datatype, TwineError) => {
 	/*
 		Operation objects are a table of operations which TwineScript proxies
 		for/sugars over JavaScript. These include basic fixes like the elimination
@@ -605,11 +606,20 @@ define([
 		},
 
 		/*
-			This takes a plain value assumed to be an array, and wraps
+			This takes a plain sequence value, and wraps
 			it in a special structure that denotes it to be spreadable.
 			This is created by the spread (...) operator.
 		*/
 		makeSpreader(val) {
+			/*
+				TypedVars and Datatypes have a special response to the spread operator: turn into
+				"rest parameter" versions of themselves.
+			*/
+			if (TypedVar.isPrototypeOf(val) || Datatype.isPrototypeOf(val)) {
+				const value2 = clone(val);
+				(TypedVar.isPrototypeOf(val) ? value2.datatype : value2).rest = true;
+				return value2;
+			}
 			return {
 				value: val,
 				spreader: true,

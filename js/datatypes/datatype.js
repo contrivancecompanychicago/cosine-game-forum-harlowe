@@ -51,16 +51,22 @@ define([
 		| `odd` | Only matches odd numbers.
 		| `integer`, `int` | Only matches whole numbers (numbers with no fractional component, and which are positive or negative).
 		| `empty` | Only matches these empty structures: `""` (the empty string), `(a:)`, `(dm:)` and `(ds:)`.
-		| `whitespace` | Only matches strings containing only whitespace (spaces, newlines, and other kinds of space).
-		| `lowercase` | Only matches strings containing only lowercase characters. Lowercase characters are characters that change when put through (uppercase:).
-		| `uppercase` | Only matches strings containing only uppercase characters. Uppercase characters are characters that change when put through (lowercase:).
-		| `alphanumeric`, `alnum` | Only matches strings containing only alphanumeric characters (letters and numbers).
-		| `digit` | Only matches strings containing only the characters '0', '1', '2', '3', '4', '5', '6', '7', '8', and '9'.
-		| `newline` | Only matches newline characters.
+		| `whitespace` | Only matches a single character of whitespace (spaces, newlines, and other kinds of space).
+		| `...whitespace` | This is the above type combined with the spread `...` operator. Matches empty strings, or strings containing only whitespace.
+		| `lowercase` | Only matches a single lowercase character. Lowercase characters are characters that change when put through (uppercase:).
+		| `...lowercase` | This is the above type combined with the spread `...` operator. Matches empty strings, or strings containing only lowercase characters.
+		| `uppercase` | Only matches a single uppercase character. Uppercase characters are characters that change when put through (lowercase:).
+		| `...uppercase` | This is the above type combined with the spread `...` operator. Matches empty strings, or strings containing only uppercase characters.
+		| `alphanumeric`, `alnum` | Only matches a single alphanumeric character (letters and numbers).
+		| `...alnum`, `...alphanumeric` | This is the above type combined with the spread `...` operator. Matches empty strings, or strings containing only alphanumeric characters.
+		| `digit` | Only matches a string consisting of exactly one of the characters '0', '1', '2', '3', '4', '5', '6', '7', '8', and '9'.
+		| `...digit` | This is the above type combined with the spread `...` operator. Matches empty strings, or strings containing only digit characters.
+		| `newline` | Only matches a newline character.
 		| `const` | Matches nothing; Use this only with (set:) to make constants.
 		| `any` | Matches anything; Use this with (macro:) to make variables that accept any storable type, or with (set:) inside data structure patterns.
 
-		Finally, custom string datatypes can be created using a suite of macros, starting with (p:).
+		Finally, custom string datatypes can be created using a suite of macros, starting with (p:). If any of the string datatypes above aren't exactly suited to the task you
+		need them to perform, consider using (p:) to create your own.
 
 		If you want to check if a variable's data is a certain type, then you can use the `is a` operator to do the comparison. To check if the data in $money is a number, write `$money is a num`.
 
@@ -73,10 +79,15 @@ define([
 		array, but that may not be precise enough for you. `$pos matches (a: number, number)` checks to see if $pos is an array containing only two numbers in a row. A data structure with datatype
 		names in various positions inside it is called a **pattern**, and `matches` is used to compare data values and patterns.
 
+		When used inside array patterns, a modified datatype called a **spread datatype** can be created using the `...` syntax. `...str` can match any number of string values inside another array.
+		You can think of this as a counterpart to the spread `...` syntax used inside macro calls - just as one array is turned into many values, so too is `...str` considered equivalent to enough `str` datatypes
+		to match the values on the other side.
+
 		Some more examples.
 
 		* `(datamap:'a',2,'b',4) matches (datamap:'b',num,'a',num))` is true.
 		* `(a: 2, 3, 4) matches (a: 2, int, int)` is true. (Patterns can have exact values in them, which must be equal in the matching data).
+		* `(a: ...num, ...str) matches (a: 2, 3, 4, 'five')`
 		* `(a: (a: 2), (a: 4)) matches (a: (a: num), (a: even))` is true.
 		* `(p: (p-many:"A"), "!")` matches "AAAAAAAA!"` is true.
 
@@ -87,6 +98,7 @@ define([
 		| `matches` | Evaluates to boolean `true` if the data on the left matches the pattern on the right. | `(a:2,3) matches (a: num, num)`
 		| `is a`, `is an` | Similar to `matches`, but requires the right side to be just a type name. | `(a:2,3) is an array`, `4.1 is a number`
 		| `-type` | Produces a TypedVar, if a variable follows it. Note that there can't be any space between `-` and `type`. | `num-type $funds`
+		| `...` | Produces a spread datatype, which, when used in arrays, matches zero or more values that match the type. | `(a: ...str) matches (a:'Elf','Drow','Kithkin')`
 	*/
 	let typeIndex, basicTypeIndex;
 
@@ -100,21 +112,30 @@ define([
 			return "`[" + this.TwineScript_ObjectName + "]`";
 		},
 
+		get TwineScript_ObjectName() {
+			return "the " + (this.rest ? "..." : "") + this.name + " datatype";
+		},
+
 		TwineScript_is(other) {
 			return Datatype.isPrototypeOf(other) && other.name === this.name;
 		},
 
 		TwineScript_Clone() {
-			return Datatype.create(this.name);
+			/*
+				In normal operations, datatypes are only cloned (i.e. necessarily mutated) when converted to spread datatypes.
+				As such, this needs only be "cloned" (which, for the purposes of complex types like (p:), is only "instanced")
+				if it isn't a spread datatype yet.
+			*/
+			return this.rest ? this : Object.create(this);
 		},
 
 		TwineScript_ToSource() {
-			return this.name;
+			return (this.rest ? "..." : "") + this.name;
 		},
 
 		TwineScript_IsTypeOf(obj) {
-			const {name} = this;
-			return (typeIndex[name] ? typeIndex[name](obj) : false);
+			const {name, rest} = this;
+			return (typeIndex[name] ? typeIndex[name](obj, rest) : false);
 		},
 
 		/*
@@ -123,10 +144,14 @@ define([
 			converted to that format when they're used for custom macros.
 		*/
 		toTypeSignatureObject() {
-			return { pattern: "range", range: typeIndex[this.name] };
+			const innerPattern = { pattern: "range", range: typeIndex[this.name] };
+			/*
+				Rest datatypes' semantics are "zero or more" rather than the 1-or-more semantics used for pattern:"rest" internally.
+			*/
+			return this.rest ? { pattern: "zero or more", innerType: innerPattern } : innerPattern;
 		},
 
-		create(name) {
+		create(name, rest = false) {
 			/*
 				Some type names have shorthands that should be expanded.
 				Generally, the abbreviated datatype is considered the 'canonical' name.
@@ -144,7 +169,7 @@ define([
 			);
 			const ret = Object.create(this);
 			ret.name = name;
-			ret.TwineScript_ObjectName = "the " + ret.name + " datatype";
+			ret.rest = rest;
 			return ret;
 		},
 
@@ -189,13 +214,13 @@ define([
 			Array.isArray(obj) || typeof obj === "string" ? !obj.length :
 			false
 		),
-		uppercase:    obj => typeof obj === "string" && obj.length !== 0 && [...obj].every(char => char !== char.toLowerCase()),
-		lowercase:    obj => typeof obj === "string" && obj.length !== 0 && [...obj].every(char => char !== char.toUpperCase()),
 		int:          obj => typeof obj === "number" && obj === (obj|0),
-		whitespace:   obj => typeof obj === "string" && !!obj.match("^" + realWhitespace + "+$"),
-		digit:        obj => typeof obj === "string" && !!obj.match(/^\d+$/),
-		alnum:        obj => typeof obj === "string" && !!obj.match("^" + anyRealLetter + "+$"),
-		newline:      obj => obj === "\n" || obj === "\r" || obj === "\r\n",
+		uppercase:    (obj, rest) => typeof obj === "string" && (rest ? obj.length !== 0 : [...obj].length === 1) && [...obj].every(char => char !== char.toLowerCase()),
+		lowercase:    (obj, rest) => typeof obj === "string" && (rest ? obj.length !== 0 : [...obj].length === 1) && [...obj].every(char => char !== char.toUpperCase()),
+		whitespace:   (obj, rest) => typeof obj === "string" && !!obj.match("^" + realWhitespace + (rest ? '*' : '') + "$"),
+		digit:        (obj, rest) => typeof obj === "string" && !!obj.match("^\\d" + (rest ? '*' : '') + "$"),
+		alnum:        (obj, rest) => typeof obj === "string" && !!obj.match("^" + anyRealLetter + (rest ? '*' : '') + "$"),
+		newline:      (obj, rest) => typeof obj === "string" && !!obj.match("^(?:\\n|\\r|\\r\\n)" + (rest ? '*' : '') + "$"),
 		any:      () => true,
 		/*
 			"const" is handled almost entirely as a special case inside VarRef. This

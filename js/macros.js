@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changercommand', 'datatypes/custommacro', 'datatypes/lambda', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/typedvar', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
-($, NaturalSort, {insensitiveName, nth, plural, andList, lockProperty}, {objectName, typeName, singleTypeCheck, toSource}, ChangerCommand, CustomMacro, Lambda, HookSet, CodeHook, TypedVar, ChangeDescriptor, TwineError) => {
+define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changercommand', 'datatypes/custommacro', 'datatypes/lambda', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/typedvar', 'datatypes/datatype', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
+($, NaturalSort, {insensitiveName, nth, plural, andList, lockProperty}, {clone, objectName, typeName, singleTypeCheck, toSource}, ChangerCommand, CustomMacro, Lambda, HookSet, CodeHook, TypedVar, Datatype, ChangeDescriptor, TwineError) => {
 	/*
 		This contains a registry of macro definitions, and methods to add to that registry.
 	*/
@@ -33,17 +33,6 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 				}
 				else if (value instanceof Set) {
 					newArgs.push(...Array.from(value).sort(NaturalSort("en")));
-				}
-				/*
-					TypedVars have a special response to the spread operator: turn into
-					"rest parameter" versions of themselves.
-				*/
-				else if (TypedVar.isPrototypeOf(value)) {
-					/*
-						Since these are unstorable, they don't have to be cloned before mutating.
-					*/
-					value.rest = true;
-					newArgs.push(value);
 				}
 				else {
 					newArgs.push(

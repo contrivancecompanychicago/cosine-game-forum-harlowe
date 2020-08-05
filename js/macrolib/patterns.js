@@ -38,31 +38,41 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 				if (pattern.regExp) {
 					return pattern.regExp;
 				}
-				const {name} = pattern;
+				const pName = pattern.name;
+				/*
+					Spread datatypes represent "zero or more" values, in keeping with how they behave when used for custom macro parameters.
+				*/
+				const rest = pattern.rest ? "*" : "";
 				/*
 					All of these, unfortunately, need to be manually aligned with their implementation in datatype.js.
 					Fortunately, both implementations rely on the same RegExp strings in Utils.
 				*/
-				if (name === "alnum") {
-					return anyRealLetter;
+				if (pName === "alnum") {
+					return anyRealLetter + rest;
 				}
-				if (name === "whitespace") {
-					return realWhitespace;
+				if (pName === "whitespace") {
+					return realWhitespace + rest;
 				}
-				if (name === "uppercase") {
-					return anyUppercase;
+				if (pName === "uppercase") {
+					return anyUppercase + rest;
 				}
-				if (name === "lowercase") {
-					return anyLowercase;
+				if (pName === "lowercase") {
+					return anyLowercase + rest;
 				}
-				if (name === "str") {
+				if (pName === "digit") {
+					return "\\d" + rest;
+				}
+				if (pName === "newline") {
+					return "(?:\\r|\\n|\\r\\n)" + rest;
+				}
+				if (pName === "str") {
 					/*
 						"string" is the only one of these datatypes which doesn't strictly refer to a single character, but instead to basically
 						anything until a more specific pattern is encountered.
 					*/
 					return ".*?";
 				}
-				if (['even','odd','int','num'].includes(name)) {
+				if (['even','odd','int','num'].includes(pName)) {
 					return TwineError.create("datatype", "Please use string datatypes like 'digit' in (" + name + ":) instead of number datatypes.");
 				}
 				/*
@@ -92,7 +102,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 		}
 		const regExp = makeRegExpString(compiledArgs);
 
-		return assign(create(Datatype), {
+		const ret = assign(create(Datatype), {
 			name, regExp,
 			/*
 				Recursive method, used only by destructure(), which retrieves every TypedVar (and thus each RegExp capture)
@@ -137,7 +147,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 				/*
 					Unfortunately, this standard destructure match error has to be replicated here.
 				*/
-				const results = (RegExp("^" + regExp + "$").exec(value) || []).slice(1);
+				const results = (RegExp("^" + (this.rest ? "(?:" : "") + regExp + (this.rest ? ")*" : "") + "$").exec(value) || []).slice(1);
 				if (!results.length) {
 					return [TwineError.create("operation", "I can't de-structure " + objectName(value) + " because it doesn't match the pattern "
 						+ this.TwineScript_ToSource() + ".")];
@@ -151,11 +161,11 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 				*/
 				return results.map((r,i) => typedVars[i] && ({ dest: typedVars[i], value: r || '', src: undefined, })).filter(Boolean);
 			},
-			TwineScript_IsTypeOf: (value) => {
+			TwineScript_IsTypeOf(value) {
 				if (!canBeUsedAlone) {
 					return TwineError.create("operation", "A (" + name + ":) datatype must only be used with a (p:) macro.");
 				}
-				return typeof value === "string" && !!value.match("^" + regExp + "$");
+				return typeof value === "string" && !!value.match("^" + (this.rest ? "(?:" : "") + regExp + (this.rest ? ")*" : "") + "$");
 			},
 			/*
 				String patterns used as custom macro arg types must, in the absence of anything more sophisticated,
@@ -168,8 +178,15 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 				The fullArgs are given unto this function entirely to allow ToSource to access them.
 			*/
 			TwineScript_ToSource: () => "(" + name + ":" + fullArgs.map(toSource) + ")",
-			TwineScript_ObjectName: "a (" + name + ":)" + " datatype",
 		});
+		/*
+			Replacing the TwineScript_ObjectName getter on Datatype requires the following finesse.
+			This could be avoided if string patterns were an actual subclass of Datatype, though...
+		*/
+		Object.defineProperty(ret, 'TwineScript_ObjectName', { get() {
+			return "a (" + name + ":)" + " datatype";
+		}});
+		return ret;
 	};
 
 	Macros.add
@@ -186,6 +203,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			creates a typed variable using it, called $name.
 			* `(set: (p:str, (p-many:(p-either:'St','Rd','Ln','Ave','Way')-type _roadTitle)) to $roadName)` uses de-structuring to extract either "St", "Rd", "ln", "Ave", or "Way",
 			from the end of the $roadName string, putting it in _roadTitle, while producing an error if such an ending isn't in $roadName.
+			* `(p:"$", digit, ...digit) matches "$21000"` checks if the right side is a string consisting of "$" followed by one or more digits.
 
 			Rationale:
 
@@ -198,7 +216,9 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			A suite of macros, starting with the (p:) macro, are available to construct string patterns. Give the (p:) macro an ordered sequence of strings (like `"Mr."`)
 			or datatypes (like `whitespace`, `alnum`, `newline`, `uppercase`, `lowercase`, or other string pattern macro calls), and it will produce a datatype that, when used with `matches` or `is a`,
 			will match a string that exactly fits the given sequence. `(p: "The", (p-many:whitespace), "End")` will match the strings "The End", "The  End", "The   End", and so forth.
-			`(p: uppercase, "1", (p-opt:"A"))` will match "A1", "B1", "A1A", "C1", and so forth. By using each string pattern macro
+			`(p: uppercase, "1", (p-opt:"A"))` will match "A1", "B1", "A1A", "C1", and so forth. Spread datatypes can be used to represent zero or more of a given string
+			datatype: `...uppercase` means "zero or more uppercase letters", `...whitespace` means "zero or more whitespace characters" and so forth - though datatypes
+			that represent multiple characters, such as `...str`, is the same as `str`.
 			
 			You may notice a similarity between these patterns and array/datamap patterns. Arrays and datamaps can be inspected using the `matches` operator when
 			combined with datatypes and the data structure macros (a:) and (dm:) - `(a:(a:num,num),(a:num,num)) matches $array`
