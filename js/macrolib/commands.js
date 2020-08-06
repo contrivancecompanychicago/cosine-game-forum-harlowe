@@ -53,7 +53,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			Stores data values in variables.
 			
 			Example usage:
-			* `(set: $battlecry to "Save a " + $favouritefood + " for me!")` creates a variable called $battlecry.
+			* `(set: $battlecry to "Save a " + $favouritefood + " for me!")` creates a variable called $battlecry containing a string.
 			* `(set: _dist to $altitude - $enemyAltitude)` creates a temp variable called _dist.
 			* `(set: num-type $funds to 0)` sets a variable and restricts its type to numbers, preventing non-numbers
 			from ever being (set:) into it by accident.
@@ -64,6 +64,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			* `(set: (dm: "Maths", _Maths, "Science", _Science) to $characterStats)` is the same as `(set: _Maths to $characterStats's Maths, _Science to $characterStats's Science)`.
 			* `(set: (p-either:"Ms.","Mr.","Mx.")-type $charTitle to "Mx.")` sets a variable that can only hold the strings "Mr.", "Ms." or "Mx.".
 			* `(set: (p:"The ", str-type _job) to "The Safecracker")` uses de-structuring to extract the string "Safecracker" from the value, and puts it in the variable _job.
+			* `(set: (a: str, ...num-type $stats) to (a: "Daria", 25, 14, 25))` uses de-structuring to extract the numbers from the right side into a new array stored in $stats.
 
 			Rationale:
 			
@@ -157,8 +158,11 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			a temp variable, the passage).
 
 			This syntax can be combined with de-structuring - simply place the typed variable where a normal variable would be
-			within a data structure. `(set: (a: num, num-type $y, num-type $x) to $array)` not only sets $y and $x, but it also
-			restricts them to number data, all in one statement.
+			within a data structure. `(set: (a: num, num-type $y, num-type _x) to $array)` not only sets $y and _x, but it also
+			restricts them to number data, all in one statement. If the typed variable is inside an array, and involves a spread datatype (like `...num`)
+			then it is restricted to data that matches `(a: ...num)` (i.e. arrays of zero or more `num` values), and it automatically gathers multiple values from the
+			right-hand-side that match the datatype. `(set: (a: str, ...bool-type $examAnswers) to (a: "ANSWER KEY", true, false, false, true, false))`
+			sets $examAnswers to `(a:true, false, false, true, false)`.
 
 			See also:
 			(push:), (move:)

@@ -1,5 +1,5 @@
 "use strict";
-define(['utils/operationutils','datatypes/typedvar','internaltypes/varref','internaltypes/twineerror'], ({objectName, matches}, TypedVar, VarRef, TwineError) => {
+define(['utils/operationutils','datatypes/typedvar','datatypes/datatype','internaltypes/varref','internaltypes/twineerror'], ({objectName, matches}, TypedVar, Datatype, VarRef, TwineError) => {
 	/*
 		AssignmentRequests represent an assignment statement. Different
 		macros may handle this request differently (for instance,
@@ -47,24 +47,74 @@ define(['utils/operationutils','datatypes/typedvar','internaltypes/varref','inte
 		*/
 		if (Array.isArray(value) && Array.isArray(pattern)) {
 			/*
-				While each value inside the array is type-checked separately by the recursive call, we still need to
-				make sure beforehand that the source is long enough to fulfill the pattern.
+				In order to properly destructure spread datatypes, each value in the pattern
+				be compared in non-uniform fashion to values in the target.
 			*/
-			const discrepancy = (pattern.length - value.length);
-			if (discrepancy > 0) {
-				return required && TwineError.create("operation", "I can't de-structure this array because it needs " + (discrepancy) +
-					" more value" + (discrepancy > 0 ? "s" : "") + ".");
-			}
-			/*
-				Note that any errors produced by this recursive destructure will simply be put in the returned array, for
-				destructure()'s consumer to deal with.
-			*/
-			pattern.forEach((p,i) => ret = ret.concat(destructure(p,
+			let patInd = 0, valInd = 0;
+			while (patInd < pattern.length && valInd < value.length) {
+				let p = pattern[patInd], v = value[valInd];
 				/*
-					For the sake of the (move:) macro, each recursive call should be given a VarRef of one level deeper than
-					the previous VarRef.
+					If the pattern isn't a rest datatype (or TypedVar) then simply destructure one-to-one.
 				*/
-				VarRef.isPrototypeOf(src) ? VarRef.create(src, i+1) : value[i])));
+				if (!(TypedVar.isPrototypeOf(p) && p.datatype.rest) && !(Datatype.isPrototypeOf(p) && p.rest)) {
+					/*
+						Note that any errors produced by this recursive destructure (or the one above) will simply be put in the returned array, for
+						destructure()'s consumer to deal with.
+					*/
+					ret = ret.concat(destructure(p,
+						/*
+							For the sake of the (move:) macro, each recursive call should be given a VarRef of one level deeper than
+							the previous VarRef.
+						*/
+						VarRef.isPrototypeOf(src) ? VarRef.create(src, valInd+1) : v));
+					valInd += 1;
+				}
+				else {
+					/*
+						If the pattern is a rest, then the values must be compared as a slice. The start of that slice is here,
+						with the initial valIndex;
+					*/
+					const valIndLeft = valInd;
+					/*
+						While this rest can collect matches from the value, increment the valInd.
+					*/
+					while (valInd < value.length && matches(p, v)) {
+						valInd += 1;
+						v = value[valInd];
+					}
+					/*
+						A seeming paradox arises when thinking about what the type of, say, (a: ...num-type $a) is.
+						It's "...num-type", but it needs to store an array? The answer is to interpret the rests inside arrays
+						as actually being (a:...rest) typing. This is, if you stretch your mind a bit, consistent with how
+						rests are considered inside string patterns like (p:).
+					*/
+					if (TypedVar.isPrototypeOf(p)) {
+						p.datatype = [p.datatype];
+					}
+					/*
+						Of course, if it's not a TypedVar, "...num-type" still needs to be replaced with an array datatype, so that
+						recursive destructure() calls can properly match the valie slice with
+					*/
+					else if (Datatype.isPrototypeOf(p)) {
+						p = Datatype.create('array');
+					}
+
+					ret = ret.concat(destructure(p,
+						VarRef.isPrototypeOf(src)
+							/*
+								Fortunately, VarRef has a convenient internal structure for creating slices
+								like "1stto2ndlast", which can be leveraged here.
+							*/
+							? VarRef.create(src, { first:valIndLeft+1, last:valInd+1 })
+							: value.slice(valIndLeft, valInd)
+					));
+				}
+				patInd += 1;
+			}
+			if (patInd < pattern.length) {
+				return required && TwineError.create("operation", "I can't de-structure this array because it needs " + (pattern.length - patInd) +
+					" more value" + ((pattern.length - patInd) > 0 ? "s" : "") + ".");
+			}
 			return ret;
 		}
 		/*
@@ -99,7 +149,12 @@ define(['utils/operationutils','datatypes/typedvar','internaltypes/varref','inte
 				return [required && TwineError.create("operation", "I can't de-structure " + objectName(value) + " into "
 					+ pattern.varRef.TwineScript_ToSource() + " because it doesn't match " + objectName(pattern.datatype) + ".")];
 			}
-			//TODO: implement support for spread TypedVars.
+			/*
+				The datatype of this TypedVar may contain sub-TypedVars to examine. So, recursively call destructure() on it.
+			*/
+			ret = ret.concat(
+				destructure(pattern.datatype, value)
+			);
 		}
 		/*
 			Whenever a VarRef is encountered (including the VarRef from the TypedVar just above), a new binding is added to the array.

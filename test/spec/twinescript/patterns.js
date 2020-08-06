@@ -378,6 +378,14 @@ describe("patterns", function() {
 			it("can set multiple variables at once", function() {
 				expect("(set: (a:num-type $a, num-type $b) to (a:2,3))$a $b").markupToPrint("2 3");
 				expect("(set: (a:num,num-type $c, (a:num-type _d)) to (a:2,3,(a:4)))$c _d").markupToPrint("3 4");
+				expect("(set: (a:num,num-type $e)-type _f to (a:2,3))$e _f").markupToPrint("3 2,3");
+			});
+			it("works with spread datatypes", function() {
+				expect("(set: (a:...num)-type $z to (a:0,1,2))$z").markupToPrint('0,1,2');
+				expect("(set: (a:...odd, even-type $a) to (a:1,3,5,6))$a").markupToPrint('6');
+				expect("(set: (a:...odd-type $c) to (a:1,3,5,6))$c").markupToPrint('1,3,5');
+				expect("(set: (a:...odd-type $d,...even-type $e) to (a:1,3,5,6))$d $e").markupToPrint('1,3,5 6');
+				expect("(set: (a:...odd, even-type $y)-type $b to (a:1,3,5,6))$b $y").markupToPrint('1,3,5,6 6');
 			});
 			it("works with (move:)", function() {
 				expect("(set:$c to (a:1,2,3,4,5,6))" +
