@@ -2,13 +2,13 @@ PATH  := node_modules/.bin:$(PATH)
 SHELL := /bin/zsh
 
 requirejs_harlowe_flags = baseUrl=js mainConfigFile=js/harlowe.js name=harlowe include=almond \
-	insertRequire=harlowe wrap=true useStrict=true out=stdout logLevel=4
+	insertRequire=harlowe wrap=true useStrict=true out=stdout logLevel=4 optimize=none
 
-requirejs_twinemarkup_flags = baseUrl=js/markup name=markup include=codemirror/mode useStrict=true out=stdout logLevel=4
+requirejs_twinemarkup_flags = baseUrl=js/markup name=markup include=codemirror/toolbar,codemirror/mode useStrict=true out=stdout logLevel=4 optimize=none
 
 jshint_flags = --reporter scripts/jshintreporter.js
 
-uglify_flags = -c --comments -m -b beautify=false,ascii_only=true,semicolons=false
+uglify_flags = -c --comments -m -b beautify=false,ascii_only=true
 
 # This function accepts two comma-separated JS string expressions,
 # and replaces every instance of the former in the stream with the latter.

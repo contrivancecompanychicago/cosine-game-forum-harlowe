@@ -26,7 +26,7 @@
 	/*
 		Import the TwineMarkup lexer function, and store it locally.
 	*/
-	let lex;
+	let lex, toolbar;
 	if(typeof module === 'object') {
 		({lex} = require('../lexer'));
 	}
@@ -38,6 +38,8 @@
 	// Loaded as a story format in TwineJS
 	else if (this && this.loaded && this.modules) {
 		lex = this.modules.Markup.lex;
+		// Only load the toolbar if this is loaded in TwineJS
+		toolbar = this.modules.Toolbar;
 	}
 	else if (this.TwineMarkup) {
 		lex = this.TwineMarkup.lex;
@@ -254,7 +256,11 @@
 					cm.setOption('lineNumbers', true);
 					cm.setOption('lineNumberFormatter', () => "\u2022");
 				}
-				
+				/*
+					Install the toolbar, if it's been loaded. (This function will early-exit if the toolbar's already installed.)
+				*/
+				toolbar && toolbar(cm);
+
 				return {
 					pos: 0,
 				};
@@ -346,7 +352,6 @@
 	*/
 	/*
 		If the style element already exists, it is reused. Otherwise, it's created.
-		(Let's use pure DOM calls in the absence of a jQuery require() call.)
 	*/
 	let harloweStyles = document.querySelector('style#cm-harlowe-3');
 	if (!harloweStyles) {

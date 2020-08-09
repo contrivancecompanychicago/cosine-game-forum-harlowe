@@ -1687,9 +1687,11 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 						bold:         { 'font-weight': 'bold' },
 						italic:       { 'font-style': 'italic' },
 						underline:    { 'text-decoration': 'underline' },
+						doubleunderline: { 'text-decoration': 'underline', 'text-decoration-style': 'double' },
+						wavyunderline: { 'text-decoration': 'underline', 'text-decoration-style': 'wavy' },
 						strike:       { 'text-decoration': 'line-through' },
 						doublestrike: { 'text-decoration': 'line-through', 'text-decoration-style': 'double' },
-						scribble:     { 'text-decoration': 'line-through', 'text-decoration-style': 'wavy' },
+						wavystrike:   { 'text-decoration': 'line-through', 'text-decoration-style': 'wavy' },
 						superscript:  { 'vertical-align': 'super', 'font-size': '.83em' },
 						subscript:    { 'vertical-align': 'sub', 'font-size': '.83em' },
 						blink: {

@@ -981,11 +981,13 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 
 			In situations where you would write something like this,
 			
-			`{(if: not $lostTheSword)[
+			```
+			{(if: not $lostTheSword)[
 			(set: $weapon to "a holy sword")
 			](else: )[
 			(set:$weapon to "an unholy swear-word")
-			]}`
+			]}
+			```
 
 			you could instead simply write this.
 
