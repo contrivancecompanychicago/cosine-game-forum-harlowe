@@ -5,6 +5,8 @@
 		The Harlowe Toolbar fits above the CodeMirror panel and provides a number of convenience buttons, in the style of forum post editors,
 		to ease the new user into the format's language.
 	*/
+	const toolbarElem = el('<div class="harloweToolbar">');
+	let panels;
 	let cm;
 	/*
 		These are a couple of convenience routines.
@@ -15,32 +17,285 @@
 		elem.innerHTML = html;
 		return elem.firstChild;
 	}
-	function wrapSelection(before,after) {
+	/*
+		All output from the buttons and wizards is from this function, which places Harlowe code into the passage around the selection.
+	*/
+	function wrapSelection(before,after,defaultText='Your Text Here') {
 		if (!cm) {
 			return;
 		}
-		cm.doc.replaceSelection(before + cm.doc.getSelection() + after, "around");
+		const selectedText = cm.doc.getSelection();
+		cm.doc.replaceSelection(before + (selectedText || defaultText) + after, "around");
 	}
-	function wrapWithChangerMacros(...macros) {
-		const before = macros.reduce((a, [name, args]) => a + (a ? '+' : '') + `(${name}:${args})`, '');
-		macros.length && wrapSelection(before + "[", "]");
+	/*
+		The mode-switcher function, which changes the displayed panel in the toolbar.
+	*/
+	const disabledButtonCSS = 'background:hsl(0,0%,50%,0.5);opacity:0.5;pointer-events:none';
+	function switchPanel(name = 'default') {
+		const {height} = getComputedStyle(toolbarElem);
+		/*
+			Uncheck all checkboxes, return all <select>s to default, and clear all textareas.
+		*/
+		Object.values(panels).forEach(panel => {
+			panel[$]('[type=radio],[type=checkbox]').forEach(node => node.checked = node.value === 'none');
+			panel[$]('[type=text],select').forEach(node => node.value = '');
+			panel[$]('button.create').forEach(node => node.setAttribute('style', disabledButtonCSS));
+		});
+		toolbarElem[$]('.harloweToolbarPanel').forEach(node => node.remove());
+		/*
+			Touch the maxHeight of the incoming panel, using the computed height of the current panel, to
+			animate its height as it enters.
+		*/
+		panels[name].style.maxHeight=height;
+		toolbarElem.append(panels[name]);
+		// Sadly, I think using this setTimeout is necessary to get it to work.
+		// "70vh" is the absolute maximum height for these panels.
+		setTimeout(() => panels[name].style.maxHeight="70vh", 100);
 	}
+
+	/*
+		A key between Harlowe transition names and their corresponding CSS animation names.
+	*/
+	const t8nPreviewAnims = {
+		default:     rev => rev ? "none" : "appear",
+		dissolve:    () => "appear",
+		shudder:     () => "shudder-in",
+		rumble:      () => "rumble-in",
+		zoom:        () => "zoom-in",
+		"slide-left":  rev => rev ? "slide-right" : "slide-left",
+		"slide-right": rev => rev ? "slide-left" : "slide-right",
+		"slide-up":    rev => rev ? "slide-down" : "slide-up",
+		"slide-down":  rev => rev ? "slide-up" : "slide-down",
+		flicker:     () => "flicker",
+		pulse:       () => "pulse",
+	};
+
+	/*
+		The constructor for the folddownPanels. This accepts a number of panel rows (as an array of row-describing objects)
+		and returns a <div> with the compiled UI elements.
+
+		Each row object typically has the following:
+		- update: A function taking the entire panel element, and performing actions whenever this element's value is altered.
+		- name: User-facing display name of this element.
+		- type: Which type of UI element to create for it.
+	*/
+	const folddownPanel = (...panelRows) => {
+		const panelElem = el('<div class="harloweToolbarPanel" style="transition:max-height 0.8s;overflow-y:auto"></div>');
+		/*
+			The MVC-style flow of element states into data, and back, is crudely performed here.
+			Elements can register "model" and "updater" functions. Model functions take a model object
+			(seen in the reduce() call below) and permute it with the element's data. Update functions
+			take the completed model object and permutes the element using it.
+			Generally, each element has an addEventListener call in its implementation (below) which
+			causes them to call update() whenever they're interacted with.
+		*/
+		const modelFns = [], updaterFns = [];
+		const model = () => modelFns.reduce((m, fn) => fn(m), {
+			changers: {},
+			wrapStart: '[', wrapEnd: ']',
+			valid: false,
+			changerNamed(name) {
+				return this.changers[name] || (this.changers[name] = []);
+			},
+		});
+		function update() {
+			const m = model();
+			updaterFns.forEach(fn => fn(m));
+		}
+
+		const previewCSS = "text-align:center;user-select:none;overflow:hidden;background:black;color:white;font-family:\'Georgia\',serif;padding:8px;font-size:1.5rem";
+
+		/*
+			Turn each panel row description into a panel element. Notice that this reducer function
+			can be recursively called, with a different element in accumulator position; this is
+			used by radiorows to add its sub-elements.
+		*/
+		return panelRows.reduce(function reducer(panelElem, row) {
+			const {type} = row;
+			/*
+				These are non-interactive messages.
+			*/
+			let ret;
+			if (type === "text") {
+				ret = el('<p>' + row.text + '</p>');
+			}
+			if (type === "small") {
+				ret = el('<small style="display:block">' + row.text + '</small>');
+			}
+			if (type === "inline-text") {
+				ret = new Text(row.text);
+			}
+			/*
+				Used only for the default panel.
+			*/
+			if (type === "buttons") {
+				panelElem.append(...row.buttons.map(button => {
+					if ('tagName' in button) {
+						return button;
+					}
+					const elem = el('<button title="' + button.title + '" style="'
+						+ "border-radius:0.5rem;"
+						+ "border:1px solid hsl(0,0%,50%,0.5);"
+						+ "margin:8px 4px;"
+						+ "padding:0px 4px;"
+						+ "height:40px;"
+						+ (button.html.startsWith('<su') ? '' : 'font-size:120%;')
+						+ 'min-width:32px;'
+						+ '">' + button.html + "</button>"
+					);
+					button.onClick && elem.addEventListener('click', button.onClick);
+					return elem;
+				}));
+			}
+			/*
+				The (text-style:) preview panel.
+			*/
+			if (type === "preview") {
+				ret = el('<div class="harlowePreview" style="margin:8px auto;width:50%;' + previewCSS + '"><span>' + row.text + '</span></div>');
+			}
+			/*
+				Checkboxes and radio buttons.
+			*/
+			if (type === "checkboxes") {
+				ret = el(`<div style="border-bottom:1px solid hsl(0,0%,50%,0.5);position:relative;padding-bottom:8px;margin-bottom:8px"><div><b>${row.name}</b></div></div>`);
+				row.options.forEach(box => {
+					const e = el('<label style="min-width:20%;text-transform:capitalize;display:inline-block;"><input type="checkbox"></input>' + box + '</label>');
+					e.addEventListener('change', update);
+					ret.append(e);
+				});
+			}
+			if (type === "radios") {
+				ret = el(`<div style="border-bottom:1px solid hsl(0,0%,50%,0.5);position:relative;padding-bottom:8px;margin-bottom:8px"><div><b>${row.name}</b></div></div>`);
+				row.options.forEach((radio,i) => {
+					const e = el(`<label style="min-width:20%;text-transform:capitalize;display:inline-block;"><input type="radio" name="${row.name}" value="${radio}" ${!i ? 'checked' : ''}></input>${radio}</label>`);
+					e.addEventListener('change', update);
+					ret.append(e);
+				});
+			}
+			/*
+				Text areas, single lines in which text can be entered.
+			*/
+			if (type === "textarea") {
+				ret = el('<div style="position:relative;padding-bottom:8px;">'
+					+ row.text
+					+ '<input style="width:50%;margin-left:1rem;display:inline-block;font-size:1rem" type=text placeholder="' + row.placeholder + '"></input></div>');
+				ret.querySelector('input').addEventListener('input', update);
+			}
+			if (type === "inline-number") {
+				ret = el('<span style="position:relative;padding-bottom:8px;">'
+					+ row.text
+					+ '<input style="box-shadow:0 1px 0 hsla(0,0%,50%,0.5);background:transparent;color:inherit;border:none;font-family:\'Source Code Pro\',monospace;width:4rem;margin-left:1rem;display:inline-block;font-size:1rem" type=number'
+					+ ' min=' + row.min + ' max=' + row.max + ' value=' + row.value + '></input></span>');
+				ret.querySelector('input').addEventListener('change', update);
+			}
+			/*
+				Dropdowns.
+			*/
+			if (type.endsWith("dropdown")) {
+				const inline = type.startsWith('inline');
+				const dropdownDiv = el('<div style="display:inline-block;' + (inline ? '' : 'width:50%;') + 'position:relative;">'
+					+ row.text
+					+ '<select style="' + (inline ? 'margin:0 0.5rem' : 'margin-left:1rem;text-transform:capitalize;') + '"></select></div>');
+				row.options.forEach((option,i) => {
+					dropdownDiv.lastChild.append(el('<option value="' + (!i ? '' : option) + '"' + (!option ? ' disabled' : !i ? ' selected' : '') + '>' + (option || '───────') + '</select>'));
+				});
+				/*
+					The special "transition" dropdowns come with a special previewer widget for the transitions.
+				*/
+				if (type.startsWith("t8n")) {
+					const select = dropdownDiv.querySelector('select');
+					const preview = el(`<div style="width:75%;margin:0 auto;cursor:pointer;${previewCSS}"><span>Sample</span></div>`);
+					dropdownDiv.append(preview);
+					const reversed = type.startsWith("t8n-out");
+
+					modelFns.push(m => {
+						if (select.value) {
+							m.changerNamed('t8n-' + (reversed ? 'depart' : 'arrive')).push(select.value);
+						}
+						return m;
+					});
+					/*
+						The transition preview is updated whenever the element is clicked, or the dropdown is changed. 
+					*/
+					updaterFns.push(() => {
+						const t8n = select.value || "default";
+						const span = preview.firstChild;
+						if (t8n in t8nPreviewAnims) {
+							/*
+								Flicker the <span> to trigger a restart of the animation.
+							*/
+							span.setAttribute('style', `display:inline-block;animation:${t8nPreviewAnims[t8n](reversed)} ${reversed ? " reverse":''} 0.8s 1;`);
+							span.remove();
+							setTimeout(() => preview.appendChild(span));
+						}
+					});
+					select.addEventListener('change', update);
+					preview.addEventListener('mouseup', update);
+				}
+				ret = dropdownDiv;
+			}
+			/*
+				Rows of options, selected using radio buttons.
+			*/
+			if (type === "radiorows") {
+				ret = el(`<div>`);
+				row.options.forEach((subrows,i) => {
+					const e = el(`<label style="border-bottom:1px solid hsl(0,0%,50%,0.5);display:block;padding-bottom:8px;margin-bottom:8px;font-size:120%;">`
+						+ `<input type="radio" name="${row.name}" value="${!i ? 'none' : i}" ${!i ? 'checked' : ''}></input></label>`);
+					/*
+						Place each of these sub-options within the <label>.
+					*/
+					ret.append(subrows.reduce(reducer, e));
+				});
+			}
+			/*
+				The "Create" and "Cancel" buttons.
+			*/
+			if (type === "confirm") {
+				const buttons = el('<p class="buttons" style="padding:8px;"></p>');
+				const cancel = el('<button><i class="fa fa-times"></i> Cancel</button>');
+				const confirm = el('<button class="create"><i class="fa fa-check"></i>Add</button>');
+				confirm.setAttribute('style', disabledButtonCSS);
+				updaterFns.push(a => {
+					confirm[!a.valid ? 'setAttribute' : 'removeAttribute']('style', disabledButtonCSS);
+				});
+				
+				cancel.addEventListener('click', () => switchPanel());
+				confirm.addEventListener('click', () => {
+					const m = model();
+					wrapSelection(Object.entries(m.changers).map(([k,v]) => `(${k}:${v.map(JSON.stringify).join(',')})`).join('+') + m.wrapStart, m.wrapEnd);
+					switchPanel();
+				});
+				buttons.append(cancel,confirm);
+				ret = buttons;
+			}
+			/*
+				The "model" and "update" functions are attached by default if they exist.
+			*/
+			row.model && modelFns.push(m => row.model(m, ret));
+			row.update && updaterFns.push(m => row.update(m, ret));
+			/*
+				Append and return the panel element.
+			*/
+			ret && panelElem.append(ret);
+			return panelElem;
+		},
+		panelElem);
+	};
 
 	/*
 		The Toolbar element consists of a single <div> in which a one of a set of precomputed panel <div>s are inserted. There's a "default"
 		panel, plus other panels for specific markup wizards.
 	*/
-	const toolbarElem = el('<div class="harloweToolbar">');
-	const panels = {
-		default: folddownPanel({
-			type: 'small',
-			text: 'The current story format is <b>Harlowe 3.2.0</b>. Consult its <a href="https://twine2.neocities.org/" target="_blank" rel="noopener noreferrer">documentation</a>.'
-		}),
+	panels = {
 		/*
 			The (text-style:) button's panel. This simply consists of several radio buttons and checkboxes that configure a (text-style:) changer.
 		*/
 		textstyle: (()=>{
 
+				/*
+					This big block of styles needs to be kept in sync with (text-style:)'s implementation.
+				*/
 				const previewStyles = {
 					bold:                  "font-weight:bold",
 					italic:                "font-style:italic",
@@ -72,24 +327,23 @@
 					fidget:                "display:inline-block;animation:fidget 60s linear 0s infinite",
 				};
 
-				const checkedStyles = panel => Array.from(panel[$](':checked')).filter(node => node.value !== "none");
-
-				function setPreviewStyle(panel, styleStr) {
-					panel.querySelector('.harlowePreview').firstChild.setAttribute('style', styleStr);
-				}
-
-				function update(panel) {
-					const previewCSS = checkedStyles(panel).map(node => previewStyles[node.parentNode.textContent]);
-					setPreviewStyle(panel, previewCSS.join(';'));
-					return previewCSS.length > 0;
+				function model(m, elem) {
+					const styles = Array.from(elem[$]('[type=radio]:checked')).map(node => node.value).filter(e => e !== "none")
+						.concat(Array.from(elem[$]('[type=checkbox]:checked')).map(node => node.parentNode.textContent));
+					m.changerNamed('text-style').push(...styles);
+					m.valid = m.valid || styles.length > 0;
+					return m;
 				}
 
 				return folddownPanel({
 					type: 'text',
-					text: 'You may select any number of styles.<br>This will wrap the selection in a hook [], and place a <code>(text-style:)</code> macro in front to modify it.',
+					text: 'You may select any number of styles.',
 				},{
 					type: 'preview',
 					text: 'Example text sample',
+					update(model, panel) {
+						panel.firstChild.setAttribute('style', model.changers['text-style'].map(name => previewStyles[name]).join(';') + ";position:relative;");
+					},
 				},{
 					type: 'small',
 					text: "This sample doesn't account for other modifications to this passage's text colour, font, or background, and is meant only for you to examine each of these styles.",
@@ -97,46 +351,42 @@
 					type: 'checkboxes',
 					name: 'Font variants',
 					options: ["bold","italic","mark"],
-					update,
+					model,
 				},{
 					type: 'radios',
 					name: 'Underlines and strikes',
 					options: ["none", "underline","double-underline","wavy-underline","strike","double-strike","wavy-strike"],
-					update,
+					model,
 				},{
 					type: 'radios',
 					name: 'Superscript and subscript',
 					options: ["none", "superscript", "subscript"],
-					update,
+					model,
 				},{
 					type: 'radios',
 					name: 'Outlines',
 					options: ["none", "outline","shadow","emboss","blur","blurrier","smear"],
-					update,
+					model,
 				},{
 					type: 'radios',
 					name: 'Letter spacing',
 					options: ["none", "condense","expand"],
-					update,
+					model,
 				},{
 					type: 'radios',
 					name: 'Flips',
 					options: ["none", "mirror","upside-down"],
-					update,
+					model,
 				},{
 					type: 'radios',
 					name: 'Animations',
-					options: ["none", "blink", "fade-in-out","rumble","sway","buoy","fidget"],
-					update,
+					options: ["none", "blink", "fade-in-out","rumble","shudder","sway","buoy","fidget"],
+					model,
+				/*},{
+					type: 'checkbox'
+					text: 'Affect the entire remainder of the passage'*/
 				},{
 					type: 'confirm',
-					confirm(panel) {
-						const styles = checkedStyles(panel);
-						wrapWithChangerMacros([
-							"text-style", styles.map(node => JSON.stringify(node.parentNode.textContent))
-						]);
-						setPreviewStyle(panel, '');
-					},
 				});
 			})(),
 		/*
@@ -144,192 +394,100 @@
 		*/
 		passagelink: folddownPanel({
 				type: 'textarea',
-				text: 'Arriving passage name',
+				text: 'Arriving passage name:',
 				placeholder: "Passage name",
-				update(panel) {
-					const name = panel.querySelector('[type=text]').value;
-					return name.length > 0 && !name.includes("]]");
+				model(m, elem) {
+					const name = elem.querySelector('input').value;
+					if (name.length > 0 && !name.includes("]]")) {
+						m.valid = true;
+						m.wrapStart = "[[" + name + "->";
+						m.wrapEnd = "]]";
+					}
+					return m;
 				},
 			},{
-				type: 'dropdown',
-				text: 'Departing passage transition',
+				type: 't8n-out-dropdown',
+				text: 'Departing passage transition:',
 				options: ["default", "", "instant", "dissolve", "rumble", "shudder", "pulse", "zoom", "flicker", "slide-left", "slide-right", "slide-up", "slide-down"],
 			},{
-				type: 'dropdown',
-				text: 'Arriving passage transition',
+				type: 't8n-in-dropdown',
+				text: 'Arriving passage transition:',
 				options: ["default", "", "instant", "dissolve", "rumble", "shudder", "pulse", "zoom", "flicker", "slide-left", "slide-right", "slide-up", "slide-down"],
 			},{
 				type: 'confirm',
-				confirm(panel) {
-					const passageName = panel.querySelector('[type=text]').value;
-					let [t8nDepart,t8nArrive] = Array.from(panel[$]('select')).map(node => node.value);
-					t8nDepart = t8nDepart ? "(t8n-depart:" + JSON.stringify(t8nDepart) + ")" : "";
-					t8nArrive = t8nArrive ? "(t8n-arrive:" + JSON.stringify(t8nArrive) + ")" : "";
-					wrapSelection(
-						t8nDepart + (t8nDepart && t8nArrive ? "+" : "") + t8nArrive + "[[",
-						"->" + passageName + "]]"
-					);
+			}),
+		if: folddownPanel({
+				type: 'text',
+				text: 'Only show a section of the passage if this condition is met:',
+			},{
+				type: 'radiorows',
+				name: 'if',
+				options: [
+					[
+						{
+							type: 'inline-dropdown',
+							text: 'It\'s ',
+							options: ["at", "not at", "before", "after"],
+						},{
+							type: "inline-number",
+							text: " visit number ",
+							value: 1,
+							min: 1,
+							max: 999,
+						},
+					],[
+						{
+							type: 'inline-dropdown',
+							text: 'It\'s an',
+							options: ["even", "odd"],
+						},{
+							type: "inline-text",
+							text: " numbered visit.",
+						},
+					],[
+						{
+							type: "inline-number",
+							text: "",
+							value: 2,
+							min: 1,
+							max: 999,
+						},{
+							type: "inline-text",
+							text: " seconds have passed since this passage was entered.",
+						},
+					]
+				],
+			},{
+				type: 'confirm',
+				confirm() {
 				},
-			})
+			}),
+		default: folddownPanel({
+				type: 'small',
+				text: 'The current story format is <b>Harlowe 3.2.0</b>. Consult its <a href="https://twine2.neocities.org/" target="_blank" rel="noopener noreferrer">documentation</a>.'
+			},{
+				type: 'buttons',
+				buttons: [
+					{ title:'Bold',                    html:'<b>B</B>',                       onClick: () => wrapSelection("''","''")},
+					{ title:'Italic',                  html:'<i>I</i>',                       onClick: () => wrapSelection("//","//")},
+					{ title:'Strikethrough',           html:'<s>S</s>',                       onClick: () => wrapSelection("~~","~~")},
+					{ title:'Superscript',             html:'<sup>Sup</sup>',                 onClick: () => wrapSelection("^^","^^")},
+					{ title:'Collapse whitespace',     html:'{}',                             onClick: () => wrapSelection("{","}")},
+					// Separate the basic markup buttons from those of the wizards
+					el('<span style="padding:0px 2px;color:hsla(0,0%,50%,0.5)">•</span>'),
+					{ title:'Special text style',      html:'Styles…',                        onClick: () => switchPanel('textstyle')},
+					{ title:'Passage link',            html:'Link…',                          onClick: () => switchPanel('passagelink')},
+					{
+						title: 'Only show a portion of text if a condition is met',
+						html:'If…',
+						onClick: () => switchPanel('if')
+					},
+				],
+			}),
 	};
-
-	const disabledButtonCSS = 'background:hsl(0,0%,50%,0.5);opacity:0.5;pointer-events:none';
 	/*
-		The mode-switcher function, which changes the displayed panel in the toolbar.
+		Switch to the default panel at startup.
 	*/
-	function switchPanel(name = 'default') {
-		const {height} = getComputedStyle(toolbarElem);
-		/*
-			Uncheck all checkboxes, return all <select>s to default, and clear all textareas.
-		*/
-		Object.values(panels).forEach(panel => {
-			panel[$]('[type=radio],[type=checkbox]').forEach(node => node.checked = node.value === 'none');
-			panel[$]('[type=text],select').forEach(node => node.value = '');
-			panel[$]('button.create').forEach(node => node.setAttribute('style', disabledButtonCSS));
-		});
-		toolbarElem[$]('.harloweToolbarPanel').forEach(node => node.remove());
-		/*
-			Touch the maxHeight of the incoming panel, using the computed height of the current panel, to
-			animate its height as it enters.
-		*/
-		panels[name].style.maxHeight=height;
-		toolbarElem.append(panels[name]);
-		// Sadly, I think using this setTimeout is necessary to get it to work.
-		// "70vh" is the absolute maximum height for these panels.
-		setTimeout(() => panels[name].style.maxHeight="70vh", 100);
-	}
-
-	/*
-		The constructor for the folddownPanels. This accepts a number of panel rows (as an array of row-describing objects)
-		and returns a <div> with the compiled UI elements.
-
-		Each row object typically has the following:
-		- update: A function taking the entire panel element, and performing actions whenever this element's value is altered.
-		- name: User-facing display name of this element.
-		- type: Which type of UI element to create for it.
-	*/
-	function folddownPanel(...panelRows) {
-		const panelElem = el('<div class="harloweToolbarPanel" style="transition:max-height 0.8s;overflow-y:auto"></div>');
-		/*
-			toggleConfirm is a function that enables or disables the Confirm button in the "confirm" row.
-			It is created below only if the "confirm" row exists.
-		*/
-		let toggleConfirm = Object;
-
-		panelRows.forEach((row) => {
-			/*
-				These are non-interactive messages.
-			*/
-			if (row.type === "text") {
-				panelElem.append(el('<p>' + row.text + '</p>'));
-			}
-			if (row.type === "small") {
-				panelElem.append(el('<small style="display:block">' + row.text + '</small>'));
-			}
-			/*
-				The text-style preview panel.
-			*/
-			if (row.type === "preview") {
-				panelElem.append(el('<div class="harlowePreview" style="margin:8px auto;width:50%;text-align:center;user-select:none;background:black;color:white;font-family:\'Georgia\',serif;padding:8px;font-size:1.5rem"><span>' + row.text + '</span></div>'));
-			}
-			/*
-				Checkboxes and radio buttons.
-			*/
-			if (row.type === "checkboxes") {
-				const boxesDiv = el(`<div style="border-bottom:1px solid hsl(0,0%,50%,0.5);position:relative;padding-bottom:8px;margin-bottom:8px"><div><b>${row.name}</b></div></div>`);
-				const onClick = row.update && (() => toggleConfirm(row.update(panelElem)));
-				row.options.forEach(box => {
-					const e = el('<label style="min-width:20%;text-transform:capitalize;display:inline-block;"><input type="checkbox"></input>' + box + '</label>');
-					onClick && e.addEventListener('click', onClick);
-					boxesDiv.append(e);
-				});
-				panelElem.append(boxesDiv);
-			}
-			if (row.type === "radios") {
-				const radiosDiv = el(`<div style="border-bottom:1px solid hsl(0,0%,50%,0.5);position:relative;padding-bottom:8px;margin-bottom:8px"><div><b>${row.name}</b></div></div>`);
-				const onClick = row.update && (() => toggleConfirm(row.update(panelElem)));
-				row.options.forEach((radio,i) => {
-					const e = el(`<label style="min-width:20%;text-transform:capitalize;display:inline-block;"><input type="radio" name="${row.name}" value="${radio}" ${!i ? 'checked' : ''}></input>${radio}</label>`);
-					onClick && e.addEventListener('click', onClick);
-					radiosDiv.append(e);
-				});
-				panelElem.append(radiosDiv);
-			}
-			/*
-				Text areas, single lines in which text can be entered.
-			*/
-			if (row.type === "textarea") {
-				const rowDiv = el('<div style="position:relative;padding-bottom:8px;">'
-					+ row.text
-					+ ':<input style="width:50%;margin-left:1rem;display:inline-block;font-size:1rem" type=text placeholder="' + row.placeholder + '"></input></div>');
-				row.update && rowDiv.querySelector('input').addEventListener('input', () => toggleConfirm(row.update(panelElem)));
-				panelElem.append(rowDiv);
-			}
-			/*
-				Dropdowns.
-			*/
-			if (row.type === "dropdown") {
-				const dropdownDiv = el('<div style="width:50%;display:inline-block;position:relative;">'
-					+ row.text
-					+ ':<select style="text-transform:capitalize;margin-left:1rem"></select></div>');
-				row.options.forEach((option,i) => {
-					dropdownDiv.lastChild.append(el('<option value="' + (!i ? '' : option) + '"' + (!option ? ' disabled' : !i ? ' selected' : '') + '>' + (option || '───────') + '</select>'));
-				});
-				panelElem.append(dropdownDiv);
-			}
-			/*
-				The "Create" and "Cancel" buttons.
-			*/
-			if (row.type === "confirm") {
-				const buttons = el('<p class="buttons" style="padding:8px;"></p>');
-				const cancel = el('<button><i class="fa fa-times"></i> Cancel</button>');
-				const confirm = el('<button class="create"><i class="fa fa-check"></i>Add</button>');
-				confirm.setAttribute('style',disabledButtonCSS);
-				toggleConfirm = val => confirm[!val ? 'setAttribute' : 'removeAttribute']('style',disabledButtonCSS);
-				toggleConfirm(false);
-				
-				cancel.addEventListener('click', () => switchPanel());
-				confirm.addEventListener('click', () => {
-					row.confirm(panelElem);
-					switchPanel();
-				});
-				buttons.append(cancel,confirm);
-				panelElem.append(buttons);
-			}
-		});
-		return panelElem;
-	}
-
-	/*
-		Finally, the default word processing buttons are created here.
-	*/
-	function defaultPanelButton(title,html,onClick) {
-		const button = el('<button title="' + title + '" style="'
-			+ "border-radius:0.5rem;"
-			+ "border:1px solid hsl(0,0%,50%,0.5);"
-			+ "margin:8px 4px;"
-			+ "padding:0px 4px;"
-			+ "height:40px;"
-			+ (html.startsWith('<su') ? '' : 'font-size:1.2rem;')
-			+ 'min-width:32px;'
-			+ '">' + html + "</button>"
-		);
-		onClick && button.addEventListener('click',onClick);
-		return button;
-	}
-
-	panels.default.append(
-		defaultPanelButton('Bold', '<b>B</B>',                         () => wrapSelection("''","''")),
-		defaultPanelButton('Italic', '<i>I</i>',                       () => wrapSelection("//","//")),
-		defaultPanelButton('Strikethrough', '<s>S</s>',                () => wrapSelection("~~","~~")),
-		defaultPanelButton('Superscript', '<sup>Sup</sup>',            () => wrapSelection("^^","^^")),
-		//defaultPanelButton('Verbatim (ignore markup)', 'Vb',           () => wrapSelection("``","``")),
-		defaultPanelButton('Collapse whitespace', '{}',                () => wrapSelection("{","}")),
-		// Separate the basic markup buttons from those of the wizards
-		el('<span style="padding:0px 2px;color:hsla(0,0%,50%,0.5)">•</span>'),
-		defaultPanelButton('Special text style', 'Styles…',            () => switchPanel('textstyle')),
-		defaultPanelButton('Passage link', 'Link…',                    () => switchPanel('passagelink'))
-	);
 	switchPanel();
 
 	function Toolbar(cmObj) {

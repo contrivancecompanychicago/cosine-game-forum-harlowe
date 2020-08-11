@@ -13,6 +13,31 @@ const {min} = Math,
 	colorRegExp  = /hsla\((\d+),\s*(\d+)%,\s*(\d+)%,\s*(\d+\.\d+)\)/g,
 	typeColours  = require('../js/utils/typecolours');
 
+/*
+	The following is a copied compilation from animations.scss, with compatibility shims removed.
+*/
+const animations = `@keyframes appear{0%{opacity:0}to{opacity:1}}
+@keyframes fade-in-out{0%,to{opacity:0}50%{opacity:1}}
+@keyframes rumble{25%{top:-.1em}75%{top:.1em}0%,to{top:0}}
+@keyframes shudder{25%{left:.1em}75%{left:-.1em}0%,to{left:0}}
+@keyframes buoy{25%{top:.25em}75%{top:-.25em}0%,to{top:0}}
+@keyframes sway{25%{left:.25em}75%{left:-.25em}0%,to{left:0}}
+@keyframes pulse{0%{transform:scale(0,0)}20%{transform:scale(1.2,1.2)}40%{transform:scale(0.9,0.9)}60%{transform:scale(1.05,1.05)}
+80%{transform:scale(0.925,0.925)}to{transform:scale(1,1)}}
+@keyframes zoom-in{0%{transform:scale(0,0)}to{transform:scale(1,1)}}
+@keyframes shudder-in{0%,to{transform:translateX(0em)}5%,25%,45%{transform:translateX(-1em)}15%,35%,55%{transform:translateX(1em)}
+65%{transform:translateX(-0.6em)}75%{transform:translateX(0.6em)}85%{transform:translateX(-0.2em)}95%{transform:translateX(0.2em)}}
+@keyframes rumble-in{0%,to{transform:translateY(0em)}5%,25%,45%{transform:translateY(-1em)}
+15%,35%,55%{transform:translateY(1em)}65%{transform:translateY(-0.6em)}75%{transform:translateY(0.6em)}85%{transform:translateY(-0.2em)}95%{transform:translateY(0.2em)}}
+@keyframes fidget{0%,8.1%,82.1%,31.1%,38.1%,44.1%,40.1%,47.1%,74.1%,16.1%,27.1%,72.1%,24.1%,95.1%,6.1%,36.1%,20.1%,4.1%,91.1%,14.1%,87.1%,to{left:0;top:0}
+8%,82%,31%,38%,44%{left:-1px}40%,47%,74%,16%,27%{left:1px}72%,24%,95%,6%,36%{top:-1px}20%,4%,91%,14%,87%{top:1px}}
+@keyframes slide-right{0%{transform:translateX(-100vw)}}
+@keyframes slide-left{0%{transform:translateX(100vw)}}
+@keyframes slide-up{0%{transform:translateY(100vh)}}
+@keyframes slide-down{0%{transform:translateY(-100vh)}}
+@keyframes flicker{0%,29%,31%,63%,65%,77%,79%,86%,88%,91%,93%{opacity:0}30%{opacity:.2}
+64%{opacity:.4}78%{opacity:.6}87%{opacity:.8}92%,to{opacity:1}}`;
+
 const versionClass = 'cm-harlowe-3-';
 /*
 	If a property includes commas, then it's a multiple-name selector.
@@ -193,6 +218,6 @@ const outputFile = {
 			return a;
 		}, '');
 	},
-} + "";
+} + animations;
 
 module.exports = outputFile;
