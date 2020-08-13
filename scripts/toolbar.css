@@ -1,0 +1,93 @@
+.harlowe-3-toolbarPanel {
+	transition: max-height 0.8s;
+	overflow-y: auto
+}
+
+.harlowe-3-stylePreview {
+	text-align: center;
+	user-select: none;
+	overflow: hidden;
+	background: black;
+	color: white;
+	font-family: 'Georgia',serif;
+	padding: 8px;
+	font-size: 1.5rem;
+	margin: 8px auto;
+	width: 50%;
+	position:relative;
+}
+.harlowe-3-stylePreview > span {
+	display:inline-block;
+}
+.harlowe-3-stylePreview > span:first-child {
+	position:absolute;
+}
+.harlowe-3-stylePreview > span:last-child {
+	position:relative;
+}
+
+.harlowe-3-toolbarPanel > button {
+	border-radius: 0.8rem;
+	border: 1px solid hsla(0,0%,50%,0.5);
+	margin: 8px 4px;
+	padding: 0px 4px;
+	height: 36px;
+	font-size: 1.2rem;
+	min-width: 32px;
+}
+
+.harlowe-3-toolbarCheckboxRow {
+	border-bottom: 1px solid hsla(0,0%,50%,0.5);
+	position: relative;
+	padding-bottom: 8px;
+	margin-bottom: 8px
+}
+
+.harlowe-3-toolbarCheckboxRow > label {
+	min-width: 20%;
+	text-transform: capitalize;
+	display: inline-block;
+}
+
+.harlowe-3-toolbarRadios {
+	border-bottom: 1px solid hsla(0,0%,50%,0.5);
+	position: relative;
+	padding-bottom: 8px;
+	margin-bottom: 8px
+}
+
+.harlowe-3-labeledInput {
+	position: relative;
+	padding-bottom: 8px;
+}
+
+.harlowe-3-labeledInput > input[type=text] {
+	display: inline-block;
+	font-size: 1rem;
+}
+
+.harlowe-3-labeledInput > input[type=number] {
+	box-shadow: 0 1px 0 hsla(0,0%,50%,0.5);
+	background: transparent;
+	color: inherit;
+	border: none;
+	font-family: 'Source Code Pro',monospace;
+	width: 4rem;
+	margin: 0 0.5rem;
+	display: inline-block;
+	font-size: 1rem
+}
+
+.harlowe-3-radioRow {
+	margin-bottom: 8px;
+	display: block;
+}
+
+.harlowe-3-radioRow .harlowe-3-radioRow {
+	margin-left: 2rem;
+}
+
+.harlowe-3-toolbarPanel > * > .harlowe-3-radioRow {
+	border-bottom: 1px solid hsla(0,0%,50%,0.5);
+	padding-bottom: 8px;
+}
