@@ -2,11 +2,6 @@
 (function() {
 	'use strict';
 	const {stringify, parse} = JSON;
-	/*
-		The Harlowe Toolbar fits above the CodeMirror panel and provides a number of convenience buttons, in the style of forum post editors,
-		to ease the new user into the format's language.
-	*/
-	const toolbarElem = el('<div class="harloweToolbar">');
 	let panels;
 	let cm;
 	/*
@@ -20,6 +15,26 @@
 		return elem.firstChild;
 	}
 	/*
+		The Harlowe Toolbar fits above the CodeMirror panel and provides a number of convenience buttons, in the style of forum post editors,
+		to ease the new user into the format's language.
+	*/
+	const toolbarElem = el('<div class="harloweToolbar">');
+	/*
+		Populate the toolbar with a <datalist> of all the visible passages.
+	*/
+	(() => {
+		const datalist = el("<datalist id='harlowe-3-passages'>");
+		datalist.append(...Array.from(document[$$]('.passage')).map(e => {
+			if (e.__vue__) {
+				const o = el(`<option>`);
+				o.setAttribute('value', e.__vue__.passage.name);
+				return o;
+			}
+		}));
+		toolbarElem.append(datalist);
+	})();
+
+	/*
 		All output from the buttons and wizards is from this function, which places Harlowe code into the passage around the selection.
 		"stringify" indicates whether to convert the wrapped text to a string.
 	*/
@@ -31,7 +46,7 @@
 			Some syntax (such as links) directly replaces the current selection entirely. Others
 			wrap the selection, or, if none exists, the "Your Text Here" prompt text.
 		*/
-		const wrapped = innerText !== null ? innerText : cm.doc.getSelection() || "Your Text Here";
+		const wrapped = innerText !== undefined ? innerText : cm.doc.getSelection() || "Your Text Here";
 		cm.doc.replaceSelection(before + (stringify ? stringify : String)(wrapped) + after, "around");
 	}
 	/*
@@ -101,18 +116,24 @@
 			causes them to call update() whenever they're interacted with.
 		*/
 		const modelFns = [], updaterFns = [];
-		const model = () => modelFns.reduce((m, fn) => fn(m) || m, {
+		function output() {
+			return Object.entries(this.changers).map(([k,v]) => `(${k}:${v.join(',')})`).join('+');
+		}
+		function changerNamed(name) {
+			return this.changers[name] || (this.changers[name] = []);
+		}
+		const model = (initiator) => modelFns.reduce((m, fn) => fn(m) || m, {
 			changers: {},
 			wrapStart: '[', wrapEnd: ']',
 			wrapStringify: false,
-			innerText: null,
+			innerText: undefined,
 			valid: false,
-			changerNamed(name) {
-				return this.changers[name] || (this.changers[name] = []);
-			},
+			output,
+			changerNamed,
+			initiator,
 		});
-		function update() {
-			const m = model();
+		function update({target} = {}) {
+			const m = model(target);
 			updaterFns.forEach(fn => fn(m));
 		}
 		/*
@@ -128,7 +149,7 @@
 		const ret = panelRows.reduce(function reducer(panelElem, row) {
 			let ret, inline, type = '';
 			const nested = (panelElem.tagName.toLowerCase() === "label");
-			if (row instanceof Text) {
+			if (Object.getPrototypeOf(row) !== Object.prototype) {
 				ret = row;
 			}
 			else {
@@ -162,7 +183,9 @@
 				The (text-style:) preview panel.
 			*/
 			if (type.endsWith("preview")) {
-				ret = el(`<div class="harlowe-3-stylePreview" style="${type.startsWith('t8n') ? 'cursor:pointer' : ''}"><span>${row.text}</span>${type.startsWith('t8n') ? "<span>" + row.text2 + "</span>" : ''}</div>`);
+				ret = el(`<div class="harlowe-3-stylePreview" style="${type.startsWith('t8n') ? 'cursor:pointer;height: 2.6rem;' : ''}" ${
+					type.startsWith('t8n') ? `alt="Click to preview the transition"` : ""}><span>${row.text}</span>${type.startsWith('t8n') ? "<span>" + row.text2 + "</span>" : ''}</div>`);
+
 				if (type.startsWith('t8n')) {
 					ret.addEventListener('mouseup', update);
 					const firstSpan = ret[$](':first-child');
@@ -196,16 +219,18 @@
 				Text areas, single lines in which text can be entered.
 			*/
 			if (type.endsWith("textarea")) {
-				ret = el('<' + (inline ? 'span' : 'div') + ' class="harlowe-3-labeledInput" style="">'
+				ret = el('<' + (inline ? 'span' : 'div') + ' class="harlowe-3-labeledInput">'
 					+ row.text
-					+ '<input ' + (row.useSelection ? 'data-use-selection' : '') + ' style="width:' + (row.width) + ';margin' + (inline ? ':0 0.5rem' : '-left:1rem') + ';" type=text placeholder="' + row.placeholder + '"></input></' + (inline ? 'span' : 'div') + '>');
+					+ '<input ' + (row.useSelection ? 'data-use-selection' : '') + (type.includes('passage') ? 'list="harlowe-3-passages"' : '') + ' style="width:'
+						+ (row.width) + ';margin' + (inline ? ':0 0.5rem' : '-left:1rem') + ';" type=text placeholder="' + row.placeholder
+					+ '"></input></' + (inline ? 'span' : 'div') + '>');
 				ret[$]('input').addEventListener('input', update);
 			}
-			if (type === "inline-number") {
-				ret = el('<span class="harlowe-3-labeledInput">'
+			if (type.endsWith("number")) {
+				ret = el('<' + (inline ? 'span' : 'div') + ' class="harlowe-3-labeledInput">'
 					+ row.text
 					+ '<input style="" type=number'
-					+ ' min=' + row.min + ' max=' + row.max + ' value=' + row.value + '></input></span>');
+					+ ' min=' + row.min + ' max=' + row.max + ' value=' + row.value + (row.step ? ' step=' + row.step : '') + '></input></' + (inline ? 'span' : 'div') + '>');
 				ret[$]('input').addEventListener('change', update);
 			}
 			/*
@@ -214,7 +239,7 @@
 			if (type.endsWith("dropdown")) {
 				const dropdownDiv = el('<' + (inline ? 'span' : 'div') + ' style="' + (inline ? '' : 'width:50%;') + 'position:relative;">'
 					+ row.text
-					+ '<select style="' + (inline ? 'margin:0 0.5rem' : 'margin-left:1rem;text-transform:capitalize;') + '"></select></' + (inline ? 'span' : 'div') + '>');
+					+ '<select style="' + (inline ? 'margin:0.5rem;' : 'margin-left:1rem;') + 'font-size:1rem;margin-top:4px"></select></' + (inline ? 'span' : 'div') + '>');
 				row.options.forEach((option,i) => {
 					dropdownDiv.lastChild.append(el('<option value="' + (!i ? '' : option) + '"' + (!option ? ' disabled' : !i ? ' selected' : '') + '>' + (option || '───────') + '</select>'));
 				});
@@ -255,26 +280,35 @@
 			*/
 			if (type === "confirm") {
 				const buttons = el('<p class="buttons" style="padding-bottom:8px;"></p>');
+				const resultingCode = el(`<span class="harlowe-3-resultCode">Resulting code: <code></code> <code></code></span>`);
 				const cancel = el('<button><i class="fa fa-times"></i> Cancel</button>');
 				const confirm = el('<button class="create"><i class="fa fa-check"></i>Add</button>');
 				confirm.setAttribute('style', disabledButtonCSS);
-				updaterFns.push(a => {
-					confirm[!a.valid ? 'setAttribute' : 'removeAttribute']('style', disabledButtonCSS);
+				updaterFns.push(m => {
+					const setAttr = !m.valid ? 'setAttribute' : 'removeAttribute';
+					confirm[setAttr]('style', disabledButtonCSS);
+					resultingCode[setAttr]('hidden','');
+					if (m.valid) {
+						resultingCode[$]('code:first-of-type').textContent = m.output() + m.wrapStart;
+						resultingCode[$]('code:last-of-type').textContent = m.wrapEnd;
+					}
 				});
 				
 				cancel.addEventListener('click', () => switchPanel());
 				confirm.addEventListener('click', () => {
 					const m = model();
-					wrapSelection(Object.entries(m.changers).map(([k,v]) => `(${k}:${v.join(',')})`).join('+') + m.wrapStart, m.wrapEnd, m.innerText, m.wrapStringify);
+					wrapSelection(m.output() + m.wrapStart, m.wrapEnd, m.innerText, m.wrapStringify);
 					switchPanel();
 				});
-				buttons.append(cancel,confirm);
+				buttons.append(resultingCode,cancel,confirm);
 				ret = buttons;
 			}
 			if (nested) {
 				const u = row.update;
 				row.update = (m, el) => {
-					Array.from(panelElem[$$]('div')).forEach(e => e[(panelElem[$](':scope > input:checked') ? "remove" : "set") + "Attribute"]("hidden",''));
+					const checked = panelElem[$](':scope > input:checked');
+					Array.from(panelElem[$$]('div,br ~ *')).forEach(e => e[(checked ? "remove" : "set") + "Attribute"]("hidden",''));
+					Array.from(panelElem[$$]('input,select')).slice(1).forEach(e => e[(checked ? "remove" : "set") + "Attribute"]("disabled",''));
 					u && u(m, el);
 				};
 			}
@@ -426,8 +460,8 @@
 			The [[Link]] button's panel. This configures the link syntax, plus a (t8n-depart:) and/or (t8n-arrive:) macro to attach to it.
 		*/
 		passagelink: (() => {
-				const passageT8nPreviews = () => [{
-					type: 'dropdown',
+				const passageT8nPreviews = () => [el('<br>'),{
+					type: 'inline-dropdown',
 					text: 'Departing passage transition: ',
 					options: ["default", "", "instant", "dissolve", "rumble", "shudder", "pulse", "zoom", "flicker", "slide-left", "slide-right", "slide-up", "slide-down"],
 					model(m, el) {
@@ -437,7 +471,7 @@
 						}
 					},
 				},{
-					type: 'dropdown',
+					type: 'inline-dropdown',
 					text: 'Arriving passage transition: ',
 					options: ["default", "", "instant", "dissolve", "rumble", "shudder", "pulse", "zoom", "flicker", "slide-left", "slide-right", "slide-up", "slide-down"],
 					model(m, el) {
@@ -447,24 +481,42 @@
 						}
 					},
 				},{
+					type: "inline-number",
+					text: "Transition time (sec): ",
+					value: 0.8,
+					min: 0,
+					max: 999,
+					step: 0.1,
+					model(m, elem) {
+						const value = elem[$]('input').value;
+						/*
+							This uses the hardcoded default time value.
+						*/
+						if (+value !== 0.8) {
+							m.changerNamed('t8n-time').push(value + 's');
+						}
+					},
+				},{
 					type: 't8n-preview',
 					text: "Departing Text",
 					text2: "Arriving Text",
 					update(m, el) {
-						const t8nOut = m.changers['t8n-depart'] ? parse(m.changers['t8n-depart'][0]) : "default";
-						const t8nIn  = m.changers['t8n-arrive'] ? parse(m.changers['t8n-arrive'][0]) : "default";
+						if (m.initiator && !["select","div","span"].some(e => e === m.initiator.tagName.toLowerCase())) {
+							return;
+						}
+						const t8nName1 = t8nPreviewAnims[m.changers['t8n-depart'] ? parse(m.changers['t8n-depart'][0]) : "default"](true);
+						const t8nName2 = t8nPreviewAnims[m.changers['t8n-arrive'] ? parse(m.changers['t8n-arrive'][0]) : "default"](false);
+						const t8nTime = m.changers['t8n-time'] ? m.changers['t8n-time'][0] : "0.8s";
 						
 						const span1 = el.firstChild;
 						const span2 = el.lastChild;
+						span1.setAttribute('style', `animation:${t8nName1} reverse ${t8nTime} 1;`);
+						span2.setAttribute('style', `animation:${t8nName2} ${t8nTime} 1;`);
 						/*
-							Flicker the <span> to trigger a restart of the animation.
+							Flicker the <span>s to trigger a restart of the animation.
 						*/
-						span1.setAttribute('style', `animation:${t8nPreviewAnims[t8nOut](true)} reverse 0.8s 1;`);
 						span1.remove();
-
-						span2.setAttribute('style', `animation:${t8nPreviewAnims[t8nIn](false)} 0.8s 1;`);
 						span2.remove();
-
 						setTimeout(() => el.append(span1, span2));
 					},
 				}];
@@ -477,7 +529,7 @@
 					width: "60%",
 					model(m, elem) {
 						const text = elem[$]('input').value;
-						if (text.length > 0 && !text.includes("]]")) {
+						if (text.length > 0) {
 							m.linkText = text;
 							m.valid = true;
 						}
@@ -490,17 +542,24 @@
 					name: 'passagelink',
 					options: [
 						[{
-							type: 'inline-textarea',
+							type: 'inline-passage-textarea',
 							text: 'Go to this passage:',
 							width: "70%",
 							placeholder: "Passage name",
 							model(m, elem) {
 								const name = elem[$]('input').value;
-								if (name.length > 0 && !name.includes("]]")) {
+								if (!name.length) {
+									m.valid = false;
+								}
+								else if (!["]]", "->", "<-"].some(str => name.includes(str) || (m.linkText && m.linkText.includes(str)))) {
 									m.wrapStart = "[[" + m.linkText;
 									m.wrapEnd = "->" + name + "]]";
-									m.innerText = '';
 								}
+								else {
+									m.wrapStart = "(link-goto:" + stringify(m.linkText) + ",";
+									m.wrapEnd = stringify(name) + ")";
+								}
+								m.innerText = '';
 							}
 						}, ...passageT8nPreviews()],
 						[{
@@ -513,8 +572,18 @@
 							},
 						}, ...passageT8nPreviews()],
 						[{
-							type: "inline-text",
-							text: 'Reveal an attached hook.',
+							type: 'inline-dropdown',
+							text: 'Reveal ',
+							options: ["an attached hook", "the remainder of the passage"],
+							model(m, elem) {
+								if (elem[$]('select').value) {
+									m.wrapStart = "[==\n";
+									m.wrapEnd = "";
+								}
+							}
+						},{
+							type: "text",
+							text: '(A hook is a section of passage code enclosed in <code>[</code> or <code>]</code>, or preceded with <code>[==</code>, which can have macros attached to the front.)',
 						},{
 							type: 'radiorows',
 							name: 'linkReveal',
@@ -555,18 +624,19 @@
 				options: [
 					[
 						/*
-							The player visited this passage [exactly] [1] times previously.
+							The player visited this passage [exactly] [1] times.
 						*/
 						{
 							type: 'inline-dropdown',
 							text: 'The player visited this passage',
-							options: ["exactly", "at most", "at least", "anything but"],
+							options: ["exactly", "at most", "at least", "anything but", "a multiple of"],
 							model(m, elem) {
 								m.changerNamed('if').push("visits" + {
 									"": " is ",
 									"at most": " <= ",
 									"at least": " >= ",
 									"anything but": " is not ",
+									"a multiple of": " % ",
 								}[elem[$]('select').value]);
 							},
 						},{
@@ -576,11 +646,15 @@
 							min: 0,
 							max: 999,
 							model(m, elem) {
-								m.changerNamed('if')[0] += (+elem[$]('input').value + 1);
+								const ifArgs = m.changerNamed('if');
+								ifArgs[0] += elem[$]('input').value;
+								if (ifArgs[0].includes(' % ')) {
+									ifArgs[0] += " is 0";
+								}
 								m.valid = true;
 							},
 						},
-						new Text(" times previously."),
+						new Text(" times."),
 					],[
 						/*
 							It's an [even] numbered visit.
@@ -615,24 +689,32 @@
 						},
 						new Text(" seconds have passed since this passage was entered."),
 					],[
+						/*
+							This passage [___] was visited [exactly] [2] times.
+						*/
 						{
 							type: "inline-textarea",
 							width:"30%",
 							text: "The passage ",
 							placeholder: "Passage name",
 							model(m, elem) {
-								m.changerNamed('if').push("(count:(history:)," + stringify(elem[$]('input').value) + ")");
+								const v = elem[$]('input').value;
+								if (v) {
+									m.changerNamed('if').push("(history: where it is " + stringify(v) + ")'s length");
+									m.valid = true;
+								}
 							},
 						},{
 							type: 'inline-dropdown',
 							text: 'was visited ',
-							options: ["exactly", "at most", "at least", "anything but"],
+							options: ["exactly", "at most", "at least", "anything but", "a multiple of"],
 							model(m, elem) {
 								m.changerNamed('if')[0] += {
 									"": " is ",
 									"at most": " <= ",
 									"at least": " >= ",
 									"anything but": " is not ",
+									"a multiple of": " % ",
 								}[elem[$]('select').value];
 							},
 						},{
@@ -642,11 +724,59 @@
 							min: 1,
 							max: 999,
 							model(m, elem) {
-								m.changerNamed('if')[0] += elem[$]('input').value;
-								m.valid = true;
+								const ifArgs = m.changerNamed('if');
+								ifArgs[0] += elem[$]('input').value;
+								if (ifArgs[0].includes(' % ')) {
+									ifArgs[0] += " is 0";
+								}
 							},
 						},
-						new Text(" times previously."),
+						new Text(" times."),
+					],[
+						/*
+							Passages with the tag [___] were visited [exactly] [2] times.
+						*/
+						{
+							type: "inline-textarea",
+							width:"20%",
+							text: "Passages with the tag ",
+							placeholder: "Tag name",
+							model(m, elem) {
+								const v = elem[$]('input').value;
+								if (v) {
+									m.changerNamed('if').push("(history: where (passage:it)'s tags contains " + stringify(v) + ")'s length");
+									m.valid = true;
+								}
+							},
+						},{
+							type: 'inline-dropdown',
+							text: 'were visited ',
+							options: ["exactly", "at most", "at least", "anything but", "a multiple of"],
+							model(m, elem) {
+								const v = elem[$]('select').value;
+								m.changerNamed('if')[0] += {
+									"": " is ",
+									"at most": " <= ",
+									"at least": " >= ",
+									"anything but": " is not ",
+									"a multiple of": " % ",
+								}[v];
+							},
+						},{
+							type: "inline-number",
+							text: "",
+							value: 1,
+							min: 1,
+							max: 999,
+							model(m, elem) {
+								const ifArgs = m.changerNamed('if');
+								ifArgs[0] += elem[$]('input').value;
+								if (ifArgs[0].includes(' % ')) {
+									ifArgs[0] += " is 0";
+								}
+							},
+						},
+						new Text(" times."),
 					],[
 						/*
 							There are no more interactable elements in the passage.
@@ -659,8 +789,26 @@
 								m.valid = true;
 							},
 						},
+						{
+							type: "text",
+							text: "Interactable elements are link, mouseover, or mouseout areas. If you're using links that reveal "
+							+ "additional lines of prose and then remove or unlink themselves, this will reveal the attached text when all of those are gone.",
+						},
 					]
 				],
+			},{
+				type: 'checkbox',
+				text: `Also, only if the previous (if:) or (unless:) hook's condition wasn't fulfilled.`,
+				model(m, elem) {
+					if (elem[$](':checked')) {
+						if ("if" in m.changers) {
+							m.changerNamed('else-if').push(...m.changerNamed('if'));
+							delete m.changers.if;
+						} else {
+							m.changerNamed('else');
+						}
+					}
+				},
 			},{
 				type: 'checkbox',
 				text: 'Affect the entire remainder of the passage',
@@ -679,15 +827,29 @@
 			},{
 				type: 'buttons',
 				buttons: [
-					{ title:'Bold',                    html:'<b>B</B>',                       onClick: () => wrapSelection("''","''")},
-					{ title:'Italic',                  html:'<i>I</i>',                       onClick: () => wrapSelection("//","//")},
-					{ title:'Strikethrough',           html:'<s>S</s>',                       onClick: () => wrapSelection("~~","~~")},
-					{ title:'Superscript',             html:'<sup>Sup</sup>',                 onClick: () => wrapSelection("^^","^^")},
-					//{ title:'Text and background colour', html:`<i class='fa fa-adjust fa-palette'>`, onClick: () => switchPanel('textcolor')},
-					{ title:'Collapse whitespace',     html:'{}',                             onClick: () => wrapSelection("{","}")},
-					// Separate the basic markup buttons from those of the wizards
-					el('<span style="padding:0px 2px;color:hsla(0,0%,50%,0.5)">•</span>'),
+					{ title:'Bold',                    html:'<i class="fa fa-bold">',         onClick: () => wrapSelection("''","''")},
+					{ title:'Italic',                  html:'<i class="fa fa-italic">',       onClick: () => wrapSelection("//","//")},
+					{ title:'Strikethrough',           html:'<i class="fa fa-strikethrough">',onClick: () => wrapSelection("~~","~~")},
+					{ title:'Superscript',             html:'<i class="fa fa-superscript">',  onClick: () => wrapSelection("^^","^^")},
+					{ title:'Text and background colour', html:`<i class='fa fa-adjust fa-palette'>`, onClick: () => switchPanel('textcolor')},
 					{ title:'Special text style',      html:'Styles…',                        onClick: () => switchPanel('textstyle')},
+					el('<span class="harlowe-3-toolbarBullet">'),
+					{ title:'Heading',                 html:'<i class="fa fa-header">',           onClick: () => wrapSelection("\n#","")},
+					{ title:'Bulleted list item',      html:'<i class="fa fa-list-ul">',          onClick: () => wrapSelection("\n* ","")},
+					{ title:'Numbered list item',      html:'<i class="fa fa-list-ol">',          onClick: () => wrapSelection("\n0. ","")},
+					{ title:'Horizontal rule',         html:'<b>—</b>',                           onClick: () => wrapSelection("\n---\n","")},
+					el('<span class="harlowe-3-toolbarBullet">'),
+					{ title:'Collapse whitespace',     html:'<b>{}</b>',                          onClick: () => wrapSelection("{","}")},
+					{
+						title:'Verbatim (ignore all markup)',
+						html:'Vb',
+						onClick() {
+							const selection = cm.doc.getSelection();
+							const consecutiveGraves = (selection.match(/`+/g) || []).reduce((a,e) => Math.max(e.length, a), 0);
+							wrapSelection("`".repeat(consecutiveGraves+1), "`".repeat(consecutiveGraves+1));
+						},
+					},
+					el('<span class="harlowe-3-toolbarBullet">'),
 					{ title:'Passage link',            html:'Link…',                          onClick: () => switchPanel('passagelink')},
 					{
 						title: 'Only show a portion of text if a condition is met',
@@ -695,7 +857,8 @@
 						onClick: () => switchPanel('if')
 					},
 				],
-			}),
+			}
+		),
 	};
 	/*
 		Switch to the default panel at startup.

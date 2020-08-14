@@ -2,6 +2,10 @@
 	transition: max-height 0.8s;
 	overflow-y: auto
 }
+.harlowe-3-toolbarPanel code:not(:empty) {
+	font-size:1rem;
+	border: 1px dotted hsl(0, 0%, 50%);
+}
 
 .harlowe-3-stylePreview {
 	text-align: center;
@@ -28,12 +32,17 @@
 
 .harlowe-3-toolbarPanel > button {
 	border-radius: 0.8rem;
-	border: 1px solid hsla(0,0%,50%,0.5);
-	margin: 8px 4px;
+	margin: 8px 2px;
 	padding: 0px 4px;
 	height: 36px;
 	font-size: 1.2rem;
 	min-width: 32px;
+}
+
+.harlowe-3-toolbarPanel > button:not(:active) {
+	border: 1px solid hsla(0,0%,50%,0.5);
+	border-top: none;
+	border-left: none;
 }
 
 .harlowe-3-toolbarCheckboxRow {
@@ -79,7 +88,7 @@
 }
 
 .harlowe-3-radioRow {
-	margin-bottom: 8px;
+	margin: 8px 0px;
 	display: block;
 }
 
@@ -90,4 +99,16 @@
 .harlowe-3-toolbarPanel > * > .harlowe-3-radioRow {
 	border-bottom: 1px solid hsla(0,0%,50%,0.5);
 	padding-bottom: 8px;
+}
+
+.harlowe-3-resultCode {
+	max-width:60%;
+	text-overflow:ellipsis;
+}
+
+.harlowe-3-toolbarBullet {
+	padding:0px 2px;color:hsla(0,0%,50%,0.5);
+}
+.harlowe-3-toolbarBullet::before {
+	content:"•";
 }
