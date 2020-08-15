@@ -1,12 +1,11 @@
 .harlowe-3-toolbarPanel {
 	transition: max-height 0.8s;
-	overflow-y: auto
+	overflow-y: auto;
 }
 .harlowe-3-toolbarPanel code:not(:empty) {
 	font-size:1rem;
 	border: 1px dotted hsl(0, 0%, 50%);
 }
-
 .harlowe-3-stylePreview {
 	text-align: center;
 	user-select: none;
@@ -36,7 +35,7 @@
 	padding: 0px 4px;
 	height: 36px;
 	font-size: 1.2rem;
-	min-width: 32px;
+	min-width: 28px;
 }
 
 .harlowe-3-toolbarPanel > button:not(:active) {

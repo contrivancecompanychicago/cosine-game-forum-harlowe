@@ -2018,7 +2018,9 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		the characters that comprise the sizing string: `(box:"=XxxxXxxxXxxxX=", 0.25)`, for instance, makes it easier to discern that
 		the box is 13/15th of the available width.
 
-		You can use this with (change:) and `?passage` to affect the placement of the passage in the page.
+		You can use this with (change:) or (enchant:) and `?passage` to affect the placement of the passage in the page. (Note that doing so will change
+		the horizontal padding of the <tw-story> HTML element, which is normally 20%. It will become 0%, and the <tw-passage>'s new margins
+		will define its position on the screen.)
 
 		The resulting hook has the CSS attributes "display:block", "overflow-y:auto", and "box-sizing:content-box". Additionally,
 		the hook will have 'padding:1em', unless another padding value has been applied to it (such as via (css:)).

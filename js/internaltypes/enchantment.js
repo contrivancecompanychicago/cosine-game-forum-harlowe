@@ -125,6 +125,21 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 						*/
 						wrapping.data({enchantedProperties});
 					}
+					/*
+						Another CSS kludge for <tw-story>: normally, a <tw-passage>'s placement onscreen is controlled by
+						the <tw-story>'s horizontal padding. In order for (box:) to work with ?passage, that padding needs to be removed
+						and replaced with the <tw-passage>'s (box:) margins.
+					*/
+					else if (e.is('tw-passage')) {
+						if (cd.styles.some(style => "margin-left" in style || "margin" in style || "margin-right" in style)) {
+							const pl = 'padding-left', pr = 'padding-right';
+							Utils.storyElement.css(pl, '0px').css(pr, '0px');
+							/*
+								Leveraging the kludge above is very convenient.
+							*/
+							wrapping.data({enchantedProperties: [pl, pr]});
+						}
+					}
 				}
 
 				/*
@@ -178,7 +193,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 					Undo the preceding CSS "inherit" kludge for <tw-story>.
 				*/
 				const enchantedProperties = $(this).data('enchantedProperties');
-				if (enchantedProperties && c.has(Utils.storyElement)) {
+				if (enchantedProperties) {
 					Utils.storyElement.css(enchantedProperties.reduce((a,e)=>(a[e] = "",a),{}));
 				}
 			});

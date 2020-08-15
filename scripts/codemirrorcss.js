@@ -14,8 +14,8 @@ const {min} = Math,
 	colorRegExp  = /hsla\((\d+),\s*(\d+)%,\s*(\d+)%,\s*(\d+\.\d+)\)/g,
 
 	typeColours  = require('../js/utils/typecolours'),
-	toolbarStyles = execSync('sass ./scripts/toolbar.css --scss --style compressed'),
-	animations = execSync('sass ./scss/animations.scss --scss --style compressed');
+	toolbarStyles = (execSync('sass ./scripts/toolbar.css --scss --style compressed') + '').replace(/\ufeff/,''),
+	animations = (execSync('sass ./scss/animations.scss --scss --style compressed') + '').replace(/\ufeff/,'');
 
 const versionClass = 'cm-harlowe-3-';
 /*

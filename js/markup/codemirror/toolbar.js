@@ -162,7 +162,7 @@
 			if (type.endsWith("text")) {
 				ret = el('<' + (inline ? 'span' : 'div') + '>' + row.text + '</' + (inline ? 'span' : 'div') + '>');
 			}
-			if (type === "small") {
+			if (type === "notice") {
 				ret = el('<small style="display:block">' + row.text + '</small>');
 			}
 			/*
@@ -391,13 +391,13 @@
 					text: 'You may select any number of styles.',
 				},{
 					type: 'preview',
-					text: 'Example text sample',
+					text: 'Example text preview',
 					update(model, panel) {
 						panel.firstChild.setAttribute('style', model.changers['text-style'].map(name => previewStyles[parse(name)]).join(';') + ";position:relative;");
 					},
 				},{
 					type: 'small',
-					text: "This sample doesn't account for other modifications to this passage's text colour, font, or background, and is meant only for you to examine each of these styles.",
+					text: "This preview doesn't account for other modifications to this passage's text colour, font, or background, and is meant only for you to examine each of these styles.",
 				},{
 					type: 'checkboxes',
 					name: 'Font variants',
@@ -446,15 +446,99 @@
 					type: 'confirm',
 				});
 			})(),
+		borders: (() => {
+				function dropdownControls(orientation) {
+					return [
+						el(`<div><b>${orientation}</b></div>`),
+						{
+							type: 'inline-dropdown',
+							text: 'Style:',
+							options: ['none', '', 'dotted', 'dashed', 'solid', 'double', 'groove', 'ridge', 'inset', 'outset'],
+							model(m, el) {
+								m.changerNamed('b4r').push(stringify(el[$]('select').value || "none"));
+							},
+						},{
+							type: 'inline-number',
+							text: 'Size:',
+							value: 1,
+							min: 0.1,
+							max: 20,
+							step: 0.1,
+							model(m, el) {
+								m.changerNamed('b4r-size').push(el[$]('input').value);
+							},
+						},{
+							type: 'inline-text',
+							text: 'Colour:',
+						}
+					];
+				}
+
+				/*
+					Reduces a 4-value array of CSS properties as far as possible.
+				*/
+				function reduce4ValueProp(arr) {
+					if (arr.length === 4 && arr[3] === arr[1]) {
+						arr.pop();
+					}
+					if (arr.length === 3 && arr[2] === arr[0]) {
+						arr.pop();
+					}
+					if (arr.length === 2 && arr[1] === arr[0]) {
+						arr.pop();
+					}
+					return arr;
+				}
+
+				return folddownPanel({
+						type: 'preview',
+						text: 'Example border preview',
+						update(m, panel) {
+							panel.firstChild.setAttribute('style', `border-style:${
+								m.changers.b4r ? m.changers.b4r.map(parse).join(' ') + ";" : ''
+							}${
+								/*
+									Border-size is a multiplier on the default Harlowe border (2px).
+								*/
+								m.changers['b4r-size'] ? 'border-width:' + m.changers['b4r-size'].reduce((a,e) => `${a} ${e*2}px`,'') + ";" : ''
+							}${
+								m.changers['b4r-colour'] ? m.changers['b4r-colour'].join(' ') + ";" : ''
+							}`);
+						},
+					},
+					...dropdownControls("Top"), ...dropdownControls("Right"), ...dropdownControls("Bottom"), ...dropdownControls("Left"),
+					{
+						type: 'confirm',
+						model(m) {
+							m.valid = true;
+							/*
+								Quickly check that each of the to-be-constructed changers' values differ from the default,
+								and don't create them if not.
+							*/
+							[['b4r', e => parse(e) === "none"], ['b4r-size', e => +e === 1]].forEach(([name, test]) => {
+								m.changers[name] = reduce4ValueProp(m.changers[name]);
+								if (m.changers[name].every(test)) {
+									delete m.changers[name];
+									if (name === 'b4r') {
+										m.valid = false;
+									}
+								}
+							});
+						},
+					}
+				);
+			})(),
 		textcolor: folddownPanel({
 				type: 'text',
 				text: 'Select colours for this text.',
 			},{
 				type: 'preview',
-				text: 'Example text sample',
+				text: 'Example text preview',
 			},{
 				type: 'small',
-				text: "This sample doesn't account for other modifications to this passage's text colour, font, or background, and is meant only for you to examine each of these styles.",
+				text: "This preview doesn't account for other modifications to this passage's text colour, font, or background, and is meant only for you to examine each of these styles.",
+			},{
+				type:'confirm',
 			}),
 		/*
 			The [[Link]] button's panel. This configures the link syntax, plus a (t8n-depart:) and/or (t8n-arrive:) macro to attach to it.
@@ -822,7 +906,7 @@
 				type: 'confirm',
 			}),
 		default: folddownPanel({
-				type: 'small',
+				type: 'notice',
 				text: 'The current story format is <b>Harlowe 3.2.0</b>. Consult its <a href="https://twine2.neocities.org/" target="_blank" rel="noopener noreferrer">documentation</a>.'
 			},{
 				type: 'buttons',
@@ -832,7 +916,12 @@
 					{ title:'Strikethrough',           html:'<i class="fa fa-strikethrough">',onClick: () => wrapSelection("~~","~~")},
 					{ title:'Superscript',             html:'<i class="fa fa-superscript">',  onClick: () => wrapSelection("^^","^^")},
 					{ title:'Text and background colour', html:`<i class='fa fa-adjust fa-palette'>`, onClick: () => switchPanel('textcolor')},
-					{ title:'Special text style',      html:'Styles…',                        onClick: () => switchPanel('textstyle')},
+					{
+						title:'Borders',
+						html:'<span style="display:inline-block; height:16px; width:16px; border-style: dotted solid solid dotted; border-size:3px;"></span>',
+						onClick: () => switchPanel('borders'),
+					},
+					{ title:'Special text style',      html:'Styles…',                            onClick: () => switchPanel('textstyle')},
 					el('<span class="harlowe-3-toolbarBullet">'),
 					{ title:'Heading',                 html:'<i class="fa fa-header">',           onClick: () => wrapSelection("\n#","")},
 					{ title:'Bulleted list item',      html:'<i class="fa fa-list-ul">',          onClick: () => wrapSelection("\n* ","")},

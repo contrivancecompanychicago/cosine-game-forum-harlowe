@@ -108,24 +108,24 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 			} = displayOptions;
 
 		/*
-			If the story has a <tw-enchantment> around it (which could have been placed)
-			by an (enchant: "<tw-story>") macro), then disenchant.
-			Note that since old passages take awhile to transition out, disenchanting everything
-			else within them would be unwise.
+			Find each <tw-enchantment> with an "enchantedProperties" data name, which holds properties
+			tweaked on <tw-story> to avoid CSS clashes, and unset those properties.
 		*/
-		if (parent.is('tw-enchantment')) {
-			/*
-				But first, undo the (enchant:) "inherit" kludge for <tw-story>, described in Enchantment.
-			*/
-			const enchantedProperties = parent.data('enchantedProperties');
+		parent.findAndFilter('tw-enchantment').each((_,e) => {
+			e=$(e);
+			const enchantedProperties = e.data('enchantedProperties');
 			if (enchantedProperties) {
 				story.css(enchantedProperties.reduce((a,e)=>(a[e] = "",a),{}));
 			}
 			/*
-				That being done, continue as above.
+				If this is enchanting <tw-story>, then immediately disenchant.
+				Note that since old passages take awhile to transition out, disenchanting everything
+				else within them would be unwise.
 			*/
-			parent = story.unwrap().parent();
-		}
+			if (e === parent) {
+				parent = story.unwrap().parent();
+			}
+		});
 
 		/*
 			Early exit: the wrong passage name was supplied.
