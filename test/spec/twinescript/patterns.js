@@ -206,7 +206,7 @@ describe("patterns", function() {
 			expect("(set: $a to '1234567890' is a ...digit)(print:$a)").markupToPrint("true");
 			expect("(set: $a to '2\n' is a digit)(print:$a)").markupToPrint("false");
 		});
-		it("'uppercase' or 'lowercase' matches single cased characters", function() {
+		it("'uppercase', 'lowercase' or 'anycase' matches single cased characters", function() {
 			expect("(set: $a to '' is a uppercase)(print:$a)").markupToPrint("false");
 			expect("(set: $a to 'Ӝ' is a uppercase)(print:$a)").markupToPrint("true");
 			expect("(set: $a to 'ӝ' is a lowercase)(print:$a)").markupToPrint("true");
@@ -216,6 +216,10 @@ describe("patterns", function() {
 			expect("(set: $a to 'ӝear' is a ...lowercase)(print:$a)").markupToPrint("true");
 			expect("(set: $a to 'ӜEAr' is a ...uppercase)(print:$a)").markupToPrint("false");
 			expect("(set: $a to 'ӝeaR' is a ...lowercase)(print:$a)").markupToPrint("false");
+			expect("(set: $a to 'ӝ' is a anycase)(print:$a)").markupToPrint("true");
+			expect("(set: $a to 'Ӝ' is a anycase)(print:$a)").markupToPrint("true");
+			expect("(set: $a to 'Ӝӝӝ' is a ...anycase)(print:$a)").markupToPrint("true");
+			expect("(set: $a to '2' is a anycase)(print:$a)").markupToPrint("false");
 		});
 		it("'newline' matches newlines", function() {
 			expect("(set: $a to '\\r\\n' is a newline)(print:$a)").markupToPrint("true");
@@ -272,6 +276,7 @@ describe("patterns", function() {
 			basicTest("p");
 			it("matches strings matching the sequence", function() {
 				expect("(print: (p:'red','blue') matches 'redblue')").markupToPrint('true');
+				expect("(print: (p:'\\red*') matches '\\red*')").markupToPrint('true');
 				expect("(print: (p:'red','blue') does not match 'xredxblue' and it does not match 'xredbluex' and it does not match 'redbluexx')").markupToPrint('true');
 			});
 			it("works with the string datatypes", function() {
@@ -321,6 +326,26 @@ describe("patterns", function() {
 			it("when used in (p:), it matches an optional occurrence of the sequence", function() {
 				expect("(print: (p:'red',(p-opt:whitespace,'blue'),'green') matches 'red bluegreen' and 'redgreen')").markupToPrint('true');
 				expect("(print: (p:'red',(p-opt:whitespace,'blue'),'green') does not match 'red blackgreen')").markupToPrint('true');
+			});
+		});
+		describe("(p-ins:)", function() {
+			basicTest("p-ins", 'whitespace, "GrEEn"');
+			it("matches the sequence case-insensitively", function() {
+				expect("(print: (p-ins:'R','b') matches 'rb' and 'RB' and 'Rb')").markupToPrint('true');
+				expect("(print: (p-ins:'Put',whitespace,'it into the coffin.') matches 'PUT IT INTO THE COFFIN.')").markupToPrint('true');
+				expect("(print: (p-ins:'Ӝӝ') matches 'ӝӝ' and 'ӜӜ')").markupToPrint('true');
+				expect("(print: (p-ins:'r','b') does not match 'rR' and it does not match '')").markupToPrint('true');
+			});
+			it("works with the other pattern macros", function() {
+				expect("(print: (p-ins:(p-many:2,5,'ӝ')) matches 'ӝӝӜ' and 'ӜӜӜ')").markupToPrint('true');
+				expect("(print: (p-ins:(p-either:'A','ӝ')) matches 'Ӝ' and 'a')").markupToPrint('true');
+				expect("(print: (p-ins:(p-opt:'ӝ')) matches 'Ӝ' and '')").markupToPrint('true');
+			});
+			it("works with exotic datatypes", function() {
+				expect("(print: (p-ins:'A',digit,'E') matches 'a0e' and 'A4E')").markupToPrint('true');
+				expect("(print: (p-ins:'A',...alnum,'E') matches 'a0e' and 'A4E')").markupToPrint('true');
+				expect("(print: (p-ins:'A',uppercase,'E') matches 'abe' and 'ABE')").markupToPrint('true');
+				expect("(print: (p-ins:'A',lowercase,'E') matches 'aBe' and 'AbE')").markupToPrint('true');
 			});
 		});
 		/*describe("(p-not-before:)", function() {
@@ -477,6 +502,11 @@ describe("patterns", function() {
 			});
 			it("works with (p-many:)", function() {
 				expect("(set: (p: 'x', (p-many:alnum)-type _a, 'z') to 'xyyyz')_a").markupToPrint('yyy');
+			});
+			it("works with (p-ins:)", function() {
+				expect("(set: (p-ins: 'x', (p-opt: 'YYY')-type _a, 'z') to 'xyyyz')_a").markupToPrint('yyy');
+				expect("(set: (p-ins: 'x', (p-many: 'Y')-type _a, 'z') to 'xyyyz')_a").markupToPrint('yyy');
+				expect("(set: (p-ins: 'x', ...uppercase-type _a, 'z') to 'xyyyz')_a").markupToPrint('yyy');
 			});
 			it("works with nested typed vars", function() {
 				expect("(set: (p: 'x', (p:alnum-type _a,'yy')-type _b, 'z') to 'xyyyz')_a _b").markupToPrint('y yyy');

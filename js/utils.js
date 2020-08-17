@@ -3,6 +3,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 ($) => {
 
 	const
+		{fromCharCode} = String,
 		// These two are used by childrenProbablyInline (see below).
 		usuallyBlockElements = (
 			// The most common block HTML tags that would be used in passage source
@@ -23,13 +24,17 @@ define(['jquery', 'markup', 'utils/polyfills'],
 		// will break if it is ever detached from the DOM.
 		nonDetachableElements = ["audio",],
 
-		// These produce long RegExp strings of every lowercase/uppercase character, defined as "any character in
+		// These produce long RegExp strings of every lowercase/uppercase/caseSensitive character, defined as "any character in
 		// the Basic Multilingual Plane which doesn't round-trip through toUpperCase/toLowerCase".
 		// Note that this is computed based on the player's locale, which is coincidentally consistent with (uppercase:),
 		// (lowercase:), and the 'uppercase' and 'lowercase' datatypes.
-		[anyUppercase, anyLowercase] = ["toLowerCase","toUpperCase"].map(name => "[" + Array.from(Array(0xDFFF)).map((_,i) => i)
-			.filter(e => String.fromCharCode(e) !== String.fromCharCode(e)[name]())
-			.map((e,i,a) => (e === a[i-1]+1 && e === a[i+1]-1) ? '-' : String.fromCharCode(e)).join('').replace(/\-+/g, '-') + "]");
+		[anyUppercase, anyLowercase, anyCasedLetter] = [
+			e => fromCharCode(e) !== fromCharCode(e).toLowerCase(),
+			e => fromCharCode(e) !== fromCharCode(e).toUpperCase(),
+			e => fromCharCode(e).toLowerCase() !== fromCharCode(e).toUpperCase(),
+		].map(filter => "[" + Array.from(Array(0xDFFF)).map((_,i) => i)
+			.filter(filter)
+			.map((e,i,a) => (e === a[i-1]+1 && e === a[i+1]-1) ? '-' : fromCharCode(e)).join('').replace(/\-+/g, '-') + "]");
 
 	/*
 		Hard-coded default time for transitions, in milliseconds.
@@ -267,7 +272,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 		// This handles alphanumeric ranges not covered by \w. Doesn't include hyphens or underscores.
 		anyRealLetter:  "[\\dA-Za-z\\u00c0-\\u00de\\u00df-\\u00ff\\u0150\\u0170\\u0151\\u0171\\uD800-\\uDFFF]",
 
-		anyUppercase, anyLowercase,
+		anyUppercase, anyLowercase, anyCasedLetter,
 
 		/*
 			HTML utilities

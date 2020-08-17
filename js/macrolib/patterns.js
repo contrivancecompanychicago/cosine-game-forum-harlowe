@@ -1,6 +1,6 @@
 "use strict";
 define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype', 'datatypes/typedvar', 'internaltypes/twineerror'],
-($, Macros, {anyRealLetter, anyUppercase, anyLowercase, realWhitespace, impossible}, {objectName, toSource}, Datatype, TypedVar, TwineError) => {
+($, Macros, {anyRealLetter, anyUppercase, anyLowercase, anyCasedLetter, realWhitespace, impossible}, {objectName, toSource}, Datatype, TypedVar, TwineError) => {
 
 	const {rest, either, nonNegativeInteger} = Macros.TypeSignature;
 	const {assign, create} = Object;
@@ -12,12 +12,15 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 		The base function for constructing Pattern datatypes, using the Pattern constructor's args, and a function to make the
 		internal RegExp using the args (which the function preprocesses to ensure they're all capable of being turned into RegExps).
 	*/
-	const createPattern = ({name, fullArgs, args, makeRegExpString, canContainTypedVars = true, canBeUsedAlone = true}) => {
-		args = args || fullArgs;
+	const createPattern = ({name, fullArgs, args, makeRegExpString, insensitive=false, canContainTypedVars = true, canBeUsedAlone = true}) => {
+		/*
+			"fullArgs" includes non-pattern arguments like (p-many:)'s min and max. args, which is optionally provided, does not.
+		*/
+		const patternArgs = args || fullArgs;
 		/*
 			Convert the args into their regexp string representations, if that's possible.
 		*/
-		const compiledArgs = args.map(function mapper(pattern) {
+		const compiledArgs = patternArgs.map(function mapper(pattern) {
 			/*
 				If this pattern has a TypedVar in it (i.e. it's a destructuring/capture pattern) then
 				convert it into a RegExp capture, so that RegExp.exec() can capture the matched substring.
@@ -36,7 +39,11 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 					or a String-related datatype.
 				*/
 				if (pattern.regExp) {
-					return pattern.regExp;
+					/*
+						If this is a recompilation of a sensitive pattern into an insensitive one, then convert this argument
+						into an insensitive one, too. (Note that the insensitive() call won't recompile an already-insensitive pattern.)
+					*/
+					return insensitive ? pattern.insensitive().regExp : pattern.regExp;
 				}
 				const pName = pattern.name;
 				/*
@@ -54,10 +61,13 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 					return realWhitespace + rest;
 				}
 				if (pName === "uppercase") {
-					return anyUppercase + rest;
+					/*
+						(p-ins:) forces both of these case-sensitive datatypes to degrade to just anycase!! Yeah!
+					*/
+					return (insensitive ? anyCasedLetter : anyUppercase) + rest;
 				}
 				if (pName === "lowercase") {
-					return anyLowercase + rest;
+					return (insensitive ? anyCasedLetter : anyLowercase) + rest;
 				}
 				if (pName === "digit") {
 					return "\\d" + rest;
@@ -85,7 +95,14 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 				characters escaped in it.
 			*/
 			if (typeof pattern === "string") {
-				return pattern.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
+				pattern = pattern.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
+				/*
+					This is where (p-ins:) is implemented - this line, which turns every uppercase or lowercase character intoa RegExp character class for both.
+				*/
+				if (insensitive) {
+					pattern = pattern.replace(RegExp("(" + anyUppercase + "|" + anyLowercase + ")", 'g'), a => "[" + a.toUpperCase() + a.toLowerCase() + "]");
+				}
+				return pattern;
 			}
 			/*
 				Each Pattern macro has a type signature of either(String,Datatype) in some configuration, so this really should be impossible.
@@ -105,11 +122,21 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 		const ret = assign(create(Datatype), {
 			name, regExp,
 			/*
+				The (p-ins:) macro performs a somewhat drastic transformation on its inputs: all of them are converted to
+				case-insensitive versions. This is done using the following brute-force method, whereby a pattern recompiles itself
+				and all of its arguments (if necessary).
+			*/
+			insensitive: () => insensitive ? ret : createPattern({
+				name, fullArgs,
+				args: patternArgs.map(p => Datatype.isPrototypeOf(p) && typeof p.insensitive === "function" ? p.insensitive() : p),
+				makeRegExpString, insensitive:true, canContainTypedVars, canBeUsedAlone
+			}),
+			/*
 				Recursive method, used only by destructure(), which retrieves every TypedVar (and thus each RegExp capture)
 				in this pattern, including inside sub-patterns.
 			*/
 			typedVars() {
-				return args.reduce((a,pattern) => {
+				return patternArgs.reduce((a,pattern) => {
 					/*
 						It's important that captures (TypedVars) are found in the exact order that they're
 						returned by RegExp#exec(). For something like /(?:(a)(b)|(c)|(?:(d(e))|(f)))/,
@@ -117,7 +144,21 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 						immediately after their containing captures.
 					*/
 					if (TypedVar.isPrototypeOf(pattern)) {
-						a = a.concat(pattern);
+						a = a.concat(
+							/*
+								You may notice a conundrum inherent in (p-ins:) combining with typed vars -
+								if a var is bound to, say, uppercase-type, but it's inside a (p-ins:), is it actually
+								uppercase-type? The intuitive solution is simply to convert all of the TypedVars inside
+								an insensitive pattern into versions whose type is wrapped in (p-ins:).
+							*/
+							insensitive ? TypedVar.create(
+								createPattern({
+									name:"p-ins", fullArgs:[pattern.datatype],
+									insensitive: true, makeRegExpString: subargs => subargs.join('')}),
+								pattern.varRef
+							) :
+							pattern
+						);
 						pattern = pattern.datatype;
 					}
 					if (Datatype.isPrototypeOf(pattern) && typeof pattern.typedVars === "function") {
@@ -194,7 +235,8 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			(p: ...String or Datatype) -> Datatype
 			Also known as: (pattern:)
 
-			Creates a string pattern, a special kind of datatype that can match complex string structures.
+			Creates a string pattern, a special kind of datatype that can match complex string structures. The pattern matches the entire sequence of strings or datatypes
+			given, in order.
 
 			Example usage:
 			* `"Rentar Ihrno" matches (p:(p-many:1,6,alnum),whitespace,(p-many:1,6,alnum))` checks if the string contains 1-6 alphanumeric letters,
@@ -292,7 +334,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			is rather counterintuitive) or if it should be set to an empty string (which contradicts its stated `digit-type` restriction anyway).
 
 			See also:
-			(p:), (p-opt:), (p-many:), (p-not-before:)
+			(p:), (p-ins:), (p-opt:), (p-many:)
 
 			Added in: 3.2.0.
 			#patterns 2
@@ -325,7 +367,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			is rather counterintuitive) or if it should be set to an empty string (which contradicts its stated `digit-type` restriction anyway).
 
 			See also:
-			(p:), (p-either:), (p-many:), (p-not-before:)
+			(p:), (p-ins:), (p-either:), (p-many:)
 
 			Added in: 3.2.0.
 			#patterns 3
@@ -375,7 +417,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			(which contradicts its stated `digit-type` restriction anyway).
 
 			See also:
-			(p:), (p-either:), (p-opt:), (p-many:), (p-not-before:)
+			(p:), (p-ins:), (p-either:), (p-opt:), (p-many:)
 
 			Added in: 3.2.0.
 			#patterns 4
@@ -412,5 +454,42 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 				});
 			},
 		[rest(either(nonNegativeInteger, String, Datatype, TypedVar))])
+		/*
+			(p-ins:)
+			Also known as: (p-insensitive:), (pattern-ins:), (pattern-insensitive:)
+
+			Creates a string pattern that matches the sequence of strings or datatypes given, case-insensitively.
+
+			Example usage:
+			* `"Hocus pocus" matches (p-ins:"hocus", (p-opt:" "), "pocus")` checks if the magic words match the pattern, regardless of any letter's capitalisation.
+			* `(set: (p:(p-ins:"SCP-"), ...digit-type _codeNum) to "Scp-991")` uses destructuring to extract "991" from the right-side string, checking if it matched
+			the given prefix case-insensitively first.
+
+			Details:
+			This is part of a suite of string pattern macros. Consult the (p:) article to learn more about string patterns, special user-created datatypes
+			that can match very precise kinds of strings.
+
+			When other patterns are given to this, they are treated as if they are case-insensitive. This means that, if `(p:"Opus ", (p-either:digit,"Magnum"))` is stored in the variable
+			$opus, then `(p-ins: $opus)` will create a datatype that can match "opus 1", "OPUS 2", "Opus Magnum" and so forth, even though $opus can't.
+
+			When the two case-sensitive datatypes `uppercase` and `lowercase` are given to this, they are treated as if they are `anycase`.
+
+			When typed variables are used in string patterns, such as in `(p-ins: "Side ", (p-either:"A","B")-type _letter)`, the variable's type may sometimes appear to contradict the
+			case-insensitivity imposed by an enclosing (p-ins:) - if that pattern is matched with "side a", then can "a" be stored in a `(p-either:"A","B")-type` variable?.
+			Harlowe resolves this as follows: when a typed variable is placed inside (p-ins:), its type is wrapped in a (p-ins:) itself. So, _letter in the preceding example
+			is bound to `(p-ins: (p-either:"A","B"))-type` data, instead of just `(p-either:"A","B")-type` data.
+
+			See also:
+			(p:), (p-opt:), (p-many:), (p-either:)
+
+			Added in: 3.2.0.
+			#patterns 5
+		*/
+		(["p-ins","pattern-ins","p-insensitive","pattern-insensitive"],
+			(_, ...fullArgs) => createPattern({
+				name:"p-ins", fullArgs,
+				insensitive: true, makeRegExpString: subargs => subargs.join(''),
+			}),
+			PatternSignature)
 		;
 });

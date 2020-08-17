@@ -974,7 +974,7 @@
 
 		// Data types
 		datatype: either(
-			"alnum", "alphanumeric", "any", "array", "bool(?:ean)?", "changer", "colou?r", "const",
+			"alnum", "alphanumeric", "any(?:case)?", "array", "bool(?:ean)?", "changer", "colou?r", "const",
 			"command", "dm", "data" + either("map","type","set"), "ds", "digit",
 			"gradient", "empty", "even", "int" + notBefore('o') + "(?:eger)?", "lambda", "lowercase", "macro", "newline",
 			"num(?:ber)?", "odd", "str(?:ing)?", "uppercase", "whitespace"

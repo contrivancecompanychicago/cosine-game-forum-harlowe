@@ -8,7 +8,7 @@ define([
 	'datatypes/lambda',
 	'datatypes/custommacro',
 	'internaltypes/twineerror',
-], ({realWhitespace, anyRealLetter}, {objectName}, Changer, Colour, Gradient, Lambda, CustomMacro, TwineError) => {
+], ({realWhitespace, anyRealLetter, anyCasedLetter}, {objectName}, Changer, Colour, Gradient, Lambda, CustomMacro, TwineError) => {
 	const {assign,seal,keys} = Object;
 	const {floor,abs} = Math;
 	/*
@@ -57,6 +57,7 @@ define([
 		| `...lowercase` | This is the above type combined with the spread `...` operator. Matches empty strings, or strings containing only lowercase characters.
 		| `uppercase` | Only matches a single uppercase character. Uppercase characters are characters that change when put through (lowercase:).
 		| `...uppercase` | This is the above type combined with the spread `...` operator. Matches empty strings, or strings containing only uppercase characters.
+		| `anycase` | This matches any character which is case-sensitive - that is, where its (lowercase:) form doesn't match its (uppercase:) form.
 		| `alphanumeric`, `alnum` | Only matches a single alphanumeric character (letters and numbers).
 		| `...alnum`, `...alphanumeric` | This is the above type combined with the spread `...` operator. Matches empty strings, or strings containing only alphanumeric characters.
 		| `digit` | Only matches a string consisting of exactly one of the characters '0', '1', '2', '3', '4', '5', '6', '7', '8', and '9'.
@@ -220,6 +221,7 @@ define([
 		whitespace:   (obj, rest) => typeof obj === "string" && !!obj.match("^" + realWhitespace + (rest ? '*' : '') + "$"),
 		digit:        (obj, rest) => typeof obj === "string" && !!obj.match("^\\d" + (rest ? '*' : '') + "$"),
 		alnum:        (obj, rest) => typeof obj === "string" && !!obj.match("^" + anyRealLetter + (rest ? '*' : '') + "$"),
+		anycase:      (obj, rest) => typeof obj === "string" && !!obj.match("^" + anyCasedLetter + (rest ? '*' : '') + "$"),
 		newline:      (obj, rest) => typeof obj === "string" && !!obj.match("^(?:\\n|\\r|\\r\\n)" + (rest ? '*' : '') + "$"),
 		any:      () => true,
 		/*

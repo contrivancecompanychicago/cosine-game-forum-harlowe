@@ -122,7 +122,7 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 				Note that since old passages take awhile to transition out, disenchanting everything
 				else within them would be unwise.
 			*/
-			if (e === parent) {
+			if (e[0] === parent[0]) {
 				parent = story.unwrap().parent();
 			}
 		});

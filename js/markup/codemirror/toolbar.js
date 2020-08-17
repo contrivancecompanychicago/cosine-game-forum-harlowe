@@ -262,7 +262,7 @@
 							subrow.model = (m, el) => {
 								return subrowEl[$]('input:checked')
 								/*
-									TBW
+									Don't run the subrow's model unless the parent row's radio button is checked.
 								*/
 								&& (!nested || panelElem[$](':scope > input:checked')) ? model(m, el) : m;
 							};

@@ -2,7 +2,10 @@
 <meta charset="utf-8">
 <title>Jasmine Spec Runner v2.4.1</title>
 <link rel="stylesheet" href="../node_modules/jasmine-core/lib/jasmine-core/jasmine.css">
-<style>.jasmine-disabled, .jasmine-stack-trace { display:none; } .jasmine-open { z-index:2; } .jasmine_html-reporter { margin-right:0px; } </style>
+<style>
+.jasmine-disabled, .jasmine-stack-trace { display:none; } .jasmine-open { z-index:2; } .jasmine_html-reporter { margin-right:0px; }
+div:not(.jasmine-failure-list) + tw-story { display:none; }
+</style>
 <script src="../node_modules/es6-shim/es6-shim.min.js"></script>
 <script src="../node_modules/requirejs/require.js"></script>
 <script>
@@ -139,10 +142,7 @@ afterAll(function() {
 	debugElement.appendTo(document.body);
 });
 
-beforeEach(function() {
-	if (window.$ && !debugElement) {
-		debugElement = debugElement || $('tw-debugger').detach();
-	}
+var jasmineMatcher = (function() {
 	function hexToRGBA(str) {
 		if (str[0] !== "#") {
 			return "";
@@ -152,7 +152,7 @@ beforeEach(function() {
 			+ parseInt(str.slice(3,5), 16) + ",\\s*"
 			+ parseInt(str.slice(5,7), 16) + "\\s*(?:,\\s*1\\s*)?\\)";
 	}
-	jasmine.addMatchers({
+	return ({
 		markupToBecome: Object.bind(Object,{
 			compare: function(a,e) {
 				var result = (runPassage(a).html() || '');
@@ -298,6 +298,12 @@ beforeEach(function() {
 			}
 		}),
 	});
+})();
+beforeEach(function() {
+	if (window.$ && !debugElement) {
+		debugElement = debugElement || $('tw-debugger').detach();
+	}
+	jasmine.addMatchers(jasmineMatcher);
 });
 beforeEach(function f(done) {
 	if (window.$ && window.clearState) {
@@ -308,9 +314,6 @@ beforeEach(function f(done) {
 		return;
 	}
 	setTimeout(f.bind(0, done), 1);
-});
-afterAll(function() {
-	$('tw-story').removeAttr('style');
 });
 </script>
 <body>
@@ -373,6 +376,6 @@ afterAll(function() {
 
 <script src="spec/browser/sessions.js"></script>
 
-<tw-story style='visibility:hidden'></tw-story>
+<tw-story></tw-story>
 <tw-storydata options="debug" ifid="107370AE-1D5A-4A33-A52C-D1180BA69750" startnode="1">
 <tw-passagedata pid="1" name="1">

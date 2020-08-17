@@ -93,6 +93,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
    * `digit`, which matches strings that only contain digits.
    * `whitespace`, which matches strings that only contain whitespace.
    * `lowercase` and `uppercase`, which match single lowercase or uppercase characters.
+   * `anycase`, which matches any character which has different lowercase or uppercase forms.
    * `newline`, which matches only a newline character.
    * `empty`, which matches only empty arrays, strings, datamaps and datasets.
  * Added a `transparent` built-in colour value.
@@ -123,6 +124,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
    * `(p-either:)` takes one or more strings or string datatypes, and produces a datatype that only matches strings that match any one of the values.
    * `(p-opt:)` is a variation of `(p:)` that optionally matches the sequence - it matches strings that match the sequence, or are empty.
    * `(p-many:)` is a variation of `(p:)` that matches strings that match the sequence many times. You can specify the minimum and/or maximum amount of times the string can match the sequence.
+   * `(p-ins:)` is a case-insensitive version of `(p:)`, which also treats any sub-patterns given to it as case-insensitive.
  * You can also use the preceding macros as de-structuring patterns by using them with the `-type` syntax. For instance, `(set: (p: (p-opt:"Dr. "), (p: str-type _firstName, whitespace, str-type _lastName)-type _fullName) to "Dr. Iris Cornea")` creates three variables, _firstName, _lastName and _fullName, from a single string.
  * Added `(datatype:)` and `(datapattern)` macros. `(datatype:)` produces the datatype that matches the given value, if it exists. `(datapattern)` is a variation that, when given arrays or datamaps, produces a data pattern that can be used with the `matches` operator, among other things, to check if the structure of one value matches the other. `(datapattern: (passage:))` produces `(dm:"name",str,"source",str,"tags",(a:str))`.
 
