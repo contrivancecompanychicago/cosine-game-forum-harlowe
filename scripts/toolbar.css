@@ -63,6 +63,14 @@
 	padding-bottom: 8px;
 	margin-bottom: 8px
 }
+.harlowe-3-builtinSwatch span {
+	width: 16px;
+	height: 24px;
+	display:inline-block;
+	cursor:pointer;
+	border-bottom: 1px solid hsla(0,0%,50%,0.5);
+	border-right: 1px solid hsla(0,0%,50%,0.5);
+}
 
 .harlowe-3-labeledInput {
 	position: relative;

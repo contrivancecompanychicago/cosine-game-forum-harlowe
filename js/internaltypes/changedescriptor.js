@@ -24,6 +24,9 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		// {String} innerSource       Used by (link:), this stores the original source if some kind
 		//                            of "trigger element" needs to be rendered in its place initially.
 		innerSource:       "",
+
+		// {Array} appendSource      Used by (append-with:), these are {source,append} objects to apply to the source at render time.
+		appendSource:      null,
 		
 		// {Boolean} enabled          Whether or not this code is enabled. (Disabled code won't be used until something enables it).
 		enabled:          true,
@@ -92,7 +95,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		*/
 		summary() {
 			return [
-				"source", "innerSource", "enabled", "verbatim", "target", "append", "newTargets",
+				"source", "innerSource", "appendSource", "enabled", "verbatim", "target", "append", "newTargets",
 				"transition", "transitionTime", "transitionDeferred", "transitionDelay",
 				"transitionSkip", "transitionOrigin",
 			]
@@ -250,7 +253,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		*/
 		render() {
 			const
-				{source, transition, transitionTime, transitionDeferred, enabled, data, section, newTargets} = this;
+				{source, transition, transitionTime, transitionDeferred, enabled, data, section, newTargets, appendSource} = this;
 			let
 				{target, target:oldTarget, append} = this;
 			
@@ -440,7 +443,26 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 			
 			dom = $(source &&
 				(this.verbatim ? document.createTextNode(source) : $.parseHTML(exec(source), document, true)));
-			
+
+			/*
+				If the source has any addenda, compile that separately and insert it into the DOM structure.
+				Note that by compiling it separately, partial structures in one addenda can't contaminate the original source.
+			*/
+			if (Array.isArray(appendSource)) {
+				appendSource.forEach(({source, append}) => {
+					const addenda = $(this.verbatim ? document.createTextNode(source) : $.parseHTML(exec(source), document, true));
+					if (append === "append") {
+						dom = dom.add(addenda);
+					}
+					else if (append === "prepend") {
+						dom = addenda.add(dom);
+					}
+					else {
+						dom = addenda;
+					}
+				});
+			}
+
 			/*
 				Now, insert the DOM structure into the target element.
 				

@@ -331,4 +331,38 @@ describe("revision macros", function() {
 		var p = runPassage("12$s[0]");
 		expect(p.text()).toBe('1002');
 	});
+	['append','prepend'].forEach(function(name,index) {
+		describe("the (" + name + "-with:) macro", function() {
+			it("produces a changer that " + name + "s its string to the source of the hook", function() {
+				expect("(" + name + "-with:'hehe')[he]").markupToPrint('hehehe');
+				expect("(" + name + "-with:'foo')[bar]").markupToPrint(index ? 'foobar' : 'barfoo');
+				expect("(print:(" + name + "-with:'hehe') is a changer)").markupToPrint('true');
+			});
+			it("won't cause structures to cross boundaries between the string and the source", function() {
+				expect(runPassage("(" + name + "-with:'a//b')[c//d]").find('i').length).toBe(0);
+			});
+			xit("works with (link:)", function() {
+				var p = runPassage("(" + name + "-with:'foo')+(link:'baz')[bar]");
+				expect(p.text()).toBe('baz');
+				p.find('tw-link').click();
+				expect(p.text()).toBe(index ? 'foobar' : 'barfoo');
+			});
+		});
+		it("doesn't work with (enchant:)", function() {
+			expect("(enchant:'hoho',(" + name + "-with:'haha'))hoho").markupToError();
+		});
+	});
+	describe("the (replace-with:) macro", function() {
+		it("produces a changer that replaces its string with the source of the hook", function() {
+			expect("(replace-with:'hehe')[he]").markupToPrint('hehe');
+			expect("(replace-with:'foo')[bar]").markupToPrint('foo');
+			expect("(print:(replace-with:'hehe') is a changer)").markupToPrint('true');
+		});
+		it("when combined, the final (replace-with:) takes precedence", function() {
+			expect("(replace-with:'haha')+(replace-with:'hehe')[he]").markupToPrint('hehe');
+		});
+		it("doesn't work with (enchant:)", function() {
+			expect("(enchant:'hoho',(replace-with:'haha'))hoho").markupToError();
+		});
+	});
 });

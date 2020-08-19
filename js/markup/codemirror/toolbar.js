@@ -97,6 +97,29 @@
 		instant:     rev => "appear step-" + (rev ? "end" : "start"),
 	};
 
+	const builtinColorNames = {
+		"#e61919": "red",
+		"#e68019": "orange",
+		"#e5e619": "yellow",
+		"#80e619": "lime",
+		"#19e619": "green",
+		"#19e5e6": "cyan",
+		"#197fe6": "blue",
+		"#1919e6": "navy",
+		"#7f19e6": "purple",
+		"#e619e5": "magenta",
+		"#ffffff": "white",
+		"#000000": "black",
+		"#888888": "grey",
+	};
+
+	function reduceHTMLColour(colour) {
+		colour = colour.toLowerCase();
+		return colour in builtinColorNames
+			? builtinColorNames[colour]
+			: (colour[1] === colour[2] && colour[3] === colour[4] && colour[5] === colour[6]) ? "#" + colour[1] + colour[3] + colour[5] : colour;
+	}
+
 	/*
 		The constructor for the folddownPanels. This accepts a number of panel rows (as an array of row-describing objects)
 		and returns a <div> with the compiled UI elements.
@@ -231,6 +254,21 @@
 					+ row.text
 					+ '<input style="" type=number'
 					+ ' min=' + row.min + ' max=' + row.max + ' value=' + row.value + (row.step ? ' step=' + row.step : '') + '></input></' + (inline ? 'span' : 'div') + '>');
+				ret[$]('input').addEventListener('change', update);
+			}
+			if (type.endsWith("colour")) {
+				ret = el('<' + (inline ? 'span' : 'div') + ' class="harlowe-3-labeledInput">'
+					+ row.text
+					+ '<input style="width:64px" type=color value="' + row.value
+					+ '"></input><span class=harlowe-3-builtinSwatch>'
+					+ Object.keys(builtinColorNames).map(builtIn =>
+						'<span style="background-color:' + builtIn + '"></span>'
+					).join('')
+					+ '</span></' + (inline ? 'span' : 'div') + '>');
+				ret[$]('.harlowe-3-builtinSwatch').addEventListener('click', ({target}) => {
+					ret[$]('input').value = target.getAttribute('style').slice(-7);
+					update();
+				});
 				ret[$]('input').addEventListener('change', update);
 			}
 			/*
@@ -468,8 +506,12 @@
 								m.changerNamed('b4r-size').push(el[$]('input').value);
 							},
 						},{
-							type: 'inline-text',
+							type: 'inline-colour',
 							text: 'Colour:',
+							value: "#ffffff",
+							model(m, el) {
+								m.changerNamed('b4r-colour').push(el[$]('input').value);
+							}
 						}
 					];
 				}
@@ -502,7 +544,7 @@
 								*/
 								m.changers['b4r-size'] ? 'border-width:' + m.changers['b4r-size'].reduce((a,e) => `${a} ${e*2}px`,'') + ";" : ''
 							}${
-								m.changers['b4r-colour'] ? m.changers['b4r-colour'].join(' ') + ";" : ''
+								m.changers['b4r-colour'] ? 'border-color:' + m.changers['b4r-colour'].join(' ') + ";" : ''
 							}`);
 						},
 					},
@@ -515,8 +557,11 @@
 								Quickly check that each of the to-be-constructed changers' values differ from the default,
 								and don't create them if not.
 							*/
-							[['b4r', e => parse(e) === "none"], ['b4r-size', e => +e === 1]].forEach(([name, test]) => {
+							[['b4r', e => parse(e) === "none"], ['b4r-size', e => +e === 1], ['b4r-colour', e => e.toLowerCase() === "#ffffff"]].forEach(([name, test]) => {
 								m.changers[name] = reduce4ValueProp(m.changers[name]);
+								if (name === 'b4r-colour') {
+									m.changers[name] = m.changers[name].map(reduceHTMLColour);
+								}
 								if (m.changers[name].every(test)) {
 									delete m.changers[name];
 									if (name === 'b4r') {

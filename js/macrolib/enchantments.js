@@ -125,10 +125,10 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'passages', 'macros
 				*/
 				if (ChangerCommand.isPrototypeOf(changer)) {
 					const summary = changer.summary();
-					if (summary.includes('newTargets') || summary.includes('target')) {
+					if (summary.includes('newTargets') || summary.includes('target') || summary.includes('appendSource')) {
 						return TwineError.create(
 							"datatype",
-							"The changer given to (" + name + ":) can't include a revision changer like (replace:) or (append:)."
+							"The changer given to (" + name + ":) can't include a revision changer like (replace:), (append:) or (append-with:)."
 						);
 					}
 				}
@@ -224,9 +224,39 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'passages', 'macros
 				(replace:), (append:), (prepend:) or other macros on it, consider using the (rerun:) macro instead.
 
 				See also:
-				(append:), (prepend:), (show:), (rerun:), (more:)
+				(append:), (prepend:), (show:), (rerun:), (more:), (replace-with:)
 
 				Added in: 1.0.0
+				#revision
+			*/
+			/*d:
+				(replace-with: String) -> Changer
+
+				A counterpart to (append-with:) and (prepend-with:), this replaces the entirety of the attached hook with the given string of prose.
+
+				Example usage:
+				* `(set: $vitalInfoChanger to it + (replace-with:"**This sentence may contain mature content, so we've excised it from your mind.**"))` causes
+				the changer in $vitalInfoChanger, which may have been used previously in the story, to replace the hooks' text with a censorship notification.
+
+				Rationale:
+				This changer macro may seem unintuitive and without obvious purpose - what is the point of a changer that changes a hook so drastically that
+				nothing is left of its original text, and the player never sees it? However, there are some minor cases where such an effect is helpful: being able to
+				pre-fill an empty hook with a given line of text not only saves you from having to write out that text multiple times (similar to saving that text
+				in a variable by itself and using (print:) or a bare variable to display it), but also allows additional changers to be combined with it, and
+				for (replace:), (append:) and (prepend:) macros to modify it afterward, by targeting the specific name of the attached hook. And, you can, at a
+				later point in a story, add this to an existing changer to cause hooks it formerly changed to display different text content.
+
+				Details:
+				This changer, when attached to a hook, will never allow the prose it replaces to be run - `(replace-with:"")[(set:$x to 1)]` will not allow
+				the enclosed (set:) macro to be run before it is replaced.
+
+				This macro can't be used with (enchant:) or (change:) - attempting to do so will produce an error. You'll want to instead use (replace:), which
+				accomplishes the same effect.
+
+				See also:
+				(append:), (prepend:), (append-with:), (prepend-with:), (show:)
+
+				Added in: 3.2.0
 				#revision
 			*/
 			"replace",
@@ -246,9 +276,46 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'passages', 'macros
 				text or amending it with an extra sentence or word, changing or revealing a deeper meaning.
 
 				See also:
-				(replace:), (prepend:), (show:), (rerun:), (more:)
+				(replace:), (prepend:), (show:), (rerun:), (more:), (append-with:)
 
 				Added in: 1.0.0
+				#revision
+			*/
+			/*d:
+				(append-with: String) -> Changer
+
+				Creates a changer that, when attached to a hook, adds the given string of code to the end of the hook.
+
+				Example usage:
+				* `(set: $cutie to (append-with:"~♡")+(color:red+white))` creates a changer that causes any attached hook to become pink and have `~♡` at the end.
+				* `(set: $mattias to (prepend-with:'MATTIAS:"')+(append-with:'"'))` creates a changer that causes any attached hook to be surrounded with `MATTIAS:"`
+				and `"`, which would be useful for character dialogue.
+
+				Rationale:
+				Some lines of prose you write in your story will tend to have identical endings, be they punctuation, dialogue tags, or otherwise,
+				which you may tire of repetitively writing. This macro and (prepend-with:) allow you to automatically attach text without
+				aving to manually write it in full - simply save this changer to a variable, and attach it to the hook. While, it should
+				be noted, you can use (append:) inside of a "footer" tagged passage to also automate this hook modification, this can, at
+				times, be more convenient than having to modify a separate passage. Also, this macro is especially useful
+				when combined with other changers, such as (text-style:), (font:) or (text-colour:).
+
+				Details:
+				The way this changer amends the text of the hook is similar to how (append:) amends hooks. To be precise, the full text of the hook is
+				rendered before it is amended to with these changers. This means that, among other things, code structures can't cross the boundary between
+				the appended text and the hook - `(append-with:"</b>")[<b>Bold]` will NOT work as it seems - the `<b>` tag will not be matched with the `</b>`
+				in the appended text.
+
+				Multiple (append-with:) and (prepend-with:) changers can be added together. When this combined changer is attached to a hook,
+				each constituent changer is applied in left-to-right order. So, `(append-with:" (5 Favs)")+(append-with:" (2 Reblogs)")[my teeth ate themselves]`
+				will result in the hook reading `my teeth ate themselves (5 Favs) (2 Reblogs)`.
+
+				This macro can't be used with (enchant:) or (change:) - attempting to do so will produce an error. You'll want to instead use (append:) or (prepend:),
+				which accomplish the same effect of amending a hook or text occurrence remotely.
+
+				See also:
+				(append:), (replace:), (prepend-with:), (replace-with:), (show:)
+
+				Added in: 3.2.0
 				#revision
 			*/
 			"append",
@@ -269,9 +336,44 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'passages', 'macros
 				preceding sentences or words to a text to change or reveal a deeper meaning.
 
 				See also:
-				(replace:), (append:), (show:), (rerun:), (more:)
+				(replace:), (append:), (show:), (rerun:), (more:), (prepend-with:)
 
 				Added in: 1.0.0
+				#revision
+			*/
+			/*d:
+				(prepend-with: String) -> Changer
+
+				Creates a changer that, when attached to a hook, adds the given string of code to the start of the hook.
+
+				Example usage:
+				* `(set: $commandPrompt to (prepend-with:">")+(font:"Courier"))`
+
+				Rationale:
+				Some lines of prose you write in your story will tend to have identical beginnings, be they punctuation, dialogue tags, or otherwise,
+				which you may tire of repetitively writing. This macro and (prepend-with:) allow you to automatically attach text without
+				aving to manually write it in full - simply save this changer to a variable, and attach it to the hook. While, it should
+				be noted, you can use (prepend:) inside of a "footer" tagged passage to also automate this hook modification, this can, at
+				times, be more convenient than having to modify a separate passage. Also, this macro is especially useful
+				when combined with other changers, such as (text-style:), (font:) or (text-colour:).
+
+				Details:
+				The way this changer amends the text of the hook is similar to how (prepend:) amends hooks. To be precise, the full text of the hook is
+				rendered before it is amended to with these changers. This means that, among other things, code structures can't cross the boundary between
+				the appended text and the hook - `(append-with:"</b>")[<b>Bold]` will NOT work as it seems - the `<b>` tag will not be matched with the `</b>`
+				in the appended text.
+
+				Multiple (append-with:) and (prepend-with:) changers can be added together. When this combined changer is attached to a hook,
+				each constituent changer is applied in left-to-right order. So, `(prepend-with:"RE:")+(prepend-with:"FWD:")[ARE YOUR EYES UPSIDE-DOWN?]`
+				will result in the hook reading `RE:FWD:ARE YOUR EYES UPSIDE-DOWN?`.
+
+				This macro can't be used with (enchant:) or (change:) - attempting to do so will produce an error. You'll want to instead use (append:) or (prepend:),
+				which accomplish the same effect of amending a hook or text occurrence remotely.
+
+				See also:
+				(append:), (replace:), (prepend-with:), (replace-with:), (show:)
+
+				Added in: 3.2.0
 				#revision
 			*/
 			"prepend"
@@ -329,6 +431,21 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'passages', 'macros
 				return desc;
 			},
 			rest(either(HookSet,String))
+		)
+		/*
+			The three (-with:) changers are implemented here, just after their "inverse phrased" counterparts.
+		*/
+		(e + "-with",
+			(_, addendum) => ChangerCommand.create(e + "-with", [addendum]),
+			(desc, addendum) => {
+				/*
+					The "appendSource" property of ChangeDescriptors allows multiple (append-with:)s to be
+					joined together.
+				*/
+				desc.appendSource = (desc.appendSource || []).concat({source: addendum, append:e});
+				return desc;
+			},
+			String
 		);
 	});
 	

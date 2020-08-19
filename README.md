@@ -148,6 +148,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
    * "buoy" and "sway", which are slow, gentle movement animations to serve as counterparts to "rumble" and "shudder".
  * The following `(transition:)` transitions have been added:
    * "zoom", which makes the transitioning entity zoom in or out from the mouse cursor's position (or the last place the touch device was touched).
+ * Added `(append-with:)`, `(prepend-with:)` and `(replace-with:)`, changers which modify the hook by adding a given string of code to the start or end of it, or replace it entirely. This is intended for use with things like dialogue tags or punctuation that's commonly used throughout the story.
 
 ###### Commands
 
