@@ -97,7 +97,7 @@
 		instant:     rev => "appear step-" + (rev ? "end" : "start"),
 	};
 
-	const builtinColorNames = {
+	const builtinColourNames = {
 		"#e61919": "red",
 		"#e68019": "orange",
 		"#e5e619": "yellow",
@@ -113,10 +113,18 @@
 		"#888888": "grey",
 	};
 
+	const builtinColourNamesReverse = Object.entries(builtinColourNames).reduce((a,[k,v]) => { a[v] = k; return a; }, {});
+
+	function convertHarloweColour(colour) {
+		return colour in builtinColourNamesReverse
+			? builtinColourNamesReverse[colour]
+			: colour;
+	}
+
 	function reduceHTMLColour(colour) {
 		colour = colour.toLowerCase();
-		return colour in builtinColorNames
-			? builtinColorNames[colour]
+		return colour in builtinColourNames
+			? builtinColourNames[colour]
 			: (colour[1] === colour[2] && colour[3] === colour[4] && colour[5] === colour[6]) ? "#" + colour[1] + colour[3] + colour[5] : colour;
 	}
 
@@ -261,7 +269,7 @@
 					+ row.text
 					+ '<input style="width:64px" type=color value="' + row.value
 					+ '"></input><span class=harlowe-3-builtinSwatch>'
-					+ Object.keys(builtinColorNames).map(builtIn =>
+					+ Object.keys(builtinColourNames).map(builtIn =>
 						'<span style="background-color:' + builtIn + '"></span>'
 					).join('')
 					+ '</span></' + (inline ? 'span' : 'div') + '>');
@@ -270,6 +278,53 @@
 					update();
 				});
 				ret[$]('input').addEventListener('change', update);
+			}
+			if (type.endsWith("gradient")) {
+				ret = el(`<div><span class=harlowe-3-gradientBar></span><button><i class='fa fa-plus'></i> Colour</button></div>`);
+				const gradientBar = ret[$]('.harlowe-3-gradientBar');
+				const createColourStop = (percent, colour) =>  {
+					gradientBar.append(el(
+						`<div data-colour="${
+							colour
+						}" data-pos="${percent}" class=harlowe-3-gradientColourStop style="left:calc(${
+							percent * 100
+						}% - 8px); top:-8px"></div>`
+					));
+					update();
+				};
+				setTimeout(() => {
+					createColourStop(0, '#ffffff');
+					createColourStop(0.5, '#000000');
+					createColourStop(1, '#ffffff');
+				});
+
+				ret[$]('button').addEventListener('click', () => createColourStop(0.5, '#888888'));
+				ret.addEventListener('mousedown', ({target}) => {
+					if (target.className === "harlowe-3-gradientColourStop") {
+						const html = document.documentElement;
+						const {left, right} = gradientBar.getBoundingClientRect();
+						const width = right - left;
+						const onMouseMove = ({pageX}) => {
+							const pos = Math.min(1,Math.max(0,(pageX - window.scrollX - left) / width));
+							target.style.left = `calc(${pos * 100}% - 8px)`;
+							target.setAttribute('data-pos', pos);
+							update();
+						};
+						const onMouseUp = () => {
+							html.removeEventListener('mousemove', onMouseMove);
+							html.removeEventListener('mouseup', onMouseUp);
+						};
+						html.addEventListener('mousemove', onMouseMove);
+						html.addEventListener('mouseup', onMouseUp);
+					}
+				});
+				updaterFns.push(() => {
+					ret[$]('.harlowe-3-gradientBar').style.background = `linear-gradient(to right, ${
+						Array.from(ret[$$]('.harlowe-3-gradientColourStop'))
+							.sort((a,b) => a.getAttribute('data-pos') - b.getAttribute('data-pos'))
+							.map(stop => stop.getAttribute('data-colour') + ' ' + (stop.getAttribute('data-pos')*100) + '%')
+					})`;
+				});
 			}
 			/*
 				Dropdowns.
@@ -544,7 +599,7 @@
 								*/
 								m.changers['b4r-size'] ? 'border-width:' + m.changers['b4r-size'].reduce((a,e) => `${a} ${e*2}px`,'') + ";" : ''
 							}${
-								m.changers['b4r-colour'] ? 'border-color:' + m.changers['b4r-colour'].join(' ') + ";" : ''
+								m.changers['b4r-colour'] ? 'border-color:' + m.changers['b4r-colour'].map(convertHarloweColour).join(' ') + ";" : ''
 							}`);
 						},
 					},
@@ -575,13 +630,73 @@
 			})(),
 		textcolor: folddownPanel({
 				type: 'text',
-				text: 'Select colours for this text.',
+				text: 'Select colours and a background.',
 			},{
 				type: 'preview',
 				text: 'Example text preview',
+				update(model, panel) {
+					panel.firstChild.setAttribute('style', `${
+						(model.changers['text-colour'] ? `color:${convertHarloweColour(model.changers['text-colour'])};` : '')
+					}${
+						model.stops ? `background:linear-gradient(${
+							model.stops.map(stop => reduceHTMLColour(stop.getAttribute('data-colour')) + " " + (stop.getAttribute('data-pos')*100) + "%")
+						})` : model.changers.background ? `background:${convertHarloweColour(model.changers.background[0])}` : ''
+					}`);
+				},
 			},{
 				type: 'small',
-				text: "This preview doesn't account for other modifications to this passage's text colour, font, or background, and is meant only for you to examine each of these styles.",
+				text: "This preview doesn't account for other modifications to this passage's text colour or background, and is meant only for you to examine the selected colours.",
+			},
+			el(`<div><b>Text colour</b></div>`),
+			{
+				type: 'colour',
+				text: '',
+				value: "#ffffff",
+				model(m,el) {
+					m.changerNamed('text-colour').push(reduceHTMLColour(el[$]('input').value));
+				},
+			},
+			el(`<div><b>Background</b></div>`),
+			{
+				type: 'radiorows',
+				name: 'bgcolor',
+				options: [
+					[{
+						type:'inline-text',
+						text:'Default background',
+						model(m) {
+							m.valid = true;
+						},
+					}],
+					[
+						new Text(`Flat colour`),
+						{
+							type: 'colour',
+							text: '',
+							value: '#000000',
+							model(m, el) {
+								m.changerNamed('background').push(reduceHTMLColour(el[$]('input').value));
+								m.valid = true;
+							},
+						}
+					],
+					[
+						new Text(`Linear gradient`),
+						{
+							type: 'gradient',
+							model(m, el) {
+								const stops = Array.from(el[$$]('.harlowe-3-gradientColourStop')).sort((a,b) => a.getAttribute('data-pos') - b.getAttribute('data-pos'));
+								if (stops.length > 1) {
+									m.valid = true;
+									m.changerNamed('background').push(`(gradient: 0, ${
+										stops.map(stop => stop.getAttribute('data-pos') + "," + reduceHTMLColour(stop.getAttribute('data-colour')))
+									})`);
+									m.stops = stops;
+								}
+							},
+						}
+					]
+				],
 			},{
 				type:'confirm',
 			}),
@@ -960,7 +1075,7 @@
 					{ title:'Italic',                  html:'<i class="fa fa-italic">',       onClick: () => wrapSelection("//","//")},
 					{ title:'Strikethrough',           html:'<i class="fa fa-strikethrough">',onClick: () => wrapSelection("~~","~~")},
 					{ title:'Superscript',             html:'<i class="fa fa-superscript">',  onClick: () => wrapSelection("^^","^^")},
-					{ title:'Text and background colour', html:`<i class='fa fa-adjust fa-palette'>`, onClick: () => switchPanel('textcolor')},
+					{ title:'Text and background colour', html:`<div class='harlowe-3-bgColourButton'>`, onClick: () => switchPanel('textcolor')},
 					{
 						title:'Borders',
 						html:'<span style="display:inline-block; height:16px; width:16px; border-style: dotted solid solid dotted; border-size:3px;"></span>',
