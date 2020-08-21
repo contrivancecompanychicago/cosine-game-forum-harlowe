@@ -63,8 +63,8 @@
 	padding-bottom: 8px;
 	margin-bottom: 8px
 }
-.harlowe-3-builtinSwatch span {
-	width: 16px;
+.harlowe-3-swatch {
+	width: 24px;
 	height: 24px;
 	display:inline-block;
 	cursor:pointer;
@@ -132,17 +132,18 @@
 .harlowe-3-gradientBar {
 	display:inline-block;
 	position:relative;
-	width:80%;
+	width:75%;
 	height:32px;
-	margin:12px 8px;
+	margin:12px 8px 96px 40px;
 	border:1px solid hsla(0,0%,50%,0.5);
 	border-radius:5px;
 }
 .harlowe-3-gradientBar + button {
-	position:relative;
-	top:-24px;
+	position:absolute;
+	top:8px;
+	right:8px;
 }
-.harlowe-3-gradientColourStop {
+.harlowe-3-colourStop {
 	position:absolute;
 	height:48px;
 	width:16px;
@@ -150,6 +151,26 @@
 	border-radius:5px;
 	cursor:grab;
 }
-.harlowe-3-gradientColourStop:active {
+.harlowe-3-colourStop:active {
 	cursor:grabbing;
+}
+.harlowe-3-colourStopButtons {
+	display:none;
+	position:relative;
+	top: 64px;
+	width: 480px;
+	background:hsla(0,0%,50%,0.5);
+	padding: 8px;
+	cursor:auto;
+}
+.harlowe-3-colourStop[selected] {
+	border-bottom-right-radius:0px;
+	border-bottom-left-radius:0px;
+	height:64px;
+}
+.harlowe-3-colourStop[selected] > .harlowe-3-colourStopButtons {
+	display:block;
+}
+.harlowe-3-singleColourPicker {
+	display:inline-block;
 }

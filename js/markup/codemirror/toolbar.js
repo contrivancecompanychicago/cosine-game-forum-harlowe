@@ -9,6 +9,8 @@
 	*/
 	const $ = 'querySelector';
 	const $$ = $ + 'All';
+	const ON = "addEventListener";
+	const OFF = "removeEventListener";
 	function el(html) {
 		const elem = document.createElement('p');
 		elem.innerHTML = html;
@@ -115,6 +117,19 @@
 
 	const builtinColourNamesReverse = Object.entries(builtinColourNames).reduce((a,[k,v]) => { a[v] = k; return a; }, {});
 
+	const openColors = [
+		["#f8f9fa","#fff5f5","#fff0f6","#f8f0fc","#f3f0ff","#edf2ff","#e7f5ff","#e3fafc","#e6fcf5","#ebfbee","#f4fce3","#fff9db","#fff4e6"],
+		["#f1f3f5","#ffe3e3","#ffdeeb","#f3d9fa","#e5dbff","#dbe4ff","#d0ebff","#c5f6fa","#c3fae8","#d3f9d8","#e9fac8","#fff3bf","#ffe8cc"],
+		["#e9ecef","#ffc9c9","#fcc2d7","#eebefa","#d0bfff","#bac8ff","#a5d8ff","#99e9f2","#96f2d7","#b2f2bb","#d8f5a2","#ffec99","#ffd8a8"],
+		["#dee2e6","#ffa8a8","#faa2c1","#e599f7","#b197fc","#91a7ff","#74c0fc","#66d9e8","#63e6be","#8ce99a","#c0eb75","#ffe066","#ffc078"],
+		["#ced4da","#ff8787","#f783ac","#da77f2","#9775fa","#748ffc","#4dabf7","#3bc9db","#38d9a9","#69db7c","#a9e34b","#ffd43b","#ffa94d"],
+		["#adb5bd","#ff6b6b","#f06595","#cc5de8","#845ef7","#5c7cfa","#339af0","#22b8cf","#20c997","#51cf66","#94d82d","#fcc419","#ff922b"],
+		["#868e96","#fa5252","#e64980","#be4bdb","#7950f2","#4c6ef5","#228be6","#15aabf","#12b886","#40c057","#82c91e","#fab005","#fd7e14"],
+		["#495057","#f03e3e","#d6336c","#ae3ec9","#7048e8","#4263eb","#1c7ed6","#1098ad","#0ca678","#37b24d","#74b816","#f59f00","#f76707"],
+		["#343a40","#e03131","#c2255c","#9c36b5","#6741d9","#3b5bdb","#1971c2","#0c8599","#099268","#2f9e44","#66a80f","#f08c00","#e8590c"],
+		["#212529","#c92a2a","#a61e4d","#862e9c","#5f3dc4","#364fc7","#1864ab","#0b7285","#087f5b","#2b8a3e","#5c940d","#e67700","#d9480f"]
+	];
+
 	function convertHarloweColour(colour) {
 		return colour in builtinColourNamesReverse
 			? builtinColourNamesReverse[colour]
@@ -172,6 +187,39 @@
 		*/
 		const panelElem = el('<div class="harlowe-3-toolbarPanel" style="transition:max-height 0.8s;overflow-y:auto">');
 
+		const makeSwatchRow = (colours, index, visible) =>
+			el(`<span class=harlowe-3-swatchRow data-index="${index}" ${!visible ? 'style="display:none"' : ''}>`
+				+ colours.map(colour =>
+					'<span class=harlowe-3-swatch style="background-color:' + colour + '"></span>').join('')
+				+ "</span>");
+
+		const makeColourPicker = value => {
+			const ret = el('<div class=harlowe-3-singleColourPicker><input style="width:48px;margin-right:8px" type=color value="'
+				+ value + '"></input></div>');
+			const extraControls = el(`<div>`);
+			const swatchSelect = el(`<select><option value="" selected>Harlowe built-ins</option></select>`);
+			ret.append(makeSwatchRow(Object.keys(builtinColourNames), '', true));
+			openColors.forEach((row,i) => {
+				ret.append(makeSwatchRow(row, i));
+				swatchSelect.append(el(`<option value=${i}>OpenColor ${i}</option>`));
+			});
+			swatchSelect[ON]('change', () => {
+				ret[$$](`[data-index]`).forEach(ind => ind.style.display = 'none');
+				ret[$](`[data-index="${swatchSelect.value}"]`).style.display = "inline-block";
+			});
+			extraControls.append(swatchSelect);
+			ret.append(swatchSelect);
+
+			ret[ON]('click', ({target}) => {
+				if (target.classList.contains('harlowe-3-swatch')) {
+					const input = ret[$]('input');
+					input.value = target.getAttribute('style').slice(-7);
+					input.dispatchEvent(new Event('change'));
+				}
+			});
+			return ret;
+		};
+
 		/*
 			Turn each panel row description into a panel element. Notice that this reducer function
 			can be recursively called, with a different element in accumulator position; this is
@@ -218,9 +266,10 @@
 					type.startsWith('t8n') ? `alt="Click to preview the transition"` : ""}><span>${row.text}</span>${type.startsWith('t8n') ? "<span>" + row.text2 + "</span>" : ''}</div>`);
 
 				if (type.startsWith('t8n')) {
-					ret.addEventListener('mouseup', update);
+					ret[ON]('mouseup', update);
+					ret[ON]('touchend', update);
 					const firstSpan = ret[$](':first-child');
-					firstSpan.addEventListener('animationend', () => firstSpan.style.visibility = "hidden");
+					firstSpan[ON]('animationend', () => firstSpan.style.visibility = "hidden");
 				}
 			}
 			/*
@@ -228,13 +277,13 @@
 			*/
 			if (type === "checkbox") {
 				ret = el('<label style="display:block;"><input type="checkbox"></input>' + row.text + '</label>');
-				ret.addEventListener('change', update);
+				ret[ON]('change', update);
 			}
 			if (type === "checkboxes") {
 				ret = el(`<div class="harlowe-3-toolbarCheckboxRow"><div><b>${row.name}</b></div></div>`);
 				row.options.forEach(box => {
 					const e = el('<label><input type="checkbox"></input>' + box + '</label>');
-					e.addEventListener('change', update);
+					e[ON]('change', update);
 					ret.append(e);
 				});
 			}
@@ -242,7 +291,7 @@
 				ret = el(`<div class="harlowe-3-toolbarCheckboxRow"><div><b>${row.name}</b></div></div>`);
 				row.options.forEach((radio,i) => {
 					const e = el(`<label><input type="radio" name="${row.name}" value="${radio}" ${!i ? 'checked' : ''}></input>${radio}</label>`);
-					e.addEventListener('change', update);
+					e[ON]('change', update);
 					ret.append(e);
 				});
 			}
@@ -255,72 +304,98 @@
 					+ '<input ' + (row.useSelection ? 'data-use-selection' : '') + (type.includes('passage') ? 'list="harlowe-3-passages"' : '') + ' style="width:'
 						+ (row.width) + ';margin' + (inline ? ':0 0.5rem' : '-left:1rem') + ';" type=text placeholder="' + row.placeholder
 					+ '"></input></' + (inline ? 'span' : 'div') + '>');
-				ret[$]('input').addEventListener('input', update);
+				ret[$]('input')[ON]('input', update);
 			}
 			if (type.endsWith("number")) {
 				ret = el('<' + (inline ? 'span' : 'div') + ' class="harlowe-3-labeledInput">'
 					+ row.text
 					+ '<input style="" type=number'
 					+ ' min=' + row.min + ' max=' + row.max + ' value=' + row.value + (row.step ? ' step=' + row.step : '') + '></input></' + (inline ? 'span' : 'div') + '>');
-				ret[$]('input').addEventListener('change', update);
+				ret[$]('input')[ON]('change', update);
 			}
 			if (type.endsWith("colour")) {
 				ret = el('<' + (inline ? 'span' : 'div') + ' class="harlowe-3-labeledInput">'
 					+ row.text
-					+ '<input style="width:64px" type=color value="' + row.value
-					+ '"></input><span class=harlowe-3-builtinSwatch>'
-					+ Object.keys(builtinColourNames).map(builtIn =>
-						'<span style="background-color:' + builtIn + '"></span>'
-					).join('')
-					+ '</span></' + (inline ? 'span' : 'div') + '>');
-				ret[$]('.harlowe-3-builtinSwatch').addEventListener('click', ({target}) => {
-					ret[$]('input').value = target.getAttribute('style').slice(-7);
-					update();
-				});
-				ret[$]('input').addEventListener('change', update);
+					+ '</' + (inline ? 'span' : 'div') + '>');
+				const picker = makeColourPicker(row.value);
+				ret.append(picker);
+				ret[$]('input')[ON]('change', update);
 			}
 			if (type.endsWith("gradient")) {
-				ret = el(`<div><span class=harlowe-3-gradientBar></span><button><i class='fa fa-plus'></i> Colour</button></div>`);
+				ret = el(`<div style='position:relative'><span class=harlowe-3-gradientBar></span><button><i class='fa fa-plus'></i> Colour</button></div>`);
 				const gradientBar = ret[$]('.harlowe-3-gradientBar');
-				const createColourStop = (percent, colour) =>  {
-					gradientBar.append(el(
-						`<div data-colour="${
+				const createColourStop = (percent, colour, selected) =>  {
+					const ret = el(
+						`<div ${selected ? 'selected' : ''} data-colour="${
 							colour
-						}" data-pos="${percent}" class=harlowe-3-gradientColourStop style="left:calc(${
+						}" data-pos="${percent}" class=harlowe-3-colourStop style="left:calc(${
 							percent * 100
-						}% - 8px); top:-8px"></div>`
-					));
+						}% - 8px); top:-8px"><div class=harlowe-3-colourStopButtons style="left:${-464*percent}px">`
+						+ `</div></div>`
+					);
+					const picker = makeColourPicker(colour);
+					picker[$]('input')[ON]('change', ({target}) => {
+						ret.setAttribute('data-colour', target.value);
+						update();
+					});
+					const deleteButton = el(`<button class="fa fa-times"> Delete</button>`);
+					deleteButton[ON]('click', () => { ret.remove(); update(); });
+					picker.append(deleteButton);
+					ret.firstChild.prepend(picker);
+					gradientBar.append(ret);
 					update();
 				};
 				setTimeout(() => {
 					createColourStop(0, '#ffffff');
-					createColourStop(0.5, '#000000');
+					createColourStop(0.5, '#000000', true);
 					createColourStop(1, '#ffffff');
 				});
 
-				ret[$]('button').addEventListener('click', () => createColourStop(0.5, '#888888'));
-				ret.addEventListener('mousedown', ({target}) => {
-					if (target.className === "harlowe-3-gradientColourStop") {
+				ret.lastChild[ON]('click', () => createColourStop(0.5, '#888888'));
+				const listener = ({target}) => {
+					if (target.classList.contains("harlowe-3-colourStop")) {
 						const html = document.documentElement;
 						const {left, right} = gradientBar.getBoundingClientRect();
 						const width = right - left;
-						const onMouseMove = ({pageX}) => {
+						const onMouseMove = ({pageX, touches}) => {
+							pageX = pageX || (touches && touches[0].pageX);
+							if (pageX === undefined) {
+								return;
+							}
 							const pos = Math.min(1,Math.max(0,(pageX - window.scrollX - left) / width));
 							target.style.left = `calc(${pos * 100}% - 8px)`;
+							/*
+								Reposition the colour stop's button bar so that it's always entirely visible.
+							*/
+							target.firstChild.style.left = `${-464*pos}px`;
 							target.setAttribute('data-pos', pos);
 							update();
 						};
 						const onMouseUp = () => {
-							html.removeEventListener('mousemove', onMouseMove);
-							html.removeEventListener('mouseup', onMouseUp);
+							html[OFF]('mousemove', onMouseMove);
+							html[OFF]('mouseup', onMouseUp);
+							html[OFF]('touchmove', onMouseMove);
+							html[OFF]('touchend', onMouseUp);
 						};
-						html.addEventListener('mousemove', onMouseMove);
-						html.addEventListener('mouseup', onMouseUp);
+						html[ON]('mousemove', onMouseMove);
+						html[ON]('mouseup', onMouseUp);
+						html[ON]('touchmove', onMouseMove);
+						html[ON]('touchend', onMouseUp);
+
+						/*
+							Additionally, when a stop is clicked, deselect all other stops and select this one,
+							causing its menu to appear.
+						*/
+						Array.from(gradientBar[$$]('[selected]')).forEach(s => s.removeAttribute('selected'));
+						target.setAttribute('selected', true);
 					}
-				});
+				};
+				ret[ON]('mousedown', listener);
+				ret[ON]('touchstart', listener);
+
 				updaterFns.push(() => {
-					ret[$]('.harlowe-3-gradientBar').style.background = `linear-gradient(to right, ${
-						Array.from(ret[$$]('.harlowe-3-gradientColourStop'))
+					gradientBar.style.background = `linear-gradient(to right, ${
+						Array.from(gradientBar[$$]('.harlowe-3-colourStop'))
 							.sort((a,b) => a.getAttribute('data-pos') - b.getAttribute('data-pos'))
 							.map(stop => stop.getAttribute('data-colour') + ' ' + (stop.getAttribute('data-pos')*100) + '%')
 					})`;
@@ -336,7 +411,7 @@
 				row.options.forEach((option,i) => {
 					dropdownDiv.lastChild.append(el('<option value="' + (!i ? '' : option) + '"' + (!option ? ' disabled' : !i ? ' selected' : '') + '>' + (option || '───────') + '</select>'));
 				});
-				dropdownDiv[$]('select').addEventListener('change', update);
+				dropdownDiv[$]('select')[ON]('change', update);
 				ret = dropdownDiv;
 			}
 			/*
@@ -365,7 +440,7 @@
 						Place each of these sub-options within the <label>.
 					*/
 					ret.append(subrows.reduce(reducer, subrowEl));
-					subrowEl[$]('input').addEventListener('change', update);
+					subrowEl[$]('input')[ON]('change', update);
 				});
 			}
 			/*
@@ -387,8 +462,8 @@
 					}
 				});
 				
-				cancel.addEventListener('click', () => switchPanel());
-				confirm.addEventListener('click', () => {
+				cancel[ON]('click', () => switchPanel());
+				confirm[ON]('click', () => {
 					const m = model();
 					wrapSelection(m.output() + m.wrapStart, m.wrapEnd, m.innerText, m.wrapStringify);
 					switchPanel();
@@ -685,11 +760,11 @@
 						{
 							type: 'gradient',
 							model(m, el) {
-								const stops = Array.from(el[$$]('.harlowe-3-gradientColourStop')).sort((a,b) => a.getAttribute('data-pos') - b.getAttribute('data-pos'));
+								const stops = Array.from(el[$$]('.harlowe-3-colourStop')).sort((a,b) => a.getAttribute('data-pos') - b.getAttribute('data-pos'));
 								if (stops.length > 1) {
 									m.valid = true;
 									m.changerNamed('background').push(`(gradient: 0, ${
-										stops.map(stop => stop.getAttribute('data-pos') + "," + reduceHTMLColour(stop.getAttribute('data-colour')))
+										stops.map(stop => Math.round(stop.getAttribute('data-pos')*10000)/10000 + "," + reduceHTMLColour(stop.getAttribute('data-colour')))
 									})`);
 									m.stops = stops;
 								}
