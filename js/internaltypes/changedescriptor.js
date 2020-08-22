@@ -9,6 +9,15 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 	*/
 
 	/*
+		A quick helper function which converts "verbatim" hooks' source into text nodes, EXCEPT newlines, which become raw <br>s
+		or <tw-consecutive-br>s. Returns an array designed for use with $().
+	*/
+	const verbatim = (source) =>
+		source.split(/\n/g).reduce((a,e,i,{length}) =>
+			// Even though this can result in the final array having a terminating false, $() will trim it out automatically.
+			a.concat(document.createTextNode(e), i !== length - 1 && document.createElement(e.length ? 'br' : 'tw-consecutive-br')), []);
+
+	/*
 		changeDescriptorShape is an array of all expected properties on
 		ChangeDescriptor instances. It's cached for performance paranoia.
 	*/
@@ -442,7 +451,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 			*/
 			
 			dom = $(source &&
-				(this.verbatim ? document.createTextNode(source) : $.parseHTML(exec(source), document, true)));
+				(this.verbatim ? verbatim(source) : $.parseHTML(exec(source), document, true)));
 
 			/*
 				If the source has any addenda, compile that separately and insert it into the DOM structure.
@@ -450,7 +459,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 			*/
 			if (Array.isArray(appendSource)) {
 				appendSource.forEach(({source, append}) => {
-					const addenda = $(this.verbatim ? document.createTextNode(source) : $.parseHTML(exec(source), document, true));
+					const addenda = $(this.verbatim ? verbatim(source) : $.parseHTML(exec(source), document, true));
 					if (append === "append") {
 						dom = dom.add(addenda);
 					}

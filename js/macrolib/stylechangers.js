@@ -350,6 +350,9 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			Details:
 			This macro takes no values - each changer value it produces is the same.
 
+			See also:
+			(collapse:), (verbatim-print:)
+
 			Added in: 3.2.0
 			#basics 15
 		*/
