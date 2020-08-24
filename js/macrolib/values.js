@@ -518,7 +518,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 
 			Example usage:
 			* `(datapattern: (a:15,45))` produces `(a:num,num)`.
-			* `(datapattern: (passage:))` produces `(dm:"name",str,"source",str,"tags",(a:str))` (as long as the passage has no metadata macros in it).
+			* `(datapattern: (passage: ))` produces `(dm:"name",str,"source",str,"tags",(a:str))` (as long as the passage has no metadata macros in it).
 			* `$coordinate matches (datapattern: (a:15,45))` checks if $coordinate is an array of exactly two numbers. 
 			* `(datapattern: $value) matches $value2` checks if $value2 exactly matches the structure of $value.
 

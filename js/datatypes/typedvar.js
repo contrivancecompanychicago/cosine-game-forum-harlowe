@@ -5,7 +5,7 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 		TypedVar data
 
 		Typed variable names combine a datatype or a pattern of data, and the name of a variable, joined by adding the `-type` suffix to the datatype. `str-type _name` defines
-		a typed variable, _name, which can only be set to a string. `(a: number)-type $a` defines a typed variable, $a, which can only be set to an array with 1 number value inside.
+		a typed variable, _name, which can only be set to a string. `(a: num)-type $a` defines a typed variable, $a, which can only be set to an array with 1 number value inside.
 
 		Typed variable names are used in several places – (set:), (put:) and (move:) can be given typed variables in place of normal variables to restrict that variable
 		to the given type, and ensure all future uses of that variable maintain that restriction. Typed variables are also used by the (macro:) macro to specify

@@ -81,7 +81,7 @@ define([
 						lastHookShown, instead preserving the value of the original (if:).
 					*/
 					if (name !== "elseif") {
-						this.stack[0].lastHookShown = false;
+						this.stackTop.lastHookShown = false;
 					}
 				}
 				/*
@@ -115,7 +115,7 @@ define([
 			}
 			expr.addClass("false");
 			
-			this.stack[0].lastHookShown = false;
+			this.stackTop.lastHookShown = false;
 			return;
 		}
 		/*
@@ -134,7 +134,7 @@ define([
 			was shown or hidden by the attached expression.
 			Sadly, we must oblige with this overweening demand.
 		*/
-		this.stack[0].lastHookShown = true;
+		this.stackTop.lastHookShown = true;
 	}
 	
 	/*
@@ -912,7 +912,7 @@ define([
 			creates new DOM elements, and whenever a blocker finishes and calls unblock().
 		*/
 		execute() {
-			let [{desc, dom, collapses, evaluateOnly}] = this.stack;
+			let {desc, dom, collapses, evaluateOnly} = this.stackTop;
 
 			if (desc && !dom) {
 				/*
@@ -954,6 +954,12 @@ define([
 						if (src) {
 							expr.data('originalSource', src);
 						}
+						/*
+							Also, much as I'd prefer not to do this, the (show:) and (rerun:) macro needs to have access to any given <tw-hook>'s
+							temp variables store, so that rerunning it will cause the correct temp variables to be used, rather than those
+							available at the (show:) callsite.
+						*/
+						expr.data('tempVariables', this.stackTop.tempVariables);
 						/*
 							First, hidden hooks should not be rendered.
 							The 'hidden' data value is used by (show:) and (link-show:). If it's a boolean, then it hasn't been shown (run) yet.

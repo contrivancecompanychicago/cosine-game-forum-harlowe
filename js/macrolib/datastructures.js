@@ -100,7 +100,7 @@ define([
 			| `of` | Obtains the item at the left numeric position, or the `length`, `any` or `all` values. | `1st of (a:"Y","O")` (is "Y")<br>`(2) of (a:"P","S")` (is "S")<br>`length of (a:5,5,5)` (is 3)
 			| `matches` | Evaluates to boolean `true` if the array on one side matches the pattern on the other. | `(a:2,3) matches (a: num, num)`, `(a: array) matches (a:(a: ))`
 			| `does not match` | Evaluates to boolean `true` if the array on one side does not match the pattern on the other. | `(a:2,3) does not match (a: num)`, `(a: str) does not match (a:(a:'Egg'))`
-			| `is a`, `is an` | Evaluates to boolean `true` if the right side is a datatype describing the left side. | `(a:2,3) is an array`, `(a:) is an empty`
+			| `is a`, `is an` | Evaluates to boolean `true` if the right side is a datatype describing the left side. | `(a:2,3) is an array`, `(a: ) is an empty`
 			| `is not a`, `is not an` | Evaluates to boolean `true` if the right side is a datatype that does not describe the left side. | `(a:2,3) is not an empty`
 
 			And, here are the data names that can be used with arrays.

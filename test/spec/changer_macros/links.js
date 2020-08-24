@@ -370,8 +370,16 @@ describe("link macros", function() {
 			p.find('tw-link').click();
 			expect(p.text()).toBe('foobarA');
 		});
+		it("works with temp variables", function() {
+			var p = runPassage('[(set:_foo to 1)|3)[_foo]](link-show:"A",?3)');
+			p.find('tw-link').click();
+			expect(p.text()).toBe('1A');
+			var p = runPassage('(set:_foo to 1)|3)[_foo][(set:_foo to 2)(link-show:"A",?3)]');
+			p.find('tw-link').click();
+			expect(p.text()).toBe('1A');
+		});
 		// May not want to implement this
-		xit("when clicked, plain hooks (and only plain hooks) in the link text are removed", function() {
+		/*it("when clicked, plain hooks (and only plain hooks) in the link text are removed", function() {
 			var p = runPassage("(link-show:'foo[bar]|2>[baz]',?1)");
 			p.find('tw-link').click();
 			expect(p.text()).toBe("foobaz");
@@ -380,6 +388,6 @@ describe("link macros", function() {
 			p.find('tw-link').click();
 			expect(p.text()).toBe("garply");
 			expect(p.find('tw-link').length).toBe(0);
-		});
+		});*/
 	});
 });

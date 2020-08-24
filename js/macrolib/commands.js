@@ -200,8 +200,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			with commas: `(put: 2 into $batteries, 4 into $bottles)`, etc.
 
 			De-structuring also works, although you will need to remember that the left side of a (set:) is
-			the right side of a (put:) - `(set: (a: any, $y, $x) to $array)` would be written as
-			`(put: $array into (a: any, $y, $x))`.
+			the right side of a (put:) - `(set: (a: any, $y, $x) to $arr)` would be written as
+			`(put: $arr into (a: any, $y, $x))`.
 
 			You can also use typed variables with (put:) - `(put: 1 into num-type $days)` permanently
 			restricts $days to numbers. Consult the article about (set:) for more information about
@@ -737,7 +737,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 					As this is a deferred rendering macro, the current tempVariables
 					object must be stored for reuse, as the section pops it when normal rendering finishes.
 				*/
-				const [{tempVariables}] = section.stack;
+				const {tempVariables} = section.stackTop;
 
 				/*
 					This updater function is called when the element is clicked, and again
@@ -1422,7 +1422,12 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				}
 				else {
 					section.renderInto("", null,
-						assign({}, cd, { append: "replace", source: elem.data('originalSource') || '', target: elem })
+						assign({}, cd, { append: "replace", source: elem.data('originalSource') || '', target: elem }),
+						/*
+							Since the shown hook needs access to the tempVariables that are available at its location, retrieve
+							the tempVariables data placed on it by Section.execute().
+						*/
+						elem.data('tempVariables')
 					);
 				}
 			}));

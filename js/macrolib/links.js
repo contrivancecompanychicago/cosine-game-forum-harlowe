@@ -339,7 +339,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 						ChangerCommand.summary(). In that case, the tempVariables will never be used,
 						so a bare object can just be provided.
 					*/
-					(desc.section && desc.section.stack[0]) ? desc.section.stack[0].tempVariables : Object.create(null);
+					(desc.section && desc.section.stackTop) ? desc.section.stackTop.tempVariables : Object.create(null);
 				/*
 					All links need to store their section as jQuery data, so that clickLinkEvent can
 					check if the section is blocked (thus preventing clicks).
@@ -612,7 +612,6 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 				}
 			},
 			(cd, section, text, ...hooks) => {
-				const [{tempVariables}] = section.stack;
 				/*
 					All links need to store their section as jQuery data, so that clickLinkEvent can
 					check if the section is blocked (thus preventing clicks).
@@ -642,7 +641,11 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 						else {
 							section.renderInto("", null,
 								assign({}, cd, { source: hiddenSource, target: elem, transitionDeferred: false }),
-								tempVariables
+								/*
+									Since the shown hook needs access to the tempVariables that are available at its location, retrieve
+									the tempVariables data placed on it by Section.execute().
+								*/
+								elem.data('tempVariables')
 							);
 						}
 					}));

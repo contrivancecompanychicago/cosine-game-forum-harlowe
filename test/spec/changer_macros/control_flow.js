@@ -179,6 +179,10 @@ describe("control flow macros", function() {
 			runPassage("(set:$foo to (show:?3))");
 			expect('|3)[Red]$foo').markupToPrint("Red");
 		});
+		it("works with temp variables", function() {
+			expect('[(set:_foo to 1)|3)[_foo]](show:?3)').markupToPrint('1');
+			expect('(set:_foo to 1)|3)[_foo][(set:_foo to 2)(show:?3)]').markupToPrint('1');
+		});
 	});
 	describe("the (hide:) macro", function() {
 		it("accepts 1 or more hooknames", function() {
@@ -234,6 +238,10 @@ describe("control flow macros", function() {
 		it("works when saved in another passage", function() {
 			runPassage("(set:$bar to (rerun:?3))");
 			expect('(set:$foo to 1)|3>[(set:$foo to it+1)]$bar$foo').markupToPrint("3");
+		});
+		it("works with temp variables", function() {
+			expect('[(set:_foo to 1)|3>[_foo]](rerun:?3)').markupToPrint('1');
+			expect('(set:_foo to 1)|3>[_foo][(set:_foo to 2)(rerun:?3)]').markupToPrint('1');
 		});
 	});
 	describe("in debug mode, the <tw-expression> has the 'false' class when the hook is hidden", function() {

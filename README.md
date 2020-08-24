@@ -6,6 +6,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 #### Bugfixes
 
+ * Fixed a long-standing bug involving the interaction between temp variables and the `(show:)` and `(link-show:)` macros. The previous behaviour, which was not my intention at all, meant that hooks shown with `(show:)` could only access temp variables available at the `(show:)` macro's location, rather than the hook's location (which is now the current behaviour). The same applies to `(link-show:)`, as well as to the new `(rerun:)` macro (below).
  * Fixed a long-standing bug where continuous ranges for arrays, such as `(a: 1,2)'s 4thlasttolast`, wouldn't work correctly. (What that example should do is provide the entire array, as is consistent with Python.)
  * Fixed a long-standing bug where `(click: ?Passage)` and `(click: ?Sidebar)` just flat-out didn't work at all.
  * Fixed a long-standing bug where lambdas would produce an incorrect duplicate-name error if the temp variables used with their clauses contained capital letters.
@@ -30,7 +31,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Now, consecutive line breaks (which Harlowe reduces the cumulative height of) at the start of a passage are no longer the wrong height while that passage transitions in. (To handle this, consecutive line breaks are now made into `<tw-consecutive-br>` elements instead of `<br data-cons>` elements.)
  * Now, `(dropdown:)` explicitly uses the background of its containing hook, instead of being transparent, which the Windows version of Chrome displays as white, regardless of text colour.
  * Now, align, horizontal rule, and column syntax in the editor no longer occupies two lines unexpectedly.
- * `(save-game:)` can now save a greater range of variable data. Formerly, only changers, arrays, datamaps, datasets, booleans, strings and numbers could be stored in variables when you use `(save-game:)` - other values, such as commands, colours, gradients, or lambdas, would cause an error. Now, it should work with every kind of supported Harlowe value (i.e. those mentioned in the documentation) except user-created commands created with `(output-hook:)` (see below). But, this means that save data from 3.1.0 is no longer compatible with 3.2.0.
+ * `(save-game:)` can now save a greater range of variable data. Formerly, only changers, arrays, datamaps, datasets, booleans, strings and numbers could be stored in variables when you use `(save-game:)` - other values, such as commands, colours, gradients, or lambdas, would cause an error. Now, it should work with every kind of supported Harlowe value (i.e. those mentioned in the documentation) except user-created commands created with `(output-hook:)` (see below). But, this means that save data from stories made in 3.1.0 is no longer compatible with 3.2.0.
  * Improved an error message that could appear if you erroneously put the spread `...` syntax inside parentheses, such as `(...$arr)`.
  * Altered the error message that appears when you don't give macros "enough values", which wouldn't properly exclude optional values.
  * Fixed some error messages involving accessing an invalid data value of a string, which would refer to the string as "an array".

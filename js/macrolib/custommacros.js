@@ -45,7 +45,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		The types are checked, and if they don't match (for instance, by incorrectly writing `($treasure: 155, "Gold Watch")`),
 		then an error will result. This ensures that incorrectly written custom macro calls are caught early, just like with built-in macros.
 
-		As with TypedVars used in other places, you can use a complex data structure as the "type" of the variable - `(a:number, number)-type _coords`
+		As with TypedVars used in other places, you can use a complex data structure as the "type" of the variable - `(a: num, num)-type _coords`
 		specifies a parameter that requires an array of two numbers. If you wish to write a very general value-selection or data-structure macro,
 		such as `(a:)` or `(either:)`, that can take any kind of data value, you can write `any-type` for that parameter. However, using `any-type` is
 		not recommended unless you genuinely need it, as you miss out on the ability to catch wrong-type errors.
