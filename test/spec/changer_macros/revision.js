@@ -50,7 +50,7 @@ describe("revision macros", function() {
 				});
 				it("works with temp variables", function() {
 					var p = runPassage("(set:_a to 1)[(set:_a to 2)]<bar|("+name+":?bar)[(print:_a)]");
-					expect(p.text()).toBe('1');
+					expect(p.text()).toBe('2');
 				});
 			});
 			describe("given multiple same-named hooks", function() {
@@ -220,7 +220,7 @@ describe("revision macros", function() {
 			});
 			it("works with temp variables", function() {
 				var p = runPassage("(set:_a to 1)[(set:_a to 2)]<bar|(replace:?bar)[(print:_a)]");
-				expect(p.text()).toBe('1');
+				expect(p.text()).toBe('2');
 			});
 		});
 		describe("given multiple same-named hooks", function() {

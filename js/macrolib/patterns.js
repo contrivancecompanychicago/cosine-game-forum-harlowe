@@ -454,7 +454,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 				});
 			},
 		[rest(either(nonNegativeInteger, String, Datatype, TypedVar))])
-		/*
+		/*d:
 			(p-ins:)
 			Also known as: (p-insensitive:), (pattern-ins:), (pattern-insensitive:)
 

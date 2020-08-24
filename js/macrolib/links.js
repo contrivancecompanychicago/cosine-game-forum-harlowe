@@ -639,13 +639,15 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 							elem.empty().append(data);
 						}
 						else {
+							const tempVariables = elem.data('tempVariables');
 							section.renderInto("", null,
 								assign({}, cd, { source: hiddenSource, target: elem, transitionDeferred: false }),
 								/*
 									Since the shown hook needs access to the tempVariables that are available at its location, retrieve
-									the tempVariables data placed on it by Section.execute().
+									the tempVariables data placed on it by Section.execute(), creating a new child scope using Object.create()
+									(similar to how (for:) creates scopes for its renders.)
 								*/
-								elem.data('tempVariables')
+								tempVariables && Object.create(tempVariables)
 							);
 						}
 					}));

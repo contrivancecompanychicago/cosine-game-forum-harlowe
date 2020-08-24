@@ -78,6 +78,19 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			code that mustn't accidentally affect any other passages' variables (by using (set:) on a variable name
 			that someone else was using for something different). This can be essential in collaborative work
 			with other authors working on the same story independently, or when writing code to be used in multiple stories.
+
+			The following example demonstrates where temp variables are visible.
+			```
+			(set: _a to 1) <- This is usable everywhere in this passage.
+			[
+				(set: _b to 1) <-- This is only usable inside this hook.
+				(set: _a to it + 1) <-- This changes the outer _a variable.
+				[
+					(print: _a + _b) <-- You can refer to both _a or _b in this hook.
+				]
+			]
+			(print: _b) <-- This will cause an error.
+			```
 			
 			Variables have many purposes: keeping track of what the player has accomplished,
 			managing some other state of the story, storing hook styles and changers, and
@@ -155,7 +168,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			value for the entire story - a style changer, for instance, or a datamap holding fixed values for a
 			procedural-generation algorithm. For these, you want to use the `const` (short for "constant") datatype.
 			Using this, the variable is guaranteed to constantly hold that value for the entirety of the story (or, if it's
-			a temp variable, the passage).
+			a temp variable, the passage or hook).
 
 			This syntax can be combined with de-structuring - simply place the typed variable where a normal variable would be
 			within a data structure. `(set: (a: num, num-type $y, num-type _x) to $array)` not only sets $y and _x, but it also
@@ -1421,13 +1434,15 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 					elem.empty().append(data);
 				}
 				else {
+					const tempVariables = elem.data('tempVariables');
 					section.renderInto("", null,
 						assign({}, cd, { append: "replace", source: elem.data('originalSource') || '', target: elem }),
 						/*
 							Since the shown hook needs access to the tempVariables that are available at its location, retrieve
-							the tempVariables data placed on it by Section.execute().
+							the tempVariables data placed on it by Section.execute(), creating a new child scope using Object.create()
+							(similar to how (for:) creates scopes for its renders.)
 						*/
-						elem.data('tempVariables')
+						tempVariables && Object.create(tempVariables)
 					);
 				}
 			}));

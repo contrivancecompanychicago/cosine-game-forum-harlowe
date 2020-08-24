@@ -816,12 +816,14 @@ define([
 					stack, or, if absent, the base VarScope class.
 				*/
 				tempVariables = Object.create(this.stack.length ?  this.stackTop.tempVariables : VarScope);
-				/*
-					For debug mode, the temp variables store needs to also carry the name of its enclosing lexical scope.
-					We derive this from the current target.
+			}
+			/*
+				For debug mode, the temp variables store needs to also carry the name of its enclosing lexical scope.
+				We derive this from the current target.
 
-					(The target should always be truthy, but, just in case...)
-				*/
+				(The target should always be truthy, but, just in case...)
+			*/
+			if (!tempVariables.hasOwnProperty('TwineScript_VariableStoreName')) {
 				const targetTag = target && target.tag();
 				tempVariables.TwineScript_VariableStoreName = (
 					targetTag === 'tw-hook' ? (target.attr('name') ? ("?" + target.attr('name')) : "an unnamed hook") :

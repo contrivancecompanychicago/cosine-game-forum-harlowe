@@ -749,6 +749,18 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				if (i > 0) {
 					object = clone(object);
 				}
+				/*
+					Special case for temp variables: inner hooks can modify outer hooks' values.
+				*/
+				else if (object.TwineScript_VariableStore && object !== State.variables) {
+					let parent = object;
+					while(parent.TwineScript_VariableStore && !parent.hasOwnProperty(property)) {
+						parent = Object.getPrototypeOf(parent);
+					}
+					if (parent.TwineScript_VariableStore) {
+						object = parent;
+					}
+				}
 
 				/*
 					Certain types of objects require special means of assigning

@@ -216,7 +216,7 @@ define(['jquery','utils/operationutils','internaltypes/changedescriptor', 'inter
 			be sufficient given macros shouldn't be mutatable from user code.
 		*/
 		TwineScript_Clone() {
-			return Object.assign(Object.create(CustomMacro), this);
+			return assign(create(CustomMacro), this);
 		},
 
 		TwineScript_ToSource() {
@@ -231,7 +231,7 @@ define(['jquery','utils/operationutils','internaltypes/changedescriptor', 'inter
 			that Macros.addCustom() will pass into the macroEntryFn on execution: varNames and body.
 		*/
 		create(params, body) {
-			const ret = Object.assign(Object.create(this), {
+			const ret = assign(create(this), {
 				params,
 				/*
 					The number of times this has been called throughout the whole story. Used

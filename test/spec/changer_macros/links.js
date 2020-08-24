@@ -374,9 +374,9 @@ describe("link macros", function() {
 			var p = runPassage('[(set:_foo to 1)|3)[_foo]](link-show:"A",?3)');
 			p.find('tw-link').click();
 			expect(p.text()).toBe('1A');
-			var p = runPassage('(set:_foo to 1)|3)[_foo][(set:_foo to 2)(link-show:"A",?3)]');
+			p = runPassage('(set:_foo to 1)|3)[_foo][(set:_foo to 2)(link-show:"A",?3)]');
 			p.find('tw-link').click();
-			expect(p.text()).toBe('1A');
+			expect(p.text()).toBe('2A');
 		});
 		// May not want to implement this
 		/*it("when clicked, plain hooks (and only plain hooks) in the link text are removed", function() {

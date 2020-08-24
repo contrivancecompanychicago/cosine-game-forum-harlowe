@@ -181,7 +181,7 @@ describe("control flow macros", function() {
 		});
 		it("works with temp variables", function() {
 			expect('[(set:_foo to 1)|3)[_foo]](show:?3)').markupToPrint('1');
-			expect('(set:_foo to 1)|3)[_foo][(set:_foo to 2)(show:?3)]').markupToPrint('1');
+			expect('(set:_foo to 1)|3)[_foo][(set:_foo to 2)(show:?3)]').markupToPrint('2');
 		});
 	});
 	describe("the (hide:) macro", function() {
@@ -241,7 +241,10 @@ describe("control flow macros", function() {
 		});
 		it("works with temp variables", function() {
 			expect('[(set:_foo to 1)|3>[_foo]](rerun:?3)').markupToPrint('1');
-			expect('(set:_foo to 1)|3>[_foo][(set:_foo to 2)(rerun:?3)]').markupToPrint('1');
+			expect('(set:_foo to 1)|3>[_foo][(set:_foo to 2)(rerun:?3)]').markupToPrint('2');
+		});
+		it("works with temp variables when rerunning itself", function() {
+			expect('(set:_foo to 1)|3>[_foo(if:_foo < 2)[(set:_foo to it + 1)(rerun:?3)]]').markupToPrint('2');
 		});
 	});
 	describe("in debug mode, the <tw-expression> has the 'false' class when the hook is hidden", function() {

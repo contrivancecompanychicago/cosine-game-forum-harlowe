@@ -96,7 +96,7 @@ describe("interaction macros", function() {
 					it("works with temporary variables", function() {
 						var p = runPassage("(set:_a to 1)[(set:_a to 2)]<bar|("+e.name+":?bar)[(print:_a)]");
 						p.find('tw-enchantment')[e.eventMethod]();
-						expect(p.text()).toBe('1');
+						expect(p.text()).toBe('2');
 					});
 					it("disenchants the selected hook when the enchantment is " + e.action + "ed", function() {
 						var p = runPassage("[cool]<foo|(" + e.name + ":?foo)[beans]");
