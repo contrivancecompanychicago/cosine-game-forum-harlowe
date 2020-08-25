@@ -232,6 +232,9 @@ describe("control flow macros", function() {
 		it("reverts hooks to their original code", function() {
 			expect('|3>[Garply](replace:?3)[Grault](rerun:?3)').markupToPrint('Garply');
 		});
+		it("errors if it would cause an infinite loop", function() {
+			expect("|1>[(rerun:?2)]|2>[(rerun:?1)]").markupToError();
+		});
 		it("doesn't work on hidden hooks", function() {
 			expect('(set:$foo to 1)|3)[(set:$foo to it+1)](rerun:?3)$foo').markupToPrint('1');
 		});

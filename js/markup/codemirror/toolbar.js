@@ -115,8 +115,6 @@
 		"#888888": "grey",
 	};
 
-	const builtinColourNamesReverse = Object.entries(builtinColourNames).reduce((a,[k,v]) => { a[v] = k; return a; }, {});
-
 	const openColors = [
 		["#f8f9fa","#fff5f5","#fff0f6","#f8f0fc","#f3f0ff","#edf2ff","#e7f5ff","#e3fafc","#e6fcf5","#ebfbee","#f4fce3","#fff9db","#fff4e6"],
 		["#f1f3f5","#ffe3e3","#ffdeeb","#f3d9fa","#e5dbff","#dbe4ff","#d0ebff","#c5f6fa","#c3fae8","#d3f9d8","#e9fac8","#fff3bf","#ffe8cc"],
@@ -130,14 +128,61 @@
 		["#212529","#c92a2a","#a61e4d","#862e9c","#5f3dc4","#364fc7","#1864ab","#0b7285","#087f5b","#2b8a3e","#5c940d","#e67700","#d9480f"]
 	];
 
-	function convertHarloweColour(colour) {
-		return colour in builtinColourNamesReverse
-			? builtinColourNamesReverse[colour]
-			: colour;
+	function toCSSColour(colour, alpha) {
+		if (+alpha === 0) {
+			return "transparent";
+		}
+		if (+alpha < 1) {
+			colour = colour.slice(1);
+			const
+				r = parseInt(colour.slice(0,2), 16),
+				g = parseInt(colour.slice(2,4), 16),
+				b = parseInt(colour.slice(4,6), 16);
+			return `rgba(${r},${g},${b},${alpha})`;
+		}
+		return colour;
 	}
 
-	function reduceHTMLColour(colour) {
+	function toHarloweColour(colour, alpha) {
+		function hexToHSL(str) {
+			str = str.slice(1);
+			const
+				r = parseInt(str.slice(0,2), 16) / 255,
+				g = parseInt(str.slice(2,4), 16) / 255,
+				b = parseInt(str.slice(4,6), 16) / 255,
+				Max = Math.max(r, g, b),
+				Min = Math.min(r, g, b),
+				// Lightness is the average of the highest and lowest values.
+				l = (Max + Min) / 2,
+				delta = Max - Min;
+
+			if (Max === Min) {
+				// If all three RGB values are equal, it is a gray.
+				return { h:0, s:0, l };
+			}
+			// Calculate hue and saturation as follows.
+			let h;
+			switch (Max) {
+				case r: h = (g - b) / delta + (g < b ? 6 : 0); break;
+				case g: h = (b - r) / delta + 2; break;
+				case b: h = (r - g) / delta + 4; break;
+			}
+			h = Math.round(h * 60);
+
+			const s = l > 0.5
+				? delta / (2 - Max - Min)
+				: delta / (Max + Min);
+			return { h, s, l };
+		}
+
 		colour = colour.toLowerCase();
+		if (+alpha === 0) {
+			return "transparent";
+		}
+		if (+alpha < 1) {
+			colour = hexToHSL(colour);
+			return `(hsl:${colour.h},${colour.s},${colour.l},${alpha})`;
+		}
 		return colour in builtinColourNames
 			? builtinColourNames[colour]
 			: (colour[1] === colour[2] && colour[3] === colour[4] && colour[5] === colour[6]) ? "#" + colour[1] + colour[3] + colour[5] : colour;
@@ -187,16 +232,15 @@
 		*/
 		const panelElem = el('<div class="harlowe-3-toolbarPanel" style="transition:max-height 0.8s;overflow-y:auto">');
 
-		const makeSwatchRow = (colours, index, visible) =>
-			el(`<span class=harlowe-3-swatchRow data-index="${index}" ${!visible ? 'style="display:none"' : ''}>`
-				+ colours.map(colour =>
-					'<span class=harlowe-3-swatch style="background-color:' + colour + '"></span>').join('')
-				+ "</span>");
-
 		const makeColourPicker = value => {
+			const makeSwatchRow = (colours, index, visible) =>
+				el(`<span class=harlowe-3-swatchRow data-index="${index}" ${!visible ? 'style="display:none"' : ''}>`
+					+ colours.map(colour =>
+						'<span class=harlowe-3-swatch style="background-color:' + colour + '"></span>').join('')
+					+ "</span>");
+
 			const ret = el('<div class=harlowe-3-singleColourPicker><input style="width:48px;margin-right:8px" type=color value="'
-				+ value + '"></input></div>');
-			const extraControls = el(`<div>`);
+				+ value + '"></div>');
 			const swatchSelect = el(`<select><option value="" selected>Harlowe built-ins</option></select>`);
 			ret.append(makeSwatchRow(Object.keys(builtinColourNames), '', true));
 			openColors.forEach((row,i) => {
@@ -207,8 +251,7 @@
 				ret[$$](`[data-index]`).forEach(ind => ind.style.display = 'none');
 				ret[$](`[data-index="${swatchSelect.value}"]`).style.display = "inline-block";
 			});
-			extraControls.append(swatchSelect);
-			ret.append(swatchSelect);
+			ret.append(swatchSelect, el('<br>'), new Text(`Opacity: `), el(`<input type=range style="width:64px;top:8px;position:relative" value=1 min=0 max=1 step=0.05>`));
 
 			ret[ON]('click', ({target}) => {
 				if (target.classList.contains('harlowe-3-swatch')) {
@@ -319,7 +362,7 @@
 					+ '</' + (inline ? 'span' : 'div') + '>');
 				const picker = makeColourPicker(row.value);
 				ret.append(picker);
-				ret[$]('input')[ON]('change', update);
+				ret[$$]('input').forEach(input => input[ON]('change', update));
 			}
 			if (type.endsWith("gradient")) {
 				ret = el(`<div style='position:relative'><span class=harlowe-3-gradientBar></span><button><i class='fa fa-plus'></i> Colour</button></div>`);
@@ -334,11 +377,16 @@
 						+ `</div></div>`
 					);
 					const picker = makeColourPicker(colour);
-					picker[$]('input')[ON]('change', ({target}) => {
-						ret.setAttribute('data-colour', target.value);
+					picker[$$]('input').forEach(input => input[ON]('change', () => {
+						const alpha = picker[$]('[type=range]').value;
+						const colour = picker[$]('[type=color]').value;
+						ret.setAttribute('data-colour', toCSSColour(colour, alpha));
+						if (alpha < 1) {
+							ret.setAttribute('data-harlowe-colour', toHarloweColour(colour, alpha));
+						}
 						update();
-					});
-					const deleteButton = el(`<button class="fa fa-times"> Delete</button>`);
+					}));
+					const deleteButton = el(`<button style='float:right'><i class="fa fa-times"></i> Delete</button>`);
 					deleteButton[ON]('click', () => { ret.remove(); update(); });
 					picker.append(deleteButton);
 					ret.firstChild.prepend(picker);
@@ -351,7 +399,7 @@
 					createColourStop(1, '#ffffff');
 				});
 
-				ret.lastChild[ON]('click', () => createColourStop(0.5, '#888888'));
+				ret[$]('button')[ON]('click', () => createColourStop(0.5, '#888888'));
 				const listener = ({target}) => {
 					if (target.classList.contains("harlowe-3-colourStop")) {
 						const html = document.documentElement;
@@ -504,6 +552,21 @@
 	};
 
 	/*
+		Some frequently used panel elements.
+	*/
+	const remainderOfPassageCheckbox = {
+		type: 'checkbox',
+		text: 'Affect the entire remainder of the passage',
+		model(m, elem) {
+			if (elem[$](':checked')) {
+				m.wrapStart = "[==\n";
+				m.wrapEnd = "";
+			}
+		},
+	};
+	const confirmRow = { type: 'confirm', };
+
+	/*
 		The Toolbar element consists of a single <div> in which a one of a set of precomputed panel <div>s are inserted. There's a "default"
 		panel, plus other panels for specific markup wizards.
 	*/
@@ -601,18 +664,9 @@
 					name: 'Animations',
 					options: ["none", "blink", "fade-in-out","rumble","shudder","sway","buoy","fidget"],
 					model,
-				},{
-					type: 'checkbox',
-					text: 'Affect the entire remainder of the passage',
-					model(m, elem) {
-						if (elem[$](':checked')) {
-							m.wrapStart = "[==\n";
-							m.wrapEnd = "";
-						}
-					},
-				},{
-					type: 'confirm',
-				});
+				},
+				remainderOfPassageCheckbox,
+				confirmRow);
 			})(),
 		borders: (() => {
 				function dropdownControls(orientation) {
@@ -640,7 +694,10 @@
 							text: 'Colour:',
 							value: "#ffffff",
 							model(m, el) {
-								m.changerNamed('b4r-colour').push(el[$]('input').value);
+								const c = el[$]('[type=color]').value,
+									a = el[$]('[type=range]').value;
+								m.changerNamed('b4r-colour').push(toHarloweColour(c, a));
+								m.borderColours = (m.borderColours || []).concat(toCSSColour(c, a));
 							}
 						}
 					];
@@ -674,7 +731,7 @@
 								*/
 								m.changers['b4r-size'] ? 'border-width:' + m.changers['b4r-size'].reduce((a,e) => `${a} ${e*2}px`,'') + ";" : ''
 							}${
-								m.changers['b4r-colour'] ? 'border-color:' + m.changers['b4r-colour'].map(convertHarloweColour).join(' ') + ";" : ''
+								m.changers['b4r-colour'] ? 'border-color:' + m.borderColours.join(' ') + ";" : ''
 							}`);
 						},
 					},
@@ -687,11 +744,8 @@
 								Quickly check that each of the to-be-constructed changers' values differ from the default,
 								and don't create them if not.
 							*/
-							[['b4r', e => parse(e) === "none"], ['b4r-size', e => +e === 1], ['b4r-colour', e => e.toLowerCase() === "#ffffff"]].forEach(([name, test]) => {
+							[['b4r', e => parse(e) === "none"], ['b4r-size', e => +e === 1], ['b4r-colour', e => e === "transparent"]].forEach(([name, test]) => {
 								m.changers[name] = reduce4ValueProp(m.changers[name]);
-								if (name === 'b4r-colour') {
-									m.changers[name] = m.changers[name].map(reduceHTMLColour);
-								}
 								if (m.changers[name].every(test)) {
 									delete m.changers[name];
 									if (name === 'b4r') {
@@ -711,11 +765,11 @@
 				text: 'Example text preview',
 				update(model, panel) {
 					panel.firstChild.setAttribute('style', `${
-						(model.changers['text-colour'] ? `color:${convertHarloweColour(model.changers['text-colour'])};` : '')
+						(model.changers['text-colour'] ? `color:${model.textColour};` : '')
 					}${
-						model.stops ? `background:linear-gradient(${
-							model.stops.map(stop => reduceHTMLColour(stop.getAttribute('data-colour')) + " " + (stop.getAttribute('data-pos')*100) + "%")
-						})` : model.changers.background ? `background:${convertHarloweColour(model.changers.background[0])}` : ''
+						model.stops ? `background:linear-gradient(${model.angle}deg, ${
+							model.stops.map(stop => stop.getAttribute('data-colour') + " " + (stop.getAttribute('data-pos')*100) + "%")
+						})` : model.changers.background ? `background:${model.backgroundColour}` : ''
 					}`);
 				},
 			},{
@@ -724,12 +778,28 @@
 			},
 			el(`<div><b>Text colour</b></div>`),
 			{
-				type: 'colour',
-				text: '',
-				value: "#ffffff",
-				model(m,el) {
-					m.changerNamed('text-colour').push(reduceHTMLColour(el[$]('input').value));
-				},
+				type: 'radiorows',
+				name: 'txtcolor',
+				options: [
+					[{
+						type:'inline-text',
+						text:'Default text colour',
+					}],
+					[
+						new Text(`Flat colour`),
+						{
+							type: 'colour',
+							text: '',
+							value: "#ffffff",
+							model(m,el) {
+								const c = el[$]('[type=color]').value,
+									a = el[$]('[type=range]').value;
+								m.changerNamed('text-colour').push(toHarloweColour(c, a));
+								m.textColour = toCSSColour(c,a);
+							},
+						}
+					],
+				],
 			},
 			el(`<div><b>Background</b></div>`),
 			{
@@ -750,7 +820,10 @@
 							text: '',
 							value: '#000000',
 							model(m, el) {
-								m.changerNamed('background').push(reduceHTMLColour(el[$]('input').value));
+							const c = el[$]('[type=color]').value,
+								a = el[$]('[type=range]').value;
+								m.changerNamed('background').push(toHarloweColour(c, a));
+								m.backgroundColour = toCSSColour(c, a);
 								m.valid = true;
 							},
 						}
@@ -763,18 +836,37 @@
 								const stops = Array.from(el[$$]('.harlowe-3-colourStop')).sort((a,b) => a.getAttribute('data-pos') - b.getAttribute('data-pos'));
 								if (stops.length > 1) {
 									m.valid = true;
-									m.changerNamed('background').push(`(gradient: 0, ${
-										stops.map(stop => Math.round(stop.getAttribute('data-pos')*10000)/10000 + "," + reduceHTMLColour(stop.getAttribute('data-colour')))
+									m.changerNamed('background').push(`(gradient: $deg, ${
+										stops.map(
+											stop => Math.round(stop.getAttribute('data-pos')*10000)/10000 + "," + (stop.getAttribute('data-harlowe-colour') || stop.getAttribute('data-colour'))
+										)
 									})`);
 									m.stops = stops;
+									m.angle = 0;
 								}
 							},
-						}
+						},
+						el('<br>'),
+						{
+							type: "inline-number",
+							text: "Angle (deg):",
+							value: 0,
+							min: 0,
+							max: 359,
+							step: 1,
+							model(m, elem) {
+								if (m.valid) {
+									const bg = m.changerNamed('background');
+									m.angle = +elem[$]('input').value;
+									bg[0] = bg[0].replace("$deg", m.angle);
+								}
+							},
+						},
 					]
 				],
-			},{
-				type:'confirm',
-			}),
+			},
+			remainderOfPassageCheckbox,
+			confirmRow),
 		/*
 			The [[Link]] button's panel. This configures the link syntax, plus a (t8n-depart:) and/or (t8n-arrive:) macro to attach to it.
 		*/
@@ -930,9 +1022,8 @@
 							],
 						}],
 					],
-				},{
-					type: 'confirm',
-				});
+				},
+				confirmRow);
 			})(),
 		if: folddownPanel({
 				type: 'text',
@@ -1128,18 +1219,9 @@
 						}
 					}
 				},
-			},{
-				type: 'checkbox',
-				text: 'Affect the entire remainder of the passage',
-				model(m, elem) {
-					if (elem[$](':checked')) {
-						m.wrapStart = "[==\n";
-						m.wrapEnd = "";
-					}
-				},
-			},{
-				type: 'confirm',
-			}),
+			},
+			remainderOfPassageCheckbox,
+			confirmRow),
 		default: folddownPanel({
 				type: 'notice',
 				text: 'The current story format is <b>Harlowe 3.2.0</b>. Consult its <a href="https://twine2.neocities.org/" target="_blank" rel="noopener noreferrer">documentation</a>.'

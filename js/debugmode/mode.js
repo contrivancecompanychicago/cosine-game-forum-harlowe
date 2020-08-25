@@ -331,7 +331,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			/*
 				If a local variable was altered rather than added, then simply update its value.
 			*/
-			const row = localTempVariables.has(row => row.name === name && row.tempScope === tempScope);
+			const row = [...localTempVariables].find(row => row.name === name && row.tempScope === tempScope);
 			if (!row) {
 				localTempVariables.add({name, path:[], value, tempScope, type});
 			}
