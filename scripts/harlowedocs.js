@@ -90,12 +90,17 @@ outputFile = outputFile.replace(/<code>([^<]+)<\/code>(~?)/g, ({length}, code, n
 	}
 	root = lex(code, 0, modeStart);
 	root.everyLeaf(token => {
+		let interstitial = "";
 		while (token.start - root.start > lastPos) {
-			ret += `<span class="${makeCSSClasses(lastPos)}">${escape(code[lastPos])}</span>`;
+			interstitial += escape(code[lastPos]);
 			lastPos += 1;
+		}
+		if (interstitial.length) {
+			ret += `<span class="${makeCSSClasses(lastPos)}">${interstitial}</span>`;
 		}
 		ret += `<span class="${makeCSSClasses(token.start)}">${escape(token.text)}</span>`;
 		lastPos = token.end - root.start;
+		return true;
 	});
 	while (code.length > lastPos) {
 		ret += `<span class="${makeCSSClasses(lastPos)}">${escape(code[lastPos])}</span>`;

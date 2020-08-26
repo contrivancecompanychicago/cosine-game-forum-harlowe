@@ -61,7 +61,8 @@
 			Uncheck all checkboxes, return all <select>s to default, and clear all textareas.
 		*/
 		Object.values(panels).forEach(panel => {
-			panel[$$]('[type=radio],[type=checkbox]').forEach(node => node.checked = node.value === 'none');
+			panel[$$]('[type=radio]').forEach(node => node.checked = (node.parentNode.parentNode[$]('label:first-of-type') === node.parentNode));
+			panel[$$]('[type=checkbox]').forEach(node => node.checked = false);
 			panel[$$]('[type=text],select').forEach(node => node.value = '');
 			panel.onreset();
 		});
@@ -349,10 +350,10 @@
 					+ '"></input></' + (inline ? 'span' : 'div') + '>');
 				ret[$]('input')[ON]('input', update);
 			}
-			if (type.endsWith("number")) {
+			if (type.endsWith("number") || type.endsWith("range")) {
 				ret = el('<' + (inline ? 'span' : 'div') + ' class="harlowe-3-labeledInput">'
 					+ row.text
-					+ '<input style="" type=number'
+					+ '<input style="" type=' + (type.endsWith("range") ? "range" : "number")
 					+ ' min=' + row.min + ' max=' + row.max + ' value=' + row.value + (row.step ? ' step=' + row.step : '') + '></input></' + (inline ? 'span' : 'div') + '>');
 				ret[$]('input')[ON]('change', update);
 			}
@@ -1222,6 +1223,87 @@
 			},
 			remainderOfPassageCheckbox,
 			confirmRow),
+		align: folddownPanel({
+				type: 'preview',
+				text: 'You can apply left, center and right alignment to your passage text, as well as adjust the margins and width.',
+				update(m, elem) {
+					elem.setAttribute("style", "width:100%;max-height:6em;overflow-y:hidden;");
+					let style = `width:${m.width*100}%;margin-left:${m.left*100}%;margin-right:${m.right*100}%;`;
+					if (m.align === "right") {
+						style += "text-align: right;";
+					}
+					else if (m.align === "left") {
+						style += "text-align: left;";
+					}
+					elem.firstChild.setAttribute('style', "display:block;" + style);
+				},
+			},{
+				type: "inline-range",
+				text: "Placement: ",
+				value: 0,
+				min: 0,
+				max: 10,
+				step: 1,
+				model(m, elem) {
+					m.placement = elem[$]('input').value/10;
+				},
+			},{
+				type: "inline-range",
+				text: "Width: ",
+				value: 5,
+				min: 1,
+				max: 10,
+				step: 1,
+				model(m, elem) {
+					m.width = elem[$]('input').value/10;
+					const area = 1 - m.width;
+					m.left = area * m.placement;
+					m.right = area * (1-m.placement);
+				},
+			},{
+				type: 'radios',
+				name: 'Alignment',
+				options: ["left", "center", "right"],
+				model(m, el) {
+					m.align = el[$]('input:checked').value;
+				},
+			},{
+				type: 'checkbox',
+				text: 'Affect the entire remainder of the passage',
+				model(m, el) {
+					const {round} = Math;
+					const GCD = (a,b) => !a? b: !b? a: a>b? GCD(a-b,b) : GCD(a,b-a);
+					const remainder = !!el[$](':checked');
+
+					/*if (m.width === (m.align === "center" ? 0.5 : 1) && m.align === (m.left && m.right ? "center" : m.left ? "left" : "right")) {
+						const left = !m.right ? 1 : round(m.left*10),
+							right = !m.left ? 1 : round(m.right*10),
+							gcd = GCD(left, right);
+						const aligner = "=".repeat(left/gcd) + (left ? ">" : "") + (right ? "<" : "") + "=".repeat(right/gcd);
+						if (remainder) {
+							m.wrapStart = aligner;
+							m.wrapEnd = '';
+						} else {
+							m.changerNamed('align').push(JSON.stringify(aligner));
+						}
+					} else*/ {
+						const left = round(m.left*100),
+							width = round(m.width*100),
+							right = round(m.right*100),
+							gcd = GCD(width, GCD(left, right));
+
+						m.changerNamed('align').push(JSON.stringify(m.align === "left" ? "<==" : m.align === "right" ? "==>" : "=><="));
+						m.changerNamed('box').push(JSON.stringify("=".repeat(left/gcd) + "X".repeat(width/gcd) + "=".repeat(right/gcd)));
+
+						if (remainder) {
+							m.wrapStart = "[==\n";
+							m.wrapEnd = "";
+						}
+					}
+					m.valid = true;
+				},
+			},
+			confirmRow),
 		default: folddownPanel({
 				type: 'notice',
 				text: 'The current story format is <b>Harlowe 3.2.0</b>. Consult its <a href="https://twine2.neocities.org/" target="_blank" rel="noopener noreferrer">documentation</a>.'
@@ -1245,6 +1327,7 @@
 					{ title:'Numbered list item',      html:'<i class="fa fa-list-ol">',          onClick: () => wrapSelection("\n0. ","")},
 					{ title:'Horizontal rule',         html:'<b>—</b>',                           onClick: () => wrapSelection("\n---\n","")},
 					el('<span class="harlowe-3-toolbarBullet">'),
+					{ title:'Alignment',               html:'<i class="fa fa-align-right">',      onClick: () => switchPanel('align')},
 					{ title:'Collapse whitespace',     html:'<b>{}</b>',                          onClick: () => wrapSelection("{","}")},
 					{
 						title:'Verbatim (ignore all markup)',
