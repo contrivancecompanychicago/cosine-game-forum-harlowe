@@ -317,4 +317,16 @@ describe("control flow macros", function() {
 			expect("(display:'quux')").markupToError();
 		});
 	});
+	['true','false'].forEach(function(name) {
+		describe("the (test-"+name+":) macro", function() {
+			['2,5,7','','"",where it is 2','(hidden:),even','?foo, ?bar, ?baz, ?qux','false','bind $a'].forEach(function(val) {
+				it("accepts any amount of data", function() {
+					expect("(print:(test-"+name+":"+val+"))").not.markupToError();
+				});
+				it("always " + (name === 'true' ? 'show' : 'hide') + "s the hook", function() {
+					expect("(test-"+name+":"+val+")[baz]").markupToPrint(name === 'true' ? 'baz' : '');
+				});
+			});
+		});
+	});
 });

@@ -425,6 +425,12 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			Any: {
 				TwineScript_TypeName: "anything",
 			},
+			/*
+				This very rare type is necessary to allow (ignore:) to replace commands which take unstorable data, such as hooks.
+			*/
+			Everything: {
+				TwineScript_TypeName: "everything",
+			},
 			
 		},
 

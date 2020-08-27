@@ -185,6 +185,11 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		if (type.TwineScript_TypeName === "anything" && arg !== undefined && !arg.TwineScript_Unstorable) {
 			return true;
 		}
+		// This very rare type should be used only for (ignore:), as well as (test-false:) and (test-true:) changers.
+		if (type.TwineScript_TypeName === "everything" && arg !== undefined) {
+			return true;
+		}
+
 		/*
 			The built-in types. Let's not get tricky here.
 		*/

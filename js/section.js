@@ -74,7 +74,7 @@ define([
 					The 'false' class is used solely by debug mode to visually denote
 					that a macro such as (if:) (but not (hidden:)) suppressed a hook.
 				*/
-				if (["if", "elseif", "unless", "else"].includes(name)) {
+				if (["if", "elseif", "unless", "else", "testfalse"].includes(name)) {
 					expr.addClass("false");
 					/*
 						Unfortunately, (else-if:) must be special-cased, so that it doesn't affect

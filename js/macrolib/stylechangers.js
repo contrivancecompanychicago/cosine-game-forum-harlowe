@@ -41,7 +41,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		```
 	*/
 	const
-		{either, wrapped, optional, Any, zeroOrMore, rest, insensitiveSet, positiveNumber, positiveInteger, nonNegativeNumber} = Macros.TypeSignature,
+		{either, wrapped, optional, Any, Everything, zeroOrMore, rest, insensitiveSet, positiveNumber, positiveInteger, nonNegativeNumber} = Macros.TypeSignature,
 		IfTypeSignature = [wrapped(Boolean, "If you gave a number, you may instead want to check that the number is not 0. "
 			+ "If you gave a string, you may instead want to check that the string is not \"\".")];
 
@@ -1976,7 +1976,73 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			},
 			[String]
 		)
-		;
+		/*d:
+			(test-true: ...[Any]) -> Changer
+
+			If you want to test your passage, while ignoring a specific changer macro in it, temporarily change that
+			changer macro's name to (test-true:), and it will ignore all of the data given to it, while enabling the hook.
+
+			Example usage:
+			* `(test-true: $eggs is 1)[Only one egg remaining!]` features an (if:) macro that has been temporarily changed to (test-true:).
+
+			Rationale:
+			While testing your passage, you may wish to examine what would happen if a changer, such as (if:) or (else:), were to have no effect on its hook.
+			But, removing and adding the macro from your passage code may get tedious and error-prone, especially if you need to disable several such
+			changers at once. Instead, you can simply temporarily change the macro's name to (test-true:), and change it back later. Regardless of what data is given
+			to this macro (colour data for (background:), booleans for (if:), hooks for (replace:)), this macro won't cause an error.
+
+			Details:
+			While it will ignore all well-formed data given to it, (test-true:) will NOT suppress errors that are already present in the data.
+			For instance, `(test-true: 5 + "3")[]` will still cause an error.
+
+			If (test-true:) and another changer are added together, such as in `(test-true:)+(if:visits is 1)`, then the latter changer will take precedence and
+			override it.
+
+			See also:
+			(ignore:), (test-false:)
+
+			Added in: 3.2.0
+			#debugging 2
+		*/
+		("test-true",
+			() => ChangerCommand.create("test-true", []),
+			d => d.enabled = true,
+			zeroOrMore(Everything)
+		)
+		/*d:
+			(test-false: ...[Any]) -> Changer
+
+			If you want to test your passage in order to see what would happen if an (if:), (unless:) or (else-if:) macro would hide the hook it's attached to,
+			you can temporarily change the name of the macro to (test-false:), which causes it to ignore the data given to it and act as if it was given `false`.
+
+			Example usage:
+			* `(test-false: $eggs is 1)[Only one egg remaining!]` features an (if:) macro that has been temporarily changed to (test-false:).
+
+			Rationale:
+			This is a counterpart of (test-true:), designed specifically for testing hooks with (if:), (unless:) and (else-if:) changers attached. For most
+			changers, using (test-true:) is sufficient to temporarily suppress the effect of the changer. However, if you want the hook to remain
+			hidden by default during the test, then using (test-true:) would still cause the hook to be displayed. While you could temporarily attach
+			(hidden:) to the hook as well, this can be cumbersome, especially if that would involve adding an additional changer to a long
+			sequence of changers attached to that hook. (test-false:) provides a more convenient alternative.
+
+			Details:
+			While it will ignore all well-formed data given to it, (test-false:) will NOT suppress errors that are already present in the data.
+			For instance, `(test-false: 5 + "3")[]` will still cause an error.
+
+			If (test-false:) and another changer are added together, such as in `(test-false:)+(if:visits is 1)`, then the latter changer will take precedence and
+			override it.
+
+			See also:
+			(ignore:), (test-true:)
+
+			Added in: 3.2.0
+			#debugging 3
+		*/
+		("test-false",
+			() => ChangerCommand.create("test-false", []),
+			d => d.enabled = false,
+			zeroOrMore(Everything)
+		);
 
 	/*d:
 		(box: String, [Number]) -> Changer

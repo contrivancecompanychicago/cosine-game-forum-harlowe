@@ -20,7 +20,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		by applying (t8n-depart:) and (t8n-arrive:). (Note that since normal passage links are identical to the
 		(link-goto:) macro, you can also attach changers to passage links.)
 	*/
-	const {Any, rest, either, optional, zeroOrMore, positiveInteger} = Macros.TypeSignature;
+	const {Any, Everything, rest, either, optional, zeroOrMore, positiveInteger} = Macros.TypeSignature;
 	const {assign} = Object;
 	const {noop} = $;
 
@@ -1838,7 +1838,38 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			(/* no cd because this is attachable:false */ _, url)=>{
 				window.location.assign(url);
 			},
-			[String], false);
+			[String], false)
+
+		/*d:
+			(ignore: ...[Any]) -> Command
+
+			If you want to test your passage while ignoring a specific command macro in it, temporarily change that
+			command macro's name to (ignore:), and it will ignore all of the data given to it.
+
+			Example usage:
+			`(ignore: ?ghost, (text-style:'outline'))` is an (enchant:) macro that has been temporarily changed to (ignore:), so that the
+			passage may be tested without the style being applied.
+
+			Rationale:
+			If you want to quickly test some aspect of your passage, you may wish to remove one or more of the commands in it, such as
+			(enchant:) or (hide:). These commands can have a large and cumbersome set of data given to them, and removing and adding them
+			can be bothersome. The (ignore:) macro can be of assistance here: simply change the command's name to "ignore", and it will
+			do nothing, while NOT causing an error regardless of what sort of data is given to it. Then, you can quickly change it back
+			to the original name after testing.
+
+			Details:
+			While it will ignore all well-formed data given to it, (ignore:) will NOT suppress errors that are already present in the data.
+			For instance, `(ignore: 4 + "2")` will still cause an error.
+
+			This command can have changers attached, but will, of course, ignore them.
+
+			See also:
+			(test-true:), (test-false:)
+
+			Added in: 3.2.0
+			#debugging 1
+		*/
+		("ignore", noop, noop, [zeroOrMore(Everything)]);
 
 	/*
 		The following couple of macros are not commands, but they are each intrinsically related to some of the macros above.

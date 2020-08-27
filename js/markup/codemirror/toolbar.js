@@ -1275,18 +1275,25 @@
 					const GCD = (a,b) => !a? b: !b? a: a>b? GCD(a-b,b) : GCD(a,b-a);
 					const remainder = !!el[$](':checked');
 
-					/*if (m.width === (m.align === "center" ? 0.5 : 1) && m.align === (m.left && m.right ? "center" : m.left ? "left" : "right")) {
-						const left = !m.right ? 1 : round(m.left*10),
-							right = !m.left ? 1 : round(m.right*10),
-							gcd = GCD(left, right);
-						const aligner = "=".repeat(left/gcd) + (left ? ">" : "") + (right ? "<" : "") + "=".repeat(right/gcd);
+					/*
+						If it's possible to reduce this specific alignment configuration to just the basic aligner markup, do so.
+					*/
+					if (m.width === (m.align === "center" ? 0.5 : 1) && (!m.left || !m.right) === (m.align !==  "center")) {
+						const left = round(m.left*10),
+							right = round(m.right*10),
+							gcd = GCD(left, right),
+							aligner =
+								(m.align === "left") ? "<==" :
+								(m.align === "right") ? "==>" :
+								"=".repeat(left/gcd) + (left ? ">" : "") + (right ? "<" : "") + "=".repeat(right/gcd);
+
 						if (remainder) {
-							m.wrapStart = aligner;
+							m.wrapStart = aligner + "\n";
 							m.wrapEnd = '';
 						} else {
 							m.changerNamed('align').push(JSON.stringify(aligner));
 						}
-					} else*/ {
+					} else {
 						const left = round(m.left*100),
 							width = round(m.width*100),
 							right = round(m.right*100),

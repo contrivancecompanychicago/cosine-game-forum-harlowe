@@ -152,6 +152,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * The following `(transition:)` transitions have been added:
    * "zoom", which makes the transitioning entity zoom in or out from the mouse cursor's position (or the last place the touch device was touched).
  * Added `(append-with:)`, `(prepend-with:)` and `(replace-with:)`, changers which modify the hook by adding a given string of code to the start or end of it, or replace it entirely. This is intended for use with things like dialogue tags or punctuation that's commonly used throughout the story.
+ * Added two debugging changers, `(test-true:)` and `(test-false:)`, inspired by Chapbook's `ifalways` and `ifnever` mods, that ignore all of the values given to them (as well as their data types) and instead act like `(if:true)` or `(if:false)`, respectively. As with their inspirations, these are designed for quick debugging checks.
 
 ###### Commands
 
@@ -162,6 +163,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a `(hide:)` macro, which removes the contents of a given hook from the passage, but allows the `(show:)` macro to restore the contents later. Hooks hidden with `(hide:)` will not re-run any containing macros when `(show:)` is used on them later.
  * Added a `(seq-link:)` macro, a variation of `(cycling-link:)` which does not cycle - it simply turns into plain text on the final string.
  * Added a `(verbatim-print:)` command macro (alias `(v6m-print:)`), a combination of `(verbatim:)` and `(print:)`. This is designed especially for printing player-inputted strings that may, for whatever reason, contain markup.
+ * Added a debugging macro, `(ignore:)`. If you wish to temporarily disable a command in the passage you're currently testing, simply change its name to "ignore" and it will ignore all of the values given to it, without causing an error.
 
 ##### Custom Macros
 
