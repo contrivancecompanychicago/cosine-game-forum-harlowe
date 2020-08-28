@@ -13,6 +13,12 @@ describe("interaction macros", function() {
 		cssClass: 'enchantment-mouseover',
 		eventMethod: 'mouseenter',
 	},{
+		name: 'mouseout',
+		entity: 'mouseout-region',
+		action: 'mouseout',
+		cssClass: 'enchantment-mouseout',
+		eventMethod: 'mouseleave',
+	},{
 		name: 'click-goto',
 		entity: 'link',
 		action: 'click',
@@ -25,26 +31,39 @@ describe("interaction macros", function() {
 		cssClass: 'enchantment-mouseover',
 		eventMethod: 'mouseenter',
 	},{
-		name: 'mouseout',
+		name: 'mouseout-goto',
 		entity: 'mouseout-region',
 		action: 'mouseout',
 		cssClass: 'enchantment-mouseout',
 		eventMethod: 'mouseleave',
 	},{
-		name: 'mouseout-goto',
+		name: 'click-undo',
+		entity: 'link',
+		action: 'click',
+		cssClass: 'enchantment-link',
+		eventMethod: 'click',
+	},{
+		name: 'mouseover-undo',
+		entity: 'mouseover-region',
+		action: 'mouseover',
+		cssClass: 'enchantment-mouseover',
+		eventMethod: 'mouseenter',
+	},{
+		name: 'mouseout-undo',
 		entity: 'mouseout-region',
 		action: 'mouseout',
 		cssClass: 'enchantment-mouseout',
 		eventMethod: 'mouseleave',
 	}].forEach(function(e) {
 		var goTo = e.name.includes('goto');
+		var undo = e.name.includes('undo');
 		var hooksetCall = "(" + e.name + ":?foo" + (goTo ? ",'garply')" : ')[]');
 		var stringCall = "(" + e.name + ":'wow'" + (goTo ? ",'garply')" : ')[]');
 		describe("(" + e.name + ":)", function() {
 			beforeEach(function() {
-				createPassage("''grault''","garply");
+				runPassage("''grault''(set: $a to 1)","garply");
 			});
-			if (!goTo) {
+			if (!goTo && !undo) {
 				it("accepts either 1 hookset or 1 non-empty string", function() {
 					expect("(print:(" + e.name + ":?foo))").not.markupToError();
 					expect("(print:(" + e.name + ":'baz'))").not.markupToError();
@@ -59,7 +78,7 @@ describe("interaction macros", function() {
 					expect("(" + e.name + ":?foo)[]").not.markupToError();
 				});
 			}
-			else {
+			else if (goTo) {
 				it("accepts either 1 hookset or 1 non-empty string, followed by a string", function() {
 					expect("(print:(" + e.name + ":?foo))").markupToError();
 					expect("(print:(" + e.name + ":'baz'))").markupToError();
@@ -76,6 +95,18 @@ describe("interaction macros", function() {
 					expect("(" + e.name + ":?foo,'qux')").markupToError();
 				});
 			}
+			else if (undo) {
+				it("accepts either 1 hookset or 1 non-empty string", function() {
+					expect("(print:(" + e.name + ":?foo))").not.markupToError();
+					expect("(print:(" + e.name + ":'baz'))").not.markupToError();
+
+					expect("(print:(" + e.name + ":?foo, 'garply'))").markupToError();
+					expect("(print:(" + e.name + ":'baz', 'garply'))").markupToError();
+				});
+				it("errors when the given passage doesn't exist", function() {
+					expect("(" + e.name + ":?foo,'qux')").markupToError();
+				});
+			}
 			describe("given a single hook", function() {
 				it("enchants the selected hook as a " + e.entity, function() {
 					var p = runPassage("[cool]<foo|" + hooksetCall).find('tw-enchantment');
@@ -86,7 +117,7 @@ describe("interaction macros", function() {
 					expect(p.length).toBe(1);
 					expect(p.hasClass(e.cssClass)).toBe(true);
 				});
-				if (!goTo) {
+				if (!goTo && !undo) {
 					it("renders the attached hook when the enchantment is " + e.action + "ed", function() {
 						var p = runPassage("[cool]<foo|(" + e.name + ":?foo)[beans]");
 						expect(p.text()).toBe("cool");
@@ -134,13 +165,24 @@ describe("interaction macros", function() {
 						expect(p.text()).toBe("123");
 					});
 				}
-				else {
+				else if (goTo) {
 					it("goes to the given passage when the enchantment is " + e.action + "ed", function(done) {
 						var p = runPassage("[cool]<foo|(" + e.name + ":?foo, 'garply')");
 						expect(p.text()).toBe("cool");
 						p.find('tw-enchantment')[e.eventMethod]();
 						setTimeout(function() {
 							expect($('tw-passage:last-child').find('b').text()).toBe("grault");
+							done();
+						},20);
+					});
+				}
+				else if (undo) {
+					it("undoes the current turn when the enchantment is " + e.action + "ed", function(done) {
+						var p = runPassage("[cool]<foo|(" + e.name + ":?foo)");
+						expect(p.text()).toBe("cool");
+						p.find('tw-enchantment')[e.eventMethod]();
+						setTimeout(function() {
+							expect("(print: $a) (print:(history:)'s length)").markupToPrint("1 1");
 							done();
 						},20);
 					});
@@ -172,7 +214,7 @@ describe("interaction macros", function() {
 							expect(g.length).toBe(1);
 						});
 						// Since the box-shadow is on a pseudo-element, we can't test its CSS.
-						if (!goTo) {
+						if (!goTo && !undo) {
 							it("multiple enchantments are triggered in order", function() {
 								var p = runPassage(
 									"(" + e.name + ":"+name+")[1]"
@@ -227,7 +269,7 @@ describe("interaction macros", function() {
 					p = runPassage(hooksetCall + "[very]<foo|[cool]<foo|").find('tw-enchantment');
 					expect(p.length).toBe(2);
 				});
-				if (!goTo) {
+				if (!goTo && !undo) {
 					it("renders the attached hook when either enchantment is " + e.action + "ed", function() {
 						['first','last'].forEach(function(f) {
 							var p = runPassage("[very]<foo|[cool]<foo|(" + e.name + ":?foo)[beans]");
@@ -252,18 +294,33 @@ describe("interaction macros", function() {
 						p.find('tw-enchantment')[e.eventMethod]();
 						expect(p.text()).toBe("garplyqux");
 					});
-				} else {
+				} else if (goTo) {
 					it("goes to the given passage when either enchantment is " + e.action + "ed", function(done) {
 						var p = runPassage("[very]<foo|[cool]<foo|(" + e.name + ":?foo, 'garply')");
 						expect(p.text()).toBe("verycool");
 						p.find('tw-enchantment').first()[e.eventMethod]();
 						setTimeout(function() {
 							expect($('tw-passage:last-child').find('b').text()).toBe("grault");
-							var p = runPassage("[very]<foo|[cool]<foo|(" + e.name + ":?foo, 'garply')");
+							p = runPassage("[very]<foo|[cool]<foo|(" + e.name + ":?foo, 'garply')");
 							expect(p.text()).toBe("verycool");
 							p.find('tw-enchantment').last()[e.eventMethod]();
 							setTimeout(function() {
 								expect($('tw-passage:last-child').find('b').text()).toBe("grault");
+								done();
+							},20);
+						},20);
+					});
+				} else if (undo) {
+					it("undoes the current turn when either enchantment is " + e.action + "ed", function(done) {
+						var p = runPassage("[very]<foo|[cool]<foo|(" + e.name + ":?foo)");
+						expect(p.text()).toBe("verycool");
+						p.find('tw-enchantment')[e.eventMethod]();
+						setTimeout(function() {
+							expect("(print: $a) (print:(history:)'s length)").markupToPrint("1 1");
+							p = runPassage("[very]<foo|[cool]<foo|(" + e.name + ":?foo)");
+							p.find('tw-enchantment').last()[e.eventMethod]();
+							setTimeout(function() {
+								expect("(print: $a) (print:(history:)'s length)").markupToPrint("1 2"); // 2, because the first markupToPrint() passage was visited also.
 								done();
 							},20);
 						},20);
@@ -281,7 +338,7 @@ describe("interaction macros", function() {
 					expect(p.length).toBe(2);
 					expect(p.hasClass(e.cssClass)).toBe(true);
 				});
-				if (!goTo) {
+				if (!goTo && !undo) {
 					it("renders the attached hook when any enchanted string is " + e.action + "ed", function() {
 						['first','last'].forEach(function(f) {
 							var p = runPassage("wow(" + e.name + ":'wow')[ gosh ]wow");
@@ -312,7 +369,7 @@ describe("interaction macros", function() {
 						p.find('tw-enchantment').first()[e.eventMethod]();
 						expect(p.text()).toBe("wowgoshgeez");
 					});
-				} else {
+				} else if (goTo) {
 					it("goes to the given passage when any enchanted string is " + e.action + "ed", function(done) {
 						var p = runPassage("wow(" + e.name + ":'wow', 'garply')wow");
 						expect(p.text()).toBe("wowwow");
@@ -324,6 +381,22 @@ describe("interaction macros", function() {
 							p.find('tw-enchantment').last()[e.eventMethod]();
 							setTimeout(function() {
 								expect($('tw-passage:last-child').find('b').text()).toBe("grault");
+								done();
+							},20);
+						},20);
+					});
+				}
+				else if (undo) {
+					it("undoes the current turn when any enchanted string is " + e.action + "ed", function(done) {
+						var p = runPassage("wow(" + e.name + ":'wow')wow");
+						expect(p.text()).toBe("wowwow");
+						p.find('tw-enchantment')[e.eventMethod]();
+						setTimeout(function() {
+							expect("(print: $a) (print:(history:)'s length)").markupToPrint("1 1");
+							p = runPassage("wow(" + e.name + ":'wow')wow");
+							p.find('tw-enchantment').last()[e.eventMethod]();
+							setTimeout(function() {
+								expect("(print: $a) (print:(history:)'s length)").markupToPrint("1 2"); // 2, because the first markupToPrint() passage was visited also.
 								done();
 							},20);
 						},20);

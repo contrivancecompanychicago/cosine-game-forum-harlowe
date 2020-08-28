@@ -82,32 +82,22 @@ outputFile = outputFile.replace(/<code>([^<]+)<\/code>(~?)/g, ({length}, code, n
 		},'');
 	}
 	code = unescape(code);
-	let ret = '', root, lastPos = 0, modeStart;
+	let ret = '', root, lastClasses = "", part = "", modeStart;
 	// If the offset is inside the "Passage markup" section, OR is followed by a </pre>, use the normal mode.
 	// Otherwise, use the macro mode.
 	if (offset > sectionMarkupEnd && !outputFile.slice(offset + length).startsWith("</pre>")) {
 		modeStart = 'macro';
 	}
 	root = lex(code, 0, modeStart);
-	root.everyLeaf(token => {
-		// Incorporate each interstitial character between the end of the last token and this one.
-		let interstitial = "";
-		let lastClasses = "";
-		while (token.start - root.start > lastPos && (!lastClasses || lastClasses === makeCSSClasses(lastPos))) {
-			interstitial += escape(code[lastPos]);
-			lastClasses = makeCSSClasses(lastPos);
-			lastPos += 1;
+	for(let i = 0; i <= code.length; i += 1) {
+		if (lastClasses !== makeCSSClasses(i) || i >= code.length) {
+			if (part) {
+				ret += `<span class="${lastClasses}">${escape(part)}</span>`;
+				part = '';
+			}
+			lastClasses = makeCSSClasses(i);
 		}
-		if (interstitial.length) {
-			ret += `<span class="${makeCSSClasses(lastPos-1)}">${interstitial}</span>`;
-		}
-		ret += `<span class="${makeCSSClasses(token.start)}">${escape(token.text)}</span>`;
-		lastPos = token.end - root.start;
-		return true;
-	});
-	while (code.length > lastPos) {
-		ret += `<span class="${makeCSSClasses(lastPos)}">${escape(code[lastPos])}</span>`;
-		lastPos += 1;
+		part += code[i]; // Will be undefined on final iteration.
 	}
 	return `<code>${ret}</code>`;
 });

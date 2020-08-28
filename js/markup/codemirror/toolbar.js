@@ -11,11 +11,12 @@
 	const $$ = $ + 'All';
 	const ON = "addEventListener";
 	const OFF = "removeEventListener";
+	const P = document.createElement('p');
 	function el(html) {
-		const elem = document.createElement('p');
-		elem.innerHTML = html;
-		return elem.firstChild;
+		P.innerHTML = html;
+		return P.firstChild;
 	}
+	const fontIcon = name => `<i class="fa fa-${name}"></i>`;
 	/*
 		The Harlowe Toolbar fits above the CodeMirror panel and provides a number of convenience buttons, in the style of forum post editors,
 		to ease the new user into the format's language.
@@ -55,7 +56,10 @@
 		The mode-switcher function, which changes the displayed panel in the toolbar.
 	*/
 	const disabledButtonCSS = 'background:hsl(0,0%,50%,0.5);opacity:0.5;pointer-events:none';
-	function switchPanel(name = 'default') {
+	function switchPanel(name) {
+		if (typeof name !== 'string') {
+			name = 'default';
+		}
 		const {height} = getComputedStyle(toolbarElem);
 		/*
 			Uncheck all checkboxes, return all <select>s to default, and clear all textareas.
@@ -366,7 +370,7 @@
 				ret[$$]('input').forEach(input => input[ON]('change', update));
 			}
 			if (type.endsWith("gradient")) {
-				ret = el(`<div style='position:relative'><span class=harlowe-3-gradientBar></span><button><i class='fa fa-plus'></i> Colour</button></div>`);
+				ret = el(`<div style='position:relative'><span class=harlowe-3-gradientBar></span><button>${fontIcon('plus')} Colour</button></div>`);
 				const gradientBar = ret[$]('.harlowe-3-gradientBar');
 				const createColourStop = (percent, colour, selected) =>  {
 					const ret = el(
@@ -387,7 +391,7 @@
 						}
 						update();
 					}));
-					const deleteButton = el(`<button style='float:right'><i class="fa fa-times"></i> Delete</button>`);
+					const deleteButton = el(`<button style='float:right'>${fontIcon('times')} Delete</button>`);
 					deleteButton[ON]('click', () => { ret.remove(); update(); });
 					picker.append(deleteButton);
 					ret.firstChild.prepend(picker);
@@ -498,8 +502,8 @@
 			if (type === "confirm") {
 				const buttons = el('<p class="buttons" style="padding-bottom:8px;"></p>');
 				const resultingCode = el(`<span class="harlowe-3-resultCode">Resulting code: <code></code> <code></code></span>`);
-				const cancel = el('<button><i class="fa fa-times"></i> Cancel</button>');
-				const confirm = el('<button class="create"><i class="fa fa-check"></i>Add</button>');
+				const cancel = el(`<button>${fontIcon('times')} Cancel</button>`);
+				const confirm = el(`<button class="create">${fontIcon('check')} Add</button>`);
 				confirm.setAttribute('style', disabledButtonCSS);
 				updaterFns.push(m => {
 					const setAttr = !m.valid ? 'setAttribute' : 'removeAttribute';
@@ -511,7 +515,7 @@
 					}
 				});
 				
-				cancel[ON]('click', () => switchPanel());
+				cancel[ON]('click', switchPanel);
 				confirm[ON]('click', () => {
 					const m = model();
 					wrapSelection(m.output() + m.wrapStart, m.wrapEnd, m.innerText, m.wrapStringify);
@@ -934,18 +938,36 @@
 				}];
 
 				return folddownPanel({
-					type: 'textarea',
-					text: "Create a hyperlink, with this text:",
-					placeholder: "Link text",
-					useSelection: true,
-					width: "60%",
-					model(m, elem) {
-						const text = elem[$]('input').value;
-						if (text.length > 0) {
-							m.linkText = text;
-							m.valid = true;
-						}
-					},
+					type: 'radiorows',
+					name: 'whichclick',
+					options: [
+						[{
+							type: 'inline-textarea',
+							text: "Create a hyperlink, with this text:",
+							placeholder: "Link text",
+							useSelection: true,
+							width: "50%",
+							model(m, elem) {
+								const text = elem[$]('input').value;
+								if (text.length > 0) {
+									m.linkText = text;
+									m.valid = true;
+								}
+							},
+						}],
+						[{
+							type: "inline-text",
+							text: "Allow the entire page to be clicked.",
+							model(m) {
+								m.changerNamed('click').push('?page');
+								m.valid = true;
+							},
+						},
+						{
+							type: "text",
+							text: "This will place a faint blue border around the edges of the page, and change the mouse cursor to the hand pointer, until it is clicked.",
+						}]
+					],
 				},{
 					type: "text",
 					text: "When it is clicked, perform this action:",
@@ -963,6 +985,11 @@
 								if (!name.length) {
 									m.valid = false;
 								}
+								if ('click' in m.changers) {
+									delete m.changers.click;
+									m.wrapStart = "(click-goto:?page," + stringify(name) + ")";
+									m.wrapEnd = "";
+								}
 								else if (!["]]", "->", "<-"].some(str => name.includes(str) || (m.linkText && m.linkText.includes(str)))) {
 									m.wrapStart = "[[" + m.linkText;
 									m.wrapEnd = "->" + name + "]]";
@@ -978,9 +1005,15 @@
 							type: 'inline-text',
 							text: "Undo the current turn, returning to the previous passage.",
 							model(m) {
-								m.changerNamed('link-undo').push(stringify(m.linkText));
-								m.wrapStart = "";
-								m.wrapEnd = "";
+								if ('click' in m.changers) {
+									m.wrapStart = "(click-undo:" + m.changers.click + ")";
+									m.wrapEnd = "";
+									delete m.changers.click;
+								} else {
+									m.changerNamed('link-undo').push(stringify(m.linkText));
+									m.wrapStart = "";
+									m.wrapEnd = "";
+								}
 							},
 						}, ...passageT8nPreviews()],
 						[{
@@ -999,26 +1032,45 @@
 						},{
 							type: 'radiorows',
 							name: 'linkReveal',
+							update(m, el) {
+								el[$$]('input').forEach(e=> e[('click' in m.changers ? "set" : "remove") + "Attribute"]("disabled",''));
+							},
 							options: [
 								[{
 									type: "inline-text",
 									text: "Then remove the link's own text.",
-									model(m){ m.changerNamed('link').push(stringify(m.linkText)); },
+									model(m) {
+										if (!('click' in m.changers)) {
+											m.changerNamed('link').push(stringify(m.linkText));
+										}
+									},
 								}],
 								[{
 									type: "inline-text",
 									text: "Then unlink the link's own text.",
-									model(m){ m.changerNamed('link-reveal').push(stringify(m.linkText)); },
+									model(m){
+										if (!('click' in m.changers)) {
+											m.changerNamed('link-reveal').push(stringify(m.linkText));
+										}
+									},
 								}],
 								[{
 									type: "inline-text",
 									text: "Re-run the hook each time the link is clicked.",
-									model(m){ m.changerNamed('link-rerun').push(stringify(m.linkText)); },
+									model(m){
+										if (!('click' in m.changers)) {
+											m.changerNamed('link-rerun').push(stringify(m.linkText));
+										}
+									},
 								}],
 								[{
 									type: "inline-text",
 									text: "Repeat the hook each time the link is clicked.",
-									model(m){ m.changerNamed('link-repeat').push(stringify(m.linkText)); },
+									model(m){
+										if (!('click' in m.changers)) {
+											m.changerNamed('link-repeat').push(stringify(m.linkText));
+										}
+									},
 								}],
 							],
 						}],
@@ -1209,7 +1261,7 @@
 				],
 			},{
 				type: 'checkbox',
-				text: `Also, only if the previous (if:) or (unless:) hook's condition wasn't fulfilled.`,
+				text: `Also, only if the previous (if:), (else-if:) or (unless:) hook's condition wasn't fulfilled.`,
 				model(m, elem) {
 					if (elem[$](':checked')) {
 						if ("if" in m.changers) {
@@ -1291,7 +1343,7 @@
 							m.wrapStart = aligner + "\n";
 							m.wrapEnd = '';
 						} else {
-							m.changerNamed('align').push(JSON.stringify(aligner));
+							m.changerNamed('align').push(stringify(aligner));
 						}
 					} else {
 						const left = round(m.left*100),
@@ -1299,8 +1351,8 @@
 							right = round(m.right*100),
 							gcd = GCD(width, GCD(left, right));
 
-						m.changerNamed('align').push(JSON.stringify(m.align === "left" ? "<==" : m.align === "right" ? "==>" : "=><="));
-						m.changerNamed('box').push(JSON.stringify("=".repeat(left/gcd) + "X".repeat(width/gcd) + "=".repeat(right/gcd)));
+						m.changerNamed('align').push(stringify(m.align === "left" ? "<==" : m.align === "right" ? "==>" : "=><="));
+						m.changerNamed('box').push(stringify("=".repeat(left/gcd) + "X".repeat(width/gcd) + "=".repeat(right/gcd)));
 
 						if (remainder) {
 							m.wrapStart = "[==\n";
@@ -1317,25 +1369,25 @@
 			},{
 				type: 'buttons',
 				buttons: [
-					{ title:'Bold',                    html:'<i class="fa fa-bold">',         onClick: () => wrapSelection("''","''")},
-					{ title:'Italic',                  html:'<i class="fa fa-italic">',       onClick: () => wrapSelection("//","//")},
-					{ title:'Strikethrough',           html:'<i class="fa fa-strikethrough">',onClick: () => wrapSelection("~~","~~")},
-					{ title:'Superscript',             html:'<i class="fa fa-superscript">',  onClick: () => wrapSelection("^^","^^")},
+					{ title:'Bold',                    html:fontIcon('bold'),         onClick: () => wrapSelection("''","''")},
+					{ title:'Italic',                  html:fontIcon('italic'),       onClick: () => wrapSelection("//","//")},
+					{ title:'Strikethrough',           html:fontIcon('strikethrough'),onClick: () => wrapSelection("~~","~~")},
+					{ title:'Superscript',             html:fontIcon('superscript'),  onClick: () => wrapSelection("^^","^^")},
 					{ title:'Text and background colour', html:`<div class='harlowe-3-bgColourButton'>`, onClick: () => switchPanel('textcolor')},
 					{
 						title:'Borders',
 						html:'<span style="display:inline-block; height:16px; width:16px; border-style: dotted solid solid dotted; border-size:3px;"></span>',
 						onClick: () => switchPanel('borders'),
 					},
-					{ title:'Special text style',      html:'Styles…',                            onClick: () => switchPanel('textstyle')},
+					{ title:'Special text style',      html:'Styles…',                    onClick: () => switchPanel('textstyle')},
 					el('<span class="harlowe-3-toolbarBullet">'),
-					{ title:'Heading',                 html:'<i class="fa fa-header">',           onClick: () => wrapSelection("\n#","")},
-					{ title:'Bulleted list item',      html:'<i class="fa fa-list-ul">',          onClick: () => wrapSelection("\n* ","")},
-					{ title:'Numbered list item',      html:'<i class="fa fa-list-ol">',          onClick: () => wrapSelection("\n0. ","")},
-					{ title:'Horizontal rule',         html:'<b>—</b>',                           onClick: () => wrapSelection("\n---\n","")},
+					{ title:'Heading',                 html:fontIcon('header'),           onClick: () => wrapSelection("\n#","")},
+					{ title:'Bulleted list item',      html:fontIcon('list-ul'),          onClick: () => wrapSelection("\n* ","")},
+					{ title:'Numbered list item',      html:fontIcon('list-ol'),          onClick: () => wrapSelection("\n0. ","")},
+					{ title:'Horizontal rule',         html:'<b>—</b>',                   onClick: () => wrapSelection("\n---\n","")},
+					{ title:'Alignment',               html:fontIcon('align-right'),      onClick: () => switchPanel('align')},
 					el('<span class="harlowe-3-toolbarBullet">'),
-					{ title:'Alignment',               html:'<i class="fa fa-align-right">',      onClick: () => switchPanel('align')},
-					{ title:'Collapse whitespace',     html:'<b>{}</b>',                          onClick: () => wrapSelection("{","}")},
+					{ title:'Collapse whitespace',     html:'<b>{}</b>',                  onClick: () => wrapSelection("{","}")},
 					{
 						title:'Verbatim (ignore all markup)',
 						html:'Vb',

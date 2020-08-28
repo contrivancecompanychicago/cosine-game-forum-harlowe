@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'utils', 'utils/operationutils', 'engine', 'passages', 'macros', 'datatypes/hookset', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/enchantment', 'internaltypes/twineerror'],
-($, Utils, {is}, Engine, Passages, Macros, HookSet, ChangerCommand, Lambda, Enchantment, TwineError) => {
+define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages', 'macros', 'datatypes/hookset', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/enchantment', 'internaltypes/twineerror'],
+($, Utils, {is}, Engine, State, Passages, Macros, HookSet, ChangerCommand, Lambda, Enchantment, TwineError) => {
 
 	const {either,rest} = Macros.TypeSignature;
 	/*
@@ -644,6 +644,14 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'passages', 'macros
 								return;
 							}
 							/*
+								If the enchantDesc has an "undo" property, then instead of filling the
+								target with the source, undo the current turn.
+							*/
+							if (enchantDesc.undo) {
+								Engine.goBack({ transition: enchantDesc.transition, });
+								return;
+							}
+							/*
 								At last, the target originally specified
 								by the ChangeDescriptor can now be filled with the
 								ChangeDescriptor's original source.
@@ -1048,8 +1056,14 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'passages', 'macros
 		(click-goto: "crim", "Test")
 		```
 
+		Details:
+		This construction differs from simply nesting (go-to:) in a hook, as in `(click:?page)[(goto:"Stonehenge")]` in one important respect: you can
+		attach the (t8n-depart:) and (t8n-arrive:) changers to the (click-goto:) command, such as by `(t8n-depart:"dissolve")(click-goto:?page, "Stonehenge")`,
+		and the passage transition will be applied when you click the indicated area. In the former construction, you'd have to attach the (t8n-depart:) and (t8n-arrive:)
+		macros to the interior (go-to:) command rather than the (click:) command.
+
 		See also:
-		(link-goto:)
+		(link-goto:), (click-undo:)
 
 		Added in: 3.0.0
 		#links 11
@@ -1072,40 +1086,85 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'passages', 'macros
 		Added in: 3.0.0
 		#links 21
 	*/
+	/*d:
+		(click-undo: HookName or String) -> Command
+
+		A special shorthand combination of the (click:) and (undo:) macros, this allows you to make a hook
+		or bit of text into a passage link. `(click-undo: ?1)` is equivalent to `(click: ?1)[(undo:)]`
+
+		Example usage:
+		`You might have gotten yourself into a pickle that only time travel can get you out of. (click-undo: ?page)`
+
+		Details:
+		This will, of course, cause an error if it's encountered on the first turn of the game (when there's nothing to undo).
+
+		You can attach the (t8n-depart:) and (t8n-arrive:) changers to (click-undo:), such as by `(t8n-depart:"dissolve")(click-undo:?page)`,
+		and the passage transition will be applied when you click the indicated area. In the former construction, you'd have to attach the (t8n-depart:) and (t8n-arrive:)
+		macros to the interior (undo:) command rather than the (click:) command.
+
+		See also:
+		(link-undo:), (click-goto:)
+
+		Added in: 3.2.0
+		#links 11
+	*/
+	/*d:
+		(mouseover-undo: HookName or String, String) -> Command
+
+		This is similar to (click-undo:), but uses the (mouseover:) macro's behaviour instead of
+		(click:)'s. For more information, consult the description of (click-undo:).
+
+		Added in: 3.2.0
+		#links 16
+	*/
+	/*d:
+		(mouseout-undo: HookName or String, String) -> Command
+
+		This is similar to (click-undo:), but uses the (mouseout:) macro's behaviour instead of
+		(click:)'s. For more information, consult the description of (click-undo:).
+
+		Added in: 3.2.0
+		#links 21
+	*/
 	interactionTypes.forEach((interactionType) => {
-		const name = interactionType.name + "-goto";
-		Macros.addCommand(name,
-			(selector, passage) => {
-				/*
-					If either of the arguments are the empty string, show an error.
-				*/
-				if (!selector || !passage) {
-					return TwineError.create("datatype", "A string given to this (" + name + ":) macro was empty.");
-				}
-				/*
-					First, of course, check for the passage's existence.
-				*/
-				if (!Passages.hasValid(passage)) {
-					return TwineError.create("macrocall",
-						"I can't (" + name + ":) the passage '" + passage + "' because it doesn't exist."
-					);
-				}
-			},
-			(desc, section, selector, passage) => {
-				/*
-					Now, newEnchantmentMacroFns() is only designed to return functions for use with addChanger().
-					What this kludge does is take the second changer function, whose signature is (descriptor, selector),
-					and then call it in TwineScript_Print() when the command is run, passing in a fake ChangeDescriptor
-					with only a "section" property.
-				*/
-				const [,makeEnchanter] = newEnchantmentMacroFns(Object.assign({}, interactionType.enchantDesc, {
-					goto: passage,
-					transition: desc.data.passageT8n,
-				}), name);
-				makeEnchanter({section}, HookSet.from(selector));
-				return Object.assign(desc, { source: '' });
-			},
-			[either(HookSet,String), String]
-		);
+		['goto','undo'].forEach(type => {
+			const name = interactionType.name + "-" + type;
+			Macros.addCommand(name,
+				(selector, passage) => {
+					/*
+						If either of the arguments are the empty string, show an error.
+					*/
+					if (!selector || (!passage && type === 'goto')) {
+						return TwineError.create("datatype", "A string given to this (" + name + ":) macro was empty.");
+					}
+					/*
+						First, of course, check for the passage's existence.
+					*/
+					if (type === "goto" && !Passages.hasValid(passage)) {
+						return TwineError.create("macrocall",
+							"I can't (" + name + ":) the passage '" + passage + "' because it doesn't exist."
+						);
+					}
+				},
+				(desc, section, selector, passage) => {
+					if (type === 'undo' && State.pastLength < 1) {
+						return TwineError.create("macrocall", "I can't (undo:) on the first turn.");
+					}
+					/*
+						Now, newEnchantmentMacroFns() is only designed to return functions for use with addChanger().
+						What this kludge does is take the second changer function, whose signature is (descriptor, selector),
+						and then call it in TwineScript_Print() when the command is run, passing in a fake ChangeDescriptor
+						with only a "section" property.
+					*/
+					const [,makeEnchanter] = newEnchantmentMacroFns(Object.assign({}, interactionType.enchantDesc,
+						{ transition: desc.data.passageT8n, },
+						type === "undo" ? { undo: true } : { goto: passage }
+					), name);
+					makeEnchanter({section}, HookSet.from(selector));
+					return Object.assign(desc, { source: '' });
+				},
+				[either(HookSet,String)].concat(type === "undo" ? [] : String)
+			);
+		});
 	});
 });

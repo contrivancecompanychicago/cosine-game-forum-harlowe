@@ -199,6 +199,24 @@
 				});
 			}
 		}
+
+		/*
+			Perform specific style alterations based on certain specific token types.
+		*/
+		function renderLine(_, __, lineElem) {
+			Array.from(lineElem.querySelectorAll('.cm-harlowe-3-colour')).forEach(elem => {
+				/*
+					It may be a bit regrettable that the fastest way to get the HTML colour of a Harlowe
+					colour token is to re-lex it separately from the tree, but since it's a single token, it should nonetheless be quick enough.
+					(Plus, colour tokens are relatively rare in most passage prose).
+				*/
+				const {colour} = lex(elem.textContent, 0, "macro").tokenAt(0);
+				/*
+					The following CSS produces a colour stripe below colour literals, which doesn't interfere with the cursor border.
+				*/
+				elem.setAttribute('style', `background:linear-gradient(to bottom,transparent,transparent 80%,${colour} 80.1%,${colour})`);
+			});
+		}
 		
 		let init = () => {
 			const doc = cm.doc;
@@ -219,8 +237,8 @@
 				const text = doc.getValue();
 				tree = lexTree(text);
 			});
-			doc.on('swapDoc', init);
 			doc.on('cursorActivity', cursorMarking);
+			cm.on('renderLine', renderLine);
 			init = null;
 		};
 		

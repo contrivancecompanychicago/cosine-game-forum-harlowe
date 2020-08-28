@@ -164,6 +164,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a `(seq-link:)` macro, a variation of `(cycling-link:)` which does not cycle - it simply turns into plain text on the final string.
  * Added a `(verbatim-print:)` command macro (alias `(v6m-print:)`), a combination of `(verbatim:)` and `(print:)`. This is designed especially for printing player-inputted strings that may, for whatever reason, contain markup.
  * Added a debugging macro, `(ignore:)`. If you wish to temporarily disable a command in the passage you're currently testing, simply change its name to "ignore" and it will ignore all of the values given to it, without causing an error.
+ * Added `(click-undo:)`, `(mouseover-undo:)`, and `(mouseout-undo:)`, to complement `(click-goto:)` and the rest.
 
 ##### Custom Macros
 
