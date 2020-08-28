@@ -1,6 +1,7 @@
 .harlowe-3-toolbarPanel {
 	transition: max-height 0.8s;
 	overflow-y: auto;
+	margin-bottom:4px;
 }
 .harlowe-3-toolbarPanel code:not(:empty) {
 	font-size:1rem;
@@ -31,14 +32,14 @@
 
 .harlowe-3-toolbarPanel > button {
 	border-radius: 0.8rem;
-	margin: 8px 2px;
+	margin: 0px 2px;
 	padding: 0px 4px;
 	height: 36px;
 	font-size: 1.2rem;
 	min-width: 28px;
 }
 
-.harlowe-3-toolbarPanel > button:not(:active) {
+.harlowe-3-toolbarPanel > button:not(:active):not(.active) {
 	border: 1px solid hsla(0,0%,50%,0.5);
 	border-top: none;
 	border-left: none;
@@ -186,4 +187,7 @@
 	border-radius:24px;
 	border:1px solid hsla(0,0%,50%,0.5);
 	display:inline-block;
+}
+.harlowe-3-hideCode ~ * .cm-harlowe-3-root:not(.cm-harlowe-3-text):not(.cm-harlowe-3-string) {
+	opacity:0.25;
 }

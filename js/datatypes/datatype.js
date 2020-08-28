@@ -8,7 +8,7 @@ define([
 	'datatypes/lambda',
 	'datatypes/custommacro',
 	'internaltypes/twineerror',
-], ({realWhitespace, anyRealLetter, anyCasedLetter}, {objectName}, Changer, Colour, Gradient, Lambda, CustomMacro, TwineError) => {
+], ({realWhitespace, anyRealLetter, anyCasedLetter, anyNewline}, {objectName}, Changer, Colour, Gradient, Lambda, CustomMacro, TwineError) => {
 	const {assign,seal,keys} = Object;
 	const {floor,abs} = Math;
 	/*
@@ -222,7 +222,7 @@ define([
 		digit:        (obj, rest) => typeof obj === "string" && !!obj.match("^\\d" + (rest ? '*' : '') + "$"),
 		alnum:        (obj, rest) => typeof obj === "string" && !!obj.match("^" + anyRealLetter + (rest ? '*' : '') + "$"),
 		anycase:      (obj, rest) => typeof obj === "string" && !!obj.match("^" + anyCasedLetter + (rest ? '*' : '') + "$"),
-		newline:      (obj, rest) => typeof obj === "string" && !!obj.match("^(?:\\n|\\r|\\r\\n)" + (rest ? '*' : '') + "$"),
+		newline:      (obj, rest) => typeof obj === "string" && !!obj.match("^" + anyNewline + (rest ? '*' : '') + "$"),
 		any:      () => true,
 		/*
 			"const" is handled almost entirely as a special case inside VarRef. This

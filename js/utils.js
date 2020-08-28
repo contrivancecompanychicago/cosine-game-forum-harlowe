@@ -273,6 +273,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 		anyRealLetter:  "[\\dA-Za-z\\u00c0-\\u00de\\u00df-\\u00ff\\u0150\\u0170\\u0151\\u0171\\uD800-\\uDFFF]",
 
 		anyUppercase, anyLowercase, anyCasedLetter,
+		anyNewline: "(?:\\n|\\r|\\r\\n)",
 
 		/*
 			HTML utilities

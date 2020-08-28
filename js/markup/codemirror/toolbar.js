@@ -133,6 +133,8 @@
 		["#212529","#c92a2a","#a61e4d","#862e9c","#5f3dc4","#364fc7","#1864ab","#0b7285","#087f5b","#2b8a3e","#5c940d","#e67700","#d9480f"]
 	];
 
+	const t8nNames = ["default", "", "instant", "dissolve", "rumble", "shudder", "pulse", "zoom", "flicker", "slide-left", "slide-right", "slide-up", "slide-down"];
+
 	function toCSSColour(colour, alpha) {
 		if (+alpha === 0) {
 			return "transparent";
@@ -311,7 +313,7 @@
 			*/
 			if (type.endsWith("preview")) {
 				ret = el(`<div class="harlowe-3-stylePreview" style="${type.startsWith('t8n') ? 'cursor:pointer;height: 2.6rem;' : ''}" ${
-					type.startsWith('t8n') ? `alt="Click to preview the transition"` : ""}><span>${row.text}</span>${type.startsWith('t8n') ? "<span>" + row.text2 + "</span>" : ''}</div>`);
+					type.startsWith('t8n') ? `alt="Click to preview the transition"` : ""}><span>${row.text || ''}</span>${type.startsWith('t8n') ? "<span>" + row.text2 + "</span>" : ''}</div>`);
 
 				if (type.startsWith('t8n')) {
 					ret[ON]('mouseup', update);
@@ -763,9 +765,6 @@
 				);
 			})(),
 		textcolor: folddownPanel({
-				type: 'text',
-				text: 'Select colours and a background.',
-			},{
 				type: 'preview',
 				text: 'Example text preview',
 				update(model, panel) {
@@ -879,7 +878,7 @@
 				const passageT8nPreviews = () => [el('<br>'),{
 					type: 'inline-dropdown',
 					text: 'Departing passage transition: ',
-					options: ["default", "", "instant", "dissolve", "rumble", "shudder", "pulse", "zoom", "flicker", "slide-left", "slide-right", "slide-up", "slide-down"],
+					options: t8nNames,
 					model(m, el) {
 						const {value} = el[$]('select');
 						if (value !== "") {
@@ -889,7 +888,7 @@
 				},{
 					type: 'inline-dropdown',
 					text: 'Arriving passage transition: ',
-					options: ["default", "", "instant", "dissolve", "rumble", "shudder", "pulse", "zoom", "flicker", "slide-left", "slide-right", "slide-up", "slide-down"],
+					options: t8nNames,
 					model(m, el) {
 						const {value} = el[$]('select');
 						if (value !== "") {
@@ -1026,9 +1025,55 @@
 									m.wrapEnd = "";
 								}
 							}
-						},{
+						},
+						el('<br>'),
+						{
 							type: "text",
 							text: '(A hook is a section of passage code enclosed in <code>[</code> or <code>]</code>, or preceded with <code>[==</code>, which can have macros attached to the front.)',
+						},{
+							type: 'inline-dropdown',
+							text: 'Revealed text transition: ',
+							options: t8nNames,
+							model(m, el) {
+								const {value} = el[$]('select');
+								if (value !== "") {
+									m.changerNamed('t8n').push(stringify(value));
+								}
+							},
+						},{
+							type: "inline-number",
+							text: "Transition time (sec): ",
+							value: 0.8,
+							min: 0,
+							max: 999,
+							step: 0.1,
+							model(m, elem) {
+								const value = elem[$]('input').value;
+								/*
+									This uses the hardcoded default time value.
+								*/
+								if (+value !== 0.8) {
+									m.changerNamed('t8n-time').push(value + 's');
+								}
+							},
+						},{
+							type: 't8n-preview',
+							text2: "Revealed Text",
+							update(m, el) {
+								if (m.initiator && !["select","div","span"].some(e => e === m.initiator.tagName.toLowerCase())) {
+									return;
+								}
+								const t8nName = t8nPreviewAnims[m.changers.t8n ? parse(m.changers.t8n[0]) : "default"](false);
+								const t8nTime = m.changers['t8n-time'] ? m.changers['t8n-time'][0] : "0.8s";
+
+								const span = el.lastChild;
+								span.setAttribute('style', `animation:${t8nName} ${t8nTime} 1;`);
+								/*
+									Flicker the <span> to trigger a restart of the animation.
+								*/
+								span.remove();
+								setTimeout(() => el.append(span));
+							},
 						},{
 							type: 'radiorows',
 							name: 'linkReveal',
@@ -1279,7 +1324,7 @@
 				type: 'preview',
 				text: 'You can apply left, center and right alignment to your passage text, as well as adjust the margins and width.',
 				update(m, elem) {
-					elem.setAttribute("style", "width:100%;max-height:6em;overflow-y:hidden;");
+					elem.setAttribute("style", "width:100%;height:6em;overflow-y:hidden;");
 					let style = `width:${m.width*100}%;margin-left:${m.left*100}%;margin-right:${m.right*100}%;`;
 					if (m.align === "right") {
 						style += "text-align: right;";
@@ -1403,6 +1448,17 @@
 						title: 'Only show a portion of text if a condition is met',
 						html:'If…',
 						onClick: () => switchPanel('if')
+					},
+					el('<span class="harlowe-3-toolbarBullet">'),
+					{ title:'Proofreading view (dim all code except strings)',
+						html:fontIcon('eye'),
+						onClick: ({target}) => {
+							toolbarElem.classList.toggle('harlowe-3-hideCode');
+							if (target.tagName.toLowerCase() === "i") {
+								target = target.parentNode;
+							}
+							target.classList.toggle('active');
+						},
 					},
 				],
 			}
