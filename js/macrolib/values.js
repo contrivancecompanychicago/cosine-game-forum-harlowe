@@ -265,7 +265,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 		*/
 		("lowerfirst", (_, string) =>
 			// This has to be an entire word, to handle surrogate pairs and single characters alike.
-			string.replace(new RegExp(anyRealLetter + "+"), word => {
+			string.replace(RegExp(anyRealLetter + "+"), word => {
 				// Split the word into code points first.
 				word = Array.from(word);
 				return word[0].toLowerCase() + (word.slice(1).join('')).toLowerCase();
@@ -297,7 +297,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 		*/
 		("upperfirst", (_, string) =>
 			// This has to be an entire word, to handle surrogate pairs and single characters alike.
-			string.replace(new RegExp(anyRealLetter + "+"), word => {
+			string.replace(RegExp(anyRealLetter + "+"), word => {
 				// Split the word into code points first.
 				word = Array.from(word);
 				return word[0].toUpperCase() + (word.slice(1).join('')).toLowerCase();
@@ -334,7 +334,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Added in: 2.0.0
 			#string
 		*/
-		("words", (_, string) => string.split(new RegExp(realWhitespace + "+")).filter(Boolean),
+		("words", (_, string) => string.split(RegExp(realWhitespace + "+")).filter(Boolean),
 		[String])
 		/*d:
 			(str-repeated: Number, String) -> String

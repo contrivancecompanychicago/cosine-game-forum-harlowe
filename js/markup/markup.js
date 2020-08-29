@@ -390,6 +390,11 @@
 					};
 				},
 			},
+
+			unclosedCollapsed: {
+				fn: emptyFn,
+			},
+
 			collapsedFront: {
 				fn: () => ({
 					isFront: true,
@@ -760,7 +765,7 @@
 				allRules[key].pattern = re;
 			}
 			else {
-				allRules[key].pattern = new RegExp(
+				allRules[key].pattern = RegExp(
 					"^(?:" + re + ")",
 					/*
 						All TwineMarkup patterns are case-insensitive.

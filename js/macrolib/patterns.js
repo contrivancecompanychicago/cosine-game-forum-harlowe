@@ -455,7 +455,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			},
 		[rest(either(nonNegativeInteger, String, Datatype, TypedVar))])
 		/*d:
-			(p-ins:)
+			(p-ins: ...String or Datatype) -> Datatype
 			Also known as: (p-insensitive:), (pattern-ins:), (pattern-insensitive:)
 
 			Creates a string pattern that matches the sequence of strings or datatypes given, case-insensitively.

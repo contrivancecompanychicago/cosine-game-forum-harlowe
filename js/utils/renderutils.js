@@ -81,8 +81,8 @@ define(['jquery', 'utils', 'renderer'], function($, Utils, Renderer) {
 	}
 
 
-	const realWhitespace  = new RegExp(Utils.realWhitespace + "+");
-	const realWhitespaceG = new RegExp(Utils.realWhitespace + "+", 'g');
+	const realWhitespace  = RegExp(Utils.realWhitespace + "+");
+	const realWhitespaceG = RegExp(Utils.realWhitespace + "+", 'g');
 
 	/*
 		A specific, simpler case for selecting substrings in text nodes: selecting

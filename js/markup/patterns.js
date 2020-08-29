@@ -211,6 +211,8 @@
 			(Try expanding this code preview using the bar on the left.)
 			```
 
+			You may apply alignment to specific hooks in your passages by attaching the (align:) macro to them.
+
 			#section
 		*/
 		align = ws + "(==+>|<=+|=+><=+|<==+>)" + ws + eol,
@@ -633,6 +635,9 @@
 
 			Details:
 
+			If you wish to still have line breaks within the markup that won't be collapsed, you can use HTML `<br>` tags (see
+			the HTML markup section for more information about raw HTML tags).
+
 			You can nest this markup within itself - `{Good  { gumballs!}}` - but the inner pair won't behave any
 			differently as a result of being nested.
 
@@ -825,6 +830,33 @@
 		*/
 		unclosedHook: "\\[=+",
 		unclosedHookPrepended: hookTagFront + "\\[=+",
+		/*d:
+			Unclosed collapsing whitespace markup
+
+			This is a special version of the collapsing whitespace markup - an open curly brace `{`, followed by any number of `=` marks, that has no matching
+			closing brace. When it is placed in a passage, it indicates that all the prose that follows, until the end of the hook
+			that contains it or the end of the passage, should have its whitespace collapsed.
+
+			As with the the unclosed hook markup, this has advantages in situations where keeping track of closing brackets would be slightly inconvenient.
+			If you use revision macros or enchantment macros like (change:), (replace:), (click:) and so forth, you can place those at the end of
+			your passage, and use a single `{=` to separate them from the rest of the passage. Additionally, you can place a `{=` at the start of your passage
+			to cause the entire passage's whitespace to be collapsed, allowing you to write additional prose without needing to have a closing brace after all of
+			your additions.
+
+			```
+			This part of the passage
+			has normal whitespace.
+			{=
+			This part of the passage
+			has collapsed
+			whitespace.
+			```
+
+			All of the details pertaining to the collapsing markup apply here - consult its article for more information.
+
+			#whitespace 2
+		*/
+		unclosedCollapsed: "\\{=+",
 		
 		passageLink:
 			passageLink.main

@@ -566,7 +566,7 @@
 		text: 'Affect the entire remainder of the passage',
 		model(m, elem) {
 			if (elem[$](':checked')) {
-				m.wrapStart = "[==\n";
+				m.wrapStart = "[=\n";
 				m.wrapEnd = "";
 			}
 		},
@@ -1018,10 +1018,10 @@
 						[{
 							type: 'inline-dropdown',
 							text: 'Reveal ',
-							options: ["an attached hook", "the remainder of the passage"],
+							options: ["an attached hook.", "the remainder of the passage."],
 							model(m, elem) {
 								if (elem[$]('select').value) {
-									m.wrapStart = "[==\n";
+									m.wrapStart = "[=\n";
 									m.wrapEnd = "";
 								}
 							}
@@ -1029,7 +1029,7 @@
 						el('<br>'),
 						{
 							type: "text",
-							text: '(A hook is a section of passage code enclosed in <code>[</code> or <code>]</code>, or preceded with <code>[==</code>, which can have macros attached to the front.)',
+							text: '(A hook is a section of passage code enclosed in <code>[</code> or <code>]</code>, or preceded with <code>[=</code>, which can have macros attached to the front.)',
 						},{
 							type: 'inline-dropdown',
 							text: 'Revealed text transition: ',
@@ -1400,7 +1400,7 @@
 						m.changerNamed('box').push(stringify("=".repeat(left/gcd) + "X".repeat(width/gcd) + "=".repeat(right/gcd)));
 
 						if (remainder) {
-							m.wrapStart = "[==\n";
+							m.wrapStart = "[=\n";
 							m.wrapEnd = "";
 						}
 					}
@@ -1408,6 +1408,32 @@
 				},
 			},
 			confirmRow),
+
+		collapse: folddownPanel({
+				type: 'inline-dropdown',
+				text: 'Collapse the whitespace within ',
+				options: ["a section of the passage.", "the remainder of the passage."],
+				model(m, elem) {
+					if (elem[$]('select').value) {
+						m.wrapStart = "{=\n";
+						m.wrapEnd = "";
+					} else {
+						m.wrapStart = "{";
+						m.wrapEnd = "}";
+					}
+					m.valid = true;
+				}
+			},
+			{
+				type:'text',
+				text: "This hides line breaks and reduces sequences of consecutive spaces to just a single space.",
+			},
+			{
+				type:'text',
+				text: "If you wish to include whitespace that's exempt from this, you may include HTML &lt;br&gt; tags, or use the verbatim (Vb) markup.",
+			},
+			confirmRow),
+
 		default: folddownPanel({
 				type: 'notice',
 				text: 'The current story format is <b>Harlowe 3.2.0</b>. Consult its <a href="https://twine2.neocities.org/" target="_blank" rel="noopener noreferrer">documentation</a>.'
@@ -1432,7 +1458,7 @@
 					{ title:'Horizontal rule',         html:'<b>—</b>',                   onClick: () => wrapSelection("\n---\n","")},
 					{ title:'Alignment',               html:fontIcon('align-right'),      onClick: () => switchPanel('align')},
 					el('<span class="harlowe-3-toolbarBullet">'),
-					{ title:'Collapse whitespace',     html:'<b>{}</b>',                  onClick: () => wrapSelection("{","}")},
+					{ title:'Collapse whitespace',     html:'<b>{}</b>',                  onClick: () => switchPanel('collapse')},
 					{
 						title:'Verbatim (ignore all markup)',
 						html:'Vb',

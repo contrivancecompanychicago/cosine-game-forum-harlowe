@@ -451,6 +451,10 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 						out += renderTag(token, "tw-collapsed");
 						break;
 					}
+					case "unclosedCollapsed": {
+						out += '<tw-collapsed>' + render(tokens.slice(i + 1, len)) + '</tw-collapsed>';
+						return out;
+					}
 					/*
 						Expressions
 					*/

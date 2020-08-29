@@ -103,6 +103,10 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 ##### Macros
 
+###### Markup
+
+ * Added unclosed collapsing whitespace markup `{=` (`{` followed by any number of `=`) to match the unclosed hook markup.
+
 ###### Metadata
 
  * Added some new macros, `(storylet:)` and `(open-storylets:)`, to support "storylets", an alternative way to link between groups of passages that's preferable for writing non-linear "episodic" interactive fiction. Instead of writing direct links between each episode, you instead write a requirement at the start of each episode, specifying (using a 'when' lambda) when would be the best time to let the player visit the passages. An example is `(storylet: when $season is "spring")`. Then, when you want the player to go to an episode, you use macros like `(open-storylets:)` to get a list of which storylet passages are available right now, and create links or other structures from there. Thanks to Emily Short for popularising the "storylet" design pattern.

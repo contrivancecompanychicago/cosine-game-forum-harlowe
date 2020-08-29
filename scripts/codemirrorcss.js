@@ -100,6 +100,8 @@ const outputFile = {
 
 	"^=collapsed":
 		"font-weight:bold; color: hsla(201,100%,30%,1.0);",
+
+	unclosedCollapsed:    coolHookBG(0.025) + "font-weight:bold; color: hsla(201,100%,30%,1.0);",
 	
 	// "Cool" hooks
 	// These are a combination of hooks and collapsed
