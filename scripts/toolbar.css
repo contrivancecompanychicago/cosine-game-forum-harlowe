@@ -191,3 +191,20 @@
 .harlowe-3-hideCode ~ * .cm-harlowe-3-root:not(.cm-harlowe-3-text):not(.cm-harlowe-3-string) {
 	opacity:0.25;
 }
+.harlowe-3-tooltip {
+	max-width:20vw;
+	position:absolute;
+	border:1px solid hsla(0,0%,50%,0.5);
+	padding:8px;
+	display:block;
+	z-index:2;
+}
+.theme-light .harlowe-3-tooltip {
+	background:white;
+}
+.theme-dark .harlowe-3-tooltip {
+	background:black;
+}
+.harlowe-3-hideTooltip ~ * .harlowe-3-tooltip {
+	display:none;
+}

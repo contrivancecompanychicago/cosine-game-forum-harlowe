@@ -127,6 +127,46 @@ $time: 0.8s;
 		display:inline-block !important;
 	}
 }
+[data-t8n^=fadeleft] {
+	&.transition-in {
+		@include animation(fade-left $time);
+		display:inline-block !important;
+	}
+	&.transition-out {
+		@include animation(fade-right $time reverse);
+		display:inline-block !important;
+	}
+}
+[data-t8n^=faderight] {
+	&.transition-in {
+		@include animation(fade-right $time);
+		display:inline-block !important;
+	}
+	&.transition-out {
+		@include animation(fade-left $time reverse);
+		display:inline-block !important;
+	}
+}
+[data-t8n^=fadeup] {
+	&.transition-in {
+		@include animation(fade-up $time);
+		display:inline-block !important;
+	}
+	&.transition-out {
+		@include animation(fade-down $time reverse);
+		display:inline-block !important;
+	}
+}
+[data-t8n^=fadedown] {
+	&.transition-in {
+		@include animation(fade-down $time);
+		display:inline-block !important;
+	}
+	&.transition-out {
+		@include animation(fade-up $time reverse);
+		display:inline-block !important;
+	}
+}
 
 /* Flicker */
 [data-t8n^=flicker] {

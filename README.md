@@ -97,7 +97,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
    * `whitespace`, which matches strings that only contain whitespace.
    * `lowercase` and `uppercase`, which match single lowercase or uppercase characters.
    * `anycase`, which matches any character which has different lowercase or uppercase forms.
-   * `newline`, which matches only a newline character.
+   * `linebreak`, which matches only a linebreak character.
    * `empty`, which matches only empty arrays, strings, datamaps and datasets.
  * Added a `transparent` built-in colour value.
 
@@ -183,7 +183,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a draggable area that, when clicked and dragged, lets you resize the debug mode panel horizontally.
  * Added a debug mode panel listing which enchantments are present in the passage, and the changers they contain. This highlights `(enchant:)` effects, as well as `(click:)`, `(mouseover:)` and `(mouseout:)`.
  * Added a debug mode panel listing which storylet passages are currently available, and their 'where' lambdas. This panel is only visible if you have `(storylet:)` macros in your story.
- * The debug mode vaiables panel now has a "(source:)" button for each variable containing a complex value (i.e. not a string, boolean, number), letting you examine and copy that variable's value as Harlowe code.
+ * The debug mode variables panel now has a "(source:)" button for each variable containing a complex value (i.e. not a string, boolean, number), letting you examine and copy that variable's value as Harlowe code.
  * The debug mode variables panel now has a "Copy $ variables as (set:) call" button at the bottom, which copies to the clipboard a string of Harlowe code that will (set:) each global variable to their currently displayed value.
  * The debug view now reveals command macros and expressions, such as `(enchant:)`, which don't print anything and are normally hidden during play.
  * Added an alternative debug view, "DOM view", which labels the unique elements on the page with their current HTML tag and a few relevant attributes, as well as spacing out the elements to better distinguish them. The elements that will be highlighted this way are `<tw-story>`, `<tw-passage>`, `<tw-sidebar>`, `<tw-include>`, `<tw-hook>`, `<tw-expression>`, `<tw-link>`, `<tw-dialog>`, `<tw-columns>`, `<tw-column>`, and `<tw-align>`.

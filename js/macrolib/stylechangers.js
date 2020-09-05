@@ -98,7 +98,8 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 	/*
 		A list of valid transition names. Used by (transition:).
 	*/
-	const validT8ns = ["instant", "dissolve", "rumble", "shudder", "pulse", "zoom", "flicker", "slideleft", "slideright", "slideup", "slidedown"];
+	const validT8ns = ["instant", "dissolve", "rumble", "shudder", "pulse", "zoom", "flicker", "slideleft", "slideright", "slideup", "slidedown",
+		"fadeleft", "faderight", "fadeup", "fadedown"];
 	const validBorders = ['dotted','dashed','solid','double','groove','ridge', 'inset','outset','none'];
 	Macros.addChanger
 		/*d:

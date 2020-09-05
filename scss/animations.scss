@@ -116,6 +116,26 @@
 	0% { @include transform(translateY(-100vh)); }
 }
 
+@include keyframes(fade-right) {
+	0% { opacity: 0; @include transform(translateX(-1em)); }
+	to { opacity: 1 }
+}
+
+@include keyframes(fade-left) {
+	0% { opacity: 0; @include transform(translateX(1em)); }
+	to { opacity: 1 }
+}
+
+@include keyframes(fade-up) {
+	0% { opacity: 0; @include transform(translateY(1em)); }
+	to { opacity: 1 }
+}
+
+@include keyframes(fade-down) {
+	0% { opacity: 0; @include transform(translateY(-1em)); }
+	to { opacity: 1 }
+}
+
 @include keyframes(flicker) {
 	0%,29%,31%,63%,65%,77%,79%,86%,88%,91%,93% { opacity: 0 }
 	30% { opacity: 0.2 }

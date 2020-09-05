@@ -102,6 +102,10 @@
 		flicker:     () => "flicker",
 		pulse:       () => "pulse",
 		instant:     rev => "appear step-" + (rev ? "end" : "start"),
+		"fade-right": () => "fade-right",
+		"fade-left":  () => "fade-left",
+		"fade-up":    () => "fade-up",
+		"fade-down":  () => "fade-down",
 	};
 
 	const builtinColourNames = {
@@ -133,7 +137,8 @@
 		["#212529","#c92a2a","#a61e4d","#862e9c","#5f3dc4","#364fc7","#1864ab","#0b7285","#087f5b","#2b8a3e","#5c940d","#e67700","#d9480f"]
 	];
 
-	const t8nNames = ["default", "", "instant", "dissolve", "rumble", "shudder", "pulse", "zoom", "flicker", "slide-left", "slide-right", "slide-up", "slide-down"];
+	const t8nNames = ["default", "", "instant", "dissolve", "rumble", "shudder", "pulse", "zoom", "flicker", "slide-left", "slide-right", "slide-up", "slide-down",
+		"fade-left", "fade-right", "fade-up", "fade-down"];
 
 	function toCSSColour(colour, alpha) {
 		if (+alpha === 0) {
@@ -302,8 +307,7 @@
 					if ('tagName' in button) {
 						return button;
 					}
-					const elem = el('<button title="' + button.title + '" class="harlowe-3-toolbarButton">' + button.html + "</button>"
-					);
+					const elem = el(`<button title="${button.title}" class="harlowe-3-toolbarButton${button.active ? ' active' : ''}">${button.html}</button>`);
 					button.onClick && elem.addEventListener('click', button.onClick);
 					return elem;
 				}));
@@ -1480,6 +1484,17 @@
 						html:fontIcon('eye'),
 						onClick: ({target}) => {
 							toolbarElem.classList.toggle('harlowe-3-hideCode');
+							if (target.tagName.toLowerCase() === "i") {
+								target = target.parentNode;
+							}
+							target.classList.toggle('active');
+						},
+					},
+					{ title:'Coding tooltips (show a tooltip when the cursor rests on code structures)',
+						html:fontIcon('comment'),
+						active: true,
+						onClick: ({target}) => {
+							toolbarElem.classList.toggle('harlowe-3-hideTooltip');
 							if (target.tagName.toLowerCase() === "i") {
 								target = target.parentNode;
 							}

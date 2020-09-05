@@ -62,7 +62,7 @@ define([
 		| `...alnum`, `...alphanumeric` | This is the above type combined with the spread `...` operator. Matches empty strings, or strings containing only alphanumeric characters.
 		| `digit` | Only matches a string consisting of exactly one of the characters '0', '1', '2', '3', '4', '5', '6', '7', '8', and '9'.
 		| `...digit` | This is the above type combined with the spread `...` operator. Matches empty strings, or strings containing only digit characters.
-		| `newline` | Only matches a newline character.
+		| `linebreak` | Only matches a line break character.
 		| `const` | Matches nothing; Use this only with (set:) to make constants.
 		| `any` | Matches anything; Use this with (macro:) to make variables that accept any storable type, or with (set:) inside data structure patterns.
 
@@ -222,7 +222,7 @@ define([
 		digit:        (obj, rest) => typeof obj === "string" && !!obj.match("^\\d" + (rest ? '*' : '') + "$"),
 		alnum:        (obj, rest) => typeof obj === "string" && !!obj.match("^" + anyRealLetter + (rest ? '*' : '') + "$"),
 		anycase:      (obj, rest) => typeof obj === "string" && !!obj.match("^" + anyCasedLetter + (rest ? '*' : '') + "$"),
-		newline:      (obj, rest) => typeof obj === "string" && !!obj.match("^" + anyNewline + (rest ? '*' : '') + "$"),
+		linebreak:    (obj, rest) => typeof obj === "string" && !!obj.match("^" + anyNewline + (rest ? '*' : '') + "$"),
 		any:      () => true,
 		/*
 			"const" is handled almost entirely as a special case inside VarRef. This

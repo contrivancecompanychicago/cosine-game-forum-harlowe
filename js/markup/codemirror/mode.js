@@ -26,7 +26,7 @@
 	/*
 		Import the TwineMarkup lexer function, and store it locally.
 	*/
-	let lex, toolbar;
+	let lex, toolbar, tooltips;
 	if(typeof module === 'object') {
 		({lex} = require('../lexer'));
 	}
@@ -38,8 +38,9 @@
 	// Loaded as a story format in TwineJS
 	else if (this && this.loaded && this.modules) {
 		lex = this.modules.Markup.lex;
-		// Only load the toolbar if this is loaded in TwineJS
+		// Only load the toolbar/tips if this is loaded in TwineJS
 		toolbar = this.modules.Toolbar;
+		tooltips = this.modules.Tooltips;
 	}
 	else if (this.TwineMarkup) {
 		lex = this.TwineMarkup.lex;
@@ -135,7 +136,7 @@
 			the token that the cursor is resting on.
 		*/
 		let cursorMarks = [];
-		function cursorMarking(doc) {
+		function cursorMarking(doc, tree) {
 			if (cursorMarks.length) {
 				cursorMarks.forEach(mark => mark.clear());
 				cursorMarks = [];
@@ -237,7 +238,10 @@
 				const text = doc.getValue();
 				tree = lexTree(text);
 			});
-			doc.on('cursorActivity', cursorMarking);
+			doc.on('cursorActivity', () => {
+				cursorMarking(doc, tree);
+				tooltips && tooltips(cm, doc, tree);
+			});
 			cm.on('renderLine', renderLine);
 			init = null;
 		};

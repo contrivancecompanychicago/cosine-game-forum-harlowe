@@ -237,7 +237,9 @@ describe("style changer macros", function() {
 			it("errors unless given a valid transition name", function() {
 				expect("(print:("+name+":''))").markupToError();
 				expect("(print:("+name+":'garply corge'))").markupToError();
-				["dissolve", "shudder", "pulse"].forEach(function(e) {
+				["dissolve", "shudder", "pulse", "flicker", "instant", "rumble",
+						"slide-right", "slide-left", "slide-top", "slide-bottom", "pulse", "zoom",
+						"fade-right", "fade-left", "fade-up", "fade-down"].forEach(function(e) {
 					expect("(print:("+name+":'" + e + "'))").not.markupToError();
 				});
 			});
