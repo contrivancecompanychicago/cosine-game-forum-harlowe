@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const typeColours = require('../js/utils/typecolours');
+const insensitiveName = (e) => (e + "").toLowerCase().replace(/-|_/g, "");
 /*
 	This extracts Harlowe macro and syntax metadata by reading
 	/*d: delimited comments from the source files.
@@ -9,6 +10,7 @@ const typeColours = require('../js/utils/typecolours');
 const
 	macroEmpty = /\(([\w\-\d]+):\)(?!`)/g,
 	macroAliases = /Also known as: [^\n]+/,
+	macroAbstract = /-> [\w]+\n(?:Also known as: [^\n]+)?\n*((?:[^\n]+\n+)+)(?=(?:Example usage))/,
 	categoryTag = /\s+#([a-z][a-z ]*[a-z])(?: (\d+))?/g,
 	/*
 		This matches a mixed-case type name, optionally plural, but not whenever
@@ -292,19 +294,25 @@ const
 			const {1:category, 2:categoryOrder} = (categoryTag.exec(text) || {});
 
 			const aka = ((macroAliases.exec(text) || [''])[0].match(macroEmpty) || []).map(e=> (new RegExp(macroEmpty).exec(e) || [])[1]) || [];
+			const abstract = ((macroAbstract.exec(input) || [])[1] || '').replace(/\n/g, ' ');
 
 			text = processTextTerms(text, name, {typeNames: true, macroNames:true});
 			
-			this.defs[title] = { text, anchor: "macro_" + name.toLowerCase(), name, category, categoryOrder, sig, returnType, aka };
+			this.defs[title] = { text, anchor: "macro_" + name.toLowerCase(), name, category, categoryOrder, sig, returnType, abstract, aka };
 		},
 
 		/*
-			This produces a 'shortened' defs object, where each definition has only these four values.
+			This produces a 'shortened' defs object, where each definition has only these four values, and each alias has its own copy of the definition.
 		*/
 		shortDefs() {
 			return Object.keys(this.defs).reduce((a,e)=>{
-				const {name, sig, returnType, aka} = this.defs[e];
-				a[e] = {name, sig, returnType, aka};
+				let {name, sig, returnType, aka, abstract, anchor} = this.defs[e];
+				/*
+					Make the name insensitive, so that it can be referenced without its 'canonical' punctuation.
+				*/
+				const data = {name, sig, returnType, aka, abstract, anchor};
+				a[insensitiveName(name)] = data;
+				aka.map(insensitiveName).forEach(alias => a[alias] = data);
 				return a;
 			},{});
 		}

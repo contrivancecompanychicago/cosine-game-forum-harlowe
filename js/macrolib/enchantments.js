@@ -987,6 +987,15 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		This is similar to (click-replace:), but uses the (mouseover:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-replace:).
 
+		Example usage:
+		```
+		You can't touch me!
+		(mouseover-prepend: ?passage)[Aah! That tickles!]
+		```
+
+		See also:
+		(mouseover-prepend:), (mouseover-append:)
+
 		Added in: 1.0.0
 		#links 15
 	*/
@@ -995,6 +1004,15 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 
 		This is similar to (click-append:), but uses the (mouseover:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-append:).
+
+		Example usage:
+		```
+		You reach into the box...
+		(mouseover-append: "box...")[ ...and pull out the final jewel.]
+		```
+
+		See also:
+		(mouseover-prepend:), (mouseover-replace:)
 
 		Added in: 1.0.0
 		#links 16
@@ -1005,6 +1023,15 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		This is similar to (click-prepend:), but uses the (mouseover:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-prepend:).
 
+		Example usage:
+		```
+		#THE END
+		(mouseover-prepend: "END")[(REAL) ]
+		```
+
+		See also:
+		(mouseover-replace:), (mouseover-append:)
+
 		Added in: 1.0.0
 		#links 17
 	*/
@@ -1013,6 +1040,15 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 
 		This is similar to (click-replace:), but uses the (mouseout:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-replace:).
+
+		Example usage:
+		```
+		You kiss her on the lips.
+		(mouseout-replace: "lips")[mouth that once sneered so cruelly at you.]
+		```
+
+		See also:
+		(mouseout-prepend:), (mouseout-append:)
 
 		Added in: 1.0.0
 		#links 20
@@ -1023,6 +1059,16 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		This is similar to (click-append:), but uses the (mouseout:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-append:).
 
+		Example usage:
+		```
+		Hold my hand.
+		(mouseout-append: "hand.")[
+		Thank you.]
+		```
+
+		See also:
+		(mouseout-prepend:), (mouseout-replace:)
+
 		Added in: 1.0.0
 		#links 21
 	*/
@@ -1031,6 +1077,15 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 
 		This is similar to (click-prepend:), but uses the (mouseout:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-prepend:).
+
+		Example usage:
+		```
+		Touch my cheek.
+		(mouseout-prepend: "cheek")[bristly, unshaven ]
+		```
+
+		See also:
+		(mouseout-append:), (mouseout-replace:)
 
 		Added in: 1.0.0
 		#links 22
@@ -1063,7 +1118,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		macros to the interior (go-to:) command rather than the (click:) command.
 
 		See also:
-		(link-goto:), (click-undo:)
+		(link-goto:), (mouseover-goto:), (mouseout-goto:)
 
 		Added in: 3.0.0
 		#links 11
@@ -1074,6 +1129,15 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		This is similar to (click-goto:), but uses the (mouseover:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-goto:).
 
+		Example usage:
+		```
+		Wait... what's |2>[over there?]
+		(mouseover-goto: ?2, "Test")
+		```
+
+		See also:
+		(link-goto:), (click-undo:), (mouseout-goto:)
+
 		Added in: 3.0.0
 		#links 16
 	*/
@@ -1082,6 +1146,15 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 
 		This is similar to (click-goto:), but uses the (mouseout:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-goto:).
+
+		Example usage:
+		```
+		You sink your head into your pillow.
+		(mouseout-goto:"pillow", "Test")
+		```
+
+		See also:
+		(link-goto:), (click-undo:), (mouseover-goto:)
 
 		Added in: 3.0.0
 		#links 21
@@ -1103,7 +1176,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		macros to the interior (undo:) command rather than the (click:) command.
 
 		See also:
-		(link-undo:), (click-goto:)
+		(link-undo:), (mouseover-undo:), (mouseout-undo:)
 
 		Added in: 3.2.0
 		#links 11
@@ -1114,6 +1187,15 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		This is similar to (click-undo:), but uses the (mouseover:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-undo:).
 
+		Example usage:
+		```
+		Now isn't the time to think about that. Look!
+		(mouseover-undo:"Look!")
+		```
+
+		See also:
+		(link-undo:), (click-undo:), (mouseout-undo:)
+
 		Added in: 3.2.0
 		#links 16
 	*/
@@ -1122,6 +1204,15 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 
 		This is similar to (click-undo:), but uses the (mouseout:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-undo:).
+
+		Example usage:
+		```
+		You sink your face into your partner's shoulder.
+		(mouseout-undo:"your partner's shoulder")
+		```
+
+		See also:
+		(link-undo:), (click-undo:), (mouseover-undo:)
 
 		Added in: 3.2.0
 		#links 21

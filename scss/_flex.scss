@@ -21,49 +21,8 @@
 // TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 // SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
-// This is a set of mixins for those who want to mess around with flexbox
-// using the native support of current browsers. For full support table
-// check: http://caniuse.com/flexbox
-//
-// Basically this will use:
-//
-// * Fallback, old syntax (IE10, Safari, mobile webkit browsers)
-// * Prefixed standard syntax (Chrome)
-// * Final standards syntax (FF, IE11, Opera 12.1)
-//
-// This was inspired by:
-// 
-// * http://dev.opera.com/articles/view/advanced-cross-browser-flexbox/
-// 
-// With help from:
-// 
-// * http://w3.org/tr/css3-flexbox/
-// * http://the-echoplex.net/flexyboxes/
-// * http://msdn.microsoft.com/en-us/library/ie/hh772069(v=vs.85).aspx
-// * http://css-tricks.com/using-flexbox/
-// * http://dev.opera.com/articles/view/advanced-cross-browser-flexbox/
-// * https://developer.mozilla.org/en-us/docs/web/guide/css/flexible_boxes
-
-//----------------------------------------------------------------------
-
-// Flexbox Containers
-//
-// The 'flex' value causes an element to generate a block-level flex
-// container box.
-//
-// The 'inline-flex' value causes an element to generate a inline-level
-// flex container box. 
-//
-// display: flex | inline-flex
-//
-// http://w3.org/tr/css3-flexbox/#flex-containers
-//
-// (Placeholder selectors for each type, for those who rather @extend)
 
 @mixin flexbox {
-	display: -webkit-box;
-	display: -webkit-flex;
-	display: -moz-flex;
 	display: -ms-flexbox;
 	display: flex;
 }
@@ -73,9 +32,6 @@
 //----------------------------------
 
 @mixin inline-flex {
-	display: -webkit-inline-box;
-	display: -webkit-inline-flex;
-	display: -moz-inline-flex;
 	display: -ms-inline-flexbox;
 	display: inline-flex;
 }
@@ -96,21 +52,6 @@
 // http://w3.org/tr/css3-flexbox/#flex-direction-property
 
 @mixin flex-direction($value: row) {
-	@if $value == row-reverse {
-		-webkit-box-direction: reverse;
-		-webkit-box-orient: horizontal;
-	} @else if $value == column {
-		-webkit-box-direction: normal;
-		-webkit-box-orient: vertical;
-	} @else if $value == column-reverse {
-		-webkit-box-direction: reverse;
-		-webkit-box-orient: vertical;
-	} @else {
-		-webkit-box-direction: normal;
-		-webkit-box-orient: horizontal;
-	}
-	-webkit-flex-direction: $value;
-	-moz-flex-direction: $value;
 	-ms-flex-direction: $value;
 	flex-direction: $value;
 }
@@ -131,9 +72,6 @@
 // http://w3.org/tr/css3-flexbox/#flex-wrap-property
 
 @mixin flex-wrap($value: nowrap) {
-	// No Webkit Box fallback.
-	-webkit-flex-wrap: $value;
-	-moz-flex-wrap: $value;
 	@if $value == nowrap {
 		-ms-flex-wrap: none;
 	} @else { 
@@ -156,9 +94,6 @@
 // http://w3.org/tr/css3-flexbox/#flex-flow-property
 
 @mixin flex-flow($values: (row nowrap)) {
-	// No Webkit Box fallback.
-	-webkit-flex-flow: $values;
-	-moz-flex-flow: $values;
 	-ms-flex-flow: $values;
 	flex-flow: $values;
 }
@@ -175,9 +110,6 @@
 // http://w3.org/tr/css3-flexbox/#order-property
 
 @mixin order($int: 0) {
-	-webkit-box-ordinal-group: $int + 1;
-	-webkit-order: $int;
-	-moz-order: $int;
 	-ms-flex-order: $int;
 	order: $int;
 }
@@ -194,9 +126,6 @@
 // http://w3.org/tr/css3-flexbox/#flex-grow-property
 
 @mixin flex-grow($int: 0) {
-	-webkit-box-flex: $int;
-	-webkit-flex-grow: $int;
-	-moz-flex-grow: $int;
 	-ms-flex-positive: $int;
 	flex-grow: $int;
 }
@@ -213,8 +142,6 @@
 // http://w3.org/tr/css3-flexbox/#flex-shrink-property
 
 @mixin flex-shrink($int: 1) {
-	-webkit-flex-shrink: $int;
-	-moz-flex-shrink: $int;
 	-ms-flex-negative: $int;
 	flex-shrink: $int;
 }
@@ -231,8 +158,6 @@
 // http://www.w3.org/TR/css3-flexbox/#flex-basis-property
 
 @mixin flex-basis($value: auto) {
-	-webkit-flex-basis: $value;
-	-moz-flex-basis: $value;
 	-ms-flex-preferred-size: $value;
 	flex-basis: $value;
 }
@@ -253,20 +178,6 @@
 // http://w3.org/tr/css3-flexbox/#flex-property
 
 @mixin flex($fg: 1, $fs: null, $fb: null) {
-    
-	// Set a variable to be used by box-flex properties
-	$fg-boxflex: $fg;
-
-	// Box-Flex only supports a flex-grow value so let's grab the
-	// first item in the list and just return that.
-	@if type-of($fg) == 'list' {
-		$fg-boxflex: nth($fg, 1);
-	}
-
-	-webkit-box-flex: $fg-boxflex;
-	-webkit-flex: $fg $fs $fb;
-	-moz-box-flex: $fg-boxflex;
-	-moz-flex: $fg $fs $fb;
 	-ms-flex: $fg $fs $fb;
 	flex: $fg $fs $fb;
 }
@@ -291,22 +202,16 @@
 
 @mixin justify-content($value: flex-start) {
 	@if $value == flex-start {
-		-webkit-box-pack: start;
 		-ms-flex-pack: start;
 	} @else if $value == flex-end {
-		-webkit-box-pack: end;
 		-ms-flex-pack: end;
 	} @else if $value == space-between {
-		-webkit-box-pack: justify;
 		-ms-flex-pack: justify;
 	} @else if $value == space-around {
 		-ms-flex-pack: distribute;		
 	} @else {
-		-webkit-box-pack: $value;
 		-ms-flex-pack: $value;
 	}
-	-webkit-justify-content: $value;
-	-moz-justify-content: $value;
 	justify-content: $value;
 }
 	// Shorter version:
@@ -331,17 +236,12 @@
 
 @mixin align-items($value: stretch) {
 	@if $value == flex-start {
-		-webkit-box-align: start;
 		-ms-flex-align: start;
 	} @else if $value == flex-end {
-		-webkit-box-align: end;
 		-ms-flex-align: end;
 	} @else {
-		-webkit-box-align: $value;
 		-ms-flex-align: $value;
 	}
-	-webkit-align-items: $value;
-	-moz-align-items: $value;
 	align-items: $value;
 }
 
@@ -353,9 +253,6 @@
 // Default: auto
 
 @mixin align-self($value: auto) {
-	// No Webkit Box Fallback.
-	-webkit-align-self: $value;
-	-moz-align-self: $value;
 	@if $value == flex-start {
 		-ms-flex-item-align: start;
 	} @else if $value == flex-end {
@@ -381,9 +278,6 @@
 // http://w3.org/tr/css3-flexbox/#align-content-property
 
 @mixin align-content($value: stretch) {
-	// No Webkit Box Fallback.
-	-webkit-align-content: $value;
-	-moz-align-content: $value;
 	@if $value == flex-start {
 		-ms-flex-line-pack: start;
 	} @else if $value == flex-end {

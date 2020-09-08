@@ -7,26 +7,11 @@
 		This is a copy of Utils.insensitiveName(), used to check macro names.
 	*/
 	const insensitiveName = (e) => (e + "").toLowerCase().replace(/-|_/g, "");
-	
-	/*
-		This MACROS token is actually replaced with an object literal listing
-		of the currently defined Harlowe macros at compile-time, from the metadata script.
-	*/
-	const macros = "MACROS";
-
-	/*
-		Produce an object holding macro names, using both their names and their aliases.
-	*/
-	const validMacros = macros instanceof Object && Object.keys(macros).reduce((a,e)=>{
-		const macro = macros[e];
-		[macro.name, ...macro.aka].forEach(name => a[insensitiveName(name)] = macro);
-		return a;
-	}, {});
 
 	/*
 		Import the TwineMarkup lexer function, and store it locally.
 	*/
-	let lex, toolbar, tooltips;
+	let lex, toolbar, tooltips, shortDefs;
 	if(typeof module === 'object') {
 		({lex} = require('../lexer'));
 	}
@@ -37,14 +22,21 @@
 	}
 	// Loaded as a story format in TwineJS
 	else if (this && this.loaded && this.modules) {
-		lex = this.modules.Markup.lex;
 		// Only load the toolbar/tips if this is loaded in TwineJS
-		toolbar = this.modules.Toolbar;
-		tooltips = this.modules.Tooltips;
+		({Markup:{lex}, Toolbar:toolbar, Tooltips:tooltips, ShortDefs:shortDefs} = this.modules);
 	}
+	// Loaded in HarloweDocs's preview pane.
 	else if (this.TwineMarkup) {
 		lex = this.TwineMarkup.lex;
+		shortDefs = this.ShortDefs;
 	}
+	/*
+		Produce an object holding macro names, using both their names and their aliases.
+	*/
+	const validMacros = Object.entries(shortDefs.Macro).reduce((a,[name,macro])=> {
+		[name, ...macro.aka].forEach(name => a[name] = macro);
+		return a;
+	}, {});
 	
 	/*
 		The mode is defined herein.

@@ -9,15 +9,10 @@
 		*/
 		0%,to { visibility:visible; }
 	}
-	@-webkit-keyframes #{$animation-name} {
-		@content;
-		0%,to { visibility:visible; }
-	}
 }
 
 @mixin transform($transforms) {
-	-webkit-transform: $transforms;
-            transform: $transforms;
+	transform: $transforms;
 }
 
 /* The following are used for (text-style:)s only */

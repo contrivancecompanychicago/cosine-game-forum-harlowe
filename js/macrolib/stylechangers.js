@@ -164,6 +164,12 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			
 			For more information, see the documentation of (if:).
 
+			Example usage:
+			```
+			(set: $form to "human")
+			(unless: $form is "duck")[The cold autumn rain chills your skin.]
+			```
+
 			Added in: 1.0.0
 			#basics 7
 		*/
@@ -247,6 +253,15 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			the attached hook if the preceding hook was hidden, and hide it otherwise.
 			If there was no preceding hook before this, then an error message will be printed.
 			
+			Example usage:
+			```
+			The coins fall... 
+			\(if: (either:false, false, false, true))
+				[and both land on tails! That means you've won the bet!]
+			\(else: )
+				[and one of them lands heads-up.]
+			```
+
 			Rationale:
 			After you've written a series of hooks guarded by (if:) and (else-if:), you'll often have one final
 			branch to show, when none of the above have been shown. (else:) is the "none of the above" variant

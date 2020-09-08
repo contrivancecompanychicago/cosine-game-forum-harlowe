@@ -4,7 +4,7 @@ SHELL := /bin/zsh
 requirejs_harlowe_flags = baseUrl=js mainConfigFile=js/harlowe.js name=harlowe include=almond \
 	insertRequire=harlowe wrap=true useStrict=true out=stdout logLevel=4 optimize=none
 
-requirejs_twinemarkup_flags = baseUrl=js/markup name=markup include=codemirror/toolbar,codemirror/tooltips,codemirror/mode useStrict=true out=stdout logLevel=4 optimize=none
+requirejs_twinemarkup_flags = baseUrl=js/markup name=markup include=codemirror/shortdefs,codemirror/tooltips,codemirror/toolbar,codemirror/mode useStrict=true out=stdout logLevel=4 optimize=none
 
 jshint_flags = --reporter scripts/jshintreporter.js
 
@@ -69,14 +69,14 @@ build/harlowe-min.js: js/*.js js/*/*.js js/*/*/*.js
 # Crudely edit out the final define() call that's added for codemirror/mode.
 unwrap = /(?:,|\n)define\([^\;]+\;/g, ""
 # Inject the definitions of valid macros, containing only the name/sig/returntype/aka
-validmacros = "\"MACROS\"", JSON.stringify(require("./scripts/metadata").Macro.shortDefs())
+shortdefs = "\"SHORTDEFS\"", JSON.stringify(Object.entries(require("./scripts/metadata")).reduce((a, [k,v]) => Object.assign(a, v.shortDefs ? {[k]: v.shortDefs()} : {}), {}))
 # Inject the pre-built CodeMirror CSS
 codemirrorcss = "\"CODEMIRRORCSS\"", JSON.stringify(require("./scripts/codemirrorcss"))
 
 build/twinemarkup-min.js: js/markup/*.js js/markup/*/*.js
 	@node_modules/.bin/r.js -o $(requirejs_twinemarkup_flags) \
 	| $(call node_replace, $(unwrap)) \
-	| $(call node_replace, $(validmacros)) \
+	| $(call node_replace, $(shortdefs)) \
 	| $(call node_replace, $(codemirrorcss)) \
 	| babel --presets es2015 \
 	| uglifyjs $(uglify_flags) \

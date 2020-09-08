@@ -392,7 +392,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		
 		/*d:
 			(print: Any) -> Command
-			This command prints out any single argument provided to it, as text.
+			This command prints out any data provided to it, as text.
 			
 			Example usage:
 			`(print: $var + "s")`
@@ -1881,10 +1881,16 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			This macro saves the current game's state in browser storage, in the given save slot,
 			and including a special filename. It can then be restored using (load-game:).
 			
+			Example usage:
+			```
+			##Chapter 2: The Mortuary
+			(save-game:"Slot A","Chapter 2 start")
+			```
+
 			Rationale:
 			
 			Many web games use browser cookies to save the player's place in the game.
-			Twine allows you to save the game, including all of the variables that were (set:)
+			Harlowe allows you to save the game, including all of the variables that were (set:)
 			or (put:), and the passages the player visited, to the player's browser storage.
 			
 			(save-game:) is a single operation that can be used as often or as little as you

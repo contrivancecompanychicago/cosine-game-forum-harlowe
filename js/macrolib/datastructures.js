@@ -727,6 +727,12 @@ define([
 			If zero values are given to (all-pass:), then it will return false by default.
 			For more information, consult the description of (all-pass:).
 
+			Example usage:
+			```
+			(set: $partyMembers to (a: (dm: "name", "Alan", curseLevel, 0), (dm: "name", "Jess", curseLevel, 0)))))
+			(set: $taintedParty to (some-pass: where its curseLevel > 0, ...$partyMembers))
+			```
+
 			Added in: 2.0.0
 			#data structure
 		*/
@@ -741,6 +747,12 @@ define([
 			This can be thought of as the opposite of (all-pass:): it produces true if every value, when given to the lambda, never evaluated to true.
 			If zero values are given to (none-pass:), then it will return true by default, just like (all-pass:).
 			For more information, consult the description of (all-pass:).
+
+			Example usage:
+			```
+			(set: $partyMembers to (a: (dm: "name", "Alan", curseLevel, 0), (dm: "name", "Jess", curseLevel, 0)))))
+			(set: $noMelvins to (none-pass: where its name is "Melvin", ...$partyMembers))
+			```
 
 			Added in: 2.0.0
 			#data structure

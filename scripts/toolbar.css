@@ -7,6 +7,9 @@
 	font-size:1rem;
 	border: 1px dotted hsl(0, 0%, 50%);
 }
+.harlowe-3-toolbarPanel [type="radio"][disabled] ~ * {
+	opacity:0.5;
+}
 .harlowe-3-stylePreview {
 	text-align: center;
 	user-select: none;
@@ -192,6 +195,7 @@
 	opacity:0.25;
 }
 .harlowe-3-tooltip {
+	font-family: "Source Sans Pro", sans-serif;
 	max-width:20vw;
 	position:absolute;
 	border:1px solid hsla(0,0%,50%,0.5);

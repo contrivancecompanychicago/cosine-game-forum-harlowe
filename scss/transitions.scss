@@ -1,7 +1,6 @@
 /* Transitions */
 @mixin animation($animations) {
-	-webkit-animation: $animations;
-            animation: $animations;
+	animation: $animations;
 }
 
 /* This is also hard-coded in Utils. */

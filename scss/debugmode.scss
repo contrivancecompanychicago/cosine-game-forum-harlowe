@@ -197,7 +197,6 @@ $zindex: 999999;
 	
 	tw-enchantment {
 		animation: enchantment 0.5s infinite;
-		-webkit-animation: enchantment 0.5s infinite;
 		border: 1px solid;
 	}
 	
@@ -220,10 +219,6 @@ $zindex: 999999;
 @keyframes enchantment {
 	0%,to { border-color: hsl( 30,100%,70%) }
 	50%   { border-color: hsl(160,100%,70%) }
-}
-@-webkit-keyframes enchantment {
-	0%,to { border-color: hsl( 30,100%,70%); }
-	50%   { border-color: hsl(160,100%,70%); }
 }
 
 $borderwidth: 2px;

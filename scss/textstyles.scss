@@ -52,7 +52,6 @@ center {
 blink {
 	text-decoration: none;
 	animation: fade-in-out 1s steps(1,end) infinite alternate;
-	-webkit-animation: fade-in-out 1s steps(1,end) infinite alternate;
 }
 
 /*** Secondary text styles, used by certain markup structures ***/
