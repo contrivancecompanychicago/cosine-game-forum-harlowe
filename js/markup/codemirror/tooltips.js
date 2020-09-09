@@ -5,34 +5,39 @@
 	const insensitiveName = e => (e + "").toLowerCase().replace(/-|_/g, "");
 	const docsURL = (anchor, contents) => `<a href="https://twine2.neocities.org/#${anchor}" target="_blank" rel="noopener noreferrer">${contents}</a>`;
 
+	const enclosedText = "This makes the enclosed text use ";
 	const tooltipMessages = {
-		hr:                  "horizontal rule",
-		bulleted:            "bulleted list item",
-		numbered:            "numbered list item",
-		heading:             ({depth}) => `level ${depth} ${depth===1 ? "(largest) " : ""}heading`,
-		align:               ({align}) => `aligner (${align})`,
+		hr:                  "This is a <b>horizontal rule</b>.",
+		bulleted:            "The <code>*</code> at the start of this line makes this a <b>bulleted list item</b>.",
+		numbered:            "The <code>0.</code> at the start of this line makes this a <b>numbered list item</b>.",
+		heading:             ({depth}) => `This is a <b>level ${depth} ${depth===1 ? "(largest) " : ""}heading</b> mark.`,
+		align:               ({align}) => `This is an <b>aligner</b> (${align}).`,
 		column:              ({width, marginRight, marginLeft}) => `column (width ${width}, left margin ${marginLeft}em, right margin ${marginRight}em)`,
-		twine1Macro:         "erroneous SugarCube macro",
-		em:                  "emphasis style",
-		strong:              "strong emphasis style",
-		bold:                "bold style",
-		italic:              "italic style",
-		strike:              "strikethrough style",
-		sup:                 "superscript style",
-		comment:             "HTML comment",
-		scriptStyleTag:      "HTML tag",
-		tag:                 "HTML tag",
-		url:                 "URL",
-		hook:                () => `hook`,
-		unclosedHook:        () => `unclosed hook`,
-		verbatim:            "verbatim markup",
+		twine1Macro:         "This is an erroneous SugarCube/Yarn-style macro call that Harlowe doesn't support.",
+		em:                  enclosedText + "<b>emphasis style</b>.",
+		strong:              enclosedText + "<b>strong emphasis style</b>.",
+		bold:                enclosedText + "<b>bold style</b>.",
+		italic:              enclosedText + "<b>italic style</b>.",
+		strike:              enclosedText + "<b>strikethrough style</b>.",
+		sup:                 enclosedText + "<b>superscript style</b>.",
+		comment:             "This is a <b>HTML comment</b>.",
+		scriptStyleTag:      token => tooltipMessages.tag(token),
+		tag:                 "This is a <b>HTML tag</b>. Harlowe supports raw HTML in passage code.",
+		hook: ({type, name, tagPosition}) => (type === "hook" ? `These square brackets are a <b>hook</b>, enclosing this section of passage code.` : '')
+			+ ` Changer values can be attached to the front of hooks.`
+			+ (name ? `<br>This hook has a <b>nametag</b> on the ${
+				tagPosition === "prepended" ? "front" : "back"
+			}. This allows the hook to be referred to in macro calls using the hook name <code>?${
+				name
+			}</code>.` : ''),
+		unclosedHook:        token => `This marks all of the remaining code in the passage as being inside a <b>hook</b>.` + tooltipMessages.hook(token),
+		verbatim:            "This is <b>verbatim markup</b>. Place text between matching pairs and amounts of <code>`</code> marks, and Harlowe will ignore the markup within, instead displaying it as-is.",
 		unclosedCollapsed:   `unclosed collapsed whitespace markup`,
 		collapsed:           `collapsed whitespace markup`,
-		escapedLine:         `escaped line break`,
-		legacyLink:          ({passage}) => `passage link to "${passage}"`,
-		passageLink:         ({passage}) => `passage link to "${passage}"`,
-		simpleLink:          ({passage}) => `passage link to "${passage}"`,
+		escapedLine:         `This is an <b>escaped line break</b> mark. This removes the line break before or after it from the displayed passage.`,
+		twineLink:           ({passage}) => `This is a link to the passage "${passage}".`,
 		br:                  ``, // Display nothing,
+		url:                 ``,
 		variable:            `story-wide variable`,
 		tempVariable:        `temp variable`,
 		macroName:           (_,[,parent]) => tooltipMessages.macro(parent),
@@ -46,9 +51,9 @@
 		belongingProperty:   `data name`,
 		belongingOperator:   `"of"`,
 		escapedStringChar:   `escaped string character`,
-		string:              `string`,
-		hookName:            `hook name`,
-		cssTime:             () => `number (CSS time format)`,
+		string:              `This is <b>string data</a>. Strings are sequences of text data enclosed in matching " or ' marks.`,
+		hookName:            ({name}) => `This <b>hook name</b> refers to <b>all hooks named "<code>${name}</code>" in this passage.`,
+		cssTime:             ({value}) => `This is <b>number data</b> in CSS time format. Harlowe automatically converts this to a number of milliseconds, so this is identical to ${value}.`,
 		datatype:            `datatype data`,
 		colour:              `colour data`,
 		number:              `number data`,
@@ -89,10 +94,16 @@
 		macro: ({name}) => {
 			const defs = ShortDefs.Macro[insensitiveName(name)];
 			if (!defs) {
-				return `Erroneous macro name`;
+				return `This is a call to a nonexistent or misspelled macro.`;
 			}
-			return `<code style='display:block'>${
-					docsURL(defs.anchor, `(${defs.name}: ${defs.sig}) -> ${defs.returnType}`)
+			const rt = defs.returnType;
+			return `This is a <b>call to the (${defs.name}:) macro</b>. ${
+					rt === "Instant" || rt === "Command" ? "It should appear in passage code without being connected to a hook." :
+					rt === "Changer" ? `It produces a Changer, which can be placed in front of a hook, or combined with other Changers.` :
+					rt === "Any" || rt === "String" ? "" :
+					`Since it produces a ${rt}, it should be nested inside another macro call that can use ${rt} (or Any) data.`
+				}<code class='harlowe-3-tooltipMacroSignature'>${
+					docsURL(defs.anchor, `(${defs.name}: ${defs.sig}) -> ${rt}`)
 				}</code>${defs.aka.length ? `<div><i>Also known as: ${
 					defs.aka.map(alias => `<code>(${alias}:)</code>`).join(', ')
 				}</i>` : ''}</div><div>${

@@ -212,3 +212,9 @@
 .harlowe-3-hideTooltip ~ * .harlowe-3-tooltip {
 	display:none;
 }
+.harlowe-3-tooltipMacroSignature {
+	display:block;
+	padding-top:0.5em;
+	margin-top:0.5em;
+	border-top:1px solid hsla(0,0%,50%,0.5);
+}

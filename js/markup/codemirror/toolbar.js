@@ -17,6 +17,7 @@
 		return P.firstChild;
 	}
 	const fontIcon = name => `<i class="fa fa-${name}"></i>`;
+	const anyLetter = "[\\w\\-\\u00c0-\\u00de\\u00df-\\u00ff\\u0150\\u0170\\u0151\\u0171\\uD800-\\uDFFF]";
 	/*
 		The Harlowe Toolbar fits above the CodeMirror panel and provides a number of convenience buttons, in the style of forum post editors,
 		to ease the new user into the format's language.
@@ -575,6 +576,7 @@
 			}
 		},
 	};
+	const hookDescription = `A <b>hook</b> is a section of passage prose enclosed in <code>[</code> or <code>]</code>, or preceded with <code>[=</code>.`;
 	const confirmRow = { type: 'confirm', };
 
 	/*
@@ -1033,7 +1035,7 @@
 						el('<br>'),
 						{
 							type: "text",
-							text: '(A hook is a section of passage code enclosed in <code>[</code> or <code>]</code>, or preceded with <code>[=</code>, which can have macros attached to the front.)',
+							text: '(' + hookDescription + ')',
 						},{
 							type: 'inline-dropdown',
 							text: 'Revealed text transition: ',
@@ -1324,6 +1326,57 @@
 			},
 			remainderOfPassageCheckbox,
 			confirmRow),
+		hook: folddownPanel({
+				type: 'text',
+				text: hookDescription + ` The main purpose of hooks is that they can have <b>changers</b> attached to the front, altering their contents or its behaviour.`,
+				model(m) {
+					m.wrapStart = "[";
+					m.wrapEnd = "]";
+					m.valid = true;
+				},
+			},{
+				type: "textarea",
+				width:"20%",
+				text: "Hook name (letters and numbers only):",
+				placeholder: "Hook name",
+				model(m, elem) {
+					const v = elem[$]('input').value;
+					if (v) {
+						if (RegExp("^" + anyLetter + "+$").exec(v)) {
+							m.wrapStart = "|" + v + ">[";
+							m.hookName = v;
+						}
+						else {
+							m.valid = false;
+						}
+					}
+				},
+			},{
+				type: 'text',
+				text: "",
+				update(m, elem) {
+					const name = (m.hookName || '').toLowerCase();
+					if (name) {
+						if (['link','page','passage','sidebar'].includes(name)) {
+							elem.innerHTML = `The hook name <b><code>?${name}</code></b> is <b>reserved</b> by Harlowe. It refers to <b>${
+								name === 'link' ? "all of the links in the passage" :
+								name === 'page' ? "the entire HTML page" :
+								name === "passage" ? "the element that contains the current passage's text" :
+								name === "sidebar" ? "the passage's sidebar, containing the undo/redo icons" :
+								"unknown"
+							}</b>.`;
+						}
+						else {
+							elem.innerHTML = `You can refer to this hook (and every other one like it) using the code <b><code>?${name}</code></b>.`;
+						}
+					}
+					else {
+						elem.innerHTML = `Hook names are optional, but giving a hook a nametag allows it to be remotely altered using macros like <code>(click:)</code>, <code>(replace:)</code>, or <code>(enchant:)</code>. `
+							+ `You can use these macros elsewhere in the passage, keeping your prose uncluttered.`;
+					}
+				},
+			},
+			confirmRow),
 		align: folddownPanel({
 				type: 'preview',
 				text: 'You can apply left, center and right alignment to your passage text, as well as adjust the margins and width.',
@@ -1479,6 +1532,7 @@
 						html:'If…',
 						onClick: () => switchPanel('if')
 					},
+					{ title:'Hook (named section of the passage)',      html:'Hook…',         onClick: () => switchPanel('hook')},
 					el('<span class="harlowe-3-toolbarBullet">'),
 					{ title:'Proofreading view (dim all code except strings)',
 						html:fontIcon('eye'),

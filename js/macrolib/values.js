@@ -969,7 +969,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			When given a sequence of booleans (the "conditions") paired with values, this provides the first value that was
 			paired with a `true` condition. This can give you one value or another based on a quick check.
 
-			Examples:
+			Example usage:
 			* `(set: $status to (cond: $cash >= 300, "stable", $cash >= 200, "lean", $cash >= 100, "skint", "broke"))`
 			* `Your (cond: $wonTheRace, "gasps of triumph", "wheezes of defeat") drown out all other noise.`
 
