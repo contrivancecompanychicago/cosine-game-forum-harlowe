@@ -19,7 +19,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 			scope to enchant.
 		*/
 		create(descriptor) {
-			Utils.assertOnlyHas(descriptor, ['scope', 'section', 'attr', 'data', 'changer', 'functions', 'lambda', 'name']);
+			Utils.assertOnlyHas(descriptor, ['scope', 'localHook', 'section', 'attr', 'data', 'changer', 'functions', 'lambda', 'name']);
 
 			return Object.assign(Object.create(this), {
 				/*
@@ -38,7 +38,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 		*/
 		enchantScope() {
 			const {attr, data, functions, section} = this;
-			let {scope, lambda} = this;
+			let {scope, localHook, lambda} = this;
 			/*
 				Create an array to temporarily store a fresh set of <tw-enchantment>s.
 				For performance reasons, this is not a jQuery that gets .add()ed to,
@@ -50,6 +50,15 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 				Now, enchant each selected word or hook within the scope.
 			*/
 			scope.forEach(section, (e, i) => {
+				/*
+					The localHook is a restriction created by (enchant-in:), limiting the given scope even further.
+					While it should probably be changed into an extension of the HookSet class, it currently allows
+					for even unnamed hooks (such as those that a changer would be attached to) to be the restricted area,
+					which would be difficult with even current (Sep 2020) user-facing HookSet syntax.
+				*/
+				if (localHook && !localHook.has(e[0]).length) {
+					return;
+				}
 				/*
 					Lambdas are given to enchantments exclusively through (enchant:). They override any
 					other changers (which shouldn't be on here anyway) and instead call the author-supplied
@@ -73,7 +82,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 								So, instead, the first item in the scope to produce an error gets replaced by it, and the rest of the scope is ignored.
 							*/
 							e.replaceWith(TwineError.create("macrocall",
-								"The changer produced by the 'via' lambda given to (enchant:) can't include a revision command like (replace:) or (append:)."
+								"The changer produced by the 'via' lambda given to (enchant:) can't include a revision or enchantment changer like (replace:) or (click:)."
 							).render(""));
 							lambda = changer = null;
 						}

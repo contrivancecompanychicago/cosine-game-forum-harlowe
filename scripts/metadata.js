@@ -10,6 +10,7 @@ const insensitiveName = (e) => (e + "").toLowerCase().replace(/-|_/g, "");
 const
 	macroEmpty = /\(([\w\-\d]+):\)(?!`)/g,
 	macroAliases = /Also known as: [^\n]+/,
+	macroAddedIn = /Added in: (\d\.\d\.\d)/,
 	macroAbstract = /-> [\w]+\n(?:Also known as: [^\n]+)?\n*((?:[^\n]+\n+)+)(?=(?:Example usage))/,
 	categoryTag = /\s+#([a-z][a-z ]*[a-z])(?: (\d+))?/g,
 	/*
@@ -243,7 +244,7 @@ const
 		regExp: /^\s*\(([\w\-\d]+):([\s\w\.\,\[\]]*)\) -> ([\w]+)/,
 
 		navLink(def) {
-			return `<li><a href="#${def.anchor}">(${def.name}:<span class='nav_macro_sig'>${def.sig}</span>)</a>
+			return `<li><a href="#${def.anchor}" ${def.addedIn === "3.2.0" ? "class='nav_new'": ""}>(${def.name}:<span class='nav_macro_sig'>${def.sig}</span>)</a>
 				<span class='nav_macro_return_type' style='${typeColours[def.returnType.toLowerCase()] || ''}'>${def.returnType}</span>${
 					def.aka.length ? `<div class='nav_macro_aka'>${def.aka.map(e => `(${e}:)`).join(', ')}</div>`
 					: ''
@@ -295,10 +296,11 @@ const
 
 			const aka = ((macroAliases.exec(text) || [''])[0].match(macroEmpty) || []).map(e=> (new RegExp(macroEmpty).exec(e) || [])[1]) || [];
 			const abstract = ((macroAbstract.exec(input) || [])[1] || '').replace(/\n/g, ' ');
+			const addedIn = ((macroAddedIn.exec(input) || [])[1] || '');
 
 			text = processTextTerms(text, name, {typeNames: true, macroNames:true});
 			
-			this.defs[title] = { text, anchor: "macro_" + name.toLowerCase(), name, category, categoryOrder, sig, returnType, abstract, aka };
+			this.defs[title] = { text, anchor: "macro_" + name.toLowerCase(), name, category, categoryOrder, sig, returnType, abstract, addedIn, aka };
 		},
 
 		/*

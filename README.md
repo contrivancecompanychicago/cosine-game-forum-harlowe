@@ -138,6 +138,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 ###### Changers
 
  * Added a variation of the `(enchant:)` macro, called `(change:)`, which simply applies the given changers once, without creating an ongoing effect that causes additional inserted text to be affected by it.
+ * Added a changer variation of `(enchant:)`, `(enchant-in:)`, which restricts the effect of the enchantment to just the attached hook. This also lets you deploy (enchant:) effects alongside other changers in variables. Note that `(enchant-in:)` cannot be supplied to itself or `(enchant:)`.
  * Added a `(text-size:)` style changer macro (also known as `(size:)`) that scales the attached hook's font size and line height by the given multiplier.
  * Added a `(transition-delay:)` macro (also known as `(t8n-delay:)`) which adds an initial delay to transitions before they begin animating. This can only enchant hooks, not links.
  * Added a `(transition-skip:)` macro (also known as `(t8n-skip:)`) which, when included with a transition, allows the player to speed up the transition by a given number of milliseconds per frame, by holding down any keyboard key, mouse button or touching the screen.
@@ -155,6 +156,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
    * "buoy" and "sway", which are slow, gentle movement animations to serve as counterparts to "rumble" and "shudder".
  * The following `(transition:)` transitions have been added:
    * "zoom", which makes the transitioning entity zoom in or out from the mouse cursor's position (or the last place the touch device was touched).
+   * "fade-up", "fade-down", "fade-left", and "fade-right", which are combinations of "dissolve" with gentler sliding transitions.
+   * "fade", which is an alias for "dissolve" (for consistency with the above, as well as the "fade-in-out" text style).
  * Added `(append-with:)`, `(prepend-with:)` and `(replace-with:)`, changers which modify the hook by adding a given string of code to the start or end of it, or replace it entirely. This is intended for use with things like dialogue tags or punctuation that's commonly used throughout the story.
  * Added two debugging changers, `(test-true:)` and `(test-false:)`, inspired by Chapbook's `ifalways` and `ifnever` mods, that ignore all of the values given to them (as well as their data types) and instead act like `(if:true)` or `(if:false)`, respectively. As with their inspirations, these are designed for quick debugging checks.
 

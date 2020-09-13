@@ -98,7 +98,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 	/*
 		A list of valid transition names. Used by (transition:).
 	*/
-	const validT8ns = ["instant", "dissolve", "rumble", "shudder", "pulse", "zoom", "flicker", "slideleft", "slideright", "slideup", "slidedown",
+	const validT8ns = ["instant", "dissolve", "fade", "rumble", "shudder", "pulse", "zoom", "flicker", "slideleft", "slideright", "slideup", "slidedown",
 		"fadeleft", "faderight", "fadeup", "fadedown"];
 	const validBorders = ['dotted','dashed','solid','double','groove','ridge', 'inset','outset','none'];
 	Macros.addChanger
@@ -652,14 +652,18 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			Details:
 			At present, the following text strings will produce a particular transition:
 			* "instant" (causes the hook to instantly appear)
-			* "dissolve" (causes the hook to gently fade in)
+			* "dissolve" or "fade" (causes the hook to gently fade in)
 			* "flicker" (causes the hook to roughly flicker in - don't use with a long (transition-time:))
 			* "shudder" (causes the hook to instantly appear while shaking back and forth)
 			* "rumble" (causes the hook to instantly appear while shaking up and down)
-			* "slide-right" (causes the hook to slide in from the right)
-			* "slide-left" (causes the hook to slide in from the left)
-			* "slide-top" (causes the hook to slide in from the top)
-			* "slide-bottom" (causes the hook to slide in from the bottom)
+			* "slide-right" (causes the hook to slide in from left to right)
+			* "slide-left" (causes the hook to slide in from right to left)
+			* "slide-up" (causes the hook to slide in from bottom to top)
+			* "slide-down" (causes the hook to slide in from top to bottom)
+			* "fade-right" (causes the hook to gently fade in while sliding rightward)
+			* "fade-left" (causes the hook to gently fade in while sliding leftward)
+			* "fade-up" (causes the hook to gently fade in while sliding upward)
+			* "fade-down" (causes the hook to gently fade in while sliding downward)
 			* "pulse" (causes the hook to instantly appear while pulsating rapidly)
 			* "zoom" (causes the hook to scale up from the mouse pointer)
 			
@@ -821,12 +825,18 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			Details:
 			This macro accepts the exact same transition names as (transition:).
 			* "instant" (causes the passage to instantly vanish)
-			* "dissolve" (causes the passage to gently fade out)
+			* "dissolve" or "fade" (causes the passage to gently fade out)
 			* "flicker" (causes the passage to roughly flicker in - don't use with a long (transition-time:)))
 			* "shudder" (causes the passage to disappear while shaking back and forth)
 			* "rumble" (causes the passage to instantly appear while shaking up and down)
-			* "slide-right" (causes the passage to slide in from the right)
-			* "slide-left" (causes the passage to slide in from the left)
+			* "slide-right" (causes the passage to slide out toward the right)
+			* "slide-left" (causes the passage to slide out toward the left)
+			* "slide-up" (causes the passage to slide out toward the top)
+			* "slide-down" (causes the passage to slide out toward the bottom)
+			* "fade-right" (causes the passage to gently fade out while sliding rightward)
+			* "fade-left" (causes the passage to gently fade out while sliding leftward)
+			* "fade-up" (causes the passage to gently fade out while sliding upward)
+			* "fade-down" (causes the passage to gently fade out while sliding downward)
 			* "pulse" (causes the passage to disappear while pulsating rapidly)
 			* "zoom" (causes the passage to shrink down toward the mouse pointer)
 
@@ -872,12 +882,18 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			Details:
 			This macro accepts the exact same transition names as (transition:).
 			* "instant" (causes the passage to instantly vanish)
-			* "dissolve" (causes the passage to gently fade out)
+			* "dissolve" or "fade" (causes the passage to gently fade out)
 			* "flicker" (causes the passage to roughly flicker out - don't use with a long (transition-time:))
 			* "shudder" (causes the passage to disappear while shaking back and forth)
 			* "rumble" (causes the passage to instantly appear while shaking up and down)
-			* "slide-right" (causes the passage to slide in from the right)
-			* "slide-left" (causes the passage to slide in from the left)
+			* "slide-right" (causes the passage to slide in from left to right)
+			* "slide-left" (causes the passage to slide in from right to left)
+			* "slide-up" (causes the passage to slide in from bottom to top)
+			* "slide-down" (causes the passage to slide in from top to bottom)
+			* "fade-right" (causes the passage to gently fade in while sliding rightward)
+			* "fade-left" (causes the passage to gently fade in while sliding leftward)
+			* "fade-up" (causes the passage to gently fade in while sliding upward)
+			* "fade-down" (causes the passage to gently fade in while sliding downward)
 			* "pulse" (causes the passage to disappear while pulsating rapidly)
 			* "zoom" (causes the passage to scale up from the mouse pointer)
 
@@ -1274,18 +1290,14 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			#styling
 		*/
 		(["text-colour", "text-color", "color", "colour"],
-			(_, CSScolour) => {
+			(_, CSScolour) => ChangerCommand.create("text-colour", [CSScolour]),
+			(d, CSScolour) => {
 				/*
 					Convert TwineScript CSS colours to bad old hexadecimal.
-					This is important as it enables the ChangerCommand to be serialised
-					as a string more easily.
 				*/
 				if (Colour.isPrototypeOf(CSScolour)) {
 					CSScolour = CSScolour.toRGBAString(CSScolour);
 				}
-				return ChangerCommand.create("text-colour", [CSScolour]);
-			},
-			(d, CSScolour) => {
 				d.styles.push({'color': CSScolour});
 				return d;
 			},

@@ -388,7 +388,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 	const Enchantments = Panel.create({
 		className: "enchantments", tabName: "Enchantment",
 		rowAdd(enchantment) {
-			const {scope, changer, name} = enchantment;
+			const {scope, changer, name, localHook} = enchantment;
 			let val;
 			if (changer) {
 				val = escape(objectName(changer));
@@ -402,7 +402,8 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			return $('<div class="enchantment-row">')
 				.data('enchantment',enchantment)
 				.append(
-					"<td class='enchantment-name'>" + toSource(scope)
+					"<td><span class='enchantment-name'>" + toSource(scope)
+					+ (localHook ? "</span><span class=enchantment-local>" + (localHook.attr('name') ? "?" + localHook.attr('name') : "an unnamed hook") : "") + "</span>"
 					+ "</td><td class='enchantment-value'>"
 					+ val + "</td>"
 					+ (changer ? "<td class='panel-row-buttons'>"

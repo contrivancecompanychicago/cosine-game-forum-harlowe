@@ -21,7 +21,7 @@
 		strike:              enclosedText + "<b>strikethrough style</b>.",
 		sup:                 enclosedText + "<b>superscript style</b>.",
 		comment:             "This is a <b>HTML comment</b>.",
-		scriptStyleTag:      token => tooltipMessages.tag(token),
+		scriptStyleTag:      () => tooltipMessages.tag,
 		tag:                 "This is a <b>HTML tag</b>. Harlowe supports raw HTML in passage code.",
 		hook: ({type, name, tagPosition}) => (type === "hook" ? `These square brackets are a <b>hook</b>, enclosing this section of passage code.` : '')
 			+ ` Changer values can be attached to the front of hooks.`
@@ -32,14 +32,18 @@
 			}</code>.` : ''),
 		unclosedHook:        token => `This marks all of the remaining code in the passage as being inside a <b>hook</b>.` + tooltipMessages.hook(token),
 		verbatim:            "This is <b>verbatim markup</b>. Place text between matching pairs and amounts of <code>`</code> marks, and Harlowe will ignore the markup within, instead displaying it as-is.",
-		unclosedCollapsed:   `unclosed collapsed whitespace markup`,
-		collapsed:           `collapsed whitespace markup`,
+		unclosedCollapsed:   token => tooltipMessages.collapsed(token),
+		collapsed:           ({type}) => `This is <b>${
+									type === "unclosedCollapsed" ? "unclosed " : ''
+								}collapsed whitespace</b> markup. All sequences of consecutive whitespace within ${
+									type === "unclosedCollapsed" ? "the remainder of the passage " : 'the <code>{</code> and <code>}</code> marks'
+								} will be replaced with a single space. You can use this to space out your code and keep your passage readable.<br>To include a line break within this markup that will be preserved, use a HTML <code>&lt;br&gt;</code> tag.`,
 		escapedLine:         `This is an <b>escaped line break</b> mark. This removes the line break before or after it from the displayed passage.`,
 		twineLink:           ({passage}) => `This is a link to the passage "${passage}".`,
 		br:                  ``, // Display nothing,
 		url:                 ``,
-		variable:            `story-wide variable`,
-		tempVariable:        `temp variable`,
+		variable:            `This is a <b>story-wide variable</b>. After this has been set to a data value, it can be used anywhere else in the story. Use these to store values related to your story's game state.`,
+		tempVariable:        `This is a <b>temp variable</b>. It can be used in the same passage and hook in which it's first set to a data value. Use these to store values temporarily, or that won't be needed elsewhere.`,
 		macroName:           (_,[,parent]) => tooltipMessages.macro(parent),
 		grouping:            `grouping`,
 		property:            `data name`,
@@ -51,12 +55,12 @@
 		belongingProperty:   `data name`,
 		belongingOperator:   `"of"`,
 		escapedStringChar:   `escaped string character`,
-		string:              `This is <b>string data</a>. Strings are sequences of text data enclosed in matching " or ' marks.`,
-		hookName:            ({name}) => `This <b>hook name</b> refers to <b>all hooks named "<code>${name}</code>" in this passage.`,
+		string:              `This is <b>string data</b>. Strings are sequences of text data enclosed in matching " or ' marks.`,
+		hookName:            ({name}) => `This <b>hook name</b> refers to all hooks named "<code>${name}</code>" in this passage.`,
 		cssTime:             ({value}) => `This is <b>number data</b> in CSS time format. Harlowe automatically converts this to a number of milliseconds, so this is identical to ${value}.`,
 		datatype:            `datatype data`,
 		colour:              `colour data`,
-		number:              `number data`,
+		number:              `This is <b>number data</b>. Harlowe supports whole numbers, negative numbers, and numbers with a decimal fraction component.`,
 		inequality:          `inequality operator`,
 		augmentedAssign:     `augmented assignment operator`,
 		identifier:          `identifier`,
@@ -98,10 +102,10 @@
 			}
 			const rt = defs.returnType;
 			return `This is a <b>call to the (${defs.name}:) macro</b>. ${
-					rt === "Instant" || rt === "Command" ? "It should appear in passage code without being connected to a hook." :
-					rt === "Changer" ? `It produces a Changer, which can be placed in front of a hook, or combined with other Changers.` :
+					rt === "Instant" || rt === "Command" ? `It's a <span class="cm-harlowe-3-macroName-command">Command</span>, so it should appear in passage code without being connected to a hook.` :
+					rt === "Changer" ? `It produces a <span class="cm-harlowe-3-macroName-changer">Changer</span>, which can be placed in front of a hook, or combined with other Changers.` :
 					rt === "Any" || rt === "String" ? "" :
-					`Since it produces a ${rt}, it should be nested inside another macro call that can use ${rt} (or Any) data.`
+					`Since it produces a <span class="cm-harlowe-3-macroName-${rt.toLowerCase()}">${rt}</span>, it should be nested inside another macro call that can use ${rt} (or Any) data.`
 				}<code class='harlowe-3-tooltipMacroSignature'>${
 					docsURL(defs.anchor, `(${defs.name}: ${defs.sig}) -> ${rt}`)
 				}</code>${defs.aka.length ? `<div><i>Also known as: ${

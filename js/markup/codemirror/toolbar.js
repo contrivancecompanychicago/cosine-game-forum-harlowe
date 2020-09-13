@@ -103,10 +103,10 @@
 		flicker:     () => "flicker",
 		pulse:       () => "pulse",
 		instant:     rev => "appear step-" + (rev ? "end" : "start"),
-		"fade-right": () => "fade-right",
-		"fade-left":  () => "fade-left",
-		"fade-up":    () => "fade-up",
-		"fade-down":  () => "fade-down",
+		"fade-right": rev => rev ? "fade-left" : "fade-right",
+		"fade-left":  rev => rev ? "fade-right" : "fade-left",
+		"fade-up":    rev => rev ? "fade-down" : "fade-up",
+		"fade-down":  rev => rev ? "fade-up" : "fade-down",
 	};
 
 	const builtinColourNames = {

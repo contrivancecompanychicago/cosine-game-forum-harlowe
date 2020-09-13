@@ -68,10 +68,10 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		You cannot use (change:) with (link:) or any of its relatives – because the enchanted hook or text is already in the passage, the link can't appear.
 
 		See also:
-		(enchant:), (replace:)
+		(enchant:), (enchant-in:), (replace:)
 
 		Added in: 3.2.0
-		#basics
+		#basics 17
 	*/
 	/*d:
 		(enchant: HookName or String, Changer or Lambda) -> Command
@@ -112,10 +112,10 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		Like (change:), you cannot use (enchant:) with (link:) or any of its relatives.
 
 		See also:
-		(click:), (change:)
+		(click:), (change:), (enchant-in:)
 
 		Added in: 2.0.0
-		#basics
+		#basics 18
 	*/
 	["enchant", "change"].forEach((name) => {
 		Macros.addCommand(name,
@@ -125,10 +125,10 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 				*/
 				if (ChangerCommand.isPrototypeOf(changer)) {
 					const summary = changer.summary();
-					if (summary.includes('newTargets') || summary.includes('target') || summary.includes('appendSource')) {
+					if (['newTargets', 'target', 'appendSource', 'functions'].some(e => summary.includes(e))) {
 						return TwineError.create(
 							"datatype",
-							"The changer given to (" + name + ":) can't include a revision changer like (replace:), (append:) or (append-with:)."
+							"The changer given to (" + name + ":) can't include a revision or enchantment changer like (replace:) or (click:)."
 						);
 					}
 				}
@@ -160,6 +160,77 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 			false // Can't have attachments.
 		);
 	});
+
+	/*d:
+		(enchant-in: HookName or String, Changer or Lambda) -> Changer
+
+		A variation of (enchant:) and (change:), this applies a changer to every occurrence of a hook or string within just the attached hook, rather than the whole passage. As
+		with (enchant:), the changer will be applied to every additional occurrence inserted into the attached hook.
+
+		Example usage:
+		```
+		(enchant:?frog, (text-style:"italic"))
+		"Opening remarks?"
+		|frog>["Crok, crok, crok."]
+		(enchant-in: ?frog, (text-colour:green))
+		["Your response?"
+		|frog>["Croak, croak."]
+		"A stunning rebuke!"
+		|frog>["Croooak."]]
+		```
+
+		Rationale:
+		While (change:) and (enchant:) both allow hooks to have changers or styles applied to them, these macros produce commands that must be placed in the passage, and which
+		affect every match within the passage. It can sometimes be convenient to restrict the effect of (enchant:) to just matches within a single area of prose, especially when matching
+		using strings, the `?Link` hook name, or `?Page's chars`. Thus, you can use (enchant-in:), attaching it to a hook that encloses the area you want it to affect. The enchantment it
+		produces will be treated as though it didn't exist outside of the attached hook.
+
+		Details:
+		This macro takes the same values as (enchant:) and (change:), and will produce the same errors for the same values. So, (link:) or any of its relatives cannot be given as the second
+		value, and neither can a lambda that doesn't produce a changer.
+
+		Note that this macro can only affect explicit hooks or string occurrences, and can't affect just "part" of a target. For instance, `(enchant-in: ?page, (background:red))[DANGER]` will NOT turn
+		the background of the attached hook red, but `(enchant-in: ?page's lines, (background:red))[DANGER]` will (because the text "DANGER" is a line of text, and is thus targeted by `?page's lines`).
+
+		See also:
+		(enchant:), (change:)
+
+		Added in: 3.2.0
+		#basics 19
+	*/
+	Macros.addChanger("enchant-in",
+		(_, scope, changer) => {
+			/*
+				This is just a copy of the same check used by (change:).
+			*/
+			if (ChangerCommand.isPrototypeOf(changer)) {
+				const summary = changer.summary();
+				if (['newTargets', 'target', 'appendSource', 'functions'].some(e => summary.includes(e))) {
+					return TwineError.create(
+						"datatype",
+						"The changer given to (" + name + ":) can't include a revision or enchantment changer like (replace:) or (click:)."
+					);
+				}
+			}
+			return ChangerCommand.create('enchant-in', [scope, changer]);
+		},
+		(desc, scope, changer) => {
+			/*
+				The 'functions' property of ChangeDescriptors only exists for this macro (currently) to solve a circular dependency
+				where Enchantment <- ChangeDescriptor <- Enchantment. This function creates an enchantment
+			*/
+			desc.functions = (desc.functions || []).concat(localHook => {
+				desc.section.addEnchantment(Enchantment.create({
+					scope: HookSet.from(scope),
+					localHook,
+					[ChangerCommand.isPrototypeOf(changer) ? "changer" : "lambda"]: changer,
+					section: desc.section,
+				}));
+			});
+			return desc;
+		},
+		[either(HookSet,String), either(ChangerCommand, Lambda.TypeSignature('via'))]
+	);
 
 	/*
 		Revision macros produce ChangerCommands that redirect where the attached hook's

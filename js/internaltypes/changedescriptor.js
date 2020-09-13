@@ -88,6 +88,10 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		// {Object} [data]            Data to attach to the <tw-hook> (NOT the <tw-expression>) using $.fn.data().
 		//                            Used only by (link:), (live:) and (event:).
 		data:             null,
+
+		// {Object} [functions]       Some arbitrary functions to execute, passing the target element, after rendering (and no other time).
+		//                            Used only by (enchant-in:).
+		functions:        null,
 		
 		// {Object} [section]         A Section that 'owns' this ChangeDescriptor.
 		//                            Used by enchantment macros to determine where to register
@@ -106,7 +110,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 			return [
 				"source", "innerSource", "appendSource", "enabled", "verbatim", "target", "append", "newTargets",
 				"transition", "transitionTime", "transitionDeferred", "transitionDelay",
-				"transitionSkip", "transitionOrigin",
+				"transitionSkip", "transitionOrigin", "functions",
 			]
 			.filter(e => this.hasOwnProperty(e))
 			.concat([
@@ -262,7 +266,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		*/
 		render() {
 			const
-				{source, transition, transitionTime, transitionDeferred, enabled, data, section, newTargets, appendSource} = this;
+				{source, transition, transitionTime, transitionDeferred, enabled, data, section, newTargets, functions, appendSource} = this;
 			let
 				{target, target:oldTarget, append} = this;
 			
@@ -528,6 +532,14 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 					this.expedite,
 					this.transitionOrigin
 				);
+			}
+
+			/*
+				After everything else is done, any especially arbitrary functions that need to be performed
+				(such as creating an enchantment for (enchant-in:)) are done here.
+			*/
+			if (functions) {
+				functions.forEach(fn => fn(target));
 			}
 			
 			return dom;

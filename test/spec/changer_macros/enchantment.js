@@ -45,6 +45,48 @@ describe("enchantment macros", function () {
 			//TODO: write more basic functionality tests comparable to (click:)'s
 		});
 	});
+	describe("(enchant-in:)", function() {
+		it("accepts either a string or a hook reference, followed by a changer command or a 'via' lambda", function() {
+			expect("(print:(enchant-in:?foo, (font:'Skia')))").not.markupToError();
+			expect("(print:(enchant-in:'baz', (font:'Skia')))").not.markupToError();
+			expect("(print:(enchant-in:?foo, via (font:'Skia')))").not.markupToError();
+			expect("(print:(enchant-in:'baz', via (font:'Skia')))").not.markupToError();
+
+			expect("(print:(enchant-in:?foo))").markupToError();
+			expect("(print:(enchant-in:(font:'Skia')))").markupToError();
+			expect("(print:(enchant-in:'baz'))").markupToError();
+			expect("(print:(enchant-in:(font:'Skia'), 'baz'))").markupToError();
+			expect("(print:(enchant-in:(font:'Skia'), where (font:'Skia')))").markupToError();
+		});
+		it("errors when the changer contains a revision command", function() {
+			expect("(enchant-in:?page's chars,(append:?baz))[A]").markupToError();
+		});
+		it("errors when the 'via' lambda returns a non-changer or a revision command", function() {
+			expect("(enchant-in:?page's chars, via 2)[A]").markupToError();
+			expect("(enchant-in:?page's chars, via (append:?baz))[A]").markupToError();
+		});
+		it("doesn't error when given (link:) changers", function() {
+			expect("(enchant-in:?page's chars, (link:'bar'))[]").not.markupToError();
+		});
+		it("enchants hooks only inside the attached hook", function() {
+			var p = runPassage("(enchant-in:?foo,(color:'#800000'))[[A]<foo|[B]<foo|][C]<foo|");
+			expect($(p.find('tw-hook[name="foo"]').get(0)).css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+			expect($(p.find('tw-hook[name="foo"]').get(1)).css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+			expect($(p.find('tw-hook[name="foo"]').get(2)).css('color')).not.toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+		});
+		it("works with data names of hooks outside the attached hook", function() {
+			expect(runPassage("(enchant-in:?page's chars, (text-style:'bold'))[BE]").find('tw-enchantment').length).toBe(2);
+		});
+		it("changes hooks when they're added to the attached hook", function() {
+			var p = runPassage("(enchant-in:?foo,(color:'#800000'))[|foo>[](link:'X')[ []<foo|]]");
+			expect($(p.find('tw-hook[name="foo"]').get(0)).css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+			p.find('tw-link').click();
+			expect($(p.find('tw-hook[name="foo"]').get(1)).css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+		});
+		it("continues working after the attached hook is rerun with (rerun:)", function() {
+			expect(runPassage("(enchant-in:?foo,(color:'#800000'))|B>[[A]<foo|](rerun:?B)").find('tw-hook[name="foo"]').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+		});
+	});
 	describe("enchanting ?Link", function() {
 		it("wraps each <tw-link> in a <tw-enchantment>", function(done) {
 			createPassage("","bar");

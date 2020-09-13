@@ -15,8 +15,8 @@ $time: 0.8s;
 	@include animation(appear 0ms step-end);
 }
 
-/* Dissolve */
-[data-t8n^=dissolve] {
+/* Dissolve/Fade */
+[data-t8n^=dissolve], [data-t8n=fade] {
 	&.transition-in {
 		@include animation(appear $time);
 	}
