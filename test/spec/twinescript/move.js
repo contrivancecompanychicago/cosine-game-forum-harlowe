@@ -116,4 +116,9 @@ describe("the (move:) macro", function() {
 		expect("(move: \"r\" into \"red\"'s 1st)").markupToError();
 		expect("(move: 1 into (datamap:)'s 'E')").markupToError();
 	});
+	it("works with array destructuring", function() {
+		expect("(set:$c to (a:1,2,3,4,5,6))" +
+			"(move: $c into (a:1,num-type $red, num-type $blue))$red $blue").markupToPrint("2 3");
+		expect("$c").markupToPrint("1,4,5,6");
+	});
 });

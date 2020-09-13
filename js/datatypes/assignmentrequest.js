@@ -112,7 +112,7 @@ define(['utils/operationutils','datatypes/typedvar','datatypes/datatype','intern
 				patInd += 1;
 			}
 			if (patInd < pattern.length) {
-				return required && TwineError.create("operation", "I can't de-structure this array because it needs " + (pattern.length - patInd) +
+				return required && TwineError.create("operation", "I can't unpack this array because it needs " + (pattern.length - patInd) +
 					" more value" + ((pattern.length - patInd) > 0 ? "s" : "") + ".");
 			}
 			return ret;
@@ -123,7 +123,7 @@ define(['utils/operationutils','datatypes/typedvar','datatypes/datatype','intern
 		if (pattern instanceof Map && value instanceof Map) {
 			for (let [k,p] of pattern.entries()) {
 				if (!value.has(k)) {
-					return required && TwineError.create("operation", "I can't de-structure this datamap because it needs a '" + k + "' data name.");
+					return required && TwineError.create("operation", "I can't unpack this datamap because it needs a '" + k + "' data name.");
 				}
 				ret = ret.concat(destructure(p,
 					VarRef.isPrototypeOf(src) ? VarRef.create(src, k) : value.get(k)));
@@ -146,7 +146,7 @@ define(['utils/operationutils','datatypes/typedvar','datatypes/datatype','intern
 				probably be changed to checking the const restriction here and now, as it is in varref.js.
 			*/
 			if (!matches(value, pattern.datatype)) {
-				return [required && TwineError.create("operation", "I can't de-structure " + objectName(value) + " into "
+				return [required && TwineError.create("operation", "I can't unpack " + objectName(value) + " into "
 					+ pattern.varRef.TwineScript_ToSource() + " because it doesn't match " + objectName(pattern.datatype) + ".")];
 			}
 			/*
@@ -180,7 +180,7 @@ define(['utils/operationutils','datatypes/typedvar','datatypes/datatype','intern
 			invalidated or not.
 		*/
 		if (!matches(value, pattern)) {
-			return required && TwineError.create("operation", "I tried to de-structure, but " + objectName(pattern) +
+			return required && TwineError.create("operation", "I tried to unpack, but " + objectName(pattern) +
 				" in the pattern didn't match " + objectName(value) + ".");
 		}
 		return ret;

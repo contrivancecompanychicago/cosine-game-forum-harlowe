@@ -1,6 +1,6 @@
 "use strict";
 define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'datatypes/hookset'],
-(State, TwineError, {impossible, andList, nth}, {isObject, toSource, isSequential, objectName, typeName, clone, isValidDatamapName, subset, collectionType, unstorableValue, matches}, HookSet) => {
+(State, TwineError, {impossible, andList, nth}, {is, isObject, toSource, isSequential, objectName, typeName, clone, isValidDatamapName, subset, collectionType, unstorableValue, matches}, HookSet) => {
 	/*
 		VarRefs are essentially objects pairing a chain of properties
 		with an initial variable reference - "$red's blue's gold" would be
@@ -960,11 +960,11 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			*/
 			const defs = object.TwineScript_TypeDefs;
 			const existingType = defs[prop];
-			if (existingType && !existingType.TwineScript_is(type)) {
+			if (existingType && !is(existingType, type)) {
 				return TwineError.create("operation",
-					"I can't redefine the type of " + this.TwineScript_ObjectName
-					+ " to " + type.TwineScript_ObjectName
-					+ ", as it is already " + existingType.TwineScript_ObjectName + ".");
+					"I can't redefine the type of " + objectName(this)
+					+ " to " + (type.TwineScript_ObjectName || typeName(type))
+					+ ", as it is already " + (existingType.TwineScript_ObjectName || typeName(existingType)) + ".");
 			}
 			/*
 				Having done that, simply affix the type.

@@ -1,7 +1,7 @@
 "use strict";
 define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 'internaltypes/twineerror',
-	'internaltypes/twinenotifier', 'datatypes/assignmentrequest', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/lambda', 'datatypes/varbind', 'utils/operationutils', 'utils/renderutils'],
-($, Macros, Utils, State, Passages, Renderer, Engine, TwineError, TwineNotifier, AssignmentRequest, HookSet, CodeHook, Lambda, VarBind, {printBuiltinValue}, {dialog, geomParse, geomStringRegExp}) => {
+	'internaltypes/twinenotifier', 'datatypes/assignmentrequest', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/lambda', 'internaltypes/varref', 'datatypes/typedvar', 'datatypes/varbind', 'utils/operationutils', 'utils/renderutils'],
+($, Macros, Utils, State, Passages, Renderer, Engine, TwineError, TwineNotifier, AssignmentRequest, HookSet, CodeHook, Lambda, VarRef, TypedVar, VarBind, {printBuiltinValue}, {dialog, geomParse, geomStringRegExp}) => {
 	
 	/*d:
 		Command data
@@ -46,7 +46,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		These can be used in passages, but cannot have their values saved using (set:) or (put:),
 		or stored in data structures.
 	*/
-	["set","put"].forEach(name =>
+	["set","put","unpack"].forEach(name =>
 		/*d:
 			(set: ...VariableToValue) -> Instant
 			
@@ -59,12 +59,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			from ever being (set:) into it by accident.
 			* `(set: const-type $robotText to (font:"Courier New"))` sets a variable and makes it so it can't ever be set
 			to another value.
-			* `(set: (a: _mainPath, _sidePath, _backPath) to (a:"north","northeast","south"))` sets three temp variables (by overwriting)
-			each variable in the array on the left with its matching value in the array on the right.
-			* `(set: (dm: "Maths", _Maths, "Science", _Science) to $characterStats)` is the same as `(set: _Maths to $characterStats's Maths, _Science to $characterStats's Science)`.
 			* `(set: (p-either:"Ms.","Mr.","Mx.")-type $charTitle to "Mx.")` sets a variable that can only hold the strings "Mr.", "Ms." or "Mx.".
-			* `(set: (p:"The ", str-type _job) to "The Safecracker")` uses de-structuring to extract the string "Safecracker" from the value, and puts it in the variable _job.
-			* `(set: (a: str, ...num-type $stats) to (a: "Daria", 25, 14, 25))` uses de-structuring to extract the numbers from the right side into a new array stored in $stats.
 
 			Rationale:
 			
@@ -110,49 +105,6 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			Due to the variable syntax potentially conflicting with dollar values (such as $1.50) in your story text,
 			variables cannot begin with a numeral.
 
-			Destructuring:
-
-			As of Harlowe 3.2.0, you can extract multiple values from an array, datamap or string, at once, and set them into
-			multiple variables, by placing a matching data structure on the left of `to` containing variables at
-			the positions of those values. For instance, `(set: (a: $x, 2, $y) to (a: 1, 2, 3))` sets $x to 1 and $y to 3,
-			and `(set: (dm: "A", $x, "B", $y) to (dm: "B", 3, "A", 1))` sets $x to 1 and $y to 3. Harlowe checks that each value on the left side has a
-			value that matches it (using the same rules as the `matches` operator) on the right side, and overwrites the left side with the
-			right side, causing the variables at various positions in the left side to be overwritten with values from the
-			right. This is known as **de-structuring**. (Remember that datamaps' "positions" are determined by their datanames, not their locations
-			in the (dm:) macro that created them, as, unlike arrays, they are not sequential.)
-
-			For extracting substrings from strings, use the (p:) macro and its related macros to construct a string pattern, resembling
-			array patterns. For instance, `(set: (p: (p-either: "Silt", "Mud", "Peat", "Slime")-type _element, " ", (p-either: "Ball", "Blast", "Shot", "Beam")-type _shape) to "Slime Ball")`
-			extracts the words "Slime" and "Ball" from the value, and puts them in the _element and _shape temp variables. Note that
-			when this is done, the _element variable is restricted to `(p-either: "Silt", "Mud", "Peat", "Slime")-type` data, so putting
-			any other kind of string into it will cause an error. Generally, it's recommended to use temp variables for string destructuring, and then,
-			if you need more general variables to hold the extracted substrings, place them in a less restricted variable afterward.
-
-			Note that the left side's data structure can have any number of nested data structures inside it.
-			`(set: (a: (a: $x), 2, (dm: "A", $y)) to (a: (a: 1), 2, (dm: "A", 3)))` also sets $x to 1 and $y to 3. If you need to reach deeply
-			into a data structure (such as one produced by (passages:), (saved-games:) or (open-storylets:)) to get a certain set of values,
-			this can come in handy.
-
-			You may have noticed that the data structures on the left side may have values that aren't variable names, such as the 2 in the
-			preceding example. These can be used as error-checking values -if a matching value isn't present on the right side at that same position,
-			then an error will be reported. To ensure that the right side does indeed contain the values you expect it to, you may include these
-			values in the left side. Of course, you may want to simply enforce that a value of a given datatype is in that position, rather a specific
-			value - this can be done by placing a datatype name at that position, like `num` or `str` or `empty`. Consult the datatype article for more
-			information on datatype names.
-
-			As you may have also noticed, this syntax is convenient for extracting values from the left side of arrays. But, what if you wish to only select
-			values from the middle, or to skip certain values without putting them in variables? You could use a value or a datamap name at that position,
-			such as by writing `(set: (a: num, $y, $x) to $array)` - though, if you aren't even certain of the data types that could be at those positions,
-			you may find the special `any` data type to be a big help - `(set: (a: any, $y, $x) to $array)` sets $x to the 3rd value in $array and $y to the
-			2nd value, without needing to worry about what the first value might be.
-
-			(When dealing with string patterns, the equivalent of `any` is simply `str`, as strings can't contain non-string data.)
-			
-			If the destination doesn't contain any variables - for instance, if you write `(set: (a:2,3)'s 1st to 1)`,
-			or `(set: true to 2)` - then an error will be printed.
-
-			For obvious reasons, de-structuring can't be used with datasets - you'll have to convert them to arrays on the right side.
-
 			Typed variables:
 
 			A common source of errors in a story is when a variable holding one type of data is mistakenly overridden
@@ -170,15 +122,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			Using this, the variable is guaranteed to constantly hold that value for the entirety of the story (or, if it's
 			a temp variable, the passage or hook).
 
-			This syntax can be combined with de-structuring - simply place the typed variable where a normal variable would be
-			within a data structure. `(set: (a: num, num-type $y, num-type _x) to $array)` not only sets $y and _x, but it also
-			restricts them to number data, all in one statement. If the typed variable is inside an array, and involves a spread datatype (like `...num`)
-			then it is restricted to data that matches `(a: ...num)` (i.e. arrays of zero or more `num` values), and it automatically gathers multiple values from the
-			right-hand-side that match the datatype. `(set: (a: str, ...bool-type $examAnswers) to (a: "ANSWER KEY", true, false, false, true, false))`
-			sets $examAnswers to `(a:true, false, false, true, false)`.
-
 			See also:
-			(push:), (move:)
+			(put:), (move:), (unpack:)
 
 			Added in: 1.0.0
 			#basics 1
@@ -212,10 +157,6 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			also set multiple variables in a single (put:) by separating each VariableToValue
 			with commas: `(put: 2 into $batteries, 4 into $bottles)`, etc.
 
-			De-structuring also works, although you will need to remember that the left side of a (set:) is
-			the right side of a (put:) - `(set: (a: any, $y, $x) to $arr)` would be written as
-			`(put: $arr into (a: any, $y, $x))`.
-
 			You can also use typed variables with (put:) - `(put: 1 into num-type $days)` permanently
 			restricts $days to numbers. Consult the article about (set:) for more information about
 			typed variables.
@@ -224,10 +165,89 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			the expression: `(put: $eggs + 2 into it)`.
 
 			See also:
-			(set:), (move:)
+			(set:), (move:), (unpack:)
 
 			Added in: 1.0.0
 			#basics 2
+		*/
+		/*d:
+			(unpack: ...VariableToValue) -> Instant
+
+			A specialised variation of (put:) that lets you extract multiple values from an array, datamap or string, at once, and put them into
+			multiple variables, by placing a matching data structure on the right of `into` containing variables at
+			the positions of those values. For instance, `(unpack: (a: 1, 2, 3) into (a: $x, 2, $y))` sets $x to 1 and $y to 3,
+			and `(unpack: (dm: "B", 3, "A", 1) into (dm: "A", $x, "B", $y))` sets $x to 1 and $y to 3. 
+
+			Example usage:
+			* `(unpack: (a:"north","northeast","south") into (a: _mainPath, _sidePath, _backPath))` sets three temp variables,
+			by overwriting each variable in the array on the right with its matching value in the array on the left.
+			* `(unpack: $characterStats into (dm: "Maths", _Maths, "Science", _Science))` is the same as `(set: _Maths to $characterStats's Maths, _Science to $characterStats's Science)`.
+			* `(unpack: "The Safecracker" into (p:"The ", str-type _job))` extracts the string "Safecracker" from the value, and puts it in the variable _job.
+			* `(unpack: (a: "Daria", 25, 14, 25) into (a: str, ...num-type $stats))` extracts the numbers from the left side into a new array stored in $stats.
+
+			Rationale:
+
+			Extracting values from data structures into variables using just the (set:) and (put:) macros can be rather cumbersome, especially if you need to extract
+			values from the same array or datamap. The (unpack:) macro provides a means to efficiently access multiple values in such structures, by describing the locations of those values within
+			the structure - if you want to obtain the first, second, and fourth values in an array and put them into $a, $b and $c, just write `(a: $a, $b, any, $c)`, in exactly those positions,
+			to the right of `into`. The visual clarity of this can provide great assistance in understanding and reminding you of what the data structure is, and the relationship of the destination variables to
+			their source values.
+
+			The (unpack:) macro also lets you use string patterns (produced by (p:) and other such macros) to unpack strings into multiple components. To obtain all the digit characters at the
+			start of a string, and nothing else, and put them into $a, just write `(p: ...digit-type $a)`. No long-winded (for:) loops and individual character checks are needed - simply describe the
+			string using the pattern macros, using typed variables to mark parts to extract, and they can be easily extracted.
+
+			Details:
+
+			Harlowe checks that each value on the right side (henceforth called the "pattern side") has a value that matches it (using the same rules as the `matches` operator)
+			on the left side (the "data side"), and overwrites the pattern side with the data side, causing the variables at various positions in the pattern side to be overwritten with values from
+			the data. (Remember that datamaps' "positions" are determined by their datanames, not their locations in the (dm:) macro that created them, as,
+			unlike arrays, they are not sequential.)
+
+			For extracting substrings from strings, use the (p:) macro and its related macros to construct a string pattern, resembling
+			array patterns. For instance, `(unpack: "Slime Ball" into (p: (p-either: "Silt", "Mud", "Peat", "Slime")-type _element, " ", (p-either: "Ball", "Blast", "Shot", "Beam")-type _shape))`
+			extracts the words "Slime" and "Ball" from the value, and puts them in the _element and _shape temp variables. Note that
+			when this is done, the _element variable is restricted to `(p-either: "Silt", "Mud", "Peat", "Slime")-type` data, so putting
+			any other kind of string into it will cause an error. Generally, it's recommended to use temp variables for string destructuring, and then,
+			if you need more general variables to hold the extracted substrings, place them in a less restricted variable afterward.
+
+			Note that the pattern side's data structure can have any number of nested data structures inside it.
+			`(unpack:  (a: (a: 1), 2, (dm: "A", 3)) into (a: (a: $x), 2, (dm: "A", $y)))` also sets $x to 1 and $y to 3. If you need to reach deeply
+			into a data structure (such as one produced by (passages:), (saved-games:) or (open-storylets:)) to get a certain set of values,
+			this can come in handy.
+
+			You may have noticed that the data structures on the pattern side may have values that aren't variable names, such as the 2 in the
+			preceding example. These can be used as error-checking values - if a matching value isn't present on the right side at that same position,
+			then an error will be reported. To ensure that the data side does indeed contain the values you expect it to, you may include these
+			values in the pattern side. Of course, you may want to simply enforce that a value of a given datatype is in that position, rather a specific
+			value - this can be done by placing a datatype name at that position, like `num` or `str` or `empty`. Consult the datatype article for more
+			information on datatype names.
+
+			As you may have also noticed, this syntax is convenient for extracting values from the left side of arrays. But, what if you wish to only select
+			values from the middle, or to skip certain values without putting them in variables? You could use a value or a datamap name at that position,
+			such as by writing `(set: (a: num, $y, $x) to $array)` - though, if you aren't even certain of the data types that could be at those positions,
+			you may find the special `any` data type to be a big help - `(set: (a: any, $y, $x) to $array)` sets $x to the 3rd value in $array and $y to the
+			2nd value, without needing to worry about what the first value might be.
+
+			(When dealing with string patterns, the equivalent of `any` is simply `str`, as strings can't contain non-string data.)
+
+			This syntax can be combined with typed variables - simply place the typed variable where a normal variable would be
+			within the pattern side. `(unpack: $array into (a: num, num-type $y, num-type _x))` not only sets $y and _x, but it also
+			restricts them to number data, all in one statement. If the typed variable is inside an array, and involves a spread datatype (like `...num`)
+			then it is restricted to data that matches `(a: ...num)` (i.e. arrays of zero or more `num` values), and it automatically gathers multiple values from the
+			right-hand-side that match the datatype. `(set: (a: str, ...bool-type $examAnswers) to (a: "ANSWER KEY", true, false, false, true, false))`
+			sets $examAnswers to `(a:true, false, false, true, false)`.
+			
+			If the destination doesn't contain any variables - for instance, if you write `(set: (a:2,3)'s 1st to 1)`,
+			or `(set: true to 2)` - then an error will be printed.
+
+			For obvious reasons, (unpack:) can't be used with datasets - you'll have to convert them to arrays on the right side.
+
+			See also:
+			(set:), (put:), (move:)
+
+			Added in: 3.2.0
+			#data structure
 		*/
 		Macros.add(name, (_, ...assignmentRequests) => {
 			let debugMessage = "";
@@ -241,8 +261,14 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				if (ar.operator === "into" && name === "set") {
 					return TwineError.create("macrocall", "Please say 'to' when using the (set:) macro.");
 				}
-				else if (ar.operator !== "into" && name === "put") {
-					return TwineError.create("macrocall", "Please say 'into' when using the (put:) macro.");
+				else if (ar.operator === "to" && name !== "set") {
+					return TwineError.create("macrocall", "Please say 'into' when using the (put:) or (unpack:) macro.");
+				}
+				if ((VarRef.isPrototypeOf(ar.dest) || TypedVar.isPrototypeOf(ar.dest)) === (name === "unpack")) {
+					return TwineError.create("macrocall", name === "unpack"
+						? "Please use the (unpack:) macro with arrays, datamaps or (p:) patterns containing variables to the right of 'into'."
+						: "Please use the (" + name + ":) macro with just single variables and typed variables to the "
+							+ (name === "set" ? "left of 'to'." : "right of 'into'."));
 				}
 
 				const debugMessage = ar.set();
@@ -289,8 +315,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 
 			As with (set:) and (put:), you can also change multiple variables in a single (move:) by
 			separating each VariableToValue with commas: `(move: $a's 1st into $b, $a's 2nd into $c)`, etc. Also,
-			destructuring syntax (described in detail in (set:)'s article) works with (move:) as well - `(move: $array into (a: $x, $y))`
-			will cause only the first and second values of $array to be moved into $x and $y.
+			unpacking syntax (described in detail in (unpack:)'s article) can be used with (move:) as well -
+			`(move: $array into (a: $x, $y))` will cause only the first and second values of $array to be moved into $x and $y.
 
 			If the data value you're accessing cannot be removed - for instance, if it's an array's `length` -
 			then an error will be produced.

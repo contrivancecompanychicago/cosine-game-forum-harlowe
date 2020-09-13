@@ -243,7 +243,7 @@ describe("patterns", function() {
 			['lowercase','a'],
 			['digit','3'],
 			['whitespace',' '],
-			['newline','\n']
+			['linebreak','\n']
 		];
 		function basicTest(name, arg, canBeUsedAlone) {
 			if (arguments.length < 3) {
@@ -387,7 +387,7 @@ describe("patterns", function() {
 			expect("(print:(datapattern:[foobar]))").markupToError();
 		});
 	});
-	describe("destructuring assignment", function() {
+	describe("the (unpack:) macro", function() {
 		describe("when given an array pattern assignment request", function() {
 			it("sets the variable in the pattern to their matching values", function() {
 				[
@@ -396,46 +396,34 @@ describe("patterns", function() {
 					["(a:5,num,num,num-type $a,num)","(a:5,4,3,2,1)"],
 					["(a:(a:num,num-type $a),num)","(a:(a:1,2),3)"],
 				].forEach(function(arr) {
-					expect("(set: "+arr[0]+" to "+arr[1]+")$a").markupToPrint("2");
-					expect("(put: "+arr[1]+" into "+arr[0]+")$a").markupToPrint("2");
+					expect("(unpack: "+arr[1]+" into "+arr[0]+")$a").markupToPrint("2");
 				});
 			});
 			it("can set multiple variables at once", function() {
-				expect("(set: (a:num-type $a, num-type $b) to (a:2,3))$a $b").markupToPrint("2 3");
-				expect("(set: (a:num,num-type $c, (a:num-type _d)) to (a:2,3,(a:4)))$c _d").markupToPrint("3 4");
-				expect("(set: (a:num,num-type $e)-type _f to (a:2,3))$e _f").markupToPrint("3 2,3");
+				expect("(unpack: (a:2,3) into (a:num-type $a, num-type $b))$a $b").markupToPrint("2 3");
+				expect("(unpack: (a:2,3,(a:4)) into (a:num,num-type $c, (a:num-type _d)))$c _d").markupToPrint("3 4");
 			});
 			it("works with spread datatypes", function() {
-				expect("(set: (a:...num)-type $z to (a:0,1,2))$z").markupToPrint('0,1,2');
-				expect("(set: (a:...odd, even-type $a) to (a:1,3,5,6))$a").markupToPrint('6');
-				expect("(set: (a:...odd-type $c) to (a:1,3,5,6))$c").markupToPrint('1,3,5');
-				expect("(set: (a:...odd-type $d,...even-type $e) to (a:1,3,5,6))$d $e").markupToPrint('1,3,5 6');
-				expect("(set: (a:...odd, even-type $y)-type $b to (a:1,3,5,6))$b $y").markupToPrint('1,3,5,6 6');
-			});
-			it("works with (move:)", function() {
-				expect("(set:$c to (a:1,2,3,4,5,6))" +
-					"(move: $c into (a:1,num-type $red, num-type $blue))$red $blue").markupToPrint("2 3");
-				expect("$c").markupToPrint("1,4,5,6");
+				expect("(unpack: (a:1,3,5,6) into (a:...odd, even-type $a))$a").markupToPrint('6');
+				expect("(unpack: (a:1,3,5,6) into (a:...odd-type $c))$c").markupToPrint('1,3,5');
+				expect("(unpack: (a:1,3,5,6) into (a:...odd-type $d,...even-type $e))$d $e").markupToPrint('1,3,5 6');
 			});
 			it("does not alter the value of 'it'", function() {
 				expect("(set:$c to 'foo')" +
-					"(set: (a:num-type $red, num-type $blue) to (a:2,it))$red $blue").markupToPrint("2 0");
+					"(unpack: (a:2,it) into (a:num-type $red, num-type $blue))$red $blue").markupToPrint("2 0");
 			});
 			it("can be used to exchange variables", function() {
-				runPassage("(set: (a:num-type $a, num-type $b, num-type $c) to (a:2,3,4))");
-				expect("(set: (a:num-type $a, num-type $b, num-type $c) to (a:$c,$b,$a))$a $b $c").markupToPrint("4 3 2");
+				runPassage("(unpack: (a:2,3,4) into (a:num-type $a, num-type $b, num-type $c))");
+				expect("(unpack: (a:$c,$b,$a) into (a:num-type $a, num-type $b, num-type $c))$a $b $c").markupToPrint("4 3 2");
 			});
 			it("errors if the pattern doesn't match", function() {
-				expect("(set: (a:5,num,num,num-type $a,num) to (a:6,4,3,2,1))$a").markupToError();
-				expect("(set: (a:5,num,num,num-type $a,num) to (a:5,4,'3',2,1))$a").markupToError();
-				expect("(set: (a:num-type $a,num,num) to (a:5,4))$a").markupToError();
-				expect("(set: (a:(a:num,num-type $a),num) to (a:(a:1),3))$a").markupToError();
+				expect("(unpack: (a:6,4,3,2,1) into (a:5,num,num,num-type $a,num))$a").markupToError();
+				expect("(unpack: (a:5,4,'3',2,1) into (a:5,num,num,num-type $a,num))$a").markupToError();
+				expect("(unpack: (a:5,4) into (a:num-type $a,num,num))$a").markupToError();
+				expect("(unpack: (a:(a:1),3) into (a:(a:num,num-type $a),num))$a").markupToError();
 			});
 			it("doesn't error if the source structure has more values than the pattern", function() {
-				expect("(set: (a:num-type $a) to (a:5,4,3,2,1))$a").markupToPrint("5");
-			});
-			it("array patterns can't be (set:) as data", function() {
-				expect("(set: $a to  (a:num-type $a))$a").markupToError();
+				expect("(unpack: (a:5,4,3,2,1) into (a:num-type $a))$a").markupToPrint("5");
 			});
 		});
 		describe("when given a datamap pattern assignment request", function() {
@@ -445,13 +433,12 @@ describe("patterns", function() {
 					["(dm:'foo',5,'bar',num-type $a,'baz',3)","(dm:'foo',5,'baz',3,'bar',2)"],
 					["(dm:'foo',5,'bar',(dm:'foo',num-type $a))","(dm:'foo',5,'bar',(dm:'foo',2))"],
 				].forEach(function(arr) {
-					expect("(set: "+arr[0]+" to "+arr[1]+")$a").markupToPrint("2");
-					expect("(put: "+arr[1]+" into "+arr[0]+")$a").markupToPrint("2");
+					expect("(unpack: "+arr[1]+" into "+arr[0]+")$a").markupToPrint("2");
 				});
 			});
 			it("can set multiple variables at once", function() {
-				expect("(set: (dm:'foo',num-type $a,'bar',num-type $b) to (dm:'foo',2,'bar',3))$a $b").markupToPrint("2 3");
-				expect("(set: (dm:'baz',num-type $c,'qux',(dm:'foo',num-type _d)) to (dm:'baz',3,'qux',(dm:'foo', 4)))$c _d").markupToPrint("3 4");
+				expect("(unpack: (dm:'foo',2,'bar',3) into (dm:'foo',num-type $a,'bar',num-type $b) )$a $b").markupToPrint("2 3");
+				expect("(unpack: (dm:'baz',3,'qux',(dm:'foo', 4)) into (dm:'baz',num-type $c,'qux',(dm:'foo',num-type _d)))$c _d").markupToPrint("3 4");
 			});
 			it("works with (move:)", function() {
 				expect("(set:$c to (dm:'foo',3,'bar',2))" +
@@ -460,71 +447,62 @@ describe("patterns", function() {
 			});
 			it("does not alter the value of 'it'", function() {
 				expect("(set:$c to 'foo')" +
-					"(set: (dm:'foo',num-type $red,'bar',num-type $blue) to (dm:'foo',2,'bar',it))$red $blue").markupToPrint("2 0");
+					"(unpack:(dm:'foo',2,'bar',it) into (dm:'foo',num-type $red,'bar',num-type $blue) )$red $blue").markupToPrint("2 0");
 			});
 			it("errors if the pattern doesn't match", function() {
-				expect("(set: (dm:'foo',num-type $a,'bar',num-type $b) to (dm:'foo',2,'baz',3))").markupToError();
-				expect("(set: (dm:'foo',num-type $a,'bar',str-type $b) to (dm:'foo',2,'baz',3))").markupToError();
-				expect("(set: (dm:'foo',2,'bar',num-type $b) to (dm:'foo',4,'bar',1))").markupToError();
+				expect("(unpack: (dm:'foo',2,'baz',3) into (dm:'foo',num-type $a,'bar',num-type $b))").markupToError();
+				expect("(unpack: (dm:'foo',2,'baz',3) into (dm:'foo',num-type $a,'bar',str-type $b))").markupToError();
+				expect("(unpack: (dm:'foo',4,'bar',1) into (dm:'foo',2,'bar',num-type $b))").markupToError();
 			});
 			it("doesn't error if the source structure has more values than the pattern", function() {
-				expect("(set: (dm:'foo',num-type $a) to (dm:'foo',5,'qux',4,'baz',3))$a").markupToPrint("5");
-			});
-			it("datamap patterns can't be (set:) as data", function() {
-				expect("(set: $a to  (dm:'foo',num-type $a))$a").markupToError();
+				expect("(unpack: (dm:'foo',5,'qux',4,'baz',3) into (dm:'foo',num-type $a))$a").markupToPrint("5");
 			});
 		});
 		describe("when given a string pattern assignment request", function() {
 			it("sets the variable in the pattern to their matching values", function() {
 				[
 					["(p:'baz', str-type _a)", "'bazfoo'"],
-					["(p:'f',(p-many:'o'))-type _a", "'foo'"],
+					["(p:(p:'f',(p-many:'o'))-type _a)", "'foo'"],
 					["(p:(p-either:'baz','qux'),str-type _a)","'quxfoo'"],
 					["(p:(p-either:'baz','qux'),str-type _a)","'bazfoo'"],
 				].forEach(function(arr) {
-					expect("(set: "+arr[0]+" to "+arr[1]+")_a").markupToPrint("foo");
-					expect("(put: "+arr[1]+" into "+arr[0]+")_a").markupToPrint("foo");
+					expect("(unpack: "+arr[1]+" into "+arr[0]+")_a").markupToPrint("foo");
 				});
 			});
 			it("can set multiple variables at once", function() {
-				expect("(set: (p: (p-many:alnum)-type $a, whitespace, (p-many:alnum)-type $b, whitespace, alnum-type $c) to 'foo bar 2')$a $b $c").markupToPrint("foo bar 2");
-				expect("(set: (p: (p-many:alnum)-type $a, whitespace, (p-many:alnum)-type $b, (p:whitespace, alnum-type $c)) to 'foo bar 2')$a $b $c").markupToPrint("foo bar 2");
+				expect("(unpack: 'foo bar 2' into (p: (p-many:alnum)-type $a, whitespace, (p-many:alnum)-type $b, whitespace, alnum-type $c) )$a $b $c").markupToPrint("foo bar 2");
+				expect("(unpack: 'foo bar 2' into (p: (p-many:alnum)-type $a, whitespace, (p-many:alnum)-type $b, (p:whitespace, alnum-type $c)))$a $b $c").markupToPrint("foo bar 2");
 			});
 			it("works with spread datatypes", function() {
-				expect("(set: ...digit-type $z to '0041')$z").markupToPrint('0041');
-				expect("(set: (p: '$', ...digit-type $a) to '$12800')$a").markupToPrint('12800');
-				expect("(set: (p: alnum-type $b, '-', ...digit) to 'A-800')$b").markupToPrint('A');
-				expect("(set: ...(p: ':', digit)-type $c to ':4:5:6')$c").markupToPrint(':4:5:6');
+				expect("(unpack: '$12800' into (p: '$', ...digit-type $a))$a").markupToPrint('12800');
+				expect("(unpack: 'A-800' into (p: alnum-type $b, '-', ...digit))$b").markupToPrint('A');
 			});
 			it("works with (p-opt:)", function() {
-				expect("(set: (p: 'x', (p-opt:'y')-type _a, 'z') to 'xyz')_a").markupToPrint("y");
-				expect("(set: (p: 'x', (p-opt:'y')-type _a, 'z') to 'xz')_a").markupToPrint("");
+				expect("(unpack: 'xyz' into (p: 'x', (p-opt:'y')-type _a, 'z'))_a").markupToPrint("y");
+				expect("(unpack: 'xz' into (p: 'x', (p-opt:'y')-type _a, 'z'))_a").markupToPrint("");
 			});
 			it("works with (p-many:)", function() {
-				expect("(set: (p: 'x', (p-many:alnum)-type _a, 'z') to 'xyyyz')_a").markupToPrint('yyy');
+				expect("(unpack: 'xyyyz' into (p: 'x', (p-many:alnum)-type _a, 'z'))_a").markupToPrint('yyy');
 			});
 			it("works with (p-ins:)", function() {
-				expect("(set: (p-ins: 'x', (p-opt: 'YYY')-type _a, 'z') to 'xyyyz')_a").markupToPrint('yyy');
-				expect("(set: (p-ins: 'x', (p-many: 'Y')-type _a, 'z') to 'xyyyz')_a").markupToPrint('yyy');
-				expect("(set: (p-ins: 'x', ...uppercase-type _a, 'z') to 'xyyyz')_a").markupToPrint('yyy');
+				expect("(unpack: 'xyyyz' into (p-ins: 'x', (p-opt: 'YYY')-type _a, 'z'))_a").markupToPrint('yyy');
+				expect("(unpack: 'xyyyz' into (p-ins: 'x', (p-many: 'Y')-type _a, 'z'))_a").markupToPrint('yyy');
+				expect("(unpack: 'xyyyz' into (p-ins: 'x', ...uppercase-type _a, 'z'))_a").markupToPrint('yyy');
 			});
 			it("works with nested typed vars", function() {
-				expect("(set: (p: 'x', (p:alnum-type _a,'yy')-type _b, 'z') to 'xyyyz')_a _b").markupToPrint('y yyy');
+				expect("(unpack: 'xyyyz' into (p: 'x', (p:alnum-type _a,'yy')-type _b, 'z'))_a _b").markupToPrint('y yyy');
 			});
 			it("can't use typed vars inside optional patterns", function() {
-				expect("(set: (p: 'x', (p-many:alnum-type _a), 'z') to 'xyyyz')_a").markupToError();
-				expect("(set: (p: 'x', (p-many:alnum-type _a), 'z') to 'xabcz')_a").markupToError();
-				expect("(set: (p: 'x', (p-opt:alnum-type _a), 'z') to 'xyz')_a").markupToError();
-				expect("(set: (p: 'x', (p-opt:alnum-type _a), 'z') to 'xz')_a").markupToError();
-				expect("(set: (p: 'x', (p-many:0,alnum-type _a), 'z') to 'xz')_a").markupToError();
-				expect("(set: (p: 'x', (p-either:'-',alnum-type _a), 'z') to 'x-z')_a").markupToError();
+				expect("(unpack: 'xyyyz' into (p: 'x', (p-many:alnum-type _a), 'z'))_a").markupToError();
+				expect("(unpack: 'xabcz' into (p: 'x', (p-many:alnum-type _a), 'z'))_a").markupToError();
+				expect("(unpack: 'xyz' into (p: 'x', (p-opt:alnum-type _a), 'z'))_a").markupToError();
+				expect("(unpack: 'xz' into (p: 'x', (p-opt:alnum-type _a), 'z'))_a").markupToError();
+				expect("(unpack: 'xz' into (p: 'x', (p-many:0,alnum-type _a), 'z'))_a").markupToError();
+				expect("(unpack: 'x-z' into (p: 'x', (p-either:'-',alnum-type _a), 'z'))_a").markupToError();
 			});
 			it("errors if nothing in the pattern matches", function() {
-				expect("(set: (p:'baz', str-type _a) to 121)").markupToError();
-				expect("(set: (p:'baz', str-type _a) to 'foobar')").markupToError();
-			});
-			xit("string patterns can't be (set:) as data", function() {
-				expect("(set: $a to  (p:'foo',digit-type $a))$a").markupToError();
+				expect("(unpack: 121 into (p:'baz', str-type _a))").markupToError();
+				expect("(unpack: 'foobar' into (p:'baz', str-type _a))").markupToError();
 			});
 		});
 	});

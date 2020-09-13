@@ -141,7 +141,23 @@ describe("variables", function() {
 			it("works with spread typed variables", function() {
 				expect("(set: ...num-type $a to 2)$a").markupToPrint('2');
 				expect("(set: ...whitespace-type $b to '    ')$b").markupToPrint('    ');
+				expect("(set: (a:...num)-type $z to (a:0,1,2))$z").markupToPrint('0,1,2');
+				expect("(set: (a:...odd, even-type $y)-type $e to (a:1,3,5,6))$e $y").markupToPrint('1,3,5,6 6');
+				expect("(set: ...digit-type $h to '0041')$h").markupToPrint('0041');
+				expect("(set: ...(p: ':', digit)-type $c to ':4:5:6')$c").markupToPrint(':4:5:6');
 			});
+		});
+		it("errors if given unpacking patterns", function() {
+			expect("(set: (a:num-type $a, num-type $b) to (a:2,3))$a $b").markupToError();
+		});
+		it("datamap patterns can't be (set:) as data", function() {
+			expect("(set: $a to  (dm:'foo',num-type $a))$a").markupToError();
+		});
+		it("array patterns can't be (set:) as data", function() {
+			expect("(set: $a to (a:num-type $a))$a").markupToError();
+		});
+		xit("string patterns can't be (set:) as data", function() {
+			expect("(set: $a to  (p:'foo',digit-type $a))$a").markupToError();
 		});
 	});
 	describe("the (put:) macro", function() {
@@ -153,6 +169,9 @@ describe("variables", function() {
 		});
 		it("works with typed variables", function() {
 			expect("(put: 1 into num-type $a)$a").markupToPrint("1");
+		});
+		it("errors if given unpacking patterns", function() {
+			expect("(put: (a:2,3) into (a:num-type $a, num-type $b))$a $b").markupToError();
 		});
 	});
 	describe("bare variables in passage text", function() {

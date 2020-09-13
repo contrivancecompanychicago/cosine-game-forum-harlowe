@@ -72,7 +72,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 				if (pName === "digit") {
 					return "\\d" + rest;
 				}
-				if (pName === "newline") {
+				if (pName === "linebreak") {
 					return "(?:\\r|\\n|\\r\\n)" + rest;
 				}
 				if (pName === "str") {
@@ -174,7 +174,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			*/
 			destructure(value) {
 				if (typeof value !== "string") {
-					return [TwineError.create("operation", "I can't de-structure " + objectName(value) + " into "
+					return [TwineError.create("operation", "I can't unpack " + objectName(value) + " into "
 					+ this.TwineScript_ToSource() + " because it isn't a string.")];
 				}
 				/*
@@ -190,7 +190,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 				*/
 				const results = (RegExp("^" + (this.rest ? "(?:" : "") + regExp + (this.rest ? ")*" : "") + "$").exec(value) || []).slice(1);
 				if (!results.length) {
-					return [TwineError.create("operation", "I can't de-structure " + objectName(value) + " because it doesn't match the pattern "
+					return [TwineError.create("operation", "I can't unpack " + objectName(value) + " because it doesn't match the pattern "
 						+ this.TwineScript_ToSource() + ".")];
 				}
 				/*
@@ -243,7 +243,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			followed by a space, followed by 1-6 alphanumeric letters.
 			* `(set:$upperFirst to (p:uppercase,(p-many:lowercase)))(set:$upperFirst-type $name to "Edgar")` creates a custom datatype, $upperFirst, and
 			creates a typed variable using it, called $name.
-			* `(set: (p:str, (p-many:(p-either:'St','Rd','Ln','Ave','Way')-type _roadTitle)) to $roadName)` uses de-structuring to extract either "St", "Rd", "ln", "Ave", or "Way",
+			* `(unpack: $roadName into (p:str, (p-many:(p-either:'St','Rd','Ln','Ave','Way')-type _roadTitle)))` extracts either "St", "Rd", "ln", "Ave", or "Way"
 			from the end of the $roadName string, putting it in _roadTitle, while producing an error if such an ending isn't in $roadName.
 			* `(p:"$", digit, ...digit) matches "$21000"` checks if the right side is a string consisting of "$" followed by one or more digits.
 
@@ -267,10 +267,9 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			checks that the array in $array contains two arrays that each contain two numbers, all in one line of code. You can't do this with strings, though,
 			because a string can only hold characters, not arbitrary data like datatypes. So, these macros provide that functionality for strings, too.
 
-			Additionally, array/datamap patterns can be used with TypedVars inside (set:) or (put:) to de-structure values into multiple variables at once, such as in `(set: (a: _x, _y) to $coordinate)`.
-			String patterns can be used to de-structure as well. For instance, `(set: (p: (p-opt:"Dr. "), (p: alnum-type _firstName, whitespace, alnum-type _lastName)-type _fullName) to "Dr. Iris Cornea")`
-			creates three variables, _firstName, _lastName and _fullName, from a single string, and sets them to "Iris", "Cornea", and "Iris Cornea", respectively. (See the (set:) article for a greater
-			explanation of de-structuring).
+			String patterns can be used with (unpack:) to unpack parts of a string into multiple variables at once. For instance,
+			`(set: (p: (p-opt:"Dr. "), (p: alnum-type _firstName, whitespace, alnum-type _lastName)-type _fullName) to "Dr. Iris Cornea")`
+			creates three variables, _firstName, _lastName and _fullName, from a single string, and sets them to "Iris", "Cornea", and "Iris Cornea", respectively.
 
 			Details:
 
@@ -359,7 +358,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			This is part of a suite of string pattern macros. Consult the (p:) article to learn more about string patterns, special user-created datatypes
 			that can match very precise kinds of strings.
 
-			When you use this in a de-structuring pattern in (set:) or (put:), such as `(p-opt:'Lord')-type _isLord`, and the optional pattern doesn't match,
+			When you use this in (unpack:), such as `(unpack: "Connie" into (p-opt:'Lord')-type _isLord`, and the optional pattern doesn't match,
 			the variable will be set to the empty string "".
 
 			Note that while you can use this as the datatype of a TypedVar (as shown previously), you can't nest TypedVars inside this, because it is an optional match - `(set: (p:"A",(p-opt:digit-type _d)) to "A")`
@@ -408,7 +407,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			If the maximum number is smaller than the minimum number, or if either of them are negative or fractional, an error will be
 			produced.
 
-			When you use this in a de-structuring pattern in (set:) or (put:) with a minimum of 0, such as `(p-many: 0, newline)-type _newlines`, and
+			When you use this in (unpack:) with a minimum of 0, such as `(unpack: "No results." into (p-many: 0, newline)-type _newlines)`, and
 			there are zero matches, the variable will be set to the empty string "".
 
 			Note that while you can use this as the datatype of a TypedVar (as shown previously), you can't nest TypedVars inside this if the minimum is 0, because it then becomes an
