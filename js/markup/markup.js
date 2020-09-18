@@ -260,7 +260,7 @@
 			twine1Macro: {
 				fn: () => ({
 					type: "error",
-					message: "Harlowe macros use a different syntax to Twine 1 and SugarCube macros.",
+					message: "Harlowe macros use a different syntax to Twine 1, SugarCube, and Yarn macros.",
 				}),
 			},
 			

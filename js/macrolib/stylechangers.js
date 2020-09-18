@@ -1147,7 +1147,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		/*d:
 			(font: String) -> Changer
 			
-			This styling command changes the font used to display the text of the attached hook. Provide
+			This styling changer changes the font used to display the text of the attached hook. Provide
 			the font's family name (such as "Helvetica Neue" or "Courier") as a string.
 
 			Example usage:
@@ -1535,7 +1535,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		/*d:
 			(background: Colour or String or Gradient) -> Changer
 
-			This styling command alters the background colour or background image
+			This styling changer alters the background colour or background image
 			of the attached hook. Supplying a gradient (produced by (gradient:)) will set the
 			background to that gradient. Supplying a colour (produced by (rgb:) or (hsl:),
 			a built-in colour value like `red`, or a bare colour value like #FA9138) will set
@@ -1552,7 +1552,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 
 			Details:
 			
-			Combining two (background:) commands will do nothing if they both influence the
+			Combining two (background:) changers will do nothing if they both influence the
 			colour or the image. For instance `(background:red) + (background:white)` will simply
 			produce the equivalent `(background:white)`. However, `(background:red) + (background:"mottled.png")`
 			will work as intended if the background image contains transparency, allowing the background
@@ -1636,8 +1636,8 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			
 			Rationale:
 			While Harlowe offers markup for common formatting styles like bold and italic, having these
-			styles available from a command macro provides some extra benefits: it's possible, as with all
-			such style macros, to (set:) them into a variable, combine them with other commands, and re-use them
+			styles available from a changer macro provides some extra benefits: it's possible, as with all
+			such style macros, to (set:) them into a variable, combine them with other changers, and re-use them
 			succinctly throughout the story (by using the variable in place of the macro).
 			
 			Furthermore, this macro also offers many less common but equally desirable styles to the author,

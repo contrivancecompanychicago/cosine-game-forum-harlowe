@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery','utils/operationutils','internaltypes/changedescriptor', 'internaltypes/varref', 'internaltypes/varscope', 'internaltypes/twineerror', 'internaltypes/twinenotifier'], ($, {objectName}, ChangeDescriptor, VarRef, VarScope, TwineError, TwineNotifier) => {
+define(['jquery','utils/operationutils','internaltypes/changedescriptor', 'internaltypes/varref', 'internaltypes/varscope', 'internaltypes/twineerror', 'internaltypes/twinenotifier'], ($, {objectName, matches}, ChangeDescriptor, VarRef, VarScope, TwineError, TwineNotifier) => {
 	const {assign,create} = Object;
 	/*d:
 		CustomMacro data
@@ -241,7 +241,15 @@ define(['jquery','utils/operationutils','internaltypes/changedescriptor', 'inter
 				called: 0,
 				varNames: params.map(p => p.varRef.propertyChain[0]),
 				typeSignature: params.map(p => {
-					const type = p.datatype.toTypeSignatureObject({rest:p.rest});
+					/*
+						Convert the datatype of this param into a Harlowe internal type signature.
+					*/
+					let type;
+					if (p.datatype.toTypeSignatureObject) {
+						type = p.datatype.toTypeSignatureObject({rest:p.rest});
+					} else {
+						type = {pattern: "range", range: e => matches(p.datatype, e)};
+					}
 					/*
 						TypedVars, when "spread", become rest parameters. These should be translated
 						into the "zeroOrMore" pattern used by Macros.

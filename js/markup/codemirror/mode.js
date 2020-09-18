@@ -235,6 +235,12 @@
 				tooltips && tooltips(cm, doc, tree);
 			});
 			cm.on('renderLine', renderLine);
+			// Remove the toolbar, if it exists.
+			// This can't actually be in the Tooltips module because it must only be installed once.
+			cm.on('scroll', () => {
+				const tooltip = document.querySelector('.harlowe-3-tooltip');
+				tooltip && tooltip.remove();
+			});
 			init = null;
 		};
 		

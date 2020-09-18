@@ -1049,7 +1049,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 	));
 
 	/*d:
-		(input-box: [VarBind], String, [Number], [String]) -> Command
+		(input-box: [Bind], String, [Number], [String]) -> Command
 
 		A command macro that creates a text input box of the given position, width and height, allowing the player
 		to input any amount of text, which can optionally be automatically stored in a variable.
@@ -1105,7 +1105,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		#input 3
 	*/
 	/*d:
-		(force-input-box: [VarBind], String, [Number], String) -> Command
+		(force-input-box: [Bind], String, [Number], String) -> Command
 
 		A command macro that creates an empty text input box of the given position, width and height, which appears to offer the
 		player a means to input text, but instead replaces every keypress inside it with characters from a pre-set string that's
@@ -1661,7 +1661,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			[String], false)
 
 		/*d:
-			(dialog: [VarBind], String, ...String) -> Command
+			(dialog: [Bind], String, ...String) -> Command
 			Also known as: (alert:)
 
 			A command that, when used, displays a pop-up dialog box with the given string displayed, and a number of links labeled with

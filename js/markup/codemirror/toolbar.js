@@ -16,6 +16,7 @@
 		P.innerHTML = html;
 		return P.firstChild;
 	}
+	const fourDecimals = n => Math.round(n*10000)/10000;
 	const fontIcon = name => `<i class="fa fa-${name}"></i>`;
 	const anyLetter = "[\\w\\-\\u00c0-\\u00de\\u00df-\\u00ff\\u0150\\u0170\\u0151\\u0171\\uD800-\\uDFFF]";
 	/*
@@ -194,7 +195,7 @@
 		}
 		if (+alpha < 1) {
 			colour = hexToHSL(colour);
-			return `(hsl:${colour.h},${colour.s},${colour.l},${alpha})`;
+			return `(hsl:${fourDecimals(colour.h)},${fourDecimals(colour.s)},${fourDecimals(colour.l)},${fourDecimals(alpha)})`;
 		}
 		return colour in builtinColourNames
 			? builtinColourNames[colour]
@@ -830,8 +831,8 @@
 							text: '',
 							value: '#000000',
 							model(m, el) {
-							const c = el[$]('[type=color]').value,
-								a = el[$]('[type=range]').value;
+								const c = el[$]('[type=color]').value,
+									a = el[$]('[type=range]').value;
 								m.changerNamed('background').push(toHarloweColour(c, a));
 								m.backgroundColour = toCSSColour(c, a);
 								m.valid = true;
@@ -848,7 +849,7 @@
 									m.valid = true;
 									m.changerNamed('background').push(`(gradient: $deg, ${
 										stops.map(
-											stop => Math.round(stop.getAttribute('data-pos')*10000)/10000 + "," + (stop.getAttribute('data-harlowe-colour') || stop.getAttribute('data-colour'))
+											stop => fourDecimals(stop.getAttribute('data-pos')) + "," + (stop.getAttribute('data-harlowe-colour') || stop.getAttribute('data-colour'))
 										)
 									})`);
 									m.stops = stops;
@@ -1383,11 +1384,8 @@
 				update(m, elem) {
 					elem.setAttribute("style", "width:100%;height:6em;overflow-y:hidden;");
 					let style = `width:${m.width*100}%;margin-left:${m.left*100}%;margin-right:${m.right*100}%;`;
-					if (m.align === "right") {
-						style += "text-align: right;";
-					}
-					else if (m.align === "left") {
-						style += "text-align: left;";
+					if (m.align !== "center") {
+						style += "text-align:" + m.align + ';';
 					}
 					elem.firstChild.setAttribute('style', "display:block;" + style);
 				},
@@ -1417,7 +1415,7 @@
 			},{
 				type: 'radios',
 				name: 'Alignment',
-				options: ["left", "center", "right"],
+				options: ["left", "center", "justify", "right"],
 				model(m, el) {
 					m.align = el[$]('input:checked').value;
 				},
@@ -1432,7 +1430,7 @@
 					/*
 						If it's possible to reduce this specific alignment configuration to just the basic aligner markup, do so.
 					*/
-					if (m.width === (m.align === "center" ? 0.5 : 1) && (!m.left || !m.right) === (m.align !==  "center")) {
+					if (m.width === (m.align === "center" ? 0.5 : 1) && (!m.left || !m.right) === (m.align !== "center" && m.align !== "justify")) {
 						const left = round(m.left*10),
 							right = round(m.right*10),
 							gcd = GCD(left, right),
@@ -1453,7 +1451,7 @@
 							right = round(m.right*100),
 							gcd = GCD(width, GCD(left, right));
 
-						m.changerNamed('align').push(stringify(m.align === "left" ? "<==" : m.align === "right" ? "==>" : "=><="));
+						m.changerNamed('align').push(stringify(m.align === "left" ? "<==" : m.align === "right" ? "==>" : m.align === "justify" ? "<==>" : "=><="));
 						m.changerNamed('box').push(stringify("=".repeat(left/gcd) + "X".repeat(width/gcd) + "=".repeat(right/gcd)));
 
 						if (remainder) {

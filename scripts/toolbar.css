@@ -218,3 +218,25 @@
 	margin-top:0.5em;
 	border-top:1px solid hsla(0,0%,50%,0.5);
 }
+.harlowe-3-tooltipTail {
+	position:absolute;
+	height:0;
+	width:0;
+	border:12px solid transparent;
+	border-bottom-color: hsla(0,0%,50%,0.5);
+}
+.harlowe-3-tooltipTail::after {
+	content:'';
+	position:absolute;
+	height:0;
+	width:0;
+	left:-12px;
+	top:-10px;
+	border:12px solid transparent;
+}
+.theme-light .harlowe-3-tooltipTail::after {
+	border-bottom-color: white;
+}
+.theme-dark .harlowe-3-tooltipTail::after {
+	border-bottom-color: black;
+}
