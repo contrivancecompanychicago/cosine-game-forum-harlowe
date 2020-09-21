@@ -272,7 +272,7 @@ define([
 						This should subtly mutate the command object in-place (which doesn't really matter as it was produced
 						from raw JS just a few lines above) leaving it ready to be TwineScript_Run() far below.
 					*/
-					result = nextValue.TwineScript_Attach(result);
+					result = nextValue.TwineScript_Attach(this, result);
 					break;
 				}
 				/*

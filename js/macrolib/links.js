@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/changercommand', 'datatypes/hookset', 'internaltypes/twineerror'],
-($, Macros, Utils, State, Passages, Engine, ChangerCommand, HookSet, TwineError) => {
+define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/changercommand', 'internaltypes/changedescriptor', 'datatypes/hookset', 'internaltypes/twineerror'],
+($, Macros, Utils, State, Passages, Engine, ChangerCommand, ChangeDescriptor, HookSet, TwineError) => {
 	/*
 		This module defines the behaviour of links in Harlowe - both
 		the normal passage links, and the (link:) macro's links.
@@ -44,7 +44,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 				closest = link.closest('tw-expression, tw-hook'),
 				event = closest.data('clickEvent'),
 				/*
-					But first of all, don't do anything if control flow in any section is currently blocked
+					Don't do anything if control flow in any section is currently blocked
 					(which means the click input should be dropped).
 				*/
 				section = closest.data('section');
@@ -185,6 +185,15 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			
 			Details:
 			This creates a link which is visually indistinguishable from normal passage links.
+
+			The created link is displayed in place of the hook's contents, and is exempt from all changers that would normally apply
+			to the hook. This means that changers like (text-colour:), added to this changer, will ONLY apply
+			to the hook once it's revealed, and not the link itself. To apply changers to just the link, consider wrapping it in a
+			hook itself and using (enchant-in:) with `?Link`, such as by the following:
+			```
+			(enchant-in:?Link, (text-colour:red))[(link:"Hands stained red")[Hands pure and dry :)]]
+			```
+			Alternatively, you can just use (enchant:) with `?Link` to enchant every link with the same changer.
 			
 			See also:
 			(link-reveal:), (link-rerun:), (link-repeat:), (link-goto:), (click:), (more:)
@@ -212,6 +221,11 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			
 			Details:
 			This creates a link which is visually indistinguishable from normal passage links.
+
+			The created link is displayed in place of the hook's contents, and is exempt from all changers that would normally apply
+			to the hook. This means that changers like (text-colour:), added to this changer, will ONLY apply
+			to the hook once it's revealed, and not the link itself. To apply changers to just the link, consider wrapping it in a
+			hook itself and using (enchant-in:) with `?Link`, or just using (enchant:) with `?Link` to enchant every link.
 			
 			If the link text contains formatting syntax, such as "**bold**", then it will be retained
 			when the link is demoted to text.
@@ -251,6 +265,11 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 
 			This macro is part of a pair with (link-rerun:) - the latter macro will empty the hook each time the link is
 			clicked. This one should be used if you'd prefer the hook to retain each of its past runs.
+
+			The created link is displayed in place of the hook's contents, and is exempt from all changers that would normally apply
+			to the hook. This means that changers like (text-colour:), added to this changer, will ONLY apply
+			to the hook once it's revealed, and not the link itself. To apply changers to just the link, consider wrapping it in a
+			hook itself and using (enchant-in:) with `?Link`, or just using (enchant:) with `?Link` to enchant every link.
 			
 			Details:
 			This creates a link which is visually indistinguishable from normal passage links.
@@ -291,6 +310,11 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			so that text gradually accumulates within it. This one should be used if you'd prefer the hook
 			to remain at a certain size, or need it to always naturally flow from the link text.
 
+			The created link is displayed in place of the hook's contents, and is exempt from all changers that would normally apply
+			to the hook. This means that changers like (text-colour:), added to this changer, will ONLY apply
+			to the hook once it's revealed, and not the link itself. To apply changers to just the link, consider wrapping it in a
+			hook itself and using (enchant-in:) with `?Link`, or just using (enchant:) with `?Link` to enchant every link.
+
 			Details:
 			This creates a link which is visually indistinguishable from normal passage links.
 			
@@ -316,20 +340,6 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			},
 			(desc, text) => {
 				/*
-					This check ensures that multiple concatenations of (link:) do not overwrite
-					the original source with their successive '<tw-link>' substitutions.
-				*/
-				if (!desc.innerSource) {
-					desc.innerSource = desc.source;
-				}
-				desc.source = '<tw-link tabindex=0>' + text + '</tw-link>';
-				/*
-					Only (link-replace:) and (link-rerun:) removes the link on click (by using the "replace"
-					append method) - the others merely append.
-				*/
-				desc.append = (arr[0] === "link" || arr[0] === "link-rerun") ? "replace" : "append";
-				desc.transitionDeferred = true;
-				/*
 					As this is a deferred rendering macro, the current tempVariables
 					object must be stored for reuse, as the section pops it when normal rendering finishes.
 				*/
@@ -340,40 +350,55 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 						so a bare object can just be provided.
 					*/
 					(desc.section && desc.section.stackTop) ? desc.section.stackTop.tempVariables : Object.create(null);
+
 				/*
-					All links need to store their section as jQuery data, so that clickLinkEvent can
-					check if the section is blocked (thus preventing clicks).
+					Create a ChangeDescriptor for the created link, which overrides the entire descriptor if it's placed in its "enablers" array.
+					The reason the original descriptor is returned, though, is so that additional non-enabler changers can apply to it.
 				*/
-				desc.data.section = desc.section;
-				desc.data.clickEvent = (link) => {
-					/*
-						Only (link-reveal:) turns the link into plain text:
-						the others either remove it (via the above) or leave it be.
-					*/
-					if (arr[0] === "link-reveal") {
-						link.contents().unwrap();
-					}
-					/*
-						(link-rerun:) replaces everything in the hook, but leaves
-						the link, so that the replacement can be repeated. It does this by removing the link,
-						then reattaching it after rendering.
-					*/
-					let parent;
-					if (arr[0] === "link-rerun") {
-						/*
-							Just to be sure that the link returns to the same DOM element, we
-							save the element in particular here.
-						*/
-						parent = link.parent();
-						link.detach();
-					}
-					desc.source = desc.innerSource + "";
-					desc.transitionDeferred = false;
-					desc.section.renderInto("", null, desc, tempVariables);
-					if (arr[0] === "link-rerun") {
-						parent.prepend(link);
-					}
-				};
+				const enabler = ChangeDescriptor.create({
+					source: '<tw-link tabindex=0>' + text + '</tw-link>',
+					target: desc.target,
+					append: "replace",
+					data: {
+						section: desc.section,
+						clickEvent: link => {
+							desc.enablers = desc.enablers.filter(e => e !== enabler);
+
+							/*
+								Only (link-reveal:) turns the link into plain text:
+								the others either remove it or leave it be.
+							*/
+							if (arr[0] === "link-reveal") {
+								link.contents().unwrap();
+							}
+							/*
+								(link-rerun:) replaces everything in the hook, but leaves
+								the link, so that the replacement can be repeated. It does this by removing the link,
+								then reattaching it after rendering.
+							*/
+							let parent = link.parent();
+							if (arr[0] === "link-rerun") {
+								/*
+									Just to be sure that the link returns to the same DOM element, we
+									save the element in particular here.
+								*/
+								link.detach();
+							}
+							/*
+								Only (link-replace:) and (link-rerun:) remove the link on click - the others merely append.
+							*/
+							if (arr[0] === "link" || arr[0] === "link-rerun") {
+								parent.empty();
+							}
+							desc.section.renderInto("", null, desc, tempVariables);
+							if (arr[0] === "link-rerun") {
+								parent.prepend(link);
+							}
+						},
+					},
+				});
+				desc.enablers = (desc.enablers || []).concat(enabler);
+				return desc;
 			},
 			[String]
 		)
@@ -718,52 +743,53 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 				return;
 			}
 			/*
-				All of the following assigned properties are those assigned by (link-reveal:).
-			*/
-			if (!desc.innerSource) {
-				desc.innerSource = desc.source;
-			}
-			/*
 				Previously visited passages may be styled differently compared
 				to unvisited passages.
 			*/
 			const visited = (State.passageNameVisited(passageName));
-			desc.source = '<tw-link tabindex=0 ' + (visited > 0 ? 'class="visited" ' : '') + '>' + text + '</tw-link>';
-			desc.append = "append";
-			desc.transitionDeferred = true;
 			/*
 				As this is a deferred rendering macro, the current tempVariables
 				object must be stored for reuse, as the section pops it when normal rendering finishes.
 			*/
-			const [{tempVariables}] = desc.section.stack;
+			const tempVariables =
+				/*
+					The only known situation when there is no section is when this is being run by
+					ChangerCommand.summary(). In that case, the tempVariables will never be used,
+					so a bare object can just be provided.
+				*/
+				(desc.section && desc.section.stackTop) ? desc.section.stackTop.tempVariables : Object.create(null);
 			/*
-				All links need to store their section as jQuery data, so that clickLinkEvent can
-				check if the section is blocked (thus preventing clicks).
+				As with (link:), it is necessary to crate a separate ChangeDescriptor for the created link.
 			*/
-			desc.data.section = desc.section;
-			desc.data.clickEvent = (link) => {
-				desc.source = desc.innerSource;
-				/*
-					It may seem pointless to unwrap the link, now that we're going to
-					somewhere else, but this change could be observed if a modal (alert:)
-					was displayed by the innerSource.
-				*/
-				link.contents().unwrap();
-				/*
-					This technically isn't needed if the goToPassage() call below fires (that is, in normal circumstances),
-					but its absence is observable if an error is displayed, so it might as well be included.
-				*/
-				desc.transitionDeferred = false;
-				desc.section.renderInto(desc.innerSource + "", null, desc, tempVariables);
-				/*
-					Having revealed, we now go-to, UNLESS the section was blocked, which either signifies
-					a blocking macro like (prompt:) is active, or a different (go-to:) was activated.
-					Much as in doExpressions() in section.renderInto(), we can check for an early exit via the DOM.
-				*/
-				desc.section.whenUnblocked(() => Engine.goToPassage(passageName, {
-					transition: desc.data.passageT8n,
-				}) );
-			};
+			const enabler = ChangeDescriptor.create({
+				source: '<tw-link tabindex=0 ' + (visited > 0 ? 'class="visited" ' : '') + '>' + text + '</tw-link>',
+				target: desc.target,
+				append: "replace",
+				data: {
+					section: desc.section,
+					append: "replace",
+					clickEvent: link => {
+						desc.enablers = desc.enablers.filter(e => e !== enabler);
+						/*
+							It may seem pointless to unwrap the link, now that we're going to
+							somewhere else, but this change could be observed if a modal (alert:)
+							was displayed by the innerSource.
+						*/
+						link.contents().unwrap();
+						desc.section.renderInto("", null, desc, tempVariables);
+						/*
+							Having revealed, we now go-to, UNLESS the section was blocked, which either signifies
+							a blocking macro like (prompt:) is active, or a different (go-to:) was activated.
+							Much as in doExpressions() in section.renderInto(), we can check for an early exit via the DOM.
+						*/
+						desc.section.whenUnblocked(() => Engine.goToPassage(passageName, {
+							transition: desc.data.passageT8n,
+						}));
+					},
+				},
+			});
+			desc.enablers = (desc.enablers || []).concat(enabler);
+			return desc;
 		},
 		[String, optional(String)]
 	);

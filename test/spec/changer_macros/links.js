@@ -42,6 +42,8 @@ describe("link macros", function() {
 		});
 		it("can be concatenated", function() {
 			var p = runPassage("(set: $x to (link:'a')+(link:'b'))$x[Hello]");
+			expect(p.text()).toBe("a");
+			p.find('tw-link').click();
 			expect(p.text()).toBe("b");
 			p.find('tw-link').click();
 			expect(p.text()).toBe("Hello");
@@ -51,6 +53,37 @@ describe("link macros", function() {
 			expect(p.find('tw-link tw-error').length).toBe(1);
 			p.find('tw-link').click();
 			expect(p.text()).not.toBe("B");
+		});
+		it("suppresses all other changers attached to it, applying them only to the revealed text", function() {
+			var p = runPassage("(link:'foo')+(color:#668899)[]");
+			expect(p.find('tw-link')).not.toHaveColour("#668899");
+
+			p = runPassage("(link:'foo')+(t8n:'dissolve')[garply2]");
+			expect(p.text()).toBe('foo');
+			p.find('tw-link').click();
+			expect(p.text()).toBe("garply2");
+
+			p = runPassage("(link:'foo2')+(append-with:'baz')[]");
+			expect(p.find('tw-link').text()).toBe('foo2');
+			p.find('tw-link').click();
+			expect(p.text()).toBe("baz");
+
+			p = runPassage("(link:'foo3')+(replace:?foo)[garply3]w|foo>[qux]");
+			expect(p.text()).toBe('foo3wqux');
+			p.find('tw-link').click();
+			expect(p.text()).toBe("wgarply3");
+
+			p = runPassage("(link:'foo4')+(if:false)[garply4]");
+			expect(p.text()).toBe('foo4');
+			p.find('tw-link').click();
+			expect(p.text()).toBe("");
+
+			p = runPassage("(link:'foo5')+(click:?foo)[garply]|foo>[qux]");
+			expect(p.text()).toBe('foo5qux');
+			p.find('tw-link').click();
+			expect(p.text()).toBe("qux");
+			p.find('.link').click();
+			expect(p.text()).toBe("garplyqux");
 		});
 	});
 	describe("(link-reveal:)", function() {

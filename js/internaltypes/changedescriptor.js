@@ -30,15 +30,15 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		// {String} source            The hook's source, which can be finagled before it is run.
 		source:            "",
 
-		// {String} innerSource       Used by (link:), this stores the original source if some kind
-		//                            of "trigger element" needs to be rendered in its place initially.
-		innerSource:       "",
-
-		// {Array} appendSource      Used by (append-with:), these are {source,append} objects to apply to the source at render time.
+		// {Array} appendSource       Used by (append-with:), these are {source,append} objects to apply to the source at render time.
 		appendSource:      null,
 		
 		// {Boolean} enabled          Whether or not this code is enabled. (Disabled code won't be used until something enables it).
 		enabled:          true,
+
+		// {Array} [enablers]         Used by (link:) and its ilk, these are alternative CDs to use instead of this one, to create the link element that
+		//                            delays the displays of this hook. Each enabler should create an element that removes the CD from this array when activated.
+		enablers:          null,
 
 		// {Boolean} verbatim         Whether to render the source at all, or display it verbatim.
 		verbatim:         false,
@@ -94,8 +94,6 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		functions:        null,
 		
 		// {Object} [section]         A Section that 'owns' this ChangeDescriptor.
-		//                            Used by enchantment macros to determine where to register
-		//                            their enchantments to.
 		section:          null,
 
 		// {Number} timestamp         Used by certain time-specific characteristics of this descriptor (currently, just transitions).
@@ -108,9 +106,9 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		*/
 		summary() {
 			return [
-				"source", "innerSource", "appendSource", "enabled", "verbatim", "target", "append", "newTargets",
+				"source", "appendSource", "enabled", "verbatim", "target", "append", "newTargets",
 				"transition", "transitionTime", "transitionDeferred", "transitionDelay",
-				"transitionSkip", "transitionOrigin", "functions",
+				"transitionSkip", "transitionOrigin", "functions", "enablers",
 			]
 			.filter(e => this.hasOwnProperty(e))
 			.concat([
@@ -266,18 +264,26 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		*/
 		render() {
 			const
-				{source, transition, transitionTime, transitionDeferred, enabled, data, section, newTargets, functions, appendSource} = this;
+				{source, transition, transitionTime, transitionDeferred, enabled, enablers, data, section, newTargets, functions, appendSource} = this;
 			let
 				{target, target:oldTarget, append} = this;
-			
+
 			assertOnlyHas(this, changeDescriptorShape);
+
 			if (!append) {
 				impossible("ChangeDescriptor.render", "This doesn't have an 'append' method chosen.");
 				return $();
 			}
 
 			/*
-				First: if this isn't enabled, nothing needs to be rendered. However,
+				Overriding all other aspects of this CD are the enablers, which create alternative elements in this CD's place. This overrides even (if:).
+			*/
+			if (enablers && enablers.length) {
+				return enablers[0].render();
+			}
+
+			/*
+				If this isn't enabled, nothing needs to be rendered. However,
 				the source needs to be saved in case the (show:) or (rerun:) macro is used on this.
 				We store it as "originalSource" in every element's jQuery data store.
 			*/
@@ -415,7 +421,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 					hook, then I'd change append to "replaceWith".
 				*/
 				else {
-					impossible("Section.render", "The target doesn't have a '" + append + "' method.");
+					impossible("ChangeDescriptor.render", "The target doesn't have a '" + append + "' method.");
 					return $();
 				}
 			}

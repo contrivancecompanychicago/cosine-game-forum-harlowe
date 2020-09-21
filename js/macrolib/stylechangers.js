@@ -1878,21 +1878,20 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		/*d:
 			(hover-style: Changer) -> Changer
 
-			Given a style-altering changer, it makes a changer which only applies when the hook or expression is hovered over
+			Given a style-altering changer, it makes a changer which only applies when the hook or command is hovered over
 			with the mouse pointer, and is removed when hovering off.
 
 			Example usage:
-			The following makes a (link:) that turns italic when the mouse hovers over it.
-			```
-			(hover-style:(text-style:'italic'))+(link:"The lake")
-			[The still, cold lake.]
-			```
+			* `(enchant:?Link, (hover-style:(text-style:'italic')))` makes each of the page's links turn italic when hovered over.
+			* `(text-colour:transparent)+(hover-style:(text-color:red))[The butler] killed Marcus O'Fogarty.` makes a hook, whose
+			text is normally transparent, turn white when hovered over.
+			* `(hover-style:)[]`
 
 			Rationale:
 			Making text react in small visual ways when the pointer hovers over it is an old hypertext tradition. It lends a
 			degree of "life" to the text, making it seem aware of the player. This feeling of life is best used to signify
-			interactivity - it seems to invite the player to answer in turn, by clicking. So, adding them to (link:) changers,
-			instead of just bare words or paragraphs, is highly recommended.
+			interactivity - it seems to invite the player to answer in turn, by clicking. So, adding them to (link:) commands,
+			as well as interaction commands like (cycling-link:), is recommended.
 
 			Details:
 			True to its name, this macro can only be used for subtle style changes. Only the following changers (and combinations
@@ -1902,7 +1901,10 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			* (css:)
 			* (font:)
 			* (text-colour:)
-			* (text-rotate:)
+			* (text-indent:)
+			* (text-rotate-x:)
+			* (text-rotate-y:)
+			* (text-rotate-z:)
 			* (text-style:)
 			* (text-size:)
 			
@@ -1910,6 +1912,11 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 
 			This macro is not recommended for use in games or stories intended for use on touch devices, as
 			the concept of "hovering" over an element doesn't really make sense with that input method.
+
+			Note that in versions of Harlowe prior to 3.2.0, this could be combined with (link:), (link-repeat:), or (link-reveal:)
+			to apply changers to the link, except for (text-colour:). This has since been changed, and now, when combined with (link:)
+			changers, (hover-style:) will only apply to the revealed hook. Note that `(link-goto:)` and passage links aren't changers,
+			so (hover-style:) can be attached to them, as expected.
 
 			See also:
 			(mouseover:), (mouseout:)

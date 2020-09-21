@@ -301,6 +301,9 @@ describe("control flow macros", function() {
 			expect("(set: $a to (for: each _a, 1,2,3) + (text-style:'bold'))$a[Gee]").markupToPrint("GeeGeeGee");
 			expect("(set: $a to (if: false) + (for: each _a, 1,2,3))$a[Gee]").markupToPrint("");
 		});
+		it("can be applied to commands", function() {
+			expect("(for: each _a, 1,2,3)(print:'Gee')").markupToPrint("GeeGeeGee");
+		});
 		it("can be composed with itself", function() {
 			expect("(set: $a to (for: each _a, 1,2,3) + (for: each _b, 4,5,6))$a[_a _b ]").markupToPrint("1 4 2 5 3 6 ");
 			expect("(set: $a to (for: each _a, 1,2) + (for: each _b, 4,5,6))$a[_a _b ]").markupToPrint("1 4 2 5 ");

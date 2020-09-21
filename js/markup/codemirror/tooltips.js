@@ -155,7 +155,7 @@
 					rt === "any" || rt === "string" ? "" :
 					`Since it produces a <span class="cm-harlowe-3-macroName-${rt}">${rt}</span>, it should be nested inside another macro call that can use ${rt} (or any) data.`
 				}<code class='harlowe-3-tooltipMacroSignature'>${
-					docsURL(defs.anchor, `(${defs.name}: ${defs.sig}) -> ${rt}`)
+					docsURL(defs.anchor, `(${defs.name}: ${defs.sig}) -> ${defs.returnType}`)
 				}</code>${defs.aka.length ? `<div><i>Also known as: ${
 					defs.aka.map(alias => `<code>(${alias}:)</code>`).join(', ')
 				}</i>` : ''}</div><div>${

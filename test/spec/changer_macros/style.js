@@ -61,7 +61,6 @@ describe("style changer macros", function() {
 		});
 		it("changes the colour of links inside hooks", function() {
 			['(color:#ff0022)|a>[foo(link:"bar")[]]',
-			'|b>[foo(link:"bar")+(color:#ff0022)[]]',
 			'|c>[foo(link:"bar")[]](enchant:?c,(color:#ff0022))',
 			'(color:#ff0022)|aa>[foo[[test]]]',
 			'|bb>[foo(color:#ff0022)[[test]]]',
@@ -894,23 +893,40 @@ describe("style changer macros", function() {
 				});
 			});
 		});
+		it("works with all style changers", function() {
+			expect("(hover-style:(align:'==>'))[]").not.markupToError();
+			expect("(hover-style:(background:black))[]").not.markupToError();
+			expect("(hover-style:(css:'padding-left:1em'))[]").not.markupToError();
+			expect("(hover-style:(font:'fantasy'))[]").not.markupToError();
+			expect("(hover-style:(text-colour:red))[]").not.markupToError();
+			expect("(hover-style:(text-rotate-x:60))[]").not.markupToError();
+			expect("(hover-style:(text-rotate-y:60))[]").not.markupToError();
+			expect("(hover-style:(text-size:3))[]").not.markupToError();
+			expect("(hover-style:(text-indent:3))[]").not.markupToError();
+		});
 		it("errors if the passed-in changer isn't just a style changer", function() {
 			expect("(hover-style:(replace:?1))[]").markupToError();
 			expect("(hover-style:(if:true))[]").markupToError();
 			expect("(hover-style:(t8n:'dissolve'))[]").markupToError();
 			expect("(hover-style:(text-color:'red')+(hook:'E'))[]").markupToError();
 		});
-		it("works correctly when combined with (link:)", function(done) {
+		it("doesn't apply to (link:) links, but to the revealed hook only", function(done) {
 			var hover = runPassage("(hover-style:(text-style:'bold'))+(link:'The lake')[The still, cold lake.]").find('tw-hook');
 			hover.mouseenter();
 			setTimeout(function() {
-				hover.click();
+				expect(hover.attr('style')).not.toMatch(/font-weight:\s*(bold|800)/);
+				hover.mouseleave();
 				setTimeout(function() {
-					expect(hover.attr('style')).toMatch(/font-weight:\s*(bold|800)/);
-					hover.mouseleave();
+					expect(hover.attr('style')).not.toMatch(/font-weight:\s*(bold|800)/);
+					hover.find('tw-link').click();
 					setTimeout(function() {
-						expect(hover.attr('style')).not.toMatch(/font-weight:\s*(bold|800)/);
-						done();
+						hover.mouseenter();
+						expect(hover.attr('style')).toMatch(/font-weight:\s*(bold|800)/);
+						hover.mouseleave();
+						setTimeout(function() {
+							expect(hover.attr('style')).not.toMatch(/font-weight:\s*(bold|800)/);
+							done();
+						});
 					});
 				});
 			});

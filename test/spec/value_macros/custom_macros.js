@@ -100,7 +100,7 @@ describe("custom macros", function() {
 			expect("(set: $e to (macro:[(output-hook:)[baz]]))($e:)").markupToPrint("baz");
 		});
 		it("can be combined with other changers", function() {
-			expect("(set: $e to (macro:[(link:'foo')+(output-hook:)[baz]]))($e:)").markupToPrint("foo");
+			expect("(set: $e to (macro:[(append-with:'foo')+(output-hook:)[baz]]))($e:)").markupToPrint("bazfoo");
 		});
 		it("temp variables in the hook retain their values", function() {
 			expect("(set: $e to (macro:str-type _a,[(output-hook:)[(print:_a+'qux')]]))($e:'baz')").markupToPrint("bazqux");

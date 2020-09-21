@@ -297,7 +297,12 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 				passes in the ChangeDescriptor, if this permits attachments.
 			*/
 			attachable ? {
-				TwineScript_Attach: changer => {
+				TwineScript_Attach: (section, changer) => {
+					/*
+						While there aren't that many applicable changers that use Section, those that do
+						need to have it passed in.
+					*/
+					cd.section = section;
 					changer.run(cd);
 					return ret;
 				},
