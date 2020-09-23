@@ -158,7 +158,7 @@ a:hover > .nav_macro_sig { display: inline; }
 aside { font-style:italic; font-size:80%; }
 
 /* Code blocks */
-code { background:#FFF; border:1px solid #888; color:#000; display:block; padding:12px; overflow-x: scroll; }
+code { background:#FFF; border:1px solid #888; color:#000; display:block; padding:12px; overflow-x: auto; }
 
 /* Inline code */
 pre { display:inline; }

@@ -327,9 +327,12 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 
 			The whitespace characters recognised by this macro include line breaks, non-breaking spaces, and other uncommon
 			space characters.
+
+			If you wish to split up a string into an array based on a more specific separator than just whitespace
+			(for instance, by just newlines) then you may use the (split:) macro.
 			
 			See also:
-			(startcase:)
+			(split:), (startcase:)
 
 			Added in: 2.0.0
 			#string
@@ -395,6 +398,29 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			#string
 		*/
 		(["str-reversed", "string-reversed"], (_, string) => [...string].reverse().join(''), [String])
+		/*d:
+			(joined: ...String) -> String
+			
+			Using the first string as a separator value, this macro takes all of the other strings given to it, and joins them into a single string.
+
+			Example usage:
+			* `(joined:" ", "Philias", "Silus", "Sebastus", "Brotch")` produces the string "Philias Silus Sebastus Brotch".
+			* `(joined:" or ", ...(datavalues: (dm: "Breakfast", "Toast", "Dinner", "Pasta", "Lunch", "Soup")))` produces the string `"Toast or Pasta or Soup"`.
+
+			Rationale:
+			If you have a list of strings stored in an array, which may be the names of related concepts, such as inventory objects or suspect names,
+			you'll often want to display all of them, or a certain number of them, to the player. This will involve adding some kind of separator between them,
+			such as a single space, a line break and bullet point, or something more complicated.
+
+			Details:
+			The separator value will only be used to separate each string value, and won't be appended or prepended to the end of the string.
+
+			If only one string is provided (that is, just the separator value) then the empty string will be returned.
+
+			Added in: 3.2.0
+			#string
+		*/
+		("joined", (_, joiner, ...strings) => strings.join(joiner), [rest(String)])
 
 		/*d:
 			Number data

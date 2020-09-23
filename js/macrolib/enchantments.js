@@ -655,7 +655,13 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 					As these are deferred rendering macros, the current tempVariables
 					object must be stored for reuse, as the section pops it when normal rendering finishes.
 				*/
-				const [{tempVariables}] = desc.section.stack;
+				const tempVariables =
+					/*
+						The only known situation when there is no section is when this is being run by
+						ChangerCommand.summary(). In that case, the tempVariables will never be used,
+						so a bare object can just be provided.
+					*/
+					(desc.section && desc.section.stackTop) ? desc.section.stackTop.tempVariables : Object.create(null);
 
 				/*
 					This enchantData object is stored in the descriptor's Section's enchantments
@@ -754,13 +760,15 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 					name,
 				});
 				/*
-					Add the above object to the section's enchantments.
+					Add the above object to the section's enchantments (unless, of course, this was called by summary()).
 				*/
-				desc.section.addEnchantment(enchantData);
-				/*
-					Enchant the scope for the first time.
-				*/
-				enchantData.enchantScope();
+				if (desc.section) {
+					desc.section.addEnchantment(enchantData);
+					/*
+						Enchant the scope for the first time.
+					*/
+					enchantData.enchantScope();
+				}
 				return desc;
 			},
 			either(HookSet,String)

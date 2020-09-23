@@ -766,13 +766,13 @@ define([
 			(folded: Lambda, ...Any) -> Any
 
 			This takes a "making" lambda and a sequence of values, and creates a new value (the "total") by feeding every value in the
-			sequence to the lambda, akin to folding a long strip of paper into a single square.
+			sequence to the lambda, akin to folding a long strip of paper into a single square. The first value after the lambda is put into the total
+			(which is the variable inside the lambda's "making" clause) before running the lambda on the remaining values.
 
 			Example usage:
-			* `(folded: _enemy making _allHP via _allHP + _enemy's hp, ...$enemies)` will first set _allHP to $enemies's 1st's hp, then add the remaining hp values in $enemies to it.
-			Then it will return the number in _allHP.
-			* `(folded: _name making _allNames via _allNames + "/" + _name, ...(history: ))` will create a string of every passage name in the (history:) array,
-			separated by a forward slash. Then it will return the string in _allNames.
+			* `(folded: _enemy making _allHP via _allHP + _enemy's HP, 0, ...$enemies)` will first set _allHP to 0, then add $enemies's 1st's HP to it,
+			then add the remaining HP values to it. Then it will return the number in _allHP.
+			* `(folded: _name making _allNames via _allNames + "/" + _name, ...(history: ))` is the same as `(joined: "/", ...(history: ))`.
 
 			Rationale:
 			The (for:) macro, while intended to display multiple copies of a hook, can also be used to run a single macro call multiple times. You may
@@ -781,31 +781,43 @@ define([
 
 			Consider, first of all, a typical (for:) and (set:) loop such as the following:
 			```
-			{(set:$allNames to "")
-			(for: each _name, ...(history: ), "here")[
-			    (set:$allNames to it + "/" + _name)
+			(set:$enemies to (a:(dm:"Name","Mossling", "HP",7), (dm:"Name","Moldling","HP",2)))
+			{(set:_allHP to 0)
+			(for: each _enemy, ...$enemies)[
+			    (set:_allHP to it + _enemy's HP)
 			]}
-			CURRENT DISK PATH: $allNames
+			TOTAL HEART POINTS: _allHP
 			```
 			This can be rewritten using (folded:) as follows. While this version may seem a little harder to read if you're not used to it, it
 			allows you to accomplish the same thing in a single line, by immediately using the macro's provided value without a variable:
 			```
-			CURRENT DISK PATH: (folded: _name making _allNames via _allNames + "/" + _name, ...(history: ), "here")
+			(set:$enemies to (a:(dm:"Name","Mossling", "HP",7), (dm:"Name","Moldling","HP",2)))
+			TOTAL HEART POINTS: (folded: _enemy making _allHP via _allHP + _enemy's HP, 0, ...$enemies)
 			```
-			This macro uses a "making" lambda (which is the "temp variable `making` another temp variable `via` expression" expression) to run the
-			expression using every provided value, much like those repeated (set:) calls.
 
 			If you need to perform this operation at various different times in your story, you may wish to (set:) the lambda into a variable,
 			so that you, for instance, might need only write:
 			```
-			(set: $namesWithForwardSlashes to _name making _allNames via _allNames + "/" + _name)
-			CURRENT DISK PATH: (folded: $namesWithForwardSlashes, ...(history: ), "here")
+			(set:$enemies to (a:(dm:"Name","Mossling", "HP",7), (dm:"Name","Moldling","HP",2)))
+			(set: $totalEnemyHP to (_enemy making _allHP via _allHP + _enemy's HP))
+			TOTAL HEART POINTS: (folded: $totalEnemyHP, 0, ...$enemies)
 			```
 
 			Details:
+			Let's look at this example usage again.
+			```
+			(set:$enemies to (a:(dm:"Name","Mossling", "HP",7), (dm:"Name","Moldling","HP",2)))
+			(folded: _enemy making _allHP via _allHP + _enemy's HP, 0, ...$enemies)
+			```
+			This macro call uses a "making" lambda (which is the "temp variable `making` another temp variable `via` expression" expression) to run the
+			expression using every provided value, much like those repeated (set:) calls. The temp variable in the "making" clause, `_allHP`, is the **total**,
+			and at the start, it is set to the first provided value (in this case, 0). The temp variable at the start, `_enemy`, is then set to the next value
+			after that (which in this case would be the "Mossling" datamap), and the "via" clause is used to set `_allHP` to a new value.
+			This repeats until all of the values have been handled. Then, the final result of `_allHP` is returned.
+
 			Of course, if at any time the expression should cause an error, such as adding a number to a string, then an error will result.
 
-			Both of the temp variables, the value and the total, can be named anything you want. As with other lambda macros, they don't exist
+			Both of the temp variables can be named anything you want. As with other lambda macros, they don't exist
 			outside of it, won't alter identically-named temp variables outside of it, and can't be manually (set:) within the lambda.
 
 			You can refer to other variables, including other temp variables, in the `via` expression. For instance, you can write
@@ -816,7 +828,7 @@ define([
 			`(folded: _item making _total via _total + _item where _item > 0, ...$arr)` will only sum up the values in $arr which are greater than 0.
 
 			See also:
-			(for:), (altered:)
+			(for:), (altered:), (joined:)
 
 			Added in: 2.0.0
 			#data structure

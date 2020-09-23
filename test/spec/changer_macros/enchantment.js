@@ -24,6 +24,9 @@ describe("enchantment macros", function () {
 			it("doesn't error when given (link:) changers", function() {
 				expect("[]<foo|("+name+":?foo, (link:'bar'))").not.markupToError();
 			});
+			it("doesn't error when given (click:) changers", function() {
+				expect("[]<foo|("+name+":?foo, (click:'bar'))").not.markupToError();
+			});
 			if (name === "change") {
 				it("only changes hooks earlier than it", function() {
 					var p = runPassage("[]<foo|(change:?foo,(color:'#800000'))[]<foo|");

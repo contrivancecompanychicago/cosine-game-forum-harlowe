@@ -387,6 +387,48 @@ describe("patterns", function() {
 			expect("(print:(datapattern:[foobar]))").markupToError();
 		});
 	});
+	describe("the (split:) macro", function() {
+		describe("when given a plain string", function() {
+			it("splits the data string into an array of substrings between matches", function() {
+				expect('(print:(split:"E","ABECDEFGEH"))').markupToPrint("AB,CD,FG,H");
+				expect('(print:(split:"E","EEEAEEE"))').markupToPrint(",,,A,,");
+				expect('(print:(split:"E","ABCDE") is an array)').markupToPrint("true");
+			});
+			it("splits the data string into every character if an empty string was given", function() {
+				expect('(print:(split:"","ABCDE"))').markupToPrint("A,B,C,D,E");
+			});
+		});
+		describe("when given a built-in string datatype", function() {
+			it("splits the data string into an array of substrings between matches", function() {
+				expect('(print:(split:whitespace,"AB CD FG H"))').markupToPrint("AB,CD,FG,H");
+				expect('(print:(split:alnum,"-+A+-B"))').markupToPrint("-+,+-");
+			});
+			it("errors if a non-string datatype is given", function() {
+				expect('(print:(split:int,"AB CD FG H"))').markupToError();
+				expect('(print:(split:dataset,"AB CD FG H"))').markupToError();
+			});
+			it("returns nothing if the datatype covers the whole string", function() {
+				expect('(print:(split:string,"AB CD FG H"))').markupToPrint("");
+				expect('(print:(split:...alnum,"ABCDE"))').markupToPrint("");
+			});
+		});
+		describe("when given a string pattern", function() {
+			it("splits the data string into an array of substrings between matches", function() {
+				expect('(print:(split:(p-many:(p-either:".",whitespace)),"AB  CD   FG.H"))').markupToPrint("AB,CD,FG,H");
+				expect('(print:(split:(p-ins:"e"),"ABECDEFGEH"))').markupToPrint("AB,CD,FG,H");
+			});
+			it("returns nothing if the pattern covers the whole string", function() {
+				expect('(print:(split:(p:"AB", alnum, "DE"),"ABCDE"))').markupToPrint("");
+			});
+		});
+		it("returns the entire string if there are no matches", function() {
+			expect('(print:(split:"J","ABECDEFGEH"))').markupToPrint("ABECDEFGEH");
+			expect('(print:(split:"J","") is (a:""))').markupToPrint("true");
+		});
+		it("is also known as (splitted:)", function() {
+			expect('(print:(splitted:"E","ABECDEFGEH"))').markupToPrint("AB,CD,FG,H");
+		});
+	});
 	describe("the (unpack:) macro", function() {
 		describe("when given an array pattern assignment request", function() {
 			it("sets the variable in the pattern to their matching values", function() {

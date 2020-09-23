@@ -22,7 +22,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a long-standing bug where block elements (like `(align:)` enchanted hooks) weren't transitioning in correctly when their passage appeared.
  * Significantly improved the performance of macros like `(enchant:)` and `(click:)` when they target a hook's `chars` or `lines`, such as by `(enchant: ?passage's hooks, $changer)`.
  * Fixed a bug where an `(enchant:)` given `?passage's chars` would crash Harlowe if the passage began with whitespace characters.
- * Fixed a bug where `(enchant:)` given a link changer such as `(link:)` would cause a Javascript error. It now causes no error, but it does nothing. (The documentation that formerly cited this as an example usage has been changed.)
+ * Fixed a bug where `(enchant:)` given a link changer such as `(link:)` or `(click:)` would cause a Javascript error. It now causes no error, but it does nothing. (The documentation that formerly cited this as an example usage has been changed.)
  * Fixed a bug where `(enchant:)` given `?passage's lines` would crash Harlowe if the passage contained zero line breaks.
  * Fixed a bug where `(hover-style:)` combined with a link changer such as `(link:)` would cause the specified hover style, after the link was clicked, to permanently persist on the hook.
  * Fixed a bug where `(hover-style:)` couldn't actually override the default hover colour for links of any kind, due to a CSS conflict.
@@ -127,6 +127,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a `(rotated-to:)` macro, a variation of `(rotated:)` which, rather than rotating the values by a given number, takes a lambda and rotates them until the first one that matches the lambda is at the front. `(rotated-to:where it > 3, 1,2,3,4)` produces `(a:4,1,2,3)`.
  * Added `(unpack:)`, a variation of `(put:)` used for assigning multiple values from an array, datamap or string into multiple variables at once. You can now write `(unpack: (a:1,2,(a:3)) into (a:$x, $y, (a:$z)))`, and the array on the left will overwrite the array on the right, causing $x to become 1, $y to become 2, and $z to become 3, without needing to write multiple `(set:)` statements. You may also put values or datatypes at positions in the right side, such as in `(put: (a:1,2,3) into (a:1,2,$x))`, to check that the right side indeed has matching values at those positions, and to cause an error if they do not.
    * The `(move:)` macro now also supports unpacking, by providing it with the same kind of statements as `(unpack:)`.
+ * Added `(split:)` (also known as `(splitted:)` to emphasise that it has an adjectival name) which takes a string or string pattern (see below) and uses it as a separator value with which to split up the other string given to it, producing an array of substrings.
+ * Added `(joined:)`, which joins together the strings given to it, using the first string as a separator value. `(joined:"! ", "Liberty", "Equality", "Fraternity", "")` produces the string `"Liberty! Equality! Fraternity!"`.
 
 ###### Datatypes
 

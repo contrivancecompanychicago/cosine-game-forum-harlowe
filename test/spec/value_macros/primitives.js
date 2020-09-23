@@ -204,6 +204,21 @@ describe("primitive value macros", function() {
 			expect("(print: (words: 'Golly')'s 1st is 'Golly')").markupToPrint('true');
 		});
 	});
+	describe("the (joined:) macro", function() {
+		it("accepts any number of strings", function() {
+			expect("(joined:)").markupToError();
+			expect("(joined: 1)").markupToError();
+			expect("(joined: 'a')").not.markupToError();
+			expect("(joined: 'red', 'blue')").not.markupToError();
+			expect("(joined: 'red', 'blue', 'foo', 'bar', 'baz')").not.markupToError();
+		});
+		it("joins each of the strings after the first, using the first as a separator", function() {
+			expect("(joined:'  ', 'A', 'B', 'C')").markupToPrint("A  B  C");
+		});
+		it("returns an empty string if only one string is given", function() {
+			expect("(joined:' ')").markupToPrint("");
+		});
+	});
 	describe("the (string-repeated:) macro", function() {
 		it("accepts 1 integer and 1 string", function() {
 			expect("(string-repeated:)").markupToError();

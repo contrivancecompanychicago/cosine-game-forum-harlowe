@@ -12,7 +12,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 		The base function for constructing Pattern datatypes, using the Pattern constructor's args, and a function to make the
 		internal RegExp using the args (which the function preprocesses to ensure they're all capable of being turned into RegExps).
 	*/
-	const createPattern = ({name, fullArgs, args, makeRegExpString, insensitive=false, canContainTypedVars = true, canBeUsedAlone = true}) => {
+	const createPattern = ({name, fullArgs, args, makeRegExpString = subargs => subargs.join(''), insensitive=false, canContainTypedVars = true, canBeUsedAlone = true}) => {
 		/*
 			"fullArgs" includes non-pattern arguments like (p-many:)'s min and max. args, which is optionally provided, does not.
 		*/
@@ -154,7 +154,8 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 							insensitive ? TypedVar.create(
 								createPattern({
 									name:"p-ins", fullArgs:[pattern.datatype],
-									insensitive: true, makeRegExpString: subargs => subargs.join('')}),
+									insensitive: true
+								}),
 								pattern.varRef
 							) :
 							pattern
@@ -303,7 +304,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 		*/
 		(["p","pattern"],
 			(_, ...fullArgs) => createPattern({
-				name:"p", fullArgs, makeRegExpString: subargs => subargs.join('')
+				name:"p", fullArgs,
 			}),
 		PatternSignature)
 		/*d:
@@ -486,9 +487,92 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 		*/
 		(["p-ins","pattern-ins","p-insensitive","pattern-insensitive"],
 			(_, ...fullArgs) => createPattern({
-				name:"p-ins", fullArgs,
-				insensitive: true, makeRegExpString: subargs => subargs.join(''),
+				name:"p-ins", fullArgs, insensitive: true,
 			}),
 			PatternSignature)
-		;
+		
+		/*d:
+			(split: String or Datatype, String) -> Array
+			Also known as: (splitted:)
+
+			This splits up the second value given to it into an array of substrings, after finding and removing each occurrence of the first string or pattern (which is used as a separator value).
+
+			Example usage:
+			* `(split: newline, (passage:"Kitchen")'s source)` produces an array of each line in the "Kitchen" passage's source.
+			* `(split: (p:",", (p-opt:" ")), "Rhett, Brett, Brad,Red")` produces `(a:"Rhett","Brett","Brad","Red")`.
+
+			Rationale:
+
+			It's common to want to extract substrings from a string, but you often want to do so not based on any fixed number of characters in the string, but on the location of a separator
+			value within the string. For instance, extracting the words from a string, such as with (words:), means you should consider whitespace to be the separator between words.
+			This macro provides a general means of splitting strings based on any separator you wish, using either a substring, a string-related datatype, or a string pattern datatype created
+			with (p:) or its family of macros.
+
+			As with most of Harlowe's data-processing macros, the word "split" should be considered an adjective, not a verb - it produces a "split string", not a command to split a string.
+
+			Details:
+			If no occurrences of the separator are found in the string, then an array containing just the complete string (with no splits) is produced.
+
+			If the separator (the first value) is the empty string, then the second string will be simply split into an array of its characters, as if by `(a: ...$secondValue)`.
+
+			If the separator is a pattern that matches the entire string (such as `(split: "Hairs", "Hairs")` or `(split: string, "Gadfly")`,
+			then an array containing just the empty string will be produced.
+
+			The pattern given to this macro cannot contained TypedVars (such as `(split: (p: alnum-type _letter), "A")`). Doing so will cause an error.
+
+			See also:
+			(words:), (folded:), (joined:)
+
+			Added in: 3.2.0
+			#string
+		*/
+		(["split", "splitted"],
+			(_, pattern, str) => {
+				pattern = createPattern({
+					name: "split", fullArgs: [pattern],
+					/*
+						Typed variables don't make sense for this macro, which isn't concerned with capturing
+						substring matches, let alone binding them.
+					*/
+					canContainTypedVars:false,
+				});
+				if (TwineError.containsError(pattern)) {
+					return pattern;
+				}
+				/*
+					To ensure that these base cases work correctly in spite of the implementation below,
+					they are explicitly stated here.
+					1. If there are no matches, the entire string is returned, even if it's the empty string.
+					2. If the pattern is "", then spread each character.
+				*/
+				if (!str) {
+					return [""];
+				}
+				if (!pattern.regExp) {
+					return [...str];
+				}
+				/*
+					The following loop algorithm doesn't compile a global RegExp, instead electing to just slice the
+					string from the left manually.
+				*/
+				const regExp = RegExp(pattern.regExp), ret = [];
+				let match;
+				/*
+					The loop should continue running until the string is consumed, OR there are no more matches
+					(whereupon the final portion of the string is concatenated to the return value, below).
+				*/
+				while (str && (match = regExp.exec(str))) {
+					/*
+						This additional check is necessary to see if there is no meaningful string consumption
+						being performed by .exec(), in the case of optional patterns like (p-opt:).
+					*/
+					if ((match.index + match[0].length) === 0) {
+						return ret;
+					}
+					ret.push(str.slice(0, match.index));
+					str = str.slice(match.index + match[0].length);
+				}
+				return ret.concat(str || []);
+			},
+			[either(String, Datatype), String]);
 });
