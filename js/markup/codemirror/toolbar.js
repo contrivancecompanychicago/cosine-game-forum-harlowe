@@ -336,17 +336,17 @@
 				ret[ON]('change', update);
 			}
 			if (type === "checkboxes") {
-				ret = el(`<div class="harlowe-3-toolbarCheckboxRow"><div><b>${row.name}</b></div></div>`);
+				ret = el(`<div class="harlowe-3-toolbarCheckboxRow"><div${row.bold ? ' style="font-weight:bold"' :''}>${row.name}</div></div>`);
 				row.options.forEach(box => {
-					const e = el('<label><input type="checkbox"></input>' + box + '</label>');
+					const e = el(`<label${row.capitalise ? ' style="text-transform:capitalize;"' : ''}><input type="checkbox"></input>${box}</label>`);
 					e[ON]('change', update);
 					ret.append(e);
 				});
 			}
 			if (type === "radios") {
-				ret = el(`<div class="harlowe-3-toolbarCheckboxRow"><div><b>${row.name}</b></div></div>`);
+				ret = el(`<div class="harlowe-3-toolbarCheckboxRow"><div${row.bold ? ' style="font-weight:bold"':''}>${row.name}</div></div>`);
 				row.options.forEach((radio,i) => {
-					const e = el(`<label><input type="radio" name="${row.name}" value="${radio}" ${!i ? 'checked' : ''}></input>${radio}</label>`);
+					const e = el(`<label${row.capitalise ? ' style="text-transform:capitalize;"' : ''}><input type="radio" name="${row.name}" value="${radio}" ${!i ? 'checked' : ''}></input>${radio}</label>`);
 					e[ON]('change', update);
 					ret.append(e);
 				});
@@ -505,11 +505,32 @@
 				});
 			}
 			/*
+				A column of textareas, but with buttons to add and subtract additional ones.
+			*/
+			if (type === "textarea-rows") {
+				ret = el('<div class="harlowe-3-textareaRows">');
+				const makeRow = () => {
+					if (ret.childNodes.length > 100) {
+						return;
+					}
+					const line = el(`<div class="harlowe-3-textareaRow"><input type=text style="width:85%;" placeholder="${row.placeholder}"></input><button class="harlowe-3-textareaRowMinus">${
+							fontIcon('minus')
+						}</button><button class="harlowe-3-textareaRowPlus">${
+							fontIcon('plus')
+						}</button></div>`);
+					line[$]('input')[ON]('input', update);
+					line[$]('.harlowe-3-textareaRowPlus')[ON]('click', () => { makeRow(); update(); });
+					line[$]('.harlowe-3-textareaRowMinus')[ON]('click', () => { line.remove(); update(); });
+					ret.append(line);
+				};
+				makeRow();
+			}
+			/*
 				The "Create" and "Cancel" buttons.
 			*/
 			if (type === "confirm") {
 				const buttons = el('<p class="buttons" style="padding-bottom:8px;"></p>');
-				const resultingCode = el(`<span class="harlowe-3-resultCode">Resulting code: <code></code> <code></code></span>`);
+				const resultingCode = el(`<span>Resulting code: <span class="harlowe-3-resultCode"><code></code> <code></code></span></span>`);
 				const cancel = el(`<button>${fontIcon('times')} Cancel</button>`);
 				const confirm = el(`<button class="create">${fontIcon('check')} Add</button>`);
 				confirm.setAttribute('style', disabledButtonCSS);
@@ -646,36 +667,50 @@
 				},{
 					type: 'checkboxes',
 					name: 'Font variants',
+					capitalise:true,
+					bold:true,
 					options: ["bold","italic","mark"],
 					model,
 				},{
 					type: 'radios',
 					name: 'Underlines and strikes',
+					capitalise:true,
+					bold:true,
 					options: ["none", "underline","double-underline","wavy-underline","strike","double-strike","wavy-strike"],
 					model,
 				},{
 					type: 'radios',
 					name: 'Superscript and subscript',
+					capitalise:true,
+					bold:true,
 					options: ["none", "superscript", "subscript"],
 					model,
 				},{
 					type: 'radios',
 					name: 'Outlines',
+					capitalise:true,
+					bold:true,
 					options: ["none", "outline","shadow","emboss","blur","blurrier","smear"],
 					model,
 				},{
 					type: 'radios',
 					name: 'Letter spacing',
+					capitalise:true,
+					bold:true,
 					options: ["none", "condense","expand"],
 					model,
 				},{
 					type: 'radios',
 					name: 'Flips',
+					capitalise:true,
+					bold:true,
 					options: ["none", "mirror","upside-down"],
 					model,
 				},{
 					type: 'radios',
 					name: 'Animations',
+					capitalise:true,
+					bold:true,
 					options: ["none", "blink", "fade-in-out","rumble","shudder","sway","buoy","fidget"],
 					model,
 				},
@@ -950,7 +985,7 @@
 						[{
 							type: 'inline-textarea',
 							text: "Create a hyperlink, with this text:",
-							placeholder: "Link text",
+							placeholder: "Link text (can\'t be empty)",
 							useSelection: true,
 							width: "50%",
 							model(m, elem) {
@@ -966,6 +1001,7 @@
 							text: "Allow the entire page to be clicked.",
 							model(m) {
 								m.changerNamed('click').push('?page');
+								m.clickPage = true;
 								m.valid = true;
 							},
 						},
@@ -980,6 +1016,14 @@
 				},{
 					type: 'radiorows',
 					name: 'passagelink',
+					update(m, el) {
+						// Disable the "cycling link" option if "click page" is selected...
+						el.lastChild.firstChild[(m.clickPage ? "set" : "remove") + "Attribute"]('disabled','');
+						// ...And deselect it if it's selected.
+						if (m.clickPage && el.lastChild.firstChild.checked) {
+							el.firstChild.firstChild.click();
+						}
+					},
 					options: [
 						[{
 							type: 'inline-passage-textarea',
@@ -1085,14 +1129,14 @@
 							type: 'radiorows',
 							name: 'linkReveal',
 							update(m, el) {
-								el[$$]('input').forEach(e=> e[('click' in m.changers ? "set" : "remove") + "Attribute"]("disabled",''));
+								el[$$]('input').forEach(e=> e[(m.clickPage ? "set" : "remove") + "Attribute"]("disabled",''));
 							},
 							options: [
 								[{
 									type: "inline-text",
 									text: "Then remove the link's own text.",
 									model(m) {
-										if (!('click' in m.changers)) {
+										if (!m.clickPage) {
 											m.changerNamed('link').push(stringify(m.linkText));
 										}
 									},
@@ -1101,7 +1145,7 @@
 									type: "inline-text",
 									text: "Then unlink the link's own text.",
 									model(m){
-										if (!('click' in m.changers)) {
+										if (!m.clickPage) {
 											m.changerNamed('link-reveal').push(stringify(m.linkText));
 										}
 									},
@@ -1110,7 +1154,7 @@
 									type: "inline-text",
 									text: "Re-run the hook each time the link is clicked.",
 									model(m){
-										if (!('click' in m.changers)) {
+										if (!m.clickPage) {
 											m.changerNamed('link-rerun').push(stringify(m.linkText));
 										}
 									},
@@ -1119,12 +1163,50 @@
 									type: "inline-text",
 									text: "Repeat the hook each time the link is clicked.",
 									model(m){
-										if (!('click' in m.changers)) {
+										if (!m.clickPage) {
 											m.changerNamed('link-repeat').push(stringify(m.linkText));
 										}
 									},
 								}],
 							],
+						}],
+						[{
+							type: 'inline-text',
+							text: "Cycle the link's text to the next alternative in a list.",
+						},
+						el('<br>'),
+						{
+							type: 'textarea-rows',
+							placeholder: 'Link text (can\'t be empty)',
+							model(m, el) {
+								const els = [m.linkText].concat(Array.from(el[$$]('input')).map(el => el.value));
+								if (!m.clickPage && els.every(Boolean)) {
+									m.wrapStart = `(cycling-link:${
+										els.map(e => JSON.stringify(e))
+									})`;
+									m.wrapEnd = '';
+									m.innerText = '';
+								}
+								else if (el.parentNode.firstChild.checked) {
+									m.valid = false;
+								}
+							},
+						},{
+							type: 'radios',
+							name: 'Upon reaching the end:',
+							options: ["Loop to the start.", "Remove the link.", "Unlink the link."],
+							model(m, el) {
+								if (!m.valid) {
+									return;
+								}
+								const {value} = el[$]('[type=radio]:checked');
+								if (value[0] === "U") {
+									m.wrapStart = m.wrapStart.replace(/^\(cycling/, '(seq');
+								}
+								else if (value[0] === "R") {
+									m.wrapStart = m.wrapStart.replace(/\)$/,',"")');
+								}
+							},
 						}],
 					],
 				},

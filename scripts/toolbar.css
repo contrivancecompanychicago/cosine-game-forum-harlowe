@@ -57,7 +57,6 @@
 
 .harlowe-3-toolbarCheckboxRow > label {
 	min-width: 20%;
-	text-transform: capitalize;
 	display: inline-block;
 }
 
@@ -113,8 +112,12 @@
 }
 
 .harlowe-3-resultCode {
-	max-width:60%;
-	text-overflow:ellipsis;
+	max-width:50%;
+	overflow-x:auto;
+	white-space:pre;
+	display:inline-block;
+	vertical-align:middle;
+	padding:1px 0px;
 }
 
 .harlowe-3-toolbarBullet {
@@ -239,4 +242,11 @@
 }
 .theme-dark .harlowe-3-tooltipTail::after {
 	border-bottom-color: black;
+}
+.harlowe-3-textareaRow:not(:last-child) .harlowe-3-textareaRowPlus,
+.harlowe-3-textareaRow:last-child .harlowe-3-textareaRowMinus {
+	display:none;
+}
+.harlowe-3-textareaRows {
+	margin-bottom:0.5em;
 }
