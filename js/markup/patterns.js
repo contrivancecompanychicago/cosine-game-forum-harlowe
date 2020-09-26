@@ -83,8 +83,7 @@
 		anyLetterStrict      =    anyLetter.replace("\\-", ""),
 		
 		eol                  = either("\\n", "$"),
-		
-		noUnescapedLineBreak = "(" + either(escapedLine,"[^\\n]") + "+)",
+
 		
 		/*d:
 			Bulleted list markup
@@ -111,7 +110,7 @@
 		
 		bullet      = "\\*",
 		
-		bulleted    = ws + "(" + bullet + "+)" + mws + noUnescapedLineBreak + eol,
+		bulleted    = ws + "(" + bullet + "+)" + mws,
 		
 		/*d:
 			Numbered list markup
@@ -138,7 +137,7 @@
 		*/
 		numberPoint = "(?:0\\.)",
 		
-		numbered    = ws + "(" + numberPoint + "+)" + mws + noUnescapedLineBreak + eol,
+		numbered    = ws + "(" + numberPoint + "+)" + mws,
 		
 		/*d:
 			Horizontal rule markup
@@ -176,7 +175,7 @@
 
 			#section
 		*/
-		heading = ws + "(#{1,6})" + ws + noUnescapedLineBreak + eol,
+		heading = ws + "(#{1,6})" + ws,
 		
 		/*d:
 			Aligner markup

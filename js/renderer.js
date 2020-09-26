@@ -200,24 +200,38 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 						// Run through the tokens, consuming all consecutive list items
 						let tagName = (token.type === "numbered" ? "ol" : "ul");
 						out += "<" + tagName + ">";
+						// This will be used to identify the depth of the initial list compared to the default (1).
 						let depth = 1;
-						while(i < len && tokens[i] && tokens[i].type === token.type) {
-							/*
-								For differences in depth, raise and lower the <ul> depth
-								in accordance with it.
-							*/
-							out += ("<"  + tagName + ">").repeat(Math.max(0, tokens[i].depth - depth));
-							out += ("</" + tagName + ">").repeat(Math.max(0, depth - tokens[i].depth));
-							depth = tokens[i].depth;
-							
-							out += renderTag(tokens[i], "li");
+						/*
+							March through the subsequent tokens of the list item, rendering them until a line break is encountered,
+							whereupon the list item is terminated.
+						*/
+						while(i < len && tokens[i]) {
+							if (tokens[i].type === "br") {
+								out += "</li>";
+								/*
+									If the very next item after the line break is not a similar list item,
+									terminate the whole list.
+								*/
+								if (!tokens[i+1] || tokens[i+1].type !== token.type) {
+									break;
+								}
+							}
+							else if (tokens[i].type === token.type) {
+								/*
+									For differences in depth, raise and lower the <ul> depth
+									in accordance with it.
+								*/
+								out += ("<"  + tagName + ">").repeat(Math.max(0, tokens[i].depth - depth));
+								out += ("</" + tagName + ">").repeat(Math.max(0, depth - tokens[i].depth));
+								out += "<li>";
+								depth = tokens[i].depth;
+							}
+							else {
+								out += render([tokens[i]]);
+							}
 							i += 1;
 						}
-						/*
-							Since the while loop broke at a point where tokens[i] wasn't a list item,
-							we must reset i to just prior to that position (so that the for-loop head can increment it).
-						*/
-						i -= 1;
 						out += ("</" + tagName + ">").repeat(depth + 1);
 						break;
 					}
@@ -318,7 +332,18 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 						break;
 					}
 					case "heading": {
-						out += renderTag(token, 'h' + token.depth);
+						out += '<h' + token.depth + ">";
+						/*
+							March through the subsequent tokens of the heading, rendering them until a line break is encountered,
+							whereupon the heading is terminated.
+						*/
+						while (++i < len && tokens[i]) {
+							if (tokens[i].type === "br") {
+								out += '</h' + token.depth + '>';
+								break;
+							}
+							out += render([tokens[i]]);
+						}
 						break;
 					}
 					case "br": {

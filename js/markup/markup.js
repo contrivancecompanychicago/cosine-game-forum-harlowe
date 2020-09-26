@@ -152,19 +152,16 @@
 			bulleted: {
 				fn: (match) => ({
 					depth: match[1].length,
-					innerText: match[2]
 				}),
 			},
 			numbered: {
 				fn: (match) => ({
 					depth: match[1].length / 2,
-					innerText: match[2]
 				}),
 			},
 			heading: {
 				fn: (match) => ({
 					depth: match[1].length,
-					innerText: match[2]
 				}),
 			},
 			/*

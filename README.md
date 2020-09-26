@@ -6,6 +6,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 #### Bugfixes
 
+ * The bulleted list, numbered list and heading markup has been fixed to permit multi-line markup (such as multi-line hooks) within it. So, among other things, hooks' opening `[` and closing `]` can now be on the same line as a bulleted list item, numbered list item, or heading.
  * Fixed a long-standing bug involving the interaction between temp variables and the `(show:)` and `(link-show:)` macros. The previous behaviour, which was not my intention at all, meant that hooks shown with `(show:)` could only access temp variables available at the `(show:)` macro's location, rather than the hook's location (which is now the current behaviour). The same applies to `(link-show:)`, as well as to the new `(rerun:)` macro (below).
  * Fixed a long-standing bug where continuous ranges for arrays, such as `(a: 1,2)'s 4thlasttolast`, wouldn't work correctly. (What that example should do is provide the entire array, as is consistent with Python.)
  * Fixed a long-standing bug where `(click: ?Passage)` and `(click: ?Sidebar)` just flat-out didn't work at all.
