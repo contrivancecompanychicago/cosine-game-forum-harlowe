@@ -62,7 +62,7 @@ describe("save macros", function() {
 		});
 		it("can save custom macros", function() {
 			runPassage(
-				"(set:$c1 to (macro: num-type _a, num-type _b, [(output:(max:_a,_b,200))]))"
+				"(set:$c1 to (macro: num-type _a, num-type _b, [(output-data:(max:_a,_b,200))]))"
 			);
 			expect("(savegame:'1')").not.markupToError();
 		});
@@ -172,8 +172,9 @@ describe("save macros", function() {
 		});
 		it("can restore custom macros", function(done) {
 			runPassage(
-				"(set:$c1 to (macro: num-type _a, num-type _b, [(output:(max:_a,_b,200))]))"
-				+ "(set:$c2 to (macro: num-type _a, str-type _b, [(output:(str:($c1:_a,150))+_b)]))"
+				"(set:$c1 to (macro: num-type _a, num-type _b, [(output-data:(max:_a,_b,200))]))"
+				+ "(set:$c2 to (macro: num-type _a, str-type _b, [(output-data:(str:($c1:_a,150))+_b)]))"
+				+ "(set:$c3 to (macro: [(output:)[foo bar]]))"
 			);
 			expect("(savegame:'1')").not.markupToError();
 			expect("(loadgame:'1')").not.markupToError();
@@ -181,6 +182,7 @@ describe("save macros", function() {
 				expect("($c1:198,197)").markupToPrint('200');
 				expect("($c1:298,297)").markupToPrint('298');
 				expect("($c2:312,' bears')").markupToPrint('312 bears');
+				expect("($c3:)").markupToPrint('foo bar');
 				done();
 			},20);
 		});

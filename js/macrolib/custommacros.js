@@ -17,7 +17,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 			Dead characters get a single, pithy line.
 			(if: _stats's HP <= 0)[(output: _TheyAre + "deceased.")]
 			Living characters get specific status conditions referred to.
-			(output:
+			(output-data:
 				_TheyAre + "in " + (cond: _stats's HP > 50, "fair", "poor") + " health." +
 				(cond: _stats's poison > 0, " " + _TheyAre + "poisoned.", "") +
 				(cond: _stats's heartbreak, " " + _TheyAre + "heartbroken.", "")
@@ -32,8 +32,8 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		This macro provides you with the means to expand Harlowe's collection of built-in macros with
 		custom utilities tailored specifically for your story. While many Twine projects are simple
 		hypertext stories, there are many that use it to make more complicated simulations, role-playing games,
-		generative art, and so on. Being able to craft a personal language of macros in which to write the many algorithms such
-		games involve is essential to keeping your code succinct and readable.
+		generative art, and so on. Being able to craft a personal language of macros in which to write the many algorithms
+		and textual structures such games involve is essential to keeping your code succinct and readable.
 
 		Writing the parameters:
 
@@ -60,7 +60,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 
 		```
 		(set: $mean to (macro: ...num-type _a, [
-			(output:(folded: _num making _total via _total + _num, ..._a) / _a's length)
+			(output-data:(folded: _num making _total via _total + _num, ..._a) / _a's length)
 		]))
 		One's 7 foot 4, one's 4 foot 7. Add 'em up and divide by two, ya get a regular ($mean:7 + 4/12, 4 + 7/12)-foot person.
 		```
@@ -68,9 +68,9 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		Writing the code:
 
 		The CodeHook, conversely, is where the code of your custom macro is written. You can (set:) temp variables in it, use (if:), (for:),
-		(cond:), and so forth to run different sections of code, and output a final value using either (output:) or (output-hook:).
+		(cond:), and so forth to run different sections of code, and finally output something using either (output:) or (output-data:).
 		(Consult each of those macros' articles to learn the exact means of using them, and their differences.) The temp variables
-		specified by the typed variables are automatically set with the passed-in data.
+		specified by the aforementioned typed variables are automatically set with the passed-in data.
 
 		Custom macros can be called like any other macro, by using the variable instead of a name: `($someCustomMacro:)` is how you would
 		call a custom macro stored in the variable $someCustomMacro, and `(_anotherCustomMacro:)` is how you would
@@ -88,16 +88,16 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		You can, of course, have zero parameters, for a macro that needs no input values, and simply outputs a complicated (or randomised) value
 		by itself.
 
-		Currently, (macro:) code hooks do NOT have access to temp variables created outside of them. `(set: _name to "Fox", _aCustomMacro to (macro:[(output:_name)])) (_aCustomMacro:)`
+		Currently, (macro:) code hooks do NOT have access to temp variables created outside of the (macro:) call. `(set: _name to "Fox", _aCustomMacro to (macro:[(output-data:_name)])) (_aCustomMacro:)`
 		will cause an error, because _name isn't accessible inside the _aCustomMacro macro. They do, however, have access to global variables (which begin with `$`).
 
 		Much like with typed variables given to (set:) or (put:), each temp variable associated with a parameter is restricted to the given data type. So,
-		`(macro:num-type _a,[(set:_a to 'text')(output:_a)]` will cause an error when run.
+		`(macro:num-type _a,[(set:_a to 'text')(output-data:_a)]` will cause an error when run.
 
-		All custom macros must return some value. If no (output:) or (output-hook:) macros were run inside the code hook, an error will result.
+		All custom macros must return some value. If no (output:) or (output-data:) macros were run inside the code hook, an error will result.
 
 		See also:
-		(output:), (output-hook:)
+		(output:), (output-data:)
 
 		Added in: 3.2.0
 		#custom macros 1
@@ -125,12 +125,12 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 				const ACM = "A custom macro";
 				if (parameters[i].varRef.object === State.variables) {
 					return TwineError.create("datatype",
-						ACM + "'s datatyped variables must be temp variables (with a '_'), not global variables (with a '$').",
-						"Write them with a _ sigil at the start instead of a $ sigil.");
+						ACM + "'s typed variables must be temp variables (with a '_'), not global variables (with a '$').",
+						"Write them with a _ symbol at the start instead of a $ symbol.");
 				}
 				if (parameters[i].varRef.propertyChain.length > 1) {
 					return TwineError.create("datatype",
-						ACM + "'s datatyped variables can't be properties inside a data structure."
+						ACM + "'s typed variables can't be properties inside a data structure."
 					);
 				}
 				if (parameters[i].datatype.rest && i !== parameters.length - 2) {
@@ -141,7 +141,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 				const name = parameters[i].varRef.propertyChain[0];
 				if (names.includes(name)) {
 					return TwineError.create("datatype",
-						ACM + "'s datatyped variables can't both be named '" + name + "'."
+						ACM + "'s typed variables can't both be named '" + name + "'."
 					);
 				}
 				names.push(name);
@@ -170,15 +170,15 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 	};
 
 	/*d:
-		(output: Any) -> Instant
-		Also known as: (out:)
+		(output-data: Any) -> Instant
+		Also known as: (out-data:)
 
 		Use this macro inside a (macro:)'s CodeHook to output the value that the macro produces.
 
 		Example usage:
 		```
 		(set: $randomCaps to (macro: str-type _str, [
-			(output:
+			(output-data:
 				(folded: _char making _out via _out + (either:(lowercase:_char),(uppercase:_char)),
 				..._str)
 			)
@@ -192,25 +192,25 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		of your macro's CodeHook, and give it the value you want the macro call to evaluate to.
 
 		This is best suited for macros which primarily compute single data values, like strings, arrays and datamaps.
-		If you wish to output a long span of code, please consider using the (output-hook:) changer instead.
+		If you wish to output a long span of code, please consider using the (output:) changer instead.
 
 		Details:
-		As soon as an (output:) macro is run, all further macros and code in the CodeHook will be ignored,
+		As soon as an (output-data:) macro is run, all further macros and code in the CodeHook will be ignored,
 		much like how the (go-to:) and (undo:) macros behave.
 
-		Attempting to call (output:) outside of a custom macro's CodeHook will cause an error.
+		Attempting to call (output-data:) outside of a custom macro's CodeHook will cause an error.
 
 		See also:
-		(output-hook:), (error:)
+		(output:), (error:)
 
 		Added in: 3.2.0
-		#custom macros 2
+		#custom macros 3
 	*/
-	addCommand(["output", "out"], () => {}, ({stack}, any) => {
+	addCommand(["output-data", "out-data"], () => {}, ({stack}, any) => {
 		/*
 			If this errors, then the error will be returned now.
 		*/
-		return outputValue("output", stack, any)
+		return outputValue("output-data", stack, any)
 		/*
 			By forcibly blocking the control flow of the section after executing this macro, (output:)
 			has the same semantics as "return" in other programming languages.
@@ -220,14 +220,15 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		/*attachable:false*/ false);
 
 	/*d:
-		(output-hook:) -> Changer
+		(output:) -> Changer
+		Also known as: (out:)
 
 		Use this macro inside a (macro:)'s CodeHook to output a command that, when run, renders the attached hook.
 
 		Example usage:
 		```
 		(set: $describePotion to (macro: dm-type _potion, [
-			(size:0.7)+(box:"=XXXXX=")+(border:"solid")+(output-hook:)[\
+			(size:0.7)+(box:"=XXXXX=")+(border:"solid")+(output:)[\
 			##(print:_potion's name)
 			|==
 			''Hue'': (print:_potion's hue)
@@ -253,33 +254,33 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		For more information on custom macros, consult the (macro:) macro's article.
 		All custom macros have inputs and output. This macro lets you output an entire hook, displaying it in a single
 		call of the macro. Attach this to a hook at the end of your custom macro's code hook, and the custom macro will
-		output a command that displays the hook, similar to how (print:) or (link-goto:) work.
+		produce a command that displays the hook, similar to how (print:) or (link-goto:) work.
 
 		If you want your custom macro to return single values of data, like numbers or arrays, rather than hooks, please
-		use the (output:) macro instead.
+		use the (output-data:) macro instead.
 
 		Details:
-		As soon as a hook with (output-hook:) attached is encountered, all further macros and code in the CodeHook will be ignored,
+		As soon as a hook with (output:) attached is encountered, all further macros and code in the CodeHook will be ignored,
 		just as how (output:) behaves. This behaviour is unique among changers.
 
-		You can combine (output-hook:) with other changers, like (text-style:) or (link:). The hook that is displayed by the command
+		You can combine (output:) with other changers, like (text-style:) or (link:). The hook that is displayed by the command
 		will have those other changers applied to it.
 
-		As you might have noticed, (output-hook:) accepts no values itself - simply attach it to a hook.
+		As you might have noticed, (output:) accepts no values itself - simply attach it to a hook.
 
-		Attempting to call (output:) outside of a custom macro's CodeHook will cause an error.
+		Attempting to use (output:) outside of a custom macro's CodeHook will cause an error.
 
 		See also:
-		(output:), (error:)
+		(output-data:), (error:)
 
 		Added in: 3.2.0
-		#custom macros 3
+		#custom macros 2
 	*/
-	addChanger("output-hook",
-		(section) => Object.assign(ChangerCommand.create("output-hook", [section])),
+	addChanger(["output", "out"],
+		(section) => Object.assign(ChangerCommand.create("output", [section])),
 		(cd, {stack,stackTop}) => {
 			/*
-				(output-hook:) commands are deferred render commands, but they need access to the temp variables
+				(output:) commands are deferred render commands, but they need access to the temp variables
 				present at the time of creation, inside the custom macro. This #awkward hack leverages
 				loopVars to store the tempVariables, as just one sad little loop.
 			*/
@@ -288,14 +289,14 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 				return a;
 			},{});
 
-			outputValue("output-hook", stack, cd);
+			outputValue("output", stack, cd);
 			/*
 				Unlike a command, changers have to explicitly block the section's control flow like so.
 			*/
 			stackTop.blocked = true;
 			/*
 				This leaves the passed-in CD unchanged.
-				I believe every changer in Harlowe returns the same ChangeDescriptor, so any changers added to (output-hook:)
+				I believe every changer in Harlowe returns the same ChangeDescriptor, so any changers added to (output:)
 				before or after are still given to stackTop.
 			*/
 			return cd;
@@ -329,7 +330,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		custom error provides a better message, explaining exactly what the problem is.
 
 		Details:
-		As with (output:), as soon as this is encountered, all further macros and code in the CodeHook will be ignored.
+		As with (output-data:), as soon as this is encountered, all further macros and code in the CodeHook will be ignored.
 		Note that this occurs even if the macro is given as input to another macro - `(cond: false, (error:"There's a problem"), "")`
 		will always produce the error, regardless of (cond:)'s behaviour.
 
@@ -337,7 +338,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		attempting to call (error:) outside of a custom macro's CodeHook will cause another (also different from intended) error.
 
 		See also:
-		(output:), (output-hook:)
+		(output:), (output-data:)
 
 		Added in: 3.2.0
 		#custom macros 4

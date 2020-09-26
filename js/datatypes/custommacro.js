@@ -142,7 +142,7 @@ define(['jquery','utils/operationutils','internaltypes/changedescriptor', 'inter
 			tempVariables,
 			dom,
 			/*
-				Output is used for both the values returned by (output:) and the ChangeDescriptors returned by (command:).
+				Output is used for both the values returned by (output:) and the ChangeDescriptors returned by (output-hook:).
 			*/
 			output(data) {
 				/*
@@ -179,10 +179,10 @@ define(['jquery','utils/operationutils','internaltypes/changedescriptor', 'inter
 			Currently, custom macros are required to return something, even if that thing is an error.
 		*/
 		if (output === undefined) {
-			return TwineError.create("custommacro", macro.TwineScript_ObjectName + " didn't output any data using (output:) or (output-hook:).");
+			return TwineError.create("custommacro", macro.TwineScript_ObjectName + " didn't output any data or hooks using (output:) or (output-data:).");
 		}
 		/*
-			As described above, if (output-hook:) was run, and a ChangeDescriptor was
+			As described above, if (output:) was run, and a ChangeDescriptor was
 			returned, then this custom macro should be considered a command macro.
 		*/
 		if (ChangeDescriptor.isPrototypeOf(output)) {

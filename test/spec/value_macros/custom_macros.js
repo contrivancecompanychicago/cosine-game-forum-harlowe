@@ -2,15 +2,15 @@ describe("custom macros", function() {
 	'use strict';
 	describe("(macro:)", function() {
 		it("consist of an optional number of typed vars, followed by a code hook", function() {
-			expect("(set: $e to (macro:[(output:2)]))").not.markupToError();
+			expect("(set: $e to (macro:[(output-data:2)]))").not.markupToError();
 			expect("(set: $e to (macro:boolean-type _a))").markupToError();
 			for(var i = 0; i <= 10; i+=1) {
 				var a = Array(i+1).fill(undefined).map(function(_,i) { return "str-type _a" + i; });
-				expect("(set: $e to (macro:" + a + ", [(output:2)]))").not.markupToError();
+				expect("(set: $e to (macro:" + a + ", [(output-data:2)]))").not.markupToError();
 			}
 		});
 		it("typed vars can have expression datatypes", function() {
-			expect("(set:$leonsKickassType to number)(set: $e to (macro:$leonsKickassType-type _a, (either:boolean,dm)-type _b, [(output:2)]))").not.markupToError();
+			expect("(set:$leonsKickassType to number)(set: $e to (macro:$leonsKickassType-type _a, (either:boolean,dm)-type _b, [(output-data:2)]))").not.markupToError();
 		});
 		it("typed vars must be temp variables", function() {
 			expect("(set: $e to (macro:boolean-type $a))").markupToError();
@@ -22,15 +22,15 @@ describe("custom macros", function() {
 			expect("(set: $e to (macro:boolean-type _a, boolean-type _a))").markupToError();
 		});
 		it("typed vars can only be spread as the last variable", function() {
-			expect("(set: $e to (macro:str-type _a, ...str-type _b, num-type _c, [(output:1)]))").markupToError();
-			expect("(set: $e to (macro:str-type _a, ...str-type _b, ...num-type _c, [(output:1)]))").markupToError();
-			expect("(set: $e to (macro:...str-type _a, num-type _c, [(output:1)]))").markupToError();
+			expect("(set: $e to (macro:str-type _a, ...str-type _b, num-type _c, [(output-data:1)]))").markupToError();
+			expect("(set: $e to (macro:str-type _a, ...str-type _b, ...num-type _c, [(output-data:1)]))").markupToError();
+			expect("(set: $e to (macro:...str-type _a, num-type _c, [(output-data:1)]))").markupToError();
 		});
 	});
 	describe("calling", function() {
 		beforeEach(function(){
-			runPassage("(set: $m to (macro:num-type _e, [(output:_e+10)]))");
-			runPassage("(set: $n to (macro:...num-type _e, [(output:_e)]))");
+			runPassage("(set: $m to (macro:num-type _e, [(output-data:_e+10)]))");
+			runPassage("(set: $n to (macro:...num-type _e, [(output-data:_e)]))");
 		});
 		it("are called by writing a macro call with their variable in place of the name, and supplying arguments", function() {
 			expect("($m:5)").markupToPrint("15");
@@ -56,54 +56,54 @@ describe("custom macros", function() {
 			expect("($n:1,2,3,4,5,'e',6)").markupToError();
 		});
 		it("variables are type-restricted", function() {
-			expect("(set: $m to (macro:num-type _e, [(set:_e to true)(output:_e)]))($m:2)").markupToError();
-			expect("(set:$g to (a:true), $m to (macro:num-type _e, [(move:$g's 1st into _e)(output:_e)]))($m:2)").markupToError();
+			expect("(set: $m to (macro:num-type _e, [(set:_e to true)(output-data:_e)]))($m:2)").markupToError();
+			expect("(set:$g to (a:true), $m to (macro:num-type _e, [(move:$g's 1st into _e)(output-data:_e)]))($m:2)").markupToError();
 		});
 		it("errors inside the custom macro are propagated outward", function() {
-			runPassage("(set: $o to (macro:num-type _e, [(output:_e*10)]))");
-			expect("(set: $m to (macro:num-type _e, [(set:_g to _e+1)(output:_e+'f')]))($m:2)").markupToError();
-			expect("(set: $n to (macro:num-type _e, [(set:_g to _e+1)(output:($m:($o:_e)))]))($n:2)").markupToError();
+			runPassage("(set: $o to (macro:num-type _e, [(output-data:_e*10)]))");
+			expect("(set: $m to (macro:num-type _e, [(set:_g to _e+1)(output-data:_e+'f')]))($m:2)").markupToError();
+			expect("(set: $n to (macro:num-type _e, [(set:_g to _e+1)(output-data:($m:($o:_e)))]))($n:2)").markupToError();
 		});
 		it("global variables can be accessed inside the code hook", function() {
-			expect("(set:$foo to 'bar')(set: $m to (macro:[(output:$foo)]))($m:)").markupToPrint('bar');
+			expect("(set:$foo to 'bar')(set: $m to (macro:[(output-data:$foo)]))($m:)").markupToPrint('bar');
 		});
 		it("external temp variables can't be accessed inside the code hook", function() {
-			expect("(set: _foo to 2)(set: $m to (macro:[(output:_foo)]))($m:)").markupToError();
+			expect("(set: _foo to 2)(set: $m to (macro:[(output-data:_foo)]))($m:)").markupToError();
 		});
 	});
-	describe("(output:)", function() {
+	describe("(output-data:)", function() {
 		it("takes a single value of any kind", function() {
 			["'a'","2","(a:)","true","(dm:)"].forEach(function(e) {
-				expect("(set: $e to (macro:[(output:" + e + ")]))($e:)").not.markupToError();
+				expect("(set: $e to (macro:[(output-data:" + e + ")]))($e:)").not.markupToError();
 			});
 		});
 		it("ceases macro execution after being called", function() {
-			expect("(set: $foo to 'bar', $e to (macro:[(output:'')(set:$foo to 'baz')]))($e:)$foo").markupToPrint("bar");
-			expect("(set: $e to (macro:[(output:'bar')(output:'baz')]))($e:)").markupToPrint("bar");
+			expect("(set: $foo to 'bar', $e to (macro:[(output-data:'')(set:$foo to 'baz')]))($e:)$foo").markupToPrint("bar");
+			expect("(set: $e to (macro:[(output-data:'bar')(output-data:'baz')]))($e:)").markupToPrint("bar");
 		});
-		it("is aliased as (out:)", function() {
-			expect("(set: $e to (macro:[(out:'bar')]))($e:)").markupToPrint("bar");
+		it("is aliased as (out-data:)", function() {
+			expect("(set: $e to (macro:[(out-data:'bar')]))($e:)").markupToPrint("bar");
 		});
 		it("can't be used outside of a custom macro", function() {
-			expect("(output:'baz')").markupToError();
-			expect("(set: $e to (macro:[(output:(output:'baz'))]))($e:)").markupToError();
+			expect("(output-data:'baz')").markupToError();
+			expect("(set: $e to (macro:[(output-data:(output-data:'baz'))]))($e:)").markupToError();
 		});
 	});
-	describe("(output-hook:)", function() {
+	describe("(output:)", function() {
 		it("takes no values, and returns a changer", function() {
-			expect("(set: $e to (macro:[(output-hook:)[baz]]))($e:)").not.markupToError();
+			expect("(set: $e to (macro:[(output:)[baz]]))($e:)").not.markupToError();
 		});
 		it("ceases macro execution after being attached", function() {
-			expect("(set: $foo to 'bar', $qux to (output-hook:), $e to (macro:[$qux[](set:$foo to 'baz')]))($e:)$foo").markupToPrint("bar");
+			expect("(set: $foo to 'bar', $qux to (output:), $e to (macro:[$qux[](set:$foo to 'baz')]))($e:)$foo").markupToPrint("bar");
 		});
 		it("the containing custom macro returns a command which displays the hook", function() {
-			expect("(set: $e to (macro:[(output-hook:)[baz]]))($e:)").markupToPrint("baz");
+			expect("(set: $e to (macro:[(output:)[baz]]))($e:)").markupToPrint("baz");
 		});
 		it("can be combined with other changers", function() {
-			expect("(set: $e to (macro:[(append-with:'foo')+(output-hook:)[baz]]))($e:)").markupToPrint("bazfoo");
+			expect("(set: $e to (macro:[(append-with:'foo')+(output:)[baz]]))($e:)").markupToPrint("bazfoo");
 		});
 		it("temp variables in the hook retain their values", function() {
-			expect("(set: $e to (macro:str-type _a,[(output-hook:)[(print:_a+'qux')]]))($e:'baz')").markupToPrint("bazqux");
+			expect("(set: $e to (macro:str-type _a,[(output:)[(print:_a+'qux')]]))($e:'baz')").markupToPrint("bazqux");
 			expect("($e:'baz')").markupToPrint("bazqux");
 		});
 	});

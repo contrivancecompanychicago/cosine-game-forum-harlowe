@@ -718,7 +718,7 @@
 				confirmRow);
 			})(),
 		borders: (() => {
-				function dropdownControls(orientation) {
+				function dropdownControls(orientation, index) {
 					return [
 						el(`<div><b>${orientation}</b></div>`),
 						{
@@ -726,7 +726,12 @@
 							text: 'Style:',
 							options: ['none', '', 'dotted', 'dashed', 'solid', 'double', 'groove', 'ridge', 'inset', 'outset'],
 							model(m, el) {
-								m.changerNamed('b4r').push(stringify(el[$]('select').value || "none"));
+								const enabled = el[$]('select').value;
+								m.changerNamed('b4r').push(stringify(enabled || "none"));
+								/*
+									This expando determines if the border is enabled.
+								*/
+								(m.borderEnabled = m.borderEnabled || [])[index] = !!enabled;
 							},
 						},{
 							type: 'inline-number',
@@ -742,6 +747,12 @@
 							type: 'inline-colour',
 							text: 'Colour:',
 							value: "#ffffff",
+							/*
+								Only show the border colour panel if this border is enabled.
+							*/
+							update(m, el) {
+								el.setAttribute('style', !m.borderEnabled[index] ? "display:none" : '');
+							},
 							model(m, el) {
 								const c = el[$]('[type=color]').value,
 									a = el[$]('[type=range]').value;
@@ -784,7 +795,7 @@
 							}`);
 						},
 					},
-					...dropdownControls("Top"), ...dropdownControls("Right"), ...dropdownControls("Bottom"), ...dropdownControls("Left"),
+					...dropdownControls("Top", 0), ...dropdownControls("Right", 1), ...dropdownControls("Bottom", 2), ...dropdownControls("Left", 3),
 					{
 						type: 'confirm',
 						model(m) {
@@ -1247,6 +1258,8 @@
 								ifArgs[0] += elem[$]('input').value;
 								if (ifArgs[0].includes(' % ')) {
 									ifArgs[0] += " is 0";
+									// Replace "% 2 is 0" with "is even"
+									ifArgs[0] = ifArgs[0].replace(" % 2 is 0", " is even");
 								}
 								m.valid = true;
 							},
@@ -1325,6 +1338,8 @@
 								ifArgs[0] += elem[$]('input').value;
 								if (ifArgs[0].includes(' % ')) {
 									ifArgs[0] += " is 0";
+									// Replace "% 2 is 0" with "is even"
+									ifArgs[0] = ifArgs[0].replace(" % 2 is 0", " is even");
 								}
 							},
 						},
@@ -1370,6 +1385,8 @@
 								ifArgs[0] += elem[$]('input').value;
 								if (ifArgs[0].includes(' % ')) {
 									ifArgs[0] += " is 0";
+									// Replace "% 2 is 0" with "is even"
+									ifArgs[0] = ifArgs[0].replace(" % 2 is 0", " is even");
 								}
 							},
 						},
@@ -1571,10 +1588,8 @@
 			},
 			confirmRow),
 
-		default: folddownPanel({
-				type: 'notice',
-				text: 'The current story format is <b>Harlowe 3.2.0</b>. Consult its <a href="https://twine2.neocities.org/" target="_blank" rel="noopener noreferrer">documentation</a>.'
-			},{
+		default: folddownPanel(
+			{
 				type: 'buttons',
 				buttons: [
 					{ title:'Bold',                    html:fontIcon('bold'),         onClick: () => wrapSelection("''","''")},
@@ -1595,7 +1610,7 @@
 					{ title:'Horizontal rule',         html:'<b>—</b>',                   onClick: () => wrapSelection("\n---\n","")},
 					{ title:'Alignment',               html:fontIcon('align-right'),      onClick: () => switchPanel('align')},
 					el('<span class="harlowe-3-toolbarBullet">'),
-					{ title:'Collapse whitespace',     html:'<b>{}</b>',                  onClick: () => switchPanel('collapse')},
+					{ title:'Collapse whitespace (at runtime)', html:'<b>{}</b>',         onClick: () => switchPanel('collapse')},
 					{
 						title:'Verbatim (ignore all markup)',
 						html:'Vb',
@@ -1613,6 +1628,7 @@
 						onClick: () => switchPanel('if')
 					},
 					{ title:'Hook (named section of the passage)',      html:'Hook…',         onClick: () => switchPanel('hook')},
+					{ title:'Set a variable',                           html:'Variable…',     onClick: () => switchPanel('variable')},
 					el('<span class="harlowe-3-toolbarBullet">'),
 					{ title:'Proofreading view (dim all code except strings)',
 						html:fontIcon('eye'),
@@ -1625,7 +1641,7 @@
 						},
 					},
 					{ title:'Coding tooltips (show a tooltip when the cursor rests on code structures)',
-						html:fontIcon('comment'),
+						html: fontIcon('comment'),
 						active: true,
 						onClick: ({target}) => {
 							toolbarElem.classList.toggle('harlowe-3-hideTooltip');
@@ -1634,6 +1650,11 @@
 							}
 							target.classList.toggle('active');
 						},
+					},
+					el('<span class="harlowe-3-toolbarBullet">'),
+					{ title:'Open the Harlowe documentation',
+						html: fontIcon('question'),
+						onClick: () => window.open(`https://twine2.neocities.org/`, "Harlowe Documentation", 'noopener,noreferrer')
 					},
 				],
 			}

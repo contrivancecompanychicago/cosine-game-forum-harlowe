@@ -10,7 +10,7 @@
 	const otherwiseFalse = ` Otherwise, it produces \`false\`.`;
 	const lambdaClause = c => `The keyword <b>"${c}"</b> makes the code on the right into a <b>"${c}" lambda clause</b>. `;
 	const tooltipMessages = {
-		hr:                  "This is a <b>horizontal rule</b>.",
+		hr:                  "This is a <b>horizontal rule</b>. It extends across the entire passage width (or the column width, if it's in a column).",
 		bulleted:            "The `*` at the start of this line makes this a <b>bulleted list item</b>.",
 		numbered:            "The `0.` at the start of this line makes this a <b>numbered list item</b>.",
 		heading:             ({depth}) => `This is a <b>level ${depth} ${depth===1 ? "(largest) " : ""}heading</b> mark.`,
@@ -139,7 +139,8 @@
 								+ `This operator can also combine two hook names, creating a hook name that applies to both names of hooks.`,
 		subtraction:         `Use the <b>subtraction operator</b> to subtract two numbers, as well as create a copy of the array or dataset on the left that doesn't contain values of the array or dataset on the right.`,
 		multiplication:      `Use the <b>multiplication operator</b> to multiply two numbers.`,
-		division:            `Use the <b>division operator</b> to divide two numbers. Dividing a number by 0 produces an error.`,
+		division:            ({text}) =>
+			`${text === '/' ? `Use the <b>division operator</b> to divide` : `Use the <b>modulo operator</b> to get the remainder (modulo) from dividing`} two numbers. Dividing a number by 0 produces an error.`,
 		macro: ({name}) => {
 			if (name === undefined) {
 				return `This macro call is incomplete or erroneously written. Macro calls should consist of \`(\`, the name (which is case-insensitive and dash-insensitive), \`:\`, zero or more expressions separated by commas, then \`)\`, in that order.`;

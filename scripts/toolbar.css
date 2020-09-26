@@ -85,6 +85,10 @@
 	font-size: 1rem;
 }
 
+.harlowe-3-labeledInput > input[type=range] {
+	vertical-align:middle;
+}
+
 .harlowe-3-labeledInput > input[type=number] {
 	box-shadow: 0 1px 0 hsla(0,0%,50%,0.5);
 	background: transparent;
@@ -121,7 +125,8 @@
 }
 
 .harlowe-3-toolbarBullet {
-	padding:0px 2px;color:hsla(0,0%,50%,0.5);
+	padding:0px 2px;
+	color:hsla(0,0%,50%,0.5);
 }
 .harlowe-3-toolbarBullet::before {
 	content:"•";
