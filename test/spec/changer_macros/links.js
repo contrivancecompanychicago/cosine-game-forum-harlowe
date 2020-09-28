@@ -423,4 +423,45 @@ describe("link macros", function() {
 			expect(p.find('tw-link').length).toBe(0);
 		});*/
 	});
+	describe("(link-fullscreen:)", function() {
+		it("accepts 2 or 3 non-empty strings", function() {
+			expect("(link-fullscreen:)").markupToError();
+			expect("(link-fullscreen:2)").markupToError();
+			expect("(link-fullscreen:'')").markupToError();
+			expect("(link-fullscreen:true)").markupToError();
+			
+			expect("(link-fullscreen:'s')").markupToError();
+			expect("(link-fullscreen:'s','s')").not.markupToError();
+			expect("(link-fullscreen:'s','s','s')").not.markupToError();
+		});
+		it("if fullscreen is available and not enabled, renders to a <tw-link> element containing the first link text", function() {
+			var link = runPassage("(link-fullscreen:'mire','qux')").find('tw-link');
+			expect(link.parent().is('tw-expression')).toBe(true);
+			expect(link.tag()).toBe("tw-link");
+			expect(link.text()).toBe("mire");
+			expect(link.is("[fullscreen]")).toBe(true);
+		});
+		// More link text tests aren't really feasible at the moment...
+		it("when clicked, toggles fullscreen mode on <html>", function() {
+			spyOn(document.documentElement,'requestFullscreen');
+			runPassage("(link-fullscreen:'mire','qux')").find('tw-link').click();
+			expect(document.documentElement.requestFullscreen).toHaveBeenCalled();
+		});
+		it("renders markup in the link text", function() {
+			var p = runPassage("(link-fullscreen:'//glower//','qux')");
+			expect(p.find('i').text()).toBe("glower");
+		});
+		it("can be focused", function() {
+			var link = runPassage("(link-fullscreen:'mire','qux')").find('tw-link');
+			expect(link.attr("tabindex")).toBe("0");
+		});
+		it("can be altered with attached style changers", function(done) {
+			var p = runPassage("(text-rotate: 20)(link-fullscreen:'mire','qux')");
+			var expr = p.find('tw-expression:last-child');
+			setTimeout(function() {
+				expect(expr.attr('style')).toMatch(/rotate\(20deg\)/);
+				done();
+			});
+		});
+	});
 });

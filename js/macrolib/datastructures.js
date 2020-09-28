@@ -540,7 +540,7 @@ define([
 			return ret;
 		},
 		[Array, rest(Array)])
-		/*
+		/*d:
 			(permutations: ...Any) -> Array
 
 			When given a sequence of values, this produces an array containing each permutation of the order of those values, as

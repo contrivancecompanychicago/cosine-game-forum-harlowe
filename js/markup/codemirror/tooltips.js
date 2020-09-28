@@ -167,10 +167,21 @@
 
 	const tooltipElem = document.createElement("div");
 	tooltipElem.className = "harlowe-3-tooltip";
+	let tooltipAppearDelay = 0;
+
+	function tooltipAppear() {
+		if (tooltipAppearDelay < 1) {
+			tooltipElem.style.display = "";
+		} else {
+			tooltipAppearDelay -= 1;
+			requestAnimationFrame(tooltipAppear);
+		}
+	}
 
 	function Tooltips(cm, doc, tree) {
 		tooltipElem.setAttribute('style', 'display:none');
 		if (doc.somethingSelected()) {
+			tooltipAppearDelay = 0;
 			return;
 		}
 		const cmElem = document.querySelector('.CodeMirror');
@@ -180,6 +191,7 @@
 		const cursor = doc.getCursor();
 		const path = tree.pathAt(doc.indexFromPos(cursor));
 		if (!path.length) {
+			tooltipAppearDelay = 0;
 			return;
 		}
 		const [token] = path;
@@ -200,6 +212,10 @@
 			tooltipElem.setAttribute('style', `left:${tipLeft}px; top:${(coords.top|0) + 30 - cmElem.querySelector('.CodeMirror-scroll').scrollTop}px;`);
 			// Place the tail at the correct location;
 			tooltipElem.lastChild.setAttribute('style', `left:${coords.right - tipLeft + (coords.right - coords.left)/2 + 6}px; top:-24px`);
+
+			tooltipElem.style.display = "none";
+			tooltipAppearDelay = 90;
+			tooltipAppear();
 		}
 	}
 	// This can only be loaded in TwineJS, not any other place.

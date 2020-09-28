@@ -45,8 +45,10 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 		}
 		// Apart from the Permalink, the sidebar buttons consist of Undo (Back) and Redo (Forward) buttons.
 		const
-			back = $('<tw-icon tabindex=0 class="undo" title="Undo">&#8630;</tw-icon>').click((e) => { e.stopPropagation(); Engine.goBack(); }),
-			fwd  = $('<tw-icon tabindex=0 class="redo" title="Redo">&#8631;</tw-icon>').click((e) => { e.stopPropagation(); Engine.goForward(); });
+			back = $('<tw-icon tabindex=0 class="undo" alt="Undo" title="Undo">&#8630;</tw-icon>').click((e) => { e.stopPropagation(); Engine.goBack(); }),
+			fwd  = $('<tw-icon tabindex=0 class="redo" alt="Redo" title="Redo">&#8631;</tw-icon>').click((e) => { e.stopPropagation(); Engine.goForward(); }),
+			fullscreen = $( document.fullscreenEnabled || document.msFullscreenEnabled ? '<tw-icon tabindex=0 class="" alt="Fullscreen" title="">&#9974;</tw-icon>' : '')
+				.click((e) => { e.stopPropagation(); Engine.toggleFullscreen(); });
 
 		if (State.pastLength <= 0) {
 			back.css("visibility", "hidden");
@@ -54,7 +56,7 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 		if (State.futureLength <= 0) {
 			fwd.css( "visibility", "hidden");
 		}
-		sidebar.append(back).append(fwd);
+		sidebar.append(back, fwd, fullscreen);
 
 		return container;
 	}
@@ -379,6 +381,33 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 			// Update the state.
 			State.play(id);
 			showPassage(id, displayOptions);
+		},
+
+		toggleFullscreen() {
+			const html = document.documentElement;
+			/*
+				A little bit of finagling with the method names is necessary for IE 11 support (as of Sep 2020).
+			*/
+			if (document.fullscreenElement) {
+				document.exitFullscreen();
+			} else if (document.msFullscreenElement) {
+				document.msExitFullscreen();
+			}
+			else {
+				/*
+					This currently doesn't do anything if the fullscreen request fails, on the extremely blithe assumption that
+					fullscreen access wouldn't have changed between the check for fullscreenEnabled when the passage was created,
+					and this button being clicked.
+				*/
+				(html.msRequestFullscreen || html.requestFullscreen).call(
+					/*
+						The <tw-story> element can't be used as the fullscreen element, because it's detached and reattached often
+						(including when it's enchanted with (enchant:?page)).
+						Using <html> also has the advantage of bringing along the debug panel for the ride into fullscreen.
+					*/
+					html
+				);
+			}
 		},
 		
 		/*

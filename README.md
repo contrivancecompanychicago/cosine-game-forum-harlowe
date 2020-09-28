@@ -179,6 +179,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a `(verbatim-print:)` command macro (alias `(v6m-print:)`), a combination of `(verbatim:)` and `(print:)`. This is designed especially for printing player-inputted strings that may, for whatever reason, contain markup.
  * Added a debugging macro, `(ignore:)`. If you wish to temporarily disable a command in the passage you're currently testing, simply change its name to "ignore" and it will ignore all of the values given to it, without causing an error.
  * Added `(click-undo:)`, `(mouseover-undo:)`, and `(mouseout-undo:)`, to complement `(click-goto:)` and the rest.
+ * Added `(link-fullscreen:)`, a command macro that creates a link that, when clicked, toggles the browser's fullscreen mode on and off. It takes two link text options, one for entering fullscreen, and one for exiting it, which are automatically updated to match the browser's current fullscreen state. Note that this will only make the `<html>` element fullscreen, for numerous reasons (mainly that enchanting the `<tw-story>` element with `(enchant:?page,` will deactivate fullscreen if it's the fullscreen element, due to the macro call wrapping `<tw-story>` in another element). Also note that because most browsers allow users to exit fullscreen mode at any time, there's no way to force fullscreen mode into one state or another. Also note that, because browsers only allow fullscreen mode to be entered from interaction elements, like links or buttons, there can't be a low-level "toggle fullscreen" command macro as an alternative to this.
 
 ##### Custom Macros
 
@@ -201,6 +202,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 ##### Other
 
+ * Added a "toggle fullscreen" button to the sidebar, underneath the "undo" and "redo" buttons. It should only appear if fullscreen mode is permitted by the browser. The same caveats about fullscreen mode for `(link-fullscreen:)` are present here.
  * The syntax highlighter no longer highlights syntactic elements inside strings. While this had some fringe benefit in cases where strings contained code to be printed, I've decided it's too distracting in more usual cases.
  * The syntax highlighter now colourises macro names based on their returned data type.
  * Added a `<noscript>` element to the output HTML, containing a sentence instructing that JavaScript should be enabled to play the story (as per SugarCube).

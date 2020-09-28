@@ -23,79 +23,98 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 		is "attached" via a jQuery .data() key, and must be called
 		from this <tw-story> handler.
 	*/
-	Utils.onStartup(() => $(Utils.storyElement).on(
-		/*
-			The jQuery event namespace is "passage-link".
-		*/
-		"click.passage-link",
-		'tw-link',
-		function clickLinkEvent() {
-			const link = $(this),
-				/*
-					Since there can be a <tw-enchantment> between the parent <tw-expression>
-					that holds the linkPassageName data and this <tw-link> itself,
-					we need to explicitly attempt to reach the <tw-expression>.
-				*/
-				expression = link.closest('tw-expression'),
-				/*
-					Links' events are, due to limitations in the ChangeDescriptor format,
-					attached to the <tw-hook> or <tw-expression> containing the element.
-				*/
-				closest = link.closest('tw-expression, tw-hook'),
-				event = closest.data('clickEvent'),
-				/*
-					Don't do anything if control flow in any section is currently blocked
-					(which means the click input should be dropped).
-				*/
-				section = closest.data('section');
-			if (section && section.stackTop && section.stackTop.blocked) {
-				return;
-			}
-
-			if (event) {
-				/*
-					If a link's body contains a <tw-error>, then don't
-					allow it to be clicked anymore, so that (for instance), the error message
-					can be expanded to see the line of additional advice.
-				*/
-				if (link.find('tw-error').length > 0) {
+	Utils.onStartup(() => {
+		$(Utils.storyElement).on(
+			/*
+				The jQuery event namespace is "passage-link".
+			*/
+			"click.passage-link",
+			'tw-link',
+			function clickLinkEvent() {
+				const link = $(this),
+					/*
+						Since there can be a <tw-enchantment> between the parent <tw-expression>
+						that holds the linkPassageName data and this <tw-link> itself,
+						we need to explicitly attempt to reach the <tw-expression>.
+					*/
+					expression = link.closest('tw-expression'),
+					/*
+						Links' events are, due to limitations in the ChangeDescriptor format,
+						attached to the <tw-hook> or <tw-expression> containing the element.
+					*/
+					closest = link.closest('tw-expression, tw-hook'),
+					event = closest.data('clickEvent'),
+					/*
+						Don't do anything if control flow in any section is currently blocked
+						(which means the click input should be dropped).
+					*/
+					section = closest.data('section');
+				if (section && section.stackTop && section.stackTop.blocked) {
 					return;
 				}
-				event(link);
-				return;
-			}
-			/*
-				If no event was registered, then this must be a passage link.
-			*/
-			const next = expression.data('linkPassageName');
-			/*
-				The correct t8nDepart, t8nArrive and t8nTime belongs to the deepest <tw-enchantment>.
-				Iterate through each <tw-enchantment> and update these variables.
-				(A .each() loop is easier when working with a jQuery compared to a .reduce().)
-			*/
 
-			let transition = Object.assign({}, expression.data('passageT8n') || {});
-			/*
-				$().find() SHOULD return the tw-enchantments in ascending depth order.
-			*/
-			expression.find('tw-enchantment').each((_,e) => {
-				Object.assign(transition, $(e).data('passageT8n') || {});
+				if (event) {
+					/*
+						If a link's body contains a <tw-error>, then don't
+						allow it to be clicked anymore, so that (for instance), the error message
+						can be expanded to see the line of additional advice.
+					*/
+					if (link.find('tw-error').length > 0) {
+						return;
+					}
+					event(link);
+					return;
+				}
+				/*
+					If no event was registered, then this must be a passage link.
+				*/
+				const next = expression.data('linkPassageName');
+				/*
+					The correct t8nDepart, t8nArrive and t8nTime belongs to the deepest <tw-enchantment>.
+					Iterate through each <tw-enchantment> and update these variables.
+					(A .each() loop is easier when working with a jQuery compared to a .reduce().)
+				*/
+
+				let transition = Object.assign({}, expression.data('passageT8n') || {});
+				/*
+					$().find() SHOULD return the tw-enchantments in ascending depth order.
+				*/
+				expression.find('tw-enchantment').each((_,e) => {
+					Object.assign(transition, $(e).data('passageT8n') || {});
+				});
+
+				if (next) {
+					// TODO: stretchtext
+					Engine.goToPassage(next, { transition });
+					return;
+				}
+				/*
+					Or, a (link-undo:) or (link-fullscreen:) link.
+				*/
+				if (link.is('[undo]')) {
+					Engine.goBack({ transition });
+					return;
+				}
+				if (link.is('[fullscreen]')) {
+					Engine.toggleFullscreen();
+					/*
+						Notice that the presence of the handler below means that we don't have to
+						run the link's event handler here, as it will be handled automatically.
+					*/
+					return;
+				}
+			}
+		);
+		/*
+			This handler updates all (link-fullscreen:) links' text, using their own event handlers,
+			whenever the browser detects a fullscreen change.
+		*/
+		$(document).on('fullscreenchange', () => {
+			$("tw-link[fullscreen]", Utils.storyElement).each((_, link) => {
+				($(link).closest('tw-expression, tw-hook').data('fullscreenEvent') || Object)(link);
 			});
-
-			if (next) {
-				// TODO: stretchtext
-				Engine.goToPassage(next, { transition });
-				return;
-			}
-			/*
-				Or, a (link-undo:) link.
-			*/
-			if (link.is('[undo]')) {
-				Engine.goBack({ transition });
-				return;
-			}
-		}
-	));
+		});
+	});
 
 	/*
 		The mechanics of determining the passage name of a (link-goto:) or (link-reveal-goto:)
@@ -683,6 +702,111 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 				});
 			},
 			[String,rest(HookSet)]
+		)
+		/*d:
+			(link-fullscreen: String, String, [String]) -> Command
+
+			Creates a link that, when clicked, toggles the browser's fullscreen mode and windowed mode. The first string is used as its link text
+			if the browser is currently in windowed mode, and the second string if it's currently in fullscreen mode. The link will automatically update
+			(re-rendering the link text) to match the browser's current fullscreen state. The optional third string is used when fullscreen mode isn't allowed
+			by the browser - if it's absent or an empty string, the link won't be displayed at all in that situation.
+
+			Example usage:
+			* `(link-fullscreen: "Turn fullscreen on", "Turn fullscreen off", "Fullscreen unavailable")`
+
+			Rationale:
+			Modern browsers allow web pages to take up the entire screen of the user, in a manner similar to desktop games. This feature can be useful
+			for immersive or moody stories, such as horror stories, that wish to immerse the player's senses in a certain colour or shade, or to display
+			impactful text that doesn't have to compete for attention from any other screen elements. While a fullscreen button is present in the story's
+			sidebar by default, this macro can be useful if you remove or replace the sidebar with something else, and can serve as an alternative
+			means of activating fullscreen mode.
+
+			The third string is an error message or alternative text you can provide if the browser doesn't allow fullscreen mode to be entered, for whatever reason.
+			If you're using this link in the middle of a sentence, you may want to use this to provide an alternative sentence fragment to fit the sentence.
+
+			Details:
+			When activated, this will make the page's `<html>` element be the fullscreen element, *not* `<tw-story>`. This is because, in most browsers,
+			removing the fullscreen element from the page, however briefly, will deactivate fullscreen mode. Since the `(enchant:)` macro, when given ?Page,
+			will often need to wrap `<tw-story>` in another element, those macro calls will deactivate fullscreen mode if `<tw-story>` was the fullscreen element.
+			So, if you have edited the compiled HTML to add elements before and after it, such as a navigation bar, that will remain visible while the story
+			is in fullscreen mode. Additionally, this means that the Debug Mode panel is still visible when fullscreen mode is activated.
+
+			If the third string is present, and the browser reports to Harlowe that fullscreen mode is unavailable, then a string visually identical to
+			a broken link will be displayed, using the third string as its text. This is, by default, a red link that cannot be clicked.
+
+			Currently, there is no special functionality or error reporting when the browser reports that fullscreen mode is available, but the attempt
+			to switch to fullscreen mode fails. In that case, the link will simply appear to do nothing.
+
+			It is possible to "force" the player into fullscreen by nesting the code for a (goto:) call inside the second string, such as by
+			`(link-fullscreen: "Continue.", "(goto:'Area 2')")`, which causes the (goto:) to be run only when the browser enters fullscreen mode,
+			then immediately leaving the passage and continuing the story. This is NOT recommended, however, because browsers currently (as of 2020) allow
+			the user to exit fullscreen mode at any time of their own accord, so a player that's not willing to enter fullscreen mode would simply exit
+			it soon afterward, and this construction would ultimately accomplish very little.
+
+			See also:
+			(link-goto:), (link-undo:), (cycling-link:)
+
+			#links
+			Added in: 3.2.0
+		*/
+		("link-fullscreen",
+			(enableText, disableText) => {
+				if (!enableText || !disableText) {
+					return TwineError.create("datatype", emptyLinkTextMessages[0]);
+				}
+			},
+			(cd, section, enableText, disableText) => {
+				/*
+					The link text is updated every time the fullscreenEvent below is fired. And, it checks if fullscreen is available every time,
+					just in case something caused it to be disabled.
+				*/
+				const linkText = () =>
+					document.fullscreenEnabled || document.msFullscreenEnabled
+						/*
+							This currently reveals its purpose in the player-readable DOM by including a 'fullscreen' attribute,
+							which is used by the "click.passage-link" event handler.
+						*/
+						? '<tw-link tabindex=0 fullscreen>' + (document.fullscreenElement || document.msFullscreenElement ? disableText : enableText) + '</tw-link>'
+						/*
+							This is a broken link, simply because there's no other Harlowe primitives that convey "something that should be clickable, but isn't".
+						*/
+						: (disableText ? '<tw-broken-link>' + disableText + '</tw-broken-link>' : '');
+				/*
+					As this is a deferred rendering macro, the current tempVariables
+					object must be stored for reuse, as the section pops it when normal rendering finishes.
+				*/
+				const {tempVariables} = section.stackTop;
+				/*
+					All links need to store their section as jQuery data, so that clickLinkEvent can
+					check if the section is blocked (thus preventing clicks).
+				*/
+				cd.data.section = section;
+				cd.data.fullscreenEvent = () => {
+					/*
+						Because arbitrary code can be in the link text, the text should only be updated when the section is unblocked.
+					*/
+					(document.fullscreenEnabled || document.msFullscreenEnabled) && cd.data.section.whenUnblocked(() => {
+						/*
+							Display the next label, reusing the ChangeDescriptor that the original run received.
+						*/
+						const cd2 = assign({}, cd, {
+							append: 'replace',
+							source: linkText(),
+							transitionDeferred: false,
+						});
+						/*
+							Since cd2's target SHOULD equal expr, passing anything as the second argument won't do anything useful
+							(much like how the first argument is overwritten by cd2's source). So, null is given.
+						*/
+						cd.section.renderInto("", null, cd2, tempVariables);
+					});
+				};
+				return assign(cd, {
+					source: linkText(),
+					transitionDeferred: true,
+				});
+			},
+			[String,String,optional(String)]
 		);
 
 
