@@ -163,6 +163,15 @@
 					defs.abstract
 				}</div>`;
 		},
+		text: (_, path) => {
+			const insideMacro = path.reduce((a,t) =>
+					a === undefined ? t.type === "macro" ? true : t.type === "hook" ? false : a : a,
+					undefined
+				);
+			if (insideMacro) {
+				return `This doesn't seem to be valid code.<br>Note that inside macro calls, only other macro calls, data, and operators are permitted.`;
+			}
+		},
 	};
 
 	const tooltipElem = document.createElement("div");
@@ -214,8 +223,16 @@
 			tooltipElem.lastChild.setAttribute('style', `left:${coords.right - tipLeft + (coords.right - coords.left)/2 + 6}px; top:-24px`);
 
 			tooltipElem.style.display = "none";
-			tooltipAppearDelay = 90;
-			tooltipAppear();
+
+			/*
+				To avoid queueing the tooltipAppear function multiple times with requestAnimationFrame, only call it if
+				the tooltip is not already delayed.
+			*/
+			const alreadyDelayed = tooltipAppearDelay > 0;
+			tooltipAppearDelay = 50;
+			if (!alreadyDelayed) {
+				tooltipAppear();
+			}
 		}
 	}
 	// This can only be loaded in TwineJS, not any other place.

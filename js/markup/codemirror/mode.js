@@ -341,6 +341,19 @@
 					}
 					switch(type) {
 						/*
+							It's an error if a text node appears inside a macro, but not inside a code hook.
+						*/
+						case "text": {
+							const insideMacro = currentBranch.slice(i + 1).reduce((a,t) =>
+									a === undefined ? t.type === "macro" ? true : t.type === "hook" ? false : a : a,
+									undefined
+								);
+							if (insideMacro) {
+								name += " harlowe-3-error";
+							}
+							break;
+						}
+						/*
 							Use the error style if the macro's name doesn't match the list of
 							existant Harlowe macros.
 						*/

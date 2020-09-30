@@ -255,3 +255,11 @@
 .harlowe-3-textareaRows {
 	margin-bottom:0.5em;
 }
+.harlowe-3-toolbarPanel [invalid]::after {
+	display:block;
+	position:absolute;
+	content:attr(invalid);
+	background-color:hsla(17,100%,50%,0.5); /* Synchronised with codemirrorcss.js */
+	right:0px;
+	bottom:8px;
+}

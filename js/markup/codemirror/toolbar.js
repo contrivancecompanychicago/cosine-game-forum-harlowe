@@ -3,7 +3,7 @@
 	'use strict';
 	const {stringify, parse} = JSON;
 	let panels;
-	let cm;
+	let cm, lex, Patterns;
 	/*
 		These are a couple of convenience routines.
 	*/
@@ -18,7 +18,6 @@
 	}
 	const fourDecimals = n => Math.round(n*10000)/10000;
 	const fontIcon = name => `<i class="fa fa-${name}"></i>`;
-	const anyLetter = "[\\w\\-\\u00c0-\\u00de\\u00df-\\u00ff\\u0150\\u0170\\u0151\\u0171\\uD800-\\uDFFF]";
 	/*
 		The Harlowe Toolbar fits above the CodeMirror panel and provides a number of convenience buttons, in the style of forum post editors,
 		to ease the new user into the format's language.
@@ -35,6 +34,7 @@
 				o.setAttribute('value', e.__vue__.passage.name);
 				return o;
 			}
+			return '';
 		}));
 		toolbarElem.append(datalist);
 	})();
@@ -354,6 +354,36 @@
 			/*
 				Text areas, single lines in which text can be entered.
 			*/
+			if (type === "expression-textarea") {
+				/*
+					These have special update and model routines.
+				*/
+				row.update = (m, elem) => {
+					if (!m.expression && elem[$]('input').value) {
+						elem.setAttribute('invalid', `This doesn't seem to be valid code.`);
+					}
+					else {
+						elem.removeAttribute('invalid');
+					}
+				};
+				row.model = (m, elem) => {
+					const v = (elem[$]('input').value || '').trim();
+					if (v) {
+						/*
+							Attempt to lex the data, and consider it invalid if it contains any text nodes.
+						*/
+						const lexed = lex(v, 0, 'macro');
+						if (lexed.children.every(function recur(token) {
+							return token.type !== "text" && token.type !== "error" &&
+								(token.type === "string" || token.type === "hook" || token.children.every(recur));
+						})) {
+							m.expression = v;
+							return;
+						}
+					}
+					m.valid = false;
+				};
+			}
 			if (type.endsWith("textarea")) {
 				ret = el('<' + (inline ? 'span' : 'div') + ' class="harlowe-3-labeledInput">'
 					+ row.text
@@ -489,7 +519,7 @@
 						const {model} = subrow;
 						if (model) {
 							subrow.model = (m, el) => {
-								return subrowEl[$]('input:checked')
+								return subrowEl[$](':scope > input:checked')
 								/*
 									Don't run the subrow's model unless the parent row's radio button is checked.
 								*/
@@ -653,9 +683,6 @@
 				}
 
 				return folddownPanel({
-					type: 'text',
-					text: 'You may select any number of styles.',
-				},{
 					type: 'preview',
 					text: 'Example text preview',
 					update(model, panel) {
@@ -1023,7 +1050,7 @@
 					],
 				},{
 					type: "text",
-					text: "When it is clicked, perform this action:",
+					text: "<b>When it is clicked, perform this action:</b>",
 				},{
 					type: 'radiorows',
 					name: 'passagelink',
@@ -1225,7 +1252,7 @@
 			})(),
 		if: folddownPanel({
 				type: 'text',
-				text: 'Only show a section of the passage if this condition is met:',
+				text: '<b>Only show a section of the passage if this condition is met:</b>',
 			},{
 				type: 'radiorows',
 				name: 'if',
@@ -1428,7 +1455,7 @@
 			confirmRow),
 		hook: folddownPanel({
 				type: 'text',
-				text: hookDescription + ` The main purpose of hooks is that they can have <b>changers</b> attached to the front, altering their contents or its behaviour.`,
+				text: hookDescription + ` The main purpose of hooks is that they can have <b>changers</b> attached to the front, altering their contents or behaviour.`,
 				model(m) {
 					m.wrapStart = "[";
 					m.wrapEnd = "]";
@@ -1436,13 +1463,13 @@
 				},
 			},{
 				type: "textarea",
-				width:"20%",
-				text: "Hook name (letters and numbers only):",
+				width:"25%",
+				text: "Hook name (letters, numbers and underscores only):",
 				placeholder: "Hook name",
 				model(m, elem) {
 					const v = elem[$]('input').value;
 					if (v) {
-						if (RegExp("^" + anyLetter + "+$").exec(v)) {
+						if (RegExp("^" + Patterns.validPropertyName + "$").exec(v)) {
 							m.wrapStart = "|" + v + ">[";
 							m.hookName = v;
 						}
@@ -1467,7 +1494,7 @@
 							}</b>.`;
 						}
 						else {
-							elem.innerHTML = `You can refer to this hook (and every other one like it) using the code <b><code>?${name}</code></b>.`;
+							elem.innerHTML = `You can refer to this hook (and every other one with this name) using the code <b><code>?${name}</code></b>.`;
 						}
 					}
 					else {
@@ -1514,6 +1541,7 @@
 			},{
 				type: 'radios',
 				name: 'Alignment',
+				capitalise: true,
 				options: ["left", "center", "justify", "right"],
 				model(m, el) {
 					m.align = el[$]('input:checked').value;
@@ -1580,11 +1608,51 @@
 			},
 			{
 				type:'text',
-				text: "This hides line breaks and reduces sequences of consecutive spaces to just a single space.",
+				text: "The <b>collapsing markup</b> hides line breaks and reduces sequences of consecutive spaces to just a single space.",
 			},
 			{
 				type:'text',
-				text: "If you wish to include whitespace that's exempt from this, you may include HTML &lt;br&gt; tags, or use the verbatim (Vb) markup.",
+				text: "If you wish to include whitespace that's exempt from this, you may include <b>HTML &lt;br&gt; tags</b>, or use the verbatim (Vb) markup.",
+			},
+			confirmRow),
+
+		variable: folddownPanel({
+				type: 'text',
+				text: 'Use <b>variables</b> to store <b>data values</b>, either across your story or within a passage.<br>'
+					+ "That data can then be used in the passage, or in other macro calls, by using the variable's name in place of that value."
+			},{
+				type: "textarea",
+				width:"25%",
+				text: "Variable name (letters, numbers and underscores only):",
+				placeholder: "Variable name",
+				model(m, elem) {
+					const v = elem[$]('input').value;
+					if (v) {
+						if (RegExp("^" + Patterns.validPropertyName + "$").exec(v) && !RegExp(/^\d/).exec(v)) {
+							m.variableName = v;
+							m.valid = true;
+						}
+					}
+				},
+			},{
+				type: "expression-textarea",
+				width:"80%",
+				text: "Variable data:",
+				placeholder: "Variable data",
+			},{
+				type: "checkbox",
+				text: "Temp variable (the variable only exists in this passage and hook).",
+				model(m, elem) {
+					const temp = elem[$]('input').checked;
+
+					/*
+						Perform the main (set:) construction here.
+					*/
+					if (m.valid) {
+						m.wrapStart = `(set: ${temp ? "_" : "$"}${m.variableName} to ${m.expression})`;
+						m.wrapEnd = '';
+					}
+				},
 			},
 			confirmRow),
 
@@ -1675,7 +1743,7 @@
 
 	// This can only be loaded in TwineJS, not any other place.
 	if (this && this.loaded) {
-		this.modules || (this.modules = {});
+		({Markup:{lex}, Patterns} = this.modules);
 		this.modules.Toolbar = Toolbar;
 	}
 }.call(eval('this')));

@@ -746,8 +746,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			See also:
 			(link-goto:), (link-undo:), (cycling-link:)
 
-			#links
 			Added in: 3.2.0
+			#links 8
 		*/
 		("link-fullscreen",
 			(enableText, disableText) => {
