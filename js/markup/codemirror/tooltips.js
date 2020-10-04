@@ -48,15 +48,15 @@
 		twineLink:           ({passage}) => `This is a link to the passage "${passage}". Links, like hooks and commands, can have changer values attached to the front.`,
 		br:                  ``, // Display nothing,
 		url:                 ``,
-		variable:            `This is a <b>story-wide variable</b>. After this has been set to a data value, it can be used anywhere else in the story. Use these to store values related to your story's game state.`,
+		variable:            `This is a <b>story-wide variable</b>. After this has been set to a data value, it can be used anywhere else in the story. Use these to store data values related to your story's game state, or changers that are commonly used.`,
 		tempVariable:        `This is a <b>temp variable</b>. It can be used in the same passage and hook in which it's first set to a data value. Use these to store values temporarily, or that won't be needed elsewhere.`,
 		macroName:           (_,[,parent]) => tooltipMessages.macro(parent),
 		grouping:            `Use these <b>grouping brackets</b> to ensure operations are performed in a certain order. Code in brackets will be computed before the code adjacent to it.`,
 		property:            ({type, name}) => (name ? `This retrieves the data stored at <b>the \`${name}\` ${
 										name.match(/^\d+(?:th|nd|st|rd)(?:last)?(?:to\d+(?:nth|nd|st|rd)(?:last)?)?$/g) ? `position${name.includes('to') ? 's' : ''}` : 'name'
 									}</b> of the container value on the ${type.startsWith('belonging') ? "right" : "left"}.<br><br>` : '')
-								+ "Some data values (arrays, datamaps, datasets, strings, colours, gradients, custom macros, and typed variables) are also storage containers for other values. "
-								+ "You can access a specific value stored in them by using that value's <b>data name</b> (or a string or number value in brackets) by writing <i>value</i> `'s` <i>name</i>, or <i>name</i> `of` <i>value</i>.",
+								+ "Some types of data values (arrays, datamaps, datasets, strings, colours, gradients, custom macros, and typedvars) are also storage containers for other values. "
+								+ "You can access a specific value stored in them using that value's <b>data name</b> (or a string or number value in brackets) by writing <i>value</i> `'s` <i>name</i>, or <i>name</i> `of` <i>value</i>.",
 		possessiveOperator:  token => tooltipMessages.property(token),
 		itsProperty:         token => tooltipMessages.property(token),
 		itsOperator:         token => tooltipMessages.identifier(token),

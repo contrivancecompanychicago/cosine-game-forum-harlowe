@@ -69,7 +69,8 @@
 		Object.values(panels).forEach(panel => {
 			panel[$$]('[type=radio]').forEach(node => node.checked = (node.parentNode.parentNode[$]('label:first-of-type') === node.parentNode));
 			panel[$$]('[type=checkbox]').forEach(node => node.checked = false);
-			panel[$$]('[type=text],select').forEach(node => node.value = '');
+			panel[$$]('[type=text]').forEach(node => node.value = '');
+			panel[$$]('select').forEach(node => node.value = node.firstChild.getAttribute('value'));
 			panel.onreset();
 		});
 		toolbarElem[$$]('.harlowe-3-toolbarPanel').forEach(node => node.remove());
@@ -354,41 +355,64 @@
 			/*
 				Text areas, single lines in which text can be entered.
 			*/
-			if (type === "expression-textarea") {
-				/*
-					These have special update and model routines.
-				*/
-				row.update = (m, elem) => {
-					if (!m.expression && elem[$]('input').value) {
-						elem.setAttribute('invalid', `This doesn't seem to be valid code.`);
-					}
-					else {
-						elem.removeAttribute('invalid');
-					}
-				};
-				row.model = (m, elem) => {
-					const v = (elem[$]('input').value || '').trim();
-					if (v) {
-						/*
-							Attempt to lex the data, and consider it invalid if it contains any text nodes.
-						*/
-						const lexed = lex(v, 0, 'macro');
-						if (lexed.children.every(function recur(token) {
-							return token.type !== "text" && token.type !== "error" &&
-								(token.type === "string" || token.type === "hook" || token.children.every(recur));
-						})) {
-							m.expression = v;
-							return;
-						}
-					}
-					m.valid = false;
-				};
-			}
 			if (type.endsWith("textarea")) {
+				let inputType = 'text';
+				const innerModel = row.model, innerUpdate = row.update;
+				/*
+					Full Harlowe expressions.
+				*/
+				if (type.endsWith("expression-textarea")) {
+					/*
+						These have special update and model routines.
+					*/
+					row.update = (m, elem) => {
+						if (!m.expression && elem[$]('input').value) {
+							elem.setAttribute('invalid', `This doesn't seem to be valid code.`);
+						}
+						else {
+							elem.removeAttribute('invalid');
+						}
+						innerUpdate && innerUpdate(m, elem);
+					};
+					row.model = (m, elem) => {
+						const v = (elem[$]('input').value || '').trim();
+						if (v) {
+							/*
+								Attempt to lex the data, and consider it invalid if it contains any text nodes.
+							*/
+							const lexed = lex(v, 0, 'macro');
+							if (lexed.children.every(function recur(token) {
+								return token.type !== "text" && token.type !== "error" &&
+									(token.type === "string" || token.type === "hook" || token.children.every(recur));
+							})) {
+								m[row.modelProperty] = v;
+								return;
+							}
+							m.valid = true;
+						}
+						innerModel && innerModel(m, elem);
+					};
+				}
+				/*
+					String-type textarea
+				*/
+				if (type.endsWith("string-textarea")) {
+					row.model = (m, elem) => {
+						m[row.modelProperty] = JSON.stringify(elem[$]('input').value || '');
+						innerModel && innerModel(m, elem);
+					};
+				}
+				if (type.endsWith("number-textarea")) {
+					inputType = 'number';
+					row.model = (m, elem) => {
+						m[row.modelProperty] = (+elem[$]('input').value || 0);
+						innerModel && innerModel(m, elem);
+					};
+				}
 				ret = el('<' + (inline ? 'span' : 'div') + ' class="harlowe-3-labeledInput">'
 					+ row.text
 					+ '<input ' + (row.useSelection ? 'data-use-selection' : '') + (type.includes('passage') ? 'list="harlowe-3-passages"' : '') + ' style="width:'
-						+ (row.width) + ';margin' + (inline ? ':0 0.5rem' : '-left:1rem') + ';" type=text placeholder="' + row.placeholder
+						+ (row.width) + ';margin' + (inline ? ':0 0.5rem' : '-left:1rem') + ';" type=' + inputType + ' placeholder="' + (row.placeholder || '')
 					+ '"></input></' + (inline ? 'span' : 'div') + '>');
 				ret[$]('input')[ON]('input', update);
 			}
@@ -513,6 +537,10 @@
 				row.options.forEach((subrows,i) => {
 					const subrowEl = el(`<label class='harlowe-3-radioRow'><input type="radio" name="${row.name}" value="${!i ? 'none' : i}" ${!i ? 'checked' : ''}></input></label>`);
 					/*
+						Place each of these sub-options within the <label>.
+					*/
+					ret.append(subrows.reduce(reducer, subrowEl));
+					/*
 						Wrap each of the subrows' model functions, so that they only fire whenever this row is actually selected.
 					*/
 					subrows.forEach(subrow => {
@@ -527,11 +555,42 @@
 							};
 						}
 					});
-					/*
-						Place each of these sub-options within the <label>.
-					*/
-					ret.append(subrows.reduce(reducer, subrowEl));
 					subrowEl[$]('input')[ON]('change', update);
+				});
+			}
+			/*
+				Rows of options, selected using a single dropdown.
+			*/
+			if (type === "dropdown-rows") {
+				ret = el(`<div>${row.text}<select style="font-size:1rem;margin-top:4px"></select><span class="harlowe-3-dropdownRows"></span></div>`);
+				const selectEl = ret[$]('select');
+				row.options.forEach(([name, ...subrows], i) => {
+					selectEl.append(el(`<option value="${name}" ${!i ? 'selected' : ''}>${name}<option>`));
+					const subrowEl = el(`<span data-value="${name}" ${i ? 'hidden' : ''}>`);
+					/*
+						Place each of these sub-options within the <span>.
+					*/
+					ret[$]('span').append(subrows.reduce(reducer, subrowEl));
+
+					subrows.forEach(subrow => {
+						const {model} = subrow;
+						if (model) {
+							subrow.model = (m, el) => {
+								return selectEl.value === name
+								/*
+									Don't run the subrow's model unless the parent row's radio button is checked.
+								*/
+								&& (!nested || panelElem[$](':scope > input:checked')) ? model(m, el) : m;
+							};
+						}
+					});
+				});
+				selectEl[ON]('change', () => {
+					const value = selectEl.value;
+					ret[$$]('.harlowe-3-dropdownRows > span').forEach(el => {
+						el[(el.getAttribute('data-value') === value ? "remove" : "set") + "Attribute"]('hidden','');
+					});
+					update();
 				});
 			}
 			/*
@@ -630,6 +689,41 @@
 	};
 	const hookDescription = `A <b>hook</b> is a section of passage prose enclosed in <code>[</code> or <code>]</code>, or preceded with <code>[=</code>.`;
 	const confirmRow = { type: 'confirm', };
+	const dataValueRow = (modelProperty) => ({
+		type: 'dropdown-rows',
+		text: 'Value: ',
+		name: 'variable-datatype',
+		options: [
+			["text string", {
+				type: "inline-string-textarea",
+				width:"60%",
+				text: "",
+				placeholder: "Text",
+				modelProperty,
+			}],
+			["number", {
+				type: "inline-number-textarea",
+				width:"20%",
+				text: "",
+				modelProperty,
+			}],
+			["Boolean value", {
+				type: 'inline-dropdown',
+				text: '',
+				options: ['false','true'],
+				model(m, el) {
+					m.expression = ""+!!el[$]('select').value;
+				}
+			}],
+			['computed value', {
+				type: "inline-expression-textarea",
+				width:"60%",
+				text: '',
+				placeholder: "Code",
+				modelProperty,
+			}],
+		],
+	});
 
 	/*
 		The Toolbar element consists of a single <div> in which a one of a set of precomputed panel <div>s are inserted. There's a "default"
@@ -1435,7 +1529,48 @@
 							text: "Interactable elements are link, mouseover, or mouseout areas. If you're using links that reveal "
 							+ "additional lines of prose and then remove or unlink themselves, this will reveal the attached text when all of those are gone.",
 						},
-					]
+					],[
+						/*
+							The variable [___] [equals] this expression [______]
+						*/
+						{
+							type: "inline-textarea",
+							width:"25%",
+							text: "The variable",
+							placeholder: "Variable (with $ or _)",
+							model(m, elem) {
+								const v = elem[$]('input').value;
+								if (v) {
+									if (RegExp("^[_\\$]" + Patterns.validPropertyName + "$").exec(v) && !RegExp(/^\d/).exec(v)) {
+										m.variable = v;
+									}
+								}
+							},
+						},{
+							type: 'inline-dropdown',
+							text: '',
+							options: ["is", "is not", "is greater than", "is less than", "contains", "is in"],
+							model(m, elem) {
+								const v = elem[$]('select').value;
+								m.operator = {
+									"is greater than": ">",
+									"is less than": "<",
+								}[v] || v;
+							},
+						},
+						new Text("a certain data value."), el('<br>'),
+						dataValueRow('expression'),
+						{
+							type: 'text',
+							text: '',
+							model(m) {
+								if (m.expression !== undefined && m.expression !== '' && m.operator && m.variable) {
+									m.changerNamed('if').push(`${m.variable} ${m.operator} ${m.expression}`);
+									m.valid = true;
+								}
+							}
+						}
+					],
 				],
 			},{
 				type: 'checkbox',
@@ -1455,7 +1590,7 @@
 			confirmRow),
 		hook: folddownPanel({
 				type: 'text',
-				text: hookDescription + ` The main purpose of hooks is that they can have <b>changers</b> attached to the front, altering their contents or behaviour.`,
+				text: hookDescription + ` The main purpose of hooks is that they can be visually or textually altered by special data values called <b>changers</b>. Changers are usually placed in front of hooks to change them.`,
 				model(m) {
 					m.wrapStart = "[";
 					m.wrapEnd = "]";
@@ -1616,7 +1751,7 @@
 			},
 			confirmRow),
 
-		variable: folddownPanel({
+		basicValue:  folddownPanel({
 				type: 'text',
 				text: 'Use <b>variables</b> to store <b>data values</b>, either across your story or within a passage.<br>'
 					+ "That data can then be used in the passage, or in other macro calls, by using the variable's name in place of that value."
@@ -1630,28 +1765,36 @@
 					if (v) {
 						if (RegExp("^" + Patterns.validPropertyName + "$").exec(v) && !RegExp(/^\d/).exec(v)) {
 							m.variableName = v;
-							m.valid = true;
 						}
 					}
 				},
-			},{
-				type: "expression-textarea",
-				width:"80%",
-				text: "Variable data:",
-				placeholder: "Variable data",
-			},{
+			}, dataValueRow("expression"), {
 				type: "checkbox",
 				text: "Temp variable (the variable only exists in this passage and hook).",
 				model(m, elem) {
-					const temp = elem[$]('input').checked;
+					m.sigil = elem[$]('input').checked ? "_" : "$";
 
 					/*
 						Perform the main (set:) construction here.
 					*/
-					if (m.valid) {
-						m.wrapStart = `(set: ${temp ? "_" : "$"}${m.variableName} to ${m.expression})`;
+					if (m.variableName && m.expression) {
+						m.wrapStart = `(set: ${m.sigil}${m.variableName} to ${m.expression})`;
 						m.wrapEnd = '';
+						m.valid = true;
+					} else {
+						m.valid = false;
 					}
+				},
+			},{
+				type: 'text',
+				text: '',
+				update(m, elem) {
+					const code = m.valid ? `${m.sigil}${m.variableName}` : '';
+					elem.innerHTML = m.valid
+						? `<p>You can refer to this variable using the code <b><code>${code}</code></b>.</p>`
+						+ "<p>Some types of data values (arrays, datamaps, datasets, strings, colours, gradients, custom macros, and typedvars) are storage containers for other values.<br>"
+						+ `You can access a specific value stored in them using that value's <b>data name</b> (or a string or number value in brackets) by writing <b><code>${code}'s</code></b> <i>name</i>, or <i>name</i> <b><code>of ${code}</code></b>.</p>`
+						: '';
 				},
 			},
 			confirmRow),
@@ -1696,7 +1839,7 @@
 						onClick: () => switchPanel('if')
 					},
 					{ title:'Hook (named section of the passage)',      html:'Hook…',         onClick: () => switchPanel('hook')},
-					{ title:'Set a variable',                           html:'Variable…',     onClick: () => switchPanel('variable')},
+					{ title:'Set a variable with a data value',         html:'Data…',         onClick: () => switchPanel('basicValue')},
 					el('<span class="harlowe-3-toolbarBullet">'),
 					{ title:'Proofreading view (dim all code except strings)',
 						html:fontIcon('eye'),
