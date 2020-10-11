@@ -68,6 +68,9 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 		**Warning:** using `chars` with (enchant:) may cause text-to-speech assistive programs to fail to read the enchanted
 		passage correctly. If this would be unacceptable for you or your story, refrain from using `chars` with (enchant:).
 
+		**Warning:** using `chars` with (enchant:) to enchant very large amounts of text at once will likely cause excessive CPU load for the reader,
+		making their browser unresponsive.
+
 		| Data name | Example | Meaning
 		|---
 		| `1st`,`2nd`,`last`, etc. | `?hook's last`, `1st of ?hook` | Only one hook with the given name, at a certain position in the passage relative to the rest (first with its name, last with its name, etc).
@@ -218,11 +221,11 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 					*/
 					const brs = elements.findAndFilter('br:not(tw-sidebar *),tw-consecutive-br:not(tw-sidebar *)').get();
 					/*
-						Place all of the elements into the current collection. When one is found that's after
+						Place all of the text nodes into the current collection. When one is found that's after
 						the current <br>, create a new collection.
 						Again, due to the cost of $().add(), this uses element arrays, and only converts to jQuery at the end.
 					*/
-					const lines = [[]];
+					let lines = [[]];
 					elements.textNodes(notTwError + ":not(tw-sidebar, tw-sidebar *)").forEach(node => {
 						if (brs.length && (node.compareDocumentPosition(brs[0]) & 2)) {
 							brs.shift();
@@ -230,7 +233,27 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 						}
 						lines[lines.length-1] = lines[lines.length-1].concat(node);
 					});
-					return $(lines.map(e => $(e).wrapAll('<tw-pseudo-hook>').parent()[0]));
+					/*
+						Some extra work needs to be done in order to make sure text nodes inside inline structures (such as in "baz**qux**garply")
+						aren't pulled out by the .wrapAll() call below. This involves replacing them, inside each line array, with their highest
+						parent that's still entirely within the line.
+					*/
+					lines = lines.map(line => line.map(node => {
+						let {parentNode} = node;
+						/*
+							If this node's parent node doesn't contain every text node in the line (i.e. isn't a trivial parent like <tw-passage>),
+							and does not contain text nodes outside the line (i.e. doesn't cross lines), replace the node with it.
+						*/
+						/*jshint -W083 */
+						while ($(parentNode).textNodes().every(cn => line.includes(cn))
+								&& !line.every(cn => $(parentNode).has(cn).length)) {
+							node = parentNode;
+							({parentNode} = node);
+						}
+						return node;
+					}));
+					const ret = $(lines.map(e => $(e).wrapAll('<tw-pseudo-hook>').parent()[0]));
+					return ret;
 				}
 			}
 			// Luckily, negatives indices work fine with $().get().

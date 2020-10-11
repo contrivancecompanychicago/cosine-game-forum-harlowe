@@ -183,7 +183,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			(link: String) -> Changer
 			Also known as: (link-replace:)
 			
-			Makes a changer to create a special link that can be used to show a hook.
+			When attached to a hook, this replaces the hook with a link that has the given text. The link, when clicked, vanishes and reveals the hook.
 			
 			Example usage:
 			* `(link: "Stake")[The dracula crumbles to dust.]` will create a link reading "Stake"
@@ -208,9 +208,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			The created link is displayed in place of the hook's contents, and is exempt from all changers that would normally apply
 			to the hook. This means that changers like (text-colour:), added to this changer, will ONLY apply
 			to the hook once it's revealed, and not the link itself. To apply changers to just the link, consider wrapping it in a
-			hook itself and using (enchant-in:) with `?Link`, such as by the following:
+			hook itself and using (link-style:), such as by the following:
 			```
-			(enchant-in:?Link, (text-colour:red))[(link:"Hands stained red")[Hands pure and dry :)]]
+			(link-style: (text-colour:red))[(link:"Hands stained red")[Hands pure and dry :)]]
 			```
 			Alternatively, you can just use (enchant:) with `?Link` to enchant every link with the same changer.
 			
@@ -224,8 +224,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 		/*d:
 			(link-reveal: String) -> Changer
 			
-			Makes a changer to create a special link that shows a hook, keeping the link's
-			text visible after clicking, or only removing a portion of it.
+			When attached to a hook, this replaces the hook with a link that has the given text. The link, when clicked, reveals the hook and becomes plain, unstyled text.
 			
 			Example usage:
 			`(link-reveal: "Heart")[broken]` will create a link reading "Heart"
@@ -244,7 +243,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			The created link is displayed in place of the hook's contents, and is exempt from all changers that would normally apply
 			to the hook. This means that changers like (text-colour:), added to this changer, will ONLY apply
 			to the hook once it's revealed, and not the link itself. To apply changers to just the link, consider wrapping it in a
-			hook itself and using (enchant-in:) with `?Link`, or just using (enchant:) with `?Link` to enchant every link.
+			hook itself and using (link-style:), or just using (enchant:) with `?Link` to enchant every link.
 			
 			If the link text contains formatting syntax, such as "**bold**", then it will be retained
 			when the link is demoted to text.
@@ -268,8 +267,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 		/*d:
 			(link-repeat: String) -> Changer
 			
-			Makes a changer to create a special link that shows a hook, and, when clicked again,
-			repeats the hook, appending its contents again.
+			When attached to a hook, this replaces the hook with a link that has the given text. The link, when clicked, reveals the hook.
+			Further clicks will cause the hook to repeat itself - a copy of the hook's code will be run, and the result appended to it,
+			in a manner similar to (for:).
 			
 			Example usage:
 			* `(link-repeat: "Add cheese")[(set:$cheese to it + 1)]` will create a link reading "Add cheese"
@@ -288,7 +288,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			The created link is displayed in place of the hook's contents, and is exempt from all changers that would normally apply
 			to the hook. This means that changers like (text-colour:), added to this changer, will ONLY apply
 			to the hook once it's revealed, and not the link itself. To apply changers to just the link, consider wrapping it in a
-			hook itself and using (enchant-in:) with `?Link`, or just using (enchant:) with `?Link` to enchant every link.
+			hook itself and using (link-style:), or just using (enchant:) with `?Link` to enchant every link.
 			
 			Details:
 			This creates a link which is visually indistinguishable from normal passage links.
@@ -311,8 +311,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 		/*d:
 			(link-rerun: String) -> Changer
 			
-			Makes a changer to create a special link that shows a hook, and, when clicked again,
-			re-runs the hook, replacing its contents with a fresh run of its code.
+			When attached to a hook, this replaces the hook with a link that has the given text. The link, when clicked, reveals the hook.
+			Further clicks will cause the hook to rerun itself, as if by the effect of (rerun:).
 			
 			Example usage:
 			* `(link-rerun: "ROLL DICE ")[You rolled a (random:1,6).]` will create a link reading "ROLL DICE"

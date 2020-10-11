@@ -8,6 +8,21 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		This module modifies the Macros module only, and exports nothing.
 	*/
 
+	/*
+		Common function to test a changer and confirm it contains no revision macros.
+	*/
+	function notRevisionChanger(macroName, changer) {
+		if (ChangerCommand.isPrototypeOf(changer)) {
+			const summary = changer.summary();
+			if (['newTargets', 'target', 'appendSource', 'functions'].some(e => summary.includes(e))) {
+				return TwineError.create(
+					"datatype",
+					"The changer given to (" + macroName + ":) can't include a revision or enchantment changer like (replace:) or (click:)."
+				);
+			}
+		}
+	}
+
 	/*d:
 		(change: HookName or String, Changer or Lambda) -> Command
 
@@ -57,7 +72,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		Using (text-colour:) with this macro will let you change the colour of links inside the indicated hook, with one exception:
 		using (change:) to change the entire passage (via `?passage` or `?page`) with (text-colour:) will NOT affect links. This is to allow you
 		to re-style the entire story without having to lose the distinct colour of links compared to passage text. You can change the colour of all links using
-		an explicit `(change: ?link, (text-colour: $color))`.
+		an explicit `(change: ?link, (text-colour: $color))` or by using `(link-style: (text-colour: $color))[=` (that is, with unclosed hook markup).
 
 		You can use (change:) with (transition:) to add transitions to hooks or text elsewhere in the same passage – however, if the (change:) macro is
 		run after the passage was initially rendered, the transitions will begin animating in the middle of their usual animations, or, if enough time
@@ -65,7 +80,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		apply a 3-second transition to each instance of the word "Riddles" in the passage, but since 2 seconds have already passed since those words were
 		rendered, only the last 1 second of the transition will be visible.
 
-		You cannot use (change:) with (link:) or any of its relatives – because the enchanted hook or text is already in the passage, the link can't appear.
+		You cannot use (change:) with (link:), (replace:), or any of its relatives – because the enchanted hook or text is already in the passage, the link can't appear
+		and it can't replace anything.
 
 		See also:
 		(enchant:), (enchant-in:), (replace:)
@@ -109,7 +125,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		When targeting ?Page, ?Passage and ?Sidebar, there is generally no difference between using (enchant:) and using (change:), as there (usually)
 		aren't any other hooks with those names in the passage.
 
-		Like (change:), you cannot use (enchant:) with (link:) or any of its relatives.
+		Like (change:), you cannot use (enchant:) with (link:), (replace:), or any of its relatives.
 
 		See also:
 		(click:), (change:), (enchant-in:)
@@ -120,17 +136,9 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 	["enchant", "change"].forEach((name) => {
 		Macros.addCommand(name,
 			(scope, changer) => {
-				/*
-					First, test the changer to confirm it contains no revision macros.
-				*/
-				if (ChangerCommand.isPrototypeOf(changer)) {
-					const summary = changer.summary();
-					if (['newTargets', 'target', 'appendSource', 'functions'].some(e => summary.includes(e))) {
-						return TwineError.create(
-							"datatype",
-							"The changer given to (" + name + ":) can't include a revision or enchantment changer like (replace:) or (click:)."
-						);
-					}
+				const error = notRevisionChanger(name, changer);
+				if (error) {
+					return error;
 				}
 			},
 			(section, scope, changer) => {
@@ -186,31 +194,29 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		produces will be treated as though it didn't exist outside of the attached hook.
 
 		Details:
-		This macro takes the same values as (enchant:) and (change:), and will produce the same errors for the same values. So, (link:) or any of its relatives cannot be given as the second
+		You can use built-in hook data names such as `lines` and `chars` with this macro, such as by `(enchant-in: ?page's lines, $changer)`, which will style all of the lines in the attached
+		hook with $changer. However, this construction appears counterintuitive when written out - the HookName selects all of the lines in the page, but only those within the attached hook are
+		styled. So, more readable shorthand macros exist for both of these - (line-style:) and (char-style:) - which you ought to use instead.
+
+		This macro takes the same values as (enchant:) and (change:), and will produce the same errors for the same values. So, (link:), (replace:), or any of its relatives cannot be given as the second
 		value, and neither can a lambda that doesn't produce a changer.
 
 		Note that this macro can only affect explicit hooks or string occurrences, and can't affect just "part" of a target. For instance, `(enchant-in: ?page, (background:red))[DANGER]` will NOT turn
 		the background of the attached hook red, but `(enchant-in: ?page's lines, (background:red))[DANGER]` will (because the text "DANGER" is a line of text, and is thus targeted by `?page's lines`).
 
+		This enchantment will be listed in the "Enchantments" tab of the Debug Mode panel when it's active, alongside enchantments created by (enchant:).
+
 		See also:
-		(enchant:), (change:)
+		(enchant:), (change:), (link-style:)
 
 		Added in: 3.2.0
 		#basics 19
 	*/
 	Macros.addChanger("enchant-in",
 		(_, scope, changer) => {
-			/*
-				This is just a copy of the same check used by (change:).
-			*/
-			if (ChangerCommand.isPrototypeOf(changer)) {
-				const summary = changer.summary();
-				if (['newTargets', 'target', 'appendSource', 'functions'].some(e => summary.includes(e))) {
-					return TwineError.create(
-						"datatype",
-						"The changer given to (" + name + ":) can't include a revision or enchantment changer like (replace:) or (click:)."
-					);
-				}
+			const error = notRevisionChanger('enchant-in', changer);
+			if (error) {
+				return error;
 			}
 			return ChangerCommand.create('enchant-in', [scope, changer]);
 		},
@@ -231,6 +237,148 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		},
 		[either(HookSet,String), either(ChangerCommand, Lambda.TypeSignature('via'))]
 	);
+	/*d:
+		(link-style: Changer or Lambda) -> Changer
+
+		When attached to a hook, this causes all of the links inside the hook to be styled using the specified changer. This is equivalent to using (enchant-in:) with `?link`.
+
+		Example usage:
+		* `(link-style:(b4r:"dotted"))[I stepped into the (link-reveal:"hall,")[ and the door shut behind me.]]` applies the changer produced by (b4r:) to the (link-reveal:) link.
+		* `(link-style:via (text-colour:(cond: pos is an even, yellow, aqua)))[You choose: [[A]] [[B]] [[C]] [[D]] [[E]].]` gives the "A", "C" and "E" links an aqua colour, and the other links a yellow colour.
+
+		Rationale:
+		Links, being the primary interactive elements in your stories, need to be visually distinguished from the passage prose surrounding them. Harlowe applies a colour
+		and boldness to links by default, but you'll often want to apply your own styles to links to suit your story. Rather than manually attach a changer holding those styles to
+		every link where it appears, you can instead use this macro to style several links at once.
+
+		If you wish to style every link in the passage or story equally, using (enchant:) with `?link` in a "header" tagged passage is most effective. But, if you only wish to apply a
+		style to links in certain sections of a passage, this macro is most effective.
+
+		Details:
+		As with (enchant-in:), this can be given a changer, or a lambda that produces a changer, which is run on each link individually, and can produce different changers for each, depending on
+		their `pos` or a random macro. If the lambda doesn't produce a changer, an error will result.
+
+		Also, as with (enchant-in:), (link:), (replace:), or any of its relatives cannot be given to this macro.
+
+		This creates a hook-specific enchantment, similar to (enchant-in:), It will be listed under the "Enchantments" tab of the Debug Mode panel.
+
+		This will also apply the style changer to (click:) links inside the hook.
+
+		See also:
+		(enchant-in:), (hover-style:), (line-style:), (char-style:)
+
+		Added in: 3.2.0
+		#basics 20
+	*/
+	/*d:
+		(line-style: Changer or Lambda) -> Changer
+
+		When attached to a hook, this causes all of the lines of prose inside the hook (identical to those that would be selected by `?page's lines`) to be styled using the specified changer.
+
+		Example usage:
+		This gives every line in the attached hook a dotted border. Notice that blank "lines" aren't styled, and are ignored.
+		```
+		(line-style:(b4r:"dotted"))
+		[Sometimes I think
+
+		that I'm losing myself
+
+		Other times,
+
+		that I never had a self
+		in the first place.]
+		```
+		This makes each line to take up 50% of the passage width, and every other line in the attached hook be right-aligned.
+		```
+		(line-style: via (box:"=XX=")+(align: (cond: pos is an even, "<==", "==>")))
+		[Sometimes you feel like
+		your mind is in one place
+		and your body is in another.]
+		```
+
+		Rationale:
+		This is a convenient and more readable shorthand for using (enchant-in:) with `?page's lines`. This lets you style all of the lines within a hook, as if they were in individual hooks themselves.
+		This allows you to alter and adjust the amount of text inside the hook without having to manually wrap each line in a hook, or attach a changer, after each alteration.
+
+		Details:
+		A line is any run of non-whitespace text or code between line breaks (or the hook's start and end) - a word-wrapped paragraph of prose is considered a single "line" as a result.
+
+		As with (enchant-in:), this can be given a changer, or a lambda that produces a changer, which is run on each line individually, and can produce different changers for each, depending on
+		their `pos` or a random macro. If the lambda doesn't produce a changer, an error will result.
+
+		Also, as with (enchant-in:), (link:), (replace:), or any of their relatives cannot be given to this macro.
+
+		This creates a hook-specific enchantment, similar to (enchant-in:), It will be listed under the "Enchantments" tab of the Debug Mode panel.
+
+		See also:
+		(enchant-in:), (hover-style:), (link-style:), (char-style:)
+
+		Added in: 3.2.0
+		#basics 21
+	*/
+	/*d:
+		(char-style: Changer or Lambda) -> Changer
+
+		When attached to a hook, this causes all of the individual non-whitespace characters inside the hook (identical to those that would be selected by `?page's chars`) to be styled using the specified changer.
+
+		Example usage:
+		* `(char-style:(text-style:"fidget"))[Maybe you stayed up too late.]`
+		* `(char-style: via (text-style:(either:'none','blur','blurrier')))[My memory is patchy. You'll have to fill in the gaps yourself.]`
+		* `(char-style: via (text-colour:(either:red,white,white)))[Blood? What blood? You're clean as a whistle.]`
+
+		Rationale:
+		This is a convenient and more readable shorthand for using (enchant-in:) with `?page's chars`. This lets you style all of the characters within a hook, as if they were in individual hooks themselves.
+		A number of strange text effects are possible with this - each character can be rotated using (text-rotate-z:), each character can have a (hover-style:), each character can have a slightly different (text-size:),
+		and so forth.
+
+		Details:
+		As with (enchant-in:), this can be given a changer, or a lambda that produces a changer, which is run on each character individually, and can produce different changers for each, depending on
+		their `pos` or a random macro. If the lambda doesn't produce a changer, an error will result.
+
+		Also, as with (enchant-in:), (link:), (replace:), or any of their relatives cannot be given to this macro.
+
+		This creates a hook-specific enchantment, similar to (enchant-in:), It will be listed under the "Enchantments" tab of the Debug Mode panel.
+
+		**Warning:** using (char-style:) may cause text-to-speech assistive programs to fail to read the hook's contents correctly. If this would be unacceptable for you or your story, refrain from using this macro.
+
+		**Warning:** using (char-style:) to enchant very large amounts of text at once will likely cause excessive CPU load for the reader, making their browser unresponsive.
+
+		See also:
+		(enchant-in:), (hover-style:), (link-style:), (line-style:)
+
+		Added in: 3.2.0
+		#basics 22
+	*/
+	[
+		['link-style', HookSet.create({type:'name', data:'link'})],
+		['line-style', HookSet.create({type:'base', data: HookSet.create({type:'name', data:'page'})}, 'lines', undefined)],
+		['char-style', HookSet.create({type:'base', data: HookSet.create({type:'name', data:'page'})}, 'chars', undefined)],
+	].forEach(([name, scope]) => {
+		Macros.addChanger(name,
+			(_, changer) => {
+				const error = notRevisionChanger(name, changer);
+				if (error) {
+					return error;
+				}
+				return ChangerCommand.create(name, [changer]);
+			},
+			(desc, changer) => {
+				/*
+					The 'functions' property of ChangeDescriptors only exists for this macro (currently) to solve a circular dependency
+					where Enchantment <- ChangeDescriptor <- Enchantment. This function creates an enchantment
+				*/
+				desc.functions = (desc.functions || []).concat(localHook => {
+					desc.section.addEnchantment(Enchantment.create({
+						scope, localHook,
+						[ChangerCommand.isPrototypeOf(changer) ? "changer" : "lambda"]: changer,
+						section: desc.section,
+					}));
+				});
+				return desc;
+			},
+			[either(ChangerCommand, Lambda.TypeSignature('via'))]
+		);
+	});
 
 	/*
 		Revision macros produce ChangerCommands that redirect where the attached hook's

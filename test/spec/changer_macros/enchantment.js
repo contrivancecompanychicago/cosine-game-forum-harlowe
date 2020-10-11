@@ -237,4 +237,97 @@ describe("enchantment macros", function () {
 			expect(enchantment.is('tw-enchantment')).toBe(true);
 		});
 	});
+	describe("(link-style:)", function() {
+		it("accepts a changer command or a 'via' lambda", function() {
+			expect("(print:(link-style:(font:'Skia')))").not.markupToError();
+			expect("(print:(link-style:via (font:'Skia')))").not.markupToError();
+			expect("(print:(link-style:?foo))").markupToError();
+			expect("(print:(link-style:(font:'Skia'), 'baz'))").markupToError();
+			expect("(print:(link-style: where (font:'Skia')))").markupToError();
+		});
+		it("enchants all of the links in a hook", function() {
+			createPassage("qux","qux");
+			runPassage('(link-style: (color:#800000))[ [[qux<-bar]] (link:"qux")[ [[qux<-bar]] ] ]');
+			expect($($('tw-link')[0]).css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+			expect($($('tw-link')[1]).css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+			$($('tw-link')[1]).click();
+			expect($($('tw-link')[1]).css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+		});
+		it("enchants the hook itself if it's a link", function() {
+			createPassage("qux","qux");
+			runPassage('(link-style: (color:#800000))[[qux<-bar]]');
+			expect($('tw-link').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+		});
+		it("doesn't create <tw-pseudo-hook>s", function() {
+			expect(runPassage('(link-style: (color:#800000))[[qux<-bar]]').find('tw-pseudo-hook').length).toBe(0);
+		});
+	});
+	describe("(line-style:)", function() {
+		it("accepts a changer command or a 'via' lambda", function() {
+			expect("(print:(line-style:(font:'Skia')))").not.markupToError();
+			expect("(print:(line-style:via (font:'Skia')))").not.markupToError();
+			expect("(print:(line-style:?foo))").markupToError();
+			expect("(print:(line-style:(font:'Skia'), 'baz'))").markupToError();
+			expect("(print:(line-style: where (font:'Skia')))").markupToError();
+		});
+		it("enchants all of the lines in a hook", function() {
+			var p = runPassage('(line-style:(text-colour:#333))[foo\n[|a>[bar]]quux\nbaz(link:"qux")[garply\ncorge]]');
+			var a = p.find('tw-enchantment');
+			expect($(a[0])).toHaveColour("#333333");
+			expect($(a[1])).toHaveColour("#333333");
+			expect($(a[2])).toHaveColour("#333333");
+			// Extra check for the link
+			a.find('tw-link').click();
+			expect($(p.find('tw-enchantment')[3]).text()).toBe('corge');
+			expect($(p.find('tw-enchantment')[3])).toHaveColour("#333333");
+		});
+		it("works with only one line", function(done) {
+			var a = runPassage('(line-style:(text-style:"shadow"))[=I just want to say hello to you');
+			setTimeout(function(){
+				expect(a.find('tw-enchantment').attr('style')).toMatch(/text-shadow/);
+				done();
+			},20);
+		});
+		it("works with (hover-style:)", function(done) {
+			var a = runPassage('(line-style:(hover-style:(background:white)))[foo\nbar\nbaz]').find('tw-hook tw-enchantment');
+			a.mouseenter();
+			setTimeout(function() {
+				expect(a).toHaveBackgroundColour("#ffffff");
+				done();
+			},20);
+		});
+		it("doesn't create <tw-pseudo-hook>s", function() {
+			expect(runPassage('(line-style: (text-colour:#333))[=foo\nbar\n').find('tw-pseudo-hook').length).toBe(0);
+		});
+	});
+	describe("(char-style:)", function() {
+		it("accepts a changer command or a 'via' lambda", function() {
+			expect("(print:(char-style:(font:'Skia')))").not.markupToError();
+			expect("(print:(char-style:via (font:'Skia')))").not.markupToError();
+			expect("(print:(char-style:?foo))").markupToError();
+			expect("(print:(char-style:(font:'Skia'), 'baz'))").markupToError();
+			expect("(print:(char-style: where (font:'Skia')))").markupToError();
+		});
+		it("selects all of the non-whitespace chars in a hook", function() {
+			var p = runPassage('(char-style:(text-style:"outline"))[foo[𐌎ar]<b| baz]');
+			expect(p.find('tw-enchantment').length).toBe(9);
+			expect($(p.find('tw-enchantment').get(3)).text()).toBe('𐌎');
+		});
+		it("works with (hover-style:)", function(done) {
+			var a = runPassage('(char-style:(hover-style:(background:white)))[foobarbaz]').find('tw-hook tw-enchantment:nth-child(4)');
+			expect(a.text()).toBe('b');
+			a.mouseenter();
+			setTimeout(function() {
+				expect(a).toHaveBackgroundColour("#ffffff");
+				done();
+			},20);
+		});
+		it("works with bidi text", function() {
+			// The ! should appear to the left in the rendered passage.
+			expect('(char-style:(background:green))["ٱٹ!‏"]').markupToPrint('"ٱٹ!‏"');
+		});
+		it("doesn't create <tw-pseudo-hook>s", function() {
+			expect(runPassage('(char-style:(background:green))[=foo\n[bar]<a|\n').find('tw-pseudo-hook').length).toBe(0);
+		});
+	});
 });

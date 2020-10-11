@@ -1919,7 +1919,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			so (hover-style:) can be attached to them, as expected.
 
 			See also:
-			(mouseover:), (mouseout:)
+			(link-style:), (line-style:), (char-style:)
 
 			Added in: 2.0.0
 			#styling

@@ -163,13 +163,15 @@
 					defs.abstract
 				}</div>`;
 		},
-		text: (_, path) => {
-			const insideMacro = path.reduce((a,t) =>
-					a === undefined ? t.type === "macro" ? true : t.type === "hook" ? false : a : a,
-					undefined
-				);
-			if (insideMacro) {
-				return `This doesn't seem to be valid code.<br>Note that inside macro calls, only other macro calls, data, and operators are permitted.`;
+		text: ({text}, path) => {
+			if (text.trim()) {
+				const insideMacro = path.reduce((a,t) =>
+						a === undefined ? t.type === "macro" ? true : t.type === "hook" ? false : a : a,
+						undefined
+					);
+				if (insideMacro) {
+					return `This doesn't seem to be valid code.<br>Note that inside macro calls, only other macro calls, data, operators and whitespace are permitted.`;
+				}
 			}
 		},
 	};
