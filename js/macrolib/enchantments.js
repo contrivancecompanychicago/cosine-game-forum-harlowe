@@ -268,7 +268,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		(enchant-in:), (hover-style:), (line-style:), (char-style:)
 
 		Added in: 3.2.0
-		#basics 20
+		#styling
 	*/
 	/*d:
 		(line-style: Changer or Lambda) -> Changer
@@ -314,7 +314,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		(enchant-in:), (hover-style:), (link-style:), (char-style:)
 
 		Added in: 3.2.0
-		#basics 21
+		#styling
 	*/
 	/*d:
 		(char-style: Changer or Lambda) -> Changer
@@ -347,7 +347,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		(enchant-in:), (hover-style:), (link-style:), (line-style:)
 
 		Added in: 3.2.0
-		#basics 22
+		#styling
 	*/
 	[
 		['link-style', HookSet.create({type:'name', data:'link'})],

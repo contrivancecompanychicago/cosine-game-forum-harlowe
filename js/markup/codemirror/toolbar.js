@@ -2,6 +2,7 @@
 (function() {
 	'use strict';
 	const {stringify, parse} = JSON;
+	const {round} = Math;
 	let panels;
 	let cm, lex, Patterns;
 	/*
@@ -16,7 +17,8 @@
 		P.innerHTML = html;
 		return P.firstChild;
 	}
-	const fourDecimals = n => Math.round(n*10000)/10000;
+	const GCD = (a,b) => !a? b: !b? a: a>b? GCD(a-b,b) : GCD(a,b-a);
+	const fourDecimals = n => round(n*10000)/10000;
 	const fontIcon = name => `<i class="fa fa-${name}"></i>`;
 	/*
 		The Harlowe Toolbar fits above the CodeMirror panel and provides a number of convenience buttons, in the style of forum post editors,
@@ -319,8 +321,9 @@
 				The (text-style:) preview panel.
 			*/
 			if (type.endsWith("preview")) {
+				const tagName = row.tagName || 'span';
 				ret = el(`<div class="harlowe-3-stylePreview" style="${type.startsWith('t8n') ? 'cursor:pointer;height: 2.6rem;' : ''}" ${
-					type.startsWith('t8n') ? `alt="Click to preview the transition"` : ""}><span>${row.text || ''}</span>${type.startsWith('t8n') ? "<span>" + row.text2 + "</span>" : ''}</div>`);
+					type.startsWith('t8n') ? `alt="Click to preview the transition"` : ""}><${tagName}>${row.text || ''}</${tagName}>${type.startsWith('t8n') ? `<${tagName}>` + row.text2 + `</${tagName}>` : ''}</div>`);
 
 				if (type.startsWith('t8n')) {
 					ret[ON]('mouseup', update);
@@ -332,8 +335,21 @@
 			/*
 				Checkboxes and radio buttons.
 			*/
-			if (type === "checkbox") {
+			if (type === "checkbox" || type === "checkboxrow") {
 				ret = el('<label style="display:block;"><input type="checkbox"></input>' + row.text + '</label>');
+				if (type.endsWith('w')) {
+					row.subrow.reduce(reducer, ret);
+					row.subrow.forEach(r => {
+						const {model} = r;
+						r.model = (m, el) => {
+							return ret[$](':scope > input:checked')
+								/*
+									Don't run the subrow's model unless the parent row's radio button is checked.
+								*/
+								&& (!nested || panelElem[$](':scope > input:checked')) ? model(m, el) : m;
+						};
+					});
+				}
 				ret[ON]('change', update);
 			}
 			if (type === "checkboxes") {
@@ -628,6 +644,12 @@
 					confirm[setAttr]('style', disabledButtonCSS);
 					resultingCode[setAttr]('hidden','');
 					if (m.valid) {
+						if (typeof m.wrapStart === 'function') {
+							m.wrapStart = m.wrapStart(m);
+						}
+						if (typeof m.wrapEnd === 'function') {
+							m.wrapEnd = m.wrapEnd(m);
+						}
 						resultingCode[$]('code:first-of-type').textContent = m.output() + m.wrapStart;
 						resultingCode[$]('code:last-of-type').textContent = m.wrapEnd;
 					}
@@ -636,6 +658,12 @@
 				cancel[ON]('click', switchPanel);
 				confirm[ON]('click', () => {
 					const m = model();
+					if (typeof m.wrapStart === 'function') {
+						m.wrapStart = m.wrapStart(m);
+					}
+					if (typeof m.wrapEnd === 'function') {
+						m.wrapEnd = m.wrapEnd(m);
+					}
 					wrapSelection(m.output() + m.wrapStart, m.wrapEnd, m.innerText, m.wrapStringify);
 					switchPanel();
 				});
@@ -1534,15 +1562,22 @@
 							The variable [___] [equals] this expression [______]
 						*/
 						{
+							type: "inline-dropdown",
+							text: 'The variable ',
+							options: ["$", "_"],
+							model(m, elem) {
+								m.variable = elem[$]('select').value ? "_" : "$";
+							},
+						},{
 							type: "inline-textarea",
 							width:"25%",
-							text: "The variable",
-							placeholder: "Variable (with $ or _)",
+							text: "",
+							placeholder: "Variable name",
 							model(m, elem) {
 								const v = elem[$]('input').value;
 								if (v) {
-									if (RegExp("^[_\\$]" + Patterns.validPropertyName + "$").exec(v) && !RegExp(/^\d/).exec(v)) {
-										m.variable = v;
+									if (RegExp("^" + Patterns.validPropertyName + "$").exec(v) && !RegExp(/^\d/).exec(v)) {
+										m.variable += v;
 									}
 								}
 							},
@@ -1555,6 +1590,7 @@
 								m.operator = {
 									"is greater than": ">",
 									"is less than": "<",
+									"": "is",
 								}[v] || v;
 							},
 						},
@@ -1685,8 +1721,6 @@
 				type: 'checkbox',
 				text: 'Affect the entire remainder of the passage',
 				model(m, el) {
-					const {round} = Math;
-					const GCD = (a,b) => !a? b: !b? a: a>b? GCD(a-b,b) : GCD(a,b-a);
 					const remainder = !!el[$](':checked');
 
 					/*
@@ -1799,6 +1833,181 @@
 			},
 			confirmRow),
 
+		input: folddownPanel({
+				type: 'radiorows',
+				name: 'inputelement',
+				options: [
+					[
+						new Text("Create a text input box."),
+						el('<br>'),
+						{
+							type: 'preview',
+							tagName: 'textarea',
+							text: 'You can type sample text into this preview box.',
+							update(m, elem) {
+								elem.setAttribute("style", "width:100%;height:6em;");
+								elem.firstChild.setAttribute('style',
+									"display:block;resize:none;font-family:Georgia,serif;border-style:solid;border-color:#fff;color:#fff;"
+									+ `width:${m.width*100}%;margin-left:${m.left*100}%;margin-right:${m.right*100}%;`
+								);
+								elem.firstChild.setAttribute('rows', m.rows || 3);
+							},
+							model(m) {
+								m.wrapStart = m => {
+									const left = round(m.left*100),
+										width = round(m.width*100),
+										right = round(m.right*100),
+										gcd = GCD(width, GCD(left, right));
+
+									return `(${'forcedText' in m ? 'force-' : ''}input-box:${
+										m.variable ? `bind ${m.variable},` : ''
+									}${
+										stringify("=".repeat(left/gcd) + "X".repeat(width/gcd) + "=".repeat(right/gcd))
+									}${
+										m.rows !== 3 ? "," + m.rows : ''
+									}${
+										'forcedText' in m ? "," + stringify(m.forcedText) :
+										m.initialText ? "," + stringify(m.initialText) : ''
+									})`;
+								};
+								m.wrapEnd = m.innerText = '';
+								m.valid = true;
+							},
+						},{
+							type: "inline-range",
+							text: "Placement: ",
+							value: 5,
+							min: 0,
+							max: 10,
+							step: 1,
+							model(m, elem) {
+								m.placement = elem[$]('input').value/10;
+							},
+						},{
+							type: "inline-range",
+							text: "Width: ",
+							value: 5,
+							min: 1,
+							max: 10,
+							step: 1,
+							model(m, elem) {
+								m.width = elem[$]('input').value/10;
+								const area = 1 - m.width;
+								m.left = area * m.placement;
+								m.right = area * (1-m.placement);
+							},
+						},{
+							type: 'inline-number',
+							text: 'Rows:',
+							value: 3,
+							min: 1,
+							max: 9,
+							step: 1,
+							model(m, el) {
+								m.rows = +el[$]('input').value;
+							},
+						},{
+							type: 'radiorows',
+							name: 'inputboxtype',
+							options: [
+								[{
+									type: "inline-textarea",
+									width:"50%",
+									text: "The box initially contains this text:",
+									placeholder: "Initial text",
+									model(m, elem) {
+										m.initialText = elem[$]('input').value || '';
+									},
+								}],
+								[{
+									type: "inline-textarea",
+									width:"50%",
+									text: "Force the player to type this text:",
+									placeholder: "Text to display",
+									model(m, elem) {
+										m.forcedText = elem[$]('input').value || '';
+									},
+								},
+								el('<div>Instead of being a normal input box, this will instead slowly write the above text into the box as the player presses keys.</div>')],
+							],
+						},
+					],[
+						new Text("Create a dropdown menu."),
+						el('<br>'),
+						{
+							type: 'inline-text',
+							text: "Dropdown options (leave blank to make a separator):",
+						},{
+							type: 'textarea-rows',
+							placeholder: "Option text (leave blank to make a separator)",
+							model(m, el) {
+								const els = Array.from(el[$$]('input')).map(el => el.value);
+								if (els.some(Boolean)) {
+									m.wrapStart = m => `(dropdown: ${m.variable ? `bind ${m.variable},` : ''}${els.map(e => stringify(e))})`;
+									m.wrapEnd = m.innerText = '';
+									m.valid = true;
+								}
+							},
+						},
+					],[
+						new Text("Show a dialog box."),
+						el('<br>'),
+						el("<div>This dialog box will appear as soon as the macro is displayed. This is best used inside a hook that's only shown if a condition is met.</div>"),
+						{
+							type: "textarea",
+							width:"80%",
+							text: "Text:",
+							placeholder: "Your text here",
+							model(m, elem) {
+								const text = elem[$]('input').value || '';
+								m.wrapStart = m => `(dialog: ${m.variable ? `bind ${m.variable},` : ''}${stringify(text)}, ${m.links.map(e => stringify(e))})`;
+								m.wrapEnd = m.innerText = '';
+							},
+						},{
+							type: 'inline-text',
+							text: "Link options:",
+						},{
+							type: 'textarea-rows',
+							placeholder: "Link text (can't be blank)",
+							model(m, el) {
+								const els = Array.from(el[$$]('input')).map(el => el.value);
+								if (els.every(Boolean)) {
+									m.links = els;
+									m.valid = true;
+								}
+							},
+						},
+					],
+				],
+			},{
+				type:'checkboxrow',
+				text:'',
+				subrow: [{
+					type: "inline-dropdown",
+					text: 'Bind this input element to the variable',
+					options: ["$", "_"],
+					model(m, elem) {
+						m.variable = elem[$]('select').value ? "_" : "$";
+					},
+				},{
+					type: "inline-textarea",
+					width:"25%",
+					text: "",
+					placeholder: "Variable name",
+					model(m, elem) {
+						const v = elem[$]('input').value;
+						if (v) {
+							if (RegExp("^" + Patterns.validPropertyName + "$").exec(v) && !RegExp(/^\d/).exec(v)) {
+								m.variable += v;
+								return;
+							}
+						}
+						m.valid = false;
+					},
+				}],
+			},
+			confirmRow),
+
 		default: folddownPanel(
 			{
 				type: 'buttons',
@@ -1832,12 +2041,9 @@
 						},
 					},
 					el('<span class="harlowe-3-toolbarBullet">'),
-					{ title:'Passage link',            html:'Link…',                          onClick: () => switchPanel('passagelink')},
-					{
-						title: 'Only show a portion of text if a condition is met',
-						html:'If…',
-						onClick: () => switchPanel('if')
-					},
+					{ title:'Link element',            html:'Link…',                          onClick: () => switchPanel('passagelink')},
+					{ title:'Only show a portion of text if a condition is met', html:'If…',  onClick: () => switchPanel('if')},
+					{ title:'Input element',           html:'Input…',                         onClick: () => switchPanel('input')},
 					{ title:'Hook (named section of the passage)',      html:'Hook…',         onClick: () => switchPanel('hook')},
 					{ title:'Set a variable with a data value',         html:'Data…',         onClick: () => switchPanel('basicValue')},
 					el('<span class="harlowe-3-toolbarBullet">'),
