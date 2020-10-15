@@ -1156,7 +1156,7 @@ define([
 			This returns a datamap containing the names of currently occupied save game slots.
 
 			Example usage:
-			`(print (saved-games:)'s "File A")` prints the name of the save file in the slot "File A".
+			`(print: (saved-games:)'s "File A")` prints the name of the save file in the slot "File A".
 			`(if: (saved-games:) contains "File A")` checks if the slot "File A" is occupied.
 
 			Rationale:
@@ -1169,7 +1169,14 @@ define([
 			Each name in the datamap corresponds to an occupied slot name. The values are the file names of
 			the files occupying the slot.
 
-			Changing the datamap does not affect the save files - it is simply information.
+			The following is an **example**. If a game was saved using `(save-game:"File A", "The Mortuary")`, and there were no other
+			saved games, the datamap produced by (saved-games:) would look like this.
+
+			| Name | Value |
+			|---
+			| File A | The string "The Mortuary" |
+
+			Changing the datamap does not affect the save files - after this macro has created the datamap, it is simply inert data.
 
 			See also:
 			(save-game:), (load-game:)

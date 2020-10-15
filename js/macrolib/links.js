@@ -336,7 +336,10 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 
 			Details:
 			This creates a link which is visually indistinguishable from normal passage links.
-			
+
+			See also:
+			(link-repeat:), (link-reveal:), (link:), (link-goto:), (click:)
+
 			Added in: 3.2.0
 			#links 4
 		*/
@@ -376,7 +379,12 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 				*/
 				const enabler = ChangeDescriptor.create({
 					source: '<tw-link tabindex=0>' + text + '</tw-link>',
-					target: desc.target,
+					/*
+						For Commands whose ChangeDescriptor is permuted by their TwineScript_Attach() method,
+						the target isn't installed until just before running. Therefore, the enabler needs to check
+						the current descriptor's target, not store whatever it is now (as it could be undefined).
+					*/
+					target: () => desc.target,
 					append: "replace",
 					data: {
 						section: desc.section,
@@ -559,7 +567,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			array.
 
 			See also:
-			(undo:), (link-goto:)
+			(undo:), (link-goto:), (icon-undo:)
 
 			Added in: 2.0.0
 			#links 7
@@ -744,7 +752,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			it soon afterward, and this construction would ultimately accomplish very little.
 
 			See also:
-			(link-goto:), (link-undo:), (cycling-link:)
+			(link-goto:), (link-undo:), (cycling-link:), (icon-fullscreen:)
 
 			Added in: 3.2.0
 			#links 8

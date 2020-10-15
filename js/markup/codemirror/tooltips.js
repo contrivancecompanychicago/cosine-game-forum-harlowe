@@ -86,18 +86,18 @@
 		augmentedAssign:     `This is an <b>augmented assignment operator</b>, similar to the ones in Javascript.`,
 		identifier: ({text}) => {
 			text = insensitiveName(text);
-			if (text === "it" || text === "its") {
+			if (text.startsWith("it")) {
 				return `The keyword <b>it</b> is a shorthand for the leftmost part of an operation. You can write \`(if: $candles < 2 and it > 5)\` instead of \`(if: $candles < 2 and $candles > 5)\` `
 					+ `or \`(set: $candles to it + 3)\` instead of \`(set: $candles to $candles + 3)\`. When accessing a data value from it, you can write it as <b>its</b>, such as in \`its length > 0\`.`;
 			}
 			if (text === "time") {
 				return `The keyword <b>time</b> equals the number of milliseconds passed since the passage was displayed.`;
 			}
-			if (text === "exits") {
+			if (text.startsWith("exit")) {
 				return `The keyword <b>exits</b> or <b>exit</b> equals the number of currently available "exits" in a passage - the number of`
 					+ ` link, mouseover, and mouseout elements that are still active on the page, which could lead to new content and progress.`;
 			}
-			if (text === "visit") {
+			if (text.startsWith("visit")) {
 				return `The keyword <b>visits</b> or <b>visit</b> equals the number of times the current passage has been visited this game, including the current visit.`
 					+ ` In \`(storylet:)\` macros, when Harlowe decides whether this passage is available to \`(open-storylets:)\`, this will often be 0, but when actually visiting the passage, it will be at least 1.`;
 			}

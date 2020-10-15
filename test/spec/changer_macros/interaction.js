@@ -251,7 +251,7 @@ describe("interaction macros", function() {
 									createPassage("''foo''","baz");
 									runPassage("(" + e.name + ":"+name+",'baz')''grault''","corge");
 									runPassage("");
-									$('tw-sidebar .undo')[e.eventMethod]();
+									$('tw-sidebar [alt=Undo]')[e.eventMethod]();
 									setTimeout(function() {
 										expect($('tw-passage:last-child').find('b').text()).toBe("grault");
 										done();

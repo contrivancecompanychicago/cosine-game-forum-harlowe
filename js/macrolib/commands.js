@@ -614,7 +614,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			after it from running.
 
 			See also:
-			(go-to:), (link-undo:)
+			(go-to:), (link-undo:), (icon-undo:)
 
 			Added in: 2.0.0
 			#links
@@ -637,6 +637,219 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				return "blocked";
 			},
 			[]);
+
+	/*
+		An onchange event for <select> elements must be registered for the sake of the (dropdown:) macro,
+		which is implemented similar to the link macros - the ChangeDescriptor's data.dropdownEvent indicates
+		what to do when the <select> is interacted with.
+	*/
+	Utils.onStartup(() => $(Utils.storyElement).on(
+		/*
+			The jQuery event namespace is "dropdown-macro".
+		*/
+		"click.icon",
+		"tw-icon",
+		function iconEvent(e) {
+			const icon = $(this),
+				event = icon.data('clickEvent'),
+				alt = icon.attr('alt');
+
+			if (event) {
+				event(icon);
+			}
+			/*
+				The built-in icon commands are as follows.
+			*/
+			if (alt === "Undo") {
+				e.stopPropagation();
+				Engine.goBack();
+			}
+			if (alt === "Redo") {
+				e.stopPropagation();
+				Engine.goForward();
+			}
+			if (alt === "Fullscreen") {
+				e.stopPropagation();
+				Engine.toggleFullscreen();
+			}
+			if (alt === "Reload") {
+				if (State.hasSessionStorage) {
+					sessionStorage.removeItem("Saved Session");
+				}
+				window.location.reload();
+			}
+		}
+	));
+
+	/*
+		The four icon commands are defined here, as quick arrays of [name, defaultIcon, visibilityTest]. Their names are
+		upperfirsted because they are used for the resulting element's alt and title attributes.
+
+		Note that the visibility test for "Fullscreen" doesn't (shouldn't) change as the game progresses, but is included as such
+		anyways. Also, "Reload"'s visibility test always returns a truthy value.
+	*/
+	[
+		["Undo", "&#8630;", () => State.pastLength > 0],
+		["Redo", "&#8631;", () => State.futureLength > 0],
+		["Fullscreen", "&#9974;", () => document.fullscreenEnabled || document.msFullscreenEnabled],
+		["Reload", "&#10226;", Object],
+	].forEach(([name, defaultIcon, visibilityTest]) => {
+		/*d:
+			(icon-undo: [String]) -> Command
+
+			Creates an icon, similar to those in the sidebar, that, if visible and clicked, undoes the current turn, returning to the previous passage, as if by (undo:). It is not
+			visible on the first turn of the game.
+
+			Example usage:
+			`(replace:?sidebar)[(icon-undo: )(size:2)[(str-repeated:$flowers + 1, "✿ ")]]` alters the sidebar such that there is only an undo button, followed
+			by a number of `✿ ` symbols equal to the number in $flowers plus 1. The space separating each florette symbol allows it to word-wrap normally. This would
+			best be used in a "header" or "footer" tagged passage.
+
+			Rationale:
+			By default, each passage in a Harlowe story features a narrow sidebar to the left, housing "Undo" and "Redo" menu icons.
+			However, using the (replace:), (append:) or (prepend:) changers with the ?sidebar HookName, it is possible to dynamically change
+			the sidebar, inserting or replacing its contents with any kind of prose. To that end, it is useful to be able to recreate
+			the "Undo" and "Redo" menu icons exactly as they were, in case an earlier operation performed on the sidebar had removed them.
+
+			Details:
+			Of course, you can use this in normal passage prose, if you wish - they are merely commands, just like (link-goto:) or (print:).
+
+			If you wish to change the icon to a different symbol, you may provide a string containing a single character to this macro.
+			If the string has more than one character, an error will result. If none is given, the default symbol is &#8630; (in HTML, `&#8630;`).
+
+			This command creates an element that uses the same default CSS styling as the sidebar's icons: a `<tw-icon>` holding a glyph of text at 66px font size,
+			with 0.2 opacity that changes to 0.4 when hovered over.
+
+			Like all sidebar icons, these will automatically hide themselves when they cannot be clicked, leaving a conspicuous space. In the
+			case of the "Undo" icon, it will be hidden if it's the first turn of the game, and there is nothing to undo.
+
+			See also:
+			(icon-redo:), (undo:), (link-undo:), (click-undo:)
+
+			Added in: 3.2.0
+			#sidebar 2
+		*/
+		/*d:
+			(icon-redo: [String]) -> Command
+
+			Creates an icon, similar to those in the sidebar, that, if visible and clicked, "re-does" a turn that was undone. It is only visible if a turn has been undone.
+
+			Example usage:
+			`(replace:?sidebar)[(b4r:"solid")+(b4r-color:gray)+(corner-radius:12)(icon-undo: )(b4r:"solid")+(b4r-color:gray)+(corner-radius:12)(icon-redo: )]` alters the sidebar such
+			that the "Undo" and "Redo" icons have rounded borders around them.
+
+			Rationale:
+			By default, each passage in a Harlowe story features a narrow sidebar to the left, housing "Undo" and "Redo" menu icons.
+			However, using the (replace:), (append:) or (prepend:) changers with the ?sidebar HookName, it is possible to dynamically change
+			the sidebar, inserting or replacing its contents with any kind of prose. To that end, it is useful to be able to recreate
+			the "Undo" and "Redo" menu icons exactly as they were, in case an earlier operation performed on the sidebar had removed them.
+
+			Details:
+			Of course, you can use this in normal passage prose, if you wish - they are merely commands, just like (link-goto:) or (print:).
+
+			If you wish to change the icon to a different symbol, you may provide a string containing a single character to this macro.
+			If the string has more than one character, an error will result. If none is given, the default symbol is &#8631; (in HTML, `&#8631;`).
+
+			This command creates an element that uses the same default CSS styling as the sidebar's icons: a `<tw-icon>` holding a glyph of text at 66px font size,
+			with 0.2 opacity that changes to 0.4 when hovered over.
+
+			Like all sidebar icons, these will automatically hide themselves when they cannot be clicked, leaving a conspicuous space. In the
+			case of the "Redo" icon, it will be hidden if this is the latest turn of the game, and there is nothing to "re-do".
+
+			See also:
+			(icon-undo:)
+
+			Added in: 3.2.0
+			#sidebar 3
+		*/
+		/*d:
+			(icon-fullscreen: [String]) -> Command
+
+			Creates an icon, similar to those in the sidebar, that, if visible and clicked, toggles fullscreen mode on or off.
+
+			Example usage:
+			`(prepend:?sidebar)[(icon-fullscreen: )]` adds a fullscreen icon to the sidebar, above the "undo" and "redo" icons. This would best be used in a "header" or "footer" tagged passage.
+
+			Rationale:
+			By default, each passage in a Harlowe story features a narrow sidebar to the left, housing "Undo" and "Redo" menu icons.
+			However, other functions may be desirable to have available to the player at all times, such as the capability to toggle fullscreen mode in the browser.
+			While you could place a (link-fullscreen:) in your passage prose, placing the icon produced by this macro is a slightly more concise solution that fits with
+			the use of the sidebar for view utility commands.
+
+			Details:
+			Of course, you can use this in normal passage prose, if you wish - they are merely commands, just like (link-goto:) or (print:).
+
+			If you wish to change the icon to a different symbol, you may provide a string containing a single character to this macro.
+			If the string has more than one character, an error will result. If none is given, the default symbol is &#9974; (in HTML, `&#9974;`).
+
+			This command creates an element that uses the same default CSS styling as the sidebar's icons: a `<tw-icon>` holding a glyph of text at 66px font size,
+			with 0.2 opacity that changes to 0.4 when hovered over.
+
+			When activated, this will make the page's `<html>` element be the fullscreen element, *not* `<tw-story>`. This is because, in most browsers,
+			removing the fullscreen element from the page, however briefly, will deactivate fullscreen mode. Since the `(enchant:)` macro, when given ?Page,
+			will often need to wrap `<tw-story>` in another element, those macro calls will deactivate fullscreen mode if `<tw-story>` was the fullscreen element.
+			So, if you have edited the compiled HTML to add elements before and after it, such as a navigation bar, that will remain visible while the story
+			is in fullscreen mode. Additionally, this means that the Debug Mode panel is still visible when fullscreen mode is activated.
+
+			If the browser reports to Harlowe that fullscreen mode is unavailable, then the icon will be hidden, leaving a conspicuous space.
+
+			See also:
+			(link-fullscreen:)
+
+			Added in: 3.2.0
+			#sidebar 4
+		*/
+		/*d:
+			(icon-reload: [String]) -> Command
+
+			Creates an icon, similar to those in the sidebar, that, if visible and clicked, reloads the whole page, restarting the story from the beginning.
+
+			Example usage:
+			`(replace:?sidebar)[(icon-reload: )]` replaces the sidebar with just the "reload" icon.
+
+			Rationale:
+			By default, each passage in a Harlowe story features a narrow sidebar to the left, housing "Undo" and "Redo" menu icons.
+			However, other functions may be desirable to have available to the player at all times, such as an option to restart the story from the beginning.
+			This would be best suited to short stories with a high density of random or branching content, such as a story with dozens of options that ends after
+			a certain number of turns, or a procedurally generated puzzle with a lot of dead-ends.
+
+			Details:
+			Of course, you can use this in normal passage prose, if you wish - they are merely commands, just like (link-goto:) or (print:).
+
+			If you wish to change the icon to a different symbol, you may provide a string containing a single character to this macro.
+			If the string has more than one character, an error will result. If none is given, the default symbol is &#10226; (in HTML, `&#10226;`).
+
+			This command creates an element that uses the same default CSS styling as the sidebar's icons: a `<tw-icon>` holding a glyph of text at 66px font size,
+			with 0.2 opacity that changes to 0.4 when hovered over.
+
+			Normally, Harlowe stories will attempt to preserve their current game state across browser page reloads.
+			This macro will suppress this behaviour, guaranteeing that the story restarts from the beginning.
+
+			Clicking this icon will NOT prompt the player with any kind of dialogue box warning them that this will restart the story. Instead, the story will
+			restart without prompting.
+
+			See also:
+			(reload:)
+
+			Added in: 3.2.0
+			#sidebar 5
+		*/
+		Macros.addCommand(`icon-${name.toLowerCase()}`,
+			(_, icon) => {
+				/*
+					Icons can only be one character (i.e. UTF-8 code point) long. This is checked using [...icon], as per other
+					string length checks throughout Harlowe. If no string was given, don't throw an error.
+				*/
+				if (typeof icon === "string" && [...icon].length !== 1) {
+					return TwineError.create("datatype",
+						`The (icon-${name.toLowerCase()}:) macro should be given a string that's 1 character long, not "${icon}".`
+					);
+				}
+			},
+			(cd, _, icon) =>
+				assign(cd, { source: `<tw-icon tabindex=0 alt="${name}" title="${name}" ${visibilityTest() ? "" : 'style="visibility:hidden"'}>${icon || defaultIcon}</tw-icon>`}),
+			[optional(String)]);
+	});
 
 		/*d:
 			(cycling-link: [Bind], ...String) -> Command
@@ -1815,6 +2028,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			loop", and won't be able to proceed. No error will be reported in this case.
 
 			This command can't have changers attached - attempting to do so will produce an error.
+
+			See also:
+			(icon-reload:)
 
 			Added in: 1.0.0
 			#url

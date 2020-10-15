@@ -151,6 +151,13 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		update() {
 			const {section, newTargets, transition, transitionDeferred, append} = this;
 			let {target} = this;
+			/*
+				If this is an enabler descriptor (such as created by (link:)) it's possible the target property was a method deferring the retrieval
+				of the actual target, as a necessity for being attached to commands like (icon-undo:). Resolve that method now.
+			*/
+			if (typeof target === "function") {
+				target = target();
+			}
 			
 			/*
 				This loop iterates over every DOM element that the target
@@ -267,6 +274,14 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 				{source, transition, transitionTime, transitionDeferred, enabled, enablers, data, section, newTargets, functions, appendSource} = this;
 			let
 				{target, target:oldTarget, append} = this;
+
+			/*
+				If this is an enabler descriptor (such as created by (link:)) it's possible the target property was a method deferring the retrieval
+				of the actual target, as a necessity for being attached to commands like (icon-undo:). Resolve that method now.
+			*/
+			if (typeof target === "function") {
+				target = target();
+			}
 
 			assertOnlyHas(this, changeDescriptorShape);
 

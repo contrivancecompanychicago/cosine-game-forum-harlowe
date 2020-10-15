@@ -451,4 +451,30 @@ describe("interface macros", function(){
 			}
 		});
 	});
+	[["Undo","↶"],["Redo","↷"],["Fullscreen","⛶"],["Reload","⟲"]].forEach(function(a) {
+		var name = a[0], symbol = a[1];
+		describe("the (icon-" + name.toLowerCase() + ":) macro", function() {
+			it("accepts an optional one-character-long string", function() {
+				expect('(icon-' + name + ':)').not.markupToError();
+				expect('(icon-' + name + ':"R")').not.markupToError();
+				expect('(icon-' + name + ':"🀄")').not.markupToError();
+				expect('(icon-' + name + ':"RS")').markupToError();
+				expect('(icon-' + name + ':"R","S")').markupToError();
+				expect('(icon-' + name + ':2)').markupToError();
+			});
+			it("creates a <tw-icon>", function() {
+				expect(runPassage('(icon-' + name + ':)').find('tw-icon').length).toBe(1);
+			});
+			it("uses a certain default symbol", function() {
+				expect(runPassage('(icon-' + name + ':)').find('tw-icon').text()).toBe(symbol);
+			});
+			it("uses the passed-in symbol, if given", function() {
+				expect(runPassage('(icon-' + name + ':"R")').find('tw-icon').text()).toBe("R");
+			});
+			it("works with (link:)", function() {
+				expect('(link:"Hey")(icon-' + name + ':)').not.markupToError();
+			});
+			//TODO: Click tests
+		});
+	});
 });

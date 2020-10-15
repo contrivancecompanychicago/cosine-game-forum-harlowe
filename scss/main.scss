@@ -146,10 +146,10 @@ tw-sidebar {
 	A <tw-icon> is, at present, a sidebar button.
 */
 tw-icon {
-	display: block;
+	display: inline-block;
 	margin: 0.5em 0;
 	opacity: 0.2;
-	font-size: 2.75em;
+	font-size: 66px;
 	&:hover {
 		opacity: 0.4;
 	}

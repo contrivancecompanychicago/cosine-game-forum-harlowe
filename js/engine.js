@@ -17,9 +17,7 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 		
 		Implemented values:
 		
-		debug : debug mode is ready. Click the bug icon to reveal all macro spans.
-		undo : enable the undo button.
-		redo : enable the redo button.
+		debug : debug mode is ready.
 		ifid : the UUID of the story. The only non-boolean option.
 	*/
 	const options = Object.create(null);
@@ -34,21 +32,11 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 			container = $('<tw-passage><tw-sidebar>'),
 			sidebar = container.children('tw-sidebar');
 		
-		/*
-			Generate the HTML for the permalink.
-			(This is currently unavailable as of Harlowe 1.0)
-		*/
-		if (options.permalink && State.save) {
-			sidebar.append(
-				'<tw-icon tabindex=0 class="permalink" title="Permanent link to this passage"><a href="#' + State.save() + '">&sect;'
-			);
-		}
-		// Apart from the Permalink, the sidebar buttons consist of Undo (Back) and Redo (Forward) buttons.
+		// The default sidebar buttons consist of Undo (Back) and Redo (Forward) buttons.
+		// The event code for these is in macrolib/commands.js, alongside the various "icon" macros.
 		const
-			back = $('<tw-icon tabindex=0 class="undo" alt="Undo" title="Undo">&#8630;</tw-icon>').click((e) => { e.stopPropagation(); Engine.goBack(); }),
-			fwd  = $('<tw-icon tabindex=0 class="redo" alt="Redo" title="Redo">&#8631;</tw-icon>').click((e) => { e.stopPropagation(); Engine.goForward(); }),
-			fullscreen = $( document.fullscreenEnabled || document.msFullscreenEnabled ? '<tw-icon tabindex=0 class="" alt="Fullscreen" title="">&#9974;</tw-icon>' : '')
-				.click((e) => { e.stopPropagation(); Engine.toggleFullscreen(); });
+			back = $('<tw-icon tabindex=0 alt="Undo" title="Undo">&#8630;</tw-icon>'),
+			fwd  = $('<tw-icon tabindex=0 alt="Redo" title="Redo">&#8631;</tw-icon>');
 
 		if (State.pastLength <= 0) {
 			back.css("visibility", "hidden");
@@ -56,7 +44,7 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 		if (State.futureLength <= 0) {
 			fwd.css( "visibility", "hidden");
 		}
-		sidebar.append(back, fwd, fullscreen);
+		sidebar.append(back, fwd);
 
 		return container;
 	}
