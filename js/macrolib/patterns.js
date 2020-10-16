@@ -2,7 +2,7 @@
 define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype', 'datatypes/typedvar', 'internaltypes/twineerror'],
 ($, Macros, {anyRealLetter, anyUppercase, anyLowercase, anyCasedLetter, realWhitespace, impossible}, {objectName, toSource}, Datatype, TypedVar, TwineError) => {
 
-	const {rest, either, nonNegativeInteger} = Macros.TypeSignature;
+	const {rest, either, optional, nonNegativeInteger} = Macros.TypeSignature;
 	const {assign, create} = Object;
 	const PatternSignature = rest(either(String, Datatype, TypedVar));
 	/*
@@ -33,11 +33,18 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 				const subPattern = mapper(pattern.datatype);
 				return TwineError.containsError(subPattern) ? subPattern : "(" + subPattern + ")";
 			}
+			/*
+				A datatype is a valid argument for a Pattern macro if it's either another Pattern,
+				or a String-related datatype.
+			*/
 			if (Datatype.isPrototypeOf(pattern)) {
 				/*
-					A datatype is a valid argument for a Pattern macro if it's either another Pattern,
-					or a String-related datatype.
+					The canContainTypedVars constraint must be obeyed for all sub-patterns of this pattern.
 				*/
+				if (!canContainTypedVars && "typedVars" in pattern && pattern.typedVars().length) {
+					return TwineError.create("operation",
+						"(" + name + ":) can't have typed variables inside its pattern.");
+				}
 				if (pattern.regExp) {
 					/*
 						If this is a recompilation of a sensitive pattern into an insensitive one, then convert this argument
@@ -521,7 +528,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			The pattern given to this macro cannot contained TypedVars (such as `(split: (p: alnum-type _letter), "A")`). Doing so will cause an error.
 
 			See also:
-			(words:), (folded:), (joined:)
+			(words:), (folded:), (joined:), (trimmed:)
 
 			Added in: 3.2.0
 			#string
@@ -574,5 +581,64 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 				}
 				return ret.concat(str || []);
 			},
-			[either(String, Datatype), String]);
+			[either(String, Datatype), String])
+
+		/*d:
+			(trimmed: [String or Datatype], String) -> String
+			
+			This macro takes one string (the last value), and produces a copy with every character matching the given pattern (the first value) removed from the start and end of it. If no pattern
+			is given, it defaults to removing whitespace, as if `whitespace` was the first argument.
+
+			Example usage:
+			* `(trimmed:"   Contract Annulled ")` produces "Contract Annulled".
+			* `(trimmed: "$", $treasureValue)` produces the string stored in $treasureValue with leading or trailing "$" signs removed.
+			* `(trimmed: digit, "john61112")` produces "john".
+
+			Rationale:
+			Removing certain leading or trailing characters in a string is a common operation, essentially equivalent to extracting a single substring from within a string.
+			Removing the punctuation or whitespace surrounding a word, or just certain specific characters, is important when you need to use the middle portion of a string
+			for some other use, such as being displayed in a different context. It's especially useful when dealing with user-inputted strings, such as those produced by (input-box:).
+
+			Details:
+			If an empty string is given, then it will be returned as-is. If the pattern doesn't match anything (for instance, if just `(p:)` or "" was given as the pattern)
+			then the string will be returned as-is.
+
+			If the pattern matches the entire string, then an empty string will be returned.
+
+			The pattern given to this macro cannot contained TypedVars (such as `(split: (p: alnum-type _letter), "A")`). Doing so will cause an error.
+
+			See also:
+			(words:), (split:)
+
+			Added in: 3.2.0
+			#string
+		*/
+		("trimmed",
+			(_, pattern, str) => {
+				if (str === undefined || (Datatype.isPrototypeOf(pattern) && pattern.name === "whitespace")) {
+					/*
+						For the base case (trimming whitespace), it is safe to default to the native trim().
+					*/
+					return pattern.trim();
+				}
+				pattern = createPattern({
+					name: "trimmed", fullArgs: [pattern],
+					/*
+						Typed variables don't make sense for this macro, which isn't concerned with capturing
+						substring matches, let alone binding them.
+					*/
+					canContainTypedVars:false,
+				});
+				if (TwineError.containsError(pattern)) {
+					return pattern;
+				}
+				/*
+					If the pattern was (p:) or something equally vacuous, then it won't have a useful regExp string.
+				*/
+				if (!pattern.regExp) {
+					return str;
+				}
+				return str.replace(RegExp("^(" + pattern.regExp + ")*|(" + pattern.regExp + ")*$",'g'),'');
+			},
+			[either(String, Datatype), optional(String)]);
 });

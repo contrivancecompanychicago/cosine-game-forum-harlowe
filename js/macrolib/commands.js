@@ -835,7 +835,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			#sidebar 5
 		*/
 		Macros.addCommand(`icon-${name.toLowerCase()}`,
-			(_, icon) => {
+			(icon) => {
 				/*
 					Icons can only be one character (i.e. UTF-8 code point) long. This is checked using [...icon], as per other
 					string length checks throughout Harlowe. If no string was given, don't throw an error.

@@ -325,14 +325,11 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			If the string was empty or contained only whitespace, then this will create an empty array. Moreover,
 			if the string contained no whitespace, then the array will contain just the entire original string.
 
-			The whitespace characters recognised by this macro include line breaks, non-breaking spaces, and other uncommon
-			space characters.
-
 			If you wish to split up a string into an array based on a more specific separator than just whitespace
 			(for instance, by just newlines) then you may use the (split:) macro.
 			
 			See also:
-			(split:), (startcase:)
+			(split:), (startcase:), (trimmed:)
 
 			Added in: 2.0.0
 			#string

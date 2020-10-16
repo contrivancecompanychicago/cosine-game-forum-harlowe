@@ -131,6 +131,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
    * The `(move:)` macro now also supports unpacking, by providing it with the same kind of statements as `(unpack:)`.
  * Added `(split:)` (also known as `(splitted:)` to emphasise that it has an adjectival name) which takes a string or string pattern (see below) and uses it as a separator value with which to split up the other string given to it, producing an array of substrings.
  * Added `(joined:)`, which joins together the strings given to it, using the first string as a separator value. `(joined:"! ", "Liberty", "Equality", "Fraternity", "")` produces the string `"Liberty! Equality! Fraternity!"`.
+ * Added `(trimmed:)`, a macro that removes instances of the given string pattern from the start and end of the given string (defaulting to whitespace if no pattern was given).
 
 ###### Datatypes
 

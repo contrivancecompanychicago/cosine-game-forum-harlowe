@@ -420,6 +420,9 @@ describe("patterns", function() {
 			it("returns nothing if the pattern covers the whole string", function() {
 				expect('(print:(split:(p:"AB", alnum, "DE"),"ABCDE"))').markupToPrint("");
 			});
+			it("errors if given a pattern containing TypedVars", function() {
+				expect('(split: (p:digit-type _a, "B"), "foo")').markupToError();
+			});
 		});
 		it("returns the entire string if there are no matches", function() {
 			expect('(print:(split:"J","ABECDEFGEH"))').markupToPrint("ABECDEFGEH");
@@ -427,6 +430,28 @@ describe("patterns", function() {
 		});
 		it("is also known as (splitted:)", function() {
 			expect('(print:(splitted:"E","ABECDEFGEH"))').markupToPrint("AB,CD,FG,H");
+		});
+	});
+	describe("the (trimmed:) macro", function() {
+		it("accepts an optional string or string pattern, and a string", function() {
+			expect("(trimmed: )").markupToError();
+			expect("(trimmed: 1)").markupToError();
+			expect("(trimmed: 'a')").not.markupToError();
+			expect("(trimmed: digit, 'blue')").not.markupToError();
+			expect("(trimmed: (p-either:'G','b'), 'blue')").not.markupToError();
+		});
+		it("removes matches from the start and end of the string", function() {
+			expect('(trimmed:(p-either:".",whitespace),"... ... Boo.")').markupToPrint("Boo");
+			expect('(trimmed:digit,"john22177")').markupToPrint("john");
+		});
+		it("returns an empty string if the pattern covers the whole string", function() {
+			expect('(print: "" is (trimmed:(p:"AB", alnum, "DE"),"ABCDE"))').markupToPrint("true");
+		});
+		it("if no pattern is given, it defaults to removing whitespace", function() {
+			expect('(trimmed: "     foo \n\n\n")').markupToPrint("foo");
+		});
+		it("errors if given a pattern containing TypedVars", function() {
+			expect('(trimmed: (p:digit-type _a, "B"), "foo")').markupToError();
 		});
 	});
 	describe("the (unpack:) macro", function() {
