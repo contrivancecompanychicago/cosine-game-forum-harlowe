@@ -29,6 +29,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where `(hover-style:)` combined with a link changer such as `(link:)` would cause the specified hover style, after the link was clicked, to permanently persist on the hook.
  * Fixed a bug where `(hover-style:)` couldn't actually override the default hover colour for links of any kind, due to a CSS conflict.
  * Fixed a bug where certain changers, like `(for:)`, caused a crash when attached to a command (like a `(print:)` macro, or a passage link).
+ * Fixed a bug where closing an `(alert:)`, `(confirm:)` or `(prompt:)` dialog box when there was an `(event:)` hook in the passage would cause a crash.
  * Fixed a bug where trying to use datanames with certain unusual types of data (changers, commands, datatypes) would give a bad Javascript error message instead of the intended error message.
  * Fixed a bug where the CSS used to position the new pure HTML dialogs didn't work on certain old browser versions.
  * Now, consecutive line breaks (which Harlowe reduces the cumulative height of) at the start of a passage are no longer the wrong height while that passage transitions in. (To handle this, consecutive line breaks are now made into `<tw-consecutive-br>` elements instead of `<br data-cons>` elements.)

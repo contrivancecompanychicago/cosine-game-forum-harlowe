@@ -255,11 +255,49 @@ describe("basic command macros", function() {
 				done();
 			},20);
 		});
+
+		it("blocks link interaction when the dialog is present", function(done) {
+			var p = runPassage("(link:'foo')[bar](dialog:'baz')");
+			expect(p.text()).toBe("foo");
+			p.find('tw-link').click();
+			setTimeout(function() {
+				expect(p.text()).toBe("foo");
+
+				p = runPassage("foo(click:'foo')[baz](dialog:'baz')");
+				expect(p.text()).toBe("foo");
+				p.find('tw-enchantment').click();
+				setTimeout(function() {
+					expect(p.text()).toBe("foo");
+					done();
+				},20);
+			},20);
+		});
+		it("blocks mouseover interaction when the dialog is present", function(done) {
+			var p = runPassage("foo(mouseover:'foo')[bar](dialog:'baz')");
+			expect(p.text()).toBe("foo");
+			p.find('tw-link').mouseenter();
+			setTimeout(function() {
+				expect(p.text()).toBe("foo");
+				done();
+			},20);
+		});
+		it("blocks (event:)s from firing when the dialog is present", function(done) {
+			var p = runPassage('(set:$baz to 0)(link-reveal: "foo")[(dialog:\'(set:$baz to 1)\')](event: when $baz > 0)[qux]');
+			p.find('tw-link').click();
+			setTimeout(function() {
+				expect(p.text()).toBe("foo");
+				$("tw-dialog").find('tw-link').last().click();
+				setTimeout(function() {
+					expect(p.text()).toBe("fooqux");
+					done();
+				},20);
+			},20);
+		});
 	});
 
 	['prompt','confirm'].forEach(function(name, confirm) {
 		describe("the (" + name + ":) macro", function() {
-			var args = "'Gooball'" + (confirm ? "" : ",'foo'");
+			var args = "'Gooball(set:$baz to 1)'" + (confirm ? "" : ",'foo'");
 			if(confirm) {
 				it("requires either 1, 2 or 3 string arguments", function() {
 					expect("(confirm:)").markupToError();
@@ -355,6 +393,18 @@ describe("basic command macros", function() {
 				setTimeout(function() {
 					expect(p.text()).toBe("foo");
 					done();
+				},20);
+			});
+			it("blocks (event:)s from firing when the dialog is present", function(done) {
+				var p = runPassage('(set:$baz to 0)(link-reveal: "foo")[(set:_x to ('+name+':'+args+'))](event: when $baz > 0)[qux]');
+				p.find('tw-link').click();
+				setTimeout(function() {
+					expect(p.text()).toBe("foo");
+					$("tw-dialog").find('tw-link').last().click();
+					setTimeout(function() {
+						expect(p.text()).toBe("fooqux");
+						done();
+					},20);
 				},20);
 			});
 			if(confirm) {

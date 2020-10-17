@@ -1154,7 +1154,7 @@ define([
 						If the callback caused the section to suddenly become blocked again, stop
 						processing the callbacks.
 					*/
-					if (this.stackTop.blocked) {
+					if (this.stackTop && this.stackTop.blocked) {
 						return;
 					}
 				}
