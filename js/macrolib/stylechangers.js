@@ -1534,6 +1534,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		)
 		/*d:
 			(background: Colour or String or Gradient) -> Changer
+			Also known as: (bg:)
 
 			This styling changer alters the background colour or background image
 			of the attached hook. Supplying a gradient (produced by (gradient:)) will set the
@@ -1571,7 +1572,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			Added in: 1.0.0
 			#styling
 		*/
-		("background",
+		(["background", "bg"],
 			(_, value) => {
 				//Convert TwineScript CSS colours to bad old hexadecimal.
 				if (Colour.isPrototypeOf(value)) {

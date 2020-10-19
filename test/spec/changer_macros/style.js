@@ -621,6 +621,9 @@ describe("style changer macros", function() {
 			expect("(print:(background:(gradient:45,0,red,1,white)))").not.markupToError();
 			expect("(print:(background:(gradient:45,0,red,1,white),'B'))").markupToError();
 		});
+		it("is also known as (bg:)", function() {
+			expect("(print: (bg:'A') is (background:'A'))").markupToPrint('true');
+		});
 		it("errors when placed in passage prose while not attached to anything", function() {
 			expect("(background:'A')").markupToError();
 			expect("(background:'A')[]").not.markupToError();

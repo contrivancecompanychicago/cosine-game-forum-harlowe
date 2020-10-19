@@ -42,7 +42,10 @@ define([
 			a `length` number: `$array's length` tells you how many values are in it. If you can't determine the exact position
 			to remove an item from (because it's dependent on a variable), you can use an expression, in brackers,
 			after it: `$array's ($pos - 3)`.
-			
+
+			**Note:** While you can normally display the contents of variables by simply placing their names directly in passage prose,
+			such as `$votes`, you have to use another macro, such as (print:), to display the contents of arrays, such as `(print: $votes's 1st)`.
+
 			To see if arrays contain certain values, you can use the `contains` and `is in` operators like so: `$array contains 1`
 			is true if it contains the number 1 anywhere, and false if it does not. `1 is in $array` is another way to write that.
 			The `is not in` operator is the opposite of `is in`, and is used to check that values aren't in arrays.
@@ -1245,6 +1248,9 @@ define([
 
 			You can express the name as a bare word if it doesn't have a space or other punctuation in it - `$animals's frog` is OK, but
 			`$animals's komodo dragon` is not. In that case, you'll need to always supply it as a string - `$animals's "komodo dragon"`.
+
+			**Note:** While you can normally display the contents of variables by simply placing their names directly in passage prose,
+			such as `$sandwich`, you have to use another macro, such as (print:), to display the contents of datamaps, such as `(print: $sandwich's bread)`.
 			
 			Datamaps may be joined by adding them together: `(dm: "goose", "honk") + (dm: "robot", "whirr")` is the same as
 			`(dm: "goose", "honk", "robot", "whirr")`. In the event that the second datamap has the same name as the first one,

@@ -28,6 +28,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where `(enchant:)` given `?passage's lines` would often cause text nodes within lines, such as the text of a `(link:)` link, to be transplanted out of any elements containing them.
  * Fixed a bug where `(hover-style:)` combined with a link changer such as `(link:)` would cause the specified hover style, after the link was clicked, to permanently persist on the hook.
  * Fixed a bug where `(hover-style:)` couldn't actually override the default hover colour for links of any kind, due to a CSS conflict.
+ * Fixed a bug where one could pass a string containing a HookName, such as `"?navbar"`, to macros that use HookNames, such as `(replace:)` or `(enchant:)`, and it would function identically to that HookName (which in this case would be `?navbar`). This was NOT intended behaviour and was not documented, and as such, certain design patterns that involved constructing HookName strings programmatically will no longer work.
  * Fixed a bug where certain changers, like `(for:)`, caused a crash when attached to a command (like a `(print:)` macro, or a passage link).
  * Fixed a bug where closing an `(alert:)`, `(confirm:)` or `(prompt:)` dialog box when there was an `(event:)` hook in the passage would cause a crash.
  * Fixed a bug where trying to use datanames with certain unusual types of data (changers, commands, datatypes) would give a bad Javascript error message instead of the intended error message.
@@ -70,7 +71,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * After much fretting and fussing, I've decided to un-deprecate `(subarray:)` and `(substring:)`, because my intended subsequence syntax - `$a's 1stTo2ndlast` and `$a's (range: $b, $c)` - has a not-uncommon edge case where it fails - when `$c` in the preceding example is negative - and I've abandoned plans to alter it to accommodate this case. This un-deprecation changes nothing about how they behaved, but the documentation has been rewritten to include them.
  * Slightly adjusted the animation of `(text-style:"rumble")` and `(text-style:"shudder")` so that the text shifts position from its centre, rather than its left edge.
  * `(all-pass:)` can now be shortened to `(pass:)`. This alias is meant for cases when you only want to check a single value, like in `(pass: $noLetterE, "Gadsby")`, rather than a sequence of values.
- * `(text-rotate:)` is aliased to `(text-rotate-z:)`, for consistency with the new macros below.
+ * `(background:)` can now be shortened to `(bg:)`.
+ * `(text-rotate:)` is now aliased to `(text-rotate-z:)`, for consistency with the new macros below.
  * `(alert:)` has been renamed to `(dialog:)`, retaining the original name `(alert:)` as an alias for it. Moreover, it can now accept any amount of link text, as well as a bound variable to set to the text of whichever link you click. Also, changers like `(t8n:)` can now be attached to the `(dialog:)` macro.
  * `(rgb:)` now accepts fractional values for the R, G, and B components.
  * Made the syntax highlighting dark mode colours 50% brighter.

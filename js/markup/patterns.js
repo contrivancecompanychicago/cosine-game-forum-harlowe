@@ -352,6 +352,10 @@
 			_assistantText[Don't touch me, please! I'm ticklish.]
 			```
 
+			**Note:** While you can normally display the contents of variables by simply placing their names directly in passage prose,
+			such as `$ship` or `$crew`, you have to use another macro, such as (print:), to display the contents of arrays, datamaps, or other structures,
+			such as `(print: $ship's mast)` or `(print: $crew's 1st)`.
+
 			#coding 2
 		*/
 		variable          = "\\$(" + validPropertyName + ")",

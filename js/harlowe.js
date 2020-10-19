@@ -165,9 +165,10 @@ require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', '
 				// Only show the first script error, leaving the rest suppressed.
 				if (!scriptError) {
 					scriptError = true;
-					Utils.storyElement.parent().append(dialog({
+					dialog({
+						parent: Utils.storyElement.parent(),
 						message:"There is a problem with this story's " + Utils.nth(i + 1) + " script:\n\n" + printJSError(e),
-					}));
+					});
 				}
 			}
 		});
@@ -183,11 +184,11 @@ require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', '
 		const metadataErrors = Passages.loadMetadata(tempSection);
 		if (metadataErrors.length) {
 			const d = dialog({
+				parent: Utils.storyElement.parent(),
 				message: "These errors occurred when running the `(metadata:)` macro calls in this story's passages:<p></p>",
 			});
 			// Because these TwineErrors have their 'source' property modified to list their actual source, render() doesn't need an argument.
 			metadataErrors.forEach(error => d.find('p').append(error.render('')));
-			Utils.storyElement.parent().append(d);
 		}
 		
 		// Load the sessionStorage if it's present (and we're not testing)

@@ -5,7 +5,7 @@ define(['jquery', 'utils', 'renderer'], function($, Utils, Renderer) {
 		the warning dialog for (loadgame:). This may be expanded in the future to offer more author-facing
 		customisability.
 	*/
-	function dialog({section, cd, message = '', defaultValue, buttons = [{name:"OK", confirm:true, callback: Object}] } = {}) {
+	function dialog({section, parent = Utils.storyElement, cd, message = '', defaultValue, buttons = [{name:"OK", confirm:true, callback: Object}] } = {}) {
 		const ret = $("<tw-backdrop><tw-dialog>"
 			/*
 				The defaultValue denotes that it should have a text input element, and provide
@@ -25,6 +25,11 @@ define(['jquery', 'utils', 'renderer'], function($, Utils, Renderer) {
 				)
 			+ "</tw-dialog-links></tw-dialog></tw-backdrop>");
 		const dialog = ret.find('tw-dialog');
+		/*
+			Sadly, this needs to be installed in the DOM now, so that certain transitions
+			that alter transitionOrigin (namely "zoom") are able to read the mouse position accurately.
+		*/
+		parent.append(ret);
 		/*
 			The user-provided text is rendered separately from the rest of the dialog, so that injection bugs, such as
 			inserting closing </tw-dialog> tags, are harder to bring about.

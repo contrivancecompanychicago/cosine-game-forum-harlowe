@@ -1850,23 +1850,22 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 						a (confirm:) is shown, offering to delete the data.
 					*/
 					const d = dialog({
-							message: "Sorry to interrupt... The story tried to load saved data, but there was a problem.\n"
-								+ result.message
-								+ "\n\nThat data might have been saved from a different version of this story. Should I delete it?"
-								+ "\n(Type 'delete' and choose Yes to delete it.)"
-								+ "\n\nEither way, the story will now continue without loading the data.",
-							defaultValue: "",
-							buttons: [
-								{name:"Yes", confirm:true, callback: () => {
-									if ("delete" === d.find('input').last().val()) {
-										localStorage.removeItem(storagePrefix("Saved Game") + slotName);
-									}
-									section.unblock('');
-								}},
-								{name:"No", cancel:true, callback: () => section.unblock()},
-							],
-						});
-					Utils.storyElement.append(d);
+						message: "Sorry to interrupt... The story tried to load saved data, but there was a problem.\n"
+							+ result.message
+							+ "\n\nThat data might have been saved from a different version of this story. Should I delete it?"
+							+ "\n(Type 'delete' and choose Yes to delete it.)"
+							+ "\n\nEither way, the story will now continue without loading the data.",
+						defaultValue: "",
+						buttons: [
+							{name:"Yes", confirm:true, callback: () => {
+								if ("delete" === d.find('input').last().val()) {
+									localStorage.removeItem(storagePrefix("Saved Game") + slotName);
+								}
+								section.unblock('');
+							}},
+							{name:"No", cancel:true, callback: () => section.unblock()},
+						],
+					});
 					return "blocked";
 				}
 				requestAnimationFrame(Engine.showPassage.bind(Engine, State.passage, false /* stretchtext value */));
@@ -1959,7 +1958,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				/*
 					Create the dialog, passing in the ChangeDescriptor, to be used when rendering the string.
 				*/
-				Utils.storyElement.append(dialog({
+				dialog({
 					section, message, cd,
 					buttons: buttons.map(b => ({
 						name: b,
@@ -1972,7 +1971,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 							section.unblock((varBind && varBind.set(b)) || '');
 						},
 					})),
-				}));
+				});
 				return "blocked";
 			},
 			[either(VarBind, String), zeroOrMore(String)])
@@ -2299,7 +2298,6 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 						callback: () => section.unblock(defaultValue),
 					}],
 				});
-				Utils.storyElement.append(d);
 				// Regrettably, this arbitrary timeout seems to be the only reliable way to focus the <input>.
 				setTimeout(() => d.find('input').last().focus(), 100);
 			},
@@ -2346,7 +2344,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				if (confirmButton === "") {
 					return TwineError.create("datatype", "The text for (confirm:)'s confirm link can't be blank.");
 				}
-				Utils.storyElement.append(dialog({
+				dialog({
 					section, message,
 					defaultValue: false,
 					buttons:[{
@@ -2358,7 +2356,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 						cancel: true,
 						callback: () => section.unblock(false),
 					}],
-				}));
+				});
 			},
 			[String, optional(String), optional(String)])
 
