@@ -13,11 +13,12 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a long-standing bug where lambdas would produce an incorrect duplicate-name error if the temp variables used with their clauses contained capital letters.
  * Fixed a long-standing bug where hooks that had `(transition:)` transitions would restart their transition animations whenever the containing passage finished transitioning in. Previously, the only way to overcome this was to make the passage transition using `(transition-arrive:"instant")`.
  * Fixed a long-standing bug where you couldn't use the column markup to create empty columns by placing two column markup lines in succession, without an intervening blank line.
- * Fixed a long-standing bug where strings containing HookName syntax (such as `"?pear"`) were considered identical to actual hooknames (such as `?pear`).
+ * Fixed a long-standing bug where strings containing HookName syntax (such as `"?pear"`) were considered identical to actual hooknames (such as `?pear`). This was NOT intended behaviour and was not documented, and as such, certain design patterns that involved constructing HookName strings programmatically (such as `(replace:"?" + $name)`) will no longer work.
  * Fixed a bug where the default CSS for `(click: ?Page)` (a blue border around the page) wasn't visible. (Now, an `::after` pseudo-element is created for the enchantment, so that the border displays above all the page content.)
  * Fixed a bug where typing `is not an` instead of `is not a` (such as in `$wallet is not an array`) would cause an error.
  * Now, trying to access the `0th` or `0thlast` value in an array or string produces an error.
  * Now, `(mouseover:)` and `(mouseout:)` should work correctly with ?Page, ?Passage, and ?Sidebar.
+ * Now, `(hook:)` works correctly when given to `(enchant:)`.
  * Fixed a bug where `(for:)` would emit infinite loop errors if 50 or more elements were given to it.
  * Fixed a long-standing bug where clicking the sidebar "undo" and "redo" icons would cause `(click:?Page)` in the preceding or following passages to automatically fire, even though you didn't actually click them.
  * Fixed a long-standing bug where block elements (like `(align:)` enchanted hooks) weren't transitioning in correctly when their passage appeared.
@@ -28,7 +29,6 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where `(enchant:)` given `?passage's lines` would often cause text nodes within lines, such as the text of a `(link:)` link, to be transplanted out of any elements containing them.
  * Fixed a bug where `(hover-style:)` combined with a link changer such as `(link:)` would cause the specified hover style, after the link was clicked, to permanently persist on the hook.
  * Fixed a bug where `(hover-style:)` couldn't actually override the default hover colour for links of any kind, due to a CSS conflict.
- * Fixed a bug where one could pass a string containing a HookName, such as `"?navbar"`, to macros that use HookNames, such as `(replace:)` or `(enchant:)`, and it would function identically to that HookName (which in this case would be `?navbar`). This was NOT intended behaviour and was not documented, and as such, certain design patterns that involved constructing HookName strings programmatically will no longer work.
  * Fixed a bug where certain changers, like `(for:)`, caused a crash when attached to a command (like a `(print:)` macro, or a passage link).
  * Fixed a bug where closing an `(alert:)`, `(confirm:)` or `(prompt:)` dialog box when there was an `(event:)` hook in the passage would cause a crash.
  * Fixed a bug where trying to use datanames with certain unusual types of data (changers, commands, datatypes) would give a bad Javascript error message instead of the intended error message.

@@ -248,12 +248,19 @@
 .theme-dark .harlowe-3-tooltipTail::after {
 	border-bottom-color: black;
 }
-.harlowe-3-textareaRow:not(:last-child) .harlowe-3-textareaRowPlus,
-.harlowe-3-textareaRow:last-child .harlowe-3-textareaRowMinus {
+.harlowe-3-dataEmptyRow:not(:last-child) {
 	display:none;
+}
+.harlowe-3-datavalueRows .harlowe-3-dropdownRowLabel {
+	font-family:'Source Code Pro',monospace;
 }
 .harlowe-3-textareaRows {
 	margin-bottom:0.5em;
+}
+.harlowe-3-datavalueRows {
+	margin-left: 6px;
+	padding-left:6px;
+	border-left: 1px solid hsla(0,0%,50%,0.5);
 }
 .harlowe-3-toolbarPanel [invalid]::after {
 	display:block;

@@ -18,6 +18,15 @@ describe("miscellaneous hook changer macros", function() {
 			runPassage("(hook:'grault')[foo]");
 			expect($('tw-passage').find('tw-hook').attr('name')).toBe('grault');
 		});
+		it("works with (enchant:)", function(done) {
+			expect('dolly(change:"dolly",(hook:"dolly"))(replace:?dolly)[horsie]').markupToPrint('horsie');
+			var p = runPassage('(enchant:"dolly",(hook:"dolly"))dolly(click-replace:?dolly)[horsie]');
+			setTimeout(function() {
+				p.find('.enchantment-link').click();
+				expect(p.text()).toBe('horsie');
+				done();
+			});
+		});
 	});
 	describe("the (verbatim:) macro", function() {
 		it("takes no values", function() {

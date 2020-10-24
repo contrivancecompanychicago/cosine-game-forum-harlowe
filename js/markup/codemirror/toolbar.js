@@ -72,7 +72,16 @@
 			panel[$$]('[type=radio]').forEach(node => node.checked = (node.parentNode.parentNode[$]('label:first-of-type') === node.parentNode));
 			panel[$$]('[type=checkbox]').forEach(node => node.checked = false);
 			panel[$$]('[type=text]').forEach(node => node.value = '');
-			panel[$$]('select').forEach(node => node.value = node.firstChild.getAttribute('value'));
+			panel[$$]('select').forEach(node => {
+				node.value = node.firstChild.getAttribute('value');
+				// For dropdowns that involve dropdown rows, hide the rows themselves.
+				const { nextElementSibling:next } = node;
+				if (next && next.className.includes('harlowe-3-dropdownRows')) {
+					Array.from(next.children).forEach(el => {
+						el[(el.getAttribute('data-value') === node.value ? "remove" : "set") + "Attribute"]('hidden','');
+					});
+				}
+			});
 			panel.onreset();
 		});
 		toolbarElem[$$]('.harlowe-3-toolbarPanel').forEach(node => node.remove());
@@ -204,6 +213,78 @@
 			? builtinColourNames[colour]
 			: (colour[1] === colour[2] && colour[3] === colour[4] && colour[5] === colour[6]) ? "#" + colour[1] + colour[3] + colour[5] : colour;
 	}
+
+	/*
+		This creates a dropdown selector that can be used to input most native Harlowe values.
+
+		modelCallback is a callback to use instead of setting a value on the model in their model() methods.
+		modelRegistry is an alternative array to register the model() methods to, instead of the one for the parent panel.
+		Both of these are used entirely by datavalue-rows, in order to suppress the usual behaviour of panel rows,
+		and to be able to dynamically add and remove rows during use.
+	*/
+	const dataValueRow = (modelCallback, modelRegistry) => ({
+		type: 'inline-dropdown-rows',
+		text: 'Value: ',
+		name: 'variable-datatype',
+		options: [
+			["text string", {
+				type: "inline-string-textarea",
+				width:"60%",
+				text: "",
+				placeholder: "Text",
+				modelCallback,
+				modelRegistry,
+			}],
+			["number", {
+				type: "inline-number-textarea",
+				width:"20%",
+				text: "",
+				modelCallback,
+				modelRegistry,
+			}],
+			["Boolean value", {
+				type: 'inline-dropdown',
+				text: '',
+				options: ['false','true'],
+				model(m, el) {
+					modelCallback(m, ""+!!el[$]('select').value);
+				},
+				modelRegistry,
+			}],
+			["colour", {
+				type: 'inline-colour',
+				text: '',
+				value: "#ffffff",
+				model(m, el) {
+					const c = el[$]('[type=color]').value,
+						a = el[$]('[type=range]').value;
+					modelCallback(m, toHarloweColour(c, a));
+				},
+				modelRegistry,
+			}],
+			["array", {
+				type: "datavalue-rows",
+				text: "",
+				/*
+					As a slightly unfortunate kludge, "datavalue-rows" models do not have an el as their
+					second argument, but instead an array of precomputed values created by the model() methods
+					of each datavalue row.
+				*/
+				model(m, rowValues) {
+					modelCallback(m, '(a:' + rowValues + ")");
+				},
+				modelRegistry,
+			}],
+			['computed value', {
+				type: "inline-expression-textarea",
+				width:"60%",
+				text: '',
+				placeholder: "Code",
+				modelCallback,
+				modelRegistry,
+			}],
+		],
+	});
 
 	/*
 		The constructor for the folddownPanels. This accepts a number of panel rows (as an array of row-describing objects)
@@ -373,7 +454,6 @@
 			*/
 			if (type.endsWith("textarea")) {
 				let inputType = 'text';
-				const innerModel = row.model, innerUpdate = row.update;
 				/*
 					Full Harlowe expressions.
 				*/
@@ -388,7 +468,6 @@
 						else {
 							elem.removeAttribute('invalid');
 						}
-						innerUpdate && innerUpdate(m, elem);
 					};
 					row.model = (m, elem) => {
 						const v = (elem[$]('input').value || '').trim();
@@ -401,12 +480,11 @@
 								return token.type !== "text" && token.type !== "error" &&
 									(token.type === "string" || token.type === "hook" || token.children.every(recur));
 							})) {
-								m[row.modelProperty] = v;
+								row.modelCallback(m,v);
 								return;
 							}
 							m.valid = true;
 						}
-						innerModel && innerModel(m, elem);
 					};
 				}
 				/*
@@ -414,15 +492,13 @@
 				*/
 				if (type.endsWith("string-textarea")) {
 					row.model = (m, elem) => {
-						m[row.modelProperty] = JSON.stringify(elem[$]('input').value || '');
-						innerModel && innerModel(m, elem);
+						row.modelCallback(m, JSON.stringify(elem[$]('input').value || ''));
 					};
 				}
 				if (type.endsWith("number-textarea")) {
 					inputType = 'number';
 					row.model = (m, elem) => {
-						m[row.modelProperty] = (+elem[$]('input').value || 0);
-						innerModel && innerModel(m, elem);
+						row.modelCallback(m, +elem[$]('input').value || 0);
 					};
 				}
 				ret = el('<' + (inline ? 'span' : 'div') + ' class="harlowe-3-labeledInput">'
@@ -577,16 +653,16 @@
 			/*
 				Rows of options, selected using a single dropdown.
 			*/
-			if (type === "dropdown-rows") {
-				ret = el(`<div>${row.text}<select style="font-size:1rem;margin-top:4px"></select><span class="harlowe-3-dropdownRows"></span></div>`);
+			if (type.endsWith("dropdown-rows")) {
+				ret = el(`<${inline ? 'span' : 'div'}><span class="harlowe-3-dropdownRowLabel">${row.text}</span><select style="font-size:1rem;margin-top:4px"></select><span class="harlowe-3-dropdownRows"></span></${inline ? 'span' : 'div'}>`);
 				const selectEl = ret[$]('select');
 				row.options.forEach(([name, ...subrows], i) => {
 					selectEl.append(el(`<option value="${name}" ${!i ? 'selected' : ''}>${name}<option>`));
 					const subrowEl = el(`<span data-value="${name}" ${i ? 'hidden' : ''}>`);
 					/*
-						Place each of these sub-options within the <span>.
+						Place each of these sub-options within the .harlowe-3-dropdownRows.
 					*/
-					ret[$]('span').append(subrows.reduce(reducer, subrowEl));
+					ret[$]('.harlowe-3-dropdownRows').append(subrows.reduce(reducer, subrowEl));
 
 					subrows.forEach(subrow => {
 						const {model} = subrow;
@@ -603,7 +679,7 @@
 				});
 				selectEl[ON]('change', () => {
 					const value = selectEl.value;
-					ret[$$]('.harlowe-3-dropdownRows > span').forEach(el => {
+					ret[$$](':scope > .harlowe-3-dropdownRows > span').forEach(el => {
 						el[(el.getAttribute('data-value') === value ? "remove" : "set") + "Attribute"]('hidden','');
 					});
 					update();
@@ -618,17 +694,94 @@
 					if (ret.childNodes.length > 100) {
 						return;
 					}
-					const line = el(`<div class="harlowe-3-textareaRow"><input type=text style="width:85%;" placeholder="${row.placeholder}"></input><button class="harlowe-3-textareaRowMinus">${
+					const line = el(`<div class="harlowe-3-dataRow"><input type=text style="width:85%;" placeholder="${row.placeholder}"></input><button class="harlowe-3-rowMinus">${
 							fontIcon('minus')
-						}</button><button class="harlowe-3-textareaRowPlus">${
+						}</button><button class="harlowe-3-rowPlus">${
 							fontIcon('plus')
 						}</button></div>`);
 					line[$]('input')[ON]('input', update);
-					line[$]('.harlowe-3-textareaRowPlus')[ON]('click', () => { makeRow(); update(); });
-					line[$]('.harlowe-3-textareaRowMinus')[ON]('click', () => { line.remove(); update(); });
+					line[$]('.harlowe-3-rowPlus')[ON]('click', () => { makeRow(); update(); });
+					line[$]('.harlowe-3-rowMinus')[ON]('click', () => { line.remove(); update(); });
 					ret.append(line);
 				};
 				makeRow();
+			}
+			/*
+				Datavalue rows are rows of inputs for Harlowe data values, which can be added and subtracted.
+				Each Harlowe input is a special row created by dataValueRow(), above.
+			*/
+			if (type === "datavalue-rows") {
+				ret = el(`<div class="harlowe-3-datavalueRows">${row.text || ''}<div class="harlowe-3-dataEmptyRow"><i>No data</i></div><button class="harlowe-3-rowPlus">${
+						fontIcon('plus')
+					} Value</button></div>`);
+				const plusButton = ret[$]('.harlowe-3-rowPlus');
+
+				/*
+					Unlike every other panel row implemented, this dynamically creates and destroys other panel rows.
+					As such, some special measures have to be taken to allow this row to still act like a normal row,
+					and for its subrows to be entirely subordinate to it.
+					In order to capture and suppress the model() methods of each subrow, two closure variables are needed:
+					a modelRegistry, which vaccuums up the model() methods of subrows as they are created (by being passed to
+					dataValueRow() in position 2) and a rowValuesBuffer, which is pushed to in place of assigning to the model
+					in each row's model() methods (see above), using the callback argument to dataValueRow() in position 1.
+				*/
+				const childModelMethods = new Set();
+				let rowValuesBuffer = [];
+				/*
+					A utility to ensure that each datavalue-row's "Value:" label is replaced with "1st", "2nd" and so forth.
+				*/
+				const renumber = () => {
+					Array.from(ret[$$](':scope > .harlowe-3-dataRow > * > .harlowe-3-dropdownRowLabel')).forEach((label,num) => {
+						num += 1;
+						const lastDigit = (num + '').slice(-1);
+						
+						label.textContent = num +
+							(lastDigit === "1" ? "st" :
+							lastDigit === "2" ? "nd" :
+							lastDigit === "3" ? "rd" : "th") + ": ";
+					});
+				};
+				const makeRow = () => {
+					if (ret.childNodes.length > 50) {
+						return;
+					}
+					const line = el(`<div class="harlowe-3-dataRow">`);
+					/*
+						The model() methods of this line's subrows are captured in this array, as well as the childModelMethods set.
+						This is to allow them to be deleted from the set once the line is removed.
+					*/
+					const modelRegistry = [];
+					ret.insertBefore(reducer(line, dataValueRow((m,v) => rowValuesBuffer.push(v), modelRegistry)), plusButton);
+					modelRegistry.forEach(m => childModelMethods.add(m));
+
+					line.append(el(`<button class="harlowe-3-rowMinus">${
+							fontIcon('minus')
+						}</button>`));
+					line[$](':scope > .harlowe-3-rowMinus')[ON]('click', () => {
+						line.remove();
+						/*
+							When the line is removed, all of its model() methods must be freed, too.
+						*/
+						modelRegistry.forEach(m => childModelMethods.delete(m));
+						if (ret.childNodes.length === 0) {
+							makeRow();
+						}
+						update();
+						renumber();
+					});
+				};
+				const innerModel = row.model;
+				row.model = (m) => {
+					/*
+						The process for actually obtaining a value from the child rows is:
+						clear the rowValues buffer, then populate it by firing all of the model() methods
+						that were captured in the modelRegistry.
+					*/
+					rowValuesBuffer = [];
+					[...childModelMethods].reduce((m, fn) => fn(m) || m, m);
+					innerModel && innerModel(m, rowValuesBuffer);
+				};
+				plusButton[ON]('click', () => { makeRow(); update(); renumber(); });
 			}
 			/*
 				The "Create" and "Cancel" buttons.
@@ -682,8 +835,9 @@
 
 			/*
 				The "model" and "update" functions are attached by default if they exist.
+				If an alternative modelRegistry array was passed in (i.e. by datavalue-rows), then use that instead.
 			*/
-			row.model && modelFns.push(m => row.model(m, ret));
+			row.model && (row.modelRegistry || modelFns).push(m => row.model(m, ret));
 			row.update && updaterFns.push(m => row.update(m, ret));
 			/*
 				Append and return the panel element.
@@ -717,41 +871,6 @@
 	};
 	const hookDescription = `A <b>hook</b> is a section of passage prose enclosed in <code>[</code> or <code>]</code>, or preceded with <code>[=</code>.`;
 	const confirmRow = { type: 'confirm', };
-	const dataValueRow = (modelProperty) => ({
-		type: 'dropdown-rows',
-		text: 'Value: ',
-		name: 'variable-datatype',
-		options: [
-			["text string", {
-				type: "inline-string-textarea",
-				width:"60%",
-				text: "",
-				placeholder: "Text",
-				modelProperty,
-			}],
-			["number", {
-				type: "inline-number-textarea",
-				width:"20%",
-				text: "",
-				modelProperty,
-			}],
-			["Boolean value", {
-				type: 'inline-dropdown',
-				text: '',
-				options: ['false','true'],
-				model(m, el) {
-					m.expression = ""+!!el[$]('select').value;
-				}
-			}],
-			['computed value', {
-				type: "inline-expression-textarea",
-				width:"60%",
-				text: '',
-				placeholder: "Code",
-				modelProperty,
-			}],
-		],
-	});
 
 	/*
 		The Toolbar element consists of a single <div> in which a one of a set of precomputed panel <div>s are inserted. There's a "default"
@@ -1595,7 +1714,7 @@
 							},
 						},
 						new Text("a certain data value."), el('<br>'),
-						dataValueRow('expression'),
+						dataValueRow((m,v) => m.expression = v),
 						{
 							type: 'text',
 							text: '',
@@ -1802,7 +1921,7 @@
 						}
 					}
 				},
-			}, dataValueRow("expression"), {
+			}, dataValueRow((m,v) => m.expression = v), {
 				type: "checkbox",
 				text: "Temp variable (the variable only exists in this passage and hook).",
 				model(m, elem) {
@@ -1828,6 +1947,7 @@
 						? `<p>You can refer to this variable using the code <b><code>${code}</code></b>.</p>`
 						+ "<p>Some types of data values (arrays, datamaps, datasets, strings, colours, gradients, custom macros, and typedvars) are storage containers for other values.<br>"
 						+ `You can access a specific value stored in them using that value's <b>data name</b> (or a string or number value in brackets) by writing <b><code>${code}'s</code></b> <i>name</i>, or <i>name</i> <b><code>of ${code}</code></b>.</p>`
+						+ `<p>(If you want to display that stored value in the passage, you'll need to give it to a macro, such as <code>(print: ${code}'s </code> <i>name</i><code>)</code>.)</p>`
 						: '';
 				},
 			},
@@ -2045,7 +2165,7 @@
 					{ title:'Only show a portion of text if a condition is met', html:'If…',  onClick: () => switchPanel('if')},
 					{ title:'Input element',           html:'Input…',                         onClick: () => switchPanel('input')},
 					{ title:'Hook (named section of the passage)',      html:'Hook…',         onClick: () => switchPanel('hook')},
-					{ title:'Set a variable with a data value',         html:'Data…',         onClick: () => switchPanel('basicValue')},
+					{ title:'Set a variable with a data value',         html:'Var…',          onClick: () => switchPanel('basicValue')},
 					el('<span class="harlowe-3-toolbarBullet">'),
 					{ title:'Proofreading view (dim all code except strings)',
 						html:fontIcon('eye'),

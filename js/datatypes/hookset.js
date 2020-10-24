@@ -118,7 +118,11 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 	*/
 	function hookToSelector(c) {
 		c = Utils.insensitiveName(c).replace(/"/g, "&quot;");
-		let ret = 'tw-hook[name="' + c + '"]';
+		/*
+			A <tw-enchantment> with a [name] is a special kind of hook created by (hook:).
+			There should be no other mechanism by which <tw-enchantment>s get names.
+		*/
+		let ret = 'tw-hook[name="' + c + '"],tw-enchantment[name="' + c + '"]';
 		/*
 			The built-in names work alongside user names: |page>[] will be
 			selected alongside the <tw-story> element.
