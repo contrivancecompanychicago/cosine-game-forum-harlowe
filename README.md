@@ -125,6 +125,11 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a `(complement:)` macro, which takes a colour and produces its complement by rotating its LCH hue by 180 degrees.
  * Added a `(palette:)` macro, designed for rapid prototyping, which produces a four-colour palette based on a given colour, for use with `(text-colour:)`, `(background:)` and `(enchant:)`.
 
+###### Values
+
+ * Added a `(trunc:)` macro, which is similar to `(round:)`, but rounds toward zero, "truncating" the fractional component. It is named after the Excel function that performs the same rounding.
+ * Added a `(plural:)` macro, which takes a number and a string, and combines them, automatically pluralising the string if the number isn't 1. `(plural:2,"duck")` produces `"2 ducks"`. Pluralisation is performed by adding "s" - a second string may be given which specifies a more correct plural form of the word (such as `(plural:4,"elf","elves")`).
+
 ###### Data Structures
 
  * Added a `(permutations:)` macro, which, when given a sequence of data, produces an array containing all possible arrangements of that data, in arrays.

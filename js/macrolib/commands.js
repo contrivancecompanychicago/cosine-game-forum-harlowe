@@ -1911,7 +1911,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			that's tilted upward, and which slides upward when it appears.
 
 			See also:
-			(alert:), (cycling-link:), (prompt:), (confirm:)
+			(cycling-link:), (prompt:), (confirm:)
 
 			Added in: 1.0.0
 			#popup 1

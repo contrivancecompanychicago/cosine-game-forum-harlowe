@@ -827,8 +827,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 		Example usage:
 		 * `(link-reveal-goto: "Study English", "Afternoon 1")[(set:$eng to it + 1)]` will create a link reading "Study English"
 		which, when clicked, adds 1 to the $eng variable using (set:), and then goes to the passage "Afternoon 1".
-		 * `(link-reveal-goto: "Fight the King of England", "Death")[(alert:"You asked for it!")]` will create a link reading
-		 "Fight the King of England" which, when clicked, displays an alert using (alert:), and then goes to the passage "Death".
+		 * `(link-reveal-goto: "Fight the King of England", "Death")[(dialog:"You asked for it!")]` will create a link reading
+		 "Fight the King of England" which, when clicked, displays an alert using (dialog:), and then goes to the passage "Death".
 		
 		Details:
 

@@ -120,6 +120,7 @@ describe("primitive value macros", function() {
 			["cos","(cos: 3.14159265)",             "-1"],
 			["tan","(round:(tan: 3.14159265 / 4))",  "1"],
 			["floor","(floor: 1.99)",                "1"],
+			["trunc","(trunc: -3.9) + (trunc:3.9) * 10",  "27"],
 			["round","(round: 1.5)",                 "2"],
 			["ceil","(ceil: 1.1)",                   "2"],
 			["pow","(pow: 2, 8)",                  "256"],
@@ -217,6 +218,32 @@ describe("primitive value macros", function() {
 		});
 		it("returns an empty string if only one string is given", function() {
 			expect("(joined:' ')").markupToPrint("");
+		});
+	});
+	describe("the (plural:) macro", function() {
+		it("accepts 1 integer, and 2 or 1 non-empty strings", function() {
+			expect("(plural:)").markupToError();
+			expect("(plural:1)").markupToError();
+			expect("(plural:1,1)").markupToError();
+			expect("(plural:'A')").markupToError();
+			expect("(plural:'A',2)").markupToError();
+			expect("(plural:1,true)").markupToError();
+			expect("(plural:1.1,'X')").markupToError();
+			expect("(plural:2,'A')").not.markupToError();
+			expect("(plural:2,'A','B')").not.markupToError();
+			expect('(plural:0,"")').markupToError();
+			expect('(plural:0,"","")').markupToError();
+		});
+		it("returns a string comprising the number, a space, and the string, pluralised if the number isn't 1", function() {
+			expect('(plural:0,"elf")').markupToPrint("0 elfs");
+			expect('(plural:1,"elf")').markupToPrint("1 elf");
+			expect('(plural:-1,"elf")').markupToPrint("-1 elfs");
+			expect('(plural:56,"elf")').markupToPrint("56 elfs");
+		});
+		it("uses the second string as the plural if given", function() {
+			expect('(plural:0,"elf","elves")').markupToPrint("0 elves");
+			expect('(plural:1,"elf","elves")').markupToPrint("1 elf");
+			expect('(plural:2,"elf","elves")').markupToPrint("2 elves");
 		});
 	});
 	describe("the (string-repeated:) macro", function() {

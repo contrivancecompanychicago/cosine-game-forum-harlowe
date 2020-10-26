@@ -8,7 +8,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 	
 	const
 		{rest, zeroOrMore, either, optional, insensitiveSet, numberRange, percent, nonNegativeInteger, Any } = Macros.TypeSignature,
-		{max,min,round} = Math;
+		{max,min,round,floor,ceil} = Math;
 	
 	Macros.add
 		/*d:
@@ -418,6 +418,42 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			#string
 		*/
 		("joined", (_, joiner, ...strings) => strings.join(joiner), [rest(String)])
+		/*d:
+			(plural: Number, String, [String]) -> String
+			
+			This macro takes a whole number and a string, then converts the number to a string, joins them up with a space character, and pluralises the string if the
+			number wasn't 1. By default, this pluralisation is done by adding "s", as in some English plurals. An optional extra string
+			can specify a different plural word to use instead.
+			
+			Example usage:
+			* `(plural: 1, "bandage")` produces "1 bandage".
+			* `(plural: -7, "bandage")` produces "-7 bandages".
+			* `(plural: 2, "elf", "elves")` produces "2 elves".
+			
+			Rationale:
+			If you have variables in your story holding number data, you'll often want to display that data to the player textually. If that
+			number refers to a quantity of some object or substance, and your game is in English, you'll want to pluralise the noun form of that
+			object or substance, which requires checking if the number is or is not 1. This macro is a shortcut for that small bit of busywork,
+			letting you simply supply the number and the noun to produce the plural.
+
+			Details:
+			If the number isn't a whole number (such as 2.3), then an error will result. Furthermore, if any of the given strings are empty, an error
+			will result.
+			
+			See also:
+			(joined:)
+
+			Added in: 3.2.0
+			#string
+		*/
+		("plural", (_, num, noun, plural) => {
+			if (!noun || plural === "") {
+				return TwineError.create("macrocall", "The (plural:) macro can't be given empty strings.");
+			}
+			return num + " " + (num !== 1 ? (plural ? plural : noun + "s") : noun);
+		},
+		[parseInt, String, optional(String)])
+
 
 		/*d:
 			Number data
@@ -1290,7 +1326,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Added in: 1.0.0
 			#number
 		*/
-		floor:  [Math.floor, Number],
+		floor:  [floor, Number],
 		/*d:
 			(round: Number) -> Number
 
@@ -1301,9 +1337,24 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Example usage:
 			`(round: 1.5)` produces 2.
 
+			Added in: 1.0.0
 			#number
 		*/
 		round:  [round, Number],
+		/*d:
+			(trunc: Number) -> Number
+
+			This macro rounds the given number towards zero. This "truncates" the fractional portion of the number, removing it and leaving
+			just the whole portion.
+
+			Example usage:
+			* `(trunc: 1.5)` produces 1.
+			* `(trunc: -3.9)` produces 3.
+
+			Added in: 3.2.0
+			#number
+		*/
+		trunc:  [n => n > 0 ? floor(n) : ceil(n), Number],
 		/*d:
 			(ceil: Number) -> Number
 
@@ -1316,7 +1367,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Added in: 1.0.0
 			#number
 		*/
-		ceil:   [Math.ceil, Number],
+		ceil:   [ceil, Number],
 		/*d:
 			(pow: Number, Number) -> Number
 

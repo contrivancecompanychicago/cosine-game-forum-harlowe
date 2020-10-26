@@ -1361,7 +1361,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			Rationale:
 			Indentation of initial letters has long been used in typesetting as a means of helping the human eye distinguish paragraphs of
 			text from each other. While you can use line breaks to separate paragraphs, this often takes up an uncomfortable amount of vertical space,
-			and can be unsuitable for long sections of prose. This macro can be used to provide indentation to single hooks, or, using (change:),
+			and can be unsuitable for long sections of prose. This macro can be used to provide indentation to single hooks, or, using (change:) or (enchant:),
 			to every line in a passage.
 
 			Details:
