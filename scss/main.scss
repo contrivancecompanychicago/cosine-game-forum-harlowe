@@ -153,6 +153,14 @@ tw-icon {
 	&:hover {
 		opacity: 0.4;
 	}
+	&[data-label]::after {
+		font-weight:bold;
+		font-family:"Verdana",sans-serif;
+		content:attr(data-label);
+		font-size:20px;
+		bottom:-20px;
+		left:-50%;
+	}
 }
 
 /*** Inner passage formatting ***/

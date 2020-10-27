@@ -454,13 +454,16 @@ describe("interface macros", function(){
 	[["Undo","↶"],["Redo","↷"],["Fullscreen","⛶"],["Reload","⟲"]].forEach(function(a) {
 		var name = a[0], symbol = a[1];
 		describe("the (icon-" + name.toLowerCase() + ":) macro", function() {
-			it("accepts an optional one-character-long string", function() {
+			it("accepts an optional one-character-long string, and an optional 2+ character-long string", function() {
 				expect('(icon-' + name + ':)').not.markupToError();
 				expect('(icon-' + name + ':"R")').not.markupToError();
 				expect('(icon-' + name + ':"🀄")').not.markupToError();
-				expect('(icon-' + name + ':"RS")').markupToError();
 				expect('(icon-' + name + ':"R","S")').markupToError();
 				expect('(icon-' + name + ':2)').markupToError();
+
+				expect('(icon-' + name + ':"R","Red")').not.markupToError();
+				expect('(icon-' + name + ':"Red")').not.markupToError();
+				expect('(icon-' + name + ':"Red","R")').not.markupToError();
 			});
 			it("creates a <tw-icon>", function() {
 				expect(runPassage('(icon-' + name + ':)').find('tw-icon').length).toBe(1);
@@ -470,6 +473,19 @@ describe("interface macros", function(){
 			});
 			it("uses the passed-in symbol, if given", function() {
 				expect(runPassage('(icon-' + name + ':"R")').find('tw-icon').text()).toBe("R");
+			});
+			it("attaches a [data-label] attribute if a string with 2+ characters was given", function() {
+				expect(runPassage('(icon-' + name + ':"garply")').find('tw-icon').attr('data-label')).toBe("garply");
+				expect(runPassage('(icon-' + name + ':"garp\\\"ly")').find('tw-icon').attr('data-label')).toBe("garp\"ly");
+				expect(runPassage('(icon-' + name + ':"**garply**")').find('tw-icon').attr('data-label')).toBe("**garply**");
+			});
+			it("does both if both strings are given", function() {
+				var p = runPassage('(icon-' + name + ':"X","garply")');
+				expect(p.find('tw-icon').attr('data-label')).toBe("garply");
+				expect(p.find('tw-icon').text()).toBe("X");
+				p = runPassage('(icon-' + name + ':"garply","X")');
+				expect(p.find('tw-icon').attr('data-label')).toBe("garply");
+				expect(p.find('tw-icon').text()).toBe("X");
 			});
 			it("works with (link:)", function() {
 				expect('(link:"Hey")(icon-' + name + ':)').not.markupToError();

@@ -695,15 +695,18 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		["Reload", "&#10226;", Object],
 	].forEach(([name, defaultIcon, visibilityTest]) => {
 		/*d:
-			(icon-undo: [String]) -> Command
+			(icon-undo: [String], [String]) -> Command
 
 			Creates an icon, similar to those in the sidebar, that, if visible and clicked, undoes the current turn, returning to the previous passage, as if by (undo:). It is not
 			visible on the first turn of the game.
 
 			Example usage:
-			`(replace:?sidebar)[(icon-undo: )(size:2)[(str-repeated:$flowers + 1, "✿ ")]]` alters the sidebar such that there is only an undo button, followed
+			* `(replace:?sidebar)[(icon-undo: )(size:2)[(str-repeated:$flowers + 1, "✿ ")]]` alters the sidebar such that there is only an undo button, followed
 			by a number of `✿ ` symbols equal to the number in $flowers plus 1. The space separating each florette symbol allows it to word-wrap normally. This would
 			best be used in a "header" or "footer" tagged passage.
+			* `(icon-undo:"👈")` creates an element that uses &#128072; as its icon instead of the default.
+			* `(icon-undo:"Undo the turn")` creates an element with the label "Undo the turn" under it.
+			* `(icon-undo:"👈", "Undo the turn")` combines both of the above.
 
 			Rationale:
 			By default, each passage in a Harlowe story features a narrow sidebar to the left, housing "Undo" and "Redo" menu icons.
@@ -715,7 +718,13 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			Of course, you can use this in normal passage prose, if you wish - they are merely commands, just like (link-goto:) or (print:).
 
 			If you wish to change the icon to a different symbol, you may provide a string containing a single character to this macro.
-			If the string has more than one character, an error will result. If none is given, the default symbol is &#8630; (in HTML, `&#8630;`).
+			If none is given, the default symbol is &#8630; (in HTML, `&#8630;`).
+
+			You may also provide a string that contains a label for the icon. This label must have more than one character in it (so that it isn't
+			confused with the optional icon string) and will be placed beneath the icon. The label's contents will NOT be interpreted as Harlowe markup, so
+			everything in it will be used verbatim for the label. This is because, unlike links, the label isn't considered part of passage prose.
+
+			If both strings given to this macro have more than one character in them, an error will result.
 
 			This command creates an element that uses the same default CSS styling as the sidebar's icons: a `<tw-icon>` holding a glyph of text at 66px font size,
 			with 0.2 opacity that changes to 0.4 when hovered over.
@@ -730,13 +739,16 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			#sidebar 2
 		*/
 		/*d:
-			(icon-redo: [String]) -> Command
+			(icon-redo: [String], [String]) -> Command
 
 			Creates an icon, similar to those in the sidebar, that, if visible and clicked, "re-does" a turn that was undone. It is only visible if a turn has been undone.
 
 			Example usage:
-			`(replace:?sidebar)[(b4r:"solid")+(b4r-color:gray)+(corner-radius:12)(icon-undo: )(b4r:"solid")+(b4r-color:gray)+(corner-radius:12)(icon-redo: )]` alters the sidebar such
+			* `(replace:?sidebar)[(b4r:"solid")+(b4r-color:gray)+(corner-radius:12)(icon-undo: )(b4r:"solid")+(b4r-color:gray)+(corner-radius:12)(icon-redo: )]` alters the sidebar such
 			that the "Undo" and "Redo" icons have rounded borders around them.
+			* `(icon-redo:"👉")` creates an element that uses &#128073; as its icon instead of the default.
+			* `(icon-redo:"Redo the turn")` creates an element with the label "Redo the turn" under it.
+			* `(icon-redo:"👉", "Redo the turn")` combines both of the above.
 
 			Rationale:
 			By default, each passage in a Harlowe story features a narrow sidebar to the left, housing "Undo" and "Redo" menu icons.
@@ -748,7 +760,13 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			Of course, you can use this in normal passage prose, if you wish - they are merely commands, just like (link-goto:) or (print:).
 
 			If you wish to change the icon to a different symbol, you may provide a string containing a single character to this macro.
-			If the string has more than one character, an error will result. If none is given, the default symbol is &#8631; (in HTML, `&#8631;`).
+			If none is given, the default symbol is &#8631; (in HTML, `&#8631;`).
+
+			You may also provide a string that contains a label for the icon. This label must have more than one character in it (so that it isn't
+			confused with the optional icon string) and will be placed beneath the icon. The label's contents will NOT be interpreted as Harlowe markup, so
+			everything in it will be used verbatim for the label. This is because, unlike links, the label isn't considered part of passage prose.
+
+			If both strings given to this macro have more than one character in them, an error will result.
 
 			This command creates an element that uses the same default CSS styling as the sidebar's icons: a `<tw-icon>` holding a glyph of text at 66px font size,
 			with 0.2 opacity that changes to 0.4 when hovered over.
@@ -763,12 +781,15 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			#sidebar 3
 		*/
 		/*d:
-			(icon-fullscreen: [String]) -> Command
+			(icon-fullscreen: [String], [String]) -> Command
 
 			Creates an icon, similar to those in the sidebar, that, if visible and clicked, toggles fullscreen mode on or off.
 
 			Example usage:
-			`(prepend:?sidebar)[(icon-fullscreen: )]` adds a fullscreen icon to the sidebar, above the "undo" and "redo" icons. This would best be used in a "header" or "footer" tagged passage.
+			* `(prepend:?sidebar)[(icon-fullscreen: )]` adds a fullscreen icon to the sidebar, above the "undo" and "redo" icons. This would best be used in a "header" or "footer" tagged passage.
+			* `(icon-fullscreen:"▢")` creates an element that uses &#9634; as its icon instead of the default.
+			* `(icon-fullscreen:"Fullscreen")` creates an element with the label "Fullscreen" under it.
+			* `(icon-fullscreen:"▢", "Fullscreen")` combines both of the above.
 
 			Rationale:
 			By default, each passage in a Harlowe story features a narrow sidebar to the left, housing "Undo" and "Redo" menu icons.
@@ -780,7 +801,13 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			Of course, you can use this in normal passage prose, if you wish - they are merely commands, just like (link-goto:) or (print:).
 
 			If you wish to change the icon to a different symbol, you may provide a string containing a single character to this macro.
-			If the string has more than one character, an error will result. If none is given, the default symbol is &#9974; (in HTML, `&#9974;`).
+			If none is given, the default symbol is &#9974; (in HTML, `&#9974;`).
+
+			You may also provide a string that contains a label for the icon. This label must have more than one character in it (so that it isn't
+			confused with the optional icon string) and will be placed beneath the icon. The label's contents will NOT be interpreted as Harlowe markup, so
+			everything in it will be used verbatim for the label. This is because, unlike links, the label isn't considered part of passage prose.
+
+			If both strings given to this macro have more than one character in them, an error will result.
 
 			This command creates an element that uses the same default CSS styling as the sidebar's icons: a `<tw-icon>` holding a glyph of text at 66px font size,
 			with 0.2 opacity that changes to 0.4 when hovered over.
@@ -806,6 +833,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 
 			Example usage:
 			`(replace:?sidebar)[(icon-reload: )]` replaces the sidebar with just the "reload" icon.
+			* `(icon-reload:"⟲")` creates an element that uses &#27F2; as its icon instead of the default.
+			* `(icon-reload:"Restart")` creates an element with the label "Restart" under it.
+			* `(icon-reload:"⟲", "Restart")` combines both of the above.
 
 			Rationale:
 			By default, each passage in a Harlowe story features a narrow sidebar to the left, housing "Undo" and "Redo" menu icons.
@@ -817,7 +847,13 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			Of course, you can use this in normal passage prose, if you wish - they are merely commands, just like (link-goto:) or (print:).
 
 			If you wish to change the icon to a different symbol, you may provide a string containing a single character to this macro.
-			If the string has more than one character, an error will result. If none is given, the default symbol is &#10226; (in HTML, `&#10226;`).
+			If none is given, the default symbol is &#10226; (in HTML, `&#10226;`).
+
+			You may also provide a string that contains a label for the icon. This label must have more than one character in it (so that it isn't
+			confused with the optional icon string) and will be placed beneath the icon. The label's contents will NOT be interpreted as Harlowe markup, so
+			everything in it will be used verbatim for the label. This is because, unlike links, the label isn't considered part of passage prose.
+
+			If both strings given to this macro have more than one character in them, an error will result.
 
 			This command creates an element that uses the same default CSS styling as the sidebar's icons: a `<tw-icon>` holding a glyph of text at 66px font size,
 			with 0.2 opacity that changes to 0.4 when hovered over.
@@ -835,20 +871,35 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			#sidebar 5
 		*/
 		Macros.addCommand(`icon-${name.toLowerCase()}`,
-			(icon) => {
-				/*
-					Icons can only be one character (i.e. UTF-8 code point) long. This is checked using [...icon], as per other
-					string length checks throughout Harlowe. If no string was given, don't throw an error.
-				*/
-				if (typeof icon === "string" && [...icon].length !== 1) {
-					return TwineError.create("datatype",
-						`The (icon-${name.toLowerCase()}:) macro should be given a string that's 1 character long, not "${icon}".`
-					);
+			(icon, label) => {
+				if (typeof icon === "string" && typeof label === "string") {
+					/*
+						String lengths are checked using [...icon], as per other
+						string length checks throughout Harlowe. If no string was given, don't throw an error.
+					*/
+					const length1 = [...icon].length, length2 = [...label].length;
+					/*
+						Icons can only be one character (i.e. UTF-8 code point) long. 
+					*/
+					if (length1 > 1 && length2 > 1) {
+						return TwineError.create("datatype",
+							`One of the two strings given to (icon-${name.toLowerCase()}:) should be 1 character long, for its icon.`
+						);
+					}
+					if (length1 === 1 && length2 === 1) {
+						return TwineError.create("datatype",
+							`One of the two strings given to (icon-${name.toLowerCase()}:) should be 2 or more characters long, for its label.`
+						);
+					}
 				}
 			},
-			(cd, _, icon) =>
-				assign(cd, { source: `<tw-icon tabindex=0 alt="${name}" title="${name}" ${visibilityTest() ? "" : 'style="visibility:hidden"'}>${icon || defaultIcon}</tw-icon>`}),
-			[optional(String)]);
+			(cd, _, icon, label) => {
+				if ((typeof label === "string" && [...label].length === 1) || (typeof icon === "string" && [...icon].length > 1)) {
+					[icon,label] = [label,icon];
+				}
+				return assign(cd, { source: `<tw-icon tabindex=0 alt="${name}" ${label ? `data-label="${label.replace('"',"&quot;")}"` : '' } title="${name}" ${visibilityTest() ? "" : 'style="visibility:hidden"'}>${icon || defaultIcon}</tw-icon>`});
+			},
+			[optional(String), optional(String)]);
 	});
 
 		/*d:

@@ -426,9 +426,9 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			can specify a different plural word to use instead.
 			
 			Example usage:
-			* `(plural: 1, "bandage")` produces "1 bandage".
-			* `(plural: -7, "bandage")` produces "-7 bandages".
-			* `(plural: 2, "elf", "elves")` produces "2 elves".
+			* `(plural: 1, "bandage")` produces `"1 bandage"`.
+			* `(plural: -7, "bandage")` produces `"-7 bandages"`.
+			* `(plural: 2, "elf", "elves")` produces `"2 elves"`.
 			
 			Rationale:
 			If you have variables in your story holding number data, you'll often want to display that data to the player textually. If that
@@ -453,7 +453,37 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			return num + " " + (num !== 1 ? (plural ? plural : noun + "s") : noun);
 		},
 		[parseInt, String, optional(String)])
+		/*d:
+			(str-nth: Number) -> String
+			Also known as: (string-nth:)
+			
+			This macro takes a whole number, and converts it to a string comprising an English ordinal abbreviation (of the form "nth", such as "1st", "22nd", etc.).
+			
+			Example usage:
+			* `(str-nth: 3)` produces `"3rd"`.
+			* `(str-nth: 0)` produces `"0th"`.
+			* `(str-nth: -7)` produces `"-7th"`.
+			
+			Rationale:
+			English ordinals are useful to express that a number refers to a position or ordering of some object or item, but constructing an
+			ordinal word from a number can be tricky, given that English ordinals have special cases for numbers ending in 1 or 2. This macro, then,
+			serves to smooth over those cases, and provide a succinct means to construct these words.
 
+			Details:
+			Do not confuse this with the (nth:) macro, which is primarily used to display values in a sequence in passage prose.
+
+			If the number isn't a whole number (such as 2.3), then an error will result.
+
+			Note that you do NOT need to use this to access array data positions, even though their positions are written in the form
+			`1st`, `2ndlast` and so forth. You can simply use numbers in brackets (such as `$inventoryArray's (2)`) to access a particular data value.
+			
+			See also:
+			(str:)
+
+			Added in: 3.2.0
+			#string
+		*/
+		(["str-nth","string-nth"], (_, num) => nth(num), [parseInt])
 
 		/*d:
 			Number data

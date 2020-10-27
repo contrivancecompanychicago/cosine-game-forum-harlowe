@@ -449,18 +449,19 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			* `(link-goto: "Cellar")` is the same as `[[Cellar]]`.
 
 			Rationale:
-			This macro serves as an alternative to the standard link syntax (`[[Link text->Destination]]`), but has a couple of
-			slight differences.
-
-			* The link syntax lets you supply a fixed text string for the link, and a markup expression for the destination
+			This macro serves as an alternative to the standard link syntax (`[[Link text->Destination]]`), and has a key difference:
+			The link syntax lets you supply a fixed text string for the link, and a markup expression for the destination
 			passage's name. (link-goto:) also allows the link text to be any expression - so, something like
 			`(link-goto: "Move " + $name + "to the cellar", "Cellar")` can be written.
 
-			* The resulting command from this macro, like all commands, can be saved and used elsewhere.
+			Details:
+			If the passage name doesn't correspond to any existing passage, a broken link (a red link that can't be clicked)
+			will be created.
+
+			The resulting command from this macro, like all commands, can be saved and used elsewhere.
 			If you have a complicated link you need to use in several passages, you could (set:) it to a variable and use that variable
 			in its place.
 
-			Details:
 			As a bit of trivia... the Harlowe engine actually converts all standard links into (link-goto:) macro calls internally -
 			the link syntax is, essentially, a syntactic shorthand for (link-goto:).
 

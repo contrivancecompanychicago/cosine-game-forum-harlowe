@@ -280,5 +280,29 @@ describe("primitive value macros", function() {
 		it("returns the string, reversed", function() {
 			expect("(print: (string-reversed:' good  -gre𐌎t\n\texcellent: '))").markupToPrint(" :tnellecxe\t\nt𐌎erg-  doog ");
 		});
+		it("is also known as (str-reversed:)", function() {
+			expect("(print: (str-reversed:'BCD'))").markupToPrint("DCB");
+		});
+	});
+	describe("the (string-nth:) macro", function() {
+		it("accepts 1 integer", function() {
+			expect("(string-nth:)").markupToError();
+			expect("(string-nth: 1.1)").markupToError();
+			expect("(string-nth: 'a')").markupToError();
+			expect("(string-nth: 1,1)").markupToError();
+		});
+		it("returns the English ordinal string for that number", function() {
+			Array.from(Array(20)).forEach(function(_,i) {
+				i -= 10;
+				var lastDigit = (+i + '').slice(-1);
+				expect("(print: (string-nth:" + i + "))").markupToPrint(i + (
+					lastDigit === "1" ? "st" :
+					lastDigit === "2" ? "nd" :
+					lastDigit === "3" ? "rd" : "th"));
+			});
+		});
+		it("is also known as (str-nth:)", function() {
+			expect("(print: (str-nth:45))").markupToPrint("45th");
+		});
 	});
 });

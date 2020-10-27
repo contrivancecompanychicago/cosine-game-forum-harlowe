@@ -129,6 +129,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
  * Added a `(trunc:)` macro, which is similar to `(round:)`, but rounds toward zero, "truncating" the fractional component. It is named after the Excel function that performs the same rounding.
  * Added a `(plural:)` macro, which takes a number and a string, and combines them, automatically pluralising the string if the number isn't 1. `(plural:2,"duck")` produces `"2 ducks"`. Pluralisation is performed by adding "s" - a second string may be given which specifies a more correct plural form of the word (such as `(plural:4,"elf","elves")`).
+ * Added a `(str-nth:)` macro (alias `(string-nth)`) which takes a number and produces the English ordinal of that number (such as `"2nd"` for `2`, and `"-41st"` for `-41`).
 
 ###### Data Structures
 
@@ -191,8 +192,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a debugging macro, `(ignore:)`. If you wish to temporarily disable a command in the passage you're currently testing, simply change its name to "ignore" and it will ignore all of the values given to it, without causing an error.
  * Added `(click-undo:)`, `(mouseover-undo:)`, and `(mouseout-undo:)`, to complement `(click-goto:)` and the rest.
  * Added `(link-fullscreen:)`, a command macro that creates a link that, when clicked, toggles the browser's fullscreen mode on and off. It takes two link text options, one for entering fullscreen, and one for exiting it, which are automatically updated to match the browser's current fullscreen state. Note that this will only make the `<html>` element fullscreen, for numerous reasons (mainly that enchanting the `<tw-story>` element with `(enchant:?page,` will deactivate fullscreen if it's the fullscreen element, due to the macro call wrapping `<tw-story>` in another element). Also note that because most browsers allow users to exit fullscreen mode at any time, there's no way to force fullscreen mode into one state or another. Also note that, because browsers only allow fullscreen mode to be entered from interaction elements, like links or buttons, there can't be a low-level "toggle fullscreen" command macro as an alternative to this.
- * Added `(icon-undo:)` and `(icon-redo:)`, two commands that replicate the default sidebar's "undo" and "redo" icons. Use these to reinsert these into the sidebar if you've modified it using `(replace:)` or `(append:)`, or simply place those icons into your passage text if you wish.
- * Added `(icon-reload:)` and `(icon-fullscreen:)`, two additional commands that can be used, with `(prepend:)` and `(append:)`, to add "fullscreen" and "reload" buttons to the sidebar. The "fullscreen" icon works similarly to the `(link-fullscreen:)` macro described above, while the "reload" icon performs similarly to `(reload:)` when clicked.
+ * Added `(icon-undo:)` and `(icon-redo:)`, two commands that replicate the default sidebar's "undo" and "redo" icons. Use these to reinsert these into the sidebar if you've modified it using `(replace:)` or `(append:)`, or simply place those icons into your passage text if you wish. You can change the icon to use a different Unicode character if you wish. You can also add text labels to these icons, which appear below them.
+ * Added `(icon-reload:)` and `(icon-fullscreen:)`, two additional commands that can be used, with `(prepend:)` and `(append:)`, to add "fullscreen" and "reload" buttons to the sidebar. The "fullscreen" icon works similarly to the `(link-fullscreen:)` macro described above, while the "reload" icon performs similarly to `(reload:)` when clicked. These offer the same options as `(icon-undo:)` and `(icon-redo:)`.
 
 ##### Custom Macros
 
