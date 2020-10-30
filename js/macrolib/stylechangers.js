@@ -41,7 +41,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		```
 	*/
 	const
-		{either, wrapped, optional, Any, Everything, zeroOrMore, rest, insensitiveSet, positiveNumber, positiveInteger, nonNegativeNumber} = Macros.TypeSignature,
+		{either, wrapped, optional, Any, Everything, zeroOrMore, rest, insensitiveSet, positiveNumber, positiveInteger, nonNegativeNumber, percent} = Macros.TypeSignature,
 		IfTypeSignature = [wrapped(Boolean, "If you gave a number, you may instead want to check that the number is not 0. "
 			+ "If you gave a string, you may instead want to check that the string is not \"\".")];
 
@@ -1145,6 +1145,38 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		)
 
 		/*d:
+			(opacity: Number) -> Changer
+			
+			This styling changer changes how opaque the attached hook is, using a value from 0 to 1. Reducing the value makes it more transparent.
+			An opacity of 0 makes the hook invisible.
+
+			Example usage:
+			`(opacity: 0.5)[You don't think there's (color:green)[a revenant] nearby, do you?]` makes the hook 50% transparent.
+			
+			Details:
+			This affects the entire hook, including its background, any borders added by (border:), and so forth. Moreover, this does not override
+			"alpha" opacity values of colours produced by (hsl:), (rgb:) and (lch:) – the multiple transparency effects produced by these will
+			multiplicatively stack with one another.
+
+			Each nested usage of (opacity:) also multiplicatively stacks with one another. If two hooks with opacity 0.5 are nested, such as by `(opacity:0.5)[(opacity:0.5)[Faded]]`,
+			then the inner hook will have an opacity equivalent to 0.25. As a consequence of this, you can't use (opacity:) inside a partially transparent hook
+			to bring the inner hook up to 100% opacity.
+
+			Two (text-style:) styles, "fade-in-out" and "opacity", will override this changer if it's affecting the same hook.
+
+			See also:
+			(hsl:), (rgb:), (text-colour:)
+
+			Added in: 3.2.0
+			#styling
+		*/
+		("opacity",
+			(_, cent) => ChangerCommand.create("opacity", [cent]),
+			(d, cent) => d.styles.push({opacity: cent}),
+			[percent]
+		)
+
+		/*d:
 			(font: String) -> Changer
 			
 			This styling changer changes the font used to display the text of the attached hook. Provide
@@ -1671,8 +1703,8 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			| "smear"          | <t-s style="text-shadow: 0em 0em 0.02em black, -0.2em 0em 0.5em black, 0.2em 0em 0.5em black; color:transparent"></t-s> | "outline", "shadow", "emboss", "blur", "blurrier"
 			| "mirror"         | <t-s style="display:inline-block;transform:scaleX(-1)"></t-s> | "upside-down"
 			| "upside-down"    | <t-s style="display:inline-block;transform:scaleY(-1)"></t-s> | "mirror"
-			| "blink"          | <t-s style="animation:fade-in-out 1s steps(1,end) infinite alternate"></t-s> | "fade-in-out", "rumble", "shudder", "sway", "buoy", "fidget"
-			| "fade-in-out"    | <t-s style="animation:fade-in-out 2s ease-in-out infinite alternate"></t-s> | "blink", "rumble", "shudder", "sway", "buoy", "fidget"
+			| "blink"          | <t-s style="animation:fade-in-out 1s steps(1,end) infinite alternate"></t-s> | "fade-in-out", "rumble", "shudder", "sway", "buoy", "fidget", (opacity:)
+			| "fade-in-out"    | <t-s style="animation:fade-in-out 2s ease-in-out infinite alternate"></t-s> | "blink", "rumble", "shudder", "sway", "buoy", "fidget", (opacity:)
 			| "rumble"         | <t-s style="display:inline-block;animation:rumble linear 0.1s 0s infinite"></t-s> | "fade-in-out", "blink", "sway", "fidget"
 			| "shudder"        | <t-s style="display:inline-block;animation:shudder linear 0.1s 0s infinite"></t-s> | "fade-in-out", "blink", "buoy", "fidget"
 			| "sway"           | <t-s style="display:inline-block;animation:sway 5s linear 0s infinite"></t-s> | "fade-in-out", "blink", "rumble", "buoy", "fidget"

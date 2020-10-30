@@ -223,6 +223,9 @@ describe("interface macros", function(){
 			var p = runPassage("(dropdown: bind $foo, 'bar','','くりかえす')");
 			expect(p.find('select option[disabled]').text()).toBe('─'.repeat(5));
 		});
+		it("labels can't contain raw HTML", function() {
+			expect("(dropdown: bind $foo, '<b></b></option>', 'foo')").markupToPrint("<b></b></option>foo");
+		});
 		it("when changed, sets the variable to the string label", function(done) {
 			var p = runPassage("(dropdown: bind $foo, 'bar','baz', 'qux')");
 			expect("$foo").markupToPrint('bar');
@@ -402,9 +405,17 @@ describe("interface macros", function(){
 			});
 			if (!force) {
 				it("if bound, sets the bound variable when the <textarea> is edited", function() {
-					var t = runPassage("("+name+":bind $foo, \"XXX===\",3,'Foo')").find('textarea');
-					t.val('Bar').trigger('input');
-					expect("$foo").markupToPrint("Bar");
+					['bind','2bind'].forEach(function(e) {
+						var t = runPassage("("+name+":"+e+" $foo, \"XXX===\",3,'Foo')").find('textarea');
+						t.val('Bar').trigger('input');
+						expect("$foo").markupToPrint("Bar");
+						runPassage("(set:$foo to '')");
+					});
+				});
+				it("errors if the bound variable can't contain booleans", function() {
+					var p = runPassage('(set:num-type $foo to 2)('+name+':bind $foo,"XX=")');
+					p.find('textarea').val('Bar').trigger('input');
+					expect(p.find('tw-error:not(.javascript)').length).toBe(1);
 				});
 				it("if one-way-bound, sets the bound variable on entry", function() {
 					runPassage("("+name+":bind $foo, \"XXX===\",3,'Foo')");
@@ -491,6 +502,70 @@ describe("interface macros", function(){
 				expect('(link:"Hey")(icon-' + name + ':)').not.markupToError();
 			});
 			//TODO: Click tests
+		});
+	});
+	describe("the (icon-counter:) macro", function() {
+		it("accepts a bound numeric variable, a string label, and an optional other string", function() {
+			expect('(icon-counter: "x")').markupToError();
+			expect('(set:$x to 1)(icon-counter: bind $x)').markupToError();
+			expect('(icon-counter: bind $x, "Y")').not.markupToError();
+			expect('(set:$x to true)(icon-counter: bind $x, "Y")').markupToError();
+			expect('(set:$x to 1)(icon-counter: bind $x, "Y","Z")').not.markupToError();
+		});
+		it("creates a <tw-icon> with a [data-label] attribute matching the passed-in string", function() {
+			expect(runPassage('(set:$qux to 1)(icon-counter: bind $qux, "**garply**")').find('tw-icon[data-label="**garply**"]').length).toBe(1);
+		});
+		it("displays the text of the bound number variable, truncated", function() {
+			expect(runPassage('(set:$foo to 51)(icon-counter:bind $foo,"baz")').find('tw-icon').text()).toBe("51");
+			expect(runPassage('(set:$foo to 14.9)(icon-counter:bind $foo,"baz")').find('tw-icon').text()).toBe("14");
+			expect(runPassage('(set:$foo to -91.1)(icon-counter:bind $foo,"baz")').find('tw-icon').text()).toBe("-91");
+		});
+		it("updates the text when the variable updates", function() {
+			var p = runPassage('(set:$foo to 24)(icon-counter:bind $foo,"baz")(link:"X")[(set:$foo to 41)]');
+			expect(p.find('tw-icon').text()).toBe("24");
+			p.find('tw-link').click();
+			expect(p.find('tw-icon').text()).toBe("41");
+		});
+		it("uses the optional string as the label when the bound variable is not 1 or -1", function() {
+			var p = runPassage('(set:$foo to 24)(icon-counter:bind $foo,"baz","qux")(link:"X")[(set:$foo to 1)]');
+			expect(p.find('tw-icon').attr('data-label')).toBe("qux");
+			p.find('tw-link').click();
+			expect(p.find('tw-icon').attr('data-label')).toBe("baz");
+		});
+		it("the <tw-icon> has opacity 1 by default", function() {
+			expect(runPassage('(set:$qux to 1)(icon-counter: bind $qux, "**garply**")').find('tw-icon').css('opacity')).toBe('1');
+		});
+	});
+	describe("the (checkbox:) macro", function() {
+		it("accepts a bound boolean variable, and a string label", function() {
+			expect('(checkbox: "x")').markupToError();
+			expect('(set:$x to true)(checkbox: bind $x)').markupToError();
+			expect('(checkbox: bind $x, "Y")').not.markupToError();
+			expect('(set:$x to true)(checkbox: bind $x, "Y")').not.markupToError();
+		});
+		it("creates an <input> with a <label> with matching 'for' and 'id' attributes", function() {
+			var p = runPassage('(checkbox:bind $foo, "bar")');
+			expect(p.find('input[type=checkbox]').attr('id')).toBe(p.find('input[type=checkbox] + label').attr('for'));
+		});
+		it("when clicked, updates the bound variable", function() {
+			var p = runPassage('(checkbox:bind $foo, "bar")');
+			p.find('input').click();
+			expect("(print:$foo)").markupToPrint("true");
+			// The variable state resets to false if it isn't 2bind
+			p = runPassage('(checkbox:bind $foo, "bar")');
+			p.find('input').click();
+			expect("(print:$foo)").markupToPrint("true");
+		});
+		it("errors if the bound variable can't contain booleans", function() {
+			var p = runPassage('(set:num-type $foo to 2)(checkbox:bind $foo,"baz")');
+			p.find('input[type=checkbox]').trigger('input');
+			expect(p.find('tw-error:not(.javascript)').length).toBe(1);
+		});
+		it("if two-way bound, updates the checked state when the variable updates", function() {
+			var p = runPassage('(set:$foo to true)(checkbox:2bind $foo,"baz")(link:"X")[(set:$foo to false)]');
+			expect(p.find('input:checked').length).toBe(1);
+			p.find('tw-link').click();
+			expect(p.find('input:checked').length).toBe(0);
 		});
 	});
 });

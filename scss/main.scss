@@ -115,6 +115,13 @@ tw-story {
 	}
 
 	/*
+		These are created by (checkbox:).
+	*/
+	input[type=checkbox] {
+		transform: scale(1.5);
+	}
+
+	/*
 		This animation for the <noscript> element should ideally prevent a "flash of unstyled content" where the
 		message is briefly visible.
 	*/
@@ -148,14 +155,16 @@ tw-sidebar {
 tw-icon {
 	display: inline-block;
 	margin: 0.5em 0;
-	opacity: 0.2;
 	font-size: 66px;
-	&:hover {
-		opacity: 0.4;
+	font-family:"Verdana",sans-serif;
+	&[alt] {
+		opacity: 0.2;
+		&:hover {
+			opacity: 0.4;
+		}
 	}
 	&[data-label]::after {
 		font-weight:bold;
-		font-family:"Verdana",sans-serif;
 		content:attr(data-label);
 		font-size:20px;
 		bottom:-20px;

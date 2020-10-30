@@ -234,10 +234,10 @@ describe("primitive value macros", function() {
 			expect('(plural:0,"")').markupToError();
 			expect('(plural:0,"","")').markupToError();
 		});
-		it("returns a string comprising the number, a space, and the string, pluralised if the number isn't 1", function() {
+		it("returns a string comprising the number, a space, and the string, pluralised if the number isn't 1 or -1", function() {
 			expect('(plural:0,"elf")').markupToPrint("0 elfs");
 			expect('(plural:1,"elf")').markupToPrint("1 elf");
-			expect('(plural:-1,"elf")').markupToPrint("-1 elfs");
+			expect('(plural:-1,"elf")').markupToPrint("-1 elf");
 			expect('(plural:56,"elf")').markupToPrint("56 elfs");
 		});
 		it("uses the second string as the plural if given", function() {

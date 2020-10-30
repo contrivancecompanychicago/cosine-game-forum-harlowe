@@ -422,7 +422,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			(plural: Number, String, [String]) -> String
 			
 			This macro takes a whole number and a string, then converts the number to a string, joins them up with a space character, and pluralises the string if the
-			number wasn't 1. By default, this pluralisation is done by adding "s", as in some English plurals. An optional extra string
+			number wasn't 1 or -1. By default, this pluralisation is done by adding "s", as in some English plurals. An optional extra string
 			can specify a different plural word to use instead.
 			
 			Example usage:
@@ -433,7 +433,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Rationale:
 			If you have variables in your story holding number data, you'll often want to display that data to the player textually. If that
 			number refers to a quantity of some object or substance, and your game is in English, you'll want to pluralise the noun form of that
-			object or substance, which requires checking if the number is or is not 1. This macro is a shortcut for that small bit of busywork,
+			object or substance, which requires checking if the number is or is not 1 or -1. This macro is a shortcut for that small bit of busywork,
 			letting you simply supply the number and the noun to produce the plural.
 
 			Details:
@@ -450,7 +450,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			if (!noun || plural === "") {
 				return TwineError.create("macrocall", "The (plural:) macro can't be given empty strings.");
 			}
-			return num + " " + (num !== 1 ? (plural ? plural : noun + "s") : noun);
+			return num + " " + (Math.abs(num) !== 1 ? (plural ? plural : noun + "s") : noun);
 		},
 		[parseInt, String, optional(String)])
 		/*d:
@@ -1378,8 +1378,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			just the whole portion.
 
 			Example usage:
-			* `(trunc: 1.5)` produces 1.
-			* `(trunc: -3.9)` produces 3.
+			`(trunc: 1.5)` produces 1. `(trunc: -3.9)` produces 3.
 
 			Added in: 3.2.0
 			#number

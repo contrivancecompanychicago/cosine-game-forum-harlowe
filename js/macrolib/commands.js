@@ -1,7 +1,7 @@
 "use strict";
 define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 'internaltypes/twineerror',
 	'internaltypes/twinenotifier', 'datatypes/assignmentrequest', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/lambda', 'internaltypes/varref', 'datatypes/typedvar', 'datatypes/varbind', 'utils/operationutils', 'utils/renderutils'],
-($, Macros, Utils, State, Passages, Renderer, Engine, TwineError, TwineNotifier, AssignmentRequest, HookSet, CodeHook, Lambda, VarRef, TypedVar, VarBind, {printBuiltinValue}, {dialog, geomParse, geomStringRegExp}) => {
+($, Macros, Utils, State, Passages, Renderer, Engine, TwineError, TwineNotifier, AssignmentRequest, HookSet, CodeHook, Lambda, VarRef, TypedVar, VarBind, {printBuiltinValue, objectName}, {dialog, geomParse, geomStringRegExp}) => {
 	
 	/*d:
 		Command data
@@ -22,6 +22,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 	*/
 	const {Any, Everything, rest, either, optional, zeroOrMore, positiveInteger} = Macros.TypeSignature;
 	const {assign} = Object;
+	const {floor,ceil,abs} = Math;
 	const {noop} = $;
 
 	/*
@@ -902,6 +903,92 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			[optional(String), optional(String)]);
 	});
 
+	/*d:
+		(icon-counter: Bind, String, [String]) -> Command
+
+		A command that creates a numeric counter element with a text label, designed to fit in the sidebar, displaying the contents of a number variable (rounded to a whole number as if by (trunc:)),
+		and updating it whenever another macro changes it.
+
+		Example usage:
+		* `(append: ?sidebar)[(icon-counter: bind $sunseeds, "Sunflower Seeds")]` creates a counter element labeled `"Sunflower Seeds"`, which updates to match the number in $sunseeds.
+		* `(set: $satchel to (dm:"tomato",2))(prepend: ?sidebar)[(icon-counter: bind $satchel's tomato, "Tomato", "Tomatoes")]` creates a counter element labeled `"Tomatoes"` if `$satchel's tomato` contains a number other than
+		1, and `"Tomato"` otherwise.
+
+		Rationale:
+		The sidebar for Harlowe stories contains two basic gameplay utility functions by default – an (icon-undo:) button and an (icon-redo:) button – and can have more such buttons added using
+		the other icon-related macros, along with changers such as (append:) and (prepend:), and ideally in a header or footer tagged passage. But, one can also use that space to hold status
+		information relevant to the player. If the game features a number of vital numeric values, such as a score or a resource count, having that value be in constant view, and in a relatively consistent
+		screen position, can be very helpful in keeping the player aware of their current status.
+
+		This element is visually optimised toward small, whole numeric values, such as the whole numbers from 0 to 100. Numbers with a greater number of decimal places than that can be
+		used, but they will likely exceed the width of the sidebar. Furthermore, decimal places in the value will not be displayed, but will be rounded using the (trunc:) algorithm.
+
+		Details:
+		The optional second string allows for you to provide singular and plural forms of the counter label, which change based on whether the counter is 1 or -1. The first string becomes the
+		singular form of the label, and the second string serves as the plural.
+
+		Unlike the other icon-related commands, which create clickable icons, the element this creates cannot be clicked, and is designed to be fully visible at all times. Thus,
+		it does not have 30% opacity by default, but instead has 100% opacity. You may attach the (opacity:) changer to it to lower its opacity, if you wish.
+
+		The font used for this element, by default, is Verdana (and falls back to the browser's default sans-serif font family). This is intended to visually differentiate this counter
+		from story prose, which uses a serif font by default.
+
+		If, when the element is created, the bound variable is not a number, then an error will result.
+		However, if the bound variable ever changes to a non-number data value after that, then the counter will simply not update, instead of producing an error.
+
+		Added in: 3.2.0
+		#sidebar 6
+	*/
+	Macros.addCommand('icon-counter',
+		(_, label, pluralLabel) => {
+			const errorMsg = ` label string given to (icon-counter:) can't be empty or only whitespace.`;
+			if (!label || !label.trim()) {
+				return TwineError.create("datatype", `The 1st ` + errorMsg);
+			}
+			if (typeof pluralLabel === "string" && !pluralLabel.trim()) {
+				return TwineError.create("datatype", `The 2nd ` + errorMsg);
+			}
+		},
+		(cd, _, bind, label, pluralLabel) => {
+			/*
+				Being a UI display macro, all binds given to this macro are automatically promoted to 2binds, because the second bind
+				(variable -> element) is the only one that matters.
+			*/
+			cd.attr.push({"data-2bind": true});
+			/*
+				This standard twoWayBindEvent updates the counter's text, very simply.
+			*/
+			cd.data.twoWayBindEvent = (expr, obj, name) => {
+				if (bind.varRef.matches(obj,name)) {
+					const value = bind.varRef.get();
+					if(typeof value === "number") {
+						const icon = cd.target.children('tw-icon');
+						icon.text(
+								/*
+									This check should have the same logic as the (trunc:) macro.
+								*/
+								value > 0 ? floor(value) : ceil(value)
+							).attr('data-label', abs(value) !== 1 && pluralLabel !== undefined ? pluralLabel : label);
+					}
+				}
+			};
+			const value = bind.varRef.get();
+			/*
+				Though it's possible for it to be redefined, a type restriction check might as well be performed now
+				when the command is being created.
+			*/
+			if (typeof value !== "number") {
+				return TwineError.create("datatype",
+					`(icon-counter:) can only be bound to a variable holding a number, not ${objectName(value)}.`
+				);
+			}
+			return assign(cd, { source: `<tw-icon data-label="${
+					Utils.escape(abs(value) !== 1 && pluralLabel !== undefined ? pluralLabel : label)
+				}">${value > 0 ? floor(value) : ceil(value)}</tw-icon>`
+			});
+		},
+		[VarBind, String, optional(String)]);
+
 		/*d:
 			(cycling-link: [Bind], ...String) -> Command
 
@@ -1199,8 +1286,11 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		then the option text and the value assigned to the bound variable will change - but *only* when the player next interacts with the dropdown.
 		$tattoo will be "Star" until a new option is selected, whereupon it will become either "Claw" or "Feather" depending on which was picked.
 
+		Harlowe markup inside (dropdown:) labels will be ignored - the text will be treated as if the markup wasn't present. For instance,
+		`(dropdown: bind $mode, "//Stealth//", "//Speed//")` will produce a dropdown with "Stealth" and "Speed", with the italic styling markup removed.
+
 		See also:
-		(cycling-link:)
+		(cycling-link:), (checkbox:)
 
 		Added in: 3.0.0
 		#input
@@ -1243,7 +1333,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 						Create the separator using box-drawing "─" characters, which should be
 						visually preferable to plain hyphens.
 					*/
-					+ (label || '─'.repeat(longestLabelLength))
+					+ Utils.escape(label || '─'.repeat(longestLabelLength))
 					+ '</option>'
 				).join('\n')
 				+ '</select>';
@@ -1290,6 +1380,111 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			return assign(cd, { source, append: "replace", });
 		},
 		[VarBind, String, rest(String)]);
+
+	/*
+		This is the handler for (checkbox:).
+	*/
+	Utils.onStartup(() => $(Utils.storyElement).on(
+		/*
+			The jQuery event namespace is "checkbox-macro".
+		*/
+		"input.checkbox-macro",
+		"input[type=checkbox]",
+		function checkboxEvent() {
+			const checkbox = $(this),
+				/*
+					The data should be stored on the nearest surrounding <tw-expression>.
+				*/
+				event = checkbox.closest('tw-expression').data('checkboxEvent');
+			if (event) {
+				event(checkbox);
+			}
+		}
+	));
+
+	/*d:
+		(checkbox: VarBind, String) -> Command
+
+		A command that creates a checkbox input, which sets the given bound variable to `true` or `false`, depending on its state.
+
+		Example usage:
+		* `(checkbox: bind $gore, "Show violent scenes")` creates a checkbox labeled "Show violent scenes" which is initially unchecked.
+		* `(checkbox: 2bind $perma, "Permadeath")` creates a checkbox which is initially checked if $perma is `true`, and continues to
+		update itself whenever some other macros change $perma.
+
+		Rationale:
+
+		This command uses the common web page checkbox input to let you ask the player for their preference on an auxiliary or
+		metatextual feature or decision. Unlike the (confirm:) command, this doesn't directly ask the player a yes/no question, but simply
+		presents a phrase or option that they can opt into or out of. Thus, it is useful for offering choices that aren't directly "in-character"
+		or diegetic in the narrative - though, you could still use it for that purpose if the clinical nature of a checkbox was especially fitting for the setting.
+
+		Details:
+
+		This macro accepts two-way binds using the `2bind` syntax. These will cause the checkbox's contents to always match the current value of the bound
+		variable, and automatically update itself whenever any other macro changes it. However, if the variable no longer contains a boolean, then
+		it won't update - for instance, if the variable becomes the number 23, the checkbox won't update.
+
+		If the bound variable isn't two-way, the checkbox will be unchecked when it appears, and the variable will be set to `false` as soon as it is displayed.
+
+		If the bound variable has already been given a type restriction (such as by `(set:num-type $candy)`), then, if that type isn't `string` or
+		`str`, an error will result.
+
+		If the label string is empty, an error will result.
+
+		See also:
+		(dropdown:), (input-box:), (confirm:)
+
+		Added in: 3.2.0
+		#input
+	*/
+	Macros.addCommand("checkbox",
+		() => {},
+		(cd, _, bind, label) => {
+			let checked = false;
+			let uniqueName = "checkbox-" + Date.now();
+			/*
+				If the binding is two-way, add the special [data-2bind] signalling attribute, get the initial checked
+				value from the bound variable, and set up the two-way binding event.
+			*/
+			if (bind.bind === "two way") {
+				cd.attr.push({"data-2bind": true});
+				const value = bind.varRef.get();
+				if (typeof value === "boolean") {
+					checked = value;
+				}
+				cd.data.twoWayBindEvent = (input, obj, name) => {
+					if (bind.varRef.matches(obj,name)) {
+						const value = bind.varRef.get();
+						/*
+							Inward binding: when the variable changes (and remains a boolean), update the check status.
+						*/
+						if (typeof value === "boolean") {
+							input.children('input[type=checkbox]').prop('checked', value);
+						}
+					}
+				};
+			}
+			cd.data.checkboxEvent = (box) => {
+				const value = box.is(':checked');
+				const result = bind.set(value);
+				if (TwineError.containsError(result)) {
+					/*
+						As with (input-box:), show any type-restriction errors that occur.
+
+						A spot of trivia: if a Jasmine test spec tries to test the checkbox event using
+						.click(), jQuery will produce an error, due to removing an element whilst performing a .click() on it.
+					*/
+					box.replaceWith(result.render(''));
+				}
+			};
+			/*
+				In HTML, checkboxes and labels are associated with [for] and [id] attribute keys.
+			*/
+			return assign(cd, { source: `<input id="${uniqueName}" type="checkbox" ${checked ? 'checked' : ''}><label for="${uniqueName}">${label}</label>`, append: "replace", });
+		},
+		[VarBind, String]
+	);
 
 	/*
 		This is the shared handler for (input-box:) and (force-input-box:).
@@ -1344,7 +1539,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		dramatically.
 
 		This macro accepts two-way binds using the `2bind` syntax. These will cause the box's contents to always match the current value of the bound
-		variable, and automatically update itself whenever any other macro changes it. However, if the variable no longer contains a string then
+		variable, and automatically update itself whenever any other macro changes it. However, if the variable no longer contains a string, then
 		it won't update - for instance, if the variable becomes the number 23, the box won't update.
 
 		If the bound variable isn't two-way, the variable will be set to the box's contents as soon as it is displayed - so, it will become the optional
@@ -1517,15 +1712,18 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				if (TwineError.containsError(result)) {
 					return result;
 				}
-				if (!force) {
-					cd.data.inputBoxEvent = (textarea) => {
-						const value = textarea.val();
-						const result = bind.set(value);
-						if (TwineError.containsError(result)) {
-							textarea.replaceWith(result.render(value));
-						}
-					};
-				}
+			}
+			/*
+				The (force-input-box:) version of this event is further below.
+			*/
+			if (!force) {
+				cd.data.inputBoxEvent = (textarea) => {
+					const value = textarea.val();
+					const result = bind.set(value);
+					if (TwineError.containsError(result)) {
+						textarea.replaceWith(result.render(''));
+					}
+				};
 			}
 			/*
 				The <textarea> is created with its height directly feeding into its rows value.
@@ -1561,7 +1759,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 					if (bind) {
 						const result = bind.set(value);
 						if (TwineError.containsError(result)) {
-							textarea.replaceWith(result.render(value));
+							textarea.replaceWith(result.render(''));
 						}
 					}
 					return true;
@@ -2319,7 +2517,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			safely, you may use either the verbatim markup, the (verbatim:) changer, or (verbatim-print:).
 
 			See also:
-			(alert:), (confirm:)
+			(alert:), (confirm:), (input-box:)
 
 			Added in: 1.0.0
 			#popup
@@ -2359,8 +2557,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 
 			When this macro is evaluated, a pop-up dialog box is shown with the given string displayed,
 			as well as two links (whose text can also be provided) to confirm or cancel whatever action
-			or fact the string tells the player. When it is submitted, it evaluates to the boolean true if the
-			confirm link had been clicked, and false if the cancel link had.
+			or fact the string tells the player. When it is submitted, it evaluates to the boolean `true` if the
+			confirm link had been clicked, and `false` if the cancel link had.
 
 			Example usage:
 			`(set: $makeCake to (confirm: "Transform your best friend into a cake?", "Do not", "Please do"))`
@@ -2382,7 +2580,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			shouldn't fire.
 
 			See also:
-			(alert:), (prompt:)
+			(alert:), (prompt:), (checkbox:)
 
 			Added in: 1.0.0
 			#popup

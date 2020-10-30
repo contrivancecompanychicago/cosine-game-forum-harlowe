@@ -463,6 +463,23 @@ describe("style changer macros", function() {
 			});
 		});
 	});
+	describe("the (opacity:) macro", function() {
+		it("requires exactly 1 number argument between 0 and 1", function() {
+			expect("(print:(opacity:))").markupToError();
+			expect("(print:(opacity:1))").not.markupToError();
+			expect("(print:(opacity:'A'))").markupToError();
+			expect("(print:(opacity:55,55))").markupToError();
+			expect("(print:(opacity:2))").markupToError();
+			expect("(print:(opacity:-1))").markupToError();
+		});
+		it("gives the hook the specified opacity value", function(done) {
+			var hook = runPassage("(opacity:0.42)[Foo]").find('tw-hook');
+			setTimeout(function() {
+				expect(hook.attr('style')).toMatch(/opacity:\s*0\.42/);
+				done();
+			});
+		});
+	});
 	describe("the (border:) macro", function() {
 		it("errors unless given up to 4 valid border names", function() {
 			expect("(print:(border:))").markupToError();
