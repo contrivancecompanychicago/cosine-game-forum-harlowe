@@ -270,3 +270,9 @@
 	right:0px;
 	bottom:8px;
 }
+/*
+	Can't have hints be visible for nested rows, because they'd eat up too much vertical space.
+*/
+.harlowe-3-datavalueRows .harlowe-3-datavalueRows .harlowe-3-datavalueRowHint {
+	display:none;
+}

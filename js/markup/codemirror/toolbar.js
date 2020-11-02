@@ -219,17 +219,17 @@
 
 		modelCallback is a callback to use instead of setting a value on the model in their model() methods.
 		modelRegistry is an alternative array to register the model() methods to, instead of the one for the parent panel.
-		Both of these are used entirely by datavalue-rows, in order to suppress the usual behaviour of panel rows,
+		Both of these are used entirely by datavalue-rows and datavalue-map, in order to suppress the usual behaviour of panel rows,
 		and to be able to dynamically add and remove rows during use.
 	*/
-	const dataValueRow = (modelCallback, modelRegistry) => ({
+	const dataValueRow = (modelCallback = (m,v) => m.expression = v, modelRegistry = undefined) => ({
 		type: 'inline-dropdown-rows',
 		text: 'Value: ',
 		name: 'variable-datatype',
 		options: [
 			["text string", {
 				type: "inline-string-textarea",
-				width:"60%",
+				width:"55%",
 				text: "",
 				placeholder: "Text",
 				modelCallback,
@@ -242,7 +242,7 @@
 				modelCallback,
 				modelRegistry,
 			}],
-			["Boolean value", {
+			["Boolean", {
 				type: 'inline-dropdown',
 				text: '',
 				options: ['false','true'],
@@ -264,9 +264,10 @@
 			}],
 			["array", {
 				type: "datavalue-rows",
-				text: "",
+				text: "<p class='harlowe-3-datavalueRowHint'>An <b>array</b> is a sequence of ordered datavalues that can be used without having to create separate variables for each. "
+					+ "Use it to store similar values whose order and position matter, or to store an ever-changing quantity of similar values.</p>",
 				/*
-					As a slightly unfortunate kludge, "datavalue-rows" models do not have an el as their
+					As a slightly unfortunate kludge, "datavalue-rows" and "datavalue-map" models do not have an el as their
 					second argument, but instead an array of precomputed values created by the model() methods
 					of each datavalue row.
 				*/
@@ -275,9 +276,25 @@
 				},
 				modelRegistry,
 			}],
-			['computed value', {
+			["datamap", {
+				type: "datavalue-map",
+				text: "<p class='harlowe-3-datavalueRowHint'>A <b>datamap</b> is a value that holds any number of other values, each of which is \"mapped\" to a unique name. "
+					+ "Use it to store data values that represent parts of a larger game entity, or rows of a table.</p>",
+				model(m, rowValues) {
+					/*
+						Unlike arrays, datamaps have a constraint on their data names: they must not be empty.
+					*/
+					if (!rowValues.every((e,i) => i % 2 !== 0 || (e !== '""' && e !== "''"))) {
+						// Any panel that consumes dataValueRow() should invalidate the model if this is true.
+						m.badPropNames = true;
+					}
+					modelCallback(m, '(dm:' + rowValues + ")");
+				},
+				modelRegistry,
+			}],
+			['expression', {
 				type: "inline-expression-textarea",
-				width:"60%",
+				width:"55%",
 				text: '',
 				placeholder: "Code",
 				modelCallback,
@@ -316,6 +333,7 @@
 			wrapStart: '[', wrapEnd: ']',
 			wrapStringify: false,
 			innerText: undefined,
+			// If the model is declared valid, then code can be produced using the panel as it currently is.
 			valid: false,
 			output,
 			changerNamed,
@@ -709,8 +727,10 @@
 			/*
 				Datavalue rows are rows of inputs for Harlowe data values, which can be added and subtracted.
 				Each Harlowe input is a special row created by dataValueRow(), above.
+				Datavalue-map is a special case where the position name is an inline-textarea input, meaning
+				each line has two inputs each.
 			*/
-			if (type === "datavalue-rows") {
+			if (type === "datavalue-rows" || type === "datavalue-map") {
 				ret = el(`<div class="harlowe-3-datavalueRows">${row.text || ''}<div class="harlowe-3-dataEmptyRow"><i>No data</i></div><button class="harlowe-3-rowPlus">${
 						fontIcon('plus')
 					} Value</button></div>`);
@@ -732,6 +752,13 @@
 				*/
 				const renumber = () => {
 					Array.from(ret[$$](':scope > .harlowe-3-dataRow > * > .harlowe-3-dropdownRowLabel')).forEach((label,num) => {
+						/*
+							Datamaps don't have sequential name labels, instead having just a colon.
+						*/
+						if (type.endsWith("map")) {
+							label.textContent = ":";
+							return;
+						}
 						num += 1;
 						const lastDigit = (num + '').slice(-1);
 						
@@ -751,7 +778,19 @@
 						This is to allow them to be deleted from the set once the line is removed.
 					*/
 					const modelRegistry = [];
-					ret.insertBefore(reducer(line, dataValueRow((m,v) => rowValuesBuffer.push(v), modelRegistry)), plusButton);
+					ret.insertBefore((
+							type.endsWith("map") ? [{
+								type: "inline-textarea",
+								text: "",
+								placeholder: "Data name",
+								width:"15%",
+								model(_, elem) {
+									rowValuesBuffer.push(stringify(elem[$]('input').value));
+								},
+								modelRegistry,
+							}] : []
+						).concat(dataValueRow((m,v) => rowValuesBuffer.push(v), modelRegistry)).reduce(reducer, line), plusButton);
+
 					modelRegistry.forEach(m => childModelMethods.add(m));
 
 					line.append(el(`<button class="harlowe-3-rowMinus">${
@@ -1714,12 +1753,12 @@
 							},
 						},
 						new Text("a certain data value."), el('<br>'),
-						dataValueRow((m,v) => m.expression = v),
+						dataValueRow(),
 						{
 							type: 'text',
 							text: '',
 							model(m) {
-								if (m.expression !== undefined && m.expression !== '' && m.operator && m.variable) {
+								if (m.expression !== undefined && m.expression !== '' && m.operator && m.variable && !m.badPropNames) {
 									m.changerNamed('if').push(`${m.variable} ${m.operator} ${m.expression}`);
 									m.valid = true;
 								}
@@ -1921,7 +1960,7 @@
 						}
 					}
 				},
-			}, dataValueRow((m,v) => m.expression = v), {
+			}, dataValueRow(), {
 				type: "checkbox",
 				text: "Temp variable (the variable only exists in this passage and hook).",
 				model(m, elem) {
@@ -1930,9 +1969,9 @@
 					/*
 						Perform the main (set:) construction here.
 					*/
-					if (m.variableName && m.expression) {
+					if (m.variableName && m.expression && !m.badPropNames) {
 						m.wrapStart = `(set: ${m.sigil}${m.variableName} to ${m.expression})`;
-						m.wrapEnd = '';
+						m.wrapEnd = m.innerText = '';
 						m.valid = true;
 					} else {
 						m.valid = false;
