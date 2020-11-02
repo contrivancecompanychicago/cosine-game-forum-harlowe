@@ -226,6 +226,7 @@
 		type: 'inline-dropdown-rows',
 		text: 'Value: ',
 		name: 'variable-datatype',
+		width: "16%",
 		options: [
 			["text string", {
 				type: "inline-string-textarea",
@@ -264,8 +265,8 @@
 			}],
 			["array", {
 				type: "datavalue-rows",
-				text: "<p class='harlowe-3-datavalueRowHint'>An <b>array</b> is a sequence of ordered datavalues that can be used without having to create separate variables for each. "
-					+ "Use it to store similar values whose order and position matter, or to store an ever-changing quantity of similar values.</p>",
+				text: "<div class='harlowe-3-datavalueRowHint'>An <b>array</b> is a sequence of ordered datavalues that can be used without having to create separate variables for each. "
+					+ "Use it to store similar values whose order and position matter, or to store an ever-changing quantity of similar values.</div>",
 				/*
 					As a slightly unfortunate kludge, "datavalue-rows" and "datavalue-map" models do not have an el as their
 					second argument, but instead an array of precomputed values created by the model() methods
@@ -274,30 +275,79 @@
 				model(m, rowValues) {
 					modelCallback(m, '(a:' + rowValues + ")");
 				},
+				/*
+					This is a special method for datavalue-rows that displays numbers (usually array indices) for each subvalue's line.
+				*/
+				renumber(label,num) {
+					num += 1;
+					const lastDigit = (num + '').slice(-1);
+					
+					label.textContent = num +
+						(lastDigit === "1" ? "st" :
+						lastDigit === "2" ? "nd" :
+						lastDigit === "3" ? "rd" : "th") + ": ";
+				},
 				modelRegistry,
 			}],
 			["datamap", {
 				type: "datavalue-map",
-				text: "<p class='harlowe-3-datavalueRowHint'>A <b>datamap</b> is a value that holds any number of other values, each of which is \"mapped\" to a unique name. "
-					+ "Use it to store data values that represent parts of a larger game entity, or rows of a table.</p>",
+				text: "<div class='harlowe-3-datavalueRowHint'>A <b>datamap</b> is a value that holds any number of other values, each of which is \"mapped\" to a unique name. "
+					+ "Use it to store data values that represent parts of a larger game entity, or rows of a table.</div>",
 				model(m, rowValues) {
 					/*
 						Unlike arrays, datamaps have a constraint on their data names: they must not be empty.
 					*/
 					if (!rowValues.every((e,i) => i % 2 !== 0 || (e !== '""' && e !== "''"))) {
 						// Any panel that consumes dataValueRow() should invalidate the model if this is true.
-						m.badPropNames = true;
+						m.invalidSubrow = true;
 					}
 					modelCallback(m, '(dm:' + rowValues + ")");
 				},
+				/*
+					Datamaps don't have sequential name labels, instead having just a colon.
+				*/
+				renumber(label) {
+					label.textContent = ":";
+				},
 				modelRegistry,
 			}],
-			['expression', {
+			['computed expression', {
 				type: "inline-expression-textarea",
 				width:"55%",
 				text: '',
 				placeholder: "Code",
 				modelCallback,
+				modelRegistry,
+			}],
+			[],
+			["randomly chosen value", {
+				type: "datavalue-rows",
+				text: "<div class='harlowe-3-datavalueRowHint'>One of the following values is randomly chosen <b>each time the macro is run</b>.</div>",
+				model(m, rowValues) {
+					if (!rowValues.length) {
+						m.invalidSubrow = true;
+					}
+					modelCallback(m, '(either:' + rowValues + ")");
+				},
+				renumber(label) {
+					label.textContent = "•";
+					label.style.marginRight="0.5em";
+				},
+				modelRegistry,
+			}],
+			["random number", el(`<div class='harlowe-3-datavalueRowHint'>A number between these two values is randomly chosen <b>each time the macro is run</b>.</div>`), {
+				type: "inline-number-textarea",
+				width:"20%",
+				text: "From",
+				model() {},
+				modelRegistry,
+			},{
+				type: "inline-number-textarea",
+				width:"20%",
+				text: "to",
+				model(m, elem) {
+					modelCallback(m, '(random:' + (+elem.previousElementSibling[$]('input').value || 0) + ',' + (+elem[$]('input').value || 0) + ")");
+				},
 				modelRegistry,
 			}],
 		],
@@ -509,15 +559,15 @@
 					String-type textarea
 				*/
 				if (type.endsWith("string-textarea")) {
-					row.model = (m, elem) => {
+					row.model || (row.model = (m, elem) => {
 						row.modelCallback(m, JSON.stringify(elem[$]('input').value || ''));
-					};
+					});
 				}
 				if (type.endsWith("number-textarea")) {
 					inputType = 'number';
-					row.model = (m, elem) => {
+					row.model || (row.model = (m, elem) => {
 						row.modelCallback(m, +elem[$]('input').value || 0);
-					};
+					});
 				}
 				ret = el('<' + (inline ? 'span' : 'div') + ' class="harlowe-3-labeledInput">'
 					+ row.text
@@ -672,9 +722,17 @@
 				Rows of options, selected using a single dropdown.
 			*/
 			if (type.endsWith("dropdown-rows")) {
-				ret = el(`<${inline ? 'span' : 'div'}><span class="harlowe-3-dropdownRowLabel">${row.text}</span><select style="font-size:1rem;margin-top:4px"></select><span class="harlowe-3-dropdownRows"></span></${inline ? 'span' : 'div'}>`);
+				ret = el(`<${inline ? 'span' : 'div'}><span class="harlowe-3-dropdownRowLabel">${
+						row.text
+					}</span><select style="font-size:1rem;margin-top:4px;${
+						row.width ? `width:${row.width};text-overflow:ellipsis` : ''
+					}"></select><span class="harlowe-3-dropdownRows"></span></${inline ? 'span' : 'div'}>`);
 				const selectEl = ret[$]('select');
 				row.options.forEach(([name, ...subrows], i) => {
+					if (!name) {
+						selectEl.append(el(`<option disabled>───────</option>`));
+						return;
+					}
 					selectEl.append(el(`<option value="${name}" ${!i ? 'selected' : ''}>${name}<option>`));
 					const subrowEl = el(`<span data-value="${name}" ${i ? 'hidden' : ''}>`);
 					/*
@@ -707,7 +765,7 @@
 				A column of textareas, but with buttons to add and subtract additional ones.
 			*/
 			if (type === "textarea-rows") {
-				ret = el('<div class="harlowe-3-textareaRows">');
+				ret = el(`<div class="harlowe-3-textareaRows ${row.nonZeroRows ? 'harlowe-3-nonZeroRows' : ''}">`);
 				const makeRow = () => {
 					if (ret.childNodes.length > 100) {
 						return;
@@ -751,22 +809,7 @@
 					A utility to ensure that each datavalue-row's "Value:" label is replaced with "1st", "2nd" and so forth.
 				*/
 				const renumber = () => {
-					Array.from(ret[$$](':scope > .harlowe-3-dataRow > * > .harlowe-3-dropdownRowLabel')).forEach((label,num) => {
-						/*
-							Datamaps don't have sequential name labels, instead having just a colon.
-						*/
-						if (type.endsWith("map")) {
-							label.textContent = ":";
-							return;
-						}
-						num += 1;
-						const lastDigit = (num + '').slice(-1);
-						
-						label.textContent = num +
-							(lastDigit === "1" ? "st" :
-							lastDigit === "2" ? "nd" :
-							lastDigit === "3" ? "rd" : "th") + ": ";
-					});
+					Array.from(ret[$$](':scope > .harlowe-3-dataRow > * > .harlowe-3-dropdownRowLabel')).forEach(row.renumber);
 				};
 				const makeRow = () => {
 					if (ret.childNodes.length > 50) {
@@ -938,7 +981,7 @@
 					mark:                  "background-color: hsla(60, 100%, 50%, 0.6)",
 					outline:               "color:black; text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px  1px 0 white, 1px  1px 0 white",
 					shadow:                "text-shadow: 0.08em 0.08em 0.08em white",
-					emboss:                "text-shadow: 0.08em 0.08em 0em white",
+					emboss:                "text-shadow: 0.04em 0.04em 0em white",
 					condense:              "letter-spacing:-0.08em",
 					expand:                "letter-spacing:0.1em",
 					blur:                  "text-shadow: 0em 0em 0.08em white; color:transparent",
@@ -1495,6 +1538,7 @@
 						el('<br>'),
 						{
 							type: 'textarea-rows',
+							nonZeroRows: true,
 							placeholder: 'Link text (can\'t be empty)',
 							model(m, el) {
 								const els = [m.linkText].concat(Array.from(el[$$]('input')).map(el => el.value));
@@ -1758,7 +1802,7 @@
 							type: 'text',
 							text: '',
 							model(m) {
-								if (m.expression !== undefined && m.expression !== '' && m.operator && m.variable && !m.badPropNames) {
+								if (m.expression !== undefined && m.expression !== '' && m.operator && m.variable && !m.invalidSubrow) {
 									m.changerNamed('if').push(`${m.variable} ${m.operator} ${m.expression}`);
 									m.valid = true;
 								}
@@ -1969,7 +2013,7 @@
 					/*
 						Perform the main (set:) construction here.
 					*/
-					if (m.variableName && m.expression && !m.badPropNames) {
+					if (m.variableName && m.expression && !m.invalidSubrow) {
 						m.wrapStart = `(set: ${m.sigil}${m.variableName} to ${m.expression})`;
 						m.wrapEnd = m.innerText = '';
 						m.valid = true;
@@ -1992,6 +2036,9 @@
 			},
 			confirmRow),
 
+		/*
+			When bound to a variable, most all of these use 2bind, because that binding more closely fits intuitions about how bindings "should" work.
+		*/
 		input: folddownPanel({
 				type: 'radiorows',
 				name: 'inputelement',
@@ -2019,7 +2066,7 @@
 										gcd = GCD(width, GCD(left, right));
 
 									return `(${'forcedText' in m ? 'force-' : ''}input-box:${
-										m.variable ? `bind ${m.variable},` : ''
+										m.variable ? `2bind ${m.variable},` : ''
 									}${
 										stringify("=".repeat(left/gcd) + "X".repeat(width/gcd) + "=".repeat(right/gcd))
 									}${
@@ -2098,14 +2145,33 @@
 							text: "Dropdown options (leave blank to make a separator):",
 						},{
 							type: 'textarea-rows',
+							nonZeroRows: true,
 							placeholder: "Option text (leave blank to make a separator)",
 							model(m, el) {
 								const els = Array.from(el[$$]('input')).map(el => el.value);
 								if (els.some(Boolean)) {
-									m.wrapStart = m => `(dropdown: ${m.variable ? `bind ${m.variable},` : ''}${els.map(e => stringify(e))})`;
+									m.wrapStart = m => `(dropdown: ${m.variable ? `2bind ${m.variable},` : ''}${els.map(e => stringify(e))})`;
 									m.wrapEnd = m.innerText = '';
 									m.valid = true;
 								}
+							},
+						},
+					],[
+						new Text("Create a checkbox."),
+						el('<br>'),
+						{
+							type: "inline-textarea",
+							width:"50%",
+							text: "Checkbox label:",
+							placeholder: "Label text",
+							model(m, elem) {
+								const labelText = elem[$]('input').value || '';
+								if (labelText) {
+									m.wrapStart = m => `(checkbox: ${m.variable ? `2bind ${m.variable},` : ''}${stringify(labelText)})`;
+									m.wrapEnd = m.innerText = '';
+									m.valid = true;
+								}
+								m.needsVariable = true;
 							},
 						},
 					],[
@@ -2127,6 +2193,7 @@
 							text: "Link options:",
 						},{
 							type: 'textarea-rows',
+							nonZeroRows: true,
 							placeholder: "Link text (can't be blank)",
 							model(m, el) {
 								const els = Array.from(el[$$]('input')).map(el => el.value);
@@ -2141,6 +2208,20 @@
 			},{
 				type:'checkboxrow',
 				text:'',
+				update(m, elem) {
+					const input = elem[$]('input');
+					if (m.needsVariable) {
+						input.setAttribute('disabled', true);
+						input.checked = true;
+					} else {
+						input.removeAttribute('disabled', true);
+					}
+				},
+				model(m, elem) {
+					if (m.needsVariable && !elem[$]('input:checked')) {
+						m.valid = false;
+					}
+				},
 				subrow: [{
 					type: "inline-dropdown",
 					text: 'Bind this input element to the variable',

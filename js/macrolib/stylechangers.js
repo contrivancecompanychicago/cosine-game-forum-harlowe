@@ -1695,7 +1695,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			| "mark"           | <t-s style="background-color: hsla(60, 100%, 50%, 0.6)"></t-s> | (background-color:)
 			| "outline"        | <t-s style="color:white; text-shadow: -1px -1px 0 black, 1px -1px 0 black, -1px  1px 0 black, 1px  1px 0 black"></t-s> | "shadow", "emboss", "blur", blurrier", "smear"
 			| "shadow"         | <t-s style="text-shadow: 0.08em 0.08em 0.08em black"></t-s> | "outline", "emboss", "blur", "blurrier", "smear"
-			| "emboss"         | <t-s style="text-shadow: 0.08em 0.08em 0em black"></t-s> | "outline", "shadow", "blur", "blurrier", "smear"
+			| "emboss"         | <t-s style="text-shadow: 0.04em 0.04em 0em black"></t-s> | "outline", "shadow", "blur", "blurrier", "smear"
 			| "condense"       | <t-s style="letter-spacing:-0.08em"></t-s> | "expand"
 			| "expand"         | <t-s style="letter-spacing:0.1em"></t-s> | "condense"
 			| "blur"           | <t-s style="text-shadow: 0em 0em 0.08em black; color:transparent"></t-s> | "outline", "shadow", "emboss", "blurrier", "smear"
@@ -1791,7 +1791,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 							"text-shadow"() { return "0.08em 0.08em 0.08em " + $(this).css('color'); },
 						},
 						emboss: {
-							"text-shadow"() { return "0.08em 0.08em 0em " + $(this).css('color'); },
+							"text-shadow"() { return "0.04em 0.04em 0em " + $(this).css('color'); },
 						},
 						smear: [{
 								"text-shadow"() {

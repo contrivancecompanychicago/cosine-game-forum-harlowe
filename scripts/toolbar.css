@@ -257,6 +257,9 @@
 .harlowe-3-textareaRows {
 	margin-bottom:0.5em;
 }
+.harlowe-3-nonZeroRows > :first-child > .harlowe-3-rowMinus {
+	display:none;
+}
 .harlowe-3-datavalueRows {
 	margin-left: 6px;
 	padding-left:6px;

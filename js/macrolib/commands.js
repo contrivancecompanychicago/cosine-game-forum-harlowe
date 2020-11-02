@@ -1403,7 +1403,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 	));
 
 	/*d:
-		(checkbox: VarBind, String) -> Command
+		(checkbox: Bind, String) -> Command
 
 		A command that creates a checkbox input, which sets the given bound variable to `true` or `false`, depending on its state.
 

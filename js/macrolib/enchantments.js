@@ -1217,7 +1217,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		Example usage:
 		```
 		You can't touch me!
-		(mouseover-prepend: ?passage)[Aah! That tickles!]
+		(mouseover-replace: ?passage)[Aah! That tickles!]
 		```
 
 		See also:
