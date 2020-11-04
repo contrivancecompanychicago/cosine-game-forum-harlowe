@@ -978,6 +978,9 @@ define([
 			| source | The source markup of the passage, exactly as you entered it in the Twine editor |
 			| name | The string name of this passage. |
 			| tags | An array of strings, which are the tags you gave to this passage. |
+			| storylet | If a (storylet:) call is in the passage, this holds the lambda for that call. Otherwise, it's absent. |
+			| exclusivity | The storylet exclusivity number. Usually only present if an (exclusivity:) call is in the passage.
+			| urgency | The storylet urgency number. Usually only present if an (urgency:) call is in the passage.
 
 			So, you can think of `(history: where its tags contains "Forest")` as a shorthand for
 			`(find: _name where (passage: _name)'s tags contains "Forest", ...(history:))`,
@@ -1025,6 +1028,8 @@ define([
 			| name | The string name of this passage. |
 			| tags | An array of strings, which are the tags you gave to this passage. |
 			| storylet | If a (storylet:) call is in the passage, this holds the lambda for that call. Otherwise, it's absent. |
+			| exclusivity | The storylet exclusivity number. Usually only present if an (exclusivity:) call is in the passage.
+			| urgency | The storylet urgency number. Usually only present if an (urgency:) call is in the passage.
 
 			However, if the passage contained a (metadata:) macro call, then the data provided to that macro call will be added to that
 			passage's datamap. So, you can have any amount of author-defined data in it as well.
@@ -1070,6 +1075,8 @@ define([
 			| source | The source markup of the passage, exactly as you entered it in the Twine editor |
 			| tags | An array of strings, which are the tags you gave to the passage. |
 			| storylet | If a (storylet:) call is in the passage, this holds the lambda for that call. Otherwise, it's absent. |
+			| exclusivity | The storylet exclusivity number. Usually only present if an (exclusivity:) call is in the passage.
+			| urgency | The storylet urgency number. Usually only present if an (urgency:) call is in the passage.
 
 			However, if the passage contained a (metadata:) macro call, then the data provided to that macro call will be added to that
 			passage's datamap. So, you can have any amount of author-defined data in it as well.
@@ -1100,8 +1107,8 @@ define([
 		/*d:
 			(open-storylets: [Lambda]) -> Array
 			
-			Checks all of the (storylet:) macros in every passage, and provides an array of datamaps for every passage whose (storylet:) lambda returned true, sorted by passage name.
-			If a lambda was provided, the storylets are filtered using it as a search test.
+			Checks all of the (storylet:) macros in every passage, and provides an array of datamaps for every passage whose (storylet:) lambda produced true, sorted by their "urgency"
+			metadata value, then by passage name. If a lambda was provided, the storylets are filtered using it as a search test.
 			
 			Example usage:
 			* `(for: each _p, ...(open-storylets:)'s 1stTo5th)[(link-goto: _p's name) - ]` creates passage links for the first five open storylets.
@@ -1113,6 +1120,14 @@ define([
 			macros such as (for:), (link-goto:) and such.
 
 			Details:
+
+			The exact algorithm determining the contents and order of the resulting array is as follows.
+			1. First, every passage's "storylet" lambda is run. If it produced true, that passage is added to the array.
+			2. Then, the highest "exclusivity" metadata number among the added passages is found. Each passage with an "exclusivity" lower than that is removed.
+			3. The array is then sorted by each passage's "urgency" metadata number. Ties are then sorted by passage name.
+
+			The (urgency:) macro can thus be used in passages to affect their order in this array, and (exclusivity:) can be used to situationally exclude certain passages from it.
+
 			The passages returned are datamaps identical to those returned by (passage:). They contain the following names and values.
 
 			| Name | Value |
@@ -1121,6 +1136,8 @@ define([
 			| source | The source markup of the passage, exactly as you entered it in the Twine editor |
 			| tags | An array of strings, which are the tags you gave to the passage. |
 			| storylet | The storylet condition lambda for this passage. |
+			| exclusivity | The exclusivity number, which is used in the algorithm above. Usually added by (exclusivity:).
+			| urgency | The urgency number, which is used in the algorithm above. Usually added by (urgency:).
 
 			As with all arrays, the (open-storylets:) array can be filtered using (filtered:), to, for instance, only contain passages with a certain tag.
 
@@ -1134,7 +1151,7 @@ define([
 			(storylet:), (passages:)
 
 			Added in: 3.2.0
-			#storylet
+			#storylet 2
 		*/
 		("open-storylets", (section, lambda) => {
 			/*
@@ -1149,7 +1166,18 @@ define([
 			if (err) {
 				return err;
 			}
-			return result.map(clone).sort((a,b) => sort(a.get('name'), b.get('name')));
+			return result.map(clone).sort((a,b) => {
+				/*
+					Sort first by urgency, then by name.
+				*/
+				let aUrgency = a.get('urgency'), bUrgency = b.get('urgency');
+				aUrgency = typeof aUrgency === "number" ? aUrgency : 0;
+				bUrgency = typeof bUrgency === "number" ? bUrgency : 0;
+				if (aUrgency !== bUrgency) {
+					return bUrgency - aUrgency;
+				}
+				return sort(a.get('name'), b.get('name'));
+			});
 		},
 		[optional(Lambda.TypeSignature('where'))])
 

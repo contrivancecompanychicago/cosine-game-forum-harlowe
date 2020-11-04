@@ -63,6 +63,22 @@ describe("metadata macros", function() {
 			createPassage("(storylet: when it is 2)", "grault");
 			expect("(open-storylets:)").markupToError();
 		});
+		it("sorts passages with a greater 'urgency' metadata number higher", function() {
+			createPassage("(storylet: when true)(urgency:2)", "grault");
+			createPassage("(storylet: when true)", "garply");
+			createPassage("(storylet: when true)(urgency:-1)", "aldo");
+			expect("(for: each _a, ...(open-storylets:))[(print:_a's name) ]").markupToPrint("grault garply aldo ");
+		});
+		it("only includes passages with the highest 'exclusivity' metadata number", function() {
+			createPassage("(storylet: when $a is 1)(exclusivity:2)", "grault");
+			createPassage("(storylet: when $a is 1)(exclusivity:2)", "qux");
+			createPassage("(storylet: when $a or $b is 1)", "garply");
+			createPassage("(storylet: when $a or $b or $c is 1)(exclusivity:-1)", "aldo");
+			createPassage("(storylet: when $a or $b or $c is 1)(exclusivity:-2)", "walter");
+			expect("(set:$a to 1)(for: each _a, ...(open-storylets:))[(print:_a's name) ]").markupToPrint("grault qux ");
+			expect("(set:$a to 0, $b to 1)(for: each _a, ...(open-storylets:))[(print:_a's name) ]").markupToPrint("garply ");
+			expect("(set:$b to 0, $c to 1)(for: each _a, ...(open-storylets:))[(print:_a's name) ]").markupToPrint("aldo ");
+		});
 		describe("when evaluating (storylet:) lambdas", function() {
 			it("'visits' refers to the containing passage itself", function() {
 				createPassage("(storylet: when visits > 3)", "grault");
@@ -93,12 +109,35 @@ describe("metadata macros", function() {
 		});
 	});
 	describe("the (metadata:) macro", function() {
+		it("accepts valid dataname and datavalue pairs", function() {
+			expect("(metadata: 'foo')").markupToError();
+			expect("(metadata: 'foo', 1, 'bar')").markupToError();
+			expect("(metadata: true, 1)").markupToError();
+			expect("(metadata: 'foo', 1, 'bar', 2)").not.markupToError();
+		});
 		it("displays nothing in passages when run", function() {
 			expect("(metadata: 'foo', 1, 'bar', 2)").markupToPrint('');
 		});
 		it("adds the given values to that passage's (passage:) datamap", function() {
 			createPassage("(metadata: 'foo', 12, 'bar', 24)", "grault");
 			expect("(print: 'foo' of (passage:'grault'))").markupToPrint("12");
+		});
+	});
+	['urgency','exclusivity'].forEach(function(name) {
+		describe("the (" + name + ":) macro", function() {
+			it("accepts only numbers", function() {
+				expect("(" + name + ": 'foo')").markupToError();
+				expect("(" + name + ": true)").markupToError();
+				expect("(" + name + ": (a:))").markupToError();
+				expect("(" + name + ": 2)").not.markupToError();
+			});
+			it("displays nothing in passages when run", function() {
+				expect("(" + name + ": 2)").markupToPrint('');
+			});
+			it("adds the given number to that passage's (passage:) datamap as the '" + name + "' data value", function() {
+				createPassage("(" + name + ": 12)", "grault");
+				expect("(print: '" + name + "' of (passage:'grault'))").markupToPrint("12");
+			});
 		});
 	});
 });

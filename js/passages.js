@@ -80,11 +80,12 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 			if (TwineError.containsError(passages)) {
 				return passages;
 			}
-			const ret = [];
+			const active = [];
+			let highestExclusivity = -Infinity;
 			/*
-				Return the result, or the first error that appeared when evaluating a passage's lambda.
+				Populate the result, or return the first error that appeared when evaluating a passage's lambda.
 			*/
-			return passages.reduce((error, p) => {
+			const error = passages.reduce((error, p) => {
 				if (error) {
 					return error;
 				}
@@ -104,10 +105,29 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 						return available;
 					}
 					if (available) {
-						ret.push(p);
+						/*
+							Record the highest exclusivity of this passage before adding it to the active storylets array,
+							for use below.
+						*/
+						const excl = p.get('exclusivity');
+						highestExclusivity = Math.max(highestExclusivity, typeof excl === "number" ? excl : 0);
+						active.push(p);
 					}
 				}
-			}, undefined) || ret;
+			}, undefined);
+			if (error) {
+				return error;
+			}
+			/*
+				Finally, filter results using the exclusivity restriction.
+				Note that passages with no "exclusivity" metadata are treated as exclusivity 0,
+				meaning giving a passage negative exclusivity causes all other passages to exclude it.
+			*/
+			return active.filter(p => {
+				let excl = p.get('exclusivity');
+				excl = typeof excl === "number" ? excl : 0;
+				return excl === highestExclusivity;
+			});
 		},
 
 		/*
