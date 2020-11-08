@@ -55,60 +55,73 @@ tw-broken-link {
 .enchantment-mouseover {
 	border-bottom: 2px dashed #999;
 }
-.enchantment-mouseoverblock {
-	border: 2px dashed #999;
-	display:block;
-}
-
-.enchantment-mouseout, .enchantment-mouseoutblock {
+.enchantment-mouseout {
 	border: hsla(200,50%,50%,0.6) 1px solid;
 	&:hover {
 		background-color: hsla(200,25%,75%,0.75);
 		border: transparent 1px solid;
 		border-radius: 0.2em;
 	}
-	.enchantment-mouseoutblock {
-		display:block;
-	}
+}
+
+// We need the clickblock frame to always be above the contents. So, a large pseudo-element is necessary.
+// Also, to account for the contents' padding, it needs to be attached to the contents itself.
+@mixin enchantment-block {
+	content:"";
+	width:100%;
+	height:100%;
+	top:0;
+	left:0;
+	display: block;
+	box-sizing:border-box;
+	// Because * has "position:relative" in main.css, this line is enough.
+	position:absolute;
+	// May not be necessary, but just in case...
+	pointer-events:none;
 }
 
 .enchantment-clickblock {
 	width:100%;
 	height:100%;
-	// This should always house a block element (<tw-story>).
+	// This should always house a block element.
 	display: block;
-	// We need the clickblock frame to always be above the contents. So, this large pseudo-element is necessary.
-	&::after {
-		content:"";
-		width:100%;
-		height:100%;
-		top:0;
-		left:0;
-		display: block;
-		// Because * has "position:relative" in main.css, this line is enough.
-		position:absolute;
-		// May not be necessary, but just in case...
-		pointer-events:none;
+	& > :not(tw-enchantment)::after {
+		@include enchantment-block;
 		// The actual box-shadow is defined below.
 		// 'box-shadow-color' doesn't exist (can't be animated), so we must overload 'color'.
 		color: hsla(225, 73%, 57%,0.5); // $linkcolour at 0.5 opacity
 		transition: color 0.2s ease-in-out;
 	}
 	// SCSS needs these to be separate for some reason?
-	&:hover::after {
+	& > :not(tw-enchantment):hover::after {
 		color: hsla(195, 100%, 50%, 0.5); // $hovercolour at 0.5 opacity
 	}
-	&:active::after {
+	& > :not(tw-enchantment):active::after {
 		color: hsla(7, 71%, 55%, 0.5); // $activecolour at 0.5 opacity
 	}
-	// <tw-story> has an inset box, unlike <tw-passage> et al.
-	&::after {
+	// Most targets, and importantly <tw-story>, have an inset box.
+	& > :not(tw-enchantment)::after {
 		box-shadow: inset 0 0 0 0.5vmax;
 	}
-	// All other clickblocks have normal box-shadows.
-	tw-story &::after {
+	// <tw-passage> and <tw-sidebar>, which don't have padding, have normal box-shadows.
+	& > tw-passage::after, & > tw-sidebar::after {
 		// If no colour is specified, box-shadow uses 'color'.
 		// Might as well use vmax because % doesn't work for box-shadow.
 		box-shadow: 0 0 0 0.5vmax;
 	}
+}
+
+.enchantment-mouseoverblock > :not(tw-enchantment)::after {
+	@include enchantment-block;
+	border: 2px dashed #999;
+}
+.enchantment-mouseoutblock > :not(tw-enchantment)::after {
+	@include enchantment-block;
+	border: hsla(200,50%,50%,0.6) 2px solid;
+}
+.enchantment-mouseoutblock:hover > :not(tw-enchantment)::after {
+	@include enchantment-block;
+	background-color: hsla(200,25%,75%,0.75);
+	border: transparent 2px solid;
+	border-radius: 0.2em;
 }

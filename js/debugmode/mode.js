@@ -247,6 +247,9 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		rowCheck({name, path, tempScope}, row) {
 			return row.attr('data-name') === name && row.attr('data-path') === (path+'') && row.attr('data-scope') === tempScope;
 		},
+		columnHead() {
+			return `<tr class="panel-head"><th>Name</th><th>Type</th><th>Scope</th><th>Value</th></tr>`;
+		},
 	});
 	/*
 		This event handler updates variables whenever the state is changed. Each row of data is either a global
@@ -417,6 +420,9 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		rowCheck(enchantment, row) {
 			return row.data('enchantment') === enchantment;
 		},
+		columnHead() {
+			return `<div class="panel-head"><th>Name</th><th>Scope</th><th>Value</th></tr>`;
+		},
 	});
 	function updateEnchantments(section) {
 		Enchantments.update(section.enchantments, section.enchantments.length);
@@ -435,7 +441,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 	const storyletSection = Section.create(storyElement);
 	const Storylets = Panel.create({
 		className: "storylets", tabName: "Storylet",
-		rowAdd({name, active, storyletSource}) {
+		rowAdd({name, active, storyletSource, exclusive, urgent}) {
 
 			return $(`<tr class="storylet-row ${!active ? 'storylet-closed' : ''}">`)
 				.attr('data-name', name)
@@ -444,11 +450,16 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 				*/
 				.append(
 					"<td class='storylet-name'>" + name
-					+ "</td><td class='storylet-lambda'>" + storyletSource + "</td>"
+					+ "</td><td class='storylet-lambda'>" + storyletSource
+					+ "</td><td class='storylet-exclusive'>" + exclusive
+					+ "</td><td class='storylet-urgent'>" + urgent + "</td>"
 				);
 		},
 		rowCheck({name}, row) {
 			return row.attr('data-name') === escape(name + '');
+		},
+		columnHead() {
+			return `<tr class="panel-head"><th>Name</th><th>Condition</th><th class='storylet-exclusive'>Exclusivity</th><th class='storylet-urgent'>Urgency</th></tr>`;
 		},
 	});
 	/*
@@ -468,12 +479,24 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			name: e.get('name'),
 			storyletSource: e.get('storylet').TwineScript_ToSource(),
 			active: !error && activeStorylets.some(map => map.get('name') === e.get('name')),
+			exclusive: typeof e.get('exclusivity') === "number" ? e.get('exclusivity') : 0,
+			urgent: typeof e.get('urgency') === "number" ? e.get('urgency') : 0,
 		})), error ? 0 : activeStorylets.length);
 		/*
 			If the list was indeed an error, simply close and mark every storylet row,
 			because storylet-listing macros currently won't work.
 		*/
 		Storylets.panel[(error ? 'add' : 'remove') + 'Class']('storylet-error');
+		/*
+			Hide the "exclusive" or "urgent" columns if all of the values are 0 or a non-number.
+		*/
+		const anyExclusives = allStorylets.some(e => e.get('exclusivity') && typeof e.get('exclusivity') === "number");
+		const anyUrgents = allStorylets.some(e => e.get('urgency') && typeof e.get('urgency') === "number");
+		Storylets.panel[(anyExclusives ? 'add' : 'remove') + 'Class']('panel-exclusive');
+		Storylets.panel[(anyUrgents ? 'add' : 'remove') + 'Class']('panel-urgent');
+		/*
+			Reveal the Storylets tab if there are storylets.
+		*/
 		if (allStorylets.length) {
 			Storylets.tab.show();
 		}
@@ -493,6 +516,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		rowAdd: $.noop,
 		rowCheck: $.noop,
 		tabUpdate: $.noop,
+		columnHead: $.noop,
 	});
 	/*
 		The Source tab shouldn't read "1 Source", unlike the others.
@@ -511,6 +535,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		className: "errors", tabName: "Error",
 		rowAdd: $.noop,
 		rowCheck: $.noop,
+		columnHead: $.noop,
 	});
 	const onError = (error, code) => {
 		/*

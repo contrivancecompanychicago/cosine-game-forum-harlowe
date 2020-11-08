@@ -342,6 +342,10 @@ tw-debugger {
 	.panel-rows:empty + .panel-variables-bottom {
 		display:none;
 	}
+	.panel-storylets:not(.panel-exclusive) .storylet-exclusive,
+	.panel-storylets:not(.panel-urgent) .storylet-urgent {
+		display:none;
+	}
 	.panel-variables-bottom {
 		padding-top:5px;
 	}

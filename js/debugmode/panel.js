@@ -9,9 +9,9 @@ define(['jquery'], ($) => {
 			rowAdd is a function which produces a new DOM structure representing the passed-in data.
 			rowCheck compares an existing DOM structure created by rowAdd to a given data row, to see if the
 			former represents the latter.
-			tabUpdate is an overridable function for updting the tab's name.
+			tabUpdate is an overridable function for updating the tab's name.
 		*/
-		create({className, rowAdd, rowCheck, tabName, tabUpdate}) {
+		create({className, rowAdd, rowCheck, columnHead, tabName, tabUpdate}) {
 			const panel = $(`<div class='panel panel-${className}' hidden><table class='panel-rows'></table></div>`);
 			const tab = $(`<button class='tab tab-${className}'>0 ${tabName}s</button>`);
 			tab.click(() => {
@@ -35,11 +35,12 @@ define(['jquery'], ($) => {
 				panelRows: panel.find('.panel-rows'),
 				rowAdd,
 				rowCheck,
+				columnHead,
 				tabUpdate,
 			});
 		},
 		update(data, count) {
-			const {rowCheck, rowAdd, panelRows} = this;
+			const {rowCheck, rowAdd, panelRows, columnHead} = this;
 			const newRows = [];
 			const children = panelRows.children();
 			/*
@@ -63,6 +64,14 @@ define(['jquery'], ($) => {
 				And finally, update the tab.
 			*/
 			this.tabUpdate(count);
+			/*
+				If the table has any rows in it, add the headers. Otherwise, remove them.
+			*/
+			if (count > 0 && !panelRows.find('.panel-head').length) {
+				panelRows.prepend(columnHead());
+			} else if (count === 0) {
+				panelRows.find('.panel-head').remove();
+			}
 		},
 	});
 	return Panel;

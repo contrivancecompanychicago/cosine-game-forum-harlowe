@@ -332,6 +332,10 @@
 				let ret = '';
 				for (let i = 0; i < currentBranch.length; i+=1) {
 					const type = currentBranch[i].type;
+					// if the name is "verbatim", erase all of the class names before it.
+					if (type === "verbatim") {
+						ret = '';
+					}
 					let name = "harlowe-3-" + type;
 					counts[name] = (counts[name] || 0) + 1;
 					// If this name has been used earlier in the chain, suffix

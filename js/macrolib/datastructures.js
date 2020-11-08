@@ -732,7 +732,7 @@ define([
 
 			Example usage:
 			```
-			(set: $partyMembers to (a: (dm: "name", "Alan", curseLevel, 0), (dm: "name", "Jess", curseLevel, 0)))))
+			(set: $partyMembers to (a: (dm: "name", "Alan", "curseLevel", 0), (dm: "name", "Jess", "curseLevel", 0)))))
 			(set: $taintedParty to (some-pass: where its curseLevel > 0, ...$partyMembers))
 			```
 
@@ -753,7 +753,7 @@ define([
 
 			Example usage:
 			```
-			(set: $partyMembers to (a: (dm: "name", "Alan", curseLevel, 0), (dm: "name", "Jess", curseLevel, 0)))))
+			(set: $partyMembers to (a: (dm: "name", "Alan", "curseLevel", 0), (dm: "name", "Jess", "curseLevel", 0)))))
 			(set: $noMelvins to (none-pass: where its name is "Melvin", ...$partyMembers))
 			```
 
@@ -1113,6 +1113,8 @@ define([
 			Example usage:
 			* `(for: each _p, ...(open-storylets:)'s 1stTo5th)[(link-goto: _p's name) - ]` creates passage links for the first five open storylets.
 			* `(link-goto: "Off to the next job!", (either: ...(open-storylets: where 'night' is not in its tags))'s name)` creates a single link that goes to a random open storylet.
+			* `You have (plural: (open-storylets: where its tags contains 'quest')'s length, "quest") available.` displays "You have 3 quests available." if 3 storylets with the "quest"
+			tag are currently open.
 
 			Rationale:
 			For a greater explanation of what storylets are (essentially, disconnected sets of passages that can be procedurally visited when author-specified requirements are met),
@@ -1125,6 +1127,7 @@ define([
 			1. First, every passage's "storylet" lambda is run. If it produced true, that passage is added to the array.
 			2. Then, the highest "exclusivity" metadata number among the added passages is found. Each passage with an "exclusivity" lower than that is removed.
 			3. The array is then sorted by each passage's "urgency" metadata number. Ties are then sorted by passage name.
+			4. If the optional "where" lambda was provided, then the results are filtered with it, as if by (filtered:).
 
 			The (urgency:) macro can thus be used in passages to affect their order in this array, and (exclusivity:) can be used to situationally exclude certain passages from it.
 
@@ -1138,8 +1141,6 @@ define([
 			| storylet | The storylet condition lambda for this passage. |
 			| exclusivity | The exclusivity number, which is used in the algorithm above. Usually added by (exclusivity:).
 			| urgency | The urgency number, which is used in the algorithm above. Usually added by (urgency:).
-
-			As with all arrays, the (open-storylets:) array can be filtered using (filtered:), to, for instance, only contain passages with a certain tag.
 
 			If no passages' storylet requirements are currently met, the array will be empty.
 

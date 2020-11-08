@@ -62,7 +62,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Now, `(enchant:)` can also accept a 'via' lambda as its second argument, to apply a slightly different changer to each hook or text - `(enchant: ?passage's lines, via (text-color:(hsl: pos * 10, 1, 0.5)))` uses the new "pos" identifier (see below) to give each line of the passage a different colour.
  * Now, `(alert:)`, `(confirm:)` and `(prompt:)` accept optional strings for their dialogs' link text (which are "Cancel" and "OK" if no strings are provided).
  * Macros and expressions (such as bare variables) inside the strings given to `(alert:)`, `(confirm:)` and `(prompt:)` will now run. This wasn't strictly a bug, but it was inconsistent given that markup is available in them.
- * The default CSS for `(mouseover:)` and `(mouseout:)` (a dotted gray border and translucent cyan border, respectively) has been brightened slightly to be more visible.
+ * The default CSS for `(mouseover:)` and `(mouseout:)` (a dotted gray border and translucent cyan border, respectively) has been brightened slightly to be more visible. Also, it has been altered to work correctly with the new `(box:)` macro.
  * Reworded the error message produced by trying to get an array element that's outside the array's length (such as `(a: 1,2)'s 5th`).
  * Removed unused, undocumented CSS for the following (also unused) elements: `<tw-outline>`, `<tw-shadow>`, `<tw-emboss>`, `<tw-condense>`, `<tw-expand>`, `<tw-blur>`, `<tw-blurrier>`, `<tw-smear>`, `<tw-mirror>`, `<tw-upside-down>`, `<tw-fade-in-out>`, `<tw-rumble>`, `<tw-shudder>`, and `<tw-shudder-in>`. The CSS applied to these was mostly functionally identical to their corresponding `(textstyle:)` styling.
  * The `(text-style:)` styles "rumble" and "shudder" no longer need to set `display:inline-block` on the hook.
@@ -77,6 +77,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * `(alert:)` has been renamed to `(dialog:)`, retaining the original name `(alert:)` as an alias for it. Moreover, it can now accept any amount of link text, as well as a bound variable to set to the text of whichever link you click. Also, changers like `(t8n:)` can now be attached to the `(dialog:)` macro.
  * `(rgb:)` now accepts fractional values for the R, G, and B components.
  * Made the syntax highlighting dark mode colours 50% brighter.
+ * Markup that's inside the verbatim markup will no longer be syntax-highlighted as if it was outside it.
 
 #### Additions
 

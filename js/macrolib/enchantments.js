@@ -822,12 +822,12 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 						target => {
 							/*
 								If the target <tw-enchantment> wraps a "block" element (currently defined as just
-								<tw-story>, <tw-sidebar> or <tw-passage>) then use the enchantDesc's
+								<tw-story>, <tw-sidebar>, <tw-passage> or "display:block" elements) then use the enchantDesc's
 								blockClassList instead of its classList. This is used to give (click: ?page)
 								a different styling than just turning the entire passage text into a link.
 							*/
 							target.attr('class',
-								target.children().is("tw-story, tw-sidebar, tw-passage")
+								target.children().is("tw-story, tw-sidebar, tw-passage") || target.children().css('display') === "block"
 								? enchantDesc.blockClassList
 								: enchantDesc.classList
 							);
