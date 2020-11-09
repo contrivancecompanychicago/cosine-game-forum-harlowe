@@ -223,7 +223,7 @@
 
 			All text from the token onward, until the next token is encountered, is contained in the specified column. A `|==|` token ends the set of columns and returns the page to normal.
 
-			Columns are currently laid out from left to right, in order of appearance.
+			Columns are laid out from left to right, in order of appearance.
 			
 			Any amount of whitespace is permitted before or after each token, as long as it is on a single line.
 

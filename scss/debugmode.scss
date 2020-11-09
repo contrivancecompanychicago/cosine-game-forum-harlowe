@@ -371,6 +371,9 @@ tw-debugger {
 	.variable-type {
 		color:#444;
 		font-weight:normal;
+		text-overflow: ellipsis;
+		overflow: hidden;
+		max-width: 10em;
 	}
 	.error-row {
 		display:table-row;

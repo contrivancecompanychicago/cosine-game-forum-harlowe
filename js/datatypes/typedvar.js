@@ -1,5 +1,5 @@
 "use strict";
-define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'internaltypes/twineerror'], ({typeName, matches, unstorableValue}, Datatype, VarRef, TwineError) => {
+define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'internaltypes/twineerror'], ({typeName, matches, toSource, unstorableValue}, Datatype, VarRef, TwineError) => {
 	const {freeze,assign,create} = Object;
 	/*d:
 		TypedVar data
@@ -51,7 +51,10 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 		},
 
 		TwineScript_ToSource() {
-			return this.datatype.TwineScript_ToSource() + "-type " + this.varRef.TwineScript_ToSource();
+			/*
+				This must use toSource(), as the datatype could be a data pattern, such as an array.
+			*/
+			return toSource(this.datatype) + "-type " + this.varRef.TwineScript_ToSource();
 		},
 		TwineScript_GetProperty(prop) {
 			return prop === "name" ? this.getName() : this[prop];

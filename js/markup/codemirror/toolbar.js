@@ -1009,7 +1009,7 @@
 					type: 'preview',
 					text: 'Example text preview',
 					update(model, panel) {
-						panel.firstChild.setAttribute('style', model.changers['text-style'].map(name => previewStyles[parse(name)]).join(';') + ";position:relative;");
+						panel.firstChild.setAttribute('style', "position:relative;" + model.changers['text-style'].map(name => previewStyles[parse(name)]).join(';'));
 					},
 				},{
 					type: 'small',
@@ -1255,7 +1255,7 @@
 						},
 						el('<br>'),
 						{
-							type: "inline-number",
+							type: "inline-range",
 							text: "Angle (deg):",
 							value: 0,
 							min: 0,
@@ -1962,6 +1962,161 @@
 			},
 			confirmRow),
 
+		rotate: folddownPanel({
+				type: 'preview',
+				text: 'Rotated text preview',
+				update(model, panel) {
+					panel.setAttribute('style', "height:6em;");
+					const span = panel[$]('span');
+					const { changers:c } = model, rx = c['text-rotate-x'], ry = c['text-rotate-y'], rz = c['text-rotate-z'];
+					let style = 'margin-top:2em;transform:';
+					if (rx || ry) {
+						style += 'perspective(50vw) ';
+					}
+					if (rx) {
+						style += `rotateX(${rx}deg) `;
+					}
+					if (ry) {
+						style += `rotateY(${ry}deg) `;
+					}
+					if (rz) {
+						style += `rotateZ(${rz}deg)`;
+					}
+					span.setAttribute('style', style);
+				},
+			},{
+				type: "range",
+				text: "Rotation (X axis):",
+				value: 0,
+				min: 0,
+				max: 359,
+				step: 1,
+				model(m, elem) {
+					const {value} = elem[$]('input');
+					if (+value) {
+						m.changerNamed('text-rotate-x').push(value);
+						m.valid = true;
+					}
+				},
+			},{
+				type: "range",
+				text: "Rotation (Y axis):",
+				value: 0,
+				min: 0,
+				max: 359,
+				step: 1,
+				model(m, elem) {
+					const {value} = elem[$]('input');
+					if (+value) {
+						m.changerNamed('text-rotate-y').push(value);
+						m.valid = true;
+					}
+				},
+			},{
+				type: "range",
+				text: "Rotation (Z axis):",
+				value: 0,
+				min: 0,
+				max: 359,
+				step: 1,
+				model(m, elem) {
+					const {value} = elem[$]('input');
+					if (+value) {
+						m.changerNamed('text-rotate-z').push(value);
+						m.valid = true;
+					}
+				},
+			},
+			remainderOfPassageCheckbox,
+			confirmRow),
+
+		columns: folddownPanel({
+				type: 'preview',
+				text: 'Use columns to lay out two or more spans of prose alongside each other. Each column has its own margins and can occupy a different amount of horizontal space.',
+				update(model, panel) {
+					panel.setAttribute('style', "width:90%;display:flex;justify-content:space-between;height:5em;overflow-y:hidden;");
+					const columns = (model.columns || []);
+					const spans = Array.from(panel[$$]('span'));
+
+					for (let i = 0; i < Math.max(columns.length, spans.length); i += 1) {
+						/*
+							Remove excess columns and add missing columns.
+						*/
+						if (i >= columns.length) {
+							spans[i].remove();
+						}
+						else if (i >= spans.length) {
+							panel.append(el('<span>' + spans[0].textContent + '</span>'));
+						}
+					}
+					const totalWidth = columns.reduce((a,e) => a + e.width, 0);
+					Array.from(panel[$$]('span')).forEach((span,i) =>
+						span.setAttribute('style',`position:relative; font-size:50%; width:${columns[i].width/totalWidth*100}%;margin-left:${columns[i].left}em;margin-right:${columns[i].right}em`)
+					);
+				},
+			},{
+				type: "inline-dropdown",
+				text: 'Columns:',
+				options: ["1", "2", "3", "4", "5", "6"],
+				model(m, elem) {
+					m.columns = [...Array(+elem[$]('select').value || 1)].map(() => ({ left: 1, width:1, right: 1 }));
+					m.wrapStart = '';
+					m.innerText = '';
+					m.wrapEnd = m.columns.length > 1 ? "\n|==|" : '';
+					m.valid = true;
+				},
+				update(m, elem) {
+					/*
+						This crude function hides all of the unavailable columns' margin and width inputs.
+					*/
+					Array.from(elem.parentNode[$$](`.harlowe-3-labeledInput`)).forEach(el => el.removeAttribute('style'));
+					Array.from(elem.parentNode[$$](`p:nth-of-type(${m.columns.length}) ~ .harlowe-3-labeledInput`)).forEach(el => el.setAttribute('style','display:none'));
+				},
+			},
+			el('<br>'),
+			...[0,1,2,3,4,5].reduce((a,n) => a.concat({
+					type: 'inline-number',
+					text: `Column ${n + 1} left margin:`,
+					value: 1,
+					min: 0,
+					max: 9,
+					step: 1,
+					model(m, el) {
+						if (m.columns[n]) {
+							m.columns[n].left = +el[$]('input').value;
+						}
+					},
+				},{
+					type: 'inline-number',
+					text: `Width:`,
+					value: 1,
+					min: 1,
+					max: 9,
+					step: 1,
+					model(m, el) {
+						if (m.columns[n]) {
+							m.columns[n].width = +el[$]('input').value;
+						}
+					},
+				},{
+					type: 'inline-number',
+					text: `Right margin:`,
+					value: 1,
+					min: 0,
+					max: 9,
+					step: 1,
+					model(m, el) {
+						const col = m.columns[n];
+						if (col) {
+							col.right = +el[$]('input').value;
+							m.wrapStart += `\n${'='.repeat(col.left)}${'|'.repeat(col.width)}${'='.repeat(col.right)}\nColumn ${n}`;
+						}
+					},
+				},
+				el('<p>')
+			),[]),
+			confirmRow),
+
 		collapse: folddownPanel({
 				type: 'inline-dropdown',
 				text: 'Collapse the whitespace within ',
@@ -2262,6 +2417,7 @@
 						html:'<span style="display:inline-block; height:16px; width:16px; border-style: dotted solid solid dotted; border-size:3px;"></span>',
 						onClick: () => switchPanel('borders'),
 					},
+					{ title:'Rotated text',            html: '<div style="transform:rotate(-30deg);font-family:serif;font-weight:bold">R</div>', onClick: () => switchPanel('rotate')},
 					{ title:'Special text style',      html:'Styles…',                    onClick: () => switchPanel('textstyle')},
 					el('<span class="harlowe-3-toolbarBullet">'),
 					{ title:'Heading',                 html:fontIcon('header'),           onClick: () => wrapSelection("\n#","")},
@@ -2269,6 +2425,7 @@
 					{ title:'Numbered list item',      html:fontIcon('list-ol'),          onClick: () => wrapSelection("\n0. ","")},
 					{ title:'Horizontal rule',         html:'<b>—</b>',                   onClick: () => wrapSelection("\n---\n","")},
 					{ title:'Alignment',               html:fontIcon('align-right'),      onClick: () => switchPanel('align')},
+					{ title:'Columns',                 html:fontIcon('columns'),          onClick: () => switchPanel('columns')},
 					el('<span class="harlowe-3-toolbarBullet">'),
 					{ title:'Collapse whitespace (at runtime)', html:'<b>{}</b>',         onClick: () => switchPanel('collapse')},
 					{

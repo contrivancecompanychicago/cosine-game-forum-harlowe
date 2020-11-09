@@ -248,7 +248,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			return row.attr('data-name') === name && row.attr('data-path') === (path+'') && row.attr('data-scope') === tempScope;
 		},
 		columnHead() {
-			return `<tr class="panel-head"><th>Name</th><th>Type</th><th>Scope</th><th>Value</th></tr>`;
+			return `<tr class="panel-head"><th>Type</th><th>Name</th><th>Scope</th><th>Value</th></tr>`;
 		},
 	});
 	/*

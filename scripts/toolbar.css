@@ -123,7 +123,9 @@
 	vertical-align:middle;
 	padding:1px 0px;
 }
-
+.harlowe-3-resultCode * {
+	white-space:nowrap;
+}
 .harlowe-3-toolbarBullet {
 	padding:0px 2px;
 	color:hsla(0,0%,50%,0.5);
