@@ -680,7 +680,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		if (!a || !b) {
 			return TwineError.create(
 				"macrocall",
-				"The sub" + collectionType(sequence) + " index values must not be 0 or NaN."
+				"The sub" + collectionType(sequence) + " index value must not be " + (a && b) + "."
 			);
 		}
 		/*

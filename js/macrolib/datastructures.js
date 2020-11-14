@@ -1161,24 +1161,12 @@ define([
 			if (section.stackTop.evaluateOnly) {
 				return TwineError.create("macrocall", "(open-storylets:) can't be used in " + section.stackTop.evaluateOnly + ".");
 			}
-			const sort = NaturalSort("en"),
-				result = Passages.getStorylets(section, lambda),
+			const result = Passages.getStorylets(section, lambda),
 				err = TwineError.containsError(result);
 			if (err) {
 				return err;
 			}
-			return result.map(clone).sort((a,b) => {
-				/*
-					Sort first by urgency, then by name.
-				*/
-				let aUrgency = a.get('urgency'), bUrgency = b.get('urgency');
-				aUrgency = typeof aUrgency === "number" ? aUrgency : 0;
-				bUrgency = typeof bUrgency === "number" ? bUrgency : 0;
-				if (aUrgency !== bUrgency) {
-					return bUrgency - aUrgency;
-				}
-				return sort(a.get('name'), b.get('name'));
-			});
+			return result.map(clone);
 		},
 		[optional(Lambda.TypeSignature('where'))])
 

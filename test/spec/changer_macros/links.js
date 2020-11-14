@@ -2,13 +2,14 @@ describe("link macros", function() {
 	'use strict';
 	
 	describe("(link-replace:)", function() {
-		it("accepts exactly 1 non-empty string", function() {
+		it("accepts exactly 1 non-empty string, plus an optional changer", function() {
 			expect("(print:(link-replace:))").markupToError();
 			expect("(print:(link-replace:''))").markupToError();
 			expect("(print:(link-replace:'baz'))").not.markupToError();
 			expect("(print:(link-replace:2))").markupToError();
 			expect("(print:(link-replace:false))").markupToError();
 			expect("(print:(link-replace:'baz', 'baz'))").markupToError();
+			expect("(print:(link-replace:'baz', (b4r:'solid')))").not.markupToError();
 		});
 		it("errors when placed in passage prose while not attached to a hook", function() {
 			expect("(link-replace:'A')").markupToError();
@@ -54,6 +55,16 @@ describe("link macros", function() {
 			p.find('tw-link').click();
 			expect(p.text()).not.toBe("B");
 		});
+		it("can be altered with the optional style changer", function(done) {
+			var p = runPassage("(link:'mire', (text-rotate: 20))[]");
+			setTimeout(function(){
+				expect(p.find('tw-link').attr('style')).toMatch(/rotate\(20deg\)/);
+				done();
+			});
+		});
+		it("errors if the optional style changer contains a revision changer", function() {
+			expect("(link:'mire', (append-with:'wow'))[]").markupToError();
+		});
 		it("suppresses all other changers attached to it, applying them only to the revealed text", function() {
 			var p = runPassage("(link:'foo')+(color:#668899)[]");
 			expect(p.find('tw-link')).not.toHaveColour("#668899");
@@ -87,13 +98,14 @@ describe("link macros", function() {
 		});
 	});
 	describe("(link-reveal:)", function() {
-		it("accepts exactly 1 non-empty string", function() {
+		it("accepts 1 non-empty string, plus an optional changer", function() {
 			expect("(print:(link-reveal:))").markupToError();
 			expect("(print:(link-reveal:''))").markupToError();
 			expect("(print:(link-reveal:'baz'))").not.markupToError();
 			expect("(print:(link-reveal:2))").markupToError();
 			expect("(print:(link-reveal:false))").markupToError();
 			expect("(print:(link-reveal:'baz', 'baz'))").markupToError();
+			expect("(print:(link-reveal:'baz', (b4r:'solid')))").not.markupToError();
 		});
 		it("errors when placed in passage prose while not attached to a hook", function() {
 			expect("(link-reveal:'A')").markupToError();
@@ -111,27 +123,27 @@ describe("link macros", function() {
 			expect(p.find('tw-link').length).toBe(0);
 			expect("$c").markupToPrint("12");
 		});
-		// May not want to implement this
-		xit("when clicked, plain hooks (and only plain hooks) in the link text are hidden", function() {
-			var p = runPassage("(link-reveal:'foo[bar]|2>[baz]')[qux]");
-			p.find('tw-link').click();
-			expect(p.text()).toBe("foobazqux");
-			expect(p.find('tw-link').length).toBe(0);
-			p = runPassage("(link-reveal:'[baz](text-style:\"bold\")[garply][corge]')[qux]");
-			p.find('tw-link').click();
-			expect(p.text()).toBe("garplyqux");
-			expect(p.find('tw-link').length).toBe(0);
+		it("can be altered with the optional style changer", function(done) {
+			var p = runPassage("(link-reveal:'mire', (text-rotate: 20))[]");
+			setTimeout(function(){
+				expect(p.find('tw-link').attr('style')).toMatch(/rotate\(20deg\)/);
+				done();
+			});
+		});
+		it("errors if the optional style changer contains a revision changer", function() {
+			expect("(link-reveal:'mire', (append-with:'wow'))[]").markupToError();
 		});
 	});
 	["link-repeat","link-rerun"].forEach(function(name) {
 		describe("("+name+":)", function() {
-			it("accepts exactly 1 non-empty string", function() {
+			it("accepts 1 non-empty string, plus an optional changer", function() {
 				expect("(print:("+name+":)").markupToError();
 				expect("(print:("+name+":''))").markupToError();
 				expect("(print:("+name+":'baz'))").not.markupToError();
 				expect("(print:("+name+":2))").markupToError();
 				expect("(print:("+name+":false))").markupToError();
 				expect("(print:("+name+":'baz', 'baz'))").markupToError();
+				expect("(print:("+name+":'baz', (b4r:'solid')))").not.markupToError();
 			});
 			it("errors when placed in passage prose while not attached to a hook", function() {
 				expect("("+name+":'A')").markupToError();
@@ -164,6 +176,16 @@ describe("link macros", function() {
 					expect("$c").markupToPrint("36");
 				});
 			}
+			it("can be altered with the optional style changer", function(done) {
+				var p = runPassage("("+name+":'mire', (text-rotate: 20))[]");
+				setTimeout(function(){
+					expect(p.find('tw-link').attr('style')).toMatch(/rotate\(20deg\)/);
+					done();
+				});
+			});
+			it("errors if the optional style changer contains a revision changer", function() {
+				expect("("+name+":'mire', (append-with:'wow'))[]").markupToError();
+			});
 		});
 	});
 	/*
@@ -264,6 +286,17 @@ describe("link macros", function() {
 						expect($('tw-passage p').text()).toBe("bar");
 						done();
 					});
+				});
+				it("can be altered with the optional style changer", function(done) {
+					createPassage("<p>$foo</p>","mire");
+					var p = runPassage("("+name+":'mire', (text-rotate: 20))[]");
+					setTimeout(function(){
+						expect(p.find('tw-link').attr('style')).toMatch(/rotate\(20deg\)/);
+						done();
+					});
+				});
+				it("errors if the optional style changer contains a revision changer", function() {
+					expect("("+name+":'mire', (append-with:'wow'))[]").markupToError();
 				});
 			}
 			else {
@@ -411,17 +444,6 @@ describe("link macros", function() {
 			p.find('tw-link').click();
 			expect(p.text()).toBe('2A');
 		});
-		// May not want to implement this
-		/*it("when clicked, plain hooks (and only plain hooks) in the link text are removed", function() {
-			var p = runPassage("(link-show:'foo[bar]|2>[baz]',?1)");
-			p.find('tw-link').click();
-			expect(p.text()).toBe("foobaz");
-			expect(p.find('tw-link').length).toBe(0);
-			p = runPassage("(link-show:'[baz](text-style:\"bold\")[garply][corge]',?1)");
-			p.find('tw-link').click();
-			expect(p.text()).toBe("garply");
-			expect(p.find('tw-link').length).toBe(0);
-		});*/
 	});
 	describe("(link-fullscreen:)", function() {
 		it("accepts 2 or 3 non-empty strings", function() {

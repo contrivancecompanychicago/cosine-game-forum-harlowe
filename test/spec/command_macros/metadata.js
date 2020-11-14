@@ -45,6 +45,70 @@ describe("metadata macros", function() {
 			expect("(source:(passages: where its name is 'grault')'s 1st's storylet)").markupToPrint("when true");
 		});
 	});
+	describe("the (link-storylet:) macro", function() {
+		it("accepts optional link text, plus a non-zero whole number or a 'where' lambda", function() {
+			expect("(link-storylet: 'ears')").markupToError();
+			expect("(link-storylet:)").markupToError();
+			expect("(link-storylet: 0)").markupToError();
+			expect("(link-storylet: 2.1)").markupToError();
+			expect("(link-storylet: 2)").not.markupToError();
+			expect("(link-storylet: -1)").not.markupToError();
+			expect("(link-storylet: 'ears', 2)").not.markupToError();
+			expect("(link-storylet: 'ears', where its tags contains 'e')").not.markupToError();
+			expect("(link-storylet: 'ears', 2, where its tags contains 'e')").markupToError();
+		});
+		it("given an index n, creates a link to the nth open storylet, using the same order as (open-storylets:)", function() {
+			createPassage("**foobarbaz(storylet: when  true is true)**", "grault");
+			createPassage("|a>[(storylet: when  $a is 1)]", "garply");
+			createPassage("(storylet: when  true is false)", "corge");
+			createPassage("(storylet: when  $a is > 1)", "quux");
+			runPassage("(set: $a to 1)");
+			expect("(link-storylet:1) (link-storylet:2)").markupToPrint("garply grault");
+			runPassage("(set: $a to 2)");
+			expect("(link-storylet:1) (link-storylet:2)").markupToPrint("grault quux");
+		});
+		it("given an index n, links to the nth (open-storylets:) result", function() {
+			createPassage("**foobarbaz(storylet: when $a is 1)**", "grault");
+			createPassage("|a>[(storylet: when $a is 1)]", "garply");
+			createPassage("(storylet: when $a is > 1)", "corge");
+			createPassage("(storylet: when $a is > 1)", "quux");
+			expect("(set:$a to 1)(link-storylet: 2)").markupToPrint('grault');
+			expect("(set:$a to 2)(link-storylet: 2)").markupToPrint('quux');
+		});
+		it("if the index n is negative, links to the nthlast (open-storylets:) result", function() {
+			createPassage("**foobarbaz(storylet: when $a > 1)**", "grault");
+			createPassage("|a>[(storylet: when $a > 1)]", "garply");
+			createPassage("(storylet: when $a is > 1)", "corge");
+			createPassage("(storylet: when $a is > 1)", "quux");
+			expect("(set:$a to 2)(link-storylet: -1) (link-storylet: -2)").markupToPrint('quux grault');
+		});
+		it("given a 'where' lambda, creates a link to the first (open-storylets:) result to match the condition", function() {
+			createPassage("**foobarbaz(storylet: when $a is 1)**", "grault");
+			createPassage("|a>[(storylet: when $a is 1)]", "garply");
+			createPassage("(storylet: when $a is > 1)", "corge");
+			createPassage("(storylet: when $a is > 1)", "quux");
+			expect("(set:$a to 1)(link-storylet: where its name contains 't')").markupToPrint('grault');
+			expect("(set:$a to 2)(link-storylet: where its name contains 'x')").markupToPrint('quux');
+		});
+		it("if there are no matches, prints nothing", function() {
+			createPassage("(storylet: when $a is > 1)", "corge");
+			createPassage("(storylet: when $a is > 1)", "quux");
+			expect("(set:$a to 1)(link-storylet: 2)").markupToPrint('');
+			expect("(set:$a to 2)(link-storylet: where its name is 'qux')").markupToPrint('');
+		});
+		it("uses the optional string as the link text instead of the passage name", function() {
+			createPassage("(storylet: when $a is > 1)", "corge");
+			createPassage("(storylet: when $a is > 1)", "quux");
+			expect("(set:$a to 2)(link-storylet: 'foo', 1)").markupToPrint('foo');
+			expect("(link-storylet: 'bar', where its name contains 'x')").markupToPrint('bar');
+		});
+		it("errors at runtime if a lambda causes an error", function() {
+			createPassage("(storylet: when $a is 3 + 'r')", "grault");
+			expect("(link-storylet:1)").markupToError();
+			createPassage("(storylet: when it is 2)", "grault");
+			expect("(link-storylet:1)").markupToError();
+		});
+	});
 	describe("the (open-storylets:) macro", function() {
 		it("returns a sorted array of passages with (storylet:) in their prose, whose lambda returns true", function() {
 			createPassage("**foobarbaz(storylet: when  true is true)**", "grault");
@@ -55,7 +119,14 @@ describe("metadata macros", function() {
 			expect("(for: each _a, ...(open-storylets:))[(print:_a's name) ]").markupToPrint("garply grault ");
 			runPassage("(set: $a to 2)");
 			expect("(for: each _a, ...(open-storylets:))[(print:_a's name) ]").markupToPrint("grault quux ");
-			runPassage("(link-repeat:'garply')[(set:$a to 'a')]\n(link-repeat:'quux')[(set:$a to 2)]");
+		});
+		it("uses an optional 'where' lambda to restrict the returned storylets", function() {
+			createPassage("**foobarbaz(storylet: when $a is 1)**", "grault");
+			createPassage("|a>[(storylet: when $a is 1)]", "garply");
+			createPassage("(storylet: when $a is > 1)", "corge");
+			createPassage("(storylet: when $a is > 1)", "quux");
+			expect("(set:$a to 1)(print:(open-storylets: where its name contains 't')'s 1st's name)").markupToPrint('grault');
+			expect("(set:$a to 2)(print:(open-storylets: where its name contains 'x')'s 1st's name)").markupToPrint('quux');
 		});
 		it("errors at runtime if a lambda causes an error", function() {
 			createPassage("(storylet: when $a is 3 + 'r')", "grault");

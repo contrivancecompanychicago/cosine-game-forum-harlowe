@@ -70,6 +70,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 		/*
 			Storylet macros like (open-storylets:) query every passage's storylet condition code using this method.
 			They may supply a lambda to filter the passages with, first.
+			The results are sorted in the order expected by (open-storylets:).
 		*/
 		getStorylets(section, passagesLambda) {
 			/*
@@ -119,15 +120,28 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 				return error;
 			}
 			/*
-				Finally, filter results using the exclusivity restriction.
+				Filter results using the exclusivity restriction.
 				Note that passages with no "exclusivity" metadata are treated as exclusivity 0,
 				meaning giving a passage negative exclusivity causes all other passages to exclude it.
 			*/
+			const natSort = NaturalSort('en');
 			return active.filter(p => {
-				let excl = p.get('exclusivity');
-				excl = typeof excl === "number" ? excl : 0;
-				return excl === highestExclusivity;
-			});
+					let excl = p.get('exclusivity');
+					excl = typeof excl === "number" ? excl : 0;
+					return excl === highestExclusivity;
+				})
+				/*
+					Sort first by urgency, then by name.
+				*/
+				.sort((a,b) => {
+					let aUrgency = a.get('urgency'), bUrgency = b.get('urgency');
+					aUrgency = typeof aUrgency === "number" ? aUrgency : 0;
+					bUrgency = typeof bUrgency === "number" ? bUrgency : 0;
+					if (aUrgency !== bUrgency) {
+						return bUrgency - aUrgency;
+					}
+					return natSort(a.get('name'), b.get('name'));
+				});
 		},
 
 		/*

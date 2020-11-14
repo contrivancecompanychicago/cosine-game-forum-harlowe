@@ -36,7 +36,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		// {Boolean} enabled          Whether or not this code is enabled. (Disabled code won't be used until something enables it).
 		enabled:          true,
 
-		// {Array} [enablers]         Used by (link:) and its ilk, these are alternative CDs to use instead of this one, to create the link element that
+		// {Array} [enablers]         Used by (link:) and its ilk, these are {descriptor, changer} objects used to create and style the link element that
 		//                            delays the displays of this hook. Each enabler should create an element that removes the CD from this array when activated.
 		enablers:          null,
 
@@ -294,7 +294,18 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 				Overriding all other aspects of this CD are the enablers, which create alternative elements in this CD's place. This overrides even (if:).
 			*/
 			if (enablers && enablers.length) {
-				return enablers[0].render();
+				const {descriptor, changer} = enablers[0];
+				const createdElement = descriptor.render();
+				/*
+					Enablers come with a changer to apply directly to the newly-rendered link element. This is applied
+					using the following slightly crude construction, similar to how Enchantment enchants a scope.
+				*/
+				if (changer) {
+					const cd = ChangeDescriptor.create({ section, target:createdElement });
+					changer.run(cd);
+					cd.update();
+				}
+				return createdElement;
 			}
 
 			/*

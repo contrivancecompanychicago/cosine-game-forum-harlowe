@@ -258,7 +258,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		As with (enchant-in:), this can be given a changer, or a lambda that produces a changer, which is run on each link individually, and can produce different changers for each, depending on
 		their `pos` or a random macro. If the lambda doesn't produce a changer, an error will result.
 
-		Also, as with (enchant-in:), (link:), (replace:), or any of its relatives cannot be given to this macro.
+		Also, as with (enchant-in:), (link:), (replace:), (append-with:), or any of its relatives cannot be given to this macro.
 
 		This creates a hook-specific enchantment, similar to (enchant-in:), It will be listed under the "Enchantments" tab of the Debug Mode panel.
 
@@ -513,7 +513,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 				Rationale:
 				Some lines of prose you write in your story will tend to have identical endings, be they punctuation, dialogue tags, or otherwise,
 				which you may tire of repetitively writing. This macro and (prepend-with:) allow you to automatically attach text without
-				aving to manually write it in full - simply save this changer to a variable, and attach it to the hook. While, it should
+				having to manually write it in full - simply save this changer to a variable, and attach it to the hook. While, it should
 				be noted, you can use (append:) inside of a "footer" tagged passage to also automate this hook modification, this can, at
 				times, be more convenient than having to modify a separate passage. Also, this macro is especially useful
 				when combined with other changers, such as (text-style:), (font:) or (text-colour:).
@@ -571,7 +571,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 				Rationale:
 				Some lines of prose you write in your story will tend to have identical beginnings, be they punctuation, dialogue tags, or otherwise,
 				which you may tire of repetitively writing. This macro and (prepend-with:) allow you to automatically attach text without
-				aving to manually write it in full - simply save this changer to a variable, and attach it to the hook. While, it should
+				having to manually write it in full - simply save this changer to a variable, and attach it to the hook. While, it should
 				be noted, you can use (prepend:) inside of a "footer" tagged passage to also automate this hook modification, this can, at
 				times, be more convenient than having to modify a separate passage. Also, this macro is especially useful
 				when combined with other changers, such as (text-style:), (font:) or (text-colour:).

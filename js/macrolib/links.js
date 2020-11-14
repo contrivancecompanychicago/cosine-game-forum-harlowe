@@ -1,13 +1,13 @@
 "use strict";
-define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/changercommand', 'internaltypes/changedescriptor', 'datatypes/hookset', 'internaltypes/twineerror'],
-($, Macros, Utils, State, Passages, Engine, ChangerCommand, ChangeDescriptor, HookSet, TwineError) => {
+define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/changercommand', 'internaltypes/changedescriptor', 'datatypes/hookset', 'datatypes/lambda', 'internaltypes/twineerror'],
+($, Macros, Utils, State, Passages, Engine, ChangerCommand, ChangeDescriptor, HookSet, Lambda, TwineError) => {
 	/*
 		This module defines the behaviour of links in Harlowe - both
 		the normal passage links, and the (link:) macro's links.
 		But, this does not include (click:) enchantments, which
 		are technically not links (but behave identically).
 	*/
-	const {optional,rest} = Macros.TypeSignature;
+	const {optional,rest,either} = Macros.TypeSignature;
 	const emptyLinkTextMessages = ["Links can't have empty strings for their displayed text.",
 		"In the link syntax, a link's displayed text is inside the [[ and ]], and on the non-pointy side of the -> or <- arrow if it's there."];
 	//const emptyPassageNameMessages = ["Passage links must have a passage name.",
@@ -180,10 +180,12 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 	
 	[
 		/*d:
-			(link: String) -> Changer
+			(link: String, [Changer]) -> Changer
 			Also known as: (link-replace:)
 			
 			When attached to a hook, this replaces the hook with a link that has the given text. The link, when clicked, vanishes and reveals the hook.
+			An optional changer can be given to alter the style of the link
+			(instead of altering the style the attached hook).
 			
 			Example usage:
 			* `(link: "Stake")[The dracula crumbles to dust.]` will create a link reading "Stake"
@@ -203,7 +205,11 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			to disappear, consider using (link-reveal:).
 			
 			Details:
-			This creates a link which is visually indistinguishable from normal passage links.
+			This creates a link which is visually indistinguishable from normal passage links. However, a changer can optionally be given, after the
+			string, to change the appearance of the link. This must be a changer that would be accepted by (enchant-in:) or
+			(link-style:) - which is to say, (link:), (replace:), (append-with:), or any of their relatives cannot be given, or else an error will result.
+			Note that if you wish to apply a changer to every link in the passage (or, via the use of a 'header' or 'footer' tagged passage, every link
+			in the story), then you can simply use (enchant:) with ?Link instead.
 
 			The created link is displayed in place of the hook's contents, and is exempt from all changers that would normally apply
 			to the hook. This means that changers like (text-colour:), added to this changer, will ONLY apply
@@ -222,10 +228,11 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 		*/
 		["link", "link-replace"],
 		/*d:
-			(link-reveal: String) -> Changer
+			(link-reveal: String, [Changer]) -> Changer
 			
 			When attached to a hook, this replaces the hook with a link that has the given text. The link, when clicked, reveals the hook and becomes plain, unstyled text.
-			
+			An optional changer can be given to alter the style of the link (instead of altering the style the attached hook).
+
 			Example usage:
 			`(link-reveal: "Heart")[broken]` will create a link reading "Heart"
 			which, when clicked, changes to plain text, and shows "broken" after it.
@@ -238,7 +245,11 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			revealed when the link is clicked.
 			
 			Details:
-			This creates a link which is visually indistinguishable from normal passage links.
+			This creates a link which is visually indistinguishable from normal passage links. However, a changer can optionally be given, after the
+			string, to change the appearance of the link. This must be a changer that would be accepted by (enchant-in:) or
+			(link-style:) - which is to say, (link:), (replace:), (append-with:), or any of their relatives cannot be given, or else an error will result.
+			Note that if you wish to apply a changer to every link in the passage (or, via the use of a 'header' or 'footer' tagged passage, every link
+			in the story), then you can simply use (enchant:) with ?Link instead.
 
 			The created link is displayed in place of the hook's contents, and is exempt from all changers that would normally apply
 			to the hook. This means that changers like (text-colour:), added to this changer, will ONLY apply
@@ -254,22 +265,14 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			Added in: 1.2.0
 			#links 2
 		*/
-		/*
-			Excised from Details:
-
-			If you want to make only a certain portion of the link text disappear when the whole link is clicked,
-			simply place that portion inside a plain hook, one with no name and no macros attached to the front:
-			`(link-reveal:"She gasped[.]")[and ran over to me.]` will create a link reading "She gasped." that becomes
-			"She gasped and ran over to me." when clicked. This can be used to make the revealed text flow more naturally
-			into the link text, by removing or adjusting punctuation.
-		*/
 		["link-reveal"],
 		/*d:
-			(link-repeat: String) -> Changer
+			(link-repeat: String, [Changer]) -> Changer
 			
 			When attached to a hook, this replaces the hook with a link that has the given text. The link, when clicked, reveals the hook.
 			Further clicks will cause the hook to repeat itself - a copy of the hook's code will be run, and the result appended to it,
-			in a manner similar to (for:).
+			in a manner similar to (for:). An optional changer can be given to alter the style of the link
+			(instead of altering the style the attached hook).
 			
 			Example usage:
 			* `(link-repeat: "Add cheese")[(set:$cheese to it + 1)]` will create a link reading "Add cheese"
@@ -291,28 +294,25 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			hook itself and using (link-style:), or just using (enchant:) with `?Link` to enchant every link.
 			
 			Details:
-			This creates a link which is visually indistinguishable from normal passage links.
-			
+			This creates a link which is visually indistinguishable from normal passage links. However, a changer can optionally be given, after the
+			string, to change the appearance of the link. This must be a changer that would be accepted by (enchant-in:) or
+			(link-style:) - which is to say, (link:), (replace:), (append-with:), or any of their relatives cannot be given, or else an error will result.
+			Note that if you wish to apply a changer to every link in the passage (or, via the use of a 'header' or 'footer' tagged passage, every link
+			in the story), then you can simply use (enchant:) with ?Link instead.
+
 			See also:
 			(link-rerun:), (link-reveal:), (link:), (link-goto:), (click:)
 			
 			Added in: 1.2.0
 			#links 3
 		*/
-		/*
-			Excised from Details:
-
-			If you want to make a certain portion of the link text disappear when the link is clicked,
-			simply put that section of the link text in a plain hook, one with no name and no macros attached
-			to the front, as per (link-reveal:). Note that this text will disappear on the first click, and won't
-			reappear or change on subsequent clicks.
-		*/
 		["link-repeat"],
 		/*d:
-			(link-rerun: String) -> Changer
+			(link-rerun: String, [Changer]) -> Changer
 			
 			When attached to a hook, this replaces the hook with a link that has the given text. The link, when clicked, reveals the hook.
-			Further clicks will cause the hook to rerun itself, as if by the effect of (rerun:).
+			Further clicks will cause the hook to rerun itself, as if by the effect of (rerun:). An optional changer can be given to alter the style of the link
+			(instead of altering the style the attached hook).
 			
 			Example usage:
 			* `(link-rerun: "ROLL DICE ")[You rolled a (random:1,6).]` will create a link reading "ROLL DICE"
@@ -335,7 +335,11 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			hook itself and using (enchant-in:) with `?Link`, or just using (enchant:) with `?Link` to enchant every link.
 
 			Details:
-			This creates a link which is visually indistinguishable from normal passage links.
+			This creates a link which is visually indistinguishable from normal passage links. However, a changer can optionally be given, after the
+			string, to change the appearance of the link. This must be a changer that would be accepted by (enchant-in:) or
+			(link-style:) - which is to say, (link:), (replace:), (append-with:), or any of their relatives cannot be given, or else an error will result.
+			Note that if you wish to apply a changer to every link in the passage (or, via the use of a 'header' or 'footer' tagged passage, every link
+			in the story), then you can simply use (enchant:) with ?Link instead.
 
 			See also:
 			(link-repeat:), (link-reveal:), (link:), (link-goto:), (click:)
@@ -343,24 +347,26 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			Added in: 3.2.0
 			#links 4
 		*/
-		/*
-			Excised from Details:
-			
-			If you want to make a certain portion of the link text disappear when the link is clicked,
-			simply put that section of the link text in a plain hook, one with no name and no macros attached
-			to the front, as per (link-reveal:). Note that this text will disappear on the first click, and won't
-			reappear or change on subsequent clicks.
-		*/
 		["link-rerun"],
 	].forEach(arr =>
 		Macros.addChanger(arr,
-			(_, expr) => {
-				if (!expr) {
+			(_, text, changer) => {
+				if (!text) {
 					return TwineError.create("datatype", emptyLinkTextMessages[0]);
 				}
-				return ChangerCommand.create(arr[0], [expr]);
+				if (changer) {
+					const summary = changer.summary();
+					if (['newTargets', 'target', 'appendSource', 'functions'].some(e => summary.includes(e))) {
+						return TwineError.create(
+							"datatype",
+							"The changer given to (" + arr[0] + ":) can't include a revision or enchantment changer like (replace:) or (click:)."
+						);
+					}
+				}
+				return ChangerCommand.create(arr[0], [text].concat(changer || []));
 			},
-			(desc, text) => {
+			(desc, text, changer) => {
+				const name = arr[0];
 				/*
 					As this is a deferred rendering macro, the current tempVariables
 					object must be stored for reuse, as the section pops it when normal rendering finishes.
@@ -377,7 +383,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 					Create a ChangeDescriptor for the created link, which overrides the entire descriptor if it's placed in its "enablers" array.
 					The reason the original descriptor is returned, though, is so that additional non-enabler changers can apply to it.
 				*/
-				const enabler = ChangeDescriptor.create({
+				const descriptor = ChangeDescriptor.create({
 					source: '<tw-link tabindex=0>' + text + '</tw-link>',
 					/*
 						For Commands whose ChangeDescriptor is permuted by their TwineScript_Attach() method,
@@ -389,13 +395,16 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 					data: {
 						section: desc.section,
 						clickEvent: link => {
-							desc.enablers = desc.enablers.filter(e => e !== enabler);
+							/*
+								Remove this enabler.
+							*/
+							desc.enablers = desc.enablers.filter(e => e.descriptor !== descriptor);
 
 							/*
 								Only (link-reveal:) turns the link into plain text:
 								the others either remove it or leave it be.
 							*/
-							if (arr[0] === "link-reveal") {
+							if (name === "link-reveal") {
 								link.contents().unwrap();
 							}
 							/*
@@ -404,7 +413,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 								then reattaching it after rendering.
 							*/
 							let parent = link.parent();
-							if (arr[0] === "link-rerun") {
+							if (name === "link-rerun") {
 								/*
 									Just to be sure that the link returns to the same DOM element, we
 									save the element in particular here.
@@ -414,20 +423,26 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 							/*
 								Only (link-replace:) and (link-rerun:) remove the link on click - the others merely append.
 							*/
-							if (arr[0] === "link" || arr[0] === "link-rerun") {
+							if (name === "link" || name === "link-rerun" || name === "click-block") {
 								parent.empty();
 							}
 							desc.section.renderInto("", null, desc, tempVariables);
-							if (arr[0] === "link-rerun") {
+							if (name === "link-rerun") {
 								parent.prepend(link);
 							}
 						},
 					},
 				});
-				desc.enablers = (desc.enablers || []).concat(enabler);
+				/*
+					Enablers are {descriptor, changer} objects. The descriptor, above, is used to create
+					the link element. The changer is then applied to the created element (rather than the hook)
+					so that, when it's removed (by clicking, via the above clickEvent), the outer hook remains
+					unaffected by its styling.
+				*/
+				desc.enablers = (desc.enablers || []).concat({ descriptor, changer, });
 				return desc;
 			},
-			[String]
+			[String, optional(ChangerCommand)]
 		)
 	);
 	
@@ -442,7 +457,6 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			
 			Takes a string of link text, and an optional destination passage name, and makes a command to create
 			a link that takes the player to another passage. The link functions identically to a standard link.
-			This command should not be attached to a hook.
 			
 			Example usage:
 			* `(link-goto: "Enter the cellar", "Cellar")` is approximately the same as `[[Enter the cellar->Cellar]]`.
@@ -471,7 +485,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			Added in: 1.0.0
 			#links 5
 		*/
-		(["link-goto"],
+		("link-goto",
 			/*
 				Return a new (link-goto:) object.
 			*/
@@ -542,6 +556,126 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			},
 			[String, optional(String)]
 		)
+		/*d:
+			(link-storylet: [String], Number or Lambda) -> Command
+
+			If there are storylets (passages containing a (storylet:) call) in this story, this will create a link to the first open storylet that
+			matches the passed-in 'where' lambda, or, if a number **n** was passed in, the **n**th (or, if negative, **n**thlast) open storylet.
+
+			Example usage:
+			```
+			You look over the paddock as you ponder how you'll spend the coming day.
+			* (link-storylet: 1)
+			* (link-storylet: 2)
+			* (link-storylet: 3)
+			```
+
+			Rationale:
+			The standard macro for accessing which storylets are currently open in the story is (open-storylets:). Combined
+			with other macros such as (for:) and (link-goto:), links to storylets can be easily created. This macro provides
+			a shorthand for the most basic case: creating a simple link to the first open storylet, second open storylet, and so forth.
+
+			Details:
+			The position functions similarly to the position number given to (subarray:) - positive numbers will count from the start,
+			and negative numbers will count from the end. `(link-storylet:-1)` will produce a link to the last available storylet (which
+			will be the one with the *least* (urgency:) value among open storylets). If the number 0 is given, an error will result.
+
+			If there is no storylet available for the link (such as `(link-storylet: 6)` when only 4 storylets are currently open) then
+			nothing will be displayed. An error will NOT be produced.
+
+			Added in: 3.2.0
+			#links
+		*/
+		("link-storylet",
+			/*
+				Return a new (link-storylet:) object.
+			*/
+			(text, condition) => {
+				const oneNumber = 'one index number or one \'where\' lambda';
+				if (condition !== undefined && typeof text !== 'string') {
+					return TwineError.create('datatype', '(link-storylet:) should be given, after the link text string, only ' + oneNumber + '.');
+				}
+				if (condition === 0 || text === 0) {
+					return TwineError.create('datatype', "(link-storylet:) can't link to the 0th storylet.");
+				}
+				if (typeof text === 'string' && !condition) {
+					return TwineError.create('datatype', '(link-storylet:) must have ' + oneNumber + ' after the link text string');
+				}
+			},
+			(cd, section, text, condition) => {
+				/*
+					If the text argument is skipped (that is, the condition is in the "text" variable)
+					then rearrange the variables correctly.
+				*/
+				if (!condition) {
+					condition = text;
+					text = '';
+				}
+				/*
+					Mistakenly attaching the wrong (t8n:) to a (link-storylet:) macro will lead to
+					a helpful advisory error being emitted.
+				*/
+				if (cd.transition) {
+					const t = "transition";
+					return TwineError.create("datatype", "Please attach ("+t+"-depart:) or ("+t+"-arrive:) to (link-storylet:), not ("+t+":).");
+				}
+				/*
+					Obtain the storylet at the given index, or the first index that passes the 'where' lambda. If there's nothing there,
+					simply don't display anything.
+				*/
+				const isLambda = Lambda.isPrototypeOf(condition);
+				const storylets = Passages.getStorylets(section, isLambda && condition),
+					err = TwineError.containsError(storylets);
+				if (err) {
+					return err;
+				}
+				let passage = storylets[isLambda ? 0 :
+					/*
+						The index is, of course, 1-indexed.
+					*/
+					condition < 0 ? storylets.length + condition : condition - 1];
+				if (!passage) {
+					return cd;
+				}
+				passage = passage.get('name');
+				/*
+					If the optional text wasn't given, use the passage name for the text.
+				*/
+				text = text || passage;
+
+				let source;
+				/*
+					Create the link in a manner consistent with (link-goto:).
+				*/
+				source = source || '<tw-link tabindex=0 '
+					/*
+						Previously visited passages may be styled differently compared
+						to unvisited passages.
+					*/
+					+ (State.passageNameVisited(passage) > 0 ? 'class="visited" ' : '')
+					+ '>' + text + '</tw-link>';
+				/*
+					Instead, the passage name is stored on the <tw-expression>, to be retrieved by clickEvent() above.
+				*/
+				cd.data.linkPassageName = passage;
+				/*
+					All links need to store their section as jQuery data, so that clickLinkEvent can
+					check if the section is blocked (thus preventing clicks).
+				*/
+				cd.data.section = section;
+				return assign(cd, {
+					source,
+					/*
+						Since this link doesn't reveal any hooks, it doesn't necessarily make sense that it should
+						have transitionDeferred... but for consistency with the other links, it does.
+						(Maybe it should error outright if (t8n:) is attached to it?)
+					*/
+					transitionDeferred: true,
+				});
+			},
+			[either(parseInt, String, Lambda.TypeSignature('where')), optional(either(parseInt, Lambda.TypeSignature('where')))]
+		)
+
 
 		/*d:
 			(link-undo: String) -> Command
@@ -549,7 +683,6 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			Takes a string of link text, and produces a link that, when clicked, undoes the current turn and
 			sends the player back to the previously visited passage. The link appears identical to a typical
 			passage link.
-			This command should not be attached to a hook.
 
 			Example usage:
 			`(link-undo:"Retreat")` behaves the same as `(link:"Retreat")[(undo: )]`.
@@ -820,7 +953,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 
 
 	/*d:
-		(link-reveal-goto: String, [String]) -> Changer
+		(link-reveal-goto: String, [String], [Changer]) -> Changer
 		
 		This is a convenient combination of the (link-reveal:) and (go-to:) macros, designed to let you run commands like (set:)
 		just before going to another passage. The first string is the link text, and the second is the passage name.
@@ -847,9 +980,32 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 		#links 6
 	*/
 	Macros.addChanger(["link-reveal-goto"],
-		(section, text, passage) => {
+		(section, text, passage, changer) => {
 			if (!text) {
 				return TwineError.create("datatype", ...emptyLinkTextMessages);
+			}
+			/*
+				To make sense of this macro's odd type signature, we need to check if the passage
+				name is omitted, but the changer isn't.
+			*/
+			if (ChangerCommand.isPrototypeOf(passage)) {
+				if (ChangerCommand.isPrototypeOf(changer)) {
+					return TwineError.create("datatype", "You mustn't give two changers to (link-reveal-goto:)");
+				}
+				changer = passage;
+				passage = undefined;
+			}
+			/*
+				Perform the usual changer type-check that's used for (link:) etc.
+			*/
+			if (changer) {
+				const summary = changer.summary();
+				if (['newTargets', 'target', 'appendSource', 'functions'].some(e => summary.includes(e))) {
+					return TwineError.create(
+						"datatype",
+						"The changer given to (link-reveal-goto:) can't include a revision or enchantment changer like (replace:) or (click:)."
+					);
+				}
 			}
 			/*
 				Being a variant of (link-goto:), this uses the same rules for passage name computation.
@@ -863,9 +1019,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 				Because this is a desugaring of the link syntax, like (link-goto:), we should create
 				a broken link only when the changer is attached.
 			*/
-			return ChangerCommand.create("link-reveal-goto", [text, passage]);
+			return ChangerCommand.create("link-reveal-goto", [text,passage,changer].filter(e => e !== undefined));
 		},
-		(desc, text, passageName) => {
+		(desc, text, passageName, changer) => {
 			/*
 				As explained above, we create the broken link now, and dispose of
 				whatever the contained hook had.
@@ -894,7 +1050,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			/*
 				As with (link:), it is necessary to crate a separate ChangeDescriptor for the created link.
 			*/
-			const enabler = ChangeDescriptor.create({
+			const descriptor = ChangeDescriptor.create({
 				source: '<tw-link tabindex=0 ' + (visited > 0 ? 'class="visited" ' : '') + '>' + text + '</tw-link>',
 				target: desc.target,
 				append: "replace",
@@ -902,7 +1058,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 					section: desc.section,
 					append: "replace",
 					clickEvent: link => {
-						desc.enablers = desc.enablers.filter(e => e !== enabler);
+						desc.enablers = desc.enablers.filter(e => e.descriptor !== descriptor);
 						/*
 							It may seem pointless to unwrap the link, now that we're going to
 							somewhere else, but this change could be observed if a modal (alert:)
@@ -921,9 +1077,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 					},
 				},
 			});
-			desc.enablers = (desc.enablers || []).concat(enabler);
+			desc.enablers = (desc.enablers || []).concat({ descriptor, changer });
 			return desc;
 		},
-		[String, optional(String)]
+		[String, optional(either(ChangerCommand, String)), optional(ChangerCommand)]
 	);
 });
