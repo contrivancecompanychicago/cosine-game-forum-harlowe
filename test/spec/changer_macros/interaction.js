@@ -64,7 +64,7 @@ describe("interaction macros", function() {
 				runPassage("''grault''(set: $a to 1)","garply");
 			});
 			if (!goTo && !undo) {
-				it("accepts either 1 hookset or 1 non-empty string", function() {
+				it("accepts either 1 hookset or 1 non-empty string, followed by an optional changer or 'via' lambda", function() {
 					expect("(print:(" + e.name + ":?foo))").not.markupToError();
 					expect("(print:(" + e.name + ":'baz'))").not.markupToError();
 
@@ -72,6 +72,10 @@ describe("interaction macros", function() {
 					expect("(print:(" + e.name + ":?foo, 'baz'))").markupToError();
 					expect("(print:(" + e.name + ":'baz', 'baz'))").markupToError();
 					expect("(print:(" + e.name + ":''))").markupToError();
+					expect("(print:(" + e.name + ":?foo, (b4r:'solid')))").not.markupToError();
+					expect("(print:(" + e.name + ":?foo, via (b4r:'solid')))").not.markupToError();
+					expect("(print:(" + e.name + ":'baz', (b4r:'solid')))").not.markupToError();
+					expect("(print:(" + e.name + ":'baz', via (b4r:'solid')))").not.markupToError();
 				});
 				it("errors when placed in passage prose while not attached to a hook", function() {
 					expect("(" + e.name + ":?foo)").markupToError();
@@ -134,15 +138,6 @@ describe("interaction macros", function() {
 						expect(p.text()).toBe("cool");
 						p.find('tw-enchantment')[e.eventMethod]();
 						expect(p.find('tw-enchantment').length).toBe(0);
-					});
-					// Might not want to implement this
-					xit("when " + e.action + "ed, plain hooks (and only plain hooks) in the link text are removed", function() {
-						var p = runPassage("[foo[bar]|2>[baz]]<foo|(" + e.name + ":?foo)[]");
-						p.find('tw-enchantment')[e.eventMethod]();
-						expect(p.text()).toBe("foobaz");
-						p = runPassage("[{[baz](text-style:'bold')[garply][corge]}]<foo|(" + e.name + ":?foo)[]");
-						p.find('tw-enchantment')[e.eventMethod]();
-						expect(p.text()).toBe("garply");
 					});
 					it("nested enchantments are triggered one by one", function() {
 						var p = runPassage("[[cool]<foo|]<bar|(" + e.name + ":?foo)[beans](" + e.name + ":?bar)[lake]");
@@ -285,14 +280,15 @@ describe("interaction macros", function() {
 							expect(p.find('tw-enchantment').length).toBe(0);
 						});
 					});
-					// Might not want to implement this
-					xit("when " + e.action + "ed, plain hooks (and only plain hooks) in each link text are removed", function() {
-						var p = runPassage("[foo[bar]|2>[baz]]<foo|[qux[bar]]<foo|(" + e.name + ":?foo)[]");
-						p.find('tw-enchantment')[e.eventMethod]();
-						expect(p.text()).toBe("foobazqux");
-						p = runPassage("[{[baz](text-style:\"bold\")[garply][corge]}]<foo|[qux[bar]]<foo|(" + e.name + ":?foo)[]");
-						p.find('tw-enchantment')[e.eventMethod]();
-						expect(p.text()).toBe("garplyqux");
+					it("if given a changer, styles every selected hook using it", function() {
+						var p = runPassage("[]<foo|[]<foo|("+e.name+":?foo, (size: 2))[]");
+						expect(p.find('tw-enchantment:first-of-type').attr('style')).toMatch(/size:\s*48px/);
+						expect(p.find('tw-enchantment:last-of-type').attr('style')).toMatch(/size:\s*48px/);
+					});
+					it("if given a lambda, uses it to produce a changer for each target", function() {
+						var p = runPassage("[]<foo|[]<bar|("+e.name+":?foo+?bar, via (size: pos*2))[]");
+						expect(p.find('tw-enchantment:first-of-type').attr('style')).toMatch(/size:\s*48px/);
+						expect(p.find('tw-enchantment:last-of-type').attr('style')).toMatch(/size:\s*96px/);
 					});
 				} else if (goTo) {
 					it("goes to the given passage when either enchantment is " + e.action + "ed", function(done) {
@@ -368,6 +364,16 @@ describe("interaction macros", function() {
 						expect(p.text()).toBe("wowgosh");
 						p.find('tw-enchantment').first()[e.eventMethod]();
 						expect(p.text()).toBe("wowgoshgeez");
+					});
+					it("if given a changer, styles every selected hook using it", function() {
+						var p = runPassage("foo foo|("+e.name+":'foo', (size: 2))[]");
+						expect(p.find('tw-enchantment:first-of-type').attr('style')).toMatch(/size:\s*48px/);
+						expect(p.find('tw-enchantment:last-of-type').attr('style')).toMatch(/size:\s*48px/);
+					});
+					it("if given a lambda, uses it to produce a changer for each target", function() {
+						var p = runPassage("foo foo|("+e.name+":'foo', via (size: pos*2))[]");
+						expect(p.find('tw-enchantment:first-of-type').attr('style')).toMatch(/size:\s*48px/);
+						expect(p.find('tw-enchantment:last-of-type').attr('style')).toMatch(/size:\s*96px/);
 					});
 				} else if (goTo) {
 					it("goes to the given passage when any enchanted string is " + e.action + "ed", function(done) {

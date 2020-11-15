@@ -2,7 +2,7 @@
 define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages', 'macros', 'datatypes/hookset', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/enchantment', 'internaltypes/twineerror'],
 ($, Utils, {is}, Engine, State, Passages, Macros, HookSet, ChangerCommand, Lambda, Enchantment, TwineError) => {
 
-	const {either,rest} = Macros.TypeSignature;
+	const {either,rest,optional} = Macros.TypeSignature;
 	/*
 		Built-in Revision, Interaction and Enchantment macros.
 		This module modifies the Macros module only, and exports nothing.
@@ -59,8 +59,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 
 		Details:
 		The (change:) macro can target plain text instead of hooks, much like (click:) - simply provide a string instead of a hook name.
-		If a "via" lambda is supplied to (change:) instead of a changer, then that lambda can compute a changer dynamically, based on specifics of
-		each hook that's enchanted. For instance, `(change: "O", via (text-style:(cond: its pos % 2 is 0, 'bold', 'none')))`
+		If a "via" lambda is supplied to (change:) instead of a changer, then that lambda is used to compute a changer dynamically, based on specifics of
+		each hook that's enchanted. For instance, `(change: "O", via (text-style:(cond: pos % 2 is 0, 'bold', 'none')))`
 
 		Like the (replace:), (append:) and (prepend:) macros, this macro does not affect text and hooks that appear after it, as it is an immediate
 		command that only affects what has already been rendered. For an alternative version of this macro which does affect hooks and text after it,
@@ -753,7 +753,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 			macro (in the case of "(macro: ?1)", selector will be "?1").
 		*/
 		return [
-			(_, selector) => {
+			(_, selector, changer) => {
 				/*
 					If the selector is empty (which means it's the empty string) then throw an error,
 					because nothing can be selected.
@@ -761,7 +761,16 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 				if (!selector) {
 					return TwineError.create("datatype", "A string given to this (" + name + ":) macro was empty.");
 				}
-				return ChangerCommand.create(name, [HookSet.from(selector)]);
+				/*
+					For the optional second argument, perform the same changer type-check used for (enchant:).
+				*/
+				if (changer) {
+					const error = notRevisionChanger(name, changer);
+					if (error) {
+						return error;
+					}
+				}
+				return ChangerCommand.create(name, [HookSet.from(selector)].concat(changer ? [changer] : []));
 			},
 			/*
 				This ChangerCommand registers a new enchantment on the Section that the
@@ -776,7 +785,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 				You may notice some of these are side-effects to a changer function's
 				proper task of altering a ChangeDescriptor. Alas...
 			*/
-			function makeEnchanter(desc, selector) {
+			function makeEnchanter(desc, selector, changer) {
 				/*
 					Prevent the target's source from running immediately.
 					This is unset when the event is finally triggered.
@@ -906,6 +915,10 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 						This name is used exclusively by Debug Mode.
 					*/
 					name,
+					/*
+						The optional changer/lambda argument leverages the same Enchantment functionality as (enchant:).
+					*/
+					[ChangerCommand.isPrototypeOf(changer) ? "changer" : "lambda"]: changer,
 				});
 				/*
 					Add the above object to the section's enchantments (unless, of course, this was called by summary()).
@@ -919,7 +932,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 				}
 				return desc;
 			},
-			either(HookSet,String)
+			[either(HookSet,String), optional(either(ChangerCommand, Lambda.TypeSignature('via')))]
 		];
 	}
 
@@ -936,7 +949,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 	*/
 	const interactionTypes = [
 		/*d:
-			(click: HookName or String) -> Changer
+			(click: HookName or String, [Changer or Lambda]) -> Changer
 
 			Produces a changer which, when attached to a hook, hides it and enchants the specified target, such that
 			it visually resembles a link, and that clicking it causes the attached hook to be revealed.
@@ -964,6 +977,10 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 
 			Additionally, if a (click:) macro is removed from the passage, then its targets will lose the link styling and no longer be
 			affected by the macro.
+
+			You can add further styling to the "links" produced by (click:) by providing an optional changer or "via" lambda as a second value, similar to (link:)'s optional
+			changer. If a "via" lambda is supplied, then that lambda is used to compute a changer dynamically, based on specifics of
+			each hook that's enchanted, similar to lambdas provided to (enchant:).
 
 			Targeting ?Page, ?Passage or ?Sidebar:
 
@@ -994,7 +1011,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 			}
 		},
 		/*d:
-			(mouseover: HookName or String) -> Changer
+			(mouseover: HookName or String, [Changer or Lambda]) -> Changer
 
 			A variation of (click:) that, instead of showing the hook when the target is clicked, shows it
 			when the mouse pointer merely hovers over it. The target is also styled differently (with a dotted underline),
@@ -1016,7 +1033,12 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 			Details:
 
 			This macro is subject to the same rules regarding the styling of its targets that (click:) has, so
-			consult (click:)'s details to review them.
+			consult (click:)'s details to review them. Note, though, that rather than making its targets appear as links, it instead,
+			by default, applies a dotted border around them.
+
+			You can add further styling to the targets by providing an optional changer or "via" lambda as a second value, similar to (link:)'s optional
+			changer. If a "via" lambda is supplied, then that lambda is used to compute a changer dynamically, based on specifics of
+			each hook that's enchanted, similar to lambdas provided to (enchant:).
 
 			This macro is not recommended for use in games or stories intended for use on touch devices, as
 			the concept of "hovering" over an element doesn't really make sense with that input method. In the event
@@ -1048,7 +1070,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 			}
 		},
 		/*d:
-			(mouseout: HookName or String) -> Changer
+			(mouseout: HookName or String, [Changer or Lambda]) -> Changer
 
 			A variation of (click:) that, instead of showing the hook when the target is clicked, shows it
 			when the mouse pointer moves over it, and then leaves. The target is also styled differently (a translucent cyan frame),
@@ -1073,6 +1095,10 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 
 			This macro is subject to the same rules regarding the styling of its targets that (click:) has, so
 			consult (click:)'s details to review them.
+
+			You can add further styling to the targets by providing an optional changer or "via" lambda as a second value, similar to (link:)'s optional
+			changer. If a "via" lambda is supplied, then that lambda is used to compute a changer dynamically, based on specifics of
+			each hook that's enchanted, similar to lambdas provided to (enchant:).
 
 			This macro is not recommended for use in games or stories intended for use on touch devices, as
 			the concept of "hovering" over an element doesn't really make sense with that input method. In the event
@@ -1152,7 +1178,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		for instance, (click: ?1)[(replace:?1)[...]] can be written as (click-replace: ?1)[...]
 	*/
 	/*d:
-		(click-replace: HookName or String) -> Changer
+		(click-replace: HookName or String, [Changer or Lambda]) -> Changer
 
 		A special shorthand combination of the (click:) and (replace:) macros, this allows you to make a hook
 		replace its own text with that of the attached hook whenever it's clicked. `(click: ?1)[(replace:?1)[...]]`
@@ -1171,7 +1197,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		#links 10
 	*/
 	/*d:
-		(click-append: HookName or String) -> Changer
+		(click-append: HookName or String, [Changer or Lambda]) -> Changer
 
 		A special shorthand combination of the (click:) and (append:) macros, this allows you to append
 		text to a hook or string when it's clicked. `(click: ?1)[(append:?1)[...]]`
@@ -1190,7 +1216,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		#links 11
 	*/
 	/*d:
-		(click-prepend: HookName or String) -> Changer
+		(click-prepend: HookName or String, [Changer or Lambda]) -> Changer
 
 		A special shorthand combination of the (click:) and (prepend:) macros, this allows you to prepend
 		text to a hook or string when it's clicked. `(click: ?1)[(prepend:?1)[...]]`
@@ -1209,7 +1235,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		#links 12
 	*/
 	/*d:
-		(mouseover-replace: HookName or String) -> Changer
+		(mouseover-replace: HookName or String, [Changer or Lambda]) -> Changer
 
 		This is similar to (click-replace:), but uses the (mouseover:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-replace:).
@@ -1227,7 +1253,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		#links 15
 	*/
 	/*d:
-		(mouseover-append: HookName or String) -> Changer
+		(mouseover-append: HookName or String, [Changer or Lambda]) -> Changer
 
 		This is similar to (click-append:), but uses the (mouseover:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-append:).
@@ -1245,7 +1271,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		#links 16
 	*/
 	/*d:
-		(mouseover-prepend: HookName or String) -> Changer
+		(mouseover-prepend: HookName or String, [Changer or Lambda]) -> Changer
 
 		This is similar to (click-prepend:), but uses the (mouseover:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-prepend:).
@@ -1263,7 +1289,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		#links 17
 	*/
 	/*d:
-		(mouseout-replace: HookName or String) -> Changer
+		(mouseout-replace: HookName or String, [Changer or Lambda]) -> Changer
 
 		This is similar to (click-replace:), but uses the (mouseout:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-replace:).
@@ -1281,7 +1307,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		#links 20
 	*/
 	/*d:
-		(mouseout-append: HookName or String) -> Changer
+		(mouseout-append: HookName or String, [Changer or Lambda]) -> Changer
 
 		This is similar to (click-append:), but uses the (mouseout:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-append:).
@@ -1300,7 +1326,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		#links 21
 	*/
 	/*d:
-		(mouseout-prepend: HookName or String) -> Changer
+		(mouseout-prepend: HookName or String, [Changer or Lambda]) -> Changer
 
 		This is similar to (click-prepend:), but uses the (mouseout:) macro's behaviour instead of
 		(click:)'s. For more information, consult the description of (click-prepend:).

@@ -479,6 +479,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			As a bit of trivia... the Harlowe engine actually converts all standard links into (link-goto:) macro calls internally -
 			the link syntax is, essentially, a syntactic shorthand for (link-goto:).
 
+			Note that (link-goto:), unlike (link:), doesn't accept a changer value to style the produced link. This is because, as
+			this produces a command (and not a changer), you can simply attach changers to the front of it to style the link.
+
 			See also:
 			(link:), (link-reveal:), (link-undo:), (goto:)
 
@@ -582,6 +585,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 
 			If there is no storylet available for the link (such as `(link-storylet: 6)` when only 4 storylets are currently open) then
 			nothing will be displayed. An error will NOT be produced.
+
+			Note that (link-storylet:), unlike (link:), doesn't accept a changer value to style the produced link. This is because, as
+			this produces a command (and not a changer), you can simply attach changers to the front of it to style the link.
 
 			Added in: 3.2.0
 			#links
@@ -700,6 +706,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			is yet nothing to undo at that time). You can check which turn it is by examining the `length` of the (history:)
 			array.
 
+			Note that (link-undo:), unlike (link:), doesn't accept a changer value to style the produced link. This is because, as
+			this produces a command (and not a changer), you can simply attach changers to the front of it to style the link.
+
 			See also:
 			(undo:), (link-goto:), (icon-undo:)
 
@@ -779,17 +788,14 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			will NOT produce an error, but simply do nothing. Also, showing a hook that was hidden with (hide:) will not re-run the
 			macros contained within, but simply make visible the hook as it was.
 
+			Note that (link-show:), unlike (link:), doesn't accept a changer value to style the produced link. This is because, as
+			this produces a command (and not a changer), you can simply attach changers to the front of it to style the link.
+
 			See also:
 			(show:), (link-reveal:), (click-append:), (more:)
 
 			Added in: 3.0.0
 			#links 8
-		*/
-		/*
-			Excised from Details:
-			If you want to make a certain portion of the link text disappear when the whole link is clicked,
-			simply place that portion inside a plain hook, one with no name and no macros attached to the front, as per (link-reveal:).
-			`(link-show:"[Reply diplomatically.]", ?reply)` makes a link reading "Reply diplomatically." that disappears when clicked.
 		*/
 		("link-show",
 			(text) => {
@@ -885,6 +891,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			the user to exit fullscreen mode at any time of their own accord, so a player that's not willing to enter fullscreen mode would simply exit
 			it soon afterward, and this construction would ultimately accomplish very little.
 
+			Note that (link-fullscreen:), unlike (link:), doesn't accept a changer value to style the produced link. This is because, as
+			this produces a command (and not a changer), you can simply attach changers to the front of it to style the link.
+
 			See also:
 			(link-goto:), (link-undo:), (cycling-link:), (icon-fullscreen:)
 
@@ -956,7 +965,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 		(link-reveal-goto: String, [String], [Changer]) -> Changer
 		
 		This is a convenient combination of the (link-reveal:) and (go-to:) macros, designed to let you run commands like (set:)
-		just before going to another passage. The first string is the link text, and the second is the passage name.
+		just before going to another passage. The first string is the link text, and the second is the passage name. An optional
+		changer, with which to style the link, can also be provided.
 		
 		Example usage:
 		 * `(link-reveal-goto: "Study English", "Afternoon 1")[(set:$eng to it + 1)]` will create a link reading "Study English"
@@ -971,7 +981,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 		has visited the destination passage.
 
 		Note also that there's no way to "cancel" traveling to the new passage once the link is clicked, unless you include (go-to:),
-		(undo:) or another such macro is inside the hook.
+		(undo:), or another such macro inside the hook.
 		
 		See also:
 		(link-reveal:), (link:), (link-goto:), (click:)

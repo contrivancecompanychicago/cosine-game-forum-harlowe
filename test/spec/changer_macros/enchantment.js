@@ -45,6 +45,11 @@ describe("enchantment macros", function () {
 					expect(p.find(':last-child > tw-hook').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
 				});
 			}
+			it("if given a lambda, uses it to produce a changer for each target", function() {
+				var p = runPassage("[baz]<foo|[baz]<bar|("+name+":?foo+?bar, via (size: pos*2))");
+				expect(p.find('tw-enchantment:first-of-type').attr('style')).toMatch(/size:\s*48px/);
+				expect(p.find('tw-enchantment:last-of-type').attr('style')).toMatch(/size:\s*96px/);
+			});
 			//TODO: write more basic functionality tests comparable to (click:)'s
 		});
 	});
