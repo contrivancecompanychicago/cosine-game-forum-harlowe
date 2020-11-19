@@ -221,8 +221,10 @@
 		modelRegistry is an alternative array to register the model() methods to, instead of the one for the parent panel.
 		Both of these are used entirely by datavalue-rows and datavalue-map, in order to suppress the usual behaviour of panel rows,
 		and to be able to dynamically add and remove rows during use.
+
+		noComplexValues prevents the UI from becoming too complicated by removing "+ value" entries when this is a nested row.
 	*/
-	const dataValueRow = (modelCallback = (m,v) => m.expression = v, modelRegistry = undefined) => ({
+	const dataValueRow = (modelCallback = (m,v) => m.expression = v, modelRegistry = undefined, noComplexValues = undefined) => ({
 		type: 'inline-dropdown-rows',
 		text: 'Value: ',
 		name: 'variable-datatype',
@@ -243,7 +245,7 @@
 				modelCallback,
 				modelRegistry,
 			}],
-			["Boolean", {
+			["Boolean value", {
 				type: 'inline-dropdown',
 				text: '',
 				options: ['false','true'],
@@ -311,14 +313,6 @@
 				},
 				modelRegistry,
 			}],
-			['computed expression', {
-				type: "inline-expression-textarea",
-				width:"55%",
-				text: '',
-				placeholder: "Code",
-				modelCallback,
-				modelRegistry,
-			}],
 			[],
 			["randomly chosen value", {
 				type: "datavalue-rows",
@@ -350,7 +344,72 @@
 				},
 				modelRegistry,
 			}],
-		],
+		].concat(noComplexValues ? [] : [
+			[],
+			["itself + value", {
+				type: "datavalue-inner",
+				text: "<div class='harlowe-3-datavalueRowHint'>The following value is added to the existing value in the variable. NOTE: if the values aren't the same type of data, an error will result.</div>",
+				model(m, rowValues) {
+					if (rowValues.length !== 1) {
+						m.invalidSubrow = true;
+					}
+					modelCallback(m, 'it + ' + rowValues);
+				},
+				renumber(label) {
+					(label || {}).textContent = "it + ";
+				},
+				modelRegistry,
+			}],
+			["variable + value",
+				{
+					type: "inline-dropdown",
+					text: ' Other variable: ',
+					options: ["$", "_"],
+					model(m, elem) {
+						/*
+							Because variable + value rows cannot be nested or included in datavalue-rows, 
+						*/
+						m.innerVariable = elem[$]('select').value ? "_" : "$";
+					},
+				},{
+					type: "inline-textarea",
+					width:"25%",
+					text: "",
+					placeholder: "Variable name",
+					model(m, elem) {
+						const v = elem[$]('input').value;
+						if (v) {
+							if (RegExp("^" + Patterns.validPropertyName + "$").exec(v) && !RegExp(/^\d/).exec(v)) {
+								m.innerVariable += v;
+							}
+						}
+					},
+				},{
+					type: "datavalue-inner",
+					text: "<div class='harlowe-3-datavalueRowHint'>The above variable's value and the value below are added together. NOTE: if the values aren't the same type of data, an error will result.</div>",
+					model(m, rowValues) {
+						if (rowValues.length !== 1) {
+							m.invalidSubrow = true;
+						}
+						modelCallback(m, m.innerVariable + ' + ' + rowValues);
+					},
+					renumber(label) {
+						(label || {}).textContent = "";
+					},
+					modelRegistry,
+				}
+			],
+		]).concat([
+			[],
+			['coded expression', {
+				type: "expression-textarea",
+				width:"90%",
+				text: '<div>Write a Harlowe code expression that should be computed to produce the desired value.</div>',
+				placeholder: "Code",
+				modelCallback,
+				modelRegistry,
+			}],
+		]),
 	});
 
 	/*
@@ -782,6 +841,26 @@
 				};
 				makeRow();
 			}
+			if (type === "datavalue-inner") {
+				ret = el(`<div class="harlowe-3-dataRow" style='margin:0.2em 0px'>${row.text}</div>`);
+				const modelRegistry = [];
+				let rowValuesBuffer = [];
+
+				reducer(ret, dataValueRow((m,v) => rowValuesBuffer.push(v), modelRegistry, true));
+
+				const innerModel = row.model;
+				row.model = (m) => {
+					/*
+						The process for actually obtaining a value from the child rows is:
+						clear the rowValues buffer, then populate it by firing all of the model() methods
+						that were captured in the modelRegistry.
+					*/
+					rowValuesBuffer = [];
+					modelRegistry.reduce((m, fn) => fn(m) || m, m);
+					innerModel && innerModel(m, rowValuesBuffer);
+				};
+				row.renumber(ret[$](':scope > * > .harlowe-3-dropdownRowLabel'));
+			}
 			/*
 				Datavalue rows are rows of inputs for Harlowe data values, which can be added and subtracted.
 				Each Harlowe input is a special row created by dataValueRow(), above.
@@ -832,7 +911,7 @@
 								},
 								modelRegistry,
 							}] : []
-						).concat(dataValueRow((m,v) => rowValuesBuffer.push(v), modelRegistry)).reduce(reducer, line), plusButton);
+						).concat(dataValueRow((m,v) => rowValuesBuffer.push(v), modelRegistry, true)).reduce(reducer, line), plusButton);
 
 					modelRegistry.forEach(m => childModelMethods.add(m));
 
@@ -943,7 +1022,7 @@
 	*/
 	const remainderOfPassageCheckbox = {
 		type: 'checkbox',
-		text: 'Affect the entire remainder of the passage',
+		text: 'Affect the entire remainder of the passage or hook',
 		model(m, elem) {
 			if (elem[$](':checked')) {
 				m.wrapStart = "[=\n";
@@ -2109,7 +2188,7 @@
 						const col = m.columns[n];
 						if (col) {
 							col.right = +el[$]('input').value;
-							m.wrapStart += `\n${'='.repeat(col.left)}${'|'.repeat(col.width)}${'='.repeat(col.right)}\nColumn ${n}`;
+							m.wrapStart += `\n${'='.repeat(col.left)}${'|'.repeat(col.width)}${'='.repeat(col.right)}\nColumn ${n+1}`;
 						}
 					},
 				},

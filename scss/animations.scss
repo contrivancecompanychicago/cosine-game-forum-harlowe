@@ -11,10 +11,6 @@
 	}
 }
 
-@mixin transform($transforms) {
-	transform: $transforms;
-}
-
 /* The following are used for (text-style:)s only */
 
 @include keyframes(appear) {
@@ -54,37 +50,37 @@
 /* The following are used for (transition:)s only */
 
 @include keyframes(pulse) {
-	0%  { @include transform(scale(0,0)) }
-	20% { @include transform(scale(1.2,1.2)) }
-	40% { @include transform(scale(0.9,0.9)) }
-	60% { @include transform(scale(1.05,1.05)) }
-	80% { @include transform(scale(0.925,0.925)) }
-	to  { @include transform(scale(1,1)) }
+	0%  { transform: scale(0,0); }
+	20% { transform: scale(1.2,1.2); }
+	40% { transform: scale(0.9,0.9); }
+	60% { transform: scale(1.05,1.05); }
+	80% { transform: scale(0.925,0.925); }
+	to  { transform: scale(1,1); }
 }
 
 @include keyframes(zoom-in) {
-	0%  { @include transform(scale(0,0)) }
-	to  { @include transform(scale(1,1)) }
+	0%  { transform: scale(0,0); }
+	to  { transform: scale(1,1); }
 }
 
 @include keyframes(shudder-in) {
-	0%, to {        @include transform(translateX(0em));    }
-	5%, 25%, 45% {  @include transform(translateX(-1em));   }
-	15%, 35%, 55% { @include transform(translateX(1em));    }
-	65% {           @include transform(translateX(-0.6em)); }
-	75% {           @include transform(translateX(0.6em));  }
-	85% {           @include transform(translateX(-0.2em)); }
-	95% {           @include transform(translateX(0.2em));  }
+	0%, to {        transform: translateX(0em);    }
+	5%, 25%, 45% {  transform: translateX(-1em);   }
+	15%, 35%, 55% { transform: translateX(1em);    }
+	65% {           transform: translateX(-0.6em); }
+	75% {           transform: translateX(0.6em);  }
+	85% {           transform: translateX(-0.2em); }
+	95% {           transform: translateX(0.2em);  }
 }
 
 @include keyframes(rumble-in) {
-	0%, to {        @include transform(translateY(0em));    }
-	5%, 25%, 45% {  @include transform(translateY(-1em));   }
-	15%, 35%, 55% { @include transform(translateY(1em));    }
-	65% {           @include transform(translateY(-0.6em)); }
-	75% {           @include transform(translateY(0.6em));  }
-	85% {           @include transform(translateY(-0.2em)); }
-	95% {           @include transform(translateY(0.2em));  }
+	0%, to {        transform: translateY(0em);    }
+	5%, 25%, 45% {  transform: translateY(-1em);   }
+	15%, 35%, 55% { transform: translateY(1em);    }
+	65% {           transform: translateY(-0.6em); }
+	75% {           transform: translateY(0.6em);  }
+	85% {           transform: translateY(-0.2em); }
+	95% {           transform: translateY(0.2em);  }
 }
 
 @include keyframes(fidget) {
@@ -96,38 +92,38 @@
 }
 
 @include keyframes(slide-right) {
-	0% { @include transform(translateX(-100vw)); }
+	0% { transform: translateX(-100vw); }
 }
 
 @include keyframes(slide-left) {
-	0% { @include transform(translateX(100vw)); }
+	0% { transform: translateX(100vw); }
 }
 
 @include keyframes(slide-up) {
-	0% { @include transform(translateY(100vh)); }
+	0% { transform: translateY(100vh); }
 }
 
 @include keyframes(slide-down) {
-	0% { @include transform(translateY(-100vh)); }
+	0% { transform: translateY(-100vh); }
 }
 
 @include keyframes(fade-right) {
-	0% { opacity: 0; @include transform(translateX(-1em)); }
+	0% { opacity: 0; transform: translateX(-1em); }
 	to { opacity: 1 }
 }
 
 @include keyframes(fade-left) {
-	0% { opacity: 0; @include transform(translateX(1em)); }
+	0% { opacity: 0; transform: translateX(1em); }
 	to { opacity: 1 }
 }
 
 @include keyframes(fade-up) {
-	0% { opacity: 0; @include transform(translateY(1em)); }
+	0% { opacity: 0; transform: translateY(1em); }
 	to { opacity: 1 }
 }
 
 @include keyframes(fade-down) {
-	0% { opacity: 0; @include transform(translateY(-1em)); }
+	0% { opacity: 0; transform: translateY(-1em); }
 	to { opacity: 1 }
 }
 

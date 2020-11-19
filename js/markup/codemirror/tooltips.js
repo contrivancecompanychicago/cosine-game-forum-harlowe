@@ -108,7 +108,7 @@
 		},
 		whitespace:          `<b>Whitespace</b> within macro calls is simply used to separate values. You can use as much or as little as you like to make your code more readable.`,
 		error:               (_,[{message, explanation}]) => message + (explanation ? "<br>" + explanation : ''),
-		boolean:             `The keywords <b>true</b> or <b>false</b> are the two <b>boolean values</b>. They are produced by inequality operators and other macros.`,
+		boolean:             `The keywords <b>true</b> or <b>false</b> are the two <b>boolean values</b>. They are produced by comparison operators (\`<\`, \`>\`, \`is\`, etc.) and other macros.`,
 		is:                  `The <b>"is" operator</b> produces the boolean value \`true\` if the values on each sides of it are exactly the same.` + otherwiseFalse,
 		to:                  `Use the <b>"to" operator</b> only inside a \`(set:)\` macro call. Place it to the left of the data, and right of the variable to set the data to.`,
 		into:                `Use the <b>"into" operator</b> only inside a \`(put:)\`, \`(move:)\` or \`(unpack:)\` macro call. Place it to the right of the data, and left of the destination to put the data.`,

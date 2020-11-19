@@ -643,7 +643,9 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			(transition: String) -> Changer
 			Also known as: (t8n:)
 			
-			A changer that applies a built-in CSS transition to a hook as it appears.
+			A changer that applies a built-in CSS transition to a hook as it appears. Give this macro one of these strings (capitalisation and hyphens ignored):
+			`"instant"`, `"dissolve"`, `"fade"`, `"rumble"`, `"shudder"`, `"pulse"`, `"zoom"`, `"flicker"`, `"slide-left"`, `"slide-right"`, `"slide-up"`, `"slide-down"`,
+			`"fade-left"`, `"fade-right"`, `"fade-up"` and `"fade-down"`.
 			
 			Example usage:
 			`(t8n: "pulse")[Gleep!]` makes the hook `[Gleep!]` use the "pulse" transition
@@ -1660,7 +1662,10 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		/*d:
 			(text-style: ...String) -> Changer
 			
-			This applies one or more selected built-in text styles to the hook's text.
+			This applies one or more selected built-in text styles to the hook's text. Give this macro one of these strings (capitalisation and hyphens ignored):
+			`"none"`, `"bold"`, `"italic"`, `"underline"`, `"double-underline"`, `"wavy-underline"`, `"strike"`, `"double-strike"`, `"wavy-strike"`, `"superscript"`,
+			`"subscript"`, `"blink"`, `"shudder"`, `"mark"`, `"condense"`, `"expand"`, `"outline"`, `"shadow"`, `"emboss"`, `"smear"`, `"blur"`, `"blurrier"`,
+			`"mirror"`, `"upside-down"`, `"fade-in-out"`, `"rumble"`, `"sway"`, `"buoy"` or `"fidget"`.
 			
 			Example usage:
 			* `The shadow (text-style: "shadow")[flares] at you!` will style the word "flares" with a shadow.
@@ -1709,7 +1714,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			| "shudder"        | <t-s style="display:inline-block;animation:shudder linear 0.1s 0s infinite"></t-s> | "fade-in-out", "blink", "buoy", "fidget"
 			| "sway"           | <t-s style="display:inline-block;animation:sway 5s linear 0s infinite"></t-s> | "fade-in-out", "blink", "rumble", "buoy", "fidget"
 			| "buoy"           | <t-s style="display:inline-block;animation:buoy 5s linear 0s infinite"></t-s> | "fade-in-out", "blink", "shudder", "sway", "fidget"
-			| "fidget"         | <t-s style="display:inline-block;animation:fidget 60s linear 0s infinite"></t-s> | "fade-in-out", "blink", "rumble", "shudder", "sway", "buoy"
+			| "fidget"         | <t-s style="display:inline-block;animation:fidget 60s step-end 0s infinite"></t-s> | "fade-in-out", "blink", "rumble", "shudder", "sway", "buoy"
 			
 			You can use the "none" style to remove an existing style from a combined changer.
 
@@ -1838,7 +1843,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 						},
 						fidget: {
 							animation() {
-								return "fidget linear 60s " + (-Math.random()*60) + "s infinite" + (Math.random()<0.5 ? " reverse" : "");
+								return "fidget step-end 60s " + (-Math.random()*60) + "s infinite" + (Math.random()<0.5 ? " reverse" : "");
 							},
 						},
 					});

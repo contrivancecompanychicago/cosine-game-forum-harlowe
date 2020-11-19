@@ -253,7 +253,7 @@
 .harlowe-3-dataEmptyRow:not(:last-child) {
 	display:none;
 }
-.harlowe-3-datavalueRows .harlowe-3-dropdownRowLabel {
+.harlowe-3-dataRow .harlowe-3-dropdownRowLabel {
 	font-family:'Source Code Pro',monospace;
 }
 .harlowe-3-textareaRows {
