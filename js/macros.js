@@ -476,7 +476,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		Some final commonly-used TypeSignatures.
 	*/
 	Object.assign(Macros.TypeSignature, {
-		positiveNumber:      Macros.TypeSignature.numberRange(0.0001, Infinity),
+		positiveNumber:      Macros.TypeSignature.numberRange(Math.pow(2,-52), Infinity),
 		nonNegativeNumber:   Macros.TypeSignature.numberRange(0, Infinity),
 		percent:             Macros.TypeSignature.numberRange(0, 1),
 	});

@@ -191,6 +191,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added an `(input-box:)` macro, which places a `<textarea>` element in the passage, sized using the same values given to the `(box:)` macro, and optionally bound to a variable.
  * Added a `(force-input-box:)` macro, designed for linear narratives, that creates what seems to be a normal `(input-box:)`, but which, when typed into, instantly replaces the entered text with portions of a predefined string.
  * Added a `(checkbox:)` macro, which creates a labeled `<input type=checkbox>` element in the passage, which is bound to a boolean variable. You'll usually want to use a `2bind` binding with this macro.
+ * Added a `(meter:)` macro, used for creating a videogame bar-graph meter that's bound to a numeric variable. You can provide this with a colour or gradient for the bar, and a text label, as well as make the bar left-aligned, right-aligned or centered.
  * Added a `(link-rerun:)` macro, which is similar to `(link-repeat:)`, but which replaces the hook on each click rather than appending to it.
  * Added a `(rerun:)` macro, which replaces a given hook with its original source, eliminating any changes made to it by `(replace:)` or other macros. This also runs any macros inside the hook an additional time.
  * Added a `(hide:)` macro, which removes the contents of a given hook from the passage, but allows the `(show:)` macro to restore the contents later. Hooks hidden with `(hide:)` will not re-run any containing macros when `(show:)` is used on them later.

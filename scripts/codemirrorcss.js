@@ -118,7 +118,7 @@ const outputFile = {
 	"twineLink:not(.text)": typeColours.twineLink,
 
 	tag:
-		"color: hsla(240,34%,46%,1.0);",
+		"color: hsla(240,34%,25%,1.0);",
 	
 	boolean:      typeColours.boolean,
 	string:       typeColours.string,

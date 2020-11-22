@@ -67,7 +67,11 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 				let changer;
 				if (lambda) {
 					changer = lambda.apply(section, { loop: scope.TwineScript_GetProperty(i), pos: i+1 });
-					if (!ChangerCommand.isPrototypeOf(changer)) {
+					if (TwineError.containsError(changer)) {
+						e.replaceWith(changer.render(''));
+						lambda = changer = null;
+					}
+					else if (!ChangerCommand.isPrototypeOf(changer)) {
 						e.replaceWith(TwineError.create("macrocall",
 							"The 'via' lambda given to (enchant:) must return a changer, not " + objectName(changer) + "."
 						).render(""));

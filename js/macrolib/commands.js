@@ -1,7 +1,7 @@
 "use strict";
 define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 'internaltypes/twineerror',
-	'internaltypes/twinenotifier', 'datatypes/assignmentrequest', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/lambda', 'internaltypes/varref', 'datatypes/typedvar', 'datatypes/varbind', 'utils/operationutils', 'utils/renderutils'],
-($, Macros, Utils, State, Passages, Renderer, Engine, TwineError, TwineNotifier, AssignmentRequest, HookSet, CodeHook, Lambda, VarRef, TypedVar, VarBind, {printBuiltinValue, objectName}, {dialog, geomParse, geomStringRegExp}) => {
+	'internaltypes/twinenotifier', 'datatypes/assignmentrequest', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/lambda', 'datatypes/colour', 'datatypes/gradient', 'internaltypes/varref', 'datatypes/typedvar', 'datatypes/varbind', 'utils/operationutils', 'utils/renderutils'],
+($, Macros, Utils, State, Passages, Renderer, Engine, TwineError, TwineNotifier, AssignmentRequest, HookSet, CodeHook, Lambda, Colour, Gradient, VarRef, TypedVar, VarBind, {printBuiltinValue, objectName}, {dialog, geomParse, geomStringRegExp}) => {
 	
 	/*d:
 		Command data
@@ -20,9 +20,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		by applying (t8n-depart:) and (t8n-arrive:). (Note that since normal passage links are identical to the
 		(link-goto:) macro, you can also attach changers to passage links.)
 	*/
-	const {Any, Everything, rest, either, optional, zeroOrMore, positiveInteger} = Macros.TypeSignature;
+	const {Any, Everything, rest, either, optional, zeroOrMore, positiveInteger, positiveNumber} = Macros.TypeSignature;
 	const {assign} = Object;
-	const {floor,ceil,abs} = Math;
+	const {floor,ceil,abs,max,min} = Math;
 	const {noop} = $;
 
 	/*
@@ -936,6 +936,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		If, when the element is created, the bound variable is not a number, then an error will result.
 		However, if the bound variable ever changes to a non-number data value after that, then the counter will simply not update, instead of producing an error.
 
+		See also:
+		(meter:)
+
 		Added in: 3.2.0
 		#sidebar 6
 	*/
@@ -958,7 +961,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			/*
 				This standard twoWayBindEvent updates the counter's text, very simply.
 			*/
-			cd.data.twoWayBindEvent = (expr, obj, name) => {
+			cd.data.twoWayBindEvent = (_, obj, name) => {
 				if (bind.varRef.matches(obj,name)) {
 					const value = bind.varRef.get();
 					if(typeof value === "number") {
@@ -988,6 +991,195 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			});
 		},
 		[VarBind, String, optional(String)]);
+
+	/*d:
+		(meter: Bind, Number, String, [String], [Colour or Gradient]) -> Command
+
+		A command that creates a horizontal bar-graph meter, showing the current value of a number variable, relative to a maximum value, and updating it whenever
+		that variable changes.
+
+		Example usage:
+		* `(set:$batteryPower to 800)(meter: bind $batteryPower, 1000, "X", "Battery Power", (gradient: 90, 0, red, 1, orange))` creates a centered meter showing the value of the $batteryPower variable,
+		from 0 to 1000, using a gradient from orange (full) to red (empty).
+		* `(set:$threatLevel to 2)(b4r:'solid')(meter: bind $threatLevel, 10, "==X", red)` creates a right-aligned meter showing the value of the $threatLevel variable,
+		from 0 to 10, in red, with a solid border.
+
+		Rationale:
+		For those making number-heavy games, presenting those numbers in an immediately recognisable fashion can be essential to a smooth game experience - and there are times when simply
+		stating the numbers in the prose isn't as direct as you'd like. The standard videogame UI meter, a bar that fills with a colour to represent an important value, is a
+		visual idiom familiar to many people. In addition to their familiarity, meters have important semantic value, too - simply by graphically presenting a value in a meter,
+		a player can immediately get a sense of how important to their play session that value is, as well as understand what numeric range that value should occupy during play.
+
+		Details:
+		The meter will graph the value of the bound variable, from 0 to the given maximum value number (which must be positive). For instance, if that number is 20, then if the bound variable is 5,
+		the meter bar will be 25% full.
+
+		The meter is a "box" element, which takes up the full width of the passage or hook in which it's contained. Placing it inside column markup can
+		allow you to place text alongside it, or other (meter:) commands, if you so desire.
+
+		The first string you give to this macro is a "sizing line" identical to that accepted by (box:) and (input-box:) - consult their documentation for more
+		information about those lines. However, the sizing line also determines the direction that the meter's bar fills. If the meter is left-aligned or
+		occupies the full width (by being given "X" as a sizing string), the bar fills from left (empty) to right (full), and the opposite is true for
+		right-alignment. Centre-alignment causes the bar to fill from the centre, expanding outward in both directions.
+
+		The second, optional string is a label that is placed inside the meter, on top of the bar. This text is aligned in the same direction as the meter itself.
+
+		Either a colour or a gradient can be given as the final value, with which to colour the bar. If neither is given, the bar will be a simple gray.
+		If a gradient is given, its rotation will be automatically changed to 90 degrees, with the leftmost colour (at colour stop 0) being placed at
+		the "empty" end of the meter, and the rightmost colour (at colour stop 1) placed at the "full" end. If the bar is center-aligned, then
+		the gradient will be modified, with both ends of the graph having the leftmost colour, and the center having the rightmost colour.
+
+		The meter is exclusively horizontal, and cannot be rotated unless you attach (text-rotate:) to it.
+
+		Note: In Internet Explorer 10, the vertical height of the meter may be lower than as drawn in other browsers. This is due to a CSS limitation in that browser.
+
+		See also:
+		(icon-counter:)
+
+		Added in: 3.2.0.
+		#interface
+	*/
+	Macros.addCommand('meter',
+		(_, __, widthStr, labelOrGradient) => {
+			if (typeof labelOrGradient === 'string' && !labelOrGradient.trim()) {
+				return TwineError.create("datatype", `The label string given to (meter:) can't be empty or only whitespace.`);
+			}
+			if (widthStr.search(geomStringRegExp) === -1
+					/*
+						A rather uncomfortable check needs to be made here: because widthStrs can have zero "=" signs
+						on either side, and a middle portion consisting of essentially anything, the default text box
+						could be confused for it, unless all 100%-width strings are prohibited to just single characters.
+					*/
+					|| (!widthStr.includes("=") && widthStr.length > 1)) {
+				return TwineError.create("datatype", 'The (meter:) macro requires a sizing line'
+						+ '("==X==", "==X", "=XXXX=" etc.) be provided, not ' + JSON.stringify(widthStr) + '.');
+			}
+		},
+		(cd, section, bind, maxValue, widthStr, labelOrGradient, gradient) => {
+			/*
+				If a label wasn't provided, but a gradient was, correct the arguments.
+			*/
+			if (labelOrGradient && typeof labelOrGradient !== 'string') {
+				gradient = labelOrGradient;
+				labelOrGradient = undefined;
+			}
+			/*
+				The default colour is a single 50% transparent gray, which is agnostic of whether the passage's colour
+				scheme is dark or light.
+			*/
+			if (!gradient) {
+				gradient = Colour.create({h:0, s:0, l:0.5, a:0.5});
+			}
+			/*
+				Single-colours can be provided instead of gradients. However, the bar needs to be drawn with a gradient background,
+				so that background-size can affect it. So, convert it to a gradient.
+			*/
+			if (Colour.isPrototypeOf(gradient)) {
+				gradient = Gradient.create(90, [{ colour: gradient, stop:0, }, { colour: gradient, stop:1, }]);
+			}
+			/*
+				The sizing line is used to determine the bar and text's alignment, as well as that of the <tw-expression> itself.
+				Center alignment is used if there's left and right margins, and right alignment is used if there's no left margin.
+				Notice that the "X" sizing line is interpreted as left alignment by default, rather than center alignment.
+			*/
+			const {marginLeft,size} = geomParse(widthStr);
+			const isCenter = marginLeft > 0 && Math.ceil(marginLeft + size) < 100;
+			/*
+				This function is used for both initial assigment of styles to the <tw-meter>, and to live updates.
+				Only the styles necessary for drawing the meter bar, in and of itself, are attached to the <tw-meter> element -
+				the borders, placement and sizing are left to the parent <tw-expression>, so that borders applied by
+				(b4r:) (which are placed on the <tw-expression>) interact correctly with the meter.
+				Hence, this receives "height:100%".
+			*/
+			const makeStyleString = value => {
+				const clampedSize = max(0, min(1, value / maxValue));
+				const g = gradient.multiply(maxValue / value);
+				return `height:100%;background-image:${
+						/*
+							A center-aligned graph consists of two different gradient backgrounds, extending to the left and right
+							from the centre. This line produces the left extension.
+						*/
+						(isCenter ? assign(g, { angle: 270 }).toLinearGradientString() + " no-repeat, " : '')
+						/*
+							And, this line produces either the right extension, or the entire bar for other alignments.
+							Note that the gradient angle is reversed for right-alignment (270 rather than 90).
+						*/
+						+ assign(g, { angle: isCenter || marginLeft === 0 ? 90 : 270 }).toLinearGradientString()
+					} no-repeat;background-size:${
+						isCenter ? Array(2).fill(clampedSize * 50 + "%") : clampedSize * 100 + "%"
+					};background-position-x:${
+						/*
+							This slightly complicated forumla is required to eliminate the compensatory
+							position provided by background-position-x's normal behaviour, where 0 places
+							the left edge at the left side and 100 places the right edge at the right side.
+							Thanks to this page for assistance:
+							https://css-tricks.com/focusing-background-image-precise-location-percentages/
+						*/
+						isCenter ? (-50 * 2/(2-clampedSize) + 100)  + "%," + (50 * 2/(2-clampedSize)) + "%"
+						: marginLeft === 0 ? 'left' : 'right'
+					};text-align:${
+						isCenter ? 'center' : marginLeft === 0 ? 'left' : 'right'
+					}`;
+			};
+			/*
+				These other styles related to placement within the passage are, as mentioned, attached to the <tw-expression>
+				using the ChangeDescriptor's styles array.
+			*/
+			cd.styles.push({
+				'margin-left': marginLeft + '%',
+				width: size + '%',
+				height: '1.5em',
+				display: 'block',
+			});
+			/*
+				Being a UI display macro, all binds given to this macro are automatically promoted to 2binds, because the second bind
+				(variable -> element) is the only one that matters.
+			*/
+			cd.attr.push({"data-2bind": true});
+			/*
+				As this is a deferred rendering macro (if a label is present), the current tempVariables
+				object must be stored for reuse, as the section pops it when normal rendering finishes.
+			*/
+			const tempVariables = labelOrGradient && section.stackTop.tempVariables;
+			/*
+				This standard twoWayBindEvent updates the meter's CSS, very simply.
+			*/
+			cd.data.twoWayBindEvent = (expr, obj, name) => {
+				if (bind.varRef.matches(obj,name)) {
+					const value = bind.varRef.get();
+					if (typeof value === "number") {
+						const icon = cd.target.children('tw-meter');
+						icon.attr('style', makeStyleString(value > 0 ? floor(value) : ceil(value)));
+						if (labelOrGradient) {
+							/*
+								Re-render the label, in the same manner as (cycling-link:).
+							*/
+							const cd2 = assign({}, cd, { source: labelOrGradient, target: icon, append: 'replace', transitionDeferred: false, });
+							cd.section.renderInto("", null, cd2, tempVariables);
+						}
+					}
+				}
+			};
+			let value = bind.varRef.get();
+			/*
+				This check should have the same logic as the (trunc:) macro.
+			*/
+			value = value > 0 ? floor(value) : ceil(value);
+			/*
+				Though it's possible for it to be redefined, a type restriction check might as well be performed now
+				when the command is being created.
+			*/
+			if (typeof value !== "number") {
+				return TwineError.create("datatype",
+					`(meter:) can only be bound to a variable holding a number, not ${objectName(value)}.`
+				);
+			}
+			/*
+				Like (box:), this needs display:block so that it can take up an entire row.
+			*/
+			return assign(cd, { source: `<tw-meter style="${ makeStyleString(value) }">${labelOrGradient || ''}</tw-meter>` });
+		},
+		[VarBind, positiveNumber, String, optional(either(String, Colour, Gradient)), optional(either(Colour, Gradient))]);
 
 		/*d:
 			(cycling-link: [Bind], ...String) -> Command

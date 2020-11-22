@@ -568,4 +568,85 @@ describe("interface macros", function(){
 			expect(p.find('input:checked').length).toBe(0);
 		});
 	});
+	describe("the (meter:) macro", function() {
+		it("accepts a bound number variable, a positive number, a sizing string, an optional string label, and an optional colour or gradient", function() {
+			expect("(meter:)").markupToError();
+			expect("(meter: bind $foo)").markupToError();
+			expect("(meter: bind $foo, 10)").markupToError();
+			expect("(meter: bind $foo, '=X')").markupToError();
+			expect("(meter: bind $foo, 10, '=X')").not.markupToError();
+			expect("(meter: bind $foo, 10, '=X', 'Yo')").not.markupToError();
+			expect("(meter: bind $foo, 10, '=X', red)").not.markupToError();
+			expect("(meter: bind $foo, 10, '=X', (gradient:90,0,red,1,white))").not.markupToError();
+			expect("(meter: bind $foo, 10, '=X', 'Yo', red)").not.markupToError();
+			expect("(meter: bind $foo, -1, '=X', 'Yo', red)").markupToError();
+		});
+		it("creates a <tw-meter> with a background-size relative to the bound variable's value", function() {
+			var p = runPassage("(set:$foo to 10)(meter: bind $foo, 100, '=X', 'Yo')");
+			expect(p.find('tw-meter').css('background-size')).toBe('10%');
+			p = runPassage("(set:$foo to 10)(meter: bind $foo, 200, '=X', 'Yo')");
+			expect(p.find('tw-meter').css('background-size')).toBe('5%');
+		});
+		it("uses the given gradient or colour for the bar, ignoring the angle", function() {
+			var p = runPassage("(set:$foo to 100)(meter: bind $foo, 100, '=X', (gradient:45,0,#ab1212,1,#ac6060))");
+			expect(p.find('tw-meter')).toHaveBackgroundGradient(270, [
+				{stop:0,colour:"#AB1212"},
+				{stop:1,colour:"#AC6060"},
+			]);
+			p = runPassage("(set:$foo to 100)(meter: bind $foo, 100, 'X=', (gradient:45,0,white,1,black))");
+			expect(p.find('tw-meter')).toHaveBackgroundGradient(90, [
+				{stop:0,colour:"#FFFFFF"},
+				{stop:1,colour:"#000000"},
+			]);
+			p = runPassage("(set:$foo to 100)(meter: bind $foo, 100, 'X=', #FADABC)");
+			expect(p.find('tw-meter')).toHaveBackgroundGradient(90, [
+				{stop:0,colour:"#FADABC"},
+				{stop:1,colour:"#FADABC"},
+			]);
+		});
+		it("scales the gradient based on how much of the bar is remaining", function() {
+			var p = runPassage("(set:$foo to 50)(meter: bind $foo, 100, '=X', (gradient:45,0,#ab1212,1,#ac6060))");
+			expect(p.find('tw-meter')).toHaveBackgroundGradient(270, [
+				{stop:0,colour:"#AB1212"},
+				{stop:2,colour:"#AC6060"},
+			]);
+		});
+		/*
+			TODO: center meter tests
+		*/
+		it("updates the bar when the variable updates", function() {
+			var p = runPassage("(set:$foo to 10)(meter: bind $foo, 100, '=X', 'Yo')(link:'baz')[(set:$foo to 90)]");
+			expect(p.find('tw-meter').css('background-size')).toBe('10%');
+			p.find('tw-link').click();
+			expect(p.find('tw-meter').css('background-size')).toBe('90%');
+		});
+		it("updates the text when the variable updates", function() {
+			var p = runPassage("(set:$foo to 10)(meter: bind $foo, 100, '=X', 'FOO: $foo')(link:'baz')[(set:$foo to 90)]");
+			expect(p.find('tw-meter').text()).toBe('FOO: 10');
+			p.find('tw-link').click();
+			expect(p.find('tw-meter').text()).toBe('FOO: 90');
+		});
+		it("gives the <tw-expression> the specified margins, width, and rows (if given), as well as display:block", function() {
+			[
+				['=XX=', 25, 50],
+				['X===', 0, 25],
+				['X===', 0, 25],
+				['==XXXXXXXX', 20, 80],
+			].forEach(function(a) {
+				var code = a[0], marginLeft=a[1], width=a[2];
+
+				var t = runPassage("(meter: bind $foo, 7, '" + code + "')").find('tw-expression[name=meter]');
+				var s = t.attr('style');
+				expect(s).toMatch(RegExp("margin-left:\\s*"+marginLeft+"%"));
+				expect(s).toMatch(RegExp("\\bwidth:\\s*"+width+"%"));
+				expect(s).toMatch(/display:\s*block/);
+			});
+		});
+		it("aligns the text with the meter's alignment", function() {
+			var p = runPassage("(set:$foo to 10)(meter: bind $foo, 100, '==X', 'Yo')");
+			expect(p.find('tw-meter').css('text-align')).toBe('right');
+			p = runPassage("(meter: bind $foo, 100, '=X==', 'Yo')");
+			expect(p.find('tw-meter').css('text-align')).toBe('center');
+		});
+	});
 });

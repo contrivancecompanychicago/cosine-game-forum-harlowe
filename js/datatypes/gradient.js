@@ -78,6 +78,13 @@ define(['utils/operationutils'], ({toSource}) => {
 		},
 
 		/*
+			This creates a copy of the gradient, but multiplies the colour stops by the given number.
+		*/
+		multiply(mul) {
+			return Gradient.create(this.angle, this.stops.map(({colour, stop}) => ({ colour, stop: stop*mul })));
+		},
+
+		/*
 			This converts the colour into a CSS linear-gradient() function.
 		*/
 		toLinearGradientString() {
