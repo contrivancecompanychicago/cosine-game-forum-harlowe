@@ -37,7 +37,11 @@
 		[name, ...macro.aka].forEach(name => a[name] = macro);
 		return a;
 	}, {});
-	
+	/*
+		Produce an array holding just Changer or Any macro names, used to determine if the Changer attachment line should be drawn.
+	*/
+	const changerMacros = Object.entries(validMacros).filter(([name,macro]) => ["Changer","Any"].includes(macro.returnType)).map(e => e[0]);
+
 	/*
 		The mode is defined herein.
 	*/
@@ -283,6 +287,10 @@
 
 				return {
 					pos: 0,
+					/*
+						This is used to (somewhat crudely) keep track of possible changer attachment.
+					*/
+					attachment: false,
 				};
 			},
 			blankLine(state) {
@@ -331,10 +339,14 @@
 				let counts = {};
 				let ret = '';
 				for (let i = 0; i < currentBranch.length; i+=1) {
-					const type = currentBranch[i].type;
-					// if the name is "verbatim", erase all of the class names before it.
+					const {type,text} = currentBranch[i];
+					// If the type is "verbatim", erase all of the class names before it.
 					if (type === "verbatim") {
 						ret = '';
+					}
+					// If the type is not "escapedLine" or "br", or if it's text that trims to "+", assume the end of changer attachment.
+					if (i === 0 && state.attachment && (type !== "escapedLine" && type !== "br" && type !== "root" && (type !== "text" || !text.match(/^\s*\+?\s*$/)))) {
+						state.attachment = false;
 					}
 					let name = "harlowe-3-" + type;
 					counts[name] = (counts[name] || 0) + 1;
@@ -348,7 +360,7 @@
 							It's an error if a text node appears inside a macro, but not inside a code hook.
 						*/
 						case "text": {
-							if (currentBranch[i].text.trim()) {
+							if (text.trim()) {
 								const insideMacro = currentBranch.slice(i + 1).reduce((a,t) =>
 										a === undefined ? t.type === "macro" ? true : t.type === "hook" ? false : a : a,
 										undefined
@@ -363,7 +375,7 @@
 							Use the error style if the macro's name doesn't match the list of
 							existant Harlowe macros.
 						*/
-						case "macroName":
+						case "macroName": {
 							const macroName = insensitiveName(currentBranch[i].text.slice(0,-1));
 							if (!validMacros.hasOwnProperty(macroName)) {
 								name += " harlowe-3-error";
@@ -377,8 +389,42 @@
 								name += "-" + validMacros[macroName].returnType.toLowerCase();
 							}
 							break;
+						}
+						case "macro": {
+							/*
+								If this macro is a Changer or an Any macro, then shakily assume that from here
+								on begins changer attachment whitespace.
+							*/
+							const macroName = insensitiveName(currentBranch[i].children[0].text.slice(0,-1));
+							if (!changerMacros.includes(macroName)) {
+								break;
+							}
+						}
+						/* falls through */
+						case "variable":
+						case "tempVariable":
+							/*
+								For variables, it can only be a shaky presumption that they contain changers. Nevertheless,
+								it's often vital to show it anyway.
+							*/
+							if (i === 0 && state.pos === currentBranch[i].end) {
+								state.attachment = true;
+							}
+							break;
 					}
 					ret += name + " ";
+				}
+				/*
+					Finally, put on the changerAttachment class if there's currently changer attachment being speculated.
+				*/
+				if (state.attachment === true) {
+					ret += " harlowe-3-changerAttachment";
+					/*
+						In order to enable the tooltips to produce a unique text tooltip for changer attachment lines,
+						the tree needs to be crudely modified here. All this would be avoided if changer attachment was
+						part of the lexer, but, alas...
+					*/
+					currentToken.changerAttachment = true;
 				}
 				return ret;
 			},

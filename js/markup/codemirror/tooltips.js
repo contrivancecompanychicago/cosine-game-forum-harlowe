@@ -30,9 +30,9 @@
 		scriptStyleTag:      () => tooltipMessages.tag,
 		tag:                 "This is a <b>HTML tag</b>. Harlowe supports raw HTML in passage code.",
 		hook: ({type, name, tagPosition}) => (type === "hook" ? `These square brackets are a <b>hook</b>, enclosing this section of passage code.` : '')
-			+ ` Changer values can be attached to the front of hooks.`
+			+ ` Changer values can be attached to the left of hooks.`
 			+ (name ? `<br>This hook has a <b>nametag</b> on the ${
-				tagPosition === "prepended" ? "front" : "back"
+				tagPosition === "prepended" ? "left" : "right"
 			}. This allows the hook to be referred to in macro calls using the hook name <code>?${
 				name
 			}</code>.` : ''),
@@ -45,7 +45,7 @@
 									type === "unclosedCollapsed" ? "the remainder of the passage " : 'the <code>{</code> and <code>}</code> marks'
 								} will be replaced with a single space. You can use this to space out your code and keep your passage readable.<br>To include a line break within this markup that will be preserved, use a HTML <code>&lt;br&gt;</code> tag.`,
 		escapedLine:         `This is an <b>escaped line break</b> mark. This removes the line break before or after it from the displayed passage.`,
-		twineLink:           ({passage}) => `This is a link to the passage "${passage}". Links, like hooks and commands, can have changer values attached to the front.`,
+		twineLink:           ({passage}) => `This is a link to the passage "${passage}". Links, like hooks and commands, can have changer values attached to the left.`,
 		br:                  ``, // Display nothing,
 		url:                 ``,
 		variable:            `This is a <b>story-wide variable</b>. After this has been set to a data value, it can be used anywhere else in the story. Use these to store data values related to your story's game state, or changers that are commonly used.`,
@@ -152,7 +152,7 @@
 			const rt = defs.returnType.toLowerCase();
 			return `This is a <b>call to the \`(${defs.name}:)\` macro</b>. ${
 					rt === "instant" || rt === "command" ? `It produces a <span class="cm-harlowe-3-macroName-command">command</span>, so it should appear in passage code without being connected to a hook.` :
-					rt === "changer" ? `It produces a <span class="cm-harlowe-3-macroName-changer">changer</span>, which can be placed in front of a hook, or combined with other changers.` :
+					rt === "changer" ? `It produces a <span class="cm-harlowe-3-macroName-changer">changer</span>, which can be placed to the left of a hook or a command (passage links are commands), or combined with other changers.` :
 					rt === "any" || rt === "string" ? "" :
 					`Since it produces a <span class="cm-harlowe-3-macroName-${rt}">${rt}</span>, it should be nested inside another macro call that can use ${rt} (or any) data.`
 				}<code class='harlowe-3-tooltipMacroSignature'>${
@@ -163,7 +163,17 @@
 					defs.abstract
 				}</div>`;
 		},
-		text: ({text}, path) => {
+		text: ({changerAttachment, text}, path) => {
+			if (changerAttachment) {
+				if (text.trim() === "+") {
+					return `If the code to the left and right of this <b>+ sign</b> produces two <span class="cm-harlowe-3-macroName-changer">changer</span> values,`
+					+ ` then they will be added together (even though this text is outside of a macro call), removing the + sign and the surrounding whitespace.<br><br>`
+						+ `Note that there needs to be a hook or a command after the rightmost changer, so that the combined changer can attach to it.`;
+				}
+				return `If the code on the left produces a <span class="cm-harlowe-3-macroName-changer">changer</span>, and the code on the right is a hook or a <span class="cm-harlowe-3-macroName-command">command</span>`
+					+ ` (passage links are commands), then the changer will <b>attach</b> to the right, applying its changes and removing this whitespace.<br><br>`
+					+ `You can place any amount of whitespace, including newlines, between a changer and the hook or command it's attached to.`;
+			}
 			if (text.trim()) {
 				const insideMacro = path.reduce((a,t) =>
 						a === undefined ? t.type === "macro" ? true : t.type === "hook" ? false : a : a,

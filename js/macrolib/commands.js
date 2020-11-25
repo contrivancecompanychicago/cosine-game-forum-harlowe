@@ -1094,18 +1094,18 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			const makeStyleString = value => {
 				const clampedSize = max(0, min(1, value / maxValue));
 				const g = gradient.multiply(maxValue / value);
-				return `height:100%;background-image:${
+				return `height:100%;background-repeat:no-repeat;background-image:${
 						/*
 							A center-aligned graph consists of two different gradient backgrounds, extending to the left and right
 							from the centre. This line produces the left extension.
 						*/
-						(isCenter ? assign(g, { angle: 270 }).toLinearGradientString() + " no-repeat, " : '')
+						(isCenter ? assign(g, { angle: 270 }).toLinearGradientString() + ", " : '')
 						/*
 							And, this line produces either the right extension, or the entire bar for other alignments.
 							Note that the gradient angle is reversed for right-alignment (270 rather than 90).
 						*/
 						+ assign(g, { angle: isCenter || marginLeft === 0 ? 90 : 270 }).toLinearGradientString()
-					} no-repeat;background-size:${
+					};background-size:${
 						isCenter ? Array(2).fill(clampedSize * 50 + "%") : clampedSize * 100 + "%"
 					};background-position-x:${
 						/*

@@ -15,7 +15,8 @@ const {min} = Math,
 
 	typeColours  = require('../js/utils/typecolours'),
 	toolbarStyles = (execSync('sass ./scripts/toolbar.css --scss --style compressed') + '').replace(/\ufeff/,''),
-	animations = (execSync('sass ./scss/animations.scss --scss --style compressed') + '').replace(/\ufeff/,'');
+	animations = (execSync('sass ./scss/animations.scss --scss --style compressed') + '').replace(/\ufeff/,''),
+	changerAttachmentColour = typeColours.changer.replace('color:','').replace('1.0','0.5');
 
 const versionClass = 'cm-harlowe-3-';
 /*
@@ -78,7 +79,16 @@ const outputFile = {
 	"^=macro ":
 		"font-weight:bold;" + typeColours.macro,
 
-	comma: typeColours.macro,
+	"comma, spread": typeColours.macro,
+
+	addition:
+		typeColours.any,
+
+	"subtraction, multiplication, division":
+		typeColours.number,
+
+	"is, and, or, not, isNot, contains, doesNotContain, isIn, isA, isNotA, isNotIn, matches, doesNotMatch":
+		typeColours.boolean,
 
 	"bold, strong":
 		"font-weight:bold;",
@@ -91,6 +101,9 @@ const outputFile = {
 
 	"strike":
 		"text-decoration: line-through;",
+
+	"changerAttachment.text":
+		"text-decoration: line-through dashed " + changerAttachmentColour + ";" + typeColours.changer,
 
 	"verbatim":
 		"background-color: hsla(0,0%,50%,0.1);",
