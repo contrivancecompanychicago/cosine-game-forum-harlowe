@@ -46,7 +46,7 @@ describe("metadata macros", function() {
 		});
 	});
 	describe("the (link-storylet:) macro", function() {
-		it("accepts optional link text, plus a non-zero whole number or a 'where' lambda", function() {
+		it("accepts optional link text, plus a non-zero whole number or a 'where' lambda, plus optional unavailable text", function() {
 			expect("(link-storylet: 'ears')").markupToError();
 			expect("(link-storylet:)").markupToError();
 			expect("(link-storylet: 0)").markupToError();
@@ -56,6 +56,8 @@ describe("metadata macros", function() {
 			expect("(link-storylet: 'ears', 2)").not.markupToError();
 			expect("(link-storylet: 'ears', where its tags contains 'e')").not.markupToError();
 			expect("(link-storylet: 'ears', 2, where its tags contains 'e')").markupToError();
+			expect("(link-storylet: 'ears', where its tags contains 'e', 'foo')").not.markupToError();
+			expect("(link-storylet: 'ears', 2, 'bar')").not.markupToError();
 		});
 		it("given an index n, creates a link to the nth open storylet, using the same order as (open-storylets:)", function() {
 			createPassage("**foobarbaz(storylet: when  true is true)**", "grault");
@@ -90,11 +92,17 @@ describe("metadata macros", function() {
 			expect("(set:$a to 1)(link-storylet: where its name contains 't')").markupToPrint('grault');
 			expect("(set:$a to 2)(link-storylet: where its name contains 'x')").markupToPrint('quux');
 		});
-		it("if there are no matches, prints nothing", function() {
+		it("if there are no matches, prints the unavailable text, if given, or nothing", function() {
 			createPassage("(storylet: when $a is > 1)", "corge");
 			createPassage("(storylet: when $a is > 1)", "quux");
 			expect("(set:$a to 1)(link-storylet: 2)").markupToPrint('');
 			expect("(set:$a to 2)(link-storylet: where its name is 'qux')").markupToPrint('');
+			var p = runPassage("(set:$a to 1)(link-storylet: 2, 'foobaz')");
+			expect(p.text()).toBe('foobaz');
+			expect(p.find('tw-link').length).toBe(0);
+			p = runPassage("(set:$a to 2)(link-storylet: where its name is 'qux', 'foobaz')");
+			expect(p.text()).toBe('foobaz');
+			expect(p.find('tw-link').length).toBe(0);
 		});
 		it("uses the optional string as the link text instead of the passage name", function() {
 			createPassage("(storylet: when $a is > 1)", "corge");

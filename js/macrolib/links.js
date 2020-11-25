@@ -560,17 +560,18 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			[String, optional(String)]
 		)
 		/*d:
-			(link-storylet: [String], Number or Lambda) -> Command
+			(link-storylet: [String], Number or Lambda, [String]) -> Command
 
 			If there are storylets (passages containing a (storylet:) call) in this story, this will create a link to the first open storylet that
 			matches the passed-in 'where' lambda, or, if a number **n** was passed in, the **n**th (or, if negative, **n**thlast) open storylet.
+			An optional final string can provide text to display when no such storylet is open currently.
 
 			Example usage:
 			```
-			You look over the paddock as you ponder how you'll spend the coming day.
-			* (link-storylet: 1)
-			* (link-storylet: 2)
-			* (link-storylet: 3)
+			You look over the paddock as you ponder three ways you may spend the coming day.
+			* (link-storylet: 1, "//(Unavailable)//")
+			* (link-storylet: 2, "//(Unavailable)//")
+			* (link-storylet: 3, "//(Unavailable)//")
 			```
 
 			Rationale:
@@ -584,7 +585,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			will be the one with the *least* (urgency:) value among open storylets). If the number 0 is given, an error will result.
 
 			If there is no storylet available for the link (such as `(link-storylet: 6)` when only 4 storylets are currently open) then
-			nothing will be displayed. An error will NOT be produced.
+			the optional final string will be displayed. If it isn't given, nothing will be displayed.
 
 			Note that (link-storylet:), unlike (link:), doesn't accept a changer value to style the produced link. This is because, as
 			this produces a command (and not a changer), you can simply attach changers to the front of it to style the link.
@@ -596,27 +597,17 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			/*
 				Return a new (link-storylet:) object.
 			*/
-			(text, condition) => {
-				const oneNumber = 'one index number or one \'where\' lambda';
-				if (condition !== undefined && typeof text !== 'string') {
-					return TwineError.create('datatype', '(link-storylet:) should be given, after the link text string, only ' + oneNumber + '.');
-				}
-				if (condition === 0 || text === 0) {
-					return TwineError.create('datatype', "(link-storylet:) can't link to the 0th storylet.");
-				}
-				if (typeof text === 'string' && !condition) {
-					return TwineError.create('datatype', '(link-storylet:) must have ' + oneNumber + ' after the link text string');
+			(...args) => {
+				const condition = args[args.length === 1 || typeof args[0] !== 'string' ? 0 : 1];
+				if (!condition || typeof condition === 'string') {
+					return TwineError.create('datatype', '(link-storylet:) should be given one index number or one \'where\' lambda, after the optional link text string.');
 				}
 			},
-			(cd, section, text, condition) => {
-				/*
-					If the text argument is skipped (that is, the condition is in the "text" variable)
-					then rearrange the variables correctly.
-				*/
-				if (!condition) {
-					condition = text;
-					text = '';
-				}
+			(cd, section, ...args) => {
+				const condition = args[args.length === 1 ? 0 : args.length === 3 || typeof args[0] === "string" ? 1 : 2];
+				let text = typeof args[0] === "string" && args[0];
+				const unavailableText = args[args.length - 1] !== condition ? args[args.length - 1] : false;
+
 				/*
 					Mistakenly attaching the wrong (t8n:) to a (link-storylet:) macro will lead to
 					a helpful advisory error being emitted.
@@ -640,35 +631,45 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 						The index is, of course, 1-indexed.
 					*/
 					condition < 0 ? storylets.length + condition : condition - 1];
-				if (!passage) {
-					return cd;
-				}
-				passage = passage.get('name');
-				/*
-					If the optional text wasn't given, use the passage name for the text.
-				*/
-				text = text || passage;
-
+				
 				let source;
 				/*
-					Create the link in a manner consistent with (link-goto:).
+					If there is no passage fitting the index or lambda, either return if there's no "unavailable" text,
+					or use it as the source instead of constructing the <tw-link>.
 				*/
-				source = source || '<tw-link tabindex=0 '
+				if (!passage) {
+					if (!unavailableText) {
+						return cd;
+					}
+					source = unavailableText;
+				}
+				else {
+					passage = passage.get('name');
 					/*
-						Previously visited passages may be styled differently compared
-						to unvisited passages.
+						If the optional text wasn't given, use the passage name for the text.
 					*/
-					+ (State.passageNameVisited(passage) > 0 ? 'class="visited" ' : '')
-					+ '>' + text + '</tw-link>';
-				/*
-					Instead, the passage name is stored on the <tw-expression>, to be retrieved by clickEvent() above.
-				*/
-				cd.data.linkPassageName = passage;
-				/*
-					All links need to store their section as jQuery data, so that clickLinkEvent can
-					check if the section is blocked (thus preventing clicks).
-				*/
-				cd.data.section = section;
+					text = text || passage;
+
+					/*
+						Create the link in a manner consistent with (link-goto:).
+					*/
+					source = source || '<tw-link tabindex=0 '
+						/*
+							Previously visited passages may be styled differently compared
+							to unvisited passages.
+						*/
+						+ (State.passageNameVisited(passage) > 0 ? 'class="visited" ' : '')
+						+ '>' + text + '</tw-link>';
+					/*
+						Instead, the passage name is stored on the <tw-expression>, to be retrieved by clickEvent() above.
+					*/
+					cd.data.linkPassageName = passage;
+					/*
+						All links need to store their section as jQuery data, so that clickLinkEvent can
+						check if the section is blocked (thus preventing clicks).
+					*/
+					cd.data.section = section;
+				}
 				return assign(cd, {
 					source,
 					/*
@@ -679,7 +680,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 					transitionDeferred: true,
 				});
 			},
-			[either(parseInt, String, Lambda.TypeSignature('where')), optional(either(parseInt, Lambda.TypeSignature('where')))]
+			[either(parseInt, String, Lambda.TypeSignature('where')), optional(either(parseInt, String, Lambda.TypeSignature('where'))), optional(String)]
 		)
 
 

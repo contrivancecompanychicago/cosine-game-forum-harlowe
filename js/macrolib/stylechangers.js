@@ -930,6 +930,57 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		)
 
 		/*d:
+			(button:) -> Changer
+
+			When applied to a link, this changer styles it so that it resembles a button, and makes it take up the entire passage width. It is not
+			recommended that this be used on non-link hooks.
+
+			Example usage:
+			* `(button:)[[Go to the cemetery]]` applies the button style to a single passage link.
+			* `(enchant:?link's 2ndlast + ?link's last, (button:))` enchants the second-last and last links in the passage with the button style.
+
+			Rationale:
+			Harlowe links, by default, are designed to appear inside and among prose, in the manner of HTML prose. That being said, a story written in a more
+			traditional interactive fiction style will often want to finish a passage with a series of exit links. These links can benefit from being more
+			visually prominent and inviting, rather than just single fragments of text. The (button:) changer provides links with a styling that is more typical
+			of other interactive fiction engines' link options.
+
+			Details:
+			This is essentially a shortcut for a number of other changers added together. `(link: "Link Text", (button:))` is equivalent to
+			`(link:"Link Text",(align:"=><=")+(box:"X")+(b4r:"solid")+(css:"padding:0px")+(corner-radius:16))`. However, unlike the latter,
+			this changer is designed to work correctly with (click:) and `(enchant:"text")`, so that the button border matches the current link colour.
+
+			To make (button:) links appear in two or more columns, or make two (button:) links appear side-by-side, consider using the column markup.
+
+			This changer can be provided to non-link hooks or commands, but since the result will have the same borders and spacing as a button while not
+			being clickable, it is not recommended to use it this way.
+
+			This changer adds the class "enchantment-button" to <tw-link> and <tw-enchantment> elements.
+
+			See also:
+			(align:), (border:), (box:), (corner-radius:)
+
+			Added in: 3.2.0
+			#styling
+		*/
+		("button",
+			() => ChangerCommand.create("button", []),
+			(d) => {
+				/*
+					In order for this to be validly considered usable with (enchant:), it should only have an "attr" item instead of a "functions" item.
+					This is currently the only way for a ChangeDescriptor to modify an element's class... as uncomfortable as it is.
+				*/
+				d.attr.push({
+					class() {
+						return this.className + (this.classList.contains('enchantment-button') ? '' : ' '.repeat(this.className.length > 0) + 'enchantment-button');
+					},
+				});
+				return d;
+			},
+			[]
+		)
+
+		/*d:
 			(border: String, [String], [String], [String]) -> Changer
 			Also known as: (b4r:)
 
@@ -2247,6 +2298,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			const styles = {
 				display:        "block",
 				width:           size + boxUnits,
+				"max-width":     size + boxUnits,
 				[name === "box" ? "margin-left" : "left"]: marginLeft + boxUnits,
 				"box-sizing":   "content-box",
 				"overflow-y":   "auto",

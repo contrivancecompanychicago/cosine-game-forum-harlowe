@@ -175,6 +175,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a `(text-rotate-x:)` and `(text-rotate-y:)`, which are 3D versions of `(text-rotate:)`, rotating the hook around the X or Y axis, making it appear to lean into the page with perspective.
  * Added the changer macros `(border:)`, `(border-size:)`, and `(border-colour:)` (aliases `(b4r:)`, `(b4r-size:)`, `(b4r-colour:)`) which add and adjust CSS borders for hooks. `(border:)` will automatically make the attached hook have `display:inline-block`, so that it remains rectangular and the border can properly enclose it.
  * Added a `(corner-radius:)` macro, which rounds the corners of the hook (using the CSS "border-radius" property, which, despite its name, works on elements without borders). It will also add padding, proportional to the amount of corner rounding, so that the corners don't encroach on the inner text.
+ * Added a `(button:)` macro, which is designed especially for links. It is essentially a convenient shorthand for `(align:"=><=")+(box:"X")+(border:"solid")+(css:"padding:0px")+(corner-radius:16)`.
  * The following `(text-style:)` styles have been added:
    * "double-underline", "wavy-underline", "double-strike" and "wavy-strike", which are variants of "underline" and "strike". Be aware these will not work in Internet Explorer.
    * "fidget", which jolts the hook by one pixel in cardinal directions pseudorandomly.

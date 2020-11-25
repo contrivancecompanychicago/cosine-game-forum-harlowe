@@ -952,6 +952,23 @@ describe("style changer macros", function() {
 			});
 		});
 	});
+	describe("the (button:) macro", function() {
+		it("requires 0 arguments", function() {
+			expect("(print:(button:))").not.markupToError();
+			expect("(print:(button:1))").markupToError();
+		});
+		it("gives the enchanted elements the 'enchantment-button' class", function() {
+			var p = runPassage("(link:'foo',(button:))[]");
+			expect(p.find('tw-link.enchantment-button').length).toBe(1);
+			p = runPassage("(button:)[[Test]]","Test");
+			expect(p.find('tw-expression.enchantment-button').length).toBe(1);
+		});
+		it("works with (enchant:) given ?Link", function() {
+			var p = runPassage("(enchant:?Link,(button:))[[Test]]","Test");
+			expect(p.find('tw-enchantment.enchantment-button > tw-link').length).toBe(1);
+		});
+		// TODO:CSS tests
+	});
 	describe("the (collapse:) macro", function() {
 		function tests(expect) {
 			it("eliminates runs of whitespace between { and }", function() {

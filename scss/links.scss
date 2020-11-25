@@ -125,3 +125,24 @@ tw-broken-link {
 	border: transparent 2px solid;
 	border-radius: 0.2em;
 }
+
+/*
+	Button styling is applied in three ways: by (button:) changing normal links and (click:) links as their second argument...
+*/
+tw-link.enchantment-button,
+.enchantment-link.enchantment-button,
+/*
+	...by link changers and (click:) links being enchanted by (enchant:), or link expressions changed by attached (button:) changers...
+*/
+.enchantment-button:not(.enchantment-link) > tw-link,
+.enchantment-button:not(.enchantment-link) > .enchantment-link,
+/*
+	...and links inside (dialog:) dialogs.
+*/
+tw-dialog-links tw-link {
+	border-radius: 16px;
+	border-style: solid;
+	border-width: 2px;
+	text-align:center;
+	display:block;
+}
