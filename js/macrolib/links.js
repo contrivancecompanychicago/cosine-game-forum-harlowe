@@ -185,7 +185,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			
 			When attached to a hook, this replaces the hook with a link that has the given text. The link, when clicked, vanishes and reveals the hook.
 			An optional changer can be given to alter the style of the link
-			(instead of altering the style the attached hook).
+			(instead of altering the style of the attached hook).
 			
 			Example usage:
 			* `(link: "Stake")[The dracula crumbles to dust.]` will create a link reading "Stake"
@@ -231,7 +231,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			(link-reveal: String, [Changer]) -> Changer
 			
 			When attached to a hook, this replaces the hook with a link that has the given text. The link, when clicked, reveals the hook and becomes plain, unstyled text.
-			An optional changer can be given to alter the style of the link (instead of altering the style the attached hook).
+			An optional changer can be given to alter the style of the link (instead of altering the style of the attached hook).
 
 			Example usage:
 			`(link-reveal: "Heart")[broken]` will create a link reading "Heart"
@@ -272,7 +272,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			When attached to a hook, this replaces the hook with a link that has the given text. The link, when clicked, reveals the hook.
 			Further clicks will cause the hook to repeat itself - a copy of the hook's code will be run, and the result appended to it,
 			in a manner similar to (for:). An optional changer can be given to alter the style of the link
-			(instead of altering the style the attached hook).
+			(instead of altering the style of the attached hook).
 			
 			Example usage:
 			* `(link-repeat: "Add cheese")[(set:$cheese to it + 1)]` will create a link reading "Add cheese"
@@ -312,7 +312,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			
 			When attached to a hook, this replaces the hook with a link that has the given text. The link, when clicked, reveals the hook.
 			Further clicks will cause the hook to rerun itself, as if by the effect of (rerun:). An optional changer can be given to alter the style of the link
-			(instead of altering the style the attached hook).
+			(instead of altering the style of the attached hook).
 			
 			Example usage:
 			* `(link-rerun: "ROLL DICE ")[You rolled a (random:1,6).]` will create a link reading "ROLL DICE"

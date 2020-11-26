@@ -304,15 +304,15 @@ const
 		},
 
 		/*
-			This produces a 'shortened' defs object, where each definition has only these four values, and each alias has its own copy of the definition.
+			This produces a 'shortened' defs object, where each definition has only these values (importantly, not the text), and each alias has its own copy of the definition.
 		*/
 		shortDefs() {
 			return Object.keys(this.defs).reduce((a,e)=>{
-				let {name, sig, returnType, aka, abstract, anchor} = this.defs[e];
+				let {name, sig, returnType, aka, abstract, anchor, category, categoryOrder} = this.defs[e];
 				/*
 					Make the name insensitive, so that it can be referenced without its 'canonical' punctuation.
 				*/
-				const data = {name, sig, returnType, aka, abstract, anchor};
+				const data = {name, sig, returnType, aka, abstract, anchor, category, categoryOrder};
 				a[insensitiveName(name)] = data;
 				aka.map(insensitiveName).forEach(alias => a[alias] = data);
 				return a;

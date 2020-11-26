@@ -4,7 +4,7 @@
 	const {stringify, parse} = JSON;
 	const {round} = Math;
 	let panels;
-	let cm, lex, Patterns;
+	let cm, lex, Patterns, ShortDefs;
 	/*
 		These are a couple of convenience routines.
 	*/
@@ -68,7 +68,16 @@
 		/*
 			Uncheck all checkboxes, return all <select>s to default, and clear all textareas.
 		*/
-		Object.values(panels).forEach(panel => {
+		Object.entries(panels).forEach(([name2,panel]) => {
+			/*
+				Lazy-create the panel if it's the one we're switching to and it hasn't been created yet.
+			*/
+			if (typeof panel === 'function') {
+				if (name2 === name) {
+					panel = panels[name2] = panel();
+				}
+				else return;
+			}
 			panel[$$]('[type=radio]').forEach(node => node.checked = (node.parentNode.parentNode[$]('label:first-of-type') === node.parentNode));
 			panel[$$]('[type=checkbox]').forEach(node => node.checked = false);
 			panel[$$]('[type=text]').forEach(node => node.value = '');
@@ -420,8 +429,10 @@
 		- update: A function taking the entire panel element, and performing actions whenever this element's value is altered.
 		- name: User-facing display name of this element.
 		- type: Which type of UI element to create for it.
+
+		Note: panel creation is deferred until first access - hence, this returns a zero-arity function.
 	*/
-	const folddownPanel = (...panelRows) => {
+	const folddownPanel = (...panelRows) => () => {
 		/*
 			The MVC-style flow of element states into data, and back, is crudely performed here.
 			Elements can register "model" and "updater" functions. Model functions take a model object
@@ -776,6 +787,58 @@
 					});
 					subrowEl[$]('input')[ON]('change', update);
 				});
+			}
+			if (type === "macro-list") {
+				ret = el(`<div><div style="text-align:center">Category: </div></div>`);
+				const categorySelector = el(`<select>`);
+				ret.firstChild.append(categorySelector);
+				const scrollBox = el(`<div style="margin-top:8px;border-top:1px solid hsla(0,0%,50%,0.5);max-height:40vh;overflow-y:scroll">`);
+				ret.append(scrollBox);
+				categorySelector[ON]('change', () => {
+					const el = scrollBox[$](`[name="${categorySelector.value}"]`);
+					el && el.scrollIntoView();
+				});
+				Object.values(ShortDefs.Macro)
+					.sort(({name:leftName, category:leftCategory, categoryOrder:leftCategoryOrder}, {name:rightName, category:rightCategory, categoryOrder:rightCategoryOrder}) => {
+						/*
+							Sort alphabetically, then by explicit order number.
+						*/
+						if (leftCategory !== rightCategory) {
+							return (leftCategory || "").localeCompare(rightCategory || "");
+						}
+						if (leftCategoryOrder !== rightCategoryOrder) {
+							if (isNaN(+leftCategoryOrder)) {
+								return 1;
+							}
+							if (isNaN(+rightCategoryOrder)) {
+								return -1;
+							}
+							return Math.sign(leftCategoryOrder - rightCategoryOrder);
+						}
+						return leftName.localeCompare(rightName);
+					})
+					.forEach((defs, i, a) => {
+						// Add category titles whenever the category changes.
+						if (i === 0 || defs.category !== a[i-1].category) {
+							scrollBox.append(el(`<h3 style="text-transform:capitalize" name="${defs.category}">${defs.category}</h3>`));
+							categorySelector.append(el(`<option value="${defs.category}">${defs.category}</option>`));
+						}
+						// Filter out doubles (created by macro aliases).
+						if (i > 0 && defs.name === a[i-1].name) {
+							return;
+						}
+
+						const subrowEl = el(`<label class='harlowe-3-radioRow'><input type="radio" name="macro-list" value="${defs.name}"></input>`
+							+ `<code><a href="https://twine2.neocities.org/#${defs.anchor}" target="_blank" rel="noopener noreferrer">(${defs.name}: ${defs.sig}) -> ${defs.returnType}</a></code>`
+							+ `${defs.aka.length ? `<div><i>Also known as: ${
+								defs.aka.map(alias => `<code>(${alias}:)</code>`).join(', ')
+							}</i>` : ''}</div><div>${
+								defs.abstract.replace(/`([^`]+)`/g, (_, inner) => `<code>${inner}</code>`)
+							}</div></label>`
+						);
+						scrollBox.append(subrowEl);
+						subrowEl[$]('input')[ON]('change', update);
+					});
 			}
 			/*
 				Rows of options, selected using a single dropdown.
@@ -2482,6 +2545,24 @@
 			},
 			confirmRow),
 
+		macro: folddownPanel({
+				type: 'text',
+				text: '<b>Macros</b> are code used for programming and styling your story. The vast majority of Harlowe\'s features are available through macros.'
+					+ '<br>All of the built-in Harlowe macros are listed here. For more details, click their signatures to open the documentation.',
+			},{
+				type: 'macro-list',
+				model(m, el) {
+					const selected = el[$]('input:checked');
+					if (selected) {
+						m.wrapStart = "(" + selected.value + ":";
+						m.wrapEnd = ")";
+						m.innerText = "Your Code Here";
+						m.valid = true;
+					}
+				},
+			},
+			confirmRow),
+
 		default: folddownPanel(
 			{
 				type: 'buttons',
@@ -2522,6 +2603,7 @@
 					{ title:'Input element',           html:'Input…',                         onClick: () => switchPanel('input')},
 					{ title:'Hook (named section of the passage)',      html:'Hook…',         onClick: () => switchPanel('hook')},
 					{ title:'Set a variable with a data value',         html:'Var…',          onClick: () => switchPanel('basicValue')},
+					{ title:'Peruse a list of all built-in macros',     html:'Macro…',        onClick: () => switchPanel('macro')},
 					el('<span class="harlowe-3-toolbarBullet">'),
 					{ title:'Proofreading view (dim all code except strings)',
 						html:fontIcon('eye'),
@@ -2568,7 +2650,7 @@
 
 	// This can only be loaded in TwineJS, not any other place.
 	if (this && this.loaded) {
-		({Markup:{lex}, Patterns} = this.modules);
+		({Markup:{lex}, Patterns, ShortDefs} = this.modules);
 		this.modules.Toolbar = Toolbar;
 	}
 }.call(eval('this')));
