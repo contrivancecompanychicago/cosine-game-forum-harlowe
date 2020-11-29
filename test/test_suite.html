@@ -279,13 +279,46 @@ var jasmineMatcher = (function() {
 						"background(?:-image)?:\\s*linear-gradient\\(" + degree + "deg,"
 							+ stops.reduce(function(str, stop) {
 								var colour = stop.colour.replace(/(\(|\))/g, "\\$1");
-								return str + "\\s*(?:" + colour + hexToRGBA(colour) + ")\\s+" + (stop.stop*100) + "%\\s*,"
+								return str + "\\s*(?:" + colour + hexToRGBA(colour) + ")\\s+" + (stop.stop*100) + "%,"
 							}, '').slice(0,-1)
 							+ "\\)", "i"));
 
 				var message = "linear-gradient(" + degree + "deg," + stops.reduce(function(str, stop) {
 					return str + stop.colour + " " + (stop.stop*100) + "%, "
 				}, '').slice(0,-2) + ")";
+
+				return {
+					pass: !!pass,
+					message: !pass
+						? "Expected element style '" + a.attr('style')
+							+ "' to contain a background-image of " + message
+						: "Expected element style '" + a.attr('style')
+							+ "' not to contain a background-image of " + message
+				};
+			}
+		}),
+		toHaveBackgroundStripes: Object.bind(Object,{
+			compare: function(a,degree,dist,colours) {
+				var d = 0;
+				var pass = a.jquery && (a.attr('style') + '').match(new RegExp(
+						"background(?:-image)?:\\s*repeating-linear-gradient\\(" + degree + "deg,"
+
+							+ colours.reduce(function makeStops(str, colour) {
+								var ret = str + "\\s*(?:" + colour + hexToRGBA(colour) + ")\\s+" + d + "px,";
+								d += dist;
+								ret += "\\s*(?:" + colour + hexToRGBA(colour) + ")\\s+" + d + "px,";
+								return ret;
+							},'').slice(0,-1)
+
+							+ "\\)", "i"));
+				d = 0;
+				var message = "repeating-linear-gradient(" + degree + "deg, "
+					+ colours.reduce(function makeStops(str, colour) {
+						var ret = str + colour + " " + d + "px, ";
+						d += dist;
+						ret += str + colour + " " + d + "px, ";
+						return ret;
+					},'').slice(0,-2) + ")";
 
 				return {
 					pass: !!pass,

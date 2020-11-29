@@ -162,12 +162,8 @@ define(['utils'], ({impossible}) => {
 				created by converting "addition" and "subtraction" in compile().
 			*/
 			{rightAssociative: ["not", "positive", "negative"]},
-			{rightAssociative: ["belongingProperty"]},
-			{rightAssociative: ["belongingOperator", "belongingItOperator"]},
-			["property"],
-			["itsProperty"],
-			{rightAssociative: ["belongingItProperty"]},
-			["possessiveOperator", "itsOperator"],
+			{rightAssociative: ["belongingProperty","belongingItProperty", "belongingOperator", "belongingItOperator"]},
+			["property","itsProperty", "possessiveOperator", "itsOperator"],
 			["twineLink"],
 			["macro"],
 			["grouping"],
@@ -868,7 +864,7 @@ define(['utils'], ({impossible}) => {
 				/*
 					Otherwise, create the error object for end-user examination.
 				*/
-				return "TwineError" + dotCreate + "'operation','I need some code to be "
+				return "TwineError" + dotCreate + "'operation','I need usable code to be "
 					+ (needsLeft === MUST ? "left " : "")
 					+ (needsLeft === MUST && needsRight === MUST ? "and " : "")
 					+ (needsRight === MUST ? "right " : "")

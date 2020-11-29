@@ -10,6 +10,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a long-standing bug involving the interaction between temp variables and the `(show:)` and `(link-show:)` macros. The previous behaviour, which was not my intention at all, meant that hooks shown with `(show:)` could only access temp variables available at the `(show:)` macro's location, rather than the hook's location (which is now the current behaviour). The same applies to `(link-show:)`, as well as to the new `(rerun:)` macro (below).
  * Fixed a long-standing bug where continuous ranges for arrays, such as `(a: 1,2)'s 4thlasttolast`, wouldn't work correctly. (What that example should do is provide the entire array, as is consistent with Python.)
  * Fixed a long-standing bug where `(click: ?Passage)` and `(click: ?Sidebar)` just flat-out didn't work at all.
+ * Fixed a long-standing bug where, due to an operator precedence conflict, writing something like `$a's stops's (1)` would cause a Javascript error.
  * Fixed a long-standing bug where lambdas would produce an incorrect duplicate-name error if the temp variables used with their clauses contained capital letters.
  * Fixed a long-standing bug where hooks that had `(transition:)` transitions would restart their transition animations whenever the containing passage finished transitioning in. Previously, the only way to overcome this was to make the passage transition using `(transition-arrive:"instant")`.
  * Fixed a long-standing bug where you couldn't use the column markup to create empty columns by placing two column markup lines in succession, without an intervening blank line.
@@ -129,6 +130,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added an `(lch:)` macro (alias `(lcha:)`), an alternative colour creation macro (comparable to `(hsl:)`) that uses the LCH colour space (which is the CIELAB colour space, familiar to graphic designers, but expressed radially using a HSL-style hue angle).
  * Added a `(complement:)` macro, which takes a colour and produces its complement by rotating its LCH hue by 180 degrees.
  * Added a `(palette:)` macro, designed for rapid prototyping, which produces a four-colour palette based on a given colour, for use with `(text-colour:)`, `(background:)` and `(enchant:)`.
+ * Added `(stripes:)`, a variant of `(gradient:)` which creates a striped background (for use with `(background:)`) when given a given stripe width, angle, and colours.
 
 ###### Values
 

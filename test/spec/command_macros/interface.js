@@ -587,7 +587,7 @@ describe("interface macros", function(){
 			p = runPassage("(set:$foo to 10)(meter: bind $foo, 200, '=X', 'Yo')");
 			expect(p.find('tw-meter').css('background-size')).toBe('5%');
 		});
-		it("uses the given gradient or colour for the bar, ignoring the angle", function() {
+		it("uses the given gradient or colour for the bar, ignoring the angle if it isn't a (stripes:) gradient", function() {
 			var p = runPassage("(set:$foo to 100)(meter: bind $foo, 100, '=X', (gradient:45,0,#ab1212,1,#ac6060))");
 			expect(p.find('tw-meter')).toHaveBackgroundGradient(270, [
 				{stop:0,colour:"#AB1212"},
@@ -603,13 +603,17 @@ describe("interface macros", function(){
 				{stop:0,colour:"#FADABC"},
 				{stop:1,colour:"#FADABC"},
 			]);
+			p = runPassage("(set:$foo to 100)(meter: bind $foo, 100, 'X=', (stripes:125,14,#22FF00,#A00))");
+			expect(p.find('tw-meter')).toHaveBackgroundStripes(125, 14, ["#22FF00", "#AA0000"]);
 		});
-		it("scales the gradient based on how much of the bar is remaining", function() {
+		it("if it isn't a (stripes:) gradient, scales the gradient based on how much of the bar is remaining", function() {
 			var p = runPassage("(set:$foo to 50)(meter: bind $foo, 100, '=X', (gradient:45,0,#ab1212,1,#ac6060))");
 			expect(p.find('tw-meter')).toHaveBackgroundGradient(270, [
 				{stop:0,colour:"#AB1212"},
 				{stop:2,colour:"#AC6060"},
 			]);
+			p = runPassage("(set:$foo to 40)(meter: bind $foo, 100, 'X=', (stripes:125,14,#22FF00,#A00))");
+			expect(p.find('tw-meter')).toHaveBackgroundStripes(125, 14, ["#22FF00", "#AA0000"]);
 		});
 		/*
 			TODO: center meter tests

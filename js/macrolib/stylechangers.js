@@ -1677,7 +1677,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 				if (Colour.isHexString(value) || Colour.isCSS3Function(value)) {
 					property = {"background-color": value};
 				}
-				else if (value.startsWith('linear-gradient(')) {
+				else if (value.startsWith('linear-gradient(') || value.startsWith('repeating-linear-gradient(')) {
 					property = {"background-image": value};
 				}
 				else {

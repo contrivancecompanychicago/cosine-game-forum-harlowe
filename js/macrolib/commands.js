@@ -1025,9 +1025,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		The second, optional string is a label that is placed inside the meter, on top of the bar. This text is aligned in the same direction as the meter itself.
 
 		Either a colour or a gradient can be given as the final value, with which to colour the bar. If neither is given, the bar will be a simple gray.
-		If a gradient is given, its rotation will be automatically changed to 90 degrees, with the leftmost colour (at colour stop 0) being placed at
-		the "empty" end of the meter, and the rightmost colour (at colour stop 1) placed at the "full" end. If the bar is center-aligned, then
-		the gradient will be modified, with both ends of the graph having the leftmost colour, and the center having the rightmost colour.
+		If a gradient is given, and it isn't a (stripes:) gradient, its rotation will be automatically changed to 90 degrees, with the leftmost colour
+		(at colour stop 0) being placed at the "empty" end of the meter, and the rightmost colour (at colour stop 1) placed at the "full" end. If the bar
+		is center-aligned, then the gradient will be modified, with both ends of the graph having the leftmost colour, and the center having the rightmost colour.
 
 		The meter is exclusively horizontal, and cannot be rotated unless you attach (text-rotate:) to it.
 
@@ -1093,18 +1093,23 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			*/
 			const makeStyleString = value => {
 				const clampedSize = max(0, min(1, value / maxValue));
-				const g = gradient.multiply(maxValue / value);
+				/*
+					The method for cutting a non-repeating gradient down by a percentage amount is to think
+					of the problem from the opposite side: simply multiply the gradient's colour stops by
+					the percentage's reciprocal, so that they extend beyond 100%.
+				*/
+				const g = gradient.repeating ? gradient : gradient.multiply(maxValue / value);
 				return `height:100%;background-repeat:no-repeat;background-image:${
 						/*
 							A center-aligned graph consists of two different gradient backgrounds, extending to the left and right
 							from the centre. This line produces the left extension.
 						*/
-						(isCenter ? assign(g, { angle: 270 }).toLinearGradientString() + ", " : '')
+						(isCenter ? assign(g, g.repeating ? {} : { angle: 270 }).toLinearGradientString() + ", " : '')
 						/*
 							And, this line produces either the right extension, or the entire bar for other alignments.
 							Note that the gradient angle is reversed for right-alignment (270 rather than 90).
 						*/
-						+ assign(g, { angle: isCenter || marginLeft === 0 ? 90 : 270 }).toLinearGradientString()
+						+ assign(g, g.repeating ? {} : { angle: isCenter || marginLeft === 0 ? 90 : 270 }).toLinearGradientString()
 					};background-size:${
 						isCenter ? Array(2).fill(clampedSize * 50 + "%") : clampedSize * 100 + "%"
 					};background-position-x:${

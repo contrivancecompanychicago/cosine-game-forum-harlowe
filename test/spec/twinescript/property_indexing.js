@@ -392,6 +392,13 @@ describe("property indexing", function() {
 				expect("(print: (gradient:0,0.7,black,0.2,white)\'s stops\'s 1st's percent)").markupToPrint("0.2");
 				expect("(print: (gradient:0,0.2,black,0.7,white)\'s stops\'s last's percent)").markupToPrint("0.7");
 				expect("(print: (gradient:0,0.7,black,0.2,white)\'s stops\'s last's colour is black)").markupToPrint("true");
+				expect("(print: 'pixels' is in (gradient:0,0.2,black,0.7,white)\'s stops\'s last)").markupToPrint("false");
+
+				expect("(print: 'percent' is in (stripes:0,32,red,orange)\'s stops\'s last)").markupToPrint("false");
+				expect("(print: (stripes:0,32,red,orange)\'s stops\'s 1st's pixels)").markupToPrint("0");
+				expect("(print: (stripes:0,32,red,orange)\'s stops\'s 2nd's pixels)").markupToPrint("32");
+				expect("(print: (stripes:0,32,red,orange)\'s stops\'s last's pixels)").markupToPrint("64");
+				expect("(print: (stripes:0,32,red,orange)\'s stops\'s last's colour is orange)").markupToPrint("true");
 			});
 			it("no other values are present", function() {
 				expect("(print:(gradient:0,0,black,1,white)'s create)").markupToError();
@@ -649,6 +656,13 @@ describe("property indexing", function() {
 				expect("(print: (gradient:0,0.7,black,0.2,white)'s ('stops')'s (1)'s 'percent')").markupToPrint("0.2");
 				expect("(print: (gradient:0,0.2,black,0.7,white)\'s ('stops')'s (-1)'s 'percent')").markupToPrint("0.7");
 				expect("(print: (gradient:0,0.7,black,0.2,white)\'s ('stops')'s (-1)'s 'colour' is black)").markupToPrint("true");
+				expect("(print: ('pixels') is in (gradient:0,0.2,black,0.7,white)\'s stops\'s (-1))").markupToPrint("false");
+
+				expect("(print: ('percent') is in (stripes:0,32,red,orange)\'s stops\'s last)").markupToPrint("false");
+				expect("(print: (stripes:0,32,red,orange)\'s ('stops')'s (1)'s pixels)").markupToPrint("0");
+				expect("(print: (stripes:0,32,red,orange)\'s stops\'s (2)'s pixels)").markupToPrint("32");
+				expect("(print: (stripes:0,32,red,orange)\'s ('stops')'s (-1)'s pixels)").markupToPrint("64");
+				expect("(print: (stripes:0,32,red,orange)\'s ('stops')'s (-1)'s colour is orange)").markupToPrint("true");
 			});
 			it("no other values are present", function() {
 				expect("(print:(gradient:0,0,black,1,white)'s 'create')").markupToError();

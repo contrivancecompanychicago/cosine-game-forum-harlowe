@@ -673,6 +673,13 @@ describe("style changer macros", function() {
 				done();
 			});
 		});
+		it("given a (stripes:) gradient, applies it as the background-image property", function(done) {
+			var p = runPassage("(background:(stripes:45,32,#00FF00,#000))[Hey]").find('tw-hook');
+			setTimeout(function() {
+				expect(p).toHaveBackgroundStripes(45, 32, ["#00FF00", "#000000"]);
+				done();
+			});
+		});
 		it("can compose with itself", function(done) {
 			var p = runPassage("(set: $x to (background:'#800000')+(background:'garply'))$x[Hey]").find('tw-hook');
 			setTimeout(function() {

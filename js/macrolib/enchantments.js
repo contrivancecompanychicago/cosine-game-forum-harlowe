@@ -59,8 +59,9 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 
 		Details:
 		The (change:) macro can target plain text instead of hooks, much like (click:) - simply provide a string instead of a hook name.
-		If a "via" lambda is supplied to (change:) instead of a changer, then that lambda is used to compute a changer dynamically, based on specifics of
-		each hook that's enchanted. For instance, `(change: "O", via (text-style:(cond: pos % 2 is 0, 'bold', 'none')))`
+		If a "via" lambda is supplied to (change:) instead of a changer, then that lambda is used to compute a changer dynamically, using the `pos` keyword
+		to distinguish each hook that's enchanted. For instance, `(change: "O", via (text-style:(cond: pos is an even, 'bold', 'none')))` changes only
+		even-numbered instances of the letter "O".
 
 		Like the (replace:), (append:) and (prepend:) macros, this macro does not affect text and hooks that appear after it, as it is an immediate
 		command that only affects what has already been rendered. For an alternative version of this macro which does affect hooks and text after it,
