@@ -50,6 +50,14 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			and assigning to its properties does affect game state.
 		*/
 		TwineScript_VariableStore: true,
+
+		/*
+			For testing purposes, there needs to be a way to "mock" having visited certain passages a certain number of times.
+			Because (mock-visits:) calls should be considered modal, and can be undone, their effects need to be tied
+			to the variable store.
+			Note that currently, mock visits are NOT saved using (save-game:).
+		*/
+		TwineScript_MockVisits: null,
 	});
 
 	/*
@@ -93,7 +101,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		the player has undone).
 		Count begins at 0 (the game start).
 	*/
-	let timeline = [ ];
+	let timeline = [];
 	
 	/*
 		Index to the game state just when the current passage was entered.
@@ -198,6 +206,17 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		*/
 		get futureLength() {
 			return (timeline.length - 1) - recent;
+		},
+
+		/*
+			Get and set the current mockVisits state.
+		*/
+		get mockVisits() {
+			return present.variables.TwineScript_MockVisits || [];
+		},
+
+		set mockVisits(value) {
+			present.variables.TwineScript_MockVisits = value;
 		},
 
 		/*

@@ -1313,12 +1313,13 @@
 				type: 'preview',
 				text: 'Example text preview',
 				update(model, panel) {
+					const changers = model.suppressedChangers || model.changers;
 					panel.firstChild.setAttribute('style', `${
-						(model.changers['text-colour'] ? `color:${model.textColour};` : '')
+						(changers['text-colour'] ? `color:${model.textColour};` : '')
 					}${
 						model.stops ? `background:linear-gradient(${model.angle}deg, ${
 							model.stops.map(stop => stop.getAttribute('data-colour') + " " + (stop.getAttribute('data-pos')*100) + "%")
-						})` : model.changers.background ? `background:${model.backgroundColour}` : ''
+						})` : changers.background ? `background:${model.backgroundColour}` : ''
 					}`);
 				},
 			},{
@@ -1414,7 +1415,24 @@
 					]
 				],
 			},
-			remainderOfPassageCheckbox,
+			{
+				type: 'radios',
+				name: 'Affect:',
+				options: ["The attached hook", "The remainder of the passage or hook.", "The entire page."],
+				model(m, el) {
+					const v = el[$]('input:checked').value;
+					const changers = Object.entries(m.changers);
+					if (v.includes('page') && changers.length) {
+						m.wrapStart = "(enchant:?page," + changers.map(([k,v]) => `(${k}:${v.join(',')})`).join('+') + ")";
+						m.wrapEnd = "";
+						m.suppressedChangers = m.changers;
+						m.changers = {};
+					} else if (v.includes('passage')) {
+						m.wrapStart = "[=\n";
+						m.wrapEnd = "";
+					}
+				},
+			},
 			confirmRow),
 		/*
 			The [[Link]] button's panel. This configures the link syntax, plus a (t8n-depart:) and/or (t8n-arrive:) macro to attach to it.

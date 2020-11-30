@@ -945,7 +945,8 @@ define([
 
 			This returns an array containing the string names of all of the passages
 			the player has visited up to now, in the order that the player visited them. An optional lambda
-			can filter the passages, by checking the (passage:) datamap of each.
+			can filter the passages, by checking the (passage:) datamap of each. The (mock-visits:) macro
+			can, during debugging, artifically add values to this array to simulate having visited various passages.
 
 			Example usage:
 			* `(history:) contains "Cellar"` is true if the player has visited a passage called
@@ -958,8 +959,8 @@ define([
 
 			Rationale:
 			Often, you may find yourself using "flag" variables to keep track of whether
-			the player has visited a certain passage in the past. You can use (history:), along with
-			data structure operators such as the `contains` operator, to obviate this necessity.
+			the player has visited a certain passage in the past. In some cases, you can use (history:), along with
+			data structure operators, such as the `contains` operator, to obviate this necessity.
 
 			Details:
 			The array includes duplicate names if the player has visited a passage more than once, or visited
@@ -967,7 +968,7 @@ define([
 
 			This does *not* include the name of the current passage the player is visiting.
 
-			This macro can optionally be given a lambda, which is used to only include passage names from the
+			This macro can optionally be given a `where` lambda, which is used to only include passage names from the
 			returned array if they match the lambda. Note that even though this produces an array of strings,
 			the variable in the lambda is always a **datamap** -
 			the same datamap as would be returned by (passage:) for that passage name. That datamap contains
@@ -986,6 +987,12 @@ define([
 			`(find: _name where (passage: _name)'s tags contains "Forest", ...(history:))`,
 			which takes the normal (history:) array, and finds only those names for passages whose tags contain "Forest".
 
+			If you're testing your story in debug mode using (mock-visits:), then each of the "mock" visits you simulate
+			using that macro will be added to the front of the returned array (if they match the passed-in lambda).
+			`(mock-visits:"A","B")` will cause `(history:)` to produce an array starting with `"A","B"`, followed by
+			passages the tester has actually visited on this playthrough. It will also cause `(history: where its name contains "A")`
+			to produce an array starting with `"A"`.
+
 			See also:
 			(passage:), (savedgames:), (passages:)
 
@@ -993,10 +1000,14 @@ define([
 			#game state
 		*/
 		("history", (section, lambda) => {
+			/*
+				Add the mock visits to the front of the pastPassageNames array.
+			*/
+			const history = State.mockVisits.concat(State.pastPassageNames());
 			if (!lambda) {
-				return State.pastPassageNames();
+				return history;
 			}
-			const passages = lambda.filter(section, State.pastPassageNames().map(p => Passages.get(p)));
+			const passages = lambda.filter(section, history.map(p => Passages.get(p)));
 			if (TwineError.containsError(passages)) {
 				return passages;
 			}

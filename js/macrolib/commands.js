@@ -1,7 +1,7 @@
 "use strict";
 define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 'internaltypes/twineerror',
 	'internaltypes/twinenotifier', 'datatypes/assignmentrequest', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/lambda', 'datatypes/colour', 'datatypes/gradient', 'internaltypes/varref', 'datatypes/typedvar', 'datatypes/varbind', 'utils/operationutils', 'utils/renderutils'],
-($, Macros, Utils, State, Passages, Renderer, Engine, TwineError, TwineNotifier, AssignmentRequest, HookSet, CodeHook, Lambda, Colour, Gradient, VarRef, TypedVar, VarBind, {printBuiltinValue, objectName}, {dialog, geomParse, geomStringRegExp}) => {
+($, Macros, Utils, State, Passages, Renderer, Engine, TwineError, TwineNotifier, AssignmentRequest, HookSet, CodeHook, Lambda, Colour, Gradient, VarRef, TypedVar, VarBind, {printBuiltinValue, objectName, clone}, {dialog, geomParse, geomStringRegExp}) => {
 	
 	/*d:
 		Command data
@@ -2317,6 +2317,62 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				requestAnimationFrame(Engine.showPassage.bind(Engine, State.passage, false /* stretchtext value */));
 			},
 			[String], false)
+
+		/*d:
+			(mock-visits: ...String) -> Command
+
+			A macro that can only be used in debug mode, this allows you to mark various passages as "visited", even though the player
+			actually hasn't. This allows you to quickly test passages that use the `visits` keyword, or the `(history:)` datamap, without
+			having to play through the whole game from the start.
+
+			Example usage:
+			* `(mock-visits:"Juice Temple", "Milk Temple", "Water Temple")` marks the passages "Juice Temple", "Milk Temple" and "Water Temple" as each having been visited once.
+			* `(mock-visits:"Lobby","Lobby","Lobby")` marks the "Lobby" passage as having been visited 3 times.
+
+			Rationale:
+			Using the `visits` keyword, or the (history:) array, as a way to track the player's progress instead of using Boolean variables and (set:)
+			can produce simpler, more understandable code - it's obvious what `(if: visits is > 2)` means just by looking at it. But, it comes
+			with a cost: when testing your story using the "Play from here" feature in the Twine editor, you may want to pretend that you have visited the
+			requisite passages a given number of times, so as to examine the resulting prose. If you were using variables, you could add a few temporary
+			(set:) macros to the passage, or put them in a "debug-header" tagged passage, to adjust the variables to match a game in progress. This macro
+			provides that same functionality to the `visits` keyword and (history:) array, letting you temporarily adjust it for testing purposes.
+
+			Details:
+			It's critical to understand that these are **mock** visits - the passages listed are not actually visited, and code inside them is not run by this macro.
+
+			As stated above, this macro will cause an error if it's used outside debug mode. This is NOT intended for use in a final game - while temporarily
+			tweaking the meaning of `visits` and (history:) is convenient for testing, the author should be able to trust that in the "real" game, they
+			correctly report the visits the player has actually made, so that the story's code can be properly understood.
+
+			Each occurrence of a passage name given to this macro counts as a single mock visit. Add multiples of the same passage name to register multiple mock
+			visits to that passage.
+
+			If this macro is used multiple times, only the final usage will count - all the rest will be forgotten. `(mock-visits:"A")(mock-visits:"B")`, for instance,
+			will only cause the "B" passage to be considered visited 1 time. This allows you to remove mock visits in the middle of a story by writing `(mock-visits:)`.
+
+			The effects of (mock-visits:) are NOT saved by (save-game:).
+
+			If you undo past a passage that used (mock-visits:), the effects of that macro call will be removed, as if it had been a (set:) macro call.
+
+			See also:
+			(history:), (set:)
+
+			Added in: 3.2.0
+			#debugging
+		*/
+		("mock-visits",
+			(...names) => {
+				if (!Engine.options.debug) {
+					return TwineError.create('operation', '(mock-visits:) cannot be used outside of debug mode.',
+						'This macro is not meant to be used outside of debugging your story.');
+				}
+				const incorrect = names.find(name => !Passages.hasValid(name));
+				if (incorrect) {
+					return TwineError.create('datatype', "I can't mock-visit '" + incorrect + "' because no passage with that name exists.");
+				}
+			},
+			(cd, _, ...names) => { State.mockVisits = clone(names); },
+		[rest(String)])
 
 		/*d:
 			(dialog: [Bind], String, ...String) -> Command

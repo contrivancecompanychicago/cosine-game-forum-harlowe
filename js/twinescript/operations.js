@@ -326,11 +326,17 @@ define([
 					not the contained passage. So, you can't use it to determine how many times the (display:)ed passage
 					has been (display:)ed.
 
+					For testing purposes, it can be convenient to temporarily alter `visits`'s value, so as to recreate a
+					certain game state. The (mock-visits:) macro, usable only in debug mode, lets you increase the number of
+					times certain passages have been "visited", so that this keyword produces higher numbers when in those passages.
+
 					Added in: 3.1.0
 				*/
 				get visits() {
 					const {stackTop:{speculativePassage}} = section;
-					return State.pastPassageNames().filter(name => name === (speculativePassage || State.passage)).length
+					const filter = name => name === (speculativePassage || State.passage);
+					return State.pastPassageNames().filter(filter).length
+						+ State.mockVisits.filter(filter).length
 						// Only add 1 (counting the current visit) if this isn't speculation, or the speculative passage equals State.passage (i.e. we're at that passage now).
 						+ (!speculativePassage || speculativePassage === State.passage);
 				},

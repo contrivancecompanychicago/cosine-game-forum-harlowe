@@ -1062,7 +1062,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			a gradient that draws a striped background, with each stripe as wide as the distance, and alternating through the given colours.
 
 			Example usage:
-			* `(enchant: ?page, (background: (gradient: 45, 20, fuchsia+white, white)))` causes the page to have a pink-and-white striped background.
+			* `(enchant: ?page, (background: (stripes: 45, 20, fuchsia+white, white)))` causes the page to have a pink-and-white striped background.
 
 			Rationale:
 			The (gradient:) macro can be used to dynamically create gradient backgrounds, which smoothly transition between multiple colours. By using

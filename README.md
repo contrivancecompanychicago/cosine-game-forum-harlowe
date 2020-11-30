@@ -207,6 +207,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added `(icon-undo:)` and `(icon-redo:)`, two commands that replicate the default sidebar's "undo" and "redo" icons. Use these to reinsert these into the sidebar if you've modified it using `(replace:)` or `(append:)`, or simply place those icons into your passage text if you wish. You can change the icon to use a different Unicode character if you wish. You can also add text labels to these icons, which appear below them.
  * Added `(icon-reload:)` and `(icon-fullscreen:)`, two additional commands that can be used, with `(prepend:)` and `(append:)`, to add "fullscreen" and "reload" buttons to the sidebar. The "fullscreen" icon works similarly to the `(link-fullscreen:)` macro described above, while the "reload" icon performs similarly to `(reload:)` when clicked. These offer the same options as `(icon-undo:)` and `(icon-redo:)`.
  * Added `(icon-counter:)`, which produces a numeric display element that live-updates to match a bound number variable (rounded to a whole number). The element is roughly the same size as the sidebar icons, and designed to be used in the sidebar alongside them.
+ * Added a debugging command, `(mock-visits:)`, which lets you re-create a game state where certain passages have been visited a certain number of times, so that the `visits` keyword and the `(history:)` array produce desired results. This command will cause an error unless it's used in debug mode.
 
 ##### Custom Macros
 

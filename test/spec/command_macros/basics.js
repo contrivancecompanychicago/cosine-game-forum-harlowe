@@ -530,4 +530,48 @@ describe("basic command macros", function() {
 			});
 		});
 	});
+
+	describe("the (mock-visits:) macro", function() {
+		beforeEach(function() {
+			var t = "(print:visits)";
+			createPassage(t, "grault");
+			createPassage(t, "garply");
+			createPassage(t, "qux");
+		});
+		it("takes any number of passage name strings", function() {
+			expect("(mock-visits:)").markupToError();
+			expect("(mock-visits:'bar')").markupToError();
+			expect("(mock-visits:'bar','baz')").markupToError();
+			expect("(mock-visits:'qux')").not.markupToError();
+			expect("(mock-visits:'qux','bar')").markupToError();
+			expect("(mock-visits:'qux','qux','qux')").not.markupToError();
+			expect("(mock-visits:'qux','garply','grault','grault')").not.markupToError();
+			expect("(mock-visits:'qux','garply','grault','foo')").markupToError();
+		});
+		// Can't test that it only works in debug mode, unfortunately.
+		it("alters the 'visits' keyword to mock visits to each of the given passages", function() {
+			runPassage("(mock-visits:'qux','qux','qux','grault')");
+			var p = goToPassage("qux");
+			expect(p.text()).toBe('4');
+			p = goToPassage("garply");
+			expect(p.text()).toBe('1');
+			p = goToPassage("grault");
+			expect(p.text()).toBe('2');
+		});
+		it("each successive (mock-visits:) call overrides the last", function() {
+			runPassage("(mock-visits:'qux','qux','qux','grault')");
+			var p = goToPassage("qux");
+			expect(p.text()).toBe('4');
+			runPassage("(mock-visits:'garply')");
+			p = goToPassage("garply");
+			expect(p.text()).toBe('2');
+			Engine.goBack();
+			Engine.goBack();
+			expect($('tw-passage > :last-child').text()).toBe('4');
+		});
+		it("alters the (history:) keyword, adding its strings to the start", function() {
+			runPassage("(mock-visits:'qux','qux','qux','grault')");
+			expect('(history:)').markupToPrint('qux,qux,qux,grault,test');
+		});
+	});
 });
