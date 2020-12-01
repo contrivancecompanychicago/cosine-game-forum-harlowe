@@ -391,16 +391,16 @@ describe("interface macros", function(){
 					var code = a[0], marginLeft=a[1], width=a[2], height=a[3];
 
 					var t = runPassage("("+name+":'" + code + "', " + height + ",'Foo')[]").find('textarea');
-					var s = t.attr('style');
-					expect(s).toMatch(RegExp("margin-left:\\s*"+marginLeft+"%"));
-					expect(s).toMatch(RegExp("\\bwidth:\\s*"+width+"%"));
+					var p = t.parent().attr('style');
+					expect(p).toMatch(RegExp("margin-left:\\s*"+marginLeft+"%"));
+					expect(p).toMatch(RegExp("\\bwidth:\\s*"+width+"%"));
 					if (!height) {
 						expect(t.attr('rows')).not.toBe(height+'');
 					}
 					else {
 						expect(t.attr('rows')).toBe(height+'');
 					}
-					expect(t.parent().attr('style')).toMatch(/display:\s*block/);
+					expect(p).toMatch(/display:\s*block/);
 				});
 			});
 			if (!force) {

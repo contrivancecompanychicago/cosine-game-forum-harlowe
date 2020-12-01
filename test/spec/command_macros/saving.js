@@ -193,13 +193,15 @@ describe("save macros", function() {
 			runPassage("quatro", "quatro");
 			deletePassage('dos');
 			var p = runPassage("(loadgame:'1')");
-			expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(1);
-			expect($("tw-dialog").find('tw-link').first().text()).toBe("Yes");
-			expect($("tw-dialog").find('tw-link').last().text()).toBe("No");
-			$("tw-dialog").find('tw-link').first().click();
 			setTimeout(function() {
-				expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(0);
-				done();
+				expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(1);
+				expect($("tw-dialog").find('tw-link').first().text()).toBe("Yes");
+				expect($("tw-dialog").find('tw-link').last().text()).toBe("No");
+				$("tw-dialog").find('tw-link').first().click();
+				setTimeout(function() {
+					expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(0);
+					done();
+				},120);
 			},120);
 			//TODO: Test that the save data is actually deleted.
 		});

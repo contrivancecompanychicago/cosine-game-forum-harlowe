@@ -139,10 +139,14 @@ tw-link.enchantment-button,
 /*
 	...and links inside (dialog:) dialogs.
 */
-tw-dialog-links tw-link {
-	border-radius: 16px;
-	border-style: solid;
-	border-width: 2px;
-	text-align:center;
-	display:block;
+tw-dialog-links {
+	padding-top:1.5em;
+	tw-link {
+		border-radius: 16px;
+		border-style: solid;
+		border-width: 2px;
+		text-align:center;
+		display:inline-block;
+		padding:0px 8px;
+	}
 }

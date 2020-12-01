@@ -70,6 +70,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * The `(text-style:)` styles "rumble" and "shudder" no longer need to set `display:inline-block` on the hook.
  * The shadow of the `(text-style:)` style "emboss" has been slightly adjusted.
  * Now, attaching `(transition:)` to a passage link instead of `(transition-depart:)` or `(transition-arrive:)` will cause an error instead of doing nothing.
+ * Now, when Harlowe detects that a hook containing block elements is being transitioned, the `<tw-transition-container>` element will be given `display:block`. This is to fix a number of transition animation bugs, though it may cause certain structures to animate differently during transition.
  * `(mouseover:)`, `(mouseout:)` and their related macros, which use mouse-hovering input that isn't possible on touch devices, will now fall back to simply being activated by clicks/touches on touch devices.
  * After much fretting and fussing, I've decided to un-deprecate `(subarray:)` and `(substring:)`, because my intended subsequence syntax - `$a's 1stTo2ndlast` and `$a's (range: $b, $c)` - has a not-uncommon edge case where it fails - when `$c` in the preceding example is negative - and I've abandoned plans to alter it to accommodate this case. This un-deprecation changes nothing about how they behaved, but the documentation has been rewritten to include them.
  * Slightly adjusted the animation of `(text-style:"rumble")` and `(text-style:"shudder")` so that the text shifts position from its centre, rather than its left edge.

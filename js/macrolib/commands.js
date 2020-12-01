@@ -1925,7 +1925,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			/*
 				The <textarea> is created with its height directly feeding into its rows value.
 			*/
-			let source = '<textarea style="margin-left:' + marginLeft + "%;width:" + size + '%" rows=' + height + '>'
+			let source = '<textarea style="width:100%" rows=' + height + '>'
 				/*
 					HTML-escape the passed-in text, which is apparently all that's necessary.
 					(force-input-box:)es, of course, start with no text inside.
@@ -1962,10 +1962,23 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 					return true;
 				};
 			}
-			/*
-				Like (box:), this needs display:block so that it can take up an entire row.
-			*/
-			cd.styles.push({ display: 'block' });
+			cd.styles.push({
+				/*
+					Like (box:), this needs display:block so that it can take up an entire row.
+				*/
+				display: 'block',
+				/*
+					These need to be on the <tw-enchantment> so that the resulting border is one that (border:) can correctly replace.
+				*/
+				'margin-left': marginLeft + "%",
+				width: size + '%',
+				/*
+					The default border style can be overridden with (border:).
+				*/
+				'border-style'() {
+					return this.style.borderStyle || 'solid';
+				},
+			});
 			return assign(cd, { source, append: "replace", });
 		},
 		[either(VarBind, String), optional(either(positiveInteger,String)), optional(either(positiveInteger,String)), optional(String)])
@@ -1980,7 +1993,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		```
 		|fan)[The overhead fan spins lazily.]
 		
-		(link:"Turn on fan")[(show:?fan)]
+		(link:"Turn on fan")[(t8n:"dissolve")(show:?fan)]
 		```
 
 		Rationale:
@@ -2027,6 +2040,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		(show:) will reveal every hook with the given name. To only reveal a specific hook, you can use the
 		possessive syntax, as usual: `(show: ?shrub's 1st)`.
 
+		You can attach a transition changer, such as (transition:), (transition-time:), (transition-delay:), and the rest, to this command.
+		Doing so will cause that transition to be applied to the hook.
+
 		Much like (replace:), (show:) cannot affects hooks or text that haven't been printed yet - if the (show:)
 		runs at the same time that the passage is appearing (as in, it isn't inside a hook that's delayed by (live:), (link:), (event:)
 		or similar macros), and a hook or line of text appears after it in the passage, the macro won't replace its contents
@@ -2054,7 +2070,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		Example usage:
 		```
 		|1>[You drew a (either:...(range:2,10), "Jack", "Queen", "King", "Ace") of (either:"Hearts","Clubs","Spades","Diamonds").]
-		(link-rerun:"Shuffle and draw.")[(rerun:?1)]
+		(link-rerun:"Shuffle and draw.")[(t8n:"dissolve")(rerun:?1)]
 		```
 
 		Rationale:
@@ -2081,6 +2097,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 
 		(rerun:) will re-run every hook with the given name. To only re-run a specific hook, you can use the
 		possessive syntax, as usual: `(rerun: ?daydream's 1st)`.
+
+		You can attach a transition changer, such as (transition:), (transition-time:), (transition-delay:), and the rest, to this command.
+		Doing so will cause that transition to be applied to the hook.
 
 		(rerun:), unlike (show:), will not work on hidden hooks until they become visible using (show:) or (link-show:).
 
@@ -2169,6 +2188,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			If you want to remove the hook's contents all together, and re-create it anew later, consider using (replace:) and (rerun:)
 			rather than (show:) and (hide:).
 
+			This command can't have changers attached - attempting to do so will produce an error.
+
 			See also:
 			(show:), (rerun:), (replace:)
 
@@ -2177,8 +2198,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		*/
 		("hide",
 			noop,
-			(cd, section, ...hooks) => {
-
+			(section, ...hooks) => {
 				hooks.forEach(hook => hook.forEach(section, elem => {
 					/*
 						The test for whether a hook has been shown is, simply, whether it has "hidden" data.
@@ -2196,9 +2216,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 					*/
 					elem.data('hidden', elem.contents().detach());
 				}));
-				return cd;
 			},
-			[rest(HookSet)])
+			[rest(HookSet)], false /* Can't have attachments.*/)
 
 		/*d:
 			(stop:) -> Command
@@ -2316,7 +2335,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				}
 				requestAnimationFrame(Engine.showPassage.bind(Engine, State.passage, false /* stretchtext value */));
 			},
-			[String], false)
+			[String], false /* Can't have attachments.*/)
 
 		/*d:
 			(mock-visits: ...String) -> Command
@@ -2354,6 +2373,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 
 			If you undo past a passage that used (mock-visits:), the effects of that macro call will be removed, as if it had been a (set:) macro call.
 
+			This command can't have changers attached - attempting to do so will produce an error.
+
 			See also:
 			(history:), (set:)
 
@@ -2371,8 +2392,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 					return TwineError.create('datatype', "I can't mock-visit '" + incorrect + "' because no passage with that name exists.");
 				}
 			},
-			(cd, _, ...names) => { State.mockVisits = clone(names); },
-		[rest(String)])
+			(_, ...names) => { State.mockVisits = clone(names); },
+		[rest(String)], false /* Can't have attachments.*/)
 
 		/*d:
 			(dialog: [Bind], String, ...String) -> Command
@@ -2411,6 +2432,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 
 			From version 3.2.0 on, it is possible to attach changers to this command. `(t8n:'slide-up')+(text-rotate-x:25)(dialog:"EMAIL SENT!")`, for instance, produces a dialog
 			that's tilted upward, and which slides upward when it appears.
+
+			You can customise the dialog by attaching changers to this command. Attaching a (transition:) command will cause the dialog to appear using that transition.
 
 			See also:
 			(cycling-link:), (prompt:), (confirm:)

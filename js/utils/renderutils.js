@@ -19,8 +19,8 @@ define(['jquery', 'utils', 'renderer'], function($, Utils, Renderer) {
 				causes a second "Cancel" link to appear next to "OK".
 			*/
 			+ (buttons.length
-					? buttons.reduce((code, {name}, i) => code + "<span style='margin:0 "
-						+ (i === 0 ? "0.5em 0 0" : i === buttons.length-1 ? "0 0 0.5em" : '0.5em') + "'><tw-link tabindex=0>" + name + "</tw-link></span>", '')
+					? buttons.reduce((code, {name}, i) => code + "<tw-link style='margin:0 "
+						+ (i === buttons.length-1 ? "0 0 0.5em" : i === 0 ? "0.5em 0 0" : '0.5em') + "' tabindex=0>" + name + "</tw-link>", '')
 					: "<tw-link tabindex=0>" + buttons[0].name + "</tw-link>"
 				)
 			+ "</tw-dialog-links></tw-dialog></tw-backdrop>");

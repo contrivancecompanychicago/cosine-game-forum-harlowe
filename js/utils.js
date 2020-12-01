@@ -528,6 +528,16 @@ define(['jquery', 'markup', 'utils/polyfills'],
 				*/
 				el.css('display','inline' + (el.children().length ? '-block' : ''));
 			}
+			else {
+				/*
+					Both of these are necessary for overriding "display:inline-block" for certain transitions,
+					including those that use transform.
+				*/
+				el.css({
+					display:'block !important',
+					width:"100%",
+				});
+			}
 			/*
 				Each frame, reduce the delay, and potentially reduce it further if this
 				transition can be skipped and an input is being held.
@@ -584,6 +594,16 @@ define(['jquery', 'markup', 'utils/polyfills'],
 					If there are no element children of the container (only text), simply use 'inline'.
 				*/
 				el.css('display','inline' + (el.children().length ? '-block' : ''));
+			}
+			else {
+				/*
+					Both of these are necessary for overriding "display:inline-block" for certain transitions,
+					including those that use transform.
+				*/
+				el.css({
+					display:'block !important',
+					width:"100%",
+				});
 			}
 			onTransitionComplete(el, transitionTime + transitionDelay - expedite, transitionSkip, (elapsedRealTime) => {
 				/*
