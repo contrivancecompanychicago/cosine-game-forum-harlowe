@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'datatypes/gradient', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
-($, Macros, Utils, {geomParse, geomStringRegExp}, Colour, Gradient, ChangerCommand, Lambda, ChangeDescriptor, TwineError) => {
+define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'datatypes/hookset', 'datatypes/gradient', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
+($, Macros, Utils, {geomParse, geomStringRegExp}, Colour, HookSet, Gradient, ChangerCommand, Lambda, ChangeDescriptor, TwineError) => {
 
 	/*
 		Built-in hook style changer macros.
@@ -41,6 +41,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		```
 	*/
 	const
+		{assign} = Object,
 		{either, wrapped, optional, Any, Everything, zeroOrMore, rest, insensitiveSet, positiveNumber, positiveInteger, nonNegativeNumber, percent} = Macros.TypeSignature,
 		IfTypeSignature = [wrapped(Boolean, "If you gave a number, you may instead want to check that the number is not 0. "
 			+ "If you gave a string, you may instead want to check that the string is not \"\".")];
@@ -98,9 +99,9 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 	/*
 		A list of valid transition names. Used by (transition:).
 	*/
-	const validT8ns = ["instant", "dissolve", "fade", "rumble", "shudder", "pulse", "zoom", "flicker", "slideleft", "slideright", "slideup", "slidedown",
-		"fadeleft", "faderight", "fadeup", "fadedown"];
-	const validBorders = ['dotted','dashed','solid','double','groove','ridge', 'inset','outset','none'];
+	const validT8ns = insensitiveSet("instant", "dissolve", "fade", "rumble", "shudder", "pulse", "zoom", "flicker", "slideleft", "slideright", "slideup", "slidedown",
+		"fadeleft", "faderight", "fadeup", "fadedown", "blur");
+	const validBorders = insensitiveSet('dotted','dashed','solid','double','groove','ridge', 'inset','outset','none');
 	Macros.addChanger
 		/*d:
 			(if: Boolean) -> Changer
@@ -668,6 +669,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			* "fade-down" (causes the hook to gently fade in while sliding downward)
 			* "pulse" (causes the hook to instantly appear while pulsating rapidly)
 			* "zoom" (causes the hook to scale up from the mouse pointer)
+			* "blur" (causes the hook to appear from a blur)
 			
 			All transitions are 0.8 seconds long, unless a (transition-time:) changer is added
 			to the changer.
@@ -679,8 +681,10 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			the passage transitions used by links or (link-goto:), and trying to do so will cause an error. Please use
 			(transition-depart:) or (transition-arrive:) for this purpose instead.
 
+			The "blur" transition will not work in Internet Explorer 10 or 11.
+
 			See also:
-			(text-style:), (transition-time:), (transition-delay:), (transition-skip:)
+			(text-style:), (transition-time:), (transition-delay:), (transition-skip:), (animate:)
 
 			Added in: 1.0.0
 			#transitions 1
@@ -697,7 +701,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 				}
 				return d;
 			},
-			[insensitiveSet(...validT8ns)]
+			[validT8ns]
 		)
 
 		/*d:
@@ -728,11 +732,9 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 				d.transitionTime     = time;
 				/*
 					(transition-time:) does a sort of unfortunate double duty: specifying the transition time
-					for hooks AND links. This is bearable because the likelihood of a link needing its own timed
-					transition and a differently-timed passage transition should be low (and can be worked around
-					using wrapper hooks anyway).
+					for hooks AND links.
 				*/
-				d.data.passageT8n = Object.assign(d.data.passageT8n || {}, { time });
+				d.data.passageT8n = assign(d.data.passageT8n || {}, { time });
 				return d;
 			},
 			[positiveNumber]
@@ -841,11 +843,14 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			* "fade-down" (causes the passage to gently fade out while sliding downward)
 			* "pulse" (causes the passage to disappear while pulsating rapidly)
 			* "zoom" (causes the passage to shrink down toward the mouse pointer)
+			* "blur" (causes the passage to vanish into a blur)
 
 			Attaching this macro to a hook that isn't a passage link won't do anything (no error message will be produced).
 
 			You can't combine transitions by adding them together, like you can with (text-style:) -
 			`(t8n-depart:"dissolve")+(t8n-depart:"shudder")` won't make a transition that simultaneously dissolve-fades and shudders.
+
+			The "blur" transition will not work in Internet Explorer 10 or 11.
 
 			See also:
 			(transition-arrive:)
@@ -856,7 +861,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		(["transition-depart", "t8n-depart"],
 			(_, name) => ChangerCommand.create("transition-depart", [Utils.insensitiveName(name)]),
 			(d, name) => {
-				d.data.passageT8n = Object.assign(d.data.passageT8n || {}, { depart:name });
+				d.data.passageT8n = assign(d.data.passageT8n || {}, { depart:name });
 				if (name === "zoom") {
 					d.data.passageT8n.departOrigin = function() {
 						const el = $(this), {left, top} = el.offset();
@@ -865,7 +870,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 				}
 				return d;
 			},
-			[insensitiveSet(...validT8ns)]
+			[validT8ns]
 		)
 
 		/*d:
@@ -898,11 +903,14 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			* "fade-down" (causes the passage to gently fade in while sliding downward)
 			* "pulse" (causes the passage to disappear while pulsating rapidly)
 			* "zoom" (causes the passage to scale up from the mouse pointer)
+			* "blur" (causes the passage to appear from a blur)
 
 			Attaching this macro to a hook that isn't a passage link won't do anything (no error message will be produced).
 
 			You can't combine transitions by adding them together, like you can with (text-style:) -
 			`(t8n-depart:"dissolve")+(t8n-depart:"shudder")` won't make a transition that simultaneously dissolve-fades and shudders.
+
+			The "blur" transition will not work in Internet Explorer 10 or 11.
 
 			See also:
 			(transition-depart:)
@@ -913,7 +921,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		(["transition-arrive", "t8n-arrive"],
 			(_, name) => ChangerCommand.create("transition-arrive", [Utils.insensitiveName(name)]),
 			(d, name) => {
-				d.data.passageT8n = Object.assign(d.data.passageT8n || {}, { arrive:name });
+				d.data.passageT8n = assign(d.data.passageT8n || {}, { arrive:name });
 				if (name === "zoom") {
 					d.data.passageT8n.arriveOrigin = function() {
 						const el = $(this), {left, top} = el.offset(), height = el.height();
@@ -926,7 +934,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 				}
 				return d;
 			},
-			[insensitiveSet(...validT8ns)]
+			[validT8ns]
 		)
 
 		/*d:
@@ -1066,7 +1074,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 				});
 				return d;
 			},
-			[insensitiveSet(...validBorders), ...Array(3).fill(optional(insensitiveSet(...validBorders)))]
+			[validBorders, ...Array(3).fill(optional(validBorders))]
 		)
 
 		/*d:
@@ -1299,7 +1307,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 						to convert to a percentage.)
 					*/
 					const alignPercent = Math.round(centerIndex / (arrow.length - 2) * 50);
-					style = Object.assign({
+					style = assign({
 							'text-align'  : 'center',
 							'max-width'   : '50%',
 						},
@@ -1802,7 +1810,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 						These map style names, as input by the author as this macro's first argument,
 						to CSS attributes that implement the styles. These are all hand-coded.
 					*/
-					styleTagNames = Object.assign(Object.create(null), {
+					styleTagNames = assign(Object.create(null), {
 						none:         {},
 						bold:         { 'font-weight': 'bold' },
 						italic:       { 'font-style': 'italic' },
@@ -2168,6 +2176,78 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			zeroOrMore(Everything)
 		);
 
+	/*
+		This is NOT a changer, but a command, yet, since it uses validT8ns, it is defined in this file extraordinarily.
+	*/
+	/*d:
+		(animate: HookName, String, [Number]) -> Command
+
+		A command that causes a hook to briefly animate, as if a (transition:) was applied to it. The length of time that the animation plays can be optionally
+		altered by providing a number.
+
+		Example usage:
+		`(when: time > 15s)[You'd better get going now, pardner. (animate:?passage's links, "rumble")]` causes all of the links in the passage to briefly
+		shake using the "rumble" transition after 15 seconds have passed.
+
+		Rationale:
+		Transitions allow incoming text to animate in a visually stylish fashion, but there are times you might want already displayed text to suddenly animate,
+		as if it had just transitioned in anew. This command can be useful, when used sparingly, to draw the attention of the player toward a particular part
+		of the passage, such as a link, or an easily missed word, after they click a link or wait a certain amount of time. It can be particularly interesting
+		when used to draw attention to a part that, until then, had nothing visually remarkable about it, so as to highlight it for only a moment.
+
+		Details:
+		(animate:) recognises the same transition names as (transition:), except for "instant" (which obviously cannot be animated). These names are:
+
+		* "dissolve" or "fade" (causes the hook to gently fade in)
+		* "flicker" (causes the hook to roughly flicker in - don't use with a long (transition-time:))
+		* "shudder" (causes the hook to instantly appear while shaking back and forth)
+		* "rumble" (causes the hook to instantly appear while shaking up and down)
+		* "slide-right" (causes the hook to slide in from left to right)
+		* "slide-left" (causes the hook to slide in from right to left)
+		* "slide-up" (causes the hook to slide in from bottom to top)
+		* "slide-down" (causes the hook to slide in from top to bottom)
+		* "fade-right" (causes the hook to gently fade in while sliding rightward)
+		* "fade-left" (causes the hook to gently fade in while sliding leftward)
+		* "fade-up" (causes the hook to gently fade in while sliding upward)
+		* "fade-down" (causes the hook to gently fade in while sliding downward)
+		* "pulse" (causes the hook to instantly appear while pulsating rapidly)
+		* "zoom" (causes the hook to scale up from the mouse pointer)
+		* "blur" (causes the hook to appear from a blur)
+
+		The optional time value, which alters the animation's length of time, corresponds to (transition-time:). Additional alterations to the animation
+		can be given by attaching the other two transition changers, (transition-delay:) and (transition-skip:), to this command.
+
+		You may notice that other, permanent animations are available as (text-style:) options. (animate:)'s animations operate separately to those,
+		and animations unique to (text-style:) can't be temporarily applied with this macro. Instead, use (change:) with (text-style:) to apply those
+		animations.
+
+		See also:
+		(show:), (rerun:), (transition:)
+
+		Added in: 3.2.0
+		#transitions
+	*/
+	Macros.addCommand
+		("animate",
+			$.noop,
+			(cd, section, hook, transition, transitionTime) => {
+				hook.forEach(section, target => {
+					/*
+						TBW
+					*/
+					let transitionOrigin;
+					if (name === "zoom") {
+						const {left, top} = target.offset();
+						transitionOrigin = (Utils.mouseCoords.x - left) + "px " + (Utils.mouseCoords.y - top) + "px";
+					}
+
+					Utils.transitionIn(target, transition, cd.transitionTime || transitionTime, cd.transitionDelay, cd.transitionSkip, 0,
+						transitionOrigin
+					);
+				});
+			},
+			[rest(HookSet), insensitiveSet(...validT8ns.innerType.filter(e => e !== "instant")), optional(positiveNumber)]);
+
 	/*d:
 		(box: String, [Number]) -> Changer
 
@@ -2308,7 +2388,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 				styles.height = height + (name === "box" ? "em" : "vh");
 			}
 			if (name === "float-box") {
-				Object.assign(styles, {
+				assign(styles, {
 					position: 'fixed',
 					top: top + "vh",
 					/*

@@ -2057,7 +2057,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		by (link-reveal:) or (click:), you may find the (more:) macro to be convenient.
 
 		See also:
-		(hidden:), (replace:), (rerun:), (more:)
+		(hidden:), (replace:), (rerun:), (more:), (animate:)
 
 		Added in: 2.0.0
 		#showing and hiding
@@ -2106,7 +2106,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		If you want to rerun a hook multiple times based on elapsed real time, use the (live:) macro.
 
 		See also:
-		(replace:), (show:), (more:), (live:)
+		(replace:), (show:), (more:), (live:), (animate:)
 
 		Added in: 3.2.0
 		#revision

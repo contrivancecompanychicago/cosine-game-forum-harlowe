@@ -187,6 +187,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
    * "zoom", which makes the transitioning entity zoom in or out from the mouse cursor's position (or the last place the touch device was touched).
    * "fade-up", "fade-down", "fade-left", and "fade-right", which are combinations of "dissolve" with gentler sliding transitions.
    * "fade", which is an alias for "dissolve" (for consistency with the above, as well as the "fade-in-out" text style).
+   * "blur", which uses the new CSS blur filter to make a hook appear or disappear in a blur. Note that this will not work in any version of Internet Explorer.
  * Added `(append-with:)`, `(prepend-with:)` and `(replace-with:)`, changers which modify the hook by adding a given string of code to the start or end of it, or replace it entirely. This is intended for use with things like dialogue tags or punctuation that's commonly used throughout the story.
  * Added two debugging changers, `(test-true:)` and `(test-false:)`, inspired by Chapbook's `ifalways` and `ifnever` mods, that ignore all of the values given to them (as well as their data types) and instead act like `(if:true)` or `(if:false)`, respectively. As with their inspirations, these are designed for quick debugging checks.
 
@@ -198,6 +199,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a `(meter:)` macro, used for creating a videogame bar-graph meter that's bound to a numeric variable. You can provide this with a colour or gradient for the bar, and a text label, as well as make the bar left-aligned, right-aligned or centered.
  * Added a `(link-rerun:)` macro, which is similar to `(link-repeat:)`, but which replaces the hook on each click rather than appending to it.
  * Added a `(rerun:)` macro, which replaces a given hook with its original source, eliminating any changes made to it by `(replace:)` or other macros. This also runs any macros inside the hook an additional time.
+ * Added an `(animate:)` macro, which causes an already-present hook to transition in again, using a specified transition and time.
  * Added a `(hide:)` macro, which removes the contents of a given hook from the passage, but allows the `(show:)` macro to restore the contents later. Hooks hidden with `(hide:)` will not re-run any containing macros when `(show:)` is used on them later.
  * Added a `(seq-link:)` macro, a variation of `(cycling-link:)` which does not cycle - it simply turns into plain text on the final string.
  * Added a `(verbatim-print:)` command macro (alias `(v6m-print:)`), a combination of `(verbatim:)` and `(print:)`. This is designed especially for printing player-inputted strings that may, for whatever reason, contain markup.

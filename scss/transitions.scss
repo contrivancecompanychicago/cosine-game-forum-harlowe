@@ -49,13 +49,6 @@ $time: 0.8s;
 	}
 }
 
-/* Box-flash */
-[data-t8n^=boxflash] {
-	&.transition-in {
-		@include animation(box-flash $time);
-	}
-}
-
 /* Pulse */
 [data-t8n^=pulse] {
 	&.transition-in {
@@ -76,6 +69,18 @@ $time: 0.8s;
 	}
 	&.transition-out {
 		@include animation(zoom-in $time reverse);
+		display:inline-block !important;
+	}
+}
+
+/* Blur */
+[data-t8n^=blur] {
+	&.transition-in {
+		@include animation(blur $time);
+		display:inline-block !important;
+	}
+	&.transition-out {
+		@include animation(blur $time reverse);
 		display:inline-block !important;
 	}
 }

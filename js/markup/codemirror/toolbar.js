@@ -129,6 +129,7 @@
 		"fade-left":  rev => rev ? "fade-right" : "fade-left",
 		"fade-up":    rev => rev ? "fade-down" : "fade-up",
 		"fade-down":  rev => rev ? "fade-up" : "fade-down",
+		blur:        () => "blur",
 	};
 
 	const builtinColourNames = {
@@ -160,7 +161,7 @@
 		["#212529","#c92a2a","#a61e4d","#862e9c","#5f3dc4","#364fc7","#1864ab","#0b7285","#087f5b","#2b8a3e","#5c940d","#e67700","#d9480f"]
 	];
 
-	const t8nNames = ["default", "", "instant", "dissolve", "rumble", "shudder", "pulse", "zoom", "flicker", "slide-left", "slide-right", "slide-up", "slide-down",
+	const t8nNames = ["default", "", "instant", "dissolve", "blur", "rumble", "shudder", "pulse", "zoom", "flicker", "slide-left", "slide-right", "slide-up", "slide-down",
 		"fade-left", "fade-right", "fade-up", "fade-down"];
 
 	function toCSSColour(colour, alpha) {

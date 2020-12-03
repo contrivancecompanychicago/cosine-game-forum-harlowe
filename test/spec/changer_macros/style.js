@@ -238,7 +238,7 @@ describe("style changer macros", function() {
 				expect("(print:("+name+":'garply corge'))").markupToError();
 				["dissolve", "fade", "shudder", "pulse", "flicker", "instant", "rumble",
 						"slide-right", "slide-left", "slide-up", "slide-down", "pulse", "zoom",
-						"fade-right", "fade-left", "fade-up", "fade-down"].forEach(function(e) {
+						"fade-right", "fade-left", "fade-up", "fade-down", "blur"].forEach(function(e) {
 					expect("(print:("+name+":'" + e + "'))").not.markupToError();
 				});
 			});
@@ -422,6 +422,18 @@ describe("style changer macros", function() {
 			it("is aliased to (t8n-"+name+":)", function() {
 				expect("(print: (t8n-"+name+":2s) is (transition-"+name+":2s))").markupToPrint("true");
 			});
+			if (name === "time") {
+				it("changes the animation-duration of the transition", function() {
+					var p = runPassage("(transition-"+name+":2s)+(t8n:'pulse')[foo]");
+					expect($('tw-transition-container[data-t8n="pulse"]').css('animation-duration')).toMatch(/^2000ms$|^2s$/);
+				});
+			}
+			if (name === "delay") {
+				it("changes the animation-delay of the transition", function() {
+					var p = runPassage("(transition-"+name+":2s)+(t8n:'pulse')[foo]");
+					expect($('tw-transition-container[data-t8n="pulse"]').css('animation-delay')).toMatch(/^2000ms$|^2s$/);
+				});
+			}
 			// TODO: Add .css() tests of output, including passage links.
 		});
 	});

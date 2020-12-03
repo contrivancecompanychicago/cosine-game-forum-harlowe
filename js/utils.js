@@ -404,7 +404,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 					as an inline attribute, well, that makes life easy for us.
 				*/
 				if (elem.hidden || /none|inline/.test(elem.style.display)
-						|| /display: (?!none|inline)/.test(elem.getAttribute('style'))) {
+						|| /display: (none|inline)/.test(elem.getAttribute('style'))) {
 					return true;
 				}
 				/*
@@ -413,11 +413,10 @@ define(['jquery', 'markup', 'utils/polyfills'],
 				*/
 				if (usuallyBlockElements.includes(elem.tagName.toLowerCase())
 						/*
-							If it has an inline style which is NOT none or inline,
+							If it has an attribute style which is verifiably block (NOT none, inline, unset or inherit),
 							then go ahead and return false.
 						*/
-						|| /none|inline/.test(elem.style.display)
-						|| /display: (?!none|inline)/.test(elem.getAttribute('style'))) {
+						|| /display: (?!none|inline|inherit|unset)/.test(elem.getAttribute('style'))) {
 					return false;
 				}
 				/*
@@ -433,7 +432,11 @@ define(['jquery', 'markup', 'utils/polyfills'],
 				unknown.push(elem);
 				return true;
 			})
-			&& unknown.every(elem => /none|inline/.test(elem.style.display));
+			/*
+				Since each element passed the "usually block" test, we can assume that a "" display property means it's
+				probably inline.
+			*/
+			&& unknown.every(elem => /none|inline|^$/.test(elem.style.display));
 		},
 
 		/*

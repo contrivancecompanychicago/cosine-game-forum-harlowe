@@ -574,4 +574,28 @@ describe("basic command macros", function() {
 			expect('(history:)').markupToPrint('qux,qux,qux,grault,test');
 		});
 	});
+	describe("the (animate:) macro", function() {
+		it("takes a hook name, a transition name string that isn't 'instant', and an optional number", function() {
+			expect("(animate:)").markupToError();
+			expect("(animate:2)").markupToError();
+			expect("(animate:?A)").markupToError();
+			expect("(animate:?A,'Good')").markupToError();
+			expect("(animate:?A,'instant')").markupToError();
+			["dissolve", "fade", "shudder", "pulse", "flicker", "rumble",
+					"slide-right", "slide-left", "slide-up", "slide-down", "pulse", "zoom",
+					"fade-right", "fade-left", "fade-up", "fade-down", "blur"].forEach(function(e) {
+				expect("(animate:?A,'" + e + "')").not.markupToError();
+			});
+			expect("(animate:?A,'fade-left',2s)").not.markupToError();
+			expect("(animate:?A,'fade-left',0)").markupToError();
+		});
+		it("animates the named hooks with the given animation", function() {
+			var p = runPassage("|a>[foo]|b>[|a>[foo]](animate:?A,'pulse',9s)");
+			expect(p.find('tw-transition-container[data-t8n="pulse"] > tw-hook[name="a"]').length).toBe(2);
+		});
+		it("changes the animation-duration with the optional number", function() {
+			var p = runPassage("|a>[foo](animate:?A,'pulse',9s)");
+			expect(p.find('tw-transition-container[data-t8n="pulse"]').css('animation-duration')).toMatch(/^9000ms$|^9s$/);
+		});
+	});
 });
