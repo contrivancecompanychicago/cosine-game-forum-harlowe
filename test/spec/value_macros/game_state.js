@@ -97,4 +97,14 @@ describe("game state macros", function() {
 		});
 		//TODO: More tests
 	});
+	describe("the (hooks-named:) macro", function() {
+		it("takes a non-empty string", function() {
+			expect("(show:(hooks-named:'2'))").not.markupToError();
+			expect("(show:(hooks-named:))").markupToError();
+			expect("(show:(hooks-named:''))").markupToError();
+		});
+		it("produces a usable hookname", function() {
+			expect("|a>[bar](replace:(hooks-named:'a'))[foo]").markupToPrint('foo');
+		});
+	});
 });

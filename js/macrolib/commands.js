@@ -1,7 +1,7 @@
 "use strict";
 define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 'internaltypes/twineerror',
 	'internaltypes/twinenotifier', 'datatypes/assignmentrequest', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/lambda', 'datatypes/colour', 'datatypes/gradient', 'internaltypes/varref', 'datatypes/typedvar', 'datatypes/varbind', 'utils/operationutils', 'utils/renderutils'],
-($, Macros, Utils, State, Passages, Renderer, Engine, TwineError, TwineNotifier, AssignmentRequest, HookSet, CodeHook, Lambda, Colour, Gradient, VarRef, TypedVar, VarBind, {printBuiltinValue, objectName, clone}, {dialog, geomParse, geomStringRegExp}) => {
+($, Macros, Utils, State, Passages, Renderer, Engine, TwineError, TwineNotifier, AssignmentRequest, HookSet, CodeHook, Lambda, Colour, Gradient, VarRef, TypedVar, VarBind, {printBuiltinValue, objectName, clone, toSource}, {dialog, geomParse, geomStringRegExp}) => {
 	
 	/*d:
 		Command data
@@ -492,6 +492,10 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			without using (source:). So, you can't provide it to (upperfirst:) and other such macros.
 			`(upperfirst: (verbatim-print: $name))` will produce an error. Instead, convert the original string
 			using (upperfirst:) before giving it to (verbatim-print:).
+
+			If you have a string you need to print frequently, and you don't want to call (verbatim-print:) every time you need to print it,
+			you may wish to simply (set:) a (verbatim-print:) into a variable, like so: `(set: $vbName to (verbatim-print:$name))`. Then, you can
+			put the command (set in that variable) into passage prose, and it will work as expected.
 			
 			See also:
 			(verbatim:), (print:)
@@ -999,7 +1003,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		that variable changes.
 
 		Example usage:
-		* `(set:$batteryPower to 800)(meter: bind $batteryPower, 1000, "X", "Battery Power", (gradient: 90, 0, red, 1, orange))` creates a centered meter showing the value of the $batteryPower variable,
+		* `(set:$batteryPower to 800)(meter: bind $batteryPower, 1000, "X", "Battery Power: $batteryPower", (gradient: 90, 0, red, 1, orange))` creates a centered meter showing the value of the $batteryPower variable,
 		from 0 to 1000, using a gradient from orange (full) to red (empty).
 		* `(set:$threatLevel to 2)(b4r:'solid')(meter: bind $threatLevel, 10, "==X", red)` creates a right-aligned meter showing the value of the $threatLevel variable,
 		from 0 to 10, in red, with a solid border.
@@ -1023,6 +1027,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		right-alignment. Centre-alignment causes the bar to fill from the centre, expanding outward in both directions.
 
 		The second, optional string is a label that is placed inside the meter, on top of the bar. This text is aligned in the same direction as the meter itself.
+		Whenever the meter updates, the label is also re-rendered.
 
 		Either a colour or a gradient can be given as the final value, with which to colour the bar. If neither is given, the bar will be a simple gray.
 		If a gradient is given, and it isn't a (stripes:) gradient, its rotation will be automatically changed to 90 degrees, with the leftmost colour
@@ -1037,7 +1042,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		(icon-counter:)
 
 		Added in: 3.2.0.
-		#interface
+		#interface 1
 	*/
 	Macros.addCommand('meter',
 		(_, __, widthStr, labelOrGradient) => {
@@ -1154,7 +1159,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 					const value = bind.varRef.get();
 					if (typeof value === "number") {
 						const icon = cd.target.children('tw-meter');
-						icon.attr('style', makeStyleString(value > 0 ? floor(value) : ceil(value)));
+						icon.attr('style', makeStyleString(value));
 						if (labelOrGradient) {
 							/*
 								Re-render the label, in the same manner as (cycling-link:).
@@ -1166,10 +1171,6 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				}
 			};
 			let value = bind.varRef.get();
-			/*
-				This check should have the same logic as the (trunc:) macro.
-			*/
-			value = value > 0 ? floor(value) : ceil(value);
 			/*
 				Though it's possible for it to be redefined, a type restriction check might as well be performed now
 				when the command is being created.
@@ -2635,12 +2636,120 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			Added in: 3.2.0
 			#debugging 1
 		*/
-		("ignore", noop, noop, [zeroOrMore(Everything)]);
+		("ignore", noop, noop, [zeroOrMore(Everything)])
+
+		/*d:
+			(assert-exists: HookName or String) -> Command
+
+			A debugging macro that confirms whether a hook with the given name, or passage text matching the given string, is present in the passage.
+			If not, it will produce a helpful error. Use this to test whether enchantment macros like (click:), (enchant:) or (show:) are working properly.
+
+			Example usage:
+			* `(assert-exists: "the auroch")` will produce an error if the text "the auroch" isn't present in the passage.
+			* `(assert-exists: ?bottomBar)` will produce an error if a ?bottomBar hook isn't present in the passage.
+
+			Rationale:
+			The macros in Harlowe that remotely affect other hooks or text based on their name or contents, such as (click:), are designed such that they
+			do not cause an error if no matching hooks or text is found in the passage. This allows them to be thought of as similar to CSS rules for how passage prose
+			is to be rendered - something like `(enchant:?dust, (text-style:'blur'))` states the "rule" that ?dust hooks are to be blurred - rather than as imperative commands
+			that must be fulfilled there and then. This means that they can be placed in every passage, via "header" or "footer" tagged passages, without errors occurring.
+			But, this flexibility comes at a cost. In the minority of situations where you need to be certain that a macro is affecting a visible in-passage
+			structure, you'll often want to test with this macro, so as to produce an error if those structures do not exist.
+
+			Details:
+			This command (and note that (assert:) doesn't produce a command) probes the current passage in which it's located in order to determine whether to produce an error or not.
+			As such, like all commands, it can be saved into a variable, and deployed into passage code using that variable, to save having to retype it in full.
+
+			If you provide an empty string to this macro (which obviously can't be found in the passage), it will produce a different kind of error than what would be desired.
+
+			See also:
+			(error:), (assert:)
+
+			Added in: 3.2.0
+			#debugging 5
+		*/
+		("assert-exists",
+			selector => {
+				/*
+					The only error that should be produced at command-creation time is that of basic type-checking.
+				*/
+				if (selector === "") {
+					return TwineError.create('datatype', "(assert-exists:) mustn't be given an empty string.");
+				}
+			},
+			(cd, section, selector) => {
+				let count = 0;
+				/*
+					Rather than call .hooks(), and have to clean up the <tw-pseudo-hook> elements afterward, we simply call .forEach().
+				*/
+				(typeof selector === "string" ? HookSet.create({type: "string", data: selector}) : selector).forEach(section, () => { ++count; });
+				if (!count) {
+					return TwineError.create("assertion",
+						`I didn't see any ${typeof selector === "string" ? "text occurrences of" : "hooks matching"} ${toSource(selector)} in this passage.`
+					);
+				}
+				return cd;
+			},
+		[either(HookSet, String)]);
 
 	/*
 		The following couple of macros are not commands, but they are each intrinsically related to some of the macros above.
 	*/
 	Macros.add
+
+		/*d:
+			(assert: Boolean) -> Instant
+
+			A debugging macro that produces a helpful error whenever the expression given to it produces Boolean false. Use this when testing your story
+			to help ensure that certain facts about the game state are true or not.
+
+			Example usage:
+			`(assert: $isWounded is $isBleeding or $isBandaged)` ensures that if $isWounded is true, one of $isBleeding or $isBandaged MUST be true, and if it's false,
+			both of them MUST be false. Otherwise, an error is produced.
+
+			Rationale:
+			Harlowe's debug mode provides panels to check the current game state, the contents of variables, active enchantments, and so forth, providing assistance
+			in identifying bugs. Of course, knowing what variables contain is not the same as knowing whether the relationships between them are being maintained, and
+			a way of encoding these relationships, in your story, can provide an additional layer of security when debugging your game. 
+
+			(assert:) allows you to *assert* facts about the game state, facts which absolutely must be true, so much so that
+			an error should be produced. For example, if your story's code assumes that the variable $nails will always be smaller than or equal to $maxNails, and you want to
+			ensure that no bugs are written that cause $nails to be greater, you may write `(assert: $nails is <= $maxNails)`, and place that call in
+			a "debug-header" tagged passage. Thus, should a bug ever appear which causes these variables to no longer maintain their relationship, the (assert:) call will produce an error.
+
+			Details:
+			Note that there are other tools within Harlowe to ensure that variables are obeying certain restrictions, which make the need for certain simple (assert:) calls
+			unnecessary. Chief among these features is TypedVars, which can be provided to (set:) to permanently and automatically restrict a certain variable to a narrow range
+			of data. Instead of writing `(assert: $petals is an int)`, you can change the earliest (set:) call that creates $petals to `(set: int-type $petals to 0)`.
+
+			Though this is classed as a "debugging" macro, this works even outside of debug mode.
+
+			This can also be useful within custom macros, as a shortened form of combining (if:) with (error:). However, the error message produced by (assert:) may not
+			be as insightful as the customisable error message given to (error:), so it's not especially recommended for use within custom macros that are meant for other authors
+			to use.
+
+			See also:
+			(error:), (assert-exists:)
+
+			Added in: 3.2.0
+			#debugging 4
+		*/
+		("assert",
+			(_, condition) => condition ? ({
+				TwineScript_TypeID:       "instant",
+				TwineScript_TypeName:     "an (assert:) operation",
+				TwineScript_ObjectName:   "an (assert:) operation",
+				TwineScript_Unstorable:    true,
+				// Being unstorable and not used by any other data strctures, this doesn't need a ToSource() function.
+				TwineScript_Print:        () => false,
+			}) :
+			/*
+				The appendTitleText expando is used exclusively to append the visible error text with its titleText (which is the source of the <tw-expression>
+				itself, usually). While a more sophisticated protocol could be devised, I currently (Dec 2020) deem it unnecessary.
+			*/
+			assign(TwineError.create("assertion", "An assertion failed: "), { appendTitleText:true }),
+		[Boolean])
+
 		/*d:
 			(save-game: String, [String]) -> Boolean
 			

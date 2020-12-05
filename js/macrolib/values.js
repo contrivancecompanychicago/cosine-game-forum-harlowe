@@ -1,6 +1,6 @@
 "use strict";
-define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatypes/gradient', 'datatypes/datatype', 'internaltypes/twineerror'],
-(Macros, {realWhitespace, nth, anyRealLetter}, {subset, objectName, clone, toSource}, Colour, Gradient, Datatype, TwineError) => {
+define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatypes/gradient', 'datatypes/datatype', 'datatypes/hookset', 'internaltypes/twineerror'],
+(Macros, {realWhitespace, nth, anyRealLetter}, {subset, objectName, clone, toSource}, Colour, Gradient, Datatype, HookSet, TwineError) => {
 	/*
 		Built-in value macros.
 		These macros manipulate the primitive values - boolean, string, number.
@@ -1115,6 +1115,47 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 		[Number, positiveInteger, Colour, rest(Colour)])
 
 		/*d:
+			(hooks-named: String) -> HookName
+
+			When given a string, this creates a HookName from it. This can be used to dynamically create HookNames.
+
+			Example usage:
+			```
+			|oracle)["I scry with sticks, not bones."]|mage)["No teeth in the jawbones?"]|bodyguard)["Don't sift through rot."]
+
+			(set: $companionType to "bodyguard")
+			(link:"Investigate the bones")[(show:(hooks-named:$companionType))]
+			```
+
+			Rationale:
+			The standard syntax for referring to hooks, in macros such as (replace:), (change:) or (show:), is to write a HookName, such as `?door`. That syntax,
+			though, requires that you hard-code the name of the hook. This macro lets you construct a HookName from one or more existing strings or other variables,
+			so that the exact hook referenced depends on the game state.
+
+			This macro is called (hooks-named:) to avoid confusion with (hook:), and also to convey that a HookName will refer to any number of hooks as long as they
+			have the same name.
+
+			Details:
+			Note that the HookNames produced by this macro have the same functionality as other HookNames. In particular, you can specify the `1st` hook, `2ndlast` and so forth
+			by writing, for instance, `(hooks-named: "A")'s 2ndlast`. Also note that the built-in HookNames can be constructed with this macro - `(hooks-named:"passage")` is
+			the same as `?passage`.
+
+			If an empty string is given, then this will cause an error.
+
+			See also:
+			(hook:)
+
+			Added in: 3.2.0
+			#basics
+		*/
+		("hooks-named", (_, data) => {
+			if (!data) {
+				return TwineError.create("datatype", "(hooks-named:) can't be given an empty string.");
+			}
+			return HookSet.create({type:"name", data});
+		}, [String])
+
+		/*d:
 			(cond: Boolean, Any, ...Any) -> Any
 
 			When given a sequence of booleans (the "conditions") paired with values, this provides the first value that was
@@ -1197,8 +1238,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 		/*d:
 			Boolean data
 			
-			Computers can perform more than just mathematical tasks - they are also virtuosos in classical logic. Much as how
-			arithmetic involves manipulating numbers with addition, multiplication and such, logic involves manipulating the
+			Branching stories involve the player making choices, and the game using its own programmed logic to react to those choices.
+			Much as how arithmetic involves manipulating numbers with addition, multiplication and such, logic involves manipulating the
 			values `true` and `false` using its own operators. Those are not text strings - they are values as fundamental as
 			the natural numbers. In computer science, they are both called *Booleans*, after the 19th century mathematician
 			George Boole.
@@ -1229,13 +1270,9 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			| `is not a`, `is not an` | Evaluates to boolean `true` if the right side does not describe the left side. | `"Boo" is not an empty`, `2 is not an odd`
 			
 			Conditions can quickly become complicated. The best way to keep things straight is to use parentheses to
-			group things.
+			group sub-statements and express order of operations.
 		*/
 
-	/*
-		JS library wrapper macros
-	*/
-	
 	/*
 		Filter out NaN and Infinities, throwing an error instead.
 		This is only applied to functions that can create non-numerics,

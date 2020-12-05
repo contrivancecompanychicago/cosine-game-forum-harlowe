@@ -454,7 +454,8 @@ describe("data structure macros", function () {
 		});
 		it("serialises commands", function() {
 			['(cycling-link:bind $foo,"bar","baz")','(click-goto:"qux","test")',
-				'(enchant:?foo,(transition:"instant")+(transition-delay:20))'
+				'(enchant:?foo,(transition:"instant")+(transition-delay:20))',
+				'(show:(hooks-named:"foo baz"))',
 			].forEach(function(e){ sourceTest(e,e); });
 			runPassage("(set:$baz to 4)");
 			sourceTest("(print:$baz)",'(print:4)');

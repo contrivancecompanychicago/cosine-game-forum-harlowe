@@ -338,7 +338,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		attempting to call (error:) outside of a custom macro's CodeHook will cause another (also different from intended) error.
 
 		See also:
-		(output:), (output-data:)
+		(output:), (output-data:), (assert:)
 
 		Added in: 3.2.0
 		#custom macros 4

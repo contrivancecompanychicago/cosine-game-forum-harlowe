@@ -14,7 +14,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a long-standing bug where lambdas would produce an incorrect duplicate-name error if the temp variables used with their clauses contained capital letters.
  * Fixed a long-standing bug where hooks that had `(transition:)` transitions would restart their transition animations whenever the containing passage finished transitioning in. Previously, the only way to overcome this was to make the passage transition using `(transition-arrive:"instant")`.
  * Fixed a long-standing bug where you couldn't use the column markup to create empty columns by placing two column markup lines in succession, without an intervening blank line.
- * Fixed a long-standing bug where strings containing HookName syntax (such as `"?pear"`) were considered identical to actual hooknames (such as `?pear`). This was NOT intended behaviour and was not documented, and as such, certain design patterns that involved constructing HookName strings programmatically (such as `(replace:"?" + $name)`) will no longer work.
+ * Fixed a long-standing bug where strings containing HookName syntax (such as `"?pear"`) were considered identical to actual hooknames (such as `?pear`). This was NOT intended behaviour and was not documented, and as such, certain design patterns that involved constructing HookName strings programmatically (such as `(replace:"?" + $name)`) will no longer work. A new macro, `(hooks-named:)`, has been added (see below) to provide this feature officially.
  * Fixed a bug where the default CSS for `(click: ?Page)` (a blue border around the page) wasn't visible. (Now, an `::after` pseudo-element is created for the enchantment, so that the border displays above all the page content.)
  * Fixed a bug where typing `is not an` instead of `is not a` (such as in `$wallet is not an array`) would cause an error.
  * Now, trying to access the `0th` or `0thlast` value in an array or string produces an error.
@@ -135,6 +135,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 ###### Values
 
+ * Added a `(hooks-named:)` macro, which can be used to construct a HookName using a string. The slightly unusual name of this macro is meant to avoid confusion with `(hook:)`.
  * Added a `(trunc:)` macro, which is similar to `(round:)`, but rounds toward zero, "truncating" the fractional component. It is named after the Excel function that performs the same rounding.
  * Added a `(plural:)` macro, which takes a number and a string, and combines them, automatically pluralising the string if the number isn't 1. `(plural:2,"duck")` produces `"2 ducks"`. Pluralisation is performed by adding "s" - a second string may be given which specifies a more correct plural form of the word (such as `(plural:4,"elf","elves")`).
  * Added a `(str-nth:)` macro (alias `(string-nth)`) which takes a number and produces the English ordinal of that number (such as `"2nd"` for `2`, and `"-41st"` for `-41`).
@@ -211,6 +212,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added `(icon-reload:)` and `(icon-fullscreen:)`, two additional commands that can be used, with `(prepend:)` and `(append:)`, to add "fullscreen" and "reload" buttons to the sidebar. The "fullscreen" icon works similarly to the `(link-fullscreen:)` macro described above, while the "reload" icon performs similarly to `(reload:)` when clicked. These offer the same options as `(icon-undo:)` and `(icon-redo:)`.
  * Added `(icon-counter:)`, which produces a numeric display element that live-updates to match a bound number variable (rounded to a whole number). The element is roughly the same size as the sidebar icons, and designed to be used in the sidebar alongside them.
  * Added a debugging command, `(mock-visits:)`, which lets you re-create a game state where certain passages have been visited a certain number of times, so that the `visits` keyword and the `(history:)` array produce desired results. This command will cause an error unless it's used in debug mode.
+ * Added a debugging command, `(assert:)`, which can be used to write an "assertion" expression about the game state of your story that should always be `true`, such as `(assert: $HP <= $maxHP)`. If some bug causes the assertion to produce `false`, a helpful error will be produced.
+ * Added a debugging command, `(assert-exists:)`, which checks whether a hook matching the passed-in HookName, or a text occurrence matching the passed-in string, exists in the passage. If not, an error is produced.
 
 ##### Custom Macros
 

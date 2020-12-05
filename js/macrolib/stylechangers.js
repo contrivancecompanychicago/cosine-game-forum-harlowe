@@ -554,7 +554,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			If an empty string is given to this macro, an error will be produced.
 
 			See also:
-			(hidden:)
+			(hidden:), (hooks-named:)
 
 			Added in: 1.0.0
 			#styling
@@ -2233,7 +2233,9 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			(cd, section, hook, transition, transitionTime) => {
 				hook.forEach(section, target => {
 					/*
-						TBW
+						The "zoom" trasition continues to transition-in the element from the mouse pointer's position, even though
+						a click may or may not have been used to reveal this (animate:) call. The following is
+						largely copied from (transition:)'s code, above.
 					*/
 					let transitionOrigin;
 					if (name === "zoom") {

@@ -6,10 +6,11 @@ define(['jquery', 'markup', 'utils/polyfills'],
 		{fromCharCode} = String,
 		// These two are used by childrenProbablyInline (see below).
 		usuallyBlockElements = (
-			// The most common block HTML tags that would be used in passage source
+			// The most common block HTML tags that would be used in passage source.
 			"audio,blockquote,canvas,div,h1,h2,h3,h4,h5,hr,ol,p,pre,table,ul,video,"
-			// And the one(s) that Harlowe itself creates through its syntax
-			+ "tw-align,tw-story,tw-passage"
+			// And the one(s) that Harlowe itself creates through its syntax.
+			// <tw-consecutive-br> is deliberately not included.
+			+ "tw-align,tw-story,tw-passage,tw-sidebar,tw-columns,tw-column,tw-meter,tw-dialog"
 		).split(','),
 		
 		usuallyInlineElements = (
@@ -17,7 +18,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 			"a,b,i,em,strong,sup,sub,abbr,acronym,s,strike,del,big,small,script,img,button,input,"
 			// And the ones that Harlowe itself creates through its syntax.
 			// Note that <tw-hook> and <tw-expression> aren't included.
-			+ "tw-link,tw-broken-link,tw-verbatim,tw-collapsed,tw-error"
+			+ "tw-link,tw-broken-link,tw-verbatim,tw-collapsed,tw-error,tw-colour,tw-icon"
 		).split(','),
 
 		// Certain HTML elements cannot have their parents unwrapped: <audio>, for instance,

@@ -33,6 +33,9 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 		means that you'll have to be extra careful while typing the hook name, as misspellings will not be easily identified
 		by Harlowe itself.
 
+		If you wish to construct a hook name programmatically, based on an existing string variable, then the (hooks-named:) macro may be
+		used in place of the above syntax.
+
 		Built in hook names:
 
 		There are five special built-in hook names, ?Page, ?Passage, ?Sidebar, ?Link and ?Visited, which, in addition to selecting named hooks,
@@ -382,7 +385,16 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 			let ret = '';
 			const {type, data} = this.selector;
 			if (type === "name") {
-				ret += "?" + data;
+				/*
+					(hooks-named:) can produce HookNames that the standard syntax cannot, such as those with whitespace.
+					So, serialisation should produce a macro call if the name can't be reduced to the standard syntax.
+				*/
+				if (!data.match(RegExp("^" + Utils.anyRealLetter + "+$"))) {
+					ret += '(hooks-named:' + JSON.stringify(data) + ")";
+				}
+				else {
+					ret += "?" + data;
+				}
 			}
 			else if (type === "string") {
 				ret += JSON.stringify(data);

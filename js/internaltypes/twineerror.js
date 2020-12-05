@@ -36,6 +36,7 @@ define(['jquery', 'utils'], ($, Utils) => {
 			+ "I don't understand it either, but it usually means that an expression was badly written.",
 		propagated:    "Click the 'Open' button to see the code hook as it was executed.",
 		user:          "This is a custom error created by (error:). It usually means you used a custom macro incorrectly.",
+		assertion:     "This command exists to provide a helpful error if a certain important condition wasn't true.",
 	},
 
 	/*
@@ -90,6 +91,10 @@ define(['jquery', 'utils'], ($, Utils) => {
 					hidden code hook from which the error transpired.
 				*/
 				innerDOM,
+				/*
+					This is a hack for the benefit of just (assert:)'s errors.
+				*/
+				appendTitleText: false,
 			});
 		},
 		
@@ -146,7 +151,9 @@ define(['jquery', 'utils'], ($, Utils) => {
 			const errorElement = $("<tw-error class='"
 					+ (this.type === "javascript" ? "javascript ": "")
 					+ (this.warning ? "warning" : "error")
-					+ "' title='" + escape(titleText) + "'>" + escape(this.message) + "</tw-error>"),
+					+ "' title='" + escape(titleText) + "'>" + escape(
+						this.message + (this.appendTitleText ? " " + titleText : "")
+					) + "</tw-error>"),
 				/*
 					The explanation text element.
 				*/
