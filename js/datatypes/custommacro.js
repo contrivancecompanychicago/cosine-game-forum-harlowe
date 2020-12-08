@@ -46,6 +46,9 @@ define(['jquery','utils/operationutils','internaltypes/changedescriptor', 'inter
 				When this command is run, simply return the fully permuted CD.
 			*/
 			TwineScript_Run: () => cd,
+			/*
+				Note that since these cannot be serialised, they can't have a TwineScript_ToSource() method.
+			*/
 		});
 		return ret;
 	};

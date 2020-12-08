@@ -1417,7 +1417,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		(click-undo: HookName or String) -> Command
 
 		A special shorthand combination of the (click:) and (undo:) macros, this allows you to make a hook
-		or bit of text into a passage link. `(click-undo: ?1)` is equivalent to `(click: ?1)[(undo:)]`
+		or bit of text into a passage link. `(click-undo: ?1)` is equivalent to `(click: ?1)[(undo: )]`
 
 		Example usage:
 		`You might have gotten yourself into a pickle that only time travel can get you out of. (click-undo: ?page)`

@@ -52,7 +52,7 @@ describe("debugging macros", function() {
 		});
 		it("if given false, it produces an error that shows the call's source", function() {
 			expect(runPassage("(assert:3<1)").find('tw-error').text()).toContain("(assert:3<1)");
-			expect(runPassage("(assert:45").find('tw-error').text()).not.toContain("(assert:45)");
+			expect(runPassage("(assert:45)").find('tw-error').text()).not.toContain("(assert:45)");
 		});
 	});
 	describe("the (assert-exists:) macro", function() {

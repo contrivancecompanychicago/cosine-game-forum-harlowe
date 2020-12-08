@@ -9,8 +9,8 @@ define(['jquery', 'markup', 'utils/polyfills'],
 			// The most common block HTML tags that would be used in passage source.
 			"audio,blockquote,canvas,div,h1,h2,h3,h4,h5,hr,ol,p,pre,table,ul,video,"
 			// And the one(s) that Harlowe itself creates through its syntax.
-			// <tw-consecutive-br> is deliberately not included.
-			+ "tw-align,tw-story,tw-passage,tw-sidebar,tw-columns,tw-column,tw-meter,tw-dialog"
+			// <tw-consecutive-br> and <tw-dialog> are deliberately not included.
+			+ "tw-align,tw-story,tw-passage,tw-sidebar,tw-columns,tw-column,tw-meter"
 		).split(','),
 		
 		usuallyInlineElements = (
@@ -387,7 +387,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 			childrenProbablyInline: returns true if the matched elements probably only contain elements that
 			are of the 'inline' or 'none' CSS display type.
 			
-			This takes some shortcuts to avoid use of the costly $css() function as much as possible,
+			This takes some shortcuts to avoid use of the costly getComputedStyle() function as much as possible,
 			hence, it can only "probably" say so.
 			
 			This is used to crudely determine whether to make a <tw-transition-container> inline or block,
@@ -399,7 +399,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 				so that $css() can be run on them after the first loop has returned all-true.
 			*/
 			const unknown = [];
-			return Array.prototype.every.call(jq.findAndFilter('*'), elem => {
+			return [].every.call(jq.findAndFilter('*'), elem => {
 				/*
 					If it actually has "style=display:inline", "hidden", or "style=display:none"
 					as an inline attribute, well, that makes life easy for us.
@@ -433,13 +433,8 @@ define(['jquery', 'markup', 'utils/polyfills'],
 				unknown.push(elem);
 				return true;
 			})
-			/*
-				Since each element passed the "usually block" test, we can assume that a "" display property means it's
-				probably inline.
-			*/
-			&& unknown.every(elem => /none|inline|^$/.test(elem.style.display));
+			&& unknown.every(a => window.getComputedStyle(a).display.includes('inline'));
 		},
-
 		/*
 			Replaces oldElem with newElem while transitioning between both.
 		*/
@@ -498,15 +493,12 @@ define(['jquery', 'markup', 'utils/polyfills'],
 			}
 			transitionTime = transitionTime || defaultTransitionTime(transIndex);
 
-			const childrenInline = Utils.childrenProbablyInline(el),
-				/*
-					If the element is not a tw-hook or tw-passage, we must
-					wrap it in a temporary element first, which can thus be
-					animated using CSS.
-				*/
-				mustWrap =
-					el.length > 1 || !childrenInline ||
-					!['tw-hook','tw-passage'].includes(el.tag());
+			/*
+				If the element is not a tw-hook, tw-passage or tw-expression, we must
+				wrap it in a temporary element first, which can thus be
+				animated using CSS.
+			*/
+			const mustWrap = el.length > 1 || !Utils.childrenProbablyInline(el) || !['tw-hook','tw-passage','tw-expression'].includes(el.tag());
 			/*
 				As mentioned above, we must, in some cases, wrap the nodes in containers.
 			*/
@@ -526,22 +518,34 @@ define(['jquery', 'markup', 'utils/polyfills'],
 				'animation-delay':   (transitionDelay - expedite) + "ms",
 			});
 
-			if (childrenInline) {
+			/*
+				To give newly-created sections time to render and apply changers, such as (box:) to hooks,
+				this code, which gives the transition element the correct display property, is crudely placed in a delayed timeout.
+			*/
+			requestAnimationFrame(() => {
 				/*
-					If there are no element children of the container (only text), simply use 'inline'.
+					Special case: due to <tw-backdrop> having display:flex, getComputedStyle() will always report 'display:block' for
+					each child element of it, even if it's a <tw-dialog>. So, ignore childrenProbablyInline() and simply assume that block positioning mustn't be applied.
+					Note that the other two elements that have display:flex, <tw-story> and <tw-columns>, don't have this concern due to their children
+					being part of usuallyBlockElements.
 				*/
-				el.css('display','inline' + (el.children().length ? '-block' : ''));
-			}
-			else {
-				/*
-					Both of these are necessary for overriding "display:inline-block" for certain transitions,
-					including those that use transform.
-				*/
-				el.css({
-					display:'block !important',
-					width:"100%",
-				});
-			}
+				if (el.parent().is('tw-backdrop') || Utils.childrenProbablyInline(el)) {
+					/*
+						If there are no element children of the container (only text), simply use 'inline'.
+					*/
+					el.css('display','inline' + (el.children().length ? '-block' : ''));
+				}
+				else {
+					/*
+						Both of these are necessary for overriding "display:inline-block" for certain transitions,
+						including those that use transform.
+					*/
+					el.css({
+						display:'block !important',
+						width:"100%",
+					});
+				}
+			});
 			/*
 				Each frame, reduce the delay, and potentially reduce it further if this
 				transition can be skipped and an input is being held.
@@ -565,15 +569,12 @@ define(['jquery', 'markup', 'utils/polyfills'],
 				return;
 			}
 			transitionTime = transitionTime || defaultTransitionTime(transIndex);
-			const childrenInline = Utils.childrenProbablyInline(el),
-				/*
-					If the element is not a tw-hook or tw-passage, we must
-					wrap it in a temporary element first, which can thus be
-					animated using CSS.
-				*/
-				mustWrap =
-					el.length > 1 || !childrenInline ||
-					!['tw-hook','tw-passage'].includes(el.tag());
+			/*
+				If the element is not a tw-hook, tw-passage or tw-expression, we must
+				wrap it in a temporary element first, which can thus be
+				animated using CSS.
+			*/
+			const mustWrap = el.length > 1 || !Utils.childrenProbablyInline(el) || !['tw-hook','tw-passage','tw-expression'].includes(el.tag());
 			/*
 				As mentioned above, we must, in some cases, wrap the nodes in containers.
 			*/
@@ -582,7 +583,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 			}
 			/*
 				Now, apply the transition.
-				The transitionOrigin must be applied before the rest of the attributeds, as it may
+				The transitionOrigin must be applied before the rest of the attributes, as it may
 				be a function.
 			*/
 			if (transitionOrigin) {
@@ -592,23 +593,36 @@ define(['jquery', 'markup', 'utils/polyfills'],
 				'animation-duration': transitionTime + "ms",
 				'animation-delay':   (transitionDelay - expedite) + "ms",
 			});
-			
-			if (childrenInline) {
+
+			/*
+				To give newly-created sections time to render and apply changers, such as (box:) to hooks,
+				this code, which gives the transition element the correct display property, is crudely placed in a delayed timeout.
+			*/
+			requestAnimationFrame(() => {
 				/*
-					If there are no element children of the container (only text), simply use 'inline'.
+					Special case: due to <tw-backdrop> having display:flex, getComputedStyle() will always report 'display:block' for
+					each child element of it, even if it's a <tw-dialog>. So, ignore childrenProbablyInline() and simply assume that block positioning mustn't be applied.
+					Note that the other two elements that have display:flex, <tw-story> and <tw-columns>, don't have this concern due to their children
+					being part of usuallyBlockElements.
 				*/
-				el.css('display','inline' + (el.children().length ? '-block' : ''));
-			}
-			else {
-				/*
-					Both of these are necessary for overriding "display:inline-block" for certain transitions,
-					including those that use transform.
-				*/
-				el.css({
-					display:'block !important',
-					width:"100%",
-				});
-			}
+				if (el.parent().is('tw-backdrop') || Utils.childrenProbablyInline(el)) {
+					/*
+						If there are no element children of the container (only text), simply use 'inline'.
+					*/
+					el.css('display','inline' + (el.children().length ? '-block' : ''));
+				}
+				else {
+					/*
+						Both of these are necessary for overriding "display:inline-block" for certain transitions,
+						including those that use transform.
+					*/
+					el.css({
+						display:'block !important',
+						width:"100%",
+					});
+				}
+			});
+
 			onTransitionComplete(el, transitionTime + transitionDelay - expedite, transitionSkip, (elapsedRealTime) => {
 				/*
 					Unwrap the wrapping... unless it contains a non-unwrappable element,

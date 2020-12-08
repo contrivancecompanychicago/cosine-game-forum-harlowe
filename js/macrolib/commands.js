@@ -51,7 +51,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		/*d:
 			(set: ...VariableToValue) -> Instant
 			
-			Stores data values in variables.
+			Stores data values in variables, optionally allowing you to permanently restrict the variable to a single datatype.
 			
 			Example usage:
 			* `(set: $battlecry to "Save a " + $favouritefood + " for me!")` creates a variable called $battlecry containing a string.
@@ -1042,7 +1042,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		(icon-counter:)
 
 		Added in: 3.2.0.
-		#interface 1
+		#input and interface
 	*/
 	Macros.addCommand('meter',
 		(_, __, widthStr, labelOrGradient) => {
@@ -1237,7 +1237,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			If only one string was given to this macro, an error will be produced.
 
 			Added in: 3.0.0
-			#input 1
+			#input and interface 1
 		*/
 		/*d:
 			(seq-link: [Bind], ...String) -> Command
@@ -1279,7 +1279,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			If only one string was given to this macro, an error will be produced.
 
 			Added in: 3.2.0
-			#input 2
+			#input and interface 2
 		*/
 		[["cycling-link"],["seq-link","sequence-link"]].forEach((name, seq) => Macros.addCommand(name,
 			(...labels) => {
@@ -1491,7 +1491,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		(cycling-link:), (checkbox:)
 
 		Added in: 3.0.0
-		#input
+		#input and interface
 	*/
 	Macros.addCommand("dropdown",
 		(_, ...labels) => {
@@ -1634,7 +1634,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		(dropdown:), (input-box:), (confirm:)
 
 		Added in: 3.2.0
-		#input
+		#input and interface
 	*/
 	Macros.addCommand("checkbox",
 		() => {},
@@ -1759,7 +1759,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		(force-input-box:), (prompt:)
 
 		Added in: 3.2.0
-		#input 3
+		#input and interface 3
 	*/
 	/*d:
 		(force-input-box: [Bind], String, [Number], String) -> Command
@@ -1807,7 +1807,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		(input-box:), (prompt:), (box:)
 
 		Added in: 3.2.0
-		#input 4
+		#input and interface 4
 	*/
 	["input-box", "force-input-box"].forEach(name => Macros.addCommand(name,
 		(...args) => {

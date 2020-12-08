@@ -9,6 +9,28 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		as easily as a built-in macro.
 
 		Example usage:
+		The following custom macro creates a command that displays a randomly rotated hook in red, with the given opacity.
+		```
+		(set:$ghostlyLaughter to (macro: num-type _o, [
+			(output: )+(text-rotate:(random:0,360))+(text-colour:(hsla:0, 1, 0.5, _o))[HE HE HE]
+		]))
+		($ghostlyLaughter:) ($ghostlyLaughter:) ($ghostlyLaughter:)
+		```
+
+		The following custom macro creates a text string based on how many turns the player has taken. It takes no data.
+		```
+		(set: $fancyTimeName to (macro: [
+			(set: _timeOfDay to (history: )'s length % 24 + 1)
+			(output-data: (a:
+				"midnight", "dreamshour", "wolfshour", "dark's end", "lightbreak", "afterdawn", "early rise", "awakening",
+				"early warming", "joyshour", "first lunch", "shadow's end", "zenith", "shadow's birth", "second lunch", "hopeshour", "early cooling",
+				"lightfade", "sundown", "dark's birth", "supper", "early rest", "slumbering", "catshour"
+			)'s (_timeOfDay))
+		]))
+		It is now ($fancyTimeName:).
+		```
+
+		The following custom macro takes a datamap containing a character's attributes, and prints a line of text describing a character.
 		```
 		(set: $charSheet to (dm: "name", str, "HP", num, "poison", num, "heartbreak", bool))
 		(set: $healthSummary to (macro: $charSheet-type _stats, [

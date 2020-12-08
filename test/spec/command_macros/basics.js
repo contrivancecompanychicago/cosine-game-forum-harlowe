@@ -546,8 +546,8 @@ describe("basic command macros", function() {
 			expect("(animate:?A,'fade-left',0)").markupToError();
 		});
 		it("animates the named hooks with the given animation", function() {
-			var p = runPassage("|a>[foo]|b>[|a>[foo]](animate:?A,'pulse',9s)");
-			expect(p.find('tw-hook[data-t8n="pulse"][name="a"]').length).toBe(2);
+			var p = runPassage("|a>[foo]|b>[|a>[foo]](animate:?A,'pulse',29s)");
+			expect(p.find('[data-t8n="pulse"] > [name="a"]').length).toBe(2);
 		});
 		it("changes the animation-duration with the optional number", function() {
 			var p = runPassage("|a>[foo](animate:?A,'pulse',9s)");

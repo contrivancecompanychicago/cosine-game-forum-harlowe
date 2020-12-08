@@ -52,16 +52,11 @@ define([
 		| `integer`, `int` | Only matches whole numbers (numbers with no fractional component, and which are positive or negative).
 		| `empty` | Only matches these empty structures: `""` (the empty string), `(a:)`, `(dm:)` and `(ds:)`.
 		| `whitespace` | Only matches a single character of whitespace (spaces, newlines, and other kinds of space).
-		| `...whitespace` | This is the above type combined with the spread `...` operator. Matches empty strings, or strings containing only whitespace.
 		| `lowercase` | Only matches a single lowercase character. Lowercase characters are characters that change when put through (uppercase:).
-		| `...lowercase` | This is the above type combined with the spread `...` operator. Matches empty strings, or strings containing only lowercase characters.
 		| `uppercase` | Only matches a single uppercase character. Uppercase characters are characters that change when put through (lowercase:).
-		| `...uppercase` | This is the above type combined with the spread `...` operator. Matches empty strings, or strings containing only uppercase characters.
 		| `anycase` | This matches any character which is case-sensitive - that is, where its (lowercase:) form doesn't match its (uppercase:) form.
 		| `alphanumeric`, `alnum` | Only matches a single alphanumeric character (letters and numbers).
-		| `...alnum`, `...alphanumeric` | This is the above type combined with the spread `...` operator. Matches empty strings, or strings containing only alphanumeric characters.
 		| `digit` | Only matches a string consisting of exactly one of the characters '0', '1', '2', '3', '4', '5', '6', '7', '8', and '9'.
-		| `...digit` | This is the above type combined with the spread `...` operator. Matches empty strings, or strings containing only digit characters.
 		| `linebreak` | Only matches a line break character.
 		| `const` | Matches nothing; Use this only with (set:) to make constants.
 		| `any` | Matches anything; Use this with (macro:) to make variables that accept any storable type, or with (set:) inside data structure patterns.
@@ -80,9 +75,11 @@ define([
 		array, but that may not be precise enough for you. `$pos matches (a: number, number)` checks to see if $pos is an array containing only two numbers in a row. A data structure with datatype
 		names in various positions inside it is called a **pattern**, and `matches` is used to compare data values and patterns.
 
-		When used inside array patterns, a modified datatype called a **spread datatype** can be created using the `...` syntax. `...str` can match any number of string values inside another array.
-		You can think of this as a counterpart to the spread `...` syntax used inside macro calls - just as one array is turned into many values, so too is `...str` considered equivalent to enough `str` datatypes
-		to match the values on the other side.
+		A modified datatype called a **spread datatype** can be created using the `...` syntax. `...str` can match any number of string values, including zero. You can think of this as a counterpart to
+		the spread `...` syntax used inside macro calls - just as one array is turned into many values, so too is `...str` considered equivalent to enough `str` datatypes to match the values on the other side.
+
+		Inside a string pattern, like those created by (p:), spread datatypes have a slightly different meaning. They refer to zero or more sequences of the given datatype. `...whitespace` inside (p:) matches
+		an entire string of whitespace, which can be one or more characters, as well as the empty string. `...digit` matches zero or more digit characters.
 
 		Some more examples.
 
@@ -90,7 +87,7 @@ define([
 		* `(a: 2, 3, 4) matches (a: 2, int, int)` is true. (Patterns can have exact values in them, which must be equal in the matching data).
 		* `(a: ...num, ...str) matches (a: 2, 3, 4, 'five')`
 		* `(a: (a: 2), (a: 4)) matches (a: (a: num), (a: even))` is true.
-		* `(p: (p-many:"A"), "!")` matches "AAAAAAAA!"` is true.
+		* `(p: (p-many:"A"), "!") matches "AAAAAAAA!"` is true.
 
 		To summarise, the datatype operators are the following.
 
@@ -99,7 +96,7 @@ define([
 		| `matches` | Evaluates to boolean `true` if the data on the left matches the pattern on the right. | `(a:2,3) matches (a: num, num)`
 		| `is a`, `is an` | Similar to `matches`, but requires the right side to be just a type name. | `(a:2,3) is an array`, `4.1 is a number`
 		| `-type` | Produces a TypedVar, if a variable follows it. Note that there can't be any space between `-` and `type`. | `num-type $funds`
-		| `...` | Produces a spread datatype, which, when used in arrays, matches zero or more values that match the type. | `(a: ...str) matches (a:'Elf','Drow','Kithkin')`
+		| `...` | Produces a spread datatype, which, when used in arrays or patterns, matches zero or more values that match the type. | `(a: ...str) matches (a:'Elf','Drow','Kithkin')`
 	*/
 	let typeIndex, basicTypeIndex;
 

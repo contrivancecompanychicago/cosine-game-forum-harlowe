@@ -473,6 +473,9 @@ describe("data structure macros", function () {
 		it("doesn't serialise errors", function() {
 			expect('(source:"red"+2)').markupToError();
 		});
+		it("doesn't serialise custom macros' commands", function() {
+			expect('(set:$a to (macro:[(output:)[]]))(source:($a:))').markupToError();
+		});
 	});
 });
 

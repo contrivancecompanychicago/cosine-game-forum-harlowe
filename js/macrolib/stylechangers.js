@@ -1666,7 +1666,10 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			#styling
 		*/
 		(["background", "bg"],
-			(_, value) => {
+			(_, value) => ChangerCommand.create("background", [value]),
+			(d, value) => {
+				let property;
+
 				//Convert TwineScript CSS colours to bad old hexadecimal.
 				if (Colour.isPrototypeOf(value)) {
 					value = value.toRGBAString(value);
@@ -1675,10 +1678,6 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 				else if (Gradient.isPrototypeOf(value)) {
 					value = value.toLinearGradientString(value);
 				}
-				return ChangerCommand.create("background", [value]);
-			},
-			(d, value) => {
-				let property;
 				/*
 					Different kinds of values can be supplied to this macro
 				*/
@@ -1697,7 +1696,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 						background-size:cover allows the image to fully cover the area
 						without tiling, which I believe is slightly more desired.
 					*/
-					property = {"background-size": "cover", "background-image":"url(" + value + ")"};
+					property = {"background-size": "cover", "background-image": "url(" + value + ")"};
 				}
 				d.styles.push(property, {
 					/*
@@ -2260,6 +2259,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		* `(box:"=XX=", 1)[Chapter complete]` produces a box that's centered, 50% of the containing element's width, and 1 line tall.
 		* `(box:"==X", 3)[Chapter complete]` produces a box that's right-aligned, 33% of the containing element's width, 3 lines tall.
 		* `(box:"X", 7)[Chapter complete]` produces a box that takes up the full containing element's width, and 7 lines tall.
+		* `(enchant: ?passage, (box:"XXX="))` enchants the passage, placing it in the left of the window.
 
 		Rationale:
 

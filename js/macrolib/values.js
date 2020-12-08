@@ -129,7 +129,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 		/*d:
 			(source: Any) -> String
 
-			When given any data value, this will produce a string of Harlowe source code that can, when run, create
+			When given almost any data value, this will produce a string of Harlowe source code that can, when run, create
 			that value exactly.
 
 			Example usage:
@@ -149,6 +149,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			generally be absent, so `(source: (a:2,    3,   4))` produces `"(a:2,3,4)"`. Also, if you call a macro using one if its aliases,
 			such as (array:) for (a:), then the source will still use its "default" name. So, `(source: (array:1))` produces `"(a:1)"`.
 
+			Commands created by custom macros (via the (output:) macro) cannot be given to this macro - attempting to do so will produce an error.
+
 			Note that you can't easily print the string returned by (source:), because, funnily enough, Harlowe will immediately
 			re-render it. You can use (verbatim-print:) to print it without it being rendered.
 
@@ -158,7 +160,16 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Added in: 3.2.0
 			#string
 		*/
-		("source", (_, val) => toSource(val), [Any])
+		("source", (_, val) => {
+			/*
+				Note that since custom macro commands cannot be serialised, they can't have a TwineScript_ToSource() method that would return this error
+				by itself. Also note that every built-in command has a TwineScript_ToSource() installed by Macros.
+			*/
+			if (val && val.TwineScript_TypeID === "command" && !val.TwineScript_ToSource) {
+				return TwineError.create("datatype", "I can't construct the source code of a command created by a custom macro.");
+			}
+			return toSource(val);
+		}, [Any])
 
 		/*d:
 			(substring: String, Number, Number) -> String

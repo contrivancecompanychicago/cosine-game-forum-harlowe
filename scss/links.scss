@@ -126,6 +126,14 @@ tw-broken-link {
 	border-radius: 0.2em;
 }
 
+@mixin button-links {
+	border-radius: 16px;
+	border-style: solid;
+	border-width: 2px;
+	text-align:center;
+	padding:0px 8px;
+	display:block;
+}
 /*
 	Button styling is applied in three ways: by (button:) changing normal links and (click:) links as their second argument...
 */
@@ -135,18 +143,16 @@ tw-link.enchantment-button,
 	...by link changers and (click:) links being enchanted by (enchant:), or link expressions changed by attached (button:) changers...
 */
 .enchantment-button:not(.enchantment-link) > tw-link,
-.enchantment-button:not(.enchantment-link) > .enchantment-link,
+.enchantment-button:not(.enchantment-link) > .enchantment-link {
+	@include button-links;
+}
 /*
 	...and links inside (dialog:) dialogs.
 */
 tw-dialog-links {
 	padding-top:1.5em;
 	tw-link {
-		border-radius: 16px;
-		border-style: solid;
-		border-width: 2px;
-		text-align:center;
+		@include button-links;
 		display:inline-block;
-		padding:0px 8px;
 	}
 }
