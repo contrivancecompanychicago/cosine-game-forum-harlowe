@@ -149,6 +149,13 @@ const
 		defCode: "markup",
 		regExp: /^\s*([\w ]+) markup\n/,
 
+		navLink(def) {
+			// Hardcoded for 3.2.0
+			const isNew = def.name === "Unclosed collapsing whitespace";
+
+			return `<li><a href="#${def.anchor}" ${isNew ? "class='nav_new'": ""}>${def.name}</a></li>`;
+		},
+
 		definition({input, 0:title, 1:name}) {
 			const slugName =  name.replace(/\s/g,'-').toLowerCase();
 			let text = input.trim().replace(title, "\n<h2 class='def_title markup_title' id=markup_" + slugName + ">"
@@ -168,6 +175,13 @@ const
 		defName: "Types of data",
 		defCode: "type",
 		regExp: /^\s*([\w]+) data\n/,
+
+		navLink(def) {
+			// Hardcoded for 3.2.0
+			const isNew = ["CodeHook","CustomMacro","Metadata","TypedVar"].includes(def.name);
+
+			return `<li><a href="#${def.anchor}" ${isNew ? "class='nav_new'": ""}>${def.name}</a></li>`;
+		},
 
 		definition({input, 0:title, 1:name}) {
 			const slugName =  name.replace(/\s/g,'-').toLowerCase();

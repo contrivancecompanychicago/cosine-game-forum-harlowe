@@ -6,18 +6,18 @@ So, I worked diligently on Harlowe for 9 months. In retrospect, it feels like my
 
 And now you get to enjoy all of this, and more.
 
- * A means of creating custom macros, using (macro:), (output:) and (output-hook:)
- * String patterns, an advanced means of matching strings comprehensively, that can be used with `matches` and the new (split:) and (trimmed:) macros
- * Changers for creating block elements, (box:) and (float-box:), with the latter allowing you to overlay a box of text anywhere in the browser window
- * Support for storylets as an alternative to hard-coded links between sections of a game, provided by (storylet:), (open-storylets:), and their related macros
- * Macros for adding and creating the sidebar's icons, allowing you to freely customise it using (replace:) and other macros
- * Several new interaction/UI command macros, such as (input-box:), (checkbox:) and (meter:)
- * (set:), (put:) and (move:) now support optional type-restrictions on variables
- * A changer and a command for displaying text verbatim, (verbatim:) and (verbatim-print:)
- * Interaction macros for toggling fullscreen mode, (link-fullscreen:) and (icon-fullscreen:)
- * Assorted pieces of "missing" common functionality, like (rerun:), (link-rerun:), (text-size:), (border:), (opacity:) and (joined:)
- * A small selection of debugging-focused macros, such as (ignore:), (test-false:), (test-true:) and (assert:)
- * Additional features for Debug Mode, including an enchantments panel, buttons for producing the source code of variables, and a DOM View button that shows the basic HTML DOM structure of the page
+ * A means of creating custom macros, using (macro:), (output:) and (output-hook:).
+ * String patterns, an advanced means of matching strings comprehensively, that can be used with `matches` and the new (split:) and (trimmed:) macros.
+ * Changers for creating block elements, (box:) and (float-box:), with the latter allowing you to overlay a box of text anywhere in the browser window.
+ * Support for storylets as an alternative to hard-coded links between sections of a game, provided by (storylet:), (open-storylets:), and their related macros.
+ * Macros for adding and creating the sidebar's icons, allowing you to freely customise it using (replace:) and other macros.
+ * Several new interaction/UI command macros, such as (input-box:), (checkbox:) and (meter:).
+ * (set:), (put:) and (move:) now support optional type-restrictions on variables.
+ * A changer and a command for displaying text verbatim, (verbatim:) and (verbatim-print:).
+ * Interaction macros for toggling fullscreen mode, (link-fullscreen:) and (icon-fullscreen:).
+ * Assorted pieces of "missing" common functionality, like (rerun:), (link-rerun:), (text-size:), (border:), (opacity:) and (joined:).
+ * A small selection of debugging-focused macros, such as (ignore:), (test-false:), (test-true:) and (assert:).
+ * Additional features for Debug Mode, including an enchantments panel, buttons for producing the source code of variables, and a DOM View button that shows the basic HTML DOM structure of the page.
  * Heavily improved in-editor syntax highlighting that now colours macros by their datatype and can, if enabled, show tooltips for code structures.
 
 And, most importantly, a new toolbar has been implemented for the Twine 2 editor that allows common Harlowe code idioms to be quickly created.

@@ -402,7 +402,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			milliseconds. If (if:) or (unless:) macros are inside the hook, they of course will be re-evaluated each time.
 			
 			Details:
-			Numbers given to macros such as `(live:)` can be suffixed with `ms` or `s` to indicate whether you mean milliseconds or
+			Numbers given to macros such as (live:) can be suffixed with `ms` or `s` to indicate whether you mean milliseconds or
 			seconds (see the article on number data for more information). If you give a bare number, the macro interprets it as milliseconds.
 
 			Live hooks will continue to re-render themselves until they encounter and print a (stop:) macro. (stop:) should be used
@@ -410,13 +410,14 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			with clicking, selecting text, and other interactions).
 
 			If you want to just display a hook once a certain thing happens (that is, when the condition in an (if:) macro becomes
-			true) and then (stop:), then the (event:) macro may be shorter and easier to use for this.
+			true) and then (stop:), then the (event:) macro may be shorter and easier to use for this. If you want to display a hook after
+			a certain amount of time has passed, then the (after:) macro is almost certainly what you'd prefer to use.
 
 			Currently, you **cannot** attach (live:) to a command (such as in `(live:2s)(link-goto:"?")`). You have to wrap the command
 			in a hook (such as `(live:2s)[(link-goto:"?")]`).
 
 			See also:
-			(event:)
+			(event:), (more:), (after:)
 
 			Added in: 1.0.0
 			#live 1
@@ -509,7 +510,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			(show:), (link-show:)
 
 			Added in: 3.1.0
-			#live 4
+			#live 5
 		*/
 		("more",
 			() => ChangerCommand.create("more"),
@@ -523,13 +524,69 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 					*/
 					event: {
 						when: true,
-						filter: section => {
-							return section.eval("Operations").Identifiers.exits !== 0 ? [] : [true];
-						},
+						filter: section => section.eval("Operations").Identifiers.exits !== 0 ? [] : [true],
 					},
 				};
 			},
 			null
+		)
+
+		/*d:
+			(after: Number, [Number]) -> Changer
+
+			Hooks that have this changer attached will only be run once the given amount of time has passed since the passage was rendered. An
+			optional second number specifies that the player can speed up the delay by holding down a keyboard key or mouse button, or by touching the touch device.
+
+			Example usage:
+			This example makes 3 additional hooks appear, one by one. The delays can only be sped up if the passage has been visited before.
+			The `time + 2s` idiom is a convenient way to express that each hook is displayed 2 seconds after the last one was displayed (as the `time` identifier
+			tracks the time passed since the passage was rendered, not the containing hook).
+			```
+			There she was. (after: 2s, (cond: visits > 0, 200ms, 0))[=
+			Covered in fur, (after: time + 2s, (cond: visits > 0, 200ms, 0))[=
+			sitting on all fours, (after: time + 2s, (cond: visits > 0, 200ms, 0))[=
+			and howling at the moon.
+			```
+
+			Rationale:
+			This macro is a shorthand form of (event:) that only is given an amount of time to wait. `(after:2s)` is the same as `(event: when time > 2s)`.
+			It is also similar to (live:), except that it only runs the hook at most once.
+
+			One significant difference this has over (event:) is that it can offer the player the ability to speed up transitions. Frequently asking the player to wait for timed delays
+			can be detrimental to the pacing of a story, especially if they are revisiting earlier passages, and providing an option to skip or expedite them is often
+			greatly appreciated.
+
+			Details:
+			Numbers given to macros such as (after:) can be suffixed with `ms` or `s` to indicate whether you mean milliseconds or
+			seconds (see the article on number data for more information). If you give a bare number, the macro interprets it as milliseconds.
+
+			The optional second number given is an amount of milliseconds (or, if suffixed with `s`, seconds) to advance the transition. For each
+			millisecond of the transition, Harlowe checks if a key or button is held, and if so, then it is advanced
+			by the given number (in addition to the elapsed millisecond).
+
+			See also:
+			(live:), (event:), (more:), (transition-skip:)
+
+			Added in: 3.2.0
+			#live 4
+		*/
+		("after",
+			(_, delay, skip) => ChangerCommand.create("after", [delay].concat(skip !== undefined ? [skip] : [])),
+			(d, delay, skip) => {
+				d.enabled = false;
+				d.data.live = {
+					event: {
+						when: true,
+						filter: section => {
+							if (Utils.anyInputDown()) {
+								delay -= skip;
+							}
+							return section.eval("Operations").Identifiers.time > delay ? [true] : [];
+						},
+					},
+				};
+			},
+			[positiveNumber, optional(nonNegativeNumber)]
 		)
 
 		/*d:
@@ -789,7 +846,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			of skipping or accelerating the transitions if they so choose.
 
 			Details:
-			The number given is an amount of milliseconds (or seconds, if specified) to advance the transition. For each
+			The number given is an amount of milliseconds (or, if suffixed with `s`, seconds) to advance the transition. For each
 			millisecond of the transition, Harlowe checks if a key or button is held, and if so, then it is advanced
 			by the given number (in addition to the elapsed millisecond).
 

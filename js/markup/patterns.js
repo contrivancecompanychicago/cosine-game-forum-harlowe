@@ -478,7 +478,7 @@
 			Like most passage text markup, this cannot be used inside a macro call (for instance, `(print: \`<br>
 			`3)`) - but since line breaks between values in macro calls are ignored, this doesn't matter.
 
-			#whitespace
+			#whitespace 4
 		*/
 		escapedLine,
 		
@@ -658,7 +658,7 @@
 
 			If you only want to remove specific line breaks, consider the escaped line break markup.
 
-			#whitespace
+			#whitespace 2
 		*/
 		collapsedFront:    "{",
 		collapsedBack:     "}",
@@ -857,7 +857,7 @@
 
 			All of the details pertaining to the collapsing markup apply here - consult its article for more information.
 
-			#whitespace 2
+			#whitespace 3
 		*/
 		unclosedCollapsed: "\\{=+",
 		

@@ -336,6 +336,8 @@ define(['jquery', 'markup', 'utils/polyfills'],
 		*/
 		buttonsDown: (...buttons) => buttons.every(b => buttonsHeld[b]),
 
+		anyInputDown: () => keysHeldCount + buttonsHeldCount > 0,
+
 		/*
 			Provides very direct access to mouseCoords.
 		*/
@@ -529,13 +531,17 @@ define(['jquery', 'markup', 'utils/polyfills'],
 					Note that the other two elements that have display:flex, <tw-story> and <tw-columns>, don't have this concern due to their children
 					being part of usuallyBlockElements.
 				*/
-				if (el.parent().is('tw-backdrop') || Utils.childrenProbablyInline(el)) {
+				if (Utils.childrenProbablyInline(el)) {
 					/*
 						If there are no element children of the container (only text), simply use 'inline'.
 					*/
 					el.css('display','inline' + (el.children().length ? '-block' : ''));
 				}
-				else {
+				/*
+					Special case: due to <tw-backdrop> and <tw-story> having display:flex, getComputedStyle() will always report 'display:block' for
+					each child element of it, even though flex elements are positioned differently and don't need width:100%.
+				*/
+				else if (!el.parent().is('tw-backdrop,tw-story')) {
 					/*
 						Both of these are necessary for overriding "display:inline-block" for certain transitions,
 						including those that use transform.
@@ -599,19 +605,17 @@ define(['jquery', 'markup', 'utils/polyfills'],
 				this code, which gives the transition element the correct display property, is crudely placed in a delayed timeout.
 			*/
 			requestAnimationFrame(() => {
-				/*
-					Special case: due to <tw-backdrop> having display:flex, getComputedStyle() will always report 'display:block' for
-					each child element of it, even if it's a <tw-dialog>. So, ignore childrenProbablyInline() and simply assume that block positioning mustn't be applied.
-					Note that the other two elements that have display:flex, <tw-story> and <tw-columns>, don't have this concern due to their children
-					being part of usuallyBlockElements.
-				*/
-				if (el.parent().is('tw-backdrop') || Utils.childrenProbablyInline(el)) {
+				if (Utils.childrenProbablyInline(el)) {
 					/*
 						If there are no element children of the container (only text), simply use 'inline'.
 					*/
 					el.css('display','inline' + (el.children().length ? '-block' : ''));
 				}
-				else {
+				/*
+					Special case: due to <tw-backdrop> and <tw-story> having display:flex, getComputedStyle() will always report 'display:block' for
+					each child element of it, even though flex elements are positioned differently and don't need width:100%.
+				*/
+				else if (!el.parent().is('tw-backdrop,tw-story')) {
 					/*
 						Both of these are necessary for overriding "display:inline-block" for certain transitions,
 						including those that use transform.

@@ -591,7 +591,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			this produces a command (and not a changer), you can simply attach changers to the front of it to style the link.
 
 			Added in: 3.2.0
-			#links
+			#links 8
 		*/
 		("link-storylet",
 			/*

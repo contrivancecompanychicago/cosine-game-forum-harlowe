@@ -1160,7 +1160,7 @@ define([
 			If any passage's (storylet:) macro produces an error (such as by dividing a number by 0), it will be displayed when the (open-storylets:) macro is run.
 
 			See also:
-			(storylet:), (passages:)
+			(storylet:), (link-storylet:), (passages:)
 
 			Added in: 3.2.0
 			#storylet 2

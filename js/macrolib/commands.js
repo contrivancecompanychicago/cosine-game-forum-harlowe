@@ -558,7 +558,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			(link-goto:), (undo:), (loadgame:)
 
 			Added in: 1.0.0
-			#links
+			#navigation
 		*/
 		("go-to",
 			(name) => {
@@ -622,7 +622,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			(go-to:), (link-undo:), (icon-undo:)
 
 			Added in: 2.0.0
-			#links
+			#navigation
 		*/
 		("undo",
 			noop,

@@ -64,6 +64,30 @@ describe("live macros", function() {
 			},20);
 		});
 	});
+	describe("the (after:) macro", function() {
+		it("requires a positive number, and an optional non-negative number", function() {
+			expect("(after:)[]").markupToError();
+			expect("(after:1)[]").not.markupToError();
+			expect("(after:1,1)[]").not.markupToError();
+			expect("(after:0)[]").markupToError();
+			expect("(after:1,-0.1)[]").markupToError();
+		});
+		it("doesn't immediately display the hook", function(done) {
+			var p = runPassage("(after: 12s)[baz]");
+			setTimeout(function() {
+				expect(p.text()).not.toBe('baz');
+				done();
+			},20);
+		});
+		it("displays the attached hook only when the given time has elapsed", function(done) {
+			var p = runPassage("(after:30ms)[bar]");
+			expect(p.text()).toBe("");
+			setTimeout(function() {
+				expect(p.text()).toBe("bar");
+				done();
+			},40);
+		});
+	});
 	describe("the (more:) macro", function() {
 		it("takes no arguments", function() {
 			expect("(more:)[]").not.markupToError();

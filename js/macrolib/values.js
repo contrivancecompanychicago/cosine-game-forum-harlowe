@@ -859,9 +859,9 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 
 			Example usage:
 			```
-			{(set: _p to (palette: "mono", orange+black))
-			(enchant: ?page, (background: _p's 1st)+(text-colour: _p's 2nd))
-			(enchant: ?link, (colour: _p's 3rd)+(hover-style:(colour:_p's 4th)))}
+			{(set: _p to (palette: "mono", orange + black))
+			(enchant: ?page, (background: _p's 1st) + (text-colour: _p's 2nd))
+			(enchant: ?link, (colour: _p's 3rd) + (hover-style: (colour:_p's 4th)))}
 			This passage uses (link:"(more)")[a brown palette.]
 			```
 
@@ -907,6 +907,13 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			*/
 			text  = Colour.create(lcha);
 			lcha.l += (l <= 0.75 ? -0.1 : 0.1);
+			/*
+				To push the link text further away from black if the plain text is already
+				relatively black, this important nudge is applied.
+			*/
+			if (lcha.l < 0.5) {
+				lcha.l *= 0.5/lcha.l;
+			}
 			link  = Colour.create(lcha);
 			lcha.l += (l <= 0.85 ? 0.15 : -0.15);
 			hover = Colour.create(lcha);

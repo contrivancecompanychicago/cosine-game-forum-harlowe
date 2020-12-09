@@ -2,6 +2,7 @@
 define(['macros','renderer', 'utils/operationutils', 'datatypes/lambda', 'internaltypes/twineerror'], (Macros, Renderer, {clone, objectName, isValidDatamapName}, Lambda, TwineError) => {
 	/*d:
 		Metadata data
+
 		Certain kinds of macros are not used inside the passage itself, but are used to mark the passage as being special in some way, or having certain
 		data available to other macros that inspect the story's state, such as (passages:) or (open-storylets:). These macros are "metadata" macros,
 		because they attach metadata to the passage. These macros must appear at the very start of those passages, ahead of every other kind of macro.
@@ -38,7 +39,7 @@ define(['macros','renderer', 'utils/operationutils', 'datatypes/lambda', 'intern
 		Storylets are mini-stories within a story - disconnected sequences of passages that can be visited non-linearly when certain conditions are fulfilled.
 		They allow a different way of writing interactive fiction than the rigid tree structure of typical Twine games: instead,
 		simply write scenes and events that occur in the story, use this macro in the first passage of these mini-stories to write a programming condition that
-		determines when it would make sense for that scene to occur, and use macros like (open-storylets:) to dynamically create links to the storylets.
+		determines when it would make sense for that scene to occur, and use macros like (open-storylets:) or (link-storylet:) to dynamically create links to the storylets.
 		This authoring style allows content to be added to the story without having to dramatically rearrange the story's structure.
 
 		Examples of narrative structures that can be represented as storylets include: jobs on a job board that are available at different times but only
@@ -92,6 +93,9 @@ define(['macros','renderer', 'utils/operationutils', 'datatypes/lambda', 'intern
 		that a storylet with a negative urgency, such as `(urgency: -11)`, will appear at the end of the (open-storylets:) array, unless a storylet
 		with an even lower urgency is also open.
 
+		See also:
+		(exclusivity:)
+
 		Added in: 3.2.0
 		#storylet 4
 	*/
@@ -120,6 +124,9 @@ define(['macros','renderer', 'utils/operationutils', 'datatypes/lambda', 'intern
 		Storylets without an "exclusivity" metadata number, added by this macro or by (metadata:), are treated as having `(exclusivity: 0)`. This means
 		that a storylet with a negative exclusivity, such as `(exclusivity: -0.001)`, will not be able to appear in (open-storylets:) if any other storylets
 		lacking an explicit (exclusivity:) call are also open.
+
+		See also:
+		(urgency:)
 
 		Added in: 3.2.0
 		#storylet 3
