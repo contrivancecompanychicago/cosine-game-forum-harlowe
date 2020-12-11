@@ -2558,7 +2558,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			(icon-reload:)
 
 			Added in: 1.0.0
-			#url
+			#navigation
 		*/
 		("reload",
 			noop,

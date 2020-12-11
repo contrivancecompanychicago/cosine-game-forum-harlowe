@@ -385,6 +385,57 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 				makeRegExpString: subargs => "(?:" + subargs.join('') + ")?"
 			}),
 		PatternSignature)
+
+		/*d:
+			(p-not: ...String or Datatype) -> Datatype
+			Also known as: (pattern-not:)
+
+			Given any number of string characters or non-spread datatypes, this creates a string pattern that matches any one character that doesn't
+			match any of those values.
+
+			Example usage:
+			* `(p-not: digit, ".")` matches any one string character except digits (matched by the `digit` datatype) or a "." character.
+			* `(p-not:..."aeiou")` matches any one string character except a lowercase vowel. Note that using the spread `...` syntax to spread strings into their individual characters
+			is recommended when using this macro.
+			* `(p:"[", (p-many:(p-not:"]")), "]")` matches "[" followed by any number of characters except "]", followed by a closing "]".
+
+			Details:
+			This is part of a suite of string pattern macros. Consult the (p:) article to learn more about string patterns, special user-created datatypes
+			that can match very precise kinds of strings.
+
+			Unlike many pattern datatype macros, this will error if given any datatype that could match 0 or 2+ characters. So, passing `str`, `empty`, any spread datatype like `...digit`,
+			or any string with more or less than 1 character, will produce an error.
+
+			When you use this in (unpack:), such as `(unpack: "-" into (p-many:(p-not:'s'))-type _isLord`, and the optional pattern doesn't match,
+			the variable will be set to the empty string "".
+
+			While you can use this as the datatype of a TypedVar, you can't nest TypedVars inside this.
+
+			See also:
+			(p-not-before:)
+
+			Added in: 3.2.0.
+			#patterns
+		*/
+		(["p-not","pattern-not"],
+			(_, ...fullArgs) => {
+				const wrong = fullArgs.find(e =>
+					/*
+						This must exclude the following datatypes: patterns, strings of length != 1,
+						and basic datatypes representing multiple or zero string characters.
+					*/
+					typeof e === "string" ? [...e].length !== 1 : e.rest || e.regExp || ['str','empty'].includes(e.name));
+
+				if (wrong) {
+					return TwineError.create("datatype", "(p-not:) should only be given single character");
+				}
+				return createPattern({
+					name: "p-not", fullArgs, canContainTypedVars: false,
+					makeRegExpString: subargs => "[^" + subargs.join('') + "]"
+				});
+			},
+		PatternSignature)
+
 		/*d:
 			(p-many: [Number], [Number], ...String or Datatype) -> Datatype
 			Also known as: (pattern-many:)

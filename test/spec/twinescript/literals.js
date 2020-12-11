@@ -58,6 +58,9 @@ describe("twinescript literals", function() {
 			expect('(print: "A\nB")').markupToPrint("A\nB");
 			expect("(print: 'A\nB')").markupToPrint("A\nB");
 		});
+		it("can contain opening hook markup", function() {
+			expect('(print: "[" + \'[\')').markupToPrint("[[");
+		});
 		it("can contain C-style backslash escapes", function() {
 			expect('(print: "A\\B")').markupToPrint("AB");
 			expect("(print: 'A\\B')").markupToPrint("AB");

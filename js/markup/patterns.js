@@ -1033,6 +1033,11 @@
 		
 		singleStringOpener:    "'",
 		doubleStringOpener:    '"',
+		/*
+			This doubled-up name is used for the special closers inside the "string" mode.
+		*/
+		singleStringCloser:    "'",
+		doubleStringCloser:    '"',
 		
 		/*
 			Macro operators

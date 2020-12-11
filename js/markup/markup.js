@@ -134,7 +134,11 @@
 			/*
 				The contents of macro tags - expressions and other macros.
 			*/
-			macroMode    = [];
+			macroMode    = [],
+			/*
+				The contents of strings - just escaped characters and closing quote marks.
+			*/
+			stringMode   = [];
 		
 		/*
 			These rules objects contain each ordered category of rules.
@@ -340,12 +344,6 @@
 						hookFront: "hook",
 					},
 					cannotCross: ["verbatimOpener"],
-					/*
-						The "hookFront" and "hookBack" tokens (well, actually just "hookBack" once
-						they're folded together) set the mode back to 'markup' even when inside a macro.
-						This explicit innerMode setting causes this.
-					*/
-					innerMode: 'markup',
 				}),
 			},
 
@@ -563,6 +561,7 @@
 							singleStringOpener:
 								"string",
 						},
+						innerMode: stringMode,
 					}),
 				},
 				doubleStringOpener: {
@@ -572,6 +571,7 @@
 							doubleStringOpener:
 								"string",
 						},
+						innerMode: stringMode,
 					}),
 				},
 				
@@ -718,6 +718,16 @@
 				return a;
 			},{})
 		));
+
+		/*
+			TBW
+		*/
+		const stringRules = setupRules(stringMode, {
+			singleStringCloser:  macroRules.singleStringOpener,
+			doubleStringCloser:  macroRules.doubleStringOpener,
+			escapedStringChar:   macroRules.escapedStringChar,
+		});
+
 		/*
 			Now that all of the rule categories have been defined, the modes can be
 			defined as selections of these categories.
@@ -740,10 +750,12 @@
 		macroMode.push(             ...keys(expressionRules),
 									...keys(macroRules));
 
+		stringMode.push(            ...keys(stringRules));
+
 		/*
 			Merge all of the categories together.
 		*/
-		const allRules = assign({}, blockRules, inlineRules, expressionRules, macroRules);
+		const allRules = assign({}, blockRules, inlineRules, expressionRules, macroRules, stringRules);
 		
 		/*
 			Add the 'pattern' property to each rule
@@ -780,16 +792,19 @@
 			}
 		});
 		assign(Lexer.rules, allRules);
+
+		const {modes} = Lexer;
 		/*
 			Declare that the starting mode for lexing, before any
 			tokens are appraised, is...
 		*/
-		Lexer.modes.start = Lexer.modes.markup = markupMode;
+		modes.start = modes.markup = markupMode;
 		/*
 			But macroMode is also exposed in order for certain consumers
 			(such as the documentation) to be able to lex in that context.
 		*/
-		Lexer.modes.macro = macroMode;
+		modes.macro = macroMode;
+		modes.string = stringMode;
 		return Lexer;
 	}
 	

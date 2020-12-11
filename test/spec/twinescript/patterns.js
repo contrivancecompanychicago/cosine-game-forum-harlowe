@@ -348,13 +348,26 @@ describe("patterns", function() {
 				expect("(print: (p-ins:'A',lowercase,'E') matches 'aBe' and 'AbE')").markupToPrint('true');
 			});
 		});
-		/*describe("(p-not-before:)", function() {
-			basicTest("p-not-before", '"black"),(p:" green"', false);
-			it("when used in (p:), it matches if the sequence does not appear at that spot", function() {
-				expect("(print: (p:'red',(p-not-before:whitespace,'blue'),string) matches 'redblue green' and 'redgreen' and 'red')").markupToPrint('true');
-				expect("(print: (p:'red',(p-not-before:whitespace,'blue'),string) does not match 'red bluegreen')").markupToPrint('true');
+		describe("(p-not:)", function() {
+			it("accepts multiple single-character strings or string datatypes", function() {
+				['alphanumeric','lowercase','uppercase','whitespace'].forEach(function(type) {
+					expect("(print: (p-not:" + type + "))").not.markupToError();
+					expect("(print: (p-not:" + type + ",'w','S','b'))").not.markupToError();
+				});
+				expect("(print: (p-not:...'aeiouy'))").not.markupToError();
+				expect("(print: (p-not:num))").markupToError();
+				expect("(print: (p-not:...num))").markupToError()
+				expect("(print: (p-not:str))").markupToError();
+				expect("(print: (p-not:(p:'a')))").markupToError();
+				expect("(print: (p-not:))").markupToError();
 			});
-		});*/
+			it("when used in (p:), it matches any character that doesn't match the given patterns", function() {
+				expect("(print: (p:'red',(p-not:...'1234'),string) matches 'red5' and 'red6green' and 'red7')").markupToPrint('true');
+				expect("(print: (p:'red',(p-not:...'1234'),string) does not match 'red3')").markupToPrint('true');
+				expect("(print: (p:'red',(p-not:digit),string) does not match 'red3')").markupToPrint('true');
+				expect("(print: (p:'red',(p-not:digit),string) does not match 'red6green')").markupToPrint('true');
+			});
+		});
 	});
 	describe("(datatype:)", function() {
 		it("takes most kinds of data, and produces a datatype that matches it", function() {
