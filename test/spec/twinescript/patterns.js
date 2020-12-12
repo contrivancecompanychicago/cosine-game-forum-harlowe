@@ -356,7 +356,7 @@ describe("patterns", function() {
 				});
 				expect("(print: (p-not:...'aeiouy'))").not.markupToError();
 				expect("(print: (p-not:num))").markupToError();
-				expect("(print: (p-not:...num))").markupToError()
+				expect("(print: (p-not:...num))").markupToError();
 				expect("(print: (p-not:str))").markupToError();
 				expect("(print: (p-not:(p:'a')))").markupToError();
 				expect("(print: (p-not:))").markupToError();

@@ -1419,16 +1419,18 @@
 			{
 				type: 'radios',
 				name: 'Affect:',
-				options: ["The attached hook", "The remainder of the passage or hook.", "The entire page."],
+				options: ["The attached hook", "The remainder of the passage or hook.", "The entire passage.", "The entire page."],
 				model(m, el) {
-					const v = el[$]('input:checked').value;
+					const v = el[$]('input:checked');
+					const index = Array.from(el[$$]('label')).indexOf(v.parentNode);
+
 					const changers = Object.entries(m.changers);
-					if (v.includes('page') && changers.length) {
-						m.wrapStart = "(enchant:?page," + changers.map(([k,v]) => `(${k}:${v.join(',')})`).join('+') + ")";
+					if (index >= 2 && changers.length) {
+						m.wrapStart = "(enchant:?pa" + (index === 2 ? "ssa" : "") + "ge," + changers.map(([k,v]) => `(${k}:${v.join(',')})`).join('+') + ")";
 						m.wrapEnd = "";
 						m.suppressedChangers = m.changers;
 						m.changers = {};
-					} else if (v.includes('passage')) {
+					} else if (index === 1) {
 						m.wrapStart = "[=\n";
 						m.wrapEnd = "";
 					}
@@ -1770,8 +1772,8 @@
 								ifArgs[0] += elem[$]('input').value;
 								if (ifArgs[0].includes(' % ')) {
 									ifArgs[0] += " is 0";
-									// Replace "% 2 is 0" with "is even"
-									ifArgs[0] = ifArgs[0].replace(" % 2 is 0", " is even");
+									// Replace "% 2 is 0" with "is an even"
+									ifArgs[0] = ifArgs[0].replace(" % 2 is 0", " is an even");
 								}
 								m.valid = true;
 							},
@@ -1805,7 +1807,7 @@
 							min: 1,
 							max: 999,
 							model(m, elem) {
-								m.changerNamed('event').push(`when time >= ${elem[$]('input').value}s`);
+								m.changerNamed('after').push(`${elem[$]('input').value}s`);
 								m.valid = true;
 							},
 						},
@@ -2650,6 +2652,16 @@
 						html: fontIcon('question'),
 						onClick: () => window.open(`https://twine2.neocities.org/`, "Harlowe Documentation", 'noopener,noreferrer')
 					},
+					(() => {
+						const button = el('<button style="position:absolute;right:1em;margin-top:-2em">' + fontIcon('chevron-up') + "</button>");
+						button.addEventListener('click', () => {
+							toolbarElem.classList.toggle('harlowe-3-minimised');
+							const list = button.firstChild.classList;
+							list.toggle('fa-chevron-down');
+							list.toggle('fa-chevron-up');
+						});
+						return button;
+					})(),
 				],
 			}
 		),

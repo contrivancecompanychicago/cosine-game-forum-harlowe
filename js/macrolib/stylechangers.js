@@ -464,7 +464,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			in a hook (such as `(event:when $a is 1)[(link-goto:"?")]`).
 
 			See also:
-			(live:)
+			(live:), (after:), (more:)
 
 			Added in: 3.0.0
 			#live 3

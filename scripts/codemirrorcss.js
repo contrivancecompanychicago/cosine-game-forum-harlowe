@@ -130,7 +130,7 @@ const outputFile = {
 
 	"twineLink:not(.text)": typeColours.twineLink,
 
-	tag:
+	"tag, scriptStyleTag, comment":
 		"color: hsla(240,34%,25%,1.0);",
 	
 	boolean:      typeColours.boolean,
@@ -141,6 +141,7 @@ const outputFile = {
 	hookName:     typeColours.hookName,
 	datatype:     typeColours.datatype,
 	colour:       typeColours.colour,
+	cssTime:      typeColours.number,
 
 	"variableOccurrence, hookOccurrence":
 		"background: hsla(159,50%,75%,1.0) !important;",

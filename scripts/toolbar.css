@@ -3,6 +3,9 @@
 	overflow-y: auto;
 	margin-bottom:4px;
 }
+.harlowe-3-minimised .harlowe-3-toolbarPanel > :not(:last-child) {
+	display:none;
+}
 .harlowe-3-toolbarPanel code:not(:empty) {
 	font-size:1rem;
 	border: 1px dotted hsl(0, 0%, 50%);
@@ -42,7 +45,7 @@
 	min-width: 28px;
 }
 
-.harlowe-3-toolbarPanel > button:not(:active):not(.active) {
+.harlowe-3-toolbarPanel > button:not(:active):not(.active):not(:last-child) {
 	border: 1px solid hsla(0,0%,50%,0.5);
 	border-top: none;
 	border-left: none;

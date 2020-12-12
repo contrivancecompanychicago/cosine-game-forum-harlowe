@@ -21,8 +21,7 @@ tw-dialog {
 tw-dialog-links {
 	text-align:right;
 	@include flexbox;
-	@include justify-content(end);
-	justify-content:end;
+	@include justify-content(flex-end);
 }
 tw-backdrop {
 	z-index: $zindex - 3;

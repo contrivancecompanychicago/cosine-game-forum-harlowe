@@ -272,7 +272,6 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 							}
 							
 							out += '<tw-align ' + (style ? ('style="' + style + '"') : '')
-								+ (Renderer.options.debug ? ' title="' + token.text + '"' : "")
 								+ '>' + body + '</tw-align>\n';
 							token = tokens[i];
 						}
@@ -323,9 +322,7 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 							out += "<tw-columns>"
 								+ columns.map(e =>
 									`<tw-column type=${e.type} ${''
-									} style="width:${e.width/totalWidth*100}%; margin-left: ${e.marginLeft}em; margin-right: ${e.marginRight}em;" ${
-										(Renderer.options.debug ? ` title="${e.text}"` : "")
-									}>${e.body}</tw-column>\n`
+									} style="width:${e.width/totalWidth*100}%; margin-left: ${e.marginLeft}em; margin-right: ${e.marginRight}em;">${e.body}</tw-column>\n`
 								).join('')
 								+ "</tw-columns>";
 						}
@@ -561,7 +558,6 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 
 						out += '<tw-expression type="' + token.type + '" name="' + escape(token.name || token.text) + '"'
 							// Debug mode: show the macro name as a title.
-							//TODO: enable this for all modes, and have Section remove it
 							+ (Renderer.options.debug ? ' title="' + escape(token.text) + '"' : '')
 							+ (blockers.length ? ' blockers="' + escape(JSON.stringify(compiledBlockers)) + '"' : '')
 							+ ' js="' + escape(Compiler(token)) + '"'

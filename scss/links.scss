@@ -142,8 +142,8 @@ tw-link.enchantment-button,
 /*
 	...by link changers and (click:) links being enchanted by (enchant:), or link expressions changed by attached (button:) changers...
 */
-.enchantment-button:not(.enchantment-link) > tw-link,
-.enchantment-button:not(.enchantment-link) > .enchantment-link {
+.enchantment-button:not(.enchantment-link) tw-link,
+.enchantment-button:not(.enchantment-link) .enchantment-link {
 	@include button-links;
 }
 /*

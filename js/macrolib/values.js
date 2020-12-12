@@ -114,7 +114,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			(num:)
 
 			Added in: 1.0.0
-			#string
+			#string 1
 		*/
 		(["str", "string", "text"],
 			/*

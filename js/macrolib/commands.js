@@ -595,7 +595,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			passage and forgetting any variable changes that occurred in this passage.
 
 			Example usage:
-			`You scurry back whence you came... (live:2s)[(undo:)]` will undo the current turn after 2 seconds.
+			`You scurry back whence you came... (after:2s)[(undo:)]` will undo the current turn after 2 seconds.
 
 			Rationale:
 			The (go-to:) macro sends players to different passages instantly. But, it's common to want to
@@ -832,15 +832,15 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			#sidebar 4
 		*/
 		/*d:
-			(icon-reload: [String]) -> Command
+			(icon-restart: [String]) -> Command
 
 			Creates an icon, similar to those in the sidebar, that, if visible and clicked, reloads the whole page, restarting the story from the beginning.
 
 			Example usage:
-			`(replace:?sidebar)[(icon-reload: )]` replaces the sidebar with just the "reload" icon.
-			* `(icon-reload:"⟲")` creates an element that uses &#27F2; as its icon instead of the default.
-			* `(icon-reload:"Restart")` creates an element with the label "Restart" under it.
-			* `(icon-reload:"⟲", "Restart")` combines both of the above.
+			`(replace:?sidebar)[(icon-restart: )]` replaces the sidebar with just the "reload" icon.
+			* `(icon-restart:"⟲")` creates an element that uses &#27F2; as its icon instead of the default.
+			* `(icon-restart:"Restart")` creates an element with the label "Restart" under it.
+			* `(icon-restart:"⟲", "Restart")` combines both of the above.
 
 			Rationale:
 			By default, each passage in a Harlowe story features a narrow sidebar to the left, housing "Undo" and "Redo" menu icons.
@@ -2537,13 +2537,14 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			[String], false)
 
 		/*d:
-			(reload:) -> Command
+			(restart:) -> Command
+			Also known as: (reload:)
 
 			When this command is used, the player's browser will immediately attempt to reload
 			the page, in effect restarting the entire story.
 
 			Example usage:
-			`(click:"Restart")[(reload:)]`
+			`(click:"Restart")[(restart:)]`
 
 			Details:
 			Normally, Harlowe stories will attempt to preserve their current game state across browser page reloads.
@@ -2555,16 +2556,16 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			This command can't have changers attached - attempting to do so will produce an error.
 
 			See also:
-			(icon-reload:)
+			(icon-restart:)
 
 			Added in: 1.0.0
 			#navigation
 		*/
-		("reload",
+		(["restart","reload"],
 			noop,
 			(/* no cd because this is attachable:false */ ) => {
 				if (State.pastLength < 1) {
-					return TwineError.create("infinite", "I mustn't (reload:) the page in the starting passage.");
+					return TwineError.create("infinite", "I mustn't (restart:) the story in the starting passage.");
 				}
 				if (State.hasSessionStorage) {
 					sessionStorage.removeItem("Saved Session");

@@ -291,6 +291,9 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 				TwineScript_ToSource() {
 					return "(" + firstName + ":" + args.map(toSource) + ")";
 				},
+				TwineScript_is(other) {
+					return toSource(this) === toSource(other);
+				},
 			},
 			/*
 				Only assign the TwineScript_Attach() method, and a TwineScript_Run() that

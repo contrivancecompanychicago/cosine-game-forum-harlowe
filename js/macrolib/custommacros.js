@@ -14,7 +14,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		(set:$ghostlyLaughter to (macro: num-type _o, [
 			(output: )+(text-rotate:(random:0,360))+(text-colour:(hsla:0, 1, 0.5, _o))[HE HE HE]
 		]))
-		($ghostlyLaughter:) ($ghostlyLaughter:) ($ghostlyLaughter:)
+		($ghostlyLaughter:0.9) ($ghostlyLaughter:0.5) ($ghostlyLaughter:0.3)
 		```
 
 		The following custom macro creates a text string based on how many turns the player has taken. It takes no data.

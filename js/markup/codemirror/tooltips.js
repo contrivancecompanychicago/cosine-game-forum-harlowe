@@ -68,7 +68,8 @@
 		string:              `This is <b>string data</b>. Strings are sequences of text data enclosed in matching " or ' marks. Use a \`\\\` inside a string to "escape" the next character. Escaped " or ' marks don't count as the end of the string.`,
 		hookName:            ({name}) => `This <b>hook name</b> refers to all hooks named "\`${name}\`" in this passage.`,
 		cssTime:             ({value}) => `This is <b>number data</b> in CSS time format. Harlowe automatically converts this to a number of milliseconds, so this is identical to ${value}.`,
-		datatype:            `This is the name of a <b>datatype</b>. Use these names to `,
+		datatype:            `This is the name of a <b>datatype</b>. Use these names to check what kind of data a data value is, using the \`matches\` or \`is a\` operators.<br>`
+								+ `You can also use them in a \`(set:)\` or \`(put:)\` to restrict that variable's data for error-checking purposes. (See the documentation for details.)`,
 		colour:              ({text}) => `This is a ` + (text.startsWith('#')
 								? "<b>HTML colour value</b>. Harlowe can use this as colour data."
 								: `built-in Harlowe <b>colour value</b>. The built-in colours are \`red\`, \`orange\`, \`yellow\`, \`lime\`, \`green\`, \`cyan\` (alias \`aqua\`), \`blue\`, \`navy\`, \`purple\`, \`fuchsia\` (alias \`magenta\`), \`white\`, \`gray\` (alias \`grey\`), \`black\`, and \`transparent\`.`),

@@ -451,21 +451,24 @@ describe("basic command macros", function() {
 		});
 	});
 
-	describe("the (reload:) macro", function() {
+	describe("the (restart:) macro", function() {
 		// window.location.reload cannot be spied on, as it and window.location are non-configurable
 		it("takes no arguments", function() {
-			expect("(set: $x to (reload:1))").markupToError();
-			expect("(set: $x to (reload:'e'))").markupToError();
+			expect("(set: $x to (restart:1))").markupToError();
+			expect("(set: $x to (restart:'e'))").markupToError();
 		});
 		it("evaluates to a command object that can't be +'d", function() {
-			expect("(print: (reload:) + (reload:))").markupToError();
+			expect("(print: (restart:) + (restart:))").markupToError();
 		});
 		it("can be (set:) into a variable", function() {
-			expect("(set: $x to (reload:))").not.markupToError();
+			expect("(set: $x to (restart:))").not.markupToError();
 		});
 		it("can't be used in the first turn", function() {
 			clearState();
 			expect("(reload:)").markupToError();
+		});
+		it("is aliased as (reload:)", function() {
+			expect("(print: (reload:) is (restart:))").markupToPrint('true');
 		});
 	});
 

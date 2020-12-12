@@ -532,10 +532,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 					being part of usuallyBlockElements.
 				*/
 				if (Utils.childrenProbablyInline(el)) {
-					/*
-						If there are no element children of the container (only text), simply use 'inline'.
-					*/
-					el.css('display','inline' + (el.children().length ? '-block' : ''));
+					el.css('display','inline');
 				}
 				/*
 					Special case: due to <tw-backdrop> and <tw-story> having display:flex, getComputedStyle() will always report 'display:block' for
@@ -545,11 +542,9 @@ define(['jquery', 'markup', 'utils/polyfills'],
 					/*
 						Both of these are necessary for overriding "display:inline-block" for certain transitions,
 						including those that use transform.
+						setAttribute() must be used to add "!important".
 					*/
-					el.css({
-						display:'block !important',
-						width:"100%",
-					});
+					el[0].setAttribute('style', el[0].getAttribute('style') + "display:block !important;width:100%");
 				}
 			});
 			/*
@@ -606,10 +601,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 			*/
 			requestAnimationFrame(() => {
 				if (Utils.childrenProbablyInline(el)) {
-					/*
-						If there are no element children of the container (only text), simply use 'inline'.
-					*/
-					el.css('display','inline' + (el.children().length ? '-block' : ''));
+					el.css('display','inline');
 				}
 				/*
 					Special case: due to <tw-backdrop> and <tw-story> having display:flex, getComputedStyle() will always report 'display:block' for
@@ -619,11 +611,9 @@ define(['jquery', 'markup', 'utils/polyfills'],
 					/*
 						Both of these are necessary for overriding "display:inline-block" for certain transitions,
 						including those that use transform.
+						setAttribute() must be used to add "!important".
 					*/
-					el.css({
-						display:'block !important',
-						width:"100%",
-					});
+					el[0].setAttribute('style', el[0].getAttribute('style') + "display:block !important;width:100%");
 				}
 			});
 
