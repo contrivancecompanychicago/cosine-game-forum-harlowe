@@ -8,6 +8,7 @@
 	const enclosedText = "This markup gives the enclosed text ";
 	const producesBooleanTrueIf = c => `The <b>"${c}" operator</b> produces the boolean value \`true\` if `;
 	const otherwiseFalse = ` Otherwise, it produces \`false\`.`;
+	const variableInProse =  `If they contain strings, numbers, commands or changers, you can place them directly in your prose to display the value, run the command, or apply the changer.`;
 	const lambdaClause = c => `The keyword <b>"${c}"</b> makes the code on the right into a <b>"${c}" lambda clause</b>. `;
 	const tooltipMessages = {
 		hr:                  "This is a <b>horizontal rule</b>. It extends across the entire passage width (or the column width, if it's in a column).",
@@ -48,8 +49,8 @@
 		twineLink:           ({passage}) => `This is a link to the passage "${passage}". Links, like hooks and commands, can have changer values attached to the left.`,
 		br:                  ``, // Display nothing,
 		url:                 ``,
-		variable:            `This is a <b>story-wide variable</b>. After this has been set to a data value, it can be used anywhere else in the story. Use these to store data values related to your story's game state, or changers that are commonly used.`,
-		tempVariable:        `This is a <b>temp variable</b>. It can be used in the same passage and hook in which it's first set to a data value. Use these to store values temporarily, or that won't be needed elsewhere.`,
+		variable:            `This is a <b>story-wide variable</b>. After this has been set to a data value, it can be used anywhere else in the story. Use these to store data values related to your story's game state, or changers that are commonly used. ` + variableInProse,
+		tempVariable:        `This is a <b>temp variable</b>. It can be used in the same passage and hook in which it's first set to a data value. Use these to store values temporarily, or that won't be needed elsewhere. ` + variableInProse,
 		macroName:           (_,[,parent]) => tooltipMessages.macro(parent),
 		grouping:            `Use these <b>grouping brackets</b> to ensure operations are performed in a certain order. Code in brackets will be computed before the code adjacent to it.`,
 		property:            ({type, name}) => (name ? `This retrieves the data stored at <b>the \`${name}\` ${

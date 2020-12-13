@@ -286,8 +286,14 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 				return ret.add(reducer(hooks.call(this.selector.data, section), this.property));
 			}
 			else {
-				ownElements = dom.add(dom.parentsUntil(Utils.storyElement.parent()))
-					.findAndFilter(hookToSelector(this.selector.data));
+				/*
+					The following construction ensures that parents up to <tw-story> are added (so that ?page can
+					select <tw-story>) but that the selector is not found in <tw-story>'s arbitrary descendants
+					(and thus that transitioning out <tw-passage>s' contents are included).
+				*/
+				const s = hookToSelector(this.selector.data);
+				ownElements = dom.findAndFilter(s).add(dom.parentsUntil(Utils.storyElement.parent()))
+					.filter(s);
 			}
 			if (this.property) {
 				ret = ret.add(reducer(ownElements, this.property));

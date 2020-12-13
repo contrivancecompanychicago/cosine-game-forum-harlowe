@@ -68,7 +68,10 @@ tw-story {
 	/*
 		The <tw-story>'s default distance from the top and bottom of the page is 5%.
 	*/
-	padding: 5% 20%;
+	padding: 5% 5%;
+	@media (min-width: 576px) {
+		padding: 5% 20%;
+	}
 
 	/*
 		This is necessary to make certain CSS animations (mainly slide-left) work with passages.
@@ -142,11 +145,15 @@ tw-passage {
 	when the story begins.
 */
 tw-sidebar {
-	left: -5em;
-	width: 3em;
-	position:absolute;
-	text-align:center;
-	display:block;
+	@media (min-width: 576px) {
+		left: -5em;
+		width: 3em;
+		position:absolute;
+		@include flex-direction(column);
+	}
+	text-align: center;
+	@include flexbox;
+	@include justify-content(space-between);
 }
 
 /*

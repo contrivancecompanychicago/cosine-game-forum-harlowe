@@ -28,6 +28,12 @@ describe("enchantment macros", function () {
 				expect("[]<foo|("+name+":?foo, (click:'bar'))").not.markupToError();
 			});
 			if (name === "change") {
+				it("doesn't affect transitioning-out passages", function() {
+					createPassage("("+name+":?foo, (click:'bar'))",'garply');
+					var p = runPassage('[]<foo| (t8n-depart:"dissolve")[[garply]]');
+					p.find('tw-link').click();
+					expect($('tw-enchantment').length).toBe(0);
+				});
 				it("only changes hooks earlier than it", function() {
 					var p = runPassage("[]<foo|(change:?foo,(color:'#800000'))[]<foo|");
 					expect(p.find('tw-hook:first-child').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);

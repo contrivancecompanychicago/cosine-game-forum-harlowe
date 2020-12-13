@@ -52,6 +52,12 @@ describe("revision macros", function() {
 					var p = runPassage("(set:_a to 1)[(set:_a to 2)]<bar|("+name+":?bar)[(print:_a)]");
 					expect(p.text()).toBe('2');
 				});
+				it("doesn't affect transitioning-out passages", function() {
+					createPassage("("+name+":?foo)[grault]",'garply');
+					var p = runPassage('[baz]<foo| (t8n-depart:"dissolve")[[garply]]');
+					p.find('tw-link').click();
+					expect($('tw-transition-container.transition-out [name="foo"]').text()).toBe('baz');
+				});
 			});
 			describe("given multiple same-named hooks", function() {
 				it(name+"s to each selected hook", function() {
@@ -221,6 +227,12 @@ describe("revision macros", function() {
 			it("works with temp variables", function() {
 				var p = runPassage("(set:_a to 1)[(set:_a to 2)]<bar|(replace:?bar)[(print:_a)]");
 				expect(p.text()).toBe('2');
+			});
+			it("doesn't affect transitioning-out passages", function() {
+				createPassage("(replace:?foo)[grault]",'garply');
+				var p = runPassage('[baz]<foo| (t8n-depart:"dissolve")[[garply]]');
+				p.find('tw-link').click();
+				expect($('tw-transition-container.transition-out [name="foo"]').text()).toBe('baz');
 			});
 		});
 		describe("given multiple same-named hooks", function() {

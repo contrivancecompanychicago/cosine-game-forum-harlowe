@@ -32,6 +32,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where `(hover-style:)` couldn't actually override the default hover colour for links of any kind, due to a CSS conflict.
  * Fixed a bug where certain changers, like `(for:)`, caused a crash when attached to a command (like a `(print:)` macro, or a passage link).
  * Fixed a bug where closing an `(alert:)`, `(confirm:)` or `(prompt:)` dialog box when there was an `(event:)` hook in the passage would cause a crash.
+ * Fixed a bug where revision changers like `(replace:)`, as well as `(enchant:)`, could affect text inside transitioning-out passages (including the passage itself, with `?passage`), which was noticeable when `(t8n-depart:)` was used with a passage link and the incoming passage contained one of those macros.
  * Fixed a bug where trying to use datanames with certain unusual types of data (changers, commands, datatypes) would give a bad Javascript error message instead of the intended error message.
  * Fixed a bug where the CSS used to position the new pure HTML dialogs didn't work on certain old browser versions.
  * Now, consecutive line breaks (which Harlowe reduces the cumulative height of) at the start of a passage are no longer the wrong height while that passage transitions in. (To handle this, consecutive line breaks are now made into `<tw-consecutive-br>` elements instead of `<br data-cons>` elements.)
@@ -81,6 +82,11 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * `(alert:)` has been renamed to `(dialog:)`, retaining the original name `(alert:)` as an alias for it. Moreover, it can now accept any amount of link text, as well as a bound variable to set to the text of whichever link you click. Also, changers like `(t8n:)` can now be attached to the `(dialog:)` macro.
  * `(reload:)` has been renamed to `(restart:)`, retaining the original name as an alias for it.
  * `(rgb:)` now accepts fractional values for the R, G, and B components.
+ * The default CSS for `<tw-sidebar>` now sets its `display` to `flex` and gives it `flex-direction:column; justify-content:space-between;`. This should have no effect on its appearance in usual circumstances (see below).
+ * Added a responsive `<meta>` tag to the HTML template, along with some very basic media queries. You might remember that responsive CSS was present in 1.2.4 but removed in 2.0.0, but all that ever did was change the font size, which wasn't helpful most of the time. These media queries now only perform the following when the viewport width is below or at 576px (the cutoff used by Bootstrap):
+   * `<tw-story>`'s padding changes to `5% 5%` instead of `5% 20%`.
+   * `<tw-sidebar>` loses `left: -5em; width: 3em; position:absolute; flex-direction:column;`, thus causing it to be placed atop the passage horizontally.
+   * `<tw-dialog>` loses `max-width: 50vw;`.
  * Made the syntax highlighting dark mode colours 50% brighter.
  * Markup that's inside the verbatim markup will no longer be syntax-highlighted as if it was outside it.
 
