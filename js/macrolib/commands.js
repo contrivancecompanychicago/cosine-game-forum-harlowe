@@ -697,7 +697,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		["Undo", "&#8630;", () => State.pastLength > 0],
 		["Redo", "&#8631;", () => State.futureLength > 0],
 		["Fullscreen", "&#9974;", () => document.fullscreenEnabled || document.msFullscreenEnabled],
-		["Reload", "&#10226;", Object],
+		["Restart", "&#10226;", Object],
 	].forEach(([name, defaultIcon, visibilityTest]) => {
 		/*d:
 			(icon-undo: [String], [String]) -> Command

@@ -462,7 +462,7 @@ describe("interface macros", function(){
 			}
 		});
 	});
-	[["Undo","↶"],["Redo","↷"],["Fullscreen","⛶"],["Reload","⟲"]].forEach(function(a) {
+	[["Undo","↶"],["Redo","↷"],["Fullscreen","⛶"],["Restart","⟲"]].forEach(function(a) {
 		var name = a[0], symbol = a[1];
 		describe("the (icon-" + name.toLowerCase() + ":) macro", function() {
 			it("accepts an optional one-character-long string, and an optional 2+ character-long string", function() {

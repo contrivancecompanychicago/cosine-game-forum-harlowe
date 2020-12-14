@@ -46,11 +46,13 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 						"(" + name + ":) can't have typed variables inside its pattern.");
 				}
 				if (pattern.regExp) {
-					/*
-						If this is a recompilation of a sensitive pattern into an insensitive one, then convert this argument
-						into an insensitive one, too. (Note that the insensitive() call won't recompile an already-insensitive pattern.)
-					*/
-					return insensitive ? pattern.insensitive().regExp : pattern.regExp;
+					return (pattern.rest ? "(?:" : "") + (
+						/*
+							If this is a recompilation of a sensitive pattern into an insensitive one, then convert this argument
+							into an insensitive one, too. (Note that the insensitive() call won't recompile an already-insensitive pattern.)
+						*/
+						insensitive ? pattern.insensitive().regExp : pattern.regExp
+					) + (pattern.rest ? ")*" : "");
 				}
 				const pName = pattern.name;
 				/*
@@ -58,7 +60,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 				*/
 				const rest = pattern.rest ? "*" : "";
 				/*
-					All of these, unfortunately, need to be manually aligned with their implementation in datatype.js.
+					All of these need to be manually aligned with their implementation in datatype.js.
 					Fortunately, both implementations rely on the same RegExp strings in Utils.
 				*/
 				if (pName === "alnum") {
@@ -75,6 +77,9 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 				}
 				if (pName === "lowercase") {
 					return (insensitive ? anyCasedLetter : anyLowercase) + rest;
+				}
+				if (pName === "anycase") {
+					return anyCasedLetter + rest;
 				}
 				if (pName === "digit") {
 					return "\\d" + rest;
@@ -208,7 +213,20 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 					Note that in the case of a 0-character match, like "(p-opt:'A')-type _a", we must default the value to the empty string
 					ourselves rather than leaving it as undefined.
 				*/
-				return results.map((r,i) => typedVars[i] && ({ dest: typedVars[i], value: r || '', src: undefined, })).filter(Boolean);
+				return results.map((r,i) => {
+					let dest = typedVars[i];
+					if (dest) {
+						/*
+							As with spread datatypes inside destructuring array patterns (like (a: 1, ...num-type _a)) which need to be wrapped in (a:)
+							(becoming (a:...num)-type _a), the datatype of the resulting variable inside a string pattern needs to be wrapped in (p:).
+						*/
+						if (dest.datatype.rest && !dest.datatype.regExp) {
+							dest = dest.TwineScript_Clone();
+							dest.datatype = createPattern({ name:"p", fullArgs: [dest.datatype], });
+						}
+						return ({ dest, value: r || '', src: undefined, });
+					}
+				}).filter(Boolean);
 			},
 			TwineScript_IsTypeOf(value) {
 				if (!canBeUsedAlone) {
@@ -226,7 +244,9 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			/*
 				The fullArgs are given unto this function entirely to allow ToSource to access them.
 			*/
-			TwineScript_ToSource: () => "(" + name + ":" + fullArgs.map(toSource) + ")",
+			TwineScript_ToSource () {
+				return (this.rest ? "..." : '') + "(" + name + ":" + fullArgs.map(toSource) + ")";
+			},
 		});
 		/*
 			Replacing the TwineScript_ObjectName getter on Datatype requires the following finesse.

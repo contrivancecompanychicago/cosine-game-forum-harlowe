@@ -1276,19 +1276,37 @@
 						type: 'preview',
 						text: 'Example border preview',
 						update(m, panel) {
+							const changersObj = m.suppressedChangers || m.changers;
 							panel.firstChild.setAttribute('style', `border-style:${
-								m.changers.b4r ? m.changers.b4r.map(parse).join(' ') + ";" : ''
+								changersObj.b4r ? changersObj.b4r.map(parse).join(' ') + ";" : ''
 							}${
 								/*
 									Border-size is a multiplier on the default Harlowe border (2px).
 								*/
-								m.changers['b4r-size'] ? 'border-width:' + m.changers['b4r-size'].reduce((a,e) => `${a} ${e*2}px`,'') + ";" : ''
+								changersObj['b4r-size'] ? 'border-width:' + changersObj['b4r-size'].reduce((a,e) => `${a} ${e*2}px`,'') + ";" : ''
 							}${
-								m.changers['b4r-colour'] ? 'border-color:' + m.borderColours.join(' ') + ";" : ''
+								changersObj['b4r-colour'] ? 'border-color:' + m.borderColours.join(' ') + ";" : ''
 							}`);
 						},
 					},
 					...dropdownControls("Top", 0), ...dropdownControls("Right", 1), ...dropdownControls("Bottom", 2), ...dropdownControls("Left", 3),
+					{
+						type: 'radios',
+						name: 'Affect:',
+						options: ["The attached hook", "The remainder of the passage or hook.", "The entire passage."],
+						model(m, el) {
+							const v = el[$]('input:checked');
+							const index = Array.from(el[$$]('label')).indexOf(v.parentNode);
+
+							if (index >= 2 && Object.keys(m.changers).length) {
+								m.suppressedChangers = m.changers;
+								m.changers = {};
+							} else if (index === 1) {
+								m.wrapStart = "[=\n";
+								m.wrapEnd = "";
+							}
+						},
+					},
 					{
 						type: 'confirm',
 						model(m) {
@@ -1297,15 +1315,20 @@
 								Quickly check that each of the to-be-constructed changers' values differ from the default,
 								and don't create them if not.
 							*/
+							const changersObj = m.suppressedChangers || m.changers;
 							[['b4r', e => parse(e) === "none"], ['b4r-size', e => +e === 1], ['b4r-colour', e => e === "transparent"]].forEach(([name, test]) => {
-								m.changers[name] = reduce4ValueProp(m.changers[name]);
-								if (m.changers[name].every(test)) {
-									delete m.changers[name];
+								changersObj[name] = reduce4ValueProp(changersObj[name]);
+								if (changersObj[name].every(test)) {
+									delete changersObj[name];
 									if (name === 'b4r') {
 										m.valid = false;
 									}
 								}
 							});
+							if (m.valid && m.suppressedChangers) {
+								m.wrapStart = "(enchant:?passage," + Object.entries(changersObj).map(([k,v]) => `(${k}:${v.join(',')})`).join('+') + ")";
+								m.wrapEnd = "";
+							}
 						},
 					}
 				);

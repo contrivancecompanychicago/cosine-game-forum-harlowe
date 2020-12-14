@@ -75,11 +75,20 @@ define([
 		array, but that may not be precise enough for you. `$pos matches (a: number, number)` checks to see if $pos is an array containing only two numbers in a row. A data structure with datatype
 		names in various positions inside it is called a **pattern**, and `matches` is used to compare data values and patterns.
 
-		A modified datatype called a **spread datatype** can be created using the `...` syntax. `...str` can match any number of string values, including zero. You can think of this as a counterpart to
-		the spread `...` syntax used inside macro calls - just as one array is turned into many values, so too is `...str` considered equivalent to enough `str` datatypes to match the values on the other side.
+		Spread datatypes:
+
+		A modified datatype can be created using the `...` syntax inside an (a:) macro call or a pattern macro call. `...str`  can match any number of string values, including zero.
+		You can think of this as a counterpart to the normal use of the spread `...` syntax - just as one array is turned into many values, so too is `...str` considered equivalent to enough `str` datatypes
+		to match the values on the other side.
+
+		Inside a typed variable in a custom macro call defined using (macro:)) a spread datatype refers to zero or more matching values being given at and after that variable's position in the macro call.
+		The typed variable in `(macro: ...num-type _a, [(output:_a)])` refers to any number of numbers being given to the macro. The variable inside the code hook is an array containing all of those number values.
+		See the (macro:) macro's article for more details.
 
 		Inside a string pattern, like those created by (p:), spread datatypes have a slightly different meaning. They refer to zero or more sequences of the given datatype. `...whitespace` inside (p:) matches
 		an entire string of whitespace, which can be one or more characters, as well as the empty string. `...digit` matches zero or more digit characters.
+
+		Note: outside of macro calls and typed variables, spread datatypes are considered the same as normal datatypes. So, `(a:2,3) matches ...num` produces `false` - in this case, you should write `(a:2,3) matches (a:...num)` instead.
 
 		Some more examples.
 
@@ -213,13 +222,17 @@ define([
 			false
 		),
 		int:          obj => typeof obj === "number" && obj === (obj|0),
-		uppercase:    (obj, rest) => typeof obj === "string" && (rest ? obj.length !== 0 : [...obj].length === 1) && [...obj].every(char => char !== char.toLowerCase()),
-		lowercase:    (obj, rest) => typeof obj === "string" && (rest ? obj.length !== 0 : [...obj].length === 1) && [...obj].every(char => char !== char.toUpperCase()),
-		whitespace:   (obj, rest) => typeof obj === "string" && !!obj.match("^" + realWhitespace + (rest ? '*' : '') + "$"),
-		digit:        (obj, rest) => typeof obj === "string" && !!obj.match("^\\d" + (rest ? '*' : '') + "$"),
-		alnum:        (obj, rest) => typeof obj === "string" && !!obj.match("^" + anyRealLetter + (rest ? '*' : '') + "$"),
-		anycase:      (obj, rest) => typeof obj === "string" && !!obj.match("^" + anyCasedLetter + (rest ? '*' : '') + "$"),
-		linebreak:    (obj, rest) => typeof obj === "string" && !!obj.match("^" + anyNewline + (rest ? '*' : '') + "$"),
+		/*
+			The following string types only match single characters, even if a rest-type, Only inside (p:), which
+			compiles its own RegExps for these types, is it possible for them to match multiple characters using rest.
+		*/
+		uppercase:    obj => typeof obj === "string" && [...obj].length === 1 && [...obj].every(char => char !== char.toLowerCase()),
+		lowercase:    obj => typeof obj === "string" && [...obj].length === 1 && [...obj].every(char => char !== char.toUpperCase()),
+		whitespace:   obj => typeof obj === "string" && !!obj.match("^" + realWhitespace + "$"),
+		digit:        obj => typeof obj === "string" && !!obj.match("^\\d" + "$"),
+		alnum:        obj => typeof obj === "string" && !!obj.match("^" + anyRealLetter + "$"),
+		anycase:      obj => typeof obj === "string" && !!obj.match("^" + anyCasedLetter + "$"),
+		linebreak:    obj => typeof obj === "string" && !!obj.match("^" + anyNewline + "$"),
 		any:      () => true,
 		/*
 			"const" is handled almost entirely as a special case inside VarRef. This

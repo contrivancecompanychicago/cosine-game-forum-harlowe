@@ -54,7 +54,7 @@ describe("list markup", function() {
 				"<ul><li>A</li></ul>B"
 			);
 		});
-		xit("work inside hooks", function() {
+		it("work inside hooks", function() {
 			expect(
 				" |x>[\n* A\n* B]\n"
 			).markupToBecome(
@@ -148,7 +148,7 @@ describe("list markup", function() {
 				"<ol><li>A</li></ol>B"
 			);
 		});
-		xit("work inside hooks", function() {
+		it("work inside hooks", function() {
 			expect(
 				" |x>[\n0. A\n0. B]\n"
 			).markupToBecome(

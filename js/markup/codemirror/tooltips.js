@@ -134,7 +134,7 @@
 		doesNotMatch:        producesBooleanTrueIf('does not match') + "one side does NOT describe the other." + otherwiseFalse,
 		bind:                `The <b>bind</b> or <b>2bind</b> keyword specifies that the variable to the right should be "bound" to an interactable element. This is used only by certain command macros, like \`(dialog:)\` or \`(cycling-link:)\`.`,
 		comma:               `Use <b>commas</b> to separate the values that you give to macro calls.`,
-		spread:              `This is a <b>spreader</b> These spread out the values in the array, string or dataset to the right of it, as if each value was individually placed in the call and separated with commas.`
+		spread:              `This is a <b>spreader</b>. These spread out the values in the array, string or dataset to the right of it, as if each value was individually placed in the call and separated with commas.`
 								+ `<br><br>Alternatively, if a datatype is to the right of it, that datatype becomes a <b>spread datatype</b> that matches zero or more of itself.`,
 		typeSignature:       `The <b>-type</b> suffix is used to restrict the variable on the right to only holding data that matches the data pattern on the left. Variables restricted in this way are called <b>typed variables</b>.`,
 		addition:            `Use the <b>addition operator</b> to add two numbers together, as well as join two strings or two arrays, and combine two datamaps, two datasets, two changers, or two colours.`
