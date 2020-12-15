@@ -359,6 +359,8 @@
 			#coding 2
 		*/
 		variable          = "\\$(" + validPropertyName + ")",
+
+		tempVariable      = "_(" + validPropertyName + ")",
 		
 		property          = "'s" + mws + "(" + validPropertyName + ")",
 		
@@ -392,10 +394,10 @@
 		belongingItProperty = "(" + validPropertyName + ")" + mws + "of" + mws + "it" + wb,
 		
 		belongingItOperator = "of" + wb + mws + "it" + wb,
-		
+
 		macro = {
 			opener:            "\\(",
-			name:              "(" + either(anyLetter + "+", variable) + "):" + notBefore('\\/'),
+			name:              "(" + either("\\$", "_") + "?" + anyLetter + "+):" + notBefore('\\/'),
 			closer:            "\\)",
 		},
 		
@@ -412,7 +414,6 @@
 		hookTagFront =  "\\|(" + anyLetter + "+)(>|\\))",
 		hookTagBack  =  "(<|\\()("   + anyLetter + "+)\\|",
 
-		tempVariable = "_(" + validPropertyName + ")" + wb,
 		
 		number = '\\b(\\d+(?:\\.\\d+)?(?:[eE][+\\-]?\\d+)?)' + notBefore("m?s") + wb
 		;

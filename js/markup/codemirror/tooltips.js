@@ -147,6 +147,9 @@
 			if (name === undefined) {
 				return `This macro call is incomplete or erroneously written. Macro calls should consist of \`(\`, the name (which is case-insensitive and dash-insensitive), \`:\`, zero or more expressions separated by commas, then \`)\`, in that order.`;
 			}
+			if (name[0] === "_" || name[0] === "$") {
+				return `This is a <b>call to a custom macro stored in the ${name} variable</b>. Custom macros are created with the \`(macro:)\` macro, and must be stored in variables in order to be used.`;
+			}
 			const defs = ShortDefs.Macro[insensitiveName(name)];
 			if (!defs) {
 				return `This is a call to a nonexistent or misspelled macro. This will cause an error.`;

@@ -376,6 +376,11 @@
 							existant Harlowe macros.
 						*/
 						case "macroName": {
+							const firstGlyph = currentBranch[i].text[0];
+							if (firstGlyph === "_" || firstGlyph === "$") {
+								name += " harlowe-3-customMacro harlowe-3-" + (firstGlyph === "_" ? "tempV" : "v") + "ariable";
+								break;
+							}
 							const macroName = insensitiveName(currentBranch[i].text.slice(0,-1));
 							if (!validMacros.hasOwnProperty(macroName)) {
 								name += " harlowe-3-error";

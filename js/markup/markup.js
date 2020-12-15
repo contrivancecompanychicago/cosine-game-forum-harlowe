@@ -471,9 +471,15 @@
 				}),
 			},
 			
-			variable:   { fn: textTokenFn("name") },
+			variable:   {
+				cannotFollow: ['macroFront'],
+				fn: textTokenFn("name")
+			},
 			
-			tempVariable: { fn: textTokenFn("name") },
+			tempVariable: {
+				cannotFollow: ['macroFront'],
+				fn: textTokenFn("name")
+			},
 		}), {
 			/*
 				Plain unappended hooks are allowed in expression position as well as

@@ -776,13 +776,18 @@ define(['utils'], ({impossible}) => {
 				The first child token in a macro is always the method name.
 			*/
 			const macroNameToken = token.children[0];
-			const variableCall = macroNameToken.type.endsWith("ariable");
+			const variableCall = macroNameToken.text[0] === "$" || macroNameToken.text[0] === "_";
 			if(macroNameToken.type !== "macroName" && !variableCall) {
 				impossible('Compiler.compile', 'macro token had no macroName child token');
 			}
 			midString = 'Macros.run' + (variableCall ? 'Custom' : '') + '('
 				+ (variableCall
-					? compile(macroNameToken)
+					/*
+						Transmute the macro name, which contains a variable, into a VarRef.
+					*/
+					? "VarRef" + dotCreate + (macroNameToken.text[0] === "_" ? "section.stackTop.tempV" : "State.v") + "ariables,"
+						+ stringify(macroNameToken.text.trim().slice(1,-1))
+						+ ").get()"
 					: '"' + token.name + '"'
 				)
 				/*
@@ -802,15 +807,7 @@ define(['utils'], ({impossible}) => {
 					(That, of course, being the comma - (macro: 1,2,3) vs [1,2,3].)
 					This is currently true, but it is nonetheless a fairly bold assumption.
 				*/
-				+ compile(token.children.slice(
-					1
-					/*
-						There's an #awkward issue here: when lexing a custom macro, the variable is consumed,
-						but the trailing ":" isn't – it simply becomes loose text. So, that token (which is the
-						first token after this one) must be sliced off.
-					*/
-					+ variableCall
-				),
+				+ compile(token.children.slice(1),
 				/*
 					To allow destructuring patterns to work, macros in destructuring position should
 					compile all of their contained VarRefs to TypedVars.
