@@ -152,10 +152,10 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Commands created by custom macros (via the (output:) macro) cannot be given to this macro - attempting to do so will produce an error.
 
 			Note that you can't easily print the string returned by (source:), because, funnily enough, Harlowe will immediately
-			re-render it. You can use (verbatim-print:) to print it without it being rendered.
+			re-render it. You can use (verbatim-source:) to accomplish this instead.
 
 			See also:
-			(datatype:)
+			(datatype:), (verbatim-source:)
 
 			Added in: 3.2.0
 			#string

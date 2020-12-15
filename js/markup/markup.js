@@ -410,7 +410,8 @@
 				fn: (match) => ({
 					type: "twineLink",
 					innerText: match[1],
-					passage: match[2]
+					passage: match[2],
+					innerMode: markupMode,
 				}),
 			},
 			/*
@@ -456,6 +457,7 @@
 						type: "twineLink",
 						innerText: p2 ? p3 : p1,
 						passage:   p1 ? p3 : p2,
+						innerMode: markupMode,
 					};
 				},
 			},
@@ -465,6 +467,7 @@
 					type: "twineLink",
 					innerText: match[1] || '',
 					passage:   match[1] || '',
+					innerMode: markupMode,
 				}),
 			},
 			
@@ -720,7 +723,7 @@
 		));
 
 		/*
-			TBW
+			String mode is a special mode which contains only these three elements, designed for the interiors of strings.
 		*/
 		const stringRules = setupRules(stringMode, {
 			singleStringCloser:  macroRules.singleStringOpener,

@@ -866,8 +866,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			Rationale:
 			Modern browsers allow web pages to take up the entire screen of the user, in a manner similar to desktop games. This feature can be useful
 			for immersive or moody stories, such as horror stories, that wish to immerse the player's senses in a certain colour or shade, or to display
-			impactful text that doesn't have to compete for attention from any other screen elements. While a fullscreen button is present in the story's
-			sidebar by default, this macro can be useful if you remove or replace the sidebar with something else, and can serve as an alternative
+			impactful text that doesn't have to compete for attention from any other screen elements. While it can be more convenient to place an (icon-fullscreen:)
+			in your story's sidebar, this macro can be useful if you remove or replace the sidebar with something else, and can serve as an alternative
 			means of activating fullscreen mode.
 
 			The third string is an error message or alternative text you can provide if the browser doesn't allow fullscreen mode to be entered, for whatever reason.
@@ -896,7 +896,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			this produces a command (and not a changer), you can simply attach changers to the front of it to style the link.
 
 			See also:
-			(link-goto:), (link-undo:), (cycling-link:), (icon-fullscreen:)
+			(link-goto:), (link-undo:), (cycling-link:), (icon-fullscreen:), (checkbox-fullscreen:)
 
 			Added in: 3.2.0
 			#links 8

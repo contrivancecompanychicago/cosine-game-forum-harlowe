@@ -2,7 +2,9 @@ Introduction 2: Welcome to the world of 3.2.0
 
 Dear fellow author of hypertext fiction: this version of Harlowe is most unlike others before it - despite a commitment to backwards-compatibility letting it be numbered a "minor" release, its wealth of added features is truly incredible. Let me explain in brief how this came to be. In April 2020, as the COVID-19 pandemic death toll (and the even greater permanent disability toll) was steadily rising worldwide, I came to something of a quiet realisation... that it was very possible I would not live to the end of this year, and, furthermore, it was probable that many Harlowe users would not live to the end of this year. I thought about Harlowe, and about how so much functionality I'd always envisioned for it - custom macros, string patterns, fullscreen support - was still unimplemented, and came to a decision that I absolutely had to finally get all of it in, this year.
 
-So, I worked diligently on Harlowe for 9 months. In retrospect, it feels like my life lost all meaning except for Harlowe. But at the end, Harlowe finally became, for the first time, a hypertext fiction coding language I could be proud of. Even now, there's still some extra features I wish I'd been able to fit in, but this version feels like the first version where Harlowe is "complete", as my original vision for the story format in 2014 had resembled.
+So, I worked diligently on Harlowe for 9 months. In retrospect, it feels like my life lost all meaning except for Harlowe. Honestly, it was perhaps less like 9 months of productivity and more like a 9-month-long panic attack. (This is what most "COVID-19 productivity" stories are actually like, deep down. Please, don't admire me. Love yourself.)
+
+But at the end, Harlowe finally became, for the first time, a hypertext fiction coding language I could be proud of. Even now, there's still some extra features I wish I'd been able to fit in, but this version feels like the first version where Harlowe is "complete", as my original vision for the story format in 2014 had resembled.
 
 And now you get to enjoy all of this, and more.
 

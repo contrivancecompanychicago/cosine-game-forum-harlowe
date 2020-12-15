@@ -547,6 +547,11 @@ describe("interface macros", function(){
 			var p = runPassage('(checkbox:bind $foo, "bar")');
 			expect(p.find('input[type=checkbox]').attr('id')).toBe(p.find('input[type=checkbox] + label').attr('for'));
 		});
+		it("consecutive checkboxes have different ids", function() {
+			var p = runPassage("(checkbox:bind $x,'foo')(checkbox:bind $x,'bar')(checkbox:bind $x,'baz')");
+			expect(p.find('input').get(0).getAttribute('id')).not.toBe(p.find('input').get(1).getAttribute('id'));
+			expect(p.find('input').get(1).getAttribute('id')).not.toBe(p.find('input').get(2).getAttribute('id'));
+		});
 		it("when clicked, updates the bound variable", function() {
 			var p = runPassage('(checkbox:bind $foo, "bar")');
 			p.find('input').click();
@@ -555,6 +560,10 @@ describe("interface macros", function(){
 			p = runPassage('(checkbox:bind $foo, "bar")');
 			p.find('input').click();
 			expect("(print:$foo)").markupToPrint("true");
+		});
+		it("renders markup in the label text", function() {
+			var p = runPassage("(checkbox:bind $x,'//glower//')");
+			expect(p.find('i').text()).toBe("glower");
 		});
 		it("errors if the bound variable can't contain booleans", function() {
 			var p = runPassage('(set:num-type $foo to 2)(checkbox:bind $foo,"baz")');
@@ -566,6 +575,35 @@ describe("interface macros", function(){
 			expect(p.find('input:checked').length).toBe(1);
 			p.find('tw-link').click();
 			expect(p.find('input:checked').length).toBe(0);
+		});
+	});
+	describe("(checkbox-fullscreen:)", function() {
+		it("accepts a string", function() {
+			expect("(checkbox-fullscreen:)").markupToError();
+			expect("(checkbox-fullscreen:2)").markupToError();
+			expect("(checkbox-fullscreen:true)").markupToError();
+			
+			expect("(checkbox-fullscreen:'')").not.markupToError();
+			expect("(checkbox-fullscreen:'s')").not.markupToError();
+			expect("(checkbox-fullscreen:'s','s')").markupToError();
+		});
+		it("creates an <input> with a <label> with matching 'for' and 'id' attributes", function() {
+			var p = runPassage('(checkbox-fullscreen:"bar")');
+			expect(p.find('input[type=checkbox]').attr('id')).toBe(p.find('input[type=checkbox] + label').attr('for'));
+		});
+		it("when clicked, toggles fullscreen mode on <html>", function() {
+			spyOn(document.documentElement,'requestFullscreen');
+			runPassage("(checkbox-fullscreen:'mire')").find('input').click();
+			expect(document.documentElement.requestFullscreen).toHaveBeenCalled();
+		});
+		it("consecutive checkboxes have different ids", function() {
+			var p = runPassage("(checkbox-fullscreen:'foo')(checkbox-fullscreen:'bar')(checkbox-fullscreen:'baz')");
+			expect(p.find('input').get(0).getAttribute('id')).not.toBe(p.find('input').get(1).getAttribute('id'));
+			expect(p.find('input').get(1).getAttribute('id')).not.toBe(p.find('input').get(2).getAttribute('id'));
+		});
+		it("renders markup in the label text", function() {
+			var p = runPassage("(checkbox-fullscreen:'//glower//')");
+			expect(p.find('i').text()).toBe("glower");
 		});
 	});
 	describe("the (meter:) macro", function() {

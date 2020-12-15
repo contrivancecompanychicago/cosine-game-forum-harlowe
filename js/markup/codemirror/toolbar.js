@@ -830,7 +830,7 @@
 						}
 
 						const subrowEl = el(`<label class='harlowe-3-radioRow'><input type="radio" name="macro-list" value="${defs.name}"></input>`
-							+ `<code><a href="https://twine2.neocities.org/#${defs.anchor}" target="_blank" rel="noopener noreferrer">(${defs.name}: ${defs.sig}) -> ${defs.returnType}</a></code>`
+							+ `<code><a href="https://twine2.neocities.org/#${defs.anchor}" target="_blank" rel="noopener noreferrer">(${defs.name}: ${defs.sig}) → ${defs.returnType}</a></code>`
 							+ `${defs.aka.length ? `<div><i>Also known as: ${
 								defs.aka.map(alias => `<code>(${alias}:)</code>`).join(', ')
 							}</i>` : ''}</div><div>${

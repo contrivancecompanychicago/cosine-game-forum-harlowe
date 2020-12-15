@@ -46,7 +46,7 @@
 									type === "unclosedCollapsed" ? "the remainder of the passage " : 'the <code>{</code> and <code>}</code> marks'
 								} will be replaced with a single space. You can use this to space out your code and keep your passage readable.<br>To include a line break within this markup that will be preserved, use a HTML <code>&lt;br&gt;</code> tag.`,
 		escapedLine:         `This is an <b>escaped line break</b> mark. This removes the line break before or after it from the displayed passage.`,
-		twineLink:           ({passage}) => `This is a link to the passage "${passage}". Links, like hooks and commands, can have changer values attached to the left.`,
+		twineLink:           ({passage}) => `This is a <b>link to the passage "${passage}"</b>. Links, like hooks and commands, can have changer values attached to the left.`,
 		br:                  ``, // Display nothing,
 		url:                 ``,
 		variable:            `This is a <b>story-wide variable</b>. After this has been set to a data value, it can be used anywhere else in the story. Use these to store data values related to your story's game state, or changers that are commonly used. ` + variableInProse,
