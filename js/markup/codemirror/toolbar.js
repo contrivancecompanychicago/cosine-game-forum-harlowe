@@ -1508,8 +1508,8 @@
 						if (m.initiator && !["select","div","span"].some(e => e === m.initiator.tagName.toLowerCase())) {
 							return;
 						}
-						const t8nName1 = t8nPreviewAnims[m.changers['t8n-depart'] ? parse(m.changers['t8n-depart'][0]) : "default"](true);
-						const t8nName2 = t8nPreviewAnims[m.changers['t8n-arrive'] ? parse(m.changers['t8n-arrive'][0]) : "default"](false);
+						const t8nName1 = "harlowe-3-" + t8nPreviewAnims[m.changers['t8n-depart'] ? parse(m.changers['t8n-depart'][0]) : "default"](true);
+						const t8nName2 = "harlowe-3-" + t8nPreviewAnims[m.changers['t8n-arrive'] ? parse(m.changers['t8n-arrive'][0]) : "default"](false);
 						const t8nTime = m.changers['t8n-time'] ? m.changers['t8n-time'][0] : "0.8s";
 						
 						const span1 = el.firstChild;
@@ -1661,7 +1661,7 @@
 								if (m.initiator && !["select","div","span"].some(e => e === m.initiator.tagName.toLowerCase())) {
 									return;
 								}
-								const t8nName = t8nPreviewAnims[m.changers.t8n ? parse(m.changers.t8n[0]) : "default"](false);
+								const t8nName = "harlowe-3-" + t8nPreviewAnims[m.changers.t8n ? parse(m.changers.t8n[0]) : "default"](false);
 								const t8nTime = m.changers['t8n-time'] ? m.changers['t8n-time'][0] : "0.8s";
 
 								const span = el.lastChild;

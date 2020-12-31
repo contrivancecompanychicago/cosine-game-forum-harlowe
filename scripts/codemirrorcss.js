@@ -15,7 +15,7 @@ const {min} = Math,
 
 	typeColours  = require('../js/utils/typecolours'),
 	toolbarStyles = (execSync('sass ./scripts/toolbar.css --scss --style compressed') + '').replace(/\ufeff/,''),
-	animations = (execSync('sass ./scss/animations.scss --scss --style compressed') + '').replace(/\ufeff/,''),
+	animations = (execSync('sass ./scss/animations.scss --scss --style compressed') + '').replace(/\ufeff/,'').replace(/@keyframes /g, "@keyframes harlowe-3-");
 	changerAttachmentColour = typeColours.changer.replace('color:','').replace('1.0','0.5');
 
 const versionClass = 'cm-harlowe-3-';
