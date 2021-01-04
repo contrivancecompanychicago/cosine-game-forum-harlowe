@@ -289,7 +289,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				TwineScript_ObjectName:   "a (" + name + ":) operation",
 				TwineScript_Unstorable: true,
 				// Being unstorable and not used by any other data strctures, this doesn't need a ToSource() function.
-				TwineScript_Print:        () => Engine.options.debug && debugMessage && TwineNotifier.create(debugMessage).render()[0].outerHTML,
+				TwineScript_Print:        () => Engine.options.debug && debugMessage && TwineNotifier.create(debugMessage).render()[0].outerHTML || '',
 			};
 		},
 		[rest(AssignmentRequest)])
@@ -363,7 +363,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				TwineScript_ObjectName:   "a (move:) operation",
 				TwineScript_Unstorable: true,
 				// Being unstorable and not used by any other data strctures, this doesn't need a ToSource() function.
-				TwineScript_Print:        () => Engine.options.debug && debugMessage && TwineNotifier.create(debugMessage).render()[0].outerHTML,
+				TwineScript_Print:        () => Engine.options.debug && debugMessage && TwineNotifier.create(debugMessage).render()[0].outerHTML || '',
 			};
 		},
 		[rest(AssignmentRequest)]);
@@ -2846,7 +2846,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				TwineScript_ObjectName:   "an (assert:) operation",
 				TwineScript_Unstorable:    true,
 				// Being unstorable and not used by any other data strctures, this doesn't need a ToSource() function.
-				TwineScript_Print:        () => false,
+				TwineScript_Print:        () => '',
 			}) :
 			/*
 				The appendTitleText expando is used exclusively to append the visible error text with its titleText (which is the source of the <tw-expression>

@@ -1,6 +1,6 @@
 "use strict";
 define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'engine', 'passages', 'section', 'debugmode/panel'],
-($, {escape,nth,storyElement}, State, VarRef, TwineError, {objectName, isObject, toSource}, Engine, Passages, Section, Panel) => (initialError, code) => {
+($, {escape,nth,storyElement,debounce}, State, VarRef, TwineError, {objectName, isObject, toSource}, Engine, Passages, Section, Panel) => (initialError, code) => {
 	/*
 		Debug Mode
 
@@ -255,7 +255,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		This event handler updates variables whenever the state is changed. Each row of data is either a global
 		variable, or a temp variable stored in the localTempVariables set, above.
 	*/
-	function updateVariables() {
+	const updateVariables = debounce(function() {
 		const rows = [];
 		const globals = State.variables;
 		let count = rows.length;
@@ -312,7 +312,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			pane, which displays variables but nothing else.
 		*/
 		Variables.panel[(count ? 'remove' : 'add') + 'Class']('panel-variables-empty');
-	}
+	});
 	/*
 		This is defined far below.
 	*/
@@ -421,12 +421,12 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			return row.data('enchantment') === enchantment;
 		},
 		columnHead() {
-			return `<div class="panel-head"><th>Name</th><th>Scope</th><th>Value</th></tr>`;
+			return `<tr class="panel-head"><th>Scope</th><th>Value</th></div>`;
 		},
 	});
-	function updateEnchantments(section) {
+	const updateEnchantments = debounce(function(section) {
 		Enchantments.update(section.enchantments, section.enchantments.length);
-	}
+	});
 	Section.on('add', updateEnchantments).on('remove', updateEnchantments);
 
 	/*
@@ -466,7 +466,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		The Storylets tab is hidden if there are no Storylets.
 	*/
 	Storylets.tab.hide();
-	updateStorylets = () => {
+	updateStorylets = debounce(() => {
 		const activeStorylets = Passages.getStorylets(storyletSection);
 		const error = (TwineError.containsError(activeStorylets));
 		/*
@@ -500,7 +500,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		if (allStorylets.length) {
 			Storylets.tab.show();
 		}
-	};
+	});
 	/* The above function is called by VarRef.on('set') earlier. */
 
 	/*

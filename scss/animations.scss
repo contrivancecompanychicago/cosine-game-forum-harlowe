@@ -3,11 +3,6 @@
 @mixin keyframes($animation-name) {
 	@keyframes #{$animation-name} {
 		@content;
-		/*
-			This is used for transition-ins which are delayed - .transition-in has visibility:hidden, meaning
-			until the animation begins, it is invisible.
-		*/
-		0%,to { visibility:visible; }
 	}
 }
 

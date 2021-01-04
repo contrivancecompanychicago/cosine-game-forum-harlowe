@@ -9,7 +9,6 @@ $time: 0.8s;
 /* Invalid/instant transition */
 .transition-in {
 	@include animation(appear 0ms step-start);
-	visibility:hidden;
 }
 .transition-out {
 	@include animation(appear 0ms step-end);

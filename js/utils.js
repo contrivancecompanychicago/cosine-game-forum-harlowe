@@ -100,18 +100,18 @@ define(['jquery', 'markup', 'utils/polyfills'],
 		when a transition is complete, and also potentially accelerates the end
 		of the transition if it can be skipped and an input is being held.
 	*/
-	function onTransitionComplete(el, delay, transitionSkip, endFn) {
+	function onTransitionComplete(el, time, delay, transitionSkip, endFn) {
 		/*
-			Each frame, reduce the delay, and potentially reduce it further if this
+			Each frame, reduce the duration, and potentially reduce it further if this
 			transition can be skipped and an input is being held.
 		*/
-		let previousTimestamp = null, elapsedRealTime = 0;
+		let previousTimestamp = null, elapsedRealTime = 0, duration = time + delay;
 		function animate(timestamp) {
 			if (el[0].compareDocumentPosition(document) & 1) {
-				delay = 0;
+				duration = 0;
 			}
 			if (previousTimestamp) {
-				delay -= (timestamp - previousTimestamp);
+				duration -= (timestamp - previousTimestamp);
 				elapsedRealTime += (timestamp - previousTimestamp);
 			}
 			previousTimestamp = timestamp;
@@ -119,17 +119,24 @@ define(['jquery', 'markup', 'utils/polyfills'],
 				The test for whether a transition can be skipped is simply that any key is being held.
 			*/
 			if (transitionSkip > 0 && (keysHeldCount + buttonsHeldCount) > 0) {
-				delay -= transitionSkip;
+				duration -= transitionSkip;
 				el.css('animation-delay', ((Utils.cssTimeUnit(el.css('animation-delay')) || 0) - transitionSkip) + "ms");
 			}
-			if (delay <= 0) {
+			if (duration <= 0) {
 				endFn(elapsedRealTime);
 			}
 			else {
 				requestAnimationFrame(animate);
 			}
+			/*
+				If the remaining duration exceeds the initial delay (that is, if it's currently eating into the "time" interval rather than
+				the "delay" interval), remove the 'visibility:hidden' guard.
+			*/
+			if (duration <= time) {
+				el.css('visibility', '');
+			}
 		}
-		!delay ? animate() : requestAnimationFrame(animate);
+		!duration ? animate() : requestAnimationFrame(animate);
 	}
 
 	/*
@@ -547,11 +554,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 					el[0].setAttribute('style', el[0].getAttribute('style') + "display:block !important;width:100%");
 				}
 			});
-			/*
-				Each frame, reduce the delay, and potentially reduce it further if this
-				transition can be skipped and an input is being held.
-			*/
-			onTransitionComplete(el, transitionTime + transitionDelay - expedite, transitionSkip, () => {
+			onTransitionComplete(el, transitionTime, transitionDelay - expedite, transitionSkip, () => {
 				/*
 					As a transition-out, all that needs to be done at the end is remove the element.
 				*/
@@ -590,10 +593,15 @@ define(['jquery', 'markup', 'utils/polyfills'],
 			if (transitionOrigin) {
 				el.css('transform-origin', transitionOrigin);
 			}
-			el.attr("data-t8n", transIndex).addClass("transition-in").css({
+			el.attr("data-t8n", transIndex).addClass("transition-in").css(Object.assign({
 				'animation-duration': transitionTime + "ms",
 				'animation-delay':   (transitionDelay - expedite) + "ms",
-			});
+			},
+			/*
+				For delayed animations, initially hide the transitioning element using visiblity:hidden.
+				onTransitionComplete will then remove this at the correct time.
+			*/
+			(transitionDelay - expedite) ? { visibility: 'hidden' } : {}));
 
 			/*
 				To give newly-created sections time to render and apply changers, such as (box:) to hooks,
@@ -617,7 +625,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 				}
 			});
 
-			onTransitionComplete(el, transitionTime + transitionDelay - expedite, transitionSkip, (elapsedRealTime) => {
+			onTransitionComplete(el, transitionTime, transitionDelay - expedite, transitionSkip, (elapsedRealTime) => {
 				/*
 					Unwrap the wrapping... unless it contains a non-unwrappable element,
 					in which case the wrapping must just have its attributes removed.
@@ -644,6 +652,30 @@ define(['jquery', 'markup', 'utils/polyfills'],
 					el.removeClass("transition-in").removeAttr("data-t8n");
 				}
 			});
+		},
+
+		/*
+			A simple debouncing function that causes a function's call to only run 300ms after the last time it was called.
+		*/
+		debounce(fn) {
+			let animFrameID, args, lastInvokeTime = 0;
+			const maybeRun = () => {
+				if (Date.now() - lastInvokeTime > 300) {
+					animFrameID = 0;
+					fn(...args);
+				}
+				else {
+					animFrameID = requestAnimationFrame(maybeRun);
+				}
+			};
+			return function() {
+				lastInvokeTime = Date.now();
+				args = arguments;
+				if (animFrameID) {
+					cancelAnimationFrame(animFrameID);
+				}
+				animFrameID = requestAnimationFrame(maybeRun);
+			};
 		},
 
 		/*

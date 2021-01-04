@@ -21,7 +21,7 @@ define(['macros','renderer', 'utils/operationutils', 'datatypes/lambda', 'intern
 		TwineScript_ObjectName:   "a (" + macroName + ":) macro",
 		TwineScript_Unstorable:   true,
 		// Being unstorable and not used by any other data strctures, this doesn't need a ToSource() function.
-		TwineScript_Print:        String,
+		TwineScript_Print:        () => '',
 	});
 
 	/*d:
