@@ -154,11 +154,13 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 					section,
 				});
 				if (name === "enchant") {
-					/*
-						section.updateEnchantments() will be run automatically after
-						this has been executed, meaning we don't have to do it here.
-					*/
 					section.addEnchantment(enchantment);
+					/*
+						When this is run in a normal section renderInto() flow, section.updateEnchantments() will
+						be run automatically after this has been executed. However, if this was run as a result of an unblocked flow
+						(via (dialog:) etc.) then it still needs to be run manually here.
+					*/
+					section.updateEnchantments();
 				}
 				else {
 					enchantment.enchantScope();

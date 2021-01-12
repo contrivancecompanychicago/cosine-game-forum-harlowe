@@ -1134,11 +1134,11 @@
 					"upside-down":         "display:inline-block;transform:scaleY(-1)",
 					blink:                 "animation:fade-in-out 1s steps(1,end) infinite alternate",
 					"fade-in-out":         "animation:fade-in-out 2s ease-in-out infinite alternate",
-					rumble:                "display:inline-block;animation:rumble linear 0.1s 0s infinite",
-					shudder:               "display:inline-block;animation:shudder linear 0.1s 0s infinite",
-					sway:                  "display:inline-block;animation:sway 5s linear 0s infinite",
-					buoy:                  "display:inline-block;animation:buoy 5s linear 0s infinite",
-					fidget:                "display:inline-block;animation:fidget 60s linear 0s infinite",
+					rumble:                "display:inline-block;animation:harlowe-3-rumble linear 0.1s 0s infinite",
+					shudder:               "display:inline-block;animation:harlowe-3-shudder linear 0.1s 0s infinite",
+					sway:                  "display:inline-block;animation:harlowe-3-sway 5s linear 0s infinite",
+					buoy:                  "display:inline-block;animation:harlowe-3-buoy 5s linear 0s infinite",
+					fidget:                "display:inline-block;animation:harlowe-3-fidget 60s linear 0s infinite",
 				};
 
 				function model(m, elem) {

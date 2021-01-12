@@ -6,6 +6,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 #### Bugfixes
 
+ * Fixed a bug where the effects of `(enchant:)` were temporarily suppressed whenever a `(dialog:)`, `(prompt:)` or `(confirm:)` was run at roughly the same time.
  * Fixed a bug where, when a transition finished, if the browser experienced lag due to a large number of other elements being present, the transitioning element's `visibility` could become `hidden` briefly before Harlowe removed the transition CSS from it.
  * Fixed a bug where Instant macros (`(set:)`, `(put:)`, `(move:)` and `(unpack:)`) would pollute the browser console with errors when Debug Mode was off.
  * Fixed a bug where Debug Mode's Enchantments panels' headers were being drawn incorrectly in Chrome.
