@@ -1751,7 +1751,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		is in fullscreen mode. Additionally, this means that the Debug Mode panel is still visible when fullscreen mode is activated.
 		
 		Currently, there is no special functionality or error reporting when the browser reports that fullscreen mode is available, but the attempt
-		to switch to fullscreen mode fails. In that case, the link will simply appear to do nothing.
+		to switch to fullscreen mode fails. In that case, the checkbox will simply appear to do nothing.
 
 		See also:
 		(checkbox:), (link-fullscreen:), (icon-fullscreen:)

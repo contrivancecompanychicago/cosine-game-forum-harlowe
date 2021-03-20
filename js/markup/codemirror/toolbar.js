@@ -1847,7 +1847,7 @@
 							model(m, elem) {
 								const v = elem[$]('input').value;
 								if (v) {
-									m.changerNamed('if').push("(history: where it is " + stringify(v) + ")'s length");
+									m.changerNamed('if').push("(history: where its name contains " + stringify(v) + ")'s length");
 									m.valid = true;
 								}
 							},

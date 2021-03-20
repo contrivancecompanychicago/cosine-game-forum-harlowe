@@ -262,7 +262,7 @@ define([
 		/*d:
 			(shuffled: Any, ...Any) -> Array
 			
-			Similar to (a:), this producws an array of the given values, except that it randomly rearranges the elements instead
+			Similar to (a:), this produces an array of the given values, except that it randomly rearranges the elements instead
 			of placing them in the given order.
 			
 			Example usage:
