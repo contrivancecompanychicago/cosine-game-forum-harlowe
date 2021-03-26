@@ -2,6 +2,13 @@
 
 Documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
+### 3.2.2 changes (unreleased):
+
+#### Bugfixes
+
+ * Fixed a bug where error messages would incorrectly call custom macros' parameters "a number" even if that parameter was restricted to something else.
+ * Fixed a code generation bug in the "The passage ___ was visited" option of the "If" pane of the editor toolbar.
+
 ### 3.2.1 changes (Jan 18, 2021):
 
 #### Bugfixes

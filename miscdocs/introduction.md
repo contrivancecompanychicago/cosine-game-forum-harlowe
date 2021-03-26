@@ -8,7 +8,7 @@ But at the end, Harlowe finally became, for the first time, a hypertext fiction 
 
 And now you get to enjoy all of this, and more.
 
- * A means of creating custom macros, using (macro:), (output:) and (output-hook:).
+ * A means of creating custom macros, using (macro:), (output:) and (output-data:).
  * String patterns, an advanced means of matching strings comprehensively, that can be used with `matches` and the new (split:) and (trimmed:) macros.
  * Changers for creating block elements, (box:) and (float-box:), with the latter allowing you to overlay a box of text anywhere in the browser window.
  * Support for storylets as an alternative to hard-coded links between sections of a game, provided by (storylet:), (open-storylets:), and their related macros.

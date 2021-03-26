@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery','utils/operationutils','internaltypes/changedescriptor', 'internaltypes/varref', 'internaltypes/varscope', 'internaltypes/twineerror', 'internaltypes/twinenotifier'], ($, {objectName, matches}, ChangeDescriptor, VarRef, VarScope, TwineError, TwineNotifier) => {
+define(['jquery','utils/operationutils','internaltypes/changedescriptor', 'internaltypes/varref', 'internaltypes/varscope', 'internaltypes/twineerror', 'internaltypes/twinenotifier'], ($, {objectName, typeName, matches}, ChangeDescriptor, VarRef, VarScope, TwineError, TwineNotifier) => {
 	const {assign,create} = Object;
 	/*d:
 		CustomMacro data
@@ -251,7 +251,7 @@ define(['jquery','utils/operationutils','internaltypes/changedescriptor', 'inter
 					if (p.datatype.toTypeSignatureObject) {
 						type = p.datatype.toTypeSignatureObject({rest:p.rest});
 					} else {
-						type = {pattern: "range", range: e => matches(p.datatype, e)};
+						type = {pattern: "range", range: e => matches(p.datatype, e), name: typeName(p.datatype)};
 					}
 					/*
 						TypedVars, when "spread", become rest parameters. These should be translated

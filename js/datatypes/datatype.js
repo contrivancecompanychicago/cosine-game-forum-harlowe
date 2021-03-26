@@ -151,7 +151,27 @@ define([
 			converted to that format when they're used for custom macros.
 		*/
 		toTypeSignatureObject() {
-			const innerPattern = { pattern: "range", range: typeIndex[this.name] };
+			const {name} = this;
+			const innerPattern = { pattern: "range", range: typeIndex[name],
+				/*
+					The name is used for type errors when these are used as custom macro parameter types.
+					A proper description of the typenames, lining up with Harlowe's built-in macro error messages, needs to be constructed.
+				*/
+				name: "a " + (
+					name === "dm" ? "datamap" :
+					name === "ds" ? "dataset" :
+					name === "num" ? name + "ber" :
+					name === "str" ? name + "ing" :
+					name === "color" ? "colour" :
+					name === "bool" ? name + "ean" :
+					name === "alnum" ? "alphanumeric character" :
+					name === "int" ? name + "eger" :
+					name === "even" || name === "odd" ? name + " number" :
+					name.endsWith("case") || name === "whitespace" ? name + " character" :
+					name === "empty" ? name + " value" :
+					name
+				)
+			};
 			/*
 				Rest datatypes' semantics are "zero or more" rather than the 1-or-more semantics used for pattern:"rest" internally.
 			*/
