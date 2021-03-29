@@ -12,6 +12,8 @@ describe("macro calls", function() {
 		expect("(a: \n )").markupToPrint("");
 		expect("(a:\n1 )").markupToPrint("1");
 		expect("(a:\n 1\n ,\n 1\n )").markupToPrint("1,1");
+		expect("(a:\n\t1\n\t,\n\t1\n\t)").markupToPrint("1,1");
+		expect("(print:2\nis 2)").markupToPrint("true");
 	});
 	it("cannot have whitespace between the name and :", function() {
 		expect("(a : )").markupToPrint("(a : )");

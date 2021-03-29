@@ -456,7 +456,9 @@
 		anyLetter,
 		anyLetterStrict,
 		
-		whitespace:  mws,
+		// This is used only for macroMode, NOT markup modes.
+		whitespace:
+			mws.replace("[","[\\n\\r"),
 		
 		/*d:
 			Escaped line break markup

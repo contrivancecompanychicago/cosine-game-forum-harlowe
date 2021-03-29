@@ -239,10 +239,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			return arr;
 		},[]);
 
-		return {
-			compiledPropertyChain,
-			deepestObject: object,
-		};
+		return compiledPropertyChain;
 	}
 
 	/*
@@ -681,7 +678,9 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			if (this.error) {
 				return this.error;
 			}
-			return get(this.deepestObject, this.compiledPropertyChain.slice(-1)[0],
+			const deepestObject = this.compiledPropertyChain.slice(0,-1).reduce((deepestObject, prop) => get(deepestObject, prop), this.object);
+
+			return get(deepestObject, this.compiledPropertyChain.slice(-1)[0],
 				/*
 					This is the original non-computed property. It is used only for
 					the error message when no property is found.
@@ -1026,8 +1025,8 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			/*
 				If the passed-in object is a TypedVar, expand the propertyChain
 			*/
-			const {compiledPropertyChain, deepestObject} = compilePropertyChain(object, propertyChain);
-			if ((error = TwineError.containsError(compiledPropertyChain, deepestObject))) {
+			const compiledPropertyChain = compilePropertyChain(object, propertyChain);
+			if ((error = TwineError.containsError(compiledPropertyChain))) {
 				return wrapError(error);
 			}
 
@@ -1035,7 +1034,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				Create the VarRefProto instance.
 			*/
 			return Object.assign(Object.create(VarRefProto), {
-				object, propertyChain, compiledPropertyChain, deepestObject
+				object, propertyChain, compiledPropertyChain
 			});
 		},
 

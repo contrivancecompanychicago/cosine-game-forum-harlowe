@@ -172,6 +172,15 @@ describe("interface macros", function(){
 							done();
 						},20);
 					});
+					it("works with bound data structure properties", function(done) {
+						var p = runPassage("(set:$foo to (a:'baz'))("+name+": 2bind $foo's 1st, 'bar','baz', 'qux')(link:'X')[(set:$foo's 1st to 'bar')]");
+						expect(p.find('tw-expression[name='+name+'] tw-link').text()).toBe('baz');
+						p.find('tw-hook tw-link').click();
+						setTimeout(function(){
+							expect(p.find('tw-expression[name='+name+'] tw-link').text()).toBe("bar");
+							done();
+						},20);
+					});
 				});
 				it("errors if the bind is invalid", function() {
 					expect("(set:$foo to 1)("+name+": bind $foo's 1st, 'bar','baz', 'qux')").markupToError();
@@ -434,6 +443,14 @@ describe("interface macros", function(){
 						done();
 					},20);
 				});
+				it("if two-way-bound, updates the <textarea> when the bound data structure property updates", function(done) {
+					var p = runPassage("(set:$foo to (dm:'qux','Quux'))("+name+":2bind $foo's qux, \"XXX===\",3,'Foo')(link:'X')[(set:$foo to (dm:'qux','Baz'))]");
+					p.find('tw-hook tw-link').click();
+					setTimeout(function(){
+						expect(p.find('textarea').val()).toBe("Baz");
+						done();
+					},20);
+				});
 			}
 			else {
 				it("when text is input, its characters are changed to those of the provided string", function() {
@@ -656,14 +673,26 @@ describe("interface macros", function(){
 		/*
 			TODO: center meter tests
 		*/
-		it("updates the bar when the variable updates", function() {
+		it("updates the bar when the bound variable updates", function() {
 			var p = runPassage("(set:$foo to 10)(meter: bind $foo, 100, '=X', 'Yo')(link:'baz')[(set:$foo to 90)]");
 			expect(p.find('tw-meter').css('background-size')).toBe('10%');
 			p.find('tw-link').click();
 			expect(p.find('tw-meter').css('background-size')).toBe('90%');
 		});
-		it("updates the text when the variable updates", function() {
+		it("updates the text when the bound variable updates", function() {
 			var p = runPassage("(set:$foo to 10)(meter: bind $foo, 100, '=X', 'FOO: $foo')(link:'baz')[(set:$foo to 90)]");
+			expect(p.find('tw-meter').text()).toBe('FOO: 10');
+			p.find('tw-link').click();
+			expect(p.find('tw-meter').text()).toBe('FOO: 90');
+		});
+		it("updates the bar when the bound data structure property updates", function() {
+			var p = runPassage("(set:$foo to (dm:'baz',10))(meter: bind $foo's baz, 100, '=X', 'Yo')(link:'baz')[(set:$foo's baz to 90)]");
+			expect(p.find('tw-meter').css('background-size')).toBe('10%');
+			p.find('tw-link').click();
+			expect(p.find('tw-meter').css('background-size')).toBe('90%');
+		});
+		it("updates the text when the bound data structure property updates", function() {
+			var p = runPassage("(set:$foo to (dm:'baz',10))(meter: bind $foo's baz, 100, '=X', 'FOO: (print:$foo\\'s baz)')(link:'baz')[(set:$foo's baz to 90)]");
 			expect(p.find('tw-meter').text()).toBe('FOO: 10');
 			p.find('tw-link').click();
 			expect(p.find('tw-meter').text()).toBe('FOO: 90');

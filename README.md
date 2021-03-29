@@ -6,6 +6,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 #### Bugfixes
 
+ * Fixed a long-standing bug where line breaks couldn't be used as whitespace around operators. For instance, `(print: 2`, a line break, then `is > 1)` would cause an error instead of being treated as `(print: 2 is > 1)`.
+ * Fixed a bug where `bind` and `2bind` wouldn't work properly when used to bind a data structure's data name (such as `bind $list's 1st`).
  * Fixed a bug where error messages would incorrectly call custom macros' parameters "a number" even if that parameter was restricted to something else.
  * Fixed a code generation bug in the "The passage ___ was visited" option of the "If" pane of the editor toolbar.
 
