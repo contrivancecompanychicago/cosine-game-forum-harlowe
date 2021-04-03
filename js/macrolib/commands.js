@@ -716,7 +716,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				e.stopPropagation();
 				Engine.toggleFullscreen();
 			}
-			if (alt === "Reload") {
+			if (alt === "Restart") {
 				if (State.hasSessionStorage) {
 					sessionStorage.removeItem("Saved Session");
 				}

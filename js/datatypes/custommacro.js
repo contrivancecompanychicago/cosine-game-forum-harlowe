@@ -140,7 +140,7 @@ define(['jquery','utils/operationutils','internaltypes/changedescriptor', 'inter
 			The stack frame itself needs to be in a variable because .execute() will pop it off the stackTop.
 		*/
 		let output, dom = $('<p>').append(body.html);
-
+		let stackSize = section.stack.length;
 		section.stack.unshift({
 			tempVariables,
 			dom,
@@ -157,11 +157,11 @@ define(['jquery','utils/operationutils','internaltypes/changedescriptor', 'inter
 		});
 		section.execute();
 		/*
-			Section.execute() doesn't pop the stack frame if it's blocked, since it could potentially unblock, and
-			the entire section is discarded when (goto:) or (undo:) activate. In the case of (output:), we must
-			pop the stack frame ourselves.
+			(output:) and (output-value:) block their stack frame, and Section.execute() doesn't pop the stack frame if it's blocked.
+			Also, if the (output:) was inside an (if:), the containing stack frame of the (if:) isn't popped either.
+			So, these pops need to be done ourselves.
 		*/
-		if (section.stackTop.blocked) {
+		while (section.stack.length > stackSize) {
 			section.stack.shift();
 		}
 		/*

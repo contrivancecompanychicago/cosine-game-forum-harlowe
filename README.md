@@ -10,6 +10,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where `bind` and `2bind` wouldn't work properly when used to bind a data structure's data name (such as `bind $list's 1st`).
  * Fixed a bug where error messages would incorrectly call custom macros' parameters "a number" even if that parameter was restricted to something else.
  * Fixed a code generation bug in the "The passage ___ was visited" option of the "If" pane of the editor toolbar.
+ * Fixed a bug where custom macros couldn't call other custom macros if the other macro's `(output:)` or `(output-hook:)` was inside a nested hook, such as an `(if:)` hook.
+ * Fixed a bug where `(icon-restart:)` didn't restart the story when clicked.
 
 ### 3.2.1 changes (Jan 18, 2021):
 
