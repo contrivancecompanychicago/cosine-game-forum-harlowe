@@ -1197,14 +1197,14 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				if (bind.varRef.matches(obj,name)) {
 					const value = bind.varRef.get();
 					if (typeof value === "number") {
-						const icon = cd.target.children('tw-meter');
-						icon.attr('style', makeStyleString(value));
+						const meter = cd.target.children('tw-meter');
+						meter.attr('style', makeStyleString(value));
 						if (labelOrGradient) {
 							/*
-								Re-render the label, in the same manner as (cycling-link:).
+								Re-render the label. We do NOT reuse the same ChangeDescriptor here, because this renders into the <tw-meter> instead of the
+								wrapping <tw-expression>, and thus shouldn't have the same styles, borders, etc. as it.
 							*/
-							const cd2 = assign({}, cd, { source: labelOrGradient, target: icon, append: 'replace', transitionDeferred: false, });
-							cd.section.renderInto("", null, cd2, tempVariables);
+							cd.section.renderInto("", null, { source: labelOrGradient, target: meter, append: 'replace', transitionDeferred: false, }, tempVariables);
 						}
 					}
 				}

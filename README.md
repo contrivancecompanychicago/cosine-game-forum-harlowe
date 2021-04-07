@@ -7,11 +7,13 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 #### Bugfixes
 
  * Fixed a long-standing bug where line breaks couldn't be used as whitespace around operators. For instance, `(print: 2`, a line break, then `is > 1)` would cause an error instead of being treated as `(print: 2 is > 1)`.
+ * Fixed a long-standing bug where combined changers weren't being properly copied, and adding more changers to them would mutate variables that were storing that changer.
  * Fixed a bug where `bind` and `2bind` wouldn't work properly when used to bind a data structure's data name (such as `bind $list's 1st`).
  * Fixed a bug where error messages would incorrectly call custom macros' parameters "a number" even if that parameter was restricted to something else.
  * Fixed a code generation bug in the "The passage ___ was visited" option of the "If" pane of the editor toolbar.
  * Fixed a bug where custom macros couldn't call other custom macros if the other macro's `(output:)` or `(output-hook:)` was inside a nested hook, such as an `(if:)` hook.
  * Fixed a bug where `(icon-restart:)` didn't restart the story when clicked.
+ * Fixed a bug where, upon supplying a label string to `(meter:)`, any updates to the meter would cause that label to gain any styles, such as `(border:)` borders, that had been given to the meter itself.
 
 ### 3.2.1 changes (Jan 18, 2021):
 

@@ -105,7 +105,14 @@ define(['utils', 'utils/operationutils', 'internaltypes/changedescriptor', 'inte
 		},
 		
 		TwineScript_Clone() {
-			return this.create(this.macroName, this.params, this.next);
+			/*
+				Each link in the chain needs to be cloned, not just the start.
+			*/
+			let clone = this.create(this.macroName, this.params, this.next), tail = clone;
+			while (tail.next) {
+				tail = tail.next = tail.next.TwineScript_Clone();
+			}
+			return clone;
 		},
 		
 		/*

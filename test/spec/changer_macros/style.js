@@ -1098,6 +1098,10 @@ describe("style changer macros", function() {
 			done();
 		});
 	});
+	it("composition doesn't mutate", function() {
+		expect("(set: $a to (collapse:))(set:$b to $a + (text-color:red))(v6m-print:(source:$a))").markupToPrint("(collapse:)");
+		expect("(set:_b to (b4r-size:1)+(b4r:'solid'))(enchant:?passage,_b+(corner-radius: 12)+(size:7/8))(v6m-print:(source:_b))").markupToPrint("(border-size:1)+(border:\"solid\")");
+	});
 	it("errors if composed with non-changer objects", function() {
 		expect("(set: $a to (align:'==>')+?Foo)").markupToError();
 		expect("(set: $a to (align:'==>')+(goto:'Foo'))").markupToError();

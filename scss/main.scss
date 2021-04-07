@@ -148,6 +148,9 @@ tw-sidebar {
 	@media (min-width: 576px) {
 		left: -5em;
 		width: 3em;
+		tw-enchantment[style*="width"] > & {
+			width: inherit;
+		}
 		position:absolute;
 		@include flex-direction(column);
 	}
