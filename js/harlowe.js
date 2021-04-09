@@ -20,10 +20,10 @@ require.config({
 		'jqueryplugins',
 	],
 });
-require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', 'passages', 'utils', 'utils/renderutils', 'internaltypes/twineerror', 'macros',
+require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', 'passages', 'utils', 'utils/renderutils', 'internaltypes/varscope', 'internaltypes/twineerror', 'macros',
 	'macrolib/values', 'macrolib/commands', 'macrolib/datastructures', 'macrolib/stylechangers', 'macrolib/enchantments', 'macrolib/metadata', 'macrolib/patterns',
 	'macrolib/links', 'macrolib/custommacros', 'repl'],
-		($, DebugMode, Renderer, State, Section, Engine, Passages, Utils, {dialog}, TwineError) => {
+		($, DebugMode, Renderer, State, Section, Engine, Passages, Utils, VarScope, {dialog}, TwineError) => {
 	/*
 		Harlowe, the default story format for Twine 2.
 		
@@ -181,6 +181,12 @@ require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', '
 
 		// Set up the passage metadata
 		const tempSection = Section.create();
+		/*
+			This is necessary in order for State to recompile custom macros containing typed variables as parameters.
+			These are recompiled into VarRefs, even though they aren't actually references to temp variables, but definitions.
+		*/
+		tempSection.stack = [{tempVariables:Object.create(VarScope)}];
+
 		const metadataErrors = Passages.loadMetadata(tempSection);
 		if (metadataErrors.length) {
 			const d = dialog({

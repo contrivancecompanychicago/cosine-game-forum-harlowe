@@ -405,8 +405,9 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		This should never receive a TwineError.
 	*/
 	function toSource(obj, isProperty) {
-		if (TwineError.containsError(obj)) {
-			impossible("toSource","received a TwineError");
+		let e = TwineError.containsError(obj);
+		if (e) {
+			impossible("toSource","received a TwineError: " + e.message);
 		}
 		if (typeof obj.TwineScript_ToSource === sFunction) {
 			return obj.TwineScript_ToSource();

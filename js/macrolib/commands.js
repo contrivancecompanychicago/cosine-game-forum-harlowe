@@ -2018,7 +2018,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			/*
 				The (force-input-box:) version of this event is further below.
 			*/
-			if (!force) {
+			if (!force && bind) {
 				cd.data.inputBoxEvent = (textarea) => {
 					const value = textarea.val();
 					const result = bind.set(value);

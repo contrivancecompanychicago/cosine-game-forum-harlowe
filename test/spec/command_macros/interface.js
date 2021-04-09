@@ -412,6 +412,12 @@ describe("interface macros", function(){
 					expect(p).toMatch(/display:\s*block/);
 				});
 			});
+			it("doesn't error when the <textarea> is edited", function() {
+				var t = runPassage("("+name+":\"XXX===\",3,'Foo')").find('textarea');
+				expect(function() {
+					t.val('Bar').trigger('input');
+				}).not.toThrow();
+			});
 			if (!force) {
 				it("if bound, sets the bound variable when the <textarea> is edited", function() {
 					['bind','2bind'].forEach(function(e) {
