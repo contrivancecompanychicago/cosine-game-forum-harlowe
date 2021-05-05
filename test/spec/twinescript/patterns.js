@@ -442,8 +442,11 @@ describe("patterns", function() {
 		});
 		describe("when given a string pattern", function() {
 			it("splits the data string into an array of substrings between matches", function() {
+				expect("(print:(split: (p:'#'), 'abe#ced#bee') is (a:'abe','ced','bee'))").markupToPrint('true');
 				expect('(print:(split:(p-many:(p-either:".",whitespace)),"AB  CD   FG.H"))').markupToPrint("AB,CD,FG,H");
 				expect('(print:(split:(p-ins:"e"),"ABECDEFGEH"))').markupToPrint("AB,CD,FG,H");
+				expect("(print:(split:(p-not:...'abcde'), 'abe4ced2bee') is (a:'abe','ced','bee'))").markupToPrint('true');
+				expect("(print:(split:(p-not:alnum), 'abe+ced+bee') is (a:'abe','ced','bee'))").markupToPrint('true');
 			});
 			it("returns nothing if the pattern covers the whole string", function() {
 				expect('(print:(split:(p:"AB", alnum, "DE"),"ABCDE"))').markupToPrint("");

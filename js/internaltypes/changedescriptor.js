@@ -89,9 +89,9 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		//                            Used only by (link:), (live:) and (event:).
 		data:             null,
 
-		// {Object} [functions]       Some arbitrary functions to execute, passing the target element, after rendering (and no other time).
-		//                            Used only by (enchant-in:).
-		functions:        null,
+		// {Object} [innerEnchantments] Functions which add enchantments that are specific to the hook.
+		//                              Because of a circular dependency, they call addEnchantment themselves. Used only by (enchant-in:) and its ilk.
+		innerEnchantments:  null,
 		
 		// {Object} [section]         A Section that 'owns' this ChangeDescriptor.
 		section:          null,
@@ -108,7 +108,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 			return [
 				"source", "appendSource", "enabled", "verbatim", "target", "append", "newTargets",
 				"transition", "transitionTime", "transitionDeferred", "transitionDelay",
-				"transitionSkip", "transitionOrigin", "functions", "enablers",
+				"transitionSkip", "transitionOrigin", "innerEnchantments", "enablers",
 			]
 			.filter(e => this.hasOwnProperty(e))
 			.concat([
@@ -271,7 +271,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		*/
 		render() {
 			const
-				{source, transition, transitionTime, transitionDeferred, enabled, enablers, data, section, newTargets, functions, appendSource} = this;
+				{source, transition, transitionTime, transitionDeferred, enabled, enablers, data, section, newTargets, innerEnchantments, appendSource} = this;
 			let
 				{target, target:oldTarget, append} = this;
 
@@ -567,11 +567,10 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 			}
 
 			/*
-				After everything else is done, any especially arbitrary functions that need to be performed
-				(such as creating an enchantment for (enchant-in:)) are done here.
+				After everything else is done, inner (enchant-in:) enchantments are created here.
 			*/
-			if (functions) {
-				functions.forEach(fn => fn(target));
+			if (innerEnchantments) {
+				innerEnchantments.map(fn => fn(target)).forEach(ench => section.addEnchantment(ench));
 			}
 			
 			return dom;

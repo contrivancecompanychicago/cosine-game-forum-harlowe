@@ -451,7 +451,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 				}
 				return createPattern({
 					name: "p-not", fullArgs, canContainTypedVars: false,
-					makeRegExpString: subargs => "[^" + subargs.join('') + "]"
+					makeRegExpString: subargs => "[^" + subargs.map(e => (e.startsWith("[") && e.endsWith("]")) ? e.slice(1,-1) : e).join('') + "]"
 				});
 			},
 		PatternSignature)

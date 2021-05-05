@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages', 'macros', 'datatypes/hookset', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/enchantment', 'internaltypes/twineerror'],
-($, Utils, {is}, Engine, State, Passages, Macros, HookSet, ChangerCommand, Lambda, Enchantment, TwineError) => {
+define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages', 'macros', 'datatypes/hookset', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/changedescriptor', 'internaltypes/enchantment', 'internaltypes/twineerror'],
+($, Utils, {is}, Engine, State, Passages, Macros, HookSet, ChangerCommand, Lambda, ChangeDescriptor, Enchantment, TwineError) => {
 
 	const {either,rest,optional} = Macros.TypeSignature;
 	/*
@@ -143,8 +143,29 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 				}
 			},
 			(section, scope, changer) => {
-				const enchantment = Enchantment.create({
-					scope: HookSet.from(scope),
+				scope = HookSet.from(scope);
+				const enchantments = [];
+				/*
+					If the changer (and currently it must be a changer) contains innerEnchantments, then those must be added to this enchantment
+					now (because ChangerCommand.update() certainly won't touch them).
+				*/
+				if (ChangerCommand.isPrototypeOf(changer)) {
+					/*
+						These two lines are similar to those used by ChangerCommand.summary().
+					*/
+					const desc = ChangeDescriptor.create({section});
+					changer.run(desc);
+					if ((desc.innerEnchantments || []).length > 0) {
+						/*
+							innerEnchantments contains functions that produce Enchantments. These are run
+							giving this outer (enchant:)'s scope as the localHook to which the Enchantment's own scope is constrained.
+						*/
+						const c = desc.innerEnchantments.map(e => e(scope));
+						enchantments.push(...c);
+					}
+				}
+				enchantments.push(Enchantment.create({
+					scope,
 					/*
 						Because the changer provided to this macro could actually be a "via" lambda that produces changers,
 						Enchantment has both "lambda" and "changer" properties to distinguish them.
@@ -152,19 +173,21 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 					*/
 					[ChangerCommand.isPrototypeOf(changer) ? "changer" : "lambda"]: changer,
 					section,
+				}));
+				enchantments.forEach(e => {
+					if (name === "enchant") {
+						section.addEnchantment(e);
+						/*
+							When this is run in a normal section renderInto() flow, section.updateEnchantments() will
+							be run automatically after this has been executed. However, if this was run as a result of an unblocked flow
+							(via (dialog:) etc.) then it still needs to be run manually here.
+						*/
+						section.updateEnchantments();
+					}
+					else {
+						e.enchantScope();
+					}
 				});
-				if (name === "enchant") {
-					section.addEnchantment(enchantment);
-					/*
-						When this is run in a normal section renderInto() flow, section.updateEnchantments() will
-						be run automatically after this has been executed. However, if this was run as a result of an unblocked flow
-						(via (dialog:) etc.) then it still needs to be run manually here.
-					*/
-					section.updateEnchantments();
-				}
-				else {
-					enchantment.enchantScope();
-				}
 				return "";
 			},
 			[either(HookSet,String), either(ChangerCommand, Lambda.TypeSignature('via'))],
@@ -209,6 +232,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 
 		This enchantment will be listed in the "Enchantments" tab of the Debug Mode panel when it's active, alongside enchantments created by (enchant:).
 
+		Due to Harlowe engine limitations, this currently does NOT work when created by a lambda given to `(enchant:)` or `(change:)`, such as in `(enchant: ?passage, via (enchant-in:?frogs,(bg:(hsl:pos*30,0.5,1))))`.
+
 		See also:
 		(enchant:), (change:), (link-style:)
 
@@ -225,17 +250,15 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		},
 		(desc, scope, changer) => {
 			/*
-				The 'functions' property of ChangeDescriptors only exists for this macro (currently) to solve a circular dependency
-				where Enchantment <- ChangeDescriptor <- Enchantment. This function creates an enchantment
+				The 'innerEnchantments' property of ChangeDescriptors is an array of functions, in order to solves a circular dependency
+				where Enchantment <- ChangeDescriptor <- Enchantment.
 			*/
-			desc.functions = (desc.functions || []).concat(localHook => {
-				desc.section.addEnchantment(Enchantment.create({
-					scope: HookSet.from(scope),
-					localHook,
-					[ChangerCommand.isPrototypeOf(changer) ? "changer" : "lambda"]: changer,
-					section: desc.section,
-				}));
-			});
+			desc.innerEnchantments = (desc.innerEnchantments || []).concat(localHook => Enchantment.create({
+				scope: HookSet.from(scope),
+				localHook,
+				[ChangerCommand.isPrototypeOf(changer) ? "changer" : "lambda"]: changer,
+				section: desc.section,
+			}));
 			return desc;
 		},
 		[either(HookSet,String), either(ChangerCommand, Lambda.TypeSignature('via'))]
@@ -266,6 +289,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		This creates a hook-specific enchantment, similar to (enchant-in:), It will be listed under the "Enchantments" tab of the Debug Mode panel.
 
 		This will also apply the style changer to (click:) links inside the hook.
+
+		Due to Harlowe engine limitations, this currently does NOT work when created by a lambda given to `(enchant:)` or `(change:)`, such as in `(enchant: ?passage, via (line-style,(bg:(hsl:pos*30,0.5,1))))`.
 
 		See also:
 		(enchant-in:), (hover-style:), (line-style:), (char-style:)
@@ -313,6 +338,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 
 		This creates a hook-specific enchantment, similar to (enchant-in:), It will be listed under the "Enchantments" tab of the Debug Mode panel.
 
+		Due to Harlowe engine limitations, this currently does NOT work when created by a lambda given to `(enchant:)` or `(change:)`, such as in `(enchant: ?passage, via (line-style,(bg:(hsl:pos*30,0.5,1))))`.
+
 		See also:
 		(enchant-in:), (hover-style:), (link-style:), (char-style:)
 
@@ -346,6 +373,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 
 		**Warning:** using (char-style:) to enchant very large amounts of text at once will likely cause excessive CPU load for the reader, making their browser unresponsive.
 
+		Due to Harlowe engine limitations, this currently does NOT work when created by a lambda given to `(enchant:)` or `(change:)`, such as in `(enchant: ?passage, via (char-style,(bg:(hsl:pos*30,0.5,1))))`.
+
 		See also:
 		(enchant-in:), (hover-style:), (link-style:), (line-style:)
 
@@ -367,16 +396,14 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 			},
 			(desc, changer) => {
 				/*
-					The 'functions' property of ChangeDescriptors only exists for this macro (currently) to solve a circular dependency
-					where Enchantment <- ChangeDescriptor <- Enchantment. This function creates an enchantment
+					The 'innerEnchantments' property of ChangeDescriptors solves a circular dependency
+					where Enchantment <- ChangeDescriptor <- Enchantment.
 				*/
-				desc.functions = (desc.functions || []).concat(localHook => {
-					desc.section.addEnchantment(Enchantment.create({
-						scope, localHook,
-						[ChangerCommand.isPrototypeOf(changer) ? "changer" : "lambda"]: changer,
-						section: desc.section,
-					}));
-				});
+				desc.innerEnchantments = (desc.innerEnchantments || []).concat(localHook => Enchantment.create({
+					scope, localHook,
+					[ChangerCommand.isPrototypeOf(changer) ? "changer" : "lambda"]: changer,
+					section: desc.section,
+				}));
 				return desc;
 			},
 			[either(ChangerCommand, Lambda.TypeSignature('via'))]

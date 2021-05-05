@@ -41,7 +41,8 @@ define([
 			use `last` to refer to the last position, `2ndlast` to refer to the second-last, and so forth. Arrays also have
 			a `length` number: `$array's length` tells you how many values are in it. If you can't determine the exact position
 			to remove an item from (because it's dependent on a variable), you can use an expression, in brackers,
-			after it: `$array's ($pos - 3)`.
+			after it: `$array's ($pos - 3)`. This syntax can be chained: if an array is inside another data structure (for instance, by
+			`(set: $array to (a:(a:1,2),(a:2,3)))`) then you can write `$array's 1st's 1st` to access the 1 stored in the inner array.
 
 			**Note:** While you can normally display the contents of variables by simply placing their names directly in passage prose,
 			such as `$votes`, you have to use another macro, such as (print:), to display the contents of arrays, such as `(print: $votes's 1st)`.
@@ -1272,10 +1273,11 @@ define([
 			
 			Datamaps consist of several string *name*s, each of which maps to a specific *value*. `$animals's frog` and `frog of $animals`
 			refers to the value associated with the name 'frog'. You can add new names or change existing values by using (set:) -
-			`(set: $animals's wolf to "howl")`.
-
-			You can express the name as a bare word if it doesn't have a space or other punctuation in it - `$animals's frog` is OK, but
+			`(set: $animals's wolf to "howl")`. You can express the name as a bare word if it doesn't have a space or other punctuation in it - `$animals's frog` is OK, but
 			`$animals's komodo dragon` is not. In that case, you'll need to always supply it as a string - `$animals's "komodo dragon"`.
+			This syntax can be chained: if a datamap is inside another data structure (for instance, by
+			`(set: $arr to (a:(dm:'name', 'silver ring', 'resaleValue', 250),(dm:'name', 'a button', 'resaleValue', 0)))`)
+			then you can write `$arr's 1st's resaleValue` to access the 250 in the first datamap.
 
 			**Note:** While you can normally display the contents of variables by simply placing their names directly in passage prose,
 			such as `$sandwich`, you have to use another macro, such as (print:), to display the contents of datamaps, such as `(print: $sandwich's bread)`.

@@ -181,7 +181,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 	let localTempVariables = new Set();
 	const Variables = Panel.create({
 		className: "variables", tabName: "Variable",
-		rowAdd({name, path, value, tempScope, type}) {
+		rowAdd({name, dataset, path, value, tempScope, type}) {
 			/*
 				The debug name used defers to the TwineScript_DebugName if it exists,
 				and falls back to the objectName if not. Note that the TwineScript_DebugName can contain HTML structures
@@ -197,6 +197,12 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			let trail = '';
 			if (path.length) {
 				trail = path.reduce((a,e) => a + e + "'s ", '');
+			}
+			/*
+				Dataset entries, which use Numbers as names instead of user-facing strings, should be converted to "???".
+			*/
+			if (dataset) {
+				name = "???";
 			}
 			/*
 				Typed variables should have their type restriction listed.
@@ -245,7 +251,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 				);
 		},
 		rowCheck({name, path, tempScope}, row) {
-			return row.attr('data-name') === name && row.attr('data-path') === (path+'') && row.attr('data-scope') === tempScope;
+			return row.attr('data-name') === name && row.attr('data-path') === (path+'');
 		},
 		columnHead() {
 			return `<tr class="panel-head"><th>Type</th><th>Name</th><th>Scope</th><th>Value</th></tr>`;
@@ -288,8 +294,8 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 					Sets don't have keys. So, using "???" for every entry is what we're forced to do
 					to keep this display consistent with the others.
 				*/
-				[...value].forEach((elem) =>
-					recursiveUpdateVariables({name:"???",     path, value:elem, tempScope})
+				[...value].forEach((elem,i) =>
+					recursiveUpdateVariables({name: i,  dataset:true,    path, value:elem, tempScope})
 				);
 			}
 		}
@@ -328,7 +334,12 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			Since temp variables' variable stores are tied to sections and can't be easily accessed
 			from here, add their variable rows on each set() rather than getting updateVariables() to do it.
 		*/
-		if (obj !== State.variables && obj.TwineScript_VariableStoreName) {
+		if (obj !== State.variables && obj.TwineScript_VariableStoreName &&
+				/*
+					Custom macro variables are prohibited from appearing in the Variables panel.
+				*/
+				!obj.TwineScript_VariableStoreName.match(/#\d+$/)
+			) {
 			const tempScope = obj.TwineScript_VariableStoreName;
 			const type = obj.TwineScript_TypeDefs && obj.TwineScript_TypeDefs[name];
 			/*
@@ -406,7 +417,13 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 				.data('enchantment',enchantment)
 				.append(
 					"<td><span class='enchantment-name'>" + toSource(scope)
-					+ (localHook ? "</span><span class=enchantment-local>" + (localHook.attr('name') ? "?" + localHook.attr('name') : "an unnamed hook") : "") + "</span>"
+					+ (localHook ? "</span><span class=enchantment-local>"
+						/*
+							localHooks can be jQuerys (for plain attachment) or HookSets (for use in (enchant:)).
+						*/
+						+ (typeof localHook.TwineScript_ToSource === "function" ? localHook.TwineScript_ToSource() :
+							localHook.attr('name') ? "?" + localHook.attr('name') : "an unnamed hook") : "")
+						+ "</span>"
 					+ "</td><td class='enchantment-value'>"
 					+ val + "</td>"
 					+ (changer ? "<td class='panel-row-buttons'>"

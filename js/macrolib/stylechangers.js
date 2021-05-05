@@ -89,7 +89,6 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 					can now be reinstated, erasing the hover style.
 				*/
 				mouseoutStyle = elem.data('mouseoutStyle');
-
 			elem.attr('style', mouseoutStyle)
 				.removeData('mouseoutStyle')
 				.attr('hover',false);
@@ -1085,7 +1084,9 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			| "inset" | <span style="border: 2px inset black;margin:2px;display:inline-block">Example text</span>
 			| "outset" | <span style="border: 2px outset black;margin:2px;display:inline-block">Example text</span>
 
-			The "none" type can be used to remove a border that another changer may have included.
+			The "none" type can be used to remove a border that another changer may have included. NOTE: As of Harlowe 3.2.2,
+			this can only be used to remove borders from combined changers, such as by `(set: $changer to it + (b4r:"none"))`,
+			and can't be used to remove borders from already-changed hooks or other structures.
 
 			The default size of the border, with no other CSS changes to any elements, is 2px (2 pixels),
 			unless a change is applied using (border-size:).
@@ -1831,7 +1832,9 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			| "buoy"           | <t-s style="display:inline-block;animation:buoy 5s linear 0s infinite"></t-s> | "fade-in-out", "blink", "shudder", "sway", "fidget"
 			| "fidget"         | <t-s style="display:inline-block;animation:fidget 60s step-end 0s infinite"></t-s> | "fade-in-out", "blink", "rumble", "shudder", "sway", "buoy"
 			
-			You can use the "none" style to remove an existing style from a combined changer.
+			You can use the "none" style to remove an existing style from a combined changer. NOTE: As of Harlowe 3.2.2,
+			this can only be used to remove styles from combined changers, such as by `(set: $changer to it + (text-style:"none"))`,
+			and can't be used to remove styles from already-changed hooks or other structures.
 
 			Due to browser limitations, combining many of these changers won't work exactly as intended – `(text-style: "underline", "strike")`, for instance,
 			will cause only the latter of the two to be applied, in this case "strike". These incompatibilities are listed in the table above.
@@ -2068,8 +2071,9 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 
 			Note that in versions of Harlowe prior to 3.2.0, this could be combined with (link:), (link-repeat:), or (link-reveal:)
 			to apply changers to the link, except for (text-colour:). This has since been changed, and now, when combined with (link:)
-			changers, (hover-style:) will only apply to the revealed hook. Note that `(link-goto:)` and passage links aren't changers,
-			so (hover-style:) can be attached to them, as expected.
+			changers, (hover-style:) will only apply to the revealed hook. (The intended way to style the link in that case is to provide (hover-style:) as
+			the optional second value to a link changer, such as by `(link-rerun:"Retry", (hover-style:(color:red)))`.)
+			Note that `(link-goto:)` and passage links aren't changers, so (hover-style:) can be attached to them, as expected.
 
 			See also:
 			(link-style:), (line-style:), (char-style:)

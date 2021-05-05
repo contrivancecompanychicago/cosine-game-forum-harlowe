@@ -272,6 +272,14 @@ describe("enchantment macros", function () {
 		it("doesn't create <tw-pseudo-hook>s", function() {
 			expect(runPassage('(link-style: (color:#800000))[[qux<-bar]]').find('tw-pseudo-hook').length).toBe(0);
 		});
+		it("works with (enchant:)", function() {
+			runPassage('(enchant:?passage,(link-style: (color:#800000)))[[test<-bar]]');
+			expect($('tw-link').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+		});
+		it("does not work with (enchant:) when used in a lambda", function() {
+			runPassage('(enchant:?passage, via (link-style: (color:#800000)))[[test<-bar]]');
+			expect($('tw-link').css('color')).not.toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+		});
 	});
 	describe("(line-style:)", function() {
 		it("accepts a changer command or a 'via' lambda", function() {
@@ -310,6 +318,14 @@ describe("enchantment macros", function () {
 		it("doesn't create <tw-pseudo-hook>s", function() {
 			expect(runPassage('(line-style: (text-colour:#333))[=foo\nbar\n').find('tw-pseudo-hook').length).toBe(0);
 		});
+		it("works with (enchant:)", function() {
+			runPassage('(enchant:?passage,(line-style: (color:#800000)))\ngooball');
+			expect($('tw-passage tw-enchantment').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+		});
+		it("does not work with (enchant:) when used in a lambda", function() {
+			runPassage('(enchant:?passage, via (line-style: (color:#800000)))\ngooball');
+			expect($('tw-passage tw-enchantment').css('color')).not.toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+		});
 	});
 	describe("(char-style:)", function() {
 		it("accepts a changer command or a 'via' lambda", function() {
@@ -339,6 +355,14 @@ describe("enchantment macros", function () {
 		});
 		it("doesn't create <tw-pseudo-hook>s", function() {
 			expect(runPassage('(char-style:(background:green))[=foo\n[bar]<a|\n').find('tw-pseudo-hook').length).toBe(0);
+		});
+		it("works with (enchant:)", function() {
+			runPassage('(enchant:?passage,(char-style: (color:#800000)))\ng');
+			expect($('tw-passage tw-enchantment').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
+		});
+		it("does not work with (enchant:) when used in a lambda", function() {
+			runPassage('(enchant:?passage, via (char-style: (color:#800000)))\ng');
+			expect($('tw-passage tw-enchantment').css('color')).not.toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
 		});
 	});
 });

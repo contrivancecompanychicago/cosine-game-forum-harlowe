@@ -16,6 +16,14 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where `(icon-restart:)` didn't restart the story when clicked.
  * Fixed a bug where, upon supplying a label string to `(meter:)`, any updates to the meter would cause that label to gain any styles, such as `(border:)` borders, that had been given to the meter itself.
  * Fixed a bug where `(input-box:)` crashed upon the first inputted character if you didn't supply the optional bound variable.
+ * Fixed a bug where `(p-not:)` would not work correctly when given built-in datatypes like `alnum` or `digit`.
+ * Fixed a bug where the startup error dialog box (that reports certain kinds of Javascript errors) wouldn't appear.
+ * Fixed a bug where `(line-style:)`, `(enchant-in:)`, `(link-style:)` and `(char-style:)` did not work when used in an `(enchant:)` or `(change:)`. (However, they currently still don't work when created by a `via` lambda given to those command macros).
+ * Now, dataset data should be displayed correctly in the Variables panel in Debug Mode.
+
+#### Alterations
+
+ * Now, temp variables in custom macro calls are no longer listed in the Variables panel in Debug Mode, due to the resulting clutter when many custom macros are used in a passage.
 
 ### 3.2.1 changes (Jan 18, 2021):
 

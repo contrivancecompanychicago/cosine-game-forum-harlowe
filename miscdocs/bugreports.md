@@ -14,6 +14,6 @@ I'd appreciate it if you could adhere to the following guidelines when reporting
  * If your issue is a bug, please set the "Label" to "Bug".
  * You *may* suggest feature requests, but please set the issue's "Label" to "Proposal".
 
-### The issues page has recently moved!
+### The issues page moved awhile ago!
 
 As of July 2020, Harlowe's issues page and hosting is now at [foss.heptapod.net](https://foss.heptapod.net). Big thanks to [Octobus SAS](https://octobus.net/) for providing this free open-source software hosting service, and [Clever Cloud SAS](https://www.clever-cloud.com/) for that service's hosting.

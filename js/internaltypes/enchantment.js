@@ -51,13 +51,13 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 			*/
 			scope.forEach(section, (e, i) => {
 				/*
-					The localHook is a restriction created by (enchant-in:), limiting the given scope even further.
-					While it should probably be changed into an extension of the HookSet class, it currently allows
-					for even unnamed hooks (such as those that a changer would be attached to) to be the restricted area,
-					which would be difficult with even current (Sep 2020) user-facing HookSet syntax.
+					The localHook is a restriction created by (enchant-in:) or its ilk, limiting the given scope even further.
+					It is either a HookSet (when used with (enchant:)) or a jQuery (when attached to a hook)
 				*/
-				if (localHook && !localHook.has(e[0]).length) {
-					return;
+				if (localHook) {
+					if (!(localHook.jquery ? localHook : localHook.hooks(section)).has(e[0]).length) {
+						return;
+					}
 				}
 				/*
 					Lambdas are given to enchantments exclusively through (enchant:). They override any

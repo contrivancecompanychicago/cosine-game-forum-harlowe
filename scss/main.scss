@@ -274,3 +274,10 @@ tw-colour {
 	width: 1em;
 	height: 1em;
 }
+
+/*
+	Empty enchantments shouldn't be able to occur, so this exists merely as a safeguard.
+*/
+tw-enchantment:empty {
+	display:none;
+}

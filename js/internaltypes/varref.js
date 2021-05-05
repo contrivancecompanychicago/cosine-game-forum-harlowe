@@ -614,7 +614,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 					"Temp variables only exist inside the same passage and hook in which they're (set:).");
 			}
 			if (Array.isArray(obj) && typeof prop === "number") {
-				return TwineError.create("property", "This array of " + (obj.length+1) + " elements doesn't have a "
+				return TwineError.create("property", "This array of " + (obj.length) + " elements doesn't have a "
 					+ propertyDebugName(originalProp)
 					+ " element.",
 					obj.length ? "It contains: " + andList(obj.map(objectName)) + '.' : "The array is empty.");
