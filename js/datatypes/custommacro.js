@@ -109,7 +109,11 @@ define(['jquery','utils/operationutils','internaltypes/changedescriptor', 'inter
 					Because each .set() activates the 'set' event for VarRef, which includes Debug Mode's
 					DOM updating, we need to only use .set() on the final iteration.
 				*/
-				const newArray = (tempVariables[name] || []).concat(arg);
+				const newArray = (tempVariables[name] || [])
+					/*
+						Don't accidentally spread arg if it's an array.
+					*/
+					.concat([arg]);
 				if (argIndex < args.length-1) {
 					tempVariables[name] = newArray;
 					return;

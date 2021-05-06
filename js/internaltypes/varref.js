@@ -315,7 +315,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				|| VarRefProto.isPrototypeOf(obj)) {
 			return obj.get(prop);
 		}
-		if (prop === "any" || prop === "all" || prop === "start" || prop === "end") {
+		if ((prop === "any" || prop === "all" || prop === "start" || prop === "end") && !obj.TwineScript_VariableStoreName) {
 			return createDeterminer(obj,prop);
 		}
 		/*

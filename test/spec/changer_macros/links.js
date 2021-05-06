@@ -168,9 +168,21 @@ describe("link macros", function() {
 					expect(p.text()).toBe("ABBB");
 					expect("$c").markupToPrint("36");
 				});
+				it("works when enchanted", function() {
+					var p = runPassage("(enchant:?link,(bg:blue))(set:$c to 0)("+name+":'A')[B(set:$c to it + 12)]");
+					p.find('tw-link').click().click().click();
+					expect(p.text()).toBe("ABBB");
+					expect("$c").markupToPrint("36");
+				});
 			} else {
 				it("when clicked multiple times, the hook is re-ran", function() {
 					var p = runPassage("(set:$c to 0)("+name+":'A')[B(set:$c to it + 12)]");
+					p.find('tw-link').click().click().click();
+					expect(p.text()).toBe("AB");
+					expect("$c").markupToPrint("36");
+				});
+				it("works when enchanted", function() {
+					var p = runPassage("(enchant:?link,(bg:blue))(set:$c to 0)("+name+":'A')[B(set:$c to it + 12)]");
 					p.find('tw-link').click().click().click();
 					expect(p.text()).toBe("AB");
 					expect("$c").markupToPrint("36");

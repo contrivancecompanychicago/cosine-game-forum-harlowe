@@ -324,7 +324,12 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 					followed by (show:?a) should result in ?a appearing, instead of nothing happening. (And
 					(show:?b) shouldn't do anything, either.)
 				*/
-				ChangeDescriptor.create({target,data:assign({}, data, {originalSource:source, hidden:true})}).update();
+				ChangeDescriptor.create({target,
+					/*
+						In the hidden hook, preserve HTML attributes (which includes 'name') but exclude 'style'.
+					*/
+					attr: this.attr.filter(e => !('style' in e)),
+					data: assign({}, data, {originalSource:source, hidden:true})}).update();
 				return $();
 			}
 

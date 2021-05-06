@@ -3031,11 +3031,11 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 						name: confirmButton || "OK",
 						confirm: true,
 						callback: () => section.unblock(d.find('input').last().val()),
-					},{
+					}].concat(cancelButton === "" ? [] : {
 						name: cancelButton || "Cancel",
 						cancel: true,
 						callback: () => section.unblock(defaultValue),
-					}],
+					}),
 				});
 				// Regrettably, this arbitrary timeout seems to be the only reliable way to focus the <input>.
 				setTimeout(() => d.find('input').last().focus(), 100);
@@ -3090,11 +3090,11 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 						name: confirmButton || "OK",
 						confirm: true,
 						callback: () => section.unblock(true),
-					},{
+					}].concat(cancelButton === "" ? [] : {
 						name: cancelButton || "Cancel",
 						cancel: true,
 						callback: () => section.unblock(false),
-					}],
+					}),
 				});
 			},
 			[String, optional(String), optional(String)])

@@ -73,7 +73,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 					}
 					else if (!ChangerCommand.isPrototypeOf(changer)) {
 						e.replaceWith(TwineError.create("macrocall",
-							"The 'via' lambda given to (enchant:) must return a changer, not " + objectName(changer) + "."
+							"The 'via' lambda given to enchantment macros must return a changer, not " + objectName(changer) + "."
 						).render(""));
 						lambda = changer = null;
 					}
@@ -86,7 +86,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 								So, instead, the first item in the scope to produce an error gets replaced by it, and the rest of the scope is ignored.
 							*/
 							e.replaceWith(TwineError.create("macrocall",
-								"The changer produced by the 'via' lambda given to (enchant:) can't include a revision or enchantment changer like (replace:) or (click:)."
+								"The changer produced by the 'via' lambda given to enchantment macros can't include a revision or enchantment changer like (replace:) or (click:)."
 							).render(""));
 							lambda = changer = null;
 						}

@@ -31,6 +31,7 @@ describe("custom macros", function() {
 		beforeEach(function(){
 			runPassage("(set: $m to (macro:num-type _e, [(output-data:_e+10)]))");
 			runPassage("(set: $n to (macro:...num-type _e, [(output-data:_e)]))");
+			runPassage("(set: $o to (macro:...array-type _e, [(output-data:_e)]))");
 		});
 		it("are called by writing a macro call with their variable in place of the name, and supplying arguments", function() {
 			expect("($m:5)").markupToPrint("15");
@@ -45,9 +46,11 @@ describe("custom macros", function() {
 		});
 		it("values given to spread parameters become arrays", function() {
 			expect("(print:array matches ($n:1,2,3,4,5))").markupToPrint('true');
+			expect("(print:(a:(a:1,2),(a:2,3)) is ($o:(a:1,2),(a:2,3)))").markupToPrint('true');
 		});
 		it("giving no values to spread parameters produces an empty array", function() {
 			expect("(print:array matches ($n:))").markupToPrint('true');
+			expect("(print:(a:) is ($o:))").markupToPrint('true');
 		});
 		it("supplying the wrong type of arguments produces an error", function() {
 			expect("($m:'e')").markupToError();

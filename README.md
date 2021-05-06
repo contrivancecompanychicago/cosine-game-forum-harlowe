@@ -19,6 +19,11 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where `(p-not:)` would not work correctly when given built-in datatypes like `alnum` or `digit`.
  * Fixed a bug where the startup error dialog box (that reports certain kinds of Javascript errors) wouldn't appear.
  * Fixed a bug where `(line-style:)`, `(enchant-in:)`, `(link-style:)` and `(char-style:)` did not work when used in an `(enchant:)` or `(change:)`. (However, they currently still don't work when created by a `via` lambda given to those command macros).
+ * Fixed a bug where giving a blank string as the Cancel button's label to `(prompt:)` or `(confirm:)` wouldn't cause the Cancel button to disappear.
+ * Fixed a bug where `(link-rerun:)` behaved like `(link-repeat:)` when it was enchanted by `(enchant:)`.
+ * Fixed a bug where error messages would sometimes refer to temp variables named "all" as "all values of the temporary variables". The same applies to "any", "start", and "end".
+ * Fixed a bug where hidden hooks and the `(hidden:)` changer would suppress the effects of `(hook:)`.
+ * Fixed a bug where `...array-type` parameters to custom macros would unwittingly "flatten" the passed-in arrays, joining them all together.
  * Now, dataset data should be displayed correctly in the Variables panel in Debug Mode.
 
 #### Alterations

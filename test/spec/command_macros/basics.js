@@ -335,6 +335,11 @@ describe("basic command macros", function() {
 				expect($("tw-dialog tw-link").first().text()).toBe("bar");
 				expect($("tw-dialog tw-link").last().text()).toBe("foo");
 			});
+			it("removes the Cancel button if its text is blank", function() {
+				runPassage("("+name+":" + args + ",'','foo')");
+				expect($("tw-dialog tw-link").length).toBe(1);
+				expect($("tw-dialog tw-link").first().text()).toBe("foo");
+			});
 			it("errors if the last optional string is blank", function() {
 				expect("("+name+":" + args + ",'foo','')").markupToError();
 			});

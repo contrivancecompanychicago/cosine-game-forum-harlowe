@@ -412,22 +412,29 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 								the link, so that the replacement can be repeated. It does this by removing the link,
 								then reattaching it after rendering.
 							*/
-							let parent = link.parent();
+							let parent = link.parentsUntil(':not(tw-enchantment)').parent();
+							if (!parent.length) {
+								parent = link.parent();
+							}
 							if (name === "link-rerun") {
 								/*
-									Just to be sure that the link returns to the same DOM element, we
-									save the element in particular here.
+									In addition to detaching the link, this removes the <tw-enchantment>s surrounding the link.
 								*/
+								const p = link.parentsUntil(':not(tw-enchantment)');
 								link.detach();
+								p.remove();
 							}
 							/*
 								Only (link-replace:) and (link-rerun:) remove the link on click - the others merely append.
 							*/
-							if (name === "link" || name === "link-rerun" || name === "click-block") {
+							if (name === "link" || name === "link-rerun") {
 								parent.empty();
 							}
 							desc.section.renderInto("", null, desc, tempVariables);
 							if (name === "link-rerun") {
+								/*
+									If ?Link is enchanted, reinserting just the link will result in the <tw-enchantment>s being reinstated.
+								*/
 								parent.prepend(link);
 							}
 						},

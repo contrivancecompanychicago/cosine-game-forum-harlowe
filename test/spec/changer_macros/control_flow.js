@@ -122,6 +122,9 @@ describe("control flow macros", function() {
 		it("can be composed with other style macros", function() {
 			expect("(set: $a to (hidden:) + (text-style:'bold'))$a[Gee]").markupToPrint("");
 		});
+		it("can be composed with (hook:)", function() {
+			expect("(set: $a to (hidden:) + (hook:'foo'))$a[Bar](show:?foo)").markupToPrint("Bar");
+		});
 	});
 	describe("the (show:) macro", function() {
 		it("accepts 1 or more hooknames", function() {
