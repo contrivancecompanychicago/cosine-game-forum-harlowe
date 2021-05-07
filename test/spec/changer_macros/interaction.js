@@ -266,8 +266,6 @@ describe("interaction macros", function() {
 										expect($('tw-passage:last-child').find('b').text()).not.toBe("grault");
 										done();
 									},20);
-
-									done();
 								});
 								if (e.eventMethod === "click") {
 									it("doesn't trigger when arriving on the page by a link", function(done) {
@@ -275,6 +273,17 @@ describe("interaction macros", function() {
 										createPassage("(" + e.name + ":"+name+")[=''grault''","corge");
 										
 										var p = runPassage("(t8n-arrive:'instant')[[corge]]");
+										p.find('tw-link')[e.eventMethod]();
+										setTimeout(function() {
+											expect($('tw-passage:last-child').find('b').text()).not.toBe("grault");
+											done();
+										},20);
+									});
+									it("doesn't trigger when arriving on the page by a (link-reveal-goto:)", function(done) {
+										createPassage("''foo''","baz");
+										createPassage("(" + e.name + ":"+name+")[=''grault''","corge");
+										
+										var p = runPassage("(link-reveal-goto:'corge',(t8n-arrive:'instant'))[]");
 										p.find('tw-link')[e.eventMethod]();
 										setTimeout(function() {
 											expect($('tw-passage:last-child').find('b').text()).not.toBe("grault");

@@ -474,6 +474,20 @@ describe("style changer macros", function() {
 				done();
 			});
 		});
+		it("composes with (text-rotate-x:)", function(done) {
+			var hook = runPassage("(text-rotate-x:160)+(text-rotate:20)[Rotated.]").find('tw-hook');
+			setTimeout(function() {
+				expect(hook.attr('style')).toMatch(/matrix3d\([^\)]+\) rotate\(20deg\)/);
+				done();
+			});
+		});
+		it("composes with (text-rotate-y:)", function(done) {
+			var hook = runPassage("(text-rotate-y:160)+(text-rotate:20)[Rotated.]").find('tw-hook');
+			setTimeout(function() {
+				expect(hook.attr('style')).toMatch(/matrix3d\([^\)]+\) rotate\(20deg\)/);
+				done();
+			});
+		});
 	});
 	describe("the (opacity:) macro", function() {
 		it("requires exactly 1 number argument between 0 and 1", function() {

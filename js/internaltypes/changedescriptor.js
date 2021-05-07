@@ -183,21 +183,23 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 						*/
 						keys(style).forEach(k => {
 							const v = style[k];
-							a[+(typeof v === "function")][k] = v;
+							a[+(typeof v === "function")].push({[k]:v});
 						});
 						return a;
-					}, [{},{}]);
+					}, [[],[]]);
 					/*
 						Now, the independent CSS can be applied immediately.
 					*/
-					elem.css(independent);
+					independent.forEach(e => elem.css(e));
 					/*
 						If the user has complicated story CSS, it's not possible
 						to determine the computed CSS of an element until it's connected to the
 						DOM. So, now this .css call is deferred for 1 frame, which should
 						(._.) be enough time for it to become attached.
 					*/
-					setTimeout(() => elem.css(dependent));
+					setTimeout(() => {
+						dependent.forEach(e => elem.css(e));
+					});
 				}
 				/*
 					If HTML attributes were included in the changeDescriptor, apply them now.

@@ -591,7 +591,8 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		Enchantments.panelRows.empty();
 		Enchantments.tabUpdate(0);
 		if (State.passage) {
-			Source.panelRows.text(Passages.get(State.passage).get('source'));
+			const p = Passages.get(State.passage);
+			p && Source.panelRows.text(p.get('source'));
 		}
 	}
 	/*

@@ -62,6 +62,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 					if (link.find('tw-error').length > 0) {
 						return;
 					}
+					e.stopPropagation();
 					event(link);
 					return;
 				}
