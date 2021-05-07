@@ -230,28 +230,58 @@ describe("interaction macros", function() {
 								expect(p.attr('tabindex')).toBe('0');
 							});
 						}
-						if (name === "?Page" && goTo) {
-							it("doesn't trigger when arriving on the page by the same input method", function(done) {
-								createPassage("''foo''","baz");
-								createPassage("(" + e.name + ":"+name+",'baz')''grault''","corge");
-								var p = runPassage("(" + e.name + ":"+name+",'corge')");
-								p[e.eventMethod]();
-								setTimeout(function() {
-									expect($('tw-passage:last-child').find('b').text()).toBe("grault");
-									done();
-								},20);
-							});
-							if (e.eventMethod === "click") {
-								it("doesn't trigger when arriving on the page via undo", function(done) {
+						if (name === "?Page") {
+							if (goTo) {
+								it("doesn't trigger when arriving on the page by the same input method", function(done) {
 									createPassage("''foo''","baz");
-									runPassage("(" + e.name + ":"+name+",'baz')''grault''","corge");
-									runPassage("");
-									$('tw-sidebar [alt=Undo]')[e.eventMethod]();
+									createPassage("(" + e.name + ":"+name+",'baz')''grault''","corge");
+									var p = runPassage("(t8n-arrive:'instant')(" + e.name + ":"+name+",'corge')");
+									p[e.eventMethod]();
 									setTimeout(function() {
 										expect($('tw-passage:last-child').find('b').text()).toBe("grault");
 										done();
 									},20);
 								});
+								if (e.eventMethod === "click") {
+									it("doesn't trigger when arriving on the page via undo", function(done) {
+										createPassage("''foo''","baz");
+										runPassage("(" + e.name + ":"+name+",'baz')''grault''","corge");
+										runPassage("");
+										$('tw-sidebar [alt=Undo]')[e.eventMethod]();
+										setTimeout(function() {
+											expect($('tw-passage:last-child').find('b').text()).toBe("grault");
+											done();
+										},20);
+									});
+								}
+							} else if (!undo) {
+								it("doesn't trigger when arriving on the page by a (goto:) revealed by the same input method", function(done) {
+									createPassage("''foo''","baz");
+									createPassage("(" + e.name + ":"+name+")[=''grault''","corge");
+									
+									var p = runPassage("(" + e.name + ":"+name+")[=(t8n-arrive:'instant')(goto:'corge')");
+									
+									p[e.eventMethod]();
+									setTimeout(function() {
+										expect($('tw-passage:last-child').find('b').text()).not.toBe("grault");
+										done();
+									},20);
+
+									done();
+								});
+								if (e.eventMethod === "click") {
+									it("doesn't trigger when arriving on the page by a link", function(done) {
+										createPassage("''foo''","baz");
+										createPassage("(" + e.name + ":"+name+")[=''grault''","corge");
+										
+										var p = runPassage("(t8n-arrive:'instant')[[corge]]");
+										p.find('tw-link')[e.eventMethod]();
+										setTimeout(function() {
+											expect($('tw-passage:last-child').find('b').text()).not.toBe("grault");
+											done();
+										},20);
+									});
+								}
 							}
 						}
 					});

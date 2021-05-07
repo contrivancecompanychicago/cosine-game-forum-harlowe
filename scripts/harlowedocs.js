@@ -256,7 +256,12 @@ html.on('click', '#night', function() { html.addClass('night'); $('#previewCode'
     })
     .on('click', '.previewButton:not(.previewCodeButton)', function(e) { previewPassage(e.target.parentNode.textContent.replace(/\\u200B/g,'')); });
 $('pre > code').append("<div class='previewButton' title='Run this Harlowe code.'></div>");
-}</script>
+}
+/* Chrome performance hack */
+if (!navigator.userAgent.includes("Firefox")) {
+	console.log("Removed animated elements for performance reasons:", $('[style*=animation:]').remove());
+}
+</script>
 `;
 /*
 	Done

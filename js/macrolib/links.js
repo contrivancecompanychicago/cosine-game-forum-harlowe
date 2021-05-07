@@ -30,7 +30,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			*/
 			"click.passage-link",
 			'tw-link',
-			function clickLinkEvent() {
+			function clickLinkEvent(e) {
 				const link = $(this),
 					/*
 						Since there can be a <tw-enchantment> between the parent <tw-expression>
@@ -84,6 +84,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 				});
 
 				if (next) {
+					e.stopPropagation();
 					// TODO: stretchtext
 					Engine.goToPassage(next, { transition });
 					return;
@@ -92,10 +93,12 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 					Or, a (link-undo:) or (link-fullscreen:) link.
 				*/
 				if (link.is('[undo]')) {
+					e.stopPropagation();
 					Engine.goBack({ transition });
 					return;
 				}
 				if (link.is('[fullscreen]')) {
+					e.stopPropagation();
 					Engine.toggleFullscreen();
 					/*
 						Notice that the presence of the handler below means that we don't have to

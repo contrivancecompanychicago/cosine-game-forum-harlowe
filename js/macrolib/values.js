@@ -986,7 +986,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			<div style="background:linear-gradient(0deg, rgba(191, 63, 63, 1) 0%, rgba(165, 191, 63, 1) 20%,
 				rgba(63, 191, 114, 1) 40%, rgba(63, 114, 191, 1) 60%, rgba(165, 63, 191, 1) 80%,
 				rgba(191, 63, 63, 1) 100%); height:64px;"></div>
-			</div>
+			
 			Any angle can be given to (gradient:), including diagonal values like 40 or 66.
 
 			Details:
