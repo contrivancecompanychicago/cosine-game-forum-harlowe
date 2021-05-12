@@ -2,7 +2,19 @@
 
 Documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
-### 3.2.2 changes (unreleased):
+### 3.2.3 changes (unreleased):
+
+#### Bugfixes
+
+ * Fixed a bug where `(click:?page)` would suppress a gradient background applied to ?Page via `(enchant:)` or `(change:)`.
+ * Fixed an incorrectly-worded error message resulting from a data name containing an error (such as `$a's (a: 1 to 2)`, which is invalid syntax).
+ * Debug Mode: fixed a bug where values in the Variables pane would sometimes be truncated incorrectly, causing partial HTML entities like "&am…" to appear.
+
+#### Alterations
+
+ * Made the syntax colour of the lambda keywords (`where`, `when`, `via`, `each` and `making`) slightly brighter.
+
+### 3.2.2 changes (May 12, 2021):
 
 #### Bugfixes
 

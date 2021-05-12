@@ -456,7 +456,7 @@ paths.forEach(function(path) {
 	let defs;
 	// .md files should be treated as entire single definitions
 	if (path === "README.md") {
-		defs = file.match(/### \d\.\d\.\d[^]*?\n(?=###[^#])/g).slice(0,3);
+		defs = file.match(/### \d\.\d\.\d[^]*?\n(?=###[^#])/g).slice(0,4);
 	} else if (path.endsWith('.md')) {
 		defs = [file];
 	} else {

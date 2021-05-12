@@ -38,6 +38,9 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			Check if it's a valid property name.
 		*/
 		let error;
+		if (TwineError.containsError(prop)) {
+			return error;
+		}
 		if (obj instanceof Map &&
 				(error = TwineError.containsError(isValidDatamapName(obj,prop)))) {
 			return error;
@@ -326,7 +329,13 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			and before the convertNegativeProp() branch.
 		*/
 		if (typeof obj === "string") {
-			obj = [...obj];
+			/*
+				This check should provide a little perf benefit in most cases,
+				where the string only has basic plane characters.
+			*/
+			if (/[^\x0000-\xFFFF]/.test(obj)) {
+				obj = [...obj];
+			}
 		}
 		if (isSequential(obj) && Number.isFinite(prop)) {
 			prop = convertNegativeProp(obj,prop);

@@ -1,7 +1,13 @@
 "use strict";
 define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerror', 'utils/operationutils', 'markup', 'twinescript/compiler'],
 ({impossible}, Passages, ChangerCommand, TwineError, {objectName,toSource}, {lex}, compile) => {
-	const {assign, create} = Object;
+	const {assign, create, defineProperty} = Object;
+	/*
+		This ensures that serialisation of Maps and Sets works as expected.
+	*/
+	defineProperty(Map.prototype, 'toJSON', { value: undefined });
+	defineProperty(Set.prototype, 'toJSON', { value: undefined });
+
 	/*
 		State
 		Singleton controlling the running game state.

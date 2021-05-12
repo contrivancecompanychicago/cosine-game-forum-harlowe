@@ -129,7 +129,17 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 					if (e.is(Utils.storyElement)) {
 						const enchantedProperties = Object.keys(Object.assign({},...cd.styles));
 						e.css(enchantedProperties.reduce((a,e)=>{
-							a[e] = "inherit";
+							/*
+								Backgrounds can be "inherited" through the simple means of
+								making them visible through the page element. This allows both
+								background-image and background-color to be "inherited".
+							*/
+							if (e === "background-color" || e === "background-image") {
+								a.background = 'transparent';
+							}
+							else {
+								a[e] = "inherit";
+							}
 							return a;
 						},{}));
 						/*

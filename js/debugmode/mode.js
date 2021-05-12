@@ -187,7 +187,13 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 				and falls back to the objectName if not. Note that the TwineScript_DebugName can contain HTML structures
 				(such as a <tw-colour> for colours) but the objectName could contain user-inputted data, so only the latter is escaped.
 			*/
-			const val = isObject(value) && value.TwineScript_DebugName ? value.TwineScript_DebugName() : escape(objectName(value));
+			const tooLong = value && value.length > 48 && !value.TwineScript_DebugName;
+			const val = isObject(value) && value.TwineScript_DebugName ? value.TwineScript_DebugName() : escape(
+				/*
+					If the value is greater than 48 characters, truncate it.
+				*/
+				objectName(value).slice(0, 48) + (tooLong ? "…" : "")
+			);
 			/*
 				Single variables, like $peas, should be displayed with no trail, as "peas".
 				Deep object properties, like $arr's 1st's 1st, should be displayed with a trail
@@ -211,12 +217,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			/*
 				Source code for objects can be viewed with a folddown button.
 			*/
-			const tooLong = val.length > 48 && !value.TwineScript_DebugName;
 			const folddown = typeof value === "object" || tooLong;
-			/*
-				If the value is greater than 36 characters, truncate it.
-			*/
-			const truncVal = (tooLong ? val.slice(0,48) + "…" : val);
 			/*
 				Create the <span>s for the variable's name and value.
 			*/
@@ -238,7 +239,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 					// Variable Scope
 					"<td class='temporary-variable-scope'>" + (tempScope || '') + "</td>",
 					// Value
-					"<td class='variable-value'>" + truncVal + "</td><td class='panel-row-buttons'>"
+					"<td class='variable-value'>" + val + "</td><td class='panel-row-buttons'>"
 						+ (folddown ? "<tw-folddown tabindex=0>(source:) </tw-folddown>" : '')
 					+ "</td>"
 				).add(

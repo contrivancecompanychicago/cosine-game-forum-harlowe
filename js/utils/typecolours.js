@@ -11,7 +11,7 @@
 		number:      "color:hsla(30,100%,30%,1.0)",
 		datamap:     "color:hsla(60,100%,30%,1.0)",
 		changer:     "color:hsla(90,100%,30%,1.0)",
-		lambda:      "color:hsla(120,100%,30%,1.0)",
+		lambda:      "color:hsla(120,100%,40%,1.0)",
 		hookName:    "color:hsla(160,100%,30%,1.0)",
 		string:      "color:hsla(180,100%,30%,1.0)",
 		identifier:  "color:hsla(200,80%,40%,1.0)",

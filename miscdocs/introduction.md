@@ -24,4 +24,4 @@ And now you get to enjoy all of this, and more.
 
 And, most importantly, a new toolbar has been implemented for the Twine 2 editor that allows common Harlowe code idioms to be quickly created.
 
-For a complete list of changes and outlines of how to use the above features, consult the <a href="#changes_3.2.0-changes">change log</a> section.
+For a complete list of changes and outlines of how to use the above features, consult the <a href="#changes_3.2.0-changes-(jan-4,-2021)">change log</a> section.

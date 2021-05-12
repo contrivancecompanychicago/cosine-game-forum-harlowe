@@ -1343,7 +1343,7 @@
 					}${
 						model.stops ? `background:linear-gradient(${model.angle}deg, ${
 							model.stops.map(stop => stop.getAttribute('data-colour') + " " + (stop.getAttribute('data-pos')*100) + "%")
-						})` : changers.background ? `background:${model.backgroundColour}` : ''
+						})` : changers.bg ? `background:${model.backgroundColour}` : ''
 					}`);
 				},
 			},{
@@ -1396,7 +1396,7 @@
 							model(m, el) {
 								const c = el[$]('[type=color]').value,
 									a = el[$]('[type=range]').value;
-								m.changerNamed('background').push(toHarloweColour(c, a));
+								m.changerNamed('bg').push(toHarloweColour(c, a));
 								m.backgroundColour = toCSSColour(c, a);
 								m.valid = true;
 							},
@@ -1410,7 +1410,7 @@
 								const stops = Array.from(el[$$]('.harlowe-3-colourStop')).sort((a,b) => a.getAttribute('data-pos') - b.getAttribute('data-pos'));
 								if (stops.length > 1) {
 									m.valid = true;
-									m.changerNamed('background').push(`(gradient: $deg, ${
+									m.changerNamed('bg').push(`(gradient: $deg, ${
 										stops.map(
 											stop => fourDecimals(stop.getAttribute('data-pos')) + "," + (stop.getAttribute('data-harlowe-colour') || stop.getAttribute('data-colour'))
 										)
@@ -1430,7 +1430,7 @@
 							step: 1,
 							model(m, elem) {
 								if (m.valid) {
-									const bg = m.changerNamed('background');
+									const bg = m.changerNamed('bg');
 									m.angle = +elem[$]('input').value;
 									bg[0] = bg[0].replace("$deg", m.angle);
 								}
