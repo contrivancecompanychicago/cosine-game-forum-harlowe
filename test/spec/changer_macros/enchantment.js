@@ -217,7 +217,8 @@ describe("enchantment macros", function () {
 			runPassage("(enchant:?Page,(color:'#800000')+(background:white))");
 			setTimeout(function() {
 				expect($('tw-story').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
-				expect($('tw-story').css('background-color')).toMatch(/(?:#ffffff|rgb\(\s*255,\s*255,\s*255\s*\))/);
+				// ?Page enchantments affecting the background cause <tw-story> to gain a transparent background.
+				expect($('tw-story').css('background-color')).toMatch(/(?:transparent|rgba?\(\s*0,\s*0,\s*0,\s*0\))/);
 				done();
 			});
 		});

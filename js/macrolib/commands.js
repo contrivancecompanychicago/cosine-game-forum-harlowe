@@ -2270,7 +2270,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		/*d:
 			(hide: ...HookName) -> Command
 
-			Hides a hook that was already visible, without fully erasing it or its contained macro calls.
+			Hides a hook, or hooks, that were already visible, without fully erasing them or their contained macro calls.
 
 			Example usage:
 			```
@@ -2287,7 +2287,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			as they are until you use (show:) to reveal them again.
 
 			Details:
-			(hide:) will hide every hook with the given name. To only hide a specific hook, you can use the
+			(hide:) will hide every hook with the given names. To only hide a specific hook, you can use the
 			possessive syntax, as usual: `(hide: ?1's 1st)`.
 
 			If you want to remove the hook's contents all together, and re-create it anew later, consider using (replace:) and (rerun:)
@@ -2504,9 +2504,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			(dialog: [Bind], String, ...String) -> Command
 			Also known as: (alert:)
 
-			A command that, when used, displays a pop-up dialog box with the given string displayed, and a number of links labeled with
-			the remaining other strings. When one of the links is clicked to dismiss the dialog, it evaluates to the string text of that clicked
-			link. If an optional bound variable is provided, that variable is updated to match the pressed button.
+			A command that, when used, displays a pop-up dialog box with the given string displayed, and a number of button-shaped links labeled with
+			the remaining other strings. If an optional bound variable is provided, that variable is updated to match the pressed button.
 
 			Example usage:
 			* `(dialog: "Beyond this point, things get serious. Grab a snack and buckle up.", "Sure.")`

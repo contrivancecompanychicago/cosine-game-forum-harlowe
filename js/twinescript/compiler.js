@@ -232,6 +232,13 @@ define(['utils'], ({impossible}) => {
 	*/
 	const comparisonOpTypes = ['inequality','is','isNot','isIn','contains','doesNotContain',
 		'isNotIn','isA','typifies','isNotA','untypifies','matches','doesNotMatch'];
+
+	/*
+		A helper that creates a TwineError.create() call, stringifying all arguments.
+	*/
+	function emitTwineError(type, message, explanation) {
+		return "TwineError.create(" + stringify(type) + "," + stringify(message) + "," + stringify(explanation) + ")";
+	}
 	
 	/*
 		This takes an array from TwineMarkup, rooted at an expression,
@@ -269,7 +276,7 @@ define(['utils'], ({impossible}) => {
 				should be abided.
 			*/
 			if (isVarRef && whitespaceError) {
-				return "TwineError" + dotCreate + "'operation'," + stringify(whitespaceError) + ")";
+				return emitTwineError('operation', whitespaceError);
 			}
 			return "";
 		}
@@ -338,7 +345,7 @@ define(['utils'], ({impossible}) => {
 			*/
 			else if (type === "whitespace") {
 				if (isVarRef && whitespaceError) {
-					return "TwineError" + dotCreate + "'operation'," + stringify(whitespaceError) + ")";
+					return emitTwineError('operation', whitespaceError);
 				}
 			}
 		}
@@ -525,9 +532,8 @@ define(['utils'], ({impossible}) => {
 				leftIsComparison        = isComparisonOp(before),
 				rightIsComparison       = isComparisonOp(after),
 				// This error message is used for elided "is not" comparisons.
-				ambiguityError = "TwineError.create('operation', 'This use of \"is not\" and \""
-					+ type + "\" is grammatically ambiguous',"
-					+ "'Maybe try rewriting this as \"__ is not __ " + type + " __ is not __\"') ";
+				ambiguityError = emitTwineError('operation', "This use of \"is not\" and \"" + type + "\" is grammatically ambiguous.",
+					"Maybe try rewriting this as \"__ is not __ " + type + " __ is not __\"");
 
 			openString = Operations + "." + type + "(";
 			midString = ",";
@@ -687,7 +693,7 @@ define(['utils'], ({impossible}) => {
 			right = compile(after, varRefArgs("right"));
 			closeString = ","
 				/*
-					Utils.stringify() is used to both escape the name
+					stringify() is used to both escape the name
 					string and wrap it in quotes.
 				*/
 				+ stringify(token.name) + ")"
@@ -724,7 +730,7 @@ define(['utils'], ({impossible}) => {
 			left = compile(before, varRefArgs("left"));
 			closeString = ","
 				/*
-					Utils.stringify() is used to both escape the name
+					stringify() is used to both escape the name
 					string and wrap it in quotes.
 				*/
 				+ stringify(token.name) + ")"
@@ -740,7 +746,7 @@ define(['utils'], ({impossible}) => {
 			left = It;
 			closeString = ","
 				/*
-					Utils.stringify() is used to both escape the name
+					stringify() is used to both escape the name
 					string and wrap it in quotes.
 				*/
 				+ stringify(token.name) + ")"
@@ -821,9 +827,7 @@ define(['utils'], ({impossible}) => {
 			needsLeft = needsRight = MUSTNT;
 		}
 		else if (type === "error") {
-			return "TwineError" + dotCreate + "'syntax'," + stringify(token.message)
-				+ (token.explanation ? ", " + stringify(token.explanation) : "")
-			+ ")";
+			return emitTwineError('syntax', stringify(token.message), token.explanation ? stringify(token.explanation) : '');
 		}
 		/*
 			If a token was found, we can recursively
@@ -861,22 +865,26 @@ define(['utils'], ({impossible}) => {
 				/*
 					Otherwise, create the error object for end-user examination.
 				*/
-				return "TwineError" + dotCreate + "'operation','I need usable code to be "
+				return emitTwineError('operation', "I need usable code to be "
 					+ (needsLeft === MUST ? "left " : "")
 					+ (needsLeft === MUST && needsRight === MUST ? "and " : "")
 					+ (needsRight === MUST ? "right " : "")
-					+ 'of "' + token.text + '"' + "')";
+					+ 'of ' + token.text + '.');
 			}
 			/*
 				Conversely, if a value is present at the left or right, and it MUSTN'T be there,
 				produce an error message.
 			*/
 			if ((needsLeft === MUSTNT && left) || (needsRight === MUSTNT && right)) {
-				return "TwineError" + dotCreate + "'operation','There can't be code to the "
+				return emitTwineError('operation', "There can't be a "
+					+ ((left && needsLeft === MUSTNT && right && needsRight === MUSTNT) ? left + ' or ' + right
+						: (left && needsLeft === MUSTNT ? left : right))
+					+ " to the "
 					+ (needsLeft === MUSTNT ? "left " : "")
 					+ (needsLeft === MUSTNT && needsRight === MUSTNT ? "or " : "")
 					+ (needsRight === MUSTNT ? "right " : "")
-					+ 'of "' + token.text + '"' + "')";
+					+ 'of ' + token.text + ".",
+					"There could be a comma missing between them, or there could be a ");
 			}
 			return openString + left + midString + right + closeString;
 		}

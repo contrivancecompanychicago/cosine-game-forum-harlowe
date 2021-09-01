@@ -259,7 +259,7 @@ $('pre > code').append("<div class='previewButton' title='Run this Harlowe code.
 }
 /* Chrome performance hack */
 if (!navigator.userAgent.includes("Firefox")) {
-	console.log("Removed animated elements for performance reasons:", $('[style*=animation:]').remove());
+	console.log("Removed animated elements for performance reasons:", $('[style*="animation:"]').remove());
 }
 </script>
 `;
