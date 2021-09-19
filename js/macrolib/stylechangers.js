@@ -577,7 +577,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 					event: {
 						when: true,
 						filter: section => {
-							if (Utils.anyInputDown()) {
+							if (Utils.anyInputDown() && skip) {
 								delay -= skip;
 							}
 							return section.eval("Operations").Identifiers.time > delay ? [true] : [];

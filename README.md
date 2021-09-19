@@ -6,6 +6,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 #### Bugfixes
 
+ * Fixed a bug where `(after:)` would stop working (the hook wouldn't appear) when the mouse was clicked or a key was pressed, and the optional second value wasn't provided.
  * Fixed a bug where `(click:?page)` would suppress a gradient background applied to ?Page via `(enchant:)` or `(change:)`.
  * Fixed an incorrectly-worded error message resulting from a data name containing an error (such as `$a's (a: 1 to 2)`, which is invalid syntax).
  * Fixed a bug where attempting to generate certain error messages would instead cause an unrelated Javascript error to occur.

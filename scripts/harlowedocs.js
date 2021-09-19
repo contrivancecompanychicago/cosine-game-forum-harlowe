@@ -224,7 +224,7 @@ This panel ↓ will show any variables that are set by the code.
 <main>${outputFile}
 <p><small>This manual was generated at: ${new Date}</small></p>
 </main>
-/* Preview */
+<!-- Preview -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.50.2/codemirror.min.js"></script>
 <link rel=stylesheet href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.50.2/codemirror.min.css">
 <style>

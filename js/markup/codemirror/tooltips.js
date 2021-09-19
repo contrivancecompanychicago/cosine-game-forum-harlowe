@@ -156,6 +156,7 @@
 			}
 			const rt = defs.returnType.toLowerCase();
 			return `This is a <b>call to the \`(${defs.name}:)\` macro</b>. ${
+					rt === "metadata" ? `Metadata macros like this should be placed at the very top of the passage, before all other macros.` :
 					rt === "instant" || rt === "command" ? `It produces a <span class="cm-harlowe-3-macroName-command">command</span>, so it should appear in passage code without being connected to a hook.` :
 					rt === "changer" ? `It produces a <span class="cm-harlowe-3-macroName-changer">changer</span>, which can be placed to the left of a hook or a command (passage links are commands), or combined with other changers.` :
 					rt === "any" || rt === "string" ? "" :
