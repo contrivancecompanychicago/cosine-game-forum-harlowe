@@ -110,7 +110,7 @@ define(['jquery', 'utils'], ($, Utils) => {
 		},
 		
 		/*
-			In TwineScript, both the runtime (operations.js) and Javascript eval()
+			In Harlowe, both the runtime (operations.js) and Javascript eval()
 			of compiled code (by compiler.js) can throw errors. They should be treated
 			as equivalent within the engine.
 			
@@ -124,14 +124,23 @@ define(['jquery', 'utils'], ($, Utils) => {
 			@return {Error|TwineError|Boolean} The first error encountered, or false.
 		*/
 		containsError(...args) {
-			return args.reduce(
-				(last, e) => last ? last
-					: e instanceof Error ? e
-					: TwineError.isPrototypeOf(e) ? e
-					: Array.isArray(e) ? TwineError.containsError(...e)
-					: false,
-				false
-			);
+			// Due to high usage, this is a simple for-loop.
+			for (let i = 0; i < args.length; i += 1) {
+				const e = args[i];
+				if (e instanceof Error) {
+					return e;
+				}
+				if (TwineError.isPrototypeOf(e)) {
+					return e;
+				}
+				if (Array.isArray(e)) {
+					const f = TwineError.containsError(...e);
+					if (f) {
+						return f;
+					}
+				}
+			}
+			return false;
 		},
 		
 		/*

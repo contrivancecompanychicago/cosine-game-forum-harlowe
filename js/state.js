@@ -597,10 +597,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			newPresent(timeline[recent].passage);
 			return true;
 		}
-		return {
-			serialise: serialise,
-			deserialise: deserialise,
-		};
+		return { serialise, deserialise, };
 	})());
 	
 	Object.seal(Moment);

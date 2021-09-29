@@ -1,6 +1,6 @@
 {
   "name": "twine-harlowe",
-  "version": "3.2.2",
+  "version": "3.2.3",
   "author": "Leon Arnott",
   "description": "The default runtime for Twine 2 stories",
   "license": "Zlib",
@@ -25,7 +25,7 @@
   "dependencies": {
     "almond": "0.3",
     "es6-shim": "latest",
-    "jquery": "^3.5.1"
+    "jquery": "^3.6"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",

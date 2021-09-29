@@ -2445,7 +2445,11 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 				[name === "box" ? "margin-left" : "left"]: marginLeft + boxUnits,
 				"box-sizing":   "content-box",
 				"overflow-y":   "auto",
-				padding() { return $(this).css('padding') || '1em'; },
+				padding() {
+					const p = $(this).css('padding');
+					// Chrome compat hack: instead of an empty string, unpadded elements have "0px" padding.
+					return (p && p !== "0px") ? p : '1em';
+				},
 			};
 			if (height !== undefined) {
 				styles.height = height + (name === "box" ? "em" : "vh");

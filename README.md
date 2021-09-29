@@ -6,6 +6,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 #### Bugfixes
 
+ * Fixed a long-standing bug where passage elements added by header or footer tagged passages would have a HTML title attribute indicated the included passage's name.
+ * Fixed a bug where `(box:)` and `(float-box:)`'s default interior padding was wrong in Chrome (but not Firefox).
  * Fixed a bug where `(after:)` would stop working (the hook wouldn't appear) when the mouse was clicked or a key was pressed, and the optional second value wasn't provided.
  * Fixed a bug where `(click:?page)` would suppress a gradient background applied to ?Page via `(enchant:)` or `(change:)`.
  * Fixed an incorrectly-worded error message resulting from a data name containing an error (such as `$a's (a: 1 to 2)`, which is invalid syntax).

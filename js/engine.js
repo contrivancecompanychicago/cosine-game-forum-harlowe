@@ -54,7 +54,7 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 		setup passage source. Used in showPassage.
 	*/
 	function setupPassageElement(tagType, setupPassage) {
-		return "<tw-include type=" + tagType + " title='"
+		return "<tw-include type=" + tagType + " name='"
 			+ escape(setupPassage.get('name'))
 			+ "'>"
 			+ setupPassage.get('source')

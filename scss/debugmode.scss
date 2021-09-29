@@ -75,7 +75,7 @@ $zindex: 999999;
 		content: "<tw-align>";
 	}
 	tw-include::before {
-		content: "<tw-include type=\"" attr(type) "\" title=\"" attr(title) "\">";
+		content: "<tw-include type=\"" attr(type) "\" name=\"" attr(name) "\">";
 	}
 }
 
@@ -211,7 +211,7 @@ $zindex: 999999;
 		background-color: hsla(30,60%,50%,0.1);
 		&::before {
 			@include tiny-annotation();
-			content: attr(type) " \"" attr(title) "\"";
+			content: attr(type) " \"" attr(name) "\"";
 		}
 	}
 }
