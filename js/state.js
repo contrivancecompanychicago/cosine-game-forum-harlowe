@@ -430,7 +430,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				where an unserialisable object was (set:) does NOT revert the
 				serialisability status.)
 
-				create an array (of [var, value] pairs) that shows each variable that
+				Create an array (of [var, value] pairs) that shows each variable that
 				couldn't be serialised at each particular turn.
 			*/
 			const serialisability = ret.map(
@@ -484,6 +484,13 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 								a[key] = toSource(variable[key]);
 								return a;
 							},{});
+						}
+						/*
+							Mock Visits should be stored as well. As of Oct 2021, it's currently not decided
+							what should happen when a mock visits savefile is loaded outside of Debug Mode.
+						*/
+						if (name === "TwineScript_MockVisits") {
+							return variable;
 						}
 						return toSource(variable);
 					}
@@ -582,7 +589,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				} catch(e) {
 					return Error(genericError);
 				}
-				
+
 				lastVariables = moment.variables;
 				/*
 					Re-establish the moment objects' prototype link to Moment.

@@ -624,6 +624,12 @@ describe("property indexing", function() {
 					expect('(set: $a to "𐌎old")(set: $a\'s (a:2,3)\'s (a:1,2) to "ar")$a').markupToPrint('𐌎ard');
 					expect('(set: $a to "𐌎old")(set: $a\'s (a:3,2)\'s (a:1,2) to "ar")$a').markupToPrint('𐌎rad');
 				});
+				it("isn't ridiculously slow", function() {
+					var p = performance.now();
+					runPassage("(set:$a to '" + 'A'.repeat(65536) + "')");
+					expect("(print:$a's (range:1,65534)'s length)").not.markupToError();
+					expect(performance.now() - p).toBeLessThan(1000);
+				});
 			});
 		});
 		describe("for colours", function() {

@@ -245,6 +245,9 @@
 				const tooltip = document.querySelector('.harlowe-3-tooltip');
 				tooltip && tooltip.remove();
 			});
+			// Remove the Insert key mode.
+			cm.addKeyMap({ Insert(){} });
+			cm.toggleOverwrite(false);
 			init = null;
 		};
 		

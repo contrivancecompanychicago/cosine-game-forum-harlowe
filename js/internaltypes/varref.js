@@ -33,6 +33,8 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		an error instead if it is not.
 		@return {String|Error}
 	*/
+	const youCanOnlyAccess = "You can only access position strings/numbers ('4th', 'last', '2ndlast', (2), etc.) or slices ('1stTo2ndlast', '3rdTo5th'), ";
+	const noZeroth = "You can't access the '0th' or '0thlast' position of ";
 	function compilePropertyIndex(obj, prop) {
 		/*
 			Check if it's a valid property name.
@@ -59,8 +61,9 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		*/
 		if (isSequential(obj)) {
 			let match;
-			const youCanOnlyAccess = "You can only access position strings/numbers ('4th', 'last', '2ndlast', (2), etc.) or slices ('1stTo2ndlast', '3rdTo5th'), ";
-			const noZeroth = "You can't access the '0th' or '0thlast' position of " + objectName(obj) + ".";
+			/*
+				Due to speed concerns, objectName() must not be called unless it will definitely be used.
+			*/
 			/*
 				Number properties are treated differently from strings by sequentials:
 				the number 1 is treated the same as the string "1st", and so forth.
@@ -87,7 +90,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			*/
 			else if (typeof prop === "string" && (match = /^(\d+)(?:st|[nr]d|th)last$/i.exec(prop))) {
 				if (match[1] === "0") {
-					return TwineError.create("property", noZeroth);
+					return TwineError.create("property", noZeroth + objectName(obj) + ".");
 				}
 				/*
 					obj.length cannot be trusted here: if it's an astral-plane
@@ -99,7 +102,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			}
 			else if (typeof prop === "string" && (match = /^(\d+)(?:st|[nr]d|th)$/i.exec(prop))) {
 				if (match[1] === "0") {
-					return TwineError.create("property", noZeroth);
+					return TwineError.create("property", noZeroth + objectName(obj) + ".");
 				}
 				/*
 					It's actually important that prop remains a number and not a string:
@@ -306,6 +309,14 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		Note: strings cannot be passed in here as obj because of their UCS-2 .length:
 		you must pass [...str] instead.
 	*/
+	/*
+		Because of the performance concerns of converting strings to arrays repeatedly,
+		as well as checking them for astral characters, strings whose properties are accessed
+		have their 'correct' representations cached in this Map.
+		For obvious reasons, this cache basically never has to be invalidated.
+	*/
+	const astralCharacter = /[^\x0000-\xFFFF]/;
+	const testedStrings = new Map();
 	function objectOrMapGet(obj, prop) {
 		if (obj === undefined) {
 			return obj;
@@ -330,11 +341,28 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		*/
 		if (typeof obj === "string") {
 			/*
+				Check the cache first.
+			*/
+			if (testedStrings.has(obj)) {
+				obj = testedStrings.get(obj);
+			}
+			/*
 				This check should provide a little perf benefit in most cases,
 				where the string only has basic plane characters.
 			*/
-			if (/[^\x0000-\xFFFF]/.test(obj)) {
-				obj = [...obj];
+			else if (astralCharacter.test(obj)) {
+				/*
+					Cache the array version of this astral string.
+				*/
+				const arrayed = [...obj];
+				testedStrings.set(obj, arrayed);
+				obj = arrayed;
+			}
+			else {
+				/*
+					Cache this basic string.
+				*/
+				testedStrings.set(obj, obj);
 			}
 		}
 		if (isSequential(obj) && Number.isFinite(prop)) {
@@ -687,7 +715,13 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			if (this.error) {
 				return this.error;
 			}
-			const deepestObject = this.compiledPropertyChain.slice(0,-1).reduce((deepestObject, prop) => get(deepestObject, prop), this.object);
+			/*
+				For speed concerns, this is a for-loop.
+			*/
+			let deepestObject = this.object;
+			for(let i = 0; i < this.compiledPropertyChain.length - 1; i += 1) {
+				deepestObject = get(deepestObject, this.compiledPropertyChain[i]);
+			}
 
 			return get(deepestObject, this.compiledPropertyChain.slice(-1)[0],
 				/*
@@ -1028,6 +1062,12 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				propertyChain to include its own, and use its object.
 			*/
 			if (VarRefProto.isPrototypeOf(object)) {
+				/*
+					Propagate passed-in wrapped errors.
+				*/
+				if (isObject(object.error)) {
+					return object;
+				}
 				propertyChain = object.propertyChain.concat(propertyChain);
 				object = object.object;
 			}

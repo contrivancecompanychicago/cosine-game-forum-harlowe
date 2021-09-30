@@ -205,6 +205,16 @@ describe("save macros", function() {
 			},120);
 			//TODO: Test that the save data is actually deleted.
 		});
+		it("can restore mock visits", function(done) {
+			runPassage("(mock-visits:'test','test','test')",'test');
+			runPassage("(savegame:'1')",'bar');
+			runPassage("(mock-visits:'bar')",'baz');
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("(print:visits)").markupToPrint('5'); // 3 mocks, 1 visit above, plus this passage
+				done();
+			},120);
+		});
 	});
 });
 

@@ -11,12 +11,17 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where `(after:)` would stop working (the hook wouldn't appear) when the mouse was clicked or a key was pressed, and the optional second value wasn't provided.
  * Fixed a bug where `(click:?page)` would suppress a gradient background applied to ?Page via `(enchant:)` or `(change:)`.
  * Fixed an incorrectly-worded error message resulting from a data name containing an error (such as `$a's (a: 1 to 2)`, which is invalid syntax).
- * Fixed a bug where attempting to generate certain error messages would instead cause an unrelated Javascript error to occur.
+ * Fixed a bug where Harlowe attempting to generate certain error messages would instead cause an unrelated Javascript error to occur.
+ * Fixed a Javascript bug that resulted when using `(load-game:)` to load a saved game that had previously used `(mock-visits:)` in Debug Mode.
+ * Fixed a bug where a Javascript error would be produced when 0 was used in a substring or subarray data name, such as `$a's (range:0,2)`. Now, a proper error message will be given.
  * Debug Mode: fixed a bug where values in the Variables pane would sometimes be truncated incorrectly, causing partial HTML entities like "&am…" to appear.
 
 #### Alterations
 
+ * Certain kinds of intense substring or subarray data names, such as `$a's (range:1,65535)`, have had their runtime performance improved.
  * Made the syntax colour of the lambda keywords (`where`, `when`, `via`, `each` and `making`) slightly brighter.
+ * `(mock-visits:)` effects are now saved using `(save-game:)` in Debug Mode.
+ * Editor: disabled the "overwrite" input mode that was toggled by pressing Insert, because I've decided it's too confusing and easy to activate accidentally.
 
 ### 3.2.2 changes (May 12, 2021):
 
