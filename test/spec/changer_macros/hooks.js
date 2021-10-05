@@ -50,23 +50,4 @@ describe("miscellaneous hook changer macros", function() {
 			expect(runPassage("(v6m:)[A\n\n\nB]").find('tw-consecutive-br').length).toBe(2);
 		});
 	});
-	describe("the (verbatim-print:) macro", function() {
-		it("takes any one value", function() {
-			expect("(verbatim-print:)").markupToError();
-			expect("(verbatim-print:'A')").not.markupToError();
-			expect("(verbatim-print:(css:''))").not.markupToError();
-			expect("(verbatim-print:red)").not.markupToError();
-		});
-		it("is aliased as (v6m-print:)", function() {
-			expect("(v6m-print:'$foo')").markupToPrint('$foo');
-		});
-		it("prints the given value verbatim", function() {
-			expect("(verbatim-print:'$foo')").markupToPrint('$foo');
-			expect("(set:$foo to '**bar**')(verbatim-print:$foo)").markupToPrint('**bar**');
-		});
-		it("preserves newlines, and creates <tw-consecutive-br>s appropriately", function() {
-			expect(runPassage("(v6m-print:'A \n B \n C')").find('br').length).toBe(2);
-			expect(runPassage("(v6m-print:'A\n\n\nB')").find('tw-consecutive-br').length).toBe(2);
-		});
-	});
 });

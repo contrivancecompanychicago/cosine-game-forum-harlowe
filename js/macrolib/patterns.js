@@ -386,7 +386,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			This is part of a suite of string pattern macros. Consult the (p:) article to learn more about string patterns, special user-created datatypes
 			that can match very precise kinds of strings.
 
-			When you use this in (unpack:), such as `(unpack: "Connie" into (p-opt:'Lord')-type _isLord`, and the optional pattern doesn't match,
+			When you use this in (unpack:), such as `(unpack: "Connie" into (p:(p-opt:"Lord")-type _isLord, str-type _name))`, and the optional pattern doesn't match,
 			the variable will be set to the empty string "".
 
 			Note that while you can use this as the datatype of a TypedVar (as shown previously), you can't nest TypedVars inside this, because it is an optional match - `(set: (p:"A",(p-opt:digit-type _d)) to "A")`

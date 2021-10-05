@@ -12,11 +12,14 @@ describe("basic command macros", function() {
 		it("prints the text equivalent of string expressions", function() {
 			expect("(print: 'gar' + 'ply')").markupToPrint("garply");
 		});
-		it("prints twinemarkup in strings", function() {
+		it("prints markup in strings", function() {
 			var expr = runPassage("(print: '//gar' + 'ply//')").find('tw-expression');
 
 			expect(expr.text()).toBe("garply");
 			expect(expr.children().is('i')).toBe(true);
+		});
+		it("prints strings with escaped line breaks correctly", function() {
+			expect("(set:$a to '\\" + '\n' + "A')(print:$a)").markupToPrint("A");
 		});
 		it("prints the text equivalent of boolean expressions", function() {
 			expect("(print: true)").markupToPrint("true");
@@ -66,6 +69,30 @@ describe("basic command macros", function() {
 			});
 		});
 	});
+
+	describe("the (verbatim-print:) macro", function() {
+		it("takes any one value", function() {
+			expect("(verbatim-print:)").markupToError();
+			expect("(verbatim-print:'A')").not.markupToError();
+			expect("(verbatim-print:(css:''))").not.markupToError();
+			expect("(verbatim-print:red)").not.markupToError();
+		});
+		it("is aliased as (v6m-print:)", function() {
+			expect("(v6m-print:'$foo')").markupToPrint('$foo');
+		});
+		it("prints the given value verbatim", function() {
+			expect("(verbatim-print:'$foo')").markupToPrint('$foo');
+			expect("(set:$foo to '**bar**')(verbatim-print:$foo)").markupToPrint('**bar**');
+		});
+		it("preserves newlines, and creates <tw-consecutive-br>s appropriately", function() {
+			expect(runPassage("(v6m-print:'A \n B \n C')").find('br').length).toBe(2);
+			expect(runPassage("(v6m-print:'A\n\n\nB')").find('tw-consecutive-br').length).toBe(2);
+		});
+		it("prints strings with escaped line breaks correctly", function() {
+			expect("(set:$a to '\\" + '\n' + "A')(v6m-print:$a)").markupToPrint("\\\nA");
+		});
+	});
+
 	describe("the (display:) macro", function() {
 		it("requires exactly 1 string argument", function() {
 			expect("(display:)").markupToError();

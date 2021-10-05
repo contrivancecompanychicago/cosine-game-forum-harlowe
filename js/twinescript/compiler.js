@@ -307,11 +307,15 @@ define(['utils'], ({impossible}) => {
 			}
 			else if (type === "string") {
 				/*
-					Note that this is entirely reliant on the fact that TwineScript string
+					Note that this is reliant on the fact that TwineScript string
 					literals are currently exactly equal to JS string literals (minus template
 					strings and newlines).
 				*/
-				return token.text.replace(/\n/g, "\\n");
+				return token.text.replace(/(.?)\n/g, (_,a) =>
+					/*
+						If a literal newline has a \ before it (such as when invoking the escaped line ending syntax), DON'T escape the newline without escaping the \ first.
+					*/
+					(a === "\\" ? "\\\\" : a === "\n" ? "\\n" : a) + "\\n");
 			}
 			else if (type === "hook") {
 				/*

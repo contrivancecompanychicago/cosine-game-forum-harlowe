@@ -14,6 +14,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where Harlowe attempting to generate certain error messages would instead cause an unrelated Javascript error to occur.
  * Fixed a Javascript bug that resulted when using `(load-game:)` to load a saved game that had previously used `(mock-visits:)` in Debug Mode.
  * Fixed a bug where a Javascript error would be produced when 0 was used in a substring or subarray data name, such as `$a's (range:0,2)`. Now, a proper error message will be given.
+ * Fixed a long-standing bug where a string containing \ followed by a newline would result in the newline transforming into the letter "n".
  * Debug Mode: fixed a bug where values in the Variables pane would sometimes be truncated incorrectly, causing partial HTML entities like "&am…" to appear.
 
 #### Alterations
@@ -21,6 +22,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Certain kinds of intense substring or subarray data names, such as `$a's (range:1,65535)`, have had their runtime performance improved.
  * Made the syntax colour of the lambda keywords (`where`, `when`, `via`, `each` and `making`) slightly brighter.
  * `(mock-visits:)` effects are now saved using `(save-game:)` in Debug Mode.
+ * Added `newline` as an alias for the `linebreak` datatype. (Some parts of the documentation previously erroneously used the former instead of the latter.)
  * Editor: disabled the "overwrite" input mode that was toggled by pressing Insert, because I've decided it's too confusing and easy to activate accidentally.
 
 ### 3.2.2 changes (May 12, 2021):

@@ -232,12 +232,15 @@ describe("patterns", function() {
 			expect("(set: $a to 'Ӝӝӝ' is a (p:...anycase))(print:$a)").markupToPrint("true");
 			expect("(set: $a to '2' is a anycase)(print:$a)").markupToPrint("false");
 		});
-		it("'linebreak' matches line breaks", function() {
-			expect("(set: $a to '\\r\\n' is a linebreak)(print:$a)").markupToPrint("true");
-			expect("(set: $a to '\\n' is a linebreak)(print:$a)").markupToPrint("true");
-			expect("(set: $a to '\\r' is a linebreak)(print:$a)").markupToPrint("true");
-			expect("(set: $a to last of 'Red\n' is a linebreak)(print:$a)").markupToPrint("true");
-			expect("(set: $a to '' is a linebreak)(print:$a)").markupToPrint("false");
+		it("'linebreak' or 'newline' matches line breaks", function() {
+			['linebreak','newline'].forEach(e=>{
+				expect("(set: $a to '\\r\\n' is a "+e+")(print:$a)").markupToPrint("true");
+				expect("(set: $a to '\\n' is a "+e+")(print:$a)").markupToPrint("true");
+				expect("(set: $a to '\\r' is a "+e+")(print:$a)").markupToPrint("true");
+				expect("(set: $a to last of 'Red\n' is a "+e+")(print:$a)").markupToPrint("true");
+				expect("(set: $a to '' is a "+e+")(print:$a)").markupToPrint("false");
+			});
+			expect("(print:linebreak is newline)").markupToPrint("true");
 		});
 		it("'empty' matches only empty structures", function() {
 			expect("(set: $a to (a:) is a empty)(print:$a)").markupToPrint("true");

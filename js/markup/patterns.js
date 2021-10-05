@@ -1014,7 +1014,7 @@
 		datatype: either(
 			"alnum", "alphanumeric", "any(?:case)?", "array", "bool(?:ean)?", "changer", "colou?r", "const",
 			"command", "dm", "data" + either("map","type","set"), "ds", "digit",
-			"gradient", "empty", "even", "int" + notBefore('o') + "(?:eger)?", "lambda", "lowercase", "macro", "linebreak",
+			"gradient", "empty", "even", "int" + notBefore('o') + "(?:eger)?", "lambda", "lowercase", "macro", "linebreak", "newline",
 			"num(?:ber)?", "odd", "str(?:ing)?", "uppercase", "whitespace"
 		) + wb,
 		

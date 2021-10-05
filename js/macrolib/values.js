@@ -14,14 +14,15 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 		/*d:
 			String data
 			
-			A string is just a run of text - a sequence of text characters strung together.
+			A string is just a run of text - a sequence of text characters strung together. To indicate that a
+			sequence of characters is a string, place a matching pair of either " or ' characters around them.
 			
 			When making a story, you'll mostly work with strings that you intend to insert into
 			the passage source. If a string contains markup, then the markup will be processed when it's
 			inserted. For instance, `"The ''biiiiig'' bellyblob"` will print as "The <b>biiiiig</b> bellyblob".
 			Even macro calls inside strings will be processed: printing `"The (print:2*3) bears"` will print "The 6 bears".
-			If you wish to avoid this, simply include the verbatim markup inside the string:``"`It's (exactly: as planned)`"`` will
-			print "It's (exactly: as planned)".
+			If you wish to avoid this, you can include the verbatim markup inside the string:``"`It's (exactly: as planned)`"`` will
+			print "It's (exactly: as planned)". Alternatively, you can use (verbatim-print:) to prevent the markup from being processed.
 			
 			You can add strings together to join them: `"The" + ' former ' + "Prime Minister's"`
 			pushes the strings together, and evaluates to "The former Prime Minister's". Notice

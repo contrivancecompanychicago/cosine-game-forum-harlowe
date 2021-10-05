@@ -57,7 +57,7 @@ define([
 		| `anycase` | This matches any character which is case-sensitive - that is, where its (lowercase:) form doesn't match its (uppercase:) form.
 		| `alphanumeric`, `alnum` | Only matches a single alphanumeric character (letters and numbers).
 		| `digit` | Only matches a string consisting of exactly one of the characters '0', '1', '2', '3', '4', '5', '6', '7', '8', and '9'.
-		| `linebreak` | Only matches a line break character.
+		| `linebreak`, `newline` | Only matches a line break character (also known as a "newline" character).
 		| `const` | Matches nothing; Use this only with (set:) to make constants.
 		| `any` | Matches anything; Use this with (macro:) to make variables that accept any storable type, or with (set:) inside data structure patterns.
 
@@ -192,6 +192,7 @@ define([
 				name === "boolean"  ? "bool" :
 				name === "alphanumeric" ? "alnum" :
 				name === "integer"  ? "int" :
+				name === "newline" ? "linebreak" :
 				name
 			);
 			const ret = Object.create(this);
