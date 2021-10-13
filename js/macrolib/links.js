@@ -49,7 +49,13 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 						(which means the click input should be dropped).
 					*/
 					section = closest.data('section');
-				if (section && section.stackTop && section.stackTop.blocked) {
+				if (section && section.stackTop && section.stackTop.blocked &&
+						/*
+							However, links inside (dialog:)s and other blocking elements may still have their
+							events occur. This is currently (as of October 2021) distinct from (click:) enchantments, which
+							are "passage-wide" and thus remain blocked.
+						*/
+						(!(section.stackTop.blocked instanceof $) || !section.stackTop.blocked.find(link).length)) {
 					return;
 				}
 

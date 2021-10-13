@@ -886,6 +886,9 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 							/*
 								First, don't do anything if control flow in the section is currently blocked
 								(which means the click/mouseover input should be dropped).
+
+								Note that this currently (October 2021) does not allow enchantment events to fire
+								even within a (dialog:) or other element which blocks control flow.
 							*/
 							if (desc.section.stackTop && desc.section.stackTop.blocked) {
 								return;

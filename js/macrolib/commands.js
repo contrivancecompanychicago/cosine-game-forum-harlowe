@@ -624,7 +624,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				/*
 					Blocking the passage immediately ceases rendering; note that this should never get unblocked.
 				*/
-				return "blocked";
+				return { blocked: true };
 			},
 			[String])
 
@@ -676,9 +676,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				*/
 				requestAnimationFrame(()=> Engine.goBack({ transition: cd.data.passageT8n }));
 				/*
-					As with the (goto:) macro, "blocked" signals to Section's runExpression() to cease evaluation.
+					As with the (goto:) macro, {blocked} signals to Section's runExpression() to cease evaluation.
 				*/
-				return "blocked";
+				return { blocked: true };
 			},
 			[]);
 
@@ -2436,7 +2436,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 							{name:"No", cancel:true, callback: () => section.unblock()},
 						],
 					});
-					return "blocked";
+					return { blocked: d };
 				}
 				requestAnimationFrame(Engine.showPassage.bind(Engine, State.passage, false /* stretchtext value */));
 			},
@@ -2529,15 +2529,15 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 
 			If no button strings are given, a single link reading "OK" will be used. Giving empty strings for any of the links will cause an error.
 
-			When the dialog is on-screen, the entire game is essentially "paused" - until it is dismissed, no further computations are performed, links can't be clicked,
-			and (live:) and (event:) macros shouldn't fire.
+			When the dialog is on-screen, the entire game is essentially "paused" - until it is dismissed,
+			no further computations are performed, links can't be clicked (except links inside the dialog text itself),
+			(click:), (mouseover:) and (mouseout:) enchantments shouldn't work, and (live:) and (event:) macros
+			shouldn't fire.
 
 			For obvious reasons, you cannot supply a two-way bound variable to this macro. Doing so will cause an error to result.
 
 			From version 3.2.0 on, it is possible to attach changers to this command. `(t8n:'slide-up')+(text-rotate-x:25)(dialog:"EMAIL SENT!")`, for instance, produces a dialog
 			that's tilted upward, and which slides upward when it appears.
-
-			You can customise the dialog by attaching changers to this command. Attaching a (transition:) command will cause the dialog to appear using that transition.
 
 			See also:
 			(cycling-link:), (prompt:), (confirm:)
@@ -2587,7 +2587,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				/*
 					Create the dialog, passing in the ChangeDescriptor, to be used when rendering the string.
 				*/
-				dialog({
+				const d = dialog({
 					section, message, cd,
 					buttons: buttons.map(b => ({
 						name: b,
@@ -2600,8 +2600,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 							section.unblock((varBind && varBind.set(b)) || '');
 						},
 					})),
-				});
-				return "blocked";
+				})
+;				return { blocked: d };
 			},
 			[either(VarBind, String), zeroOrMore(String)])
 
@@ -2996,7 +2996,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			support certain newer browsers that no longer offer this function, the macro was changed.
 
 			When the dialog is on-screen, the entire game is essentially "paused" - until it is dismissed,
-			no further computations are performed, links can't be clicked, and (live:) and (event:) macros
+			no further computations are performed, links can't be clicked (except links inside the dialog text itself),
+			(click:), (mouseover:) and (mouseout:) enchantments shouldn't work, and (live:) and (event:) macros
 			shouldn't fire.
 
 			A note about player-submitted strings: because most string-printing functionality in Harlowe (the (print:) macro,
@@ -3036,6 +3037,11 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 						callback: () => section.unblock(defaultValue),
 					}),
 				});
+				/*
+					The blocking dialog is passed to section.stackTop.blocked. This allows
+					certain local events within the dialog (such as (link:)s) to still be usable.
+				*/
+				section.stackTop.blocked = d;
 				// Regrettably, this arbitrary timeout seems to be the only reliable way to focus the <input>.
 				setTimeout(() => d.find('input').last().focus(), 100);
 			},
@@ -3065,7 +3071,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			support certain newer browsers that no longer offer this function, the macro was changed.
 
 			When the dialog is on-screen, the entire game is essentially "paused" - until it is dismissed,
-			no further computations are performed, links can't be clicked, and (live:) and (event:) macros
+			no further computations are performed, links can't be clicked (except links inside the dialog text itself),
+			(click:), (mouseover:) and (mouseout:) enchantments shouldn't work, and (live:) and (event:) macros
 			shouldn't fire.
 
 			See also:
@@ -3082,7 +3089,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				if (confirmButton === "") {
 					return TwineError.create("datatype", "The text for (confirm:)'s confirm link can't be blank.");
 				}
-				dialog({
+				const d = dialog({
 					section, message,
 					defaultValue: false,
 					buttons:[{
@@ -3095,6 +3102,11 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 						callback: () => section.unblock(false),
 					}),
 				});
+				/*
+					The blocking dialog is passed to section.stackTop.blocked. This allows
+					certain local events within the dialog (such as (link:)s) to still be usable.
+				*/
+				section.stackTop.blocked = d;
 			},
 			[String, optional(String), optional(String)])
 

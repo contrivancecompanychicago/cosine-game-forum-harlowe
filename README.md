@@ -20,6 +20,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 #### Alterations
 
  * Certain kinds of intense substring or subarray data names, such as `$a's (range:1,65535)`, have had their runtime performance improved.
+ * Links (created by `(link:)` and related macros) now work inside `(dialog:)`, `(prompt:)` and `(confirm:)`'s body prose. Note that enchantments and interaction macros such as `(click:)` continue to not affect prose inside dialog boxes.
  * Made the syntax colour of the lambda keywords (`where`, `when`, `via`, `each` and `making`) slightly brighter.
  * `(mock-visits:)` effects are now saved using `(save-game:)` in Debug Mode.
  * Added `newline` as an alias for the `linebreak` datatype. (Some parts of the documentation previously erroneously used the former instead of the latter.)

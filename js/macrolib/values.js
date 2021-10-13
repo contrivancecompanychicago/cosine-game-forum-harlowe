@@ -15,7 +15,12 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			String data
 			
 			A string is just a run of text - a sequence of text characters strung together. To indicate that a
-			sequence of characters is a string, place a matching pair of either " or ' characters around them.
+			sequence of characters is a string, place a matching pair of either `"` or `'` characters around them. If you want
+			to include a `"` or `'` inside a string that is enclosed with a pair of that character, you can use the `\` symbol to
+			escape that character. `\"` and `\"` will become a `"` and `'`, respectively.
+			If you want to include a `\` character by itself, write `\\`.
+
+			You can place line breaks inside strings, thus causing the strings to span multiple lines.
 			
 			When making a story, you'll mostly work with strings that you intend to insert into
 			the passage source. If a string contains markup, then the markup will be processed when it's

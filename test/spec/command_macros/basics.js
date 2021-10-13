@@ -299,6 +299,35 @@ describe("basic command macros", function() {
 				},20);
 			},20);
 		});
+		it("does not block link interaction inside the dialog itself", function(done) {
+			var p = runPassage("(dialog:'(color:green)[baz(link:\"qux\")[foo]]')");
+			expect($("tw-dialog > tw-hook").text()).toBe("bazqux");
+			$("tw-dialog").find('tw-link').first().click();
+			setTimeout(function() {
+				expect($("tw-dialog > tw-hook").text()).toBe("bazfoo");
+				done();
+			},20);
+		});
+		/* Dialogs need to be reimplemented as separate sections for these two to be usable */
+		xit("does not block (click:) interaction inside the dialog itself", function(done) {
+			p = runPassage("(dialog:'|A>[baz(click:?A)[foo]]')");
+			expect($("tw-dialog > tw-hook").text()).toBe("baz");
+			$('tw-dialog > tw-enchantment').click();
+			setTimeout(function() {
+				expect(p.text()).toBe("bazfoo");
+				done();
+			},20);
+		});
+		xit("does not block enchantments", function(done) {
+			var p = runPassage("(dialog:'|A>[baz](enchant:?A,(text-colour:#440044))')");
+			expect($("tw-dialog > tw-hook").css('color')).toMatch(/rgba?\(68,\s?0,\s?68[\),]/);
+			$("tw-dialog").find('tw-link').first().click();
+			setTimeout(function() {
+				p = runPassage("(enchant:?A,(text-colour:#440044))(dialog:'|A>[qux]')");
+				expect($("tw-dialog > tw-hook").css('color')).toMatch(/rgba?\(68,\s?0,\s?68[\),]/);
+				done();
+			},20);
+		});
 		it("blocks mouseover interaction when the dialog is present", function(done) {
 			var p = runPassage("foo(mouseover:'foo')[bar](dialog:'baz')");
 			expect(p.text()).toBe("foo");
@@ -395,6 +424,15 @@ describe("basic command macros", function() {
 						expect("(print:$qux)").markupToPrint("2");
 						done();
 					},60);
+				},20);
+			});
+			it("does not block link interaction inside the dialog itself", function(done) {
+				var p = runPassage("("+name+":'(color:green)[baz(link:\"qux\")[foo]]'" + (confirm ? "" : ",'foo'") + ")");
+				expect($("tw-dialog > tw-hook").text()).toBe("bazqux");
+				$("tw-dialog").find('tw-link').first().click();
+				setTimeout(function() {
+					expect($("tw-dialog > tw-hook").text()).toBe("bazfoo");
+					done();
 				},20);
 			});
 			it("doesn't block control flow if it errors", function() {

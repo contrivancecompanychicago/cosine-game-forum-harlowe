@@ -237,7 +237,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 			By forcibly blocking the control flow of the section after executing this macro, (output:)
 			has the same semantics as "return" in other programming languages.
 		*/
-			|| "blocked";
+			|| { blocked: true };
 	}, [Any],
 		/*attachable:false*/ false);
 
@@ -372,7 +372,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 			}
 		},
 		({stack}, message) => {
-			return outputValue("error", stack, TwineError.create("user", message)) || "blocked";
+			return outputValue("error", stack, TwineError.create("user", message)) || { blocked: true };
 		},
 	[String],
 	/*attachable:false*/false);

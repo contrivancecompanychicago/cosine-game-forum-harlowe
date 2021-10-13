@@ -233,7 +233,7 @@ describe("patterns", function() {
 			expect("(set: $a to '2' is a anycase)(print:$a)").markupToPrint("false");
 		});
 		it("'linebreak' or 'newline' matches line breaks", function() {
-			['linebreak','newline'].forEach(e=>{
+			['linebreak','newline'].forEach(function(e){
 				expect("(set: $a to '\\r\\n' is a "+e+")(print:$a)").markupToPrint("true");
 				expect("(set: $a to '\\n' is a "+e+")(print:$a)").markupToPrint("true");
 				expect("(set: $a to '\\r' is a "+e+")(print:$a)").markupToPrint("true");

@@ -17,7 +17,7 @@ define([
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier',
 ],
-($, Utils, Renderer, Environ, Operations, State, {printBuiltinValue,objectName,typeID}, {collapse}, ChangerCommand, HookSet, Colour, Lambda, ChangeDescriptor, VarScope, TwineError, TwineNotifier) => {
+($, Utils, Renderer, Environ, Operations, State, {printBuiltinValue,objectName,typeID,isObject}, {collapse}, ChangerCommand, HookSet, Colour, Lambda, ChangeDescriptor, VarScope, TwineError, TwineNotifier) => {
 
 	let Section;
 
@@ -388,12 +388,12 @@ define([
 				this.renderInto('', nextElem, result);
 			}
 			/*
-				If TwineScript_Run returns the string "blocked",
+				If TwineScript_Run returns a {blocked} object,
 				then block control flow. This is usually caused by dialog macros like (alert:) or (confirm:),
 				or interruption macros like (goto:).
 			*/
-			else if (result === "blocked") {
-				this.stackTop.blocked = true;
+			else if (isObject(result) && result.blocked) {
+				this.stackTop.blocked = result.blocked;
 				/*
 					This #awkward reinjection of JS blocker code is the only way to get errors back from a command (i.e. not a value macro)
 					that blocked the section, and put them in the original initiating <tw-expression>.
@@ -592,7 +592,7 @@ define([
 					- collapses: Boolean (used by collapsing markup)
 					- lastHookShown: Boolean (used by (else:) and (elseif:))
 					- dom: jQuery (used by blockers)
-					- blocked: Boolean (used by blockers)
+					- blocked: Boolean or jQuery (used by blockers; a jQuery denotes the blocking element)
 					- blockedValues: Array (used by blockers)
 					- evaluateOnly: String (used by evaluateTwineMarkup())
 					- finalIter: Boolean (used for infinite loop checks)
@@ -1028,6 +1028,9 @@ define([
 								/*
 									The first blocker can now be taken out and run, which
 									blocks this section and ends execution.
+
+									The blocker's own macro call may cause this.stackTop to become a jQuery of the blocked
+									element, so that events can still fire within it. Thus, this setting is only a special backup.
 								*/
 								this.stackTop.blocked = true;
 								let error = this.eval(blockers.shift());
