@@ -181,7 +181,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 	let localTempVariables = new Set();
 	const Variables = Panel.create({
 		className: "variables", tabName: "Variable",
-		rowAdd({name, dataset, path, value, tempScope, type}) {
+		rowWrite({name, dataset, path, value, tempScope, type}, row) {
 			/*
 				The debug name used defers to the TwineScript_DebugName if it exists,
 				and falls back to the objectName if not. Note that the TwineScript_DebugName can contain HTML structures
@@ -219,6 +219,24 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			*/
 			const folddown = typeof value === "object" || tooLong;
 			/*
+				Freshen up the passed-in row if given.
+			*/
+			if (row) {
+				row.find('.variable-type').html((typeName ? typeName + '-type ' : ''));
+				if (trail) {
+					row.find('.variable-path').html((tempScope ? "_" : "$") + escape(trail));
+				}
+				row.find('.variable-name').html((!trail ? (tempScope ? "_" : "$") : '') + escape(name + ''));
+				row.find('.temporary-variable-scope').html(tempScope || '');
+				row.find('.variable-value').html(val);
+				row.find('tw-folddown')[folddown ? 'show' : 'hide']();
+				row.next('.panel-row-source td').html(folddown ? escape(toSource(value)) : '');
+				/*
+					So thart the .panel-row-source isn't considered unused and deleted, return it as well in the jQuery.
+				*/
+				return row.add(row.next('.panel-row-source'));
+			}
+			/*
 				Create the <span>s for the variable's name and value.
 			*/
 			return $('<div class="variable-row">')
@@ -240,7 +258,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 					"<td class='temporary-variable-scope'>" + (tempScope || '') + "</td>",
 					// Value
 					"<td class='variable-value'>" + val + "</td><td class='panel-row-buttons'>"
-						+ (folddown ? "<tw-folddown tabindex=0>(source:) </tw-folddown>" : '')
+						+ "<tw-folddown tabindex=0 style='display:" + (folddown ? "visible" : 'none') + "'>(source:) </tw-folddown>"
 					+ "</td>"
 				).add(
 					/*
@@ -248,11 +266,11 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 						A. it doesn't disrupt the :nth-of-type() styling used for variable rows.
 						B. it needs to hold a <td> with colspan, whose effect isn't available to CSS.
 					*/
-					folddown ? "<tr class='variable-row panel-row-source' style='display:none'><td colspan='5'>" + escape(toSource(value)) + "</td></tr>" : ""
+					"<tr class='variable-row panel-row-source' style='display:none'><td colspan='5'>" + (folddown ? escape(toSource(value)) : '') + "</td></tr>"
 				);
 		},
 		rowCheck({name, path, tempScope}, row) {
-			return row.attr('data-name') === name && row.attr('data-path') === (path+'');
+			return row.attr('data-name') === name && row.attr('data-path') === (path+'') && row.attr('data-scope') === tempScope;
 		},
 		columnHead() {
 			return `<tr class="panel-head"><th>Type</th><th>Name</th><th>Scope</th><th>Value</th></tr>`;
@@ -402,7 +420,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 	*/
 	const Enchantments = Panel.create({
 		className: "enchantments", tabName: "Enchantment",
-		rowAdd(enchantment) {
+		rowWrite(enchantment, row) {
 			const {scope, changer, name, localHook} = enchantment;
 			let val;
 			if (changer) {
@@ -412,10 +430,17 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 				val = "<em>enchanted via (" + name + ":)</em>";
 			}
 			/*
+				Enchantment rows never need to be freshened up because rowCheck() compares
+				the exact enchantment object, from which all the values are derived.
+			*/
+			if (row) {
+				return row;
+			}
+			/*
 				Create the <span>s for the variable's name and value.
 			*/
 			return $('<div class="enchantment-row">')
-				.data('enchantment',enchantment)
+				.data('enchantment', enchantment)
 				.append(
 					"<td><span class='enchantment-name'>" + toSource(scope)
 					+ (localHook ? "</span><span class=enchantment-local>"
@@ -459,8 +484,15 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 	const storyletSection = Section.create(storyElement);
 	const Storylets = Panel.create({
 		className: "storylets", tabName: "Storylet",
-		rowAdd({name, active, storyletSource, exclusive, urgent}) {
+		rowWrite({name, active, storyletSource, exclusive, urgent}, row) {
 
+			if (row) {
+				/*
+					Only the active/inactive state needs to be updated.
+				*/
+				row[(!active ? 'add' : 'remove') + 'Class']('storylet-closed');
+				return row;
+			}
 			return $(`<tr class="storylet-row ${!active ? 'storylet-closed' : ''}">`)
 				.attr('data-name', name)
 				/*
@@ -527,11 +559,11 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		Source
 		------
 		panel. This simply holds one "row" that's manually updated without using the same Panel
-		update -> rowCheck -> rowAdd lifecycle as the other panels.
+		update -> rowCheck -> rowWrite lifecycle as the other panels.
 	*/
 	const Source = Panel.create({
 		className: "source", tabName: "Source",
-		rowAdd: $.noop,
+		rowWrite: $.noop,
 		rowCheck: $.noop,
 		tabUpdate: $.noop,
 		columnHead: $.noop,
@@ -551,9 +583,12 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 	*/
 	const Errors = Panel.create({
 		className: "errors", tabName: "Error",
-		rowAdd: $.noop,
+		rowWrite: $.noop,
 		rowCheck: $.noop,
 		columnHead: $.noop,
+		tabUpdate: count =>
+			Errors.tab.css({ background: count ? 'rgba(230,101,204,0.3)' : '' })
+				.text(`${count} Error${count !== 1 ? 's' : ''}`),
 	});
 	const onError = (error, code) => {
 		/*

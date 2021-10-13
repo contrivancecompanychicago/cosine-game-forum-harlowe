@@ -16,6 +16,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where a Javascript error would be produced when 0 was used in a substring or subarray data name, such as `$a's (range:0,2)`. Now, a proper error message will be given.
  * Fixed a long-standing bug where a string containing \ followed by a newline would result in the newline transforming into the letter "n".
  * Debug Mode: fixed a bug where values in the Variables pane would sometimes be truncated incorrectly, causing partial HTML entities like "&am…" to appear.
+ * Debug Mode: fixed a bug where the variable source rows revealed by the `(source:)` button would abruptly close whenever another entry in one of the panels was updated.
 
 #### Alterations
 
@@ -25,6 +26,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * `(mock-visits:)` effects are now saved using `(save-game:)` in Debug Mode.
  * Added `newline` as an alias for the `linebreak` datatype. (Some parts of the documentation previously erroneously used the former instead of the latter.)
  * Editor: disabled the "overwrite" input mode that was toggled by pressing Insert, because I've decided it's too confusing and easy to activate accidentally.
+ * Improved the performance of Debug Mode's panels when updating individual entries.
+ * Debug Mode: The 'Errors' tab now changes colour when the first error has occurred in the story.
 
 ### 3.2.2 changes (May 12, 2021):
 

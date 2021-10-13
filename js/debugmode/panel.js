@@ -6,12 +6,13 @@ define(['jquery'], ($) => {
 	*/
 	const Panel = Object.freeze({
 		/*
-			rowAdd is a function which produces a new DOM structure representing the passed-in data.
-			rowCheck compares an existing DOM structure created by rowAdd to a given data row, to see if the
+			rowWrite is a function which produces a new DOM structure representing the passed-in data, or freshens up
+				an existing row if passed in
+			rowCheck compares an existing DOM structure created by rowWrite to a given data row, to see if the
 			former represents the latter.
 			tabUpdate is an overridable function for updating the tab's name.
 		*/
-		create({className, rowAdd, rowCheck, columnHead, tabName, tabUpdate}) {
+		create({className, rowWrite, rowCheck, columnHead, tabName, tabUpdate}) {
 			const panel = $(`<div class='panel panel-${className}' hidden><table class='panel-rows'></table></div>`);
 			const tab = $(`<button class='tab tab-${className}'>0 ${tabName}s</button>`);
 			tab.click(() => {
@@ -33,14 +34,14 @@ define(['jquery'], ($) => {
 				tab,
 				panel,
 				panelRows: panel.find('.panel-rows'),
-				rowAdd,
+				rowWrite,
 				rowCheck,
 				columnHead,
 				tabUpdate,
 			});
 		},
 		update(data, count) {
-			const {rowCheck, rowAdd, panelRows, columnHead} = this;
+			const {rowCheck, rowWrite, panelRows, columnHead} = this;
 			const newRows = [];
 			const children = panelRows.children();
 			/*
@@ -50,16 +51,16 @@ define(['jquery'], ($) => {
 			*/
 			data.forEach(d => {
 				const existingRow = children.filter((_,e) => rowCheck(d,$(e)));
-				const newRow = rowAdd(d);
-				if (existingRow.length) {
-					existingRow.replaceWith(newRow);
-				}
-				else {
+				const newRow = rowWrite(d, existingRow.length && existingRow);
+				if (!existingRow.length) {
 					panelRows.append(newRow);
 				}
-				newRows.push(newRow[0]);
+				newRows.push(...newRow.get());
 			});
-			children.filter((_,e) => !newRows.includes(e)).remove();
+			/*
+				Remove rows once their data is gone (but don't remove the table head).
+			*/
+			children.filter((_,e) => !newRows.includes(e) && !e.className.includes('panel-head')).remove();
 			/*
 				And finally, update the tab.
 			*/
