@@ -1,6 +1,6 @@
 "use strict";
-define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatypes/gradient', 'datatypes/datatype', 'datatypes/hookset', 'internaltypes/twineerror'],
-(Macros, {realWhitespace, nth, anyRealLetter}, {subset, objectName, clone, toSource}, Colour, Gradient, Datatype, HookSet, TwineError) => {
+define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatypes/gradient', 'datatypes/datatype', 'datatypes/hookset', 'datatypes/codehook', 'internaltypes/twineerror'],
+(Macros, {realWhitespace, nth, anyRealLetter}, {subset, objectName, clone, toSource}, Colour, Gradient, Datatype, HookSet, CodeHook, TwineError) => {
 	/*
 		Built-in value macros.
 		These macros manipulate the primitive values - boolean, string, number.
@@ -123,14 +123,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			#string 1
 		*/
 		(["str", "string", "text"],
-			/*
-				Since only primitives (and arrays) are passed into this, and we use
-				JS's default toString() for primitives, we don't need
-				to do anything more than join() the array.
-			*/
-			(_, ...args) => args.join(''),
-		// (str: accepts a lot of any primitive)
-		[zeroOrMore(Macros.TypeSignature.either(String, Number, Boolean, Array))])
+			(_, ...args) => args.map(e => CodeHook.isPrototypeOf(e) ? e.source : e).join(''),
+		[zeroOrMore(Macros.TypeSignature.either(String, Number, Boolean, Array, CodeHook))])
 
 		/*d:
 			(source: Any) -> String

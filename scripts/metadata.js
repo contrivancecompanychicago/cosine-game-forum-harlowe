@@ -150,8 +150,8 @@ const
 		regExp: /^\s*([\w ]+) markup\n/,
 
 		navLink(def) {
-			// Hardcoded for 3.2.0
-			const isNew = def.name === "Unclosed collapsing whitespace";
+			// Change this for 3.3.0
+			const isNew = false;
 
 			return `<li><a href="#${def.anchor}" ${isNew ? "class='nav_new'": ""}>${def.name}</a></li>`;
 		},
@@ -177,8 +177,8 @@ const
 		regExp: /^\s*([\w]+) data\n/,
 
 		navLink(def) {
-			// Hardcoded for 3.2.0
-			const isNew = ["CodeHook","CustomMacro","Metadata","TypedVar"].includes(def.name);
+			// Change this for 3.3.0
+			const isNew = [].includes(def.name);
 
 			return `<li><a href="#${def.anchor}" ${isNew ? "class='nav_new'": ""}>${def.name}</a></li>`;
 		},
@@ -258,7 +258,7 @@ const
 		regExp: /^\s*\(([\w\-\d]+):([\s\w\.\,\[\]]*)\) -> ([\w]+)/,
 
 		navLink(def) {
-			return `<li><a href="#${def.anchor}" ${def.addedIn === "3.2.0" ? "class='nav_new'": ""}>(${def.name}:<span class='nav_macro_sig'>${def.sig}</span>)</a>
+			return `<li><a href="#${def.anchor}" ${def.addedIn === "3.3.0" ? "class='nav_new'": ""}>(${def.name}:<span class='nav_macro_sig'>${def.sig}</span>)</a>
 				<span class='nav_macro_return_type' style='${typeColours[def.returnType.toLowerCase()] || ''}'>${def.returnType}</span>${
 					def.aka.length ? `<div class='nav_macro_aka'>${def.aka.map(e => `(${e}:)`).join(', ')}</div>`
 					: ''

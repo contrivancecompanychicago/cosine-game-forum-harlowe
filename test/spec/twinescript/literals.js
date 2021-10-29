@@ -67,6 +67,9 @@ describe("twinescript literals", function() {
 			expect('(print: "A\\"B")').markupToPrint("A\"B");
 			expect("(print: 'A\\'B')").markupToPrint("A'B");
 		});
+		it("can contain close-brackets", function() {
+			expect('(print: ")")').markupToPrint(")");
+		});
 	});
 	function expectColourToBe(str, colour) {
 		expect(runPassage("(print:" + str + ")").find('tw-colour')).toHaveBackgroundColour(colour);
@@ -120,8 +123,18 @@ describe("twinescript literals", function() {
 			});
 			expect(runPassage("(print:transparent)").find('tw-colour')).toHaveBackgroundColour('rgba(0,0,0,0)');
 		});
-		it("can contain close-brackets", function() {
-			expect('(print: ")")').markupToPrint(")");
+	});
+	describe("code hooks", function() {
+		it("can consist of zero or more characters enclosed in a hook", function() {
+			expect("(print:[Foo\nBar])").markupToPrint("Foo\nBar");
+			expect("(print:[Foo\nBar] is a codehook)").markupToPrint("true");
+		});
+		it("does not allow C-style backslash escapes", function() {
+			expect('(print:[A\\B])').markupToPrint("A\\B");
+			expect("(print:[A\\B])").markupToPrint("A\\B");
+		});
+		it("can contain markup", function() {
+			expect("(print:[(print:['Baz'])(link:'Foo')[Bar]])").markupToPrint("'Baz'Foo");
 		});
 	});
 });

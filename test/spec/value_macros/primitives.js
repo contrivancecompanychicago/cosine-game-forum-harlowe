@@ -44,6 +44,10 @@ describe("primitive value macros", function() {
 		it("is aliased as (str:)", function() {
 			expect("(str: 2)").markupToPrint("2");
 		});
+		it("converts code hooks to strings", function() {
+			expect("(str: [barbaz])").markupToPrint("barbaz");
+			expect("(print:(str: [barbaz]) is a string)").markupToPrint("true");
+		});
 	});
 	describe("the (random:) macro", function() {
 		it("accepts 1 or 2 whole numbers", function() {

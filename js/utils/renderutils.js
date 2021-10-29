@@ -6,6 +6,14 @@ define(['jquery', 'utils', 'renderer'], function($, Utils, Renderer) {
 		customisability.
 	*/
 	function dialog({section, parent = Utils.storyElement, cd, message = '', defaultValue, buttons = [{name:"OK", confirm:true, callback: Object}] } = {}) {
+		/*
+			If the message is a CodeHook, convert it to a string.
+			Yes, this means the stored HTML compilation is discarded...
+		*/
+		if (message.TwineScript_TypeName === "a code hook") {
+			message = message.source;
+		}
+
 		const ret = $("<tw-backdrop><tw-dialog>"
 			/*
 				The defaultValue denotes that it should have a text input element, and provide

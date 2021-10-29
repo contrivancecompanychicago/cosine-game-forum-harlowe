@@ -217,21 +217,24 @@ describe("basic command macros", function() {
 		});
 	});
 	describe("the (dialog:) macro", function() {
-		it("requires many string arguments, and an optional bound variable", function() {
+		it("requires many string arguments (or a codehook followed by strings), and an optional bound variable", function() {
 			expect("(dialog:)").markupToError();
 			expect("(dialog:1)").markupToError();
 			expect("(dialog:bind _a)").markupToError();
 			expect("(dialog:'e')").not.markupToError();
+			expect("(dialog:[e])").not.markupToError();
 			expect("(dialog:'e','f')").not.markupToError();
+			expect("(dialog:[e],'f')").not.markupToError();
 			expect("(dialog:'e','f','g','h','i','j')").not.markupToError();
+			expect("(dialog:[e],'f','g','h','i','j')").not.markupToError();
 			expect("(dialog:bind _a, 'e','f','g','h','i','j')").not.markupToError();
 			expect("(dialog:bind _a, 'e')").not.markupToError();
 		});
 		it("is aliased as (alert:)", function() {
 			expect("(print: (alert:'a') is (dialog:'a'))").not.markupToError();
 		});
-		it("produces a command which creates a dialog with a backdrop, the given string, and an 'OK' close link", function(done) {
-			runPassage("(dialog:'Gooball')");
+		it("produces a command which creates a dialog with a backdrop, the given string or codehook, and an 'OK' close link", function(done) {
+			runPassage("(dialog:[Gooball])");
 			expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(1);
 			expect($("tw-dialog").contents().first().text()).toBe("Gooball");
 			expect($("tw-dialog").find('tw-link').text()).toBe("OK");

@@ -2501,14 +2501,14 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		[rest(String)], false /* Can't have attachments.*/)
 
 		/*d:
-			(dialog: [Bind], String, ...String) -> Command
+			(dialog: [Bind], String or CodeHook, ...String) -> Command
 			Also known as: (alert:)
 
-			A command that, when used, displays a pop-up dialog box with the given string displayed, and a number of button-shaped links labeled with
+			A command that, when used, displays a pop-up dialog box with the given string or codehook displayed, and a number of button-shaped links labeled with
 			the remaining other strings. If an optional bound variable is provided, that variable is updated to match the pressed button.
 
 			Example usage:
-			* `(dialog: "Beyond this point, things get serious. Grab a snack and buckle up.", "Sure.")`
+			* `(dialog: [Beyond this point, things get serious. Grab a snack and buckle up.], "Sure.")`
 			* `(dialog: bind $defund, "Which department will you defund?", "Law Enforcement", "Education", "Health", "Public Housing")`
 
 			Rationale:
@@ -2521,6 +2521,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			This is designed to be the most general-use dialog-producing macro, allowing any number of links, and optionally binding the clicked link to a variable.
 
 			Details:
+			There's no difference in behaviour when you provide this with a codehook instead of a string. That being said, codehooks are recommended because
+			their internal markup is correctly coloured in the Twine editor, and because `"` or `'` symbols don't need to be escaped (using `\`) inside them.
+
 			The dialog that is produced is implemented entirely in HTML. User CSS stylesheets can be used to style it, and (enchant:) macros that affect ?Link can
 			affect the dialog links.
 
@@ -2556,7 +2559,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 						small check is necessary.
 					*/
 					if (message === undefined) {
-						return TwineError.create("datatype", "(dialog:) needs a message string to display.");
+						return TwineError.create("datatype", "(dialog:) needs a message string or codehook to display.");
 					}
 				}
 				else if (message !== undefined) {
@@ -2600,10 +2603,10 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 							section.unblock((varBind && varBind.set(b)) || '');
 						},
 					})),
-				})
-;				return { blocked: d };
+				});
+				return { blocked: d };
 			},
-			[either(VarBind, String), zeroOrMore(String)])
+			[either(VarBind, String, CodeHook), optional(either(CodeHook, String)), zeroOrMore(String)])
 
 		/*d:
 			(open-url: String) -> Command

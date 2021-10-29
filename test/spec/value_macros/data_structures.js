@@ -445,6 +445,9 @@ describe("data structure macros", function () {
 			it("serialises gradients", function() {
 				sourceTest("(gradient: 0, 0, black, 0.49, #ff0009, 0.5, white, 1, white)",'(gradient:0,0,black,0.49,(hsl:358,1,0.5),0.5,white,1,white)');
 			});
+			it("serialises code hooks", function() {
+				sourceTest("[A**B**C]","[A**B**C]");
+			});
 			it("serialises commands", function() {
 				['(cycling-link:bind $foo,"bar","baz")','(click-goto:"qux","test")',
 					'(enchant:?foo,(transition:"instant")+(transition-delay:20))',

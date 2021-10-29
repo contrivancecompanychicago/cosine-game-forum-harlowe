@@ -395,7 +395,6 @@ describe("patterns", function() {
 		});
 		it("errors if given data that has no matching type", function() {
 			expect("(print:(datatype:?hook))").markupToError();
-			expect("(print:(datatype:[foobar]))").markupToError();
 		});
 	});
 	describe("the (datapattern:) macro", function() {
@@ -415,7 +414,6 @@ describe("patterns", function() {
 		});
 		it("errors if given data that has no matching type", function() {
 			expect("(print:(datapattern:?hook))").markupToError();
-			expect("(print:(datapattern:[foobar]))").markupToError();
 		});
 	});
 	describe("the (split:) macro", function() {

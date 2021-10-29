@@ -472,6 +472,10 @@ describe("twinescript operators", function () {
 			expect("(print: ?red's 1st + ?blue's 2nd is ?red's 1st + ?blue's 2nd)").markupToPrint("true");
 			expect("(print: ?red + ?blue is ?blue + ?red)").markupToPrint("true");
 		});
+		it("compares codehooks by value", function (){
+			expect("(print: [A] is [A])").markupToPrint("true");
+			expect("(print: [A] is [B])").markupToPrint("false");
+		});
 		it("compares colours by value", function (){
 			expect("(print: (rgb:40,80,40) is (rgb:40,80,40))").markupToPrint("true");
 			expect("(print: (rgba:40,80,40,0.3) is (rgba:40,80,40,0.3))").markupToPrint("true");

@@ -60,6 +60,10 @@ describe("save macros", function() {
 			runPassage("(set:$c1 to (gradient:90,0,white,1,black))");
 			expect("(savegame:'1')").not.markupToError();
 		});
+		it("can save code hooks", function() {
+			runPassage("(set:$c1 to [ABCDEFG])");
+			expect("(savegame:'1')").not.markupToError();
+		});
 		it("can save custom macros", function() {
 			runPassage(
 				"(set:$c1 to (macro: num-type _a, num-type _b, [(output-data:(max:_a,_b,200))]))"
@@ -167,6 +171,15 @@ describe("save macros", function() {
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
 				expect("(print:'`'+(source:$c1)+'`')").markupToPrint('(gradient:90,0,white,1,black)');
+				done();
+			}, 20);
+		});
+		it("can restore code hooks", function(done) {
+			runPassage("(set:$c1 to [Foo bar baz])");
+			runPassage("(savegame:'1')");
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("(print:'`'+(source:$c1)+'`')").markupToPrint('[Foo bar baz]');
 				done();
 			}, 20);
 		});

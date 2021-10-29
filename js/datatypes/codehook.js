@@ -3,24 +3,51 @@ define(['internaltypes/twineerror', 'renderer'], (TwineError, {exec}) => {
 	/*d:
 		CodeHook data
 
-		Only used by the (macro:) macro, CodeHooks are where the inner code of the custom macro is written. Unlike actual hooks, these are written inside
-		the macro call, as data provided to it. The contents of this hook will not be displayed when the custom macro runs, so you can put any number
-		of comments and remarks inside it, for your own benefit.
+		Several macros, such as (dialog:) or (append-with:), are used to render some markup code stored in a string.
+		However, markup code stored in strings can be difficult to write or read in the editor, because there's no syntax
+		highlighting for the interior of string. It is also sometimes desirable to have markup code in strings appear
+		different to other strings in Debug Mode, so that you can more easily tell what the string is used for in the game.
 
-		Like other exotic data types in Harlowe, this cannot be stored in variables using (set:) or (put:).
+		CodeHooks can be used as alternatives to strings in these cases. You may think of them as "hooks" that
+		are written inside macro calls, as data provided to them. Place markup code between `[` and `]` symbols, in the
+		same way that strings are between pairs of `"` or `'` symbols.
+
+		Note that unlike strings, you can nest hooks inside CodeHooks without needing to escape the `]` symbol.
+		`(print:[Good afternoon.(if:visits > 1)[ I'm glad to see you again]])` is a valid CodeHook.
+
+		The (macro:) macro only accepts CodeHooks for the inner code of the custom macro. The contents of this hook will not be displayed when the
+		custom macro runs, so you can put any number of comments and remarks inside it, for your own benefit.
 	*/
-	return Object.freeze({
+	const CodeHook = Object.freeze({
 		
 		/*
 			These should normally only appear during type signature error messages.
 		*/
 		TwineScript_TypeName: "a code hook",
 		TwineScript_ObjectName: "a code hook",
-
-		TwineScript_Unstorable: true,
 		
 		TwineScript_ToSource() {
 			return "[" + this.source + "]";
+		},
+
+		/*
+			Because printed values are encased in <tw-expression>s, the enclosing hook syntax doesn't need to be
+			included here.
+		*/
+		TwineScript_Print() {
+			return this.source;
+		},
+
+		TwineScript_toString() {
+			return this.source;
+		},
+
+		TwineScript_is(other) {
+			return CodeHook.isPrototypeOf(other) && this.source === other.source;
+		},
+
+		TwineScript_Clone() {
+			return CodeHook.create(this.source, this.html);
 		},
 
 		/*
@@ -41,4 +68,5 @@ define(['internaltypes/twineerror', 'renderer'], (TwineError, {exec}) => {
 			return Object.assign(Object.create(this), { source, html });
 		},
 	});
+	return CodeHook;
 });

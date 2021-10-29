@@ -2,7 +2,22 @@
 
 Documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
-### 3.2.3 changes (unreleased):
+### 3.3.0 changes (unreleased):
+
+#### Bugfixes
+
+ n/a
+
+#### Alterations
+
+ * Code hooks can now be stored in variables and printed in the passage. This means that instead of storing long strings containing large amounts of markup that doesn't get highlighted in the syntax highlighter, you can instead store code hooks. 
+ * Also, code hooks can be converted into strings using `(str:)`.
+
+#### Additions
+
+ * Added the `codehook` datatype.
+
+### 3.2.3 changes (October 22, 2021):
 
 #### Bugfixes
 
@@ -248,7 +263,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a `(transition-delay:)` macro (also known as `(t8n-delay:)`) which adds an initial delay to transitions before they begin animating. This can only enchant hooks, not links.
  * Added a `(transition-skip:)` macro (also known as `(t8n-skip:)`) which, when included with a transition, allows the player to speed up the transition by a given number of milliseconds per frame, by holding down any keyboard key, mouse button, or by touching the screen.
  * Added an `(after:)` changer macro, which is essentially a `(live:)` changer that only ever runs the hook once. However, unlike `(live:)`, it takes an optional second number that allows the player to speed up the delay by the given number of milliseconds per frame, by holding down any keyboard key, mouse button, or by touching the screen.
- * Added a `(collapsed:)` changer macro, which causes the attached hook's whitespace to collapse, as if by the `{` and `}` collapsing whitespace markup. This can also be used with `(enchant:)`.
+ * Added a `(collapse:)` changer macro, which causes the attached hook's whitespace to collapse, as if by the `{` and `}` collapsing whitespace markup. This can also be used with `(enchant:)`.
  * Added a `(verbatim:)` changer macro (alias `(v6m:)`), which causes the attached hook or command to be printed verbatim, as if by the verbatim markup.
  * Added a `(text-indent:)` changer macro, which applies a leading indent to the attached hook, and can be applied to each line in the passage using, for example, `(enchant:?passage's lines, (text-indent:12))`.
  * Added a `(box:)` changer macro, which turns the attached hook into a box with given width and horizontal margins, a height scaling with window height, and a scroll bar if its contained prose exceeds its height.

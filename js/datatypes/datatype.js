@@ -7,8 +7,9 @@ define([
 	'datatypes/gradient',
 	'datatypes/lambda',
 	'datatypes/custommacro',
+	'datatypes/codehook',
 	'internaltypes/twineerror',
-], ({realWhitespace, anyRealLetter, anyCasedLetter, anyNewline}, {objectName}, Changer, Colour, Gradient, Lambda, CustomMacro, TwineError) => {
+], ({realWhitespace, anyRealLetter, anyCasedLetter, anyNewline}, {objectName}, Changer, Colour, Gradient, Lambda, CustomMacro, CodeHook, TwineError) => {
 	const {assign,seal,keys} = Object;
 	const {floor,abs} = Math;
 	/*
@@ -42,6 +43,7 @@ define([
 		| `lambda` | Lambdas
 		| `macro` | CustomMacros
 		| `datatype` | Datatypes
+		| `codehook` | CodeHooks
 
 		In addition to the above, there are a few variations of these that only match a certain subset of each type.
 
@@ -227,6 +229,7 @@ define([
 		gradient: obj => Gradient.isPrototypeOf(obj),
 		lambda:   obj => Lambda.isPrototypeOf(obj),
 		macro:    obj => CustomMacro.isPrototypeOf(obj),
+		codehook: obj => CodeHook.isPrototypeOf(obj),
 		str:      obj => typeof obj === "string",
 		num:      obj => typeof obj === "number",
 		bool:     obj => typeof obj === "boolean",
