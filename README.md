@@ -10,7 +10,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 #### Alterations
 
- * Code hooks can now be stored in variables and printed in the passage. This means that instead of storing long strings containing large amounts of markup that doesn't get highlighted in the syntax highlighter, you can instead store code hooks. 
+ * Code hooks can now be stored in variables and printed in the passage. This means that instead of storing long strings containing large amounts of markup that doesn't get highlighted in the syntax highlighter, you can instead store code hooks.
+ * `(dialog:)`, `(confirm:)` and `(prompt:)` have been altered to permit code hooks in place of the message string value.
  * Also, code hooks can be converted into strings using `(str:)`.
 
 #### Additions

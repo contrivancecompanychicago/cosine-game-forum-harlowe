@@ -2976,7 +2976,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			[String, optional(String)])
 
 		/*d:
-			(prompt: String, String, [String], [String]) -> String
+			(prompt: String or CodeHook, String, [String], [String]) -> String
 
 			When this macro is evaluated, a browser pop-up dialog box is shown with the first string displayed,
 			a text entry box containing the second string (as a default value), a confirm link and a cancel link.
@@ -2984,7 +2984,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			the default value regardless of the entry box's contents.
 
 			Example usage:
-			`(set: $name to (prompt: "Your name, please:", "Frances Spayne", "Don't care", "Confirm"))`
+			`(set: $name to (prompt: [Your name, please:], "Frances Spayne", "Don't care", "Confirm"))`
 
 			Details:
 			The dialog that is produced is implemented entirely in HTML. User CSS stylesheets can be used to
@@ -3048,10 +3048,10 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				// Regrettably, this arbitrary timeout seems to be the only reliable way to focus the <input>.
 				setTimeout(() => d.find('input').last().focus(), 100);
 			},
-			[String, String, optional(String), optional(String)])
+			[either(String, CodeHook), String, optional(String), optional(String)])
 
 		/*d:
-			(confirm: String, [String], [String]) -> Boolean
+			(confirm: String or CodeHook, [String], [String]) -> Boolean
 
 			When this macro is evaluated, a pop-up dialog box is shown with the given string displayed,
 			as well as two links (whose text can also be provided) to confirm or cancel whatever action
@@ -3111,7 +3111,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				*/
 				section.stackTop.blocked = d;
 			},
-			[String, optional(String), optional(String)])
+			[either(String, CodeHook), optional(String), optional(String)])
 
 		/*d:
 			(page-url:) -> String

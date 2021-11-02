@@ -193,7 +193,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			    an intimidating rumble! You'll have to eat plenty of trees.
 			](else-if: $size is 'big')[
 			    a loud growl. You're hungry for some shrubs.
-			](else:​)[
+			](else: )[
 			    a faint gurgle. You hope to scavenge some leaves.
 			]}
 			```

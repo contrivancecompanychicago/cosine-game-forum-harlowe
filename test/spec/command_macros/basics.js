@@ -356,18 +356,22 @@ describe("basic command macros", function() {
 
 	['prompt','confirm'].forEach(function(name, confirm) {
 		describe("the (" + name + ":) macro", function() {
-			var args = "'Gooball(set:$baz to 1)'" + (confirm ? "" : ",'foo'");
+			var args = "[Gooball(set:$baz to 1)]" + (confirm ? "" : ",'foo'");
 			if(confirm) {
-				it("requires either 1, 2 or 3 string arguments", function() {
+				it("requires either 1, 2 or 3 string (or, for the first, a codehook) arguments", function() {
 					expect("(confirm:)").markupToError();
 					expect("(confirm:1)").markupToError();
 					expect("(confirm:'e')").not.markupToError();
 					expect("(confirm:'e','f')").not.markupToError();
 					expect("(confirm:'e','f','g')").not.markupToError();
 					expect("(confirm:'e','f','g','h')").markupToError();
+					expect("(confirm:[e])").not.markupToError();
+					expect("(confirm:[e],'f')").not.markupToError();
+					expect("(confirm:[e],'f','g')").not.markupToError();
+					expect("(confirm:[e],'f','g','h')").markupToError();
 				});
 			} else {
-				it("requires either 2, 3 or 4 string arguments", function() {
+				it("requires either 2, 3 or 4 string (or, for the first, a codehook) arguments", function() {
 					expect("(prompt:)").markupToError();
 					expect("(prompt:1)").markupToError();
 					expect("(prompt:'e')").markupToError();
@@ -375,6 +379,11 @@ describe("basic command macros", function() {
 					expect("(prompt:'e','f','g')").not.markupToError();
 					expect("(prompt:'e','f','g','h')").not.markupToError();
 					expect("(prompt:'e','f','g','h','i')").markupToError();
+					expect("(prompt:[e])").markupToError();
+					expect("(prompt:[e],'f')").not.markupToError();
+					expect("(prompt:[e],'f','g')").not.markupToError();
+					expect("(prompt:[e],'f','g','h')").not.markupToError();
+					expect("(prompt:[e],'f','g','h','i')").markupToError();
 				});
 			}
 			it("produces a command which creates a dialog with a backdrop, the given string, an 'OK' close link, and a 'Cancel' close link", function(done) {
