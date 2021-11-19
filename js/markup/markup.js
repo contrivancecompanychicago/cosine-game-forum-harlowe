@@ -382,6 +382,9 @@
 						type: "verbatim" + number,
 						isFront: true,
 						matches: matches,
+						// This is an unfortunate hack to allow this token
+						// to match with a cannotCross of "verbatimOpener".
+						aka: 'verbatimOpener',
 					};
 				},
 			},

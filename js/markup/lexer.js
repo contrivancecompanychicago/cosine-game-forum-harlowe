@@ -238,7 +238,47 @@
 				ret += "[" + this.children + "]";
 			}
 			return ret;
-		}
+		},
+
+		/*
+			Create a copy with a new child array containing the same children, passed by reference, and all other
+			properties shallow-copied.
+		*/
+		copy() {
+			const ret = new Token(this);
+
+			ret.children = ret.children.slice();
+			return ret;
+		},
+		/*
+			Fold the non-folded immediate children of this token.
+		*/
+		foldChildren() {
+			let frontTokenStack = [];
+			const oldChildren = this.children.slice();
+			for(let i = 0; i < oldChildren.length; i += 1) {
+				const token = oldChildren[i];
+				let folded = false;
+				/*
+					Because lex() already lexes tokens as if they were folded,
+					i.e. using the correct mode (macroMode etc.), then re-lexing
+					doesn't need to occur when folding tokens here.
+				*/
+				if (token.matches) {
+					for(let ft = 0; ft < frontTokenStack.length; ft += 1) {
+						let {type} = frontTokenStack[ft];
+						if (type in token.matches) {
+							foldTokens(this, token, frontTokenStack[ft]);
+							frontTokenStack = frontTokenStack.slice(ft + 1);
+							folded = true;
+						}
+					}
+				}
+				if (!folded && token.isFrontToken()) {
+					frontTokenStack.unshift(token);
+				}
+			}
+		},
 	};
 	
 	/*
@@ -293,7 +333,7 @@
 		addChild methods, this function will lex its text into new tokens
 		and add them as children.
 	*/
-	function lex(parentToken) {
+	function lex(parentToken, fold) {
 		const
 			src = parentToken.innerText;
 		
@@ -377,18 +417,18 @@
 						tokenData's matches, or -1.
 					*/
 					for(; ft < frontTokenStack.length; ft += 1) {
-						let {type} = frontTokenStack[ft];
+						let {type, aka} = frontTokenStack[ft];
 						if (type in tokenData.matches) {
 							isMatchingBack = true;
 							break;
 						}
 						/*
-							For the purposes of the following comparison with cannotCross,
-							the innumerable "verbatimN" types must be converted back to
-							"verbatimOpener". This is a somewhat unfortunate hack.
+							If the token has an "also known as", then use that instead
+							of the actual type for cannotCross comparisons. This is currently
+							(as of 11-2021) used only for verbatimOpeners.
 						*/
-						if (type.indexOf("verbatim") === 0) {
-							type = "verbatimOpener";
+						if (aka) {
+							type = aka;
 						}
 						/*
 							If there is a front token which this back token "cannot cross" -
@@ -434,13 +474,25 @@
 					The preceding test confirmed whether this is a matching Back token or not.
 					If so, we fold them together.
 				*/
+				let folded = false;
 				if (isMatchingBack) {
 					/*
-						Note: this function splices the children array in-place!!
-						Fortunately, nothing needs to be adjusted to account for this.
+						If folding is disabled (e.g. by the syntax highlighter trying to do incremental
+						parsing) then simply remove the front token from the stack without folding.
 					*/
-					foldTokens(parentToken, lastToken, frontTokenStack[ft]);
+					if (fold) {
+						/*
+							Note: this function splices the children array in-place!!
+							Fortunately, nothing needs to be adjusted to account for this.
+						*/
+						foldTokens(parentToken, lastToken, frontTokenStack[ft]);
+					}
 					frontTokenStack = frontTokenStack.slice(ft + 1);
+					/*
+						Even though we don't actually fold the token if this is a flat lex,
+						act like it was so that this lastToken isn't saved, immediately below.
+					*/
+					folded = true;
 				}
 				
 				/*
@@ -448,7 +500,7 @@
 					later that can match it. This MUST come after the isMatchingBack check
 					so that the tokens which are both Front and Back will work properly.
 				*/
-				if (lastToken.isFrontToken()) {
+				if (!folded && lastToken.isFrontToken()) {
 					frontTokenStack.unshift(lastToken);
 				}
 				/*
@@ -580,8 +632,10 @@
 			The main function.
 			This returns the entire set of tokens, rooted in a "root"
 			token that has all of tokenMethods's methods.
+			Flat refers to whether the tokens are folded (front and back
+			tokens converted into a single subtree node).
 		*/
-		lex(src, initIndex, innerMode = 'start') {
+		lex(src, initIndex, innerMode = 'start', flat = false) {
 			return lex(new Token({
 				type:                 "root",
 				start:        initIndex || 0,
@@ -590,7 +644,7 @@
 				innerText:               src,
 				children:                 [],
 				innerMode: Lexer.modes[innerMode],
-			}));
+			}), !flat);
 		},
 		/*
 			The (initially empty) rules object should be augmented with
