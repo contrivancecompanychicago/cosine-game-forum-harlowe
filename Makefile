@@ -22,6 +22,7 @@ node_replace = node -e '\
 
 source = "\"source\":\"\"", "\"source\":" + JSON.stringify(read("template.html"))
 setup = "\"setup\":\"\"", "\"setup\": function(){" + read("build/twinemarkup-min.js") + "}"
+hydrate = "\"hydrate\":\"\"", "\"hydrate\":" + JSON.stringify(read("build/twinemarkup-min.js"))
 engine = "{{HARLOWE}}", JSON.stringify("<script title=\"Twine engine code\" data-main=\"harlowe\">" + read("build/harlowe-min.js") + "</script>\n").slice(1, -1)
 css = "{{CSS}}", JSON.stringify("<style title=\"Twine CSS\">" + read("build/harlowe-css.css") + "</style>").slice(1, -1)
 
@@ -79,13 +80,13 @@ build/twinemarkup-min.js: js/markup/*.js js/markup/*/*.js
 	| $(call node_replace, $(shortdefs)) \
 	| $(call node_replace, $(codemirrorcss)) \
 	| babel --presets es2015 \
-	| uglifyjs $(uglify_flags) \
 	> build/twinemarkup-min.js
 
 dist/format.js: build/harlowe-min.js build/twinemarkup-min.js css
 	@cat format.js \
 	| $(call node_replace, $(source)) \
 	| $(call node_replace, $(setup)) \
+	| $(call node_replace, $(hydrate)) \
 	| $(call node_replace, $(engine)) \
 	| $(call node_replace, $(css)) \
 	> dist/format.js

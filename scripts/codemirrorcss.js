@@ -181,7 +181,7 @@ const outputFile = {
 			const selector = e.split(", ")
 				/*
 					This does a few things:
-					- It leaves the .theme-dark prefix alone.
+					- It leaves the dark theme prefix alone.
 					- It converts sequential selectors (separated by a dot).
 					- It adds the cm- CodeMirror prefix to the CSS classes.
 					- It adds the harlowe- storyformat prefix as well.
@@ -189,8 +189,11 @@ const outputFile = {
 					and the values to a CSS body.
 				*/
 				.map(function map(e) {
-					if (e.indexOf(".theme-dark") === 0) {
+					if (e.indexOf('.theme-dark') === 0) {
 						return e.slice(0,11) + " " + map(e.slice(11).trim());
+					}
+					if (e.indexOf('[data-app-theme=dark]') === 0) {
+						return e.slice(0,21) + " " + map(e.slice(21).trim());
 					}
 					if (e.indexOf('.') > -1) {
 						return e.split(/\./g).map(map).join('');
@@ -206,9 +209,11 @@ const outputFile = {
 				Now create the dark versions of anything that has a colour.
 			*/
 			if (this[e].match(colorRegExp)) {
-				a += selector.map(e => ".theme-dark " + e).join(', ') + "{"
-					+ this[e].replace(colorRegExp, (_, h,s,l,a) => "hsla(" + h + "," + min(100,(+s)*1.5) + "%," + (100-l) + "%," + a + ")")
-					+ "}";
+				['.theme-dark','[data-app-theme=dark]'].forEach(darkSelector => {
+					a += selector.map(e => darkSelector + " " + e).join(', ') + "{"
+							+ this[e].replace(colorRegExp, (_, h,s,l,a) => "hsla(" + h + "," + min(100,(+s)*1.5) + "%," + (100-l) + "%," + a + ")")
+							+ "}";
+				});
 			}
 			return a;
 		}, '');

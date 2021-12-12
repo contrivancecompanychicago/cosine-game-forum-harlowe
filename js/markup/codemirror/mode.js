@@ -20,15 +20,9 @@
 			lex = markup.lex;
 		});
 	}
-	// Loaded as a story format in TwineJS
-	else if (this && this.loaded && this.modules) {
-		// Only load the toolbar/tips if this is loaded in TwineJS
-		({Markup:{lex}, Toolbar:toolbar, Tooltips:tooltips, ShortDefs:shortDefs} = this.modules);
-	}
-	// Loaded in HarloweDocs's preview pane.
-	else if (this.TwineMarkup) {
-		lex = this.TwineMarkup.lex;
-		shortDefs = this.ShortDefs;
+	// Loaded as a story format in TwineJS (any ver) or in HarloweDocs's preview pane.
+	else {
+		({Markup:{lex}, Toolbar:toolbar, Tooltips:tooltips, ShortDefs:shortDefs} = (this.modules || this));
 	}
 	/*
 		Produce an object holding macro names, using both their names and their aliases.
@@ -45,7 +39,7 @@
 	/*
 		The mode is defined herein.
 	*/
-	window.CodeMirror && CodeMirror.defineMode('harlowe-3', () => {
+	const mode = () => {
 		let cm, tree,
 			// These caches are used to implement special highlighting when the cursor
 			// rests on variables or hookNames, such that all the other variable/hook
@@ -264,24 +258,7 @@
 						TwineJS's PassageEditor stashes a reference to the CodeMirror instance in
 						the Harlowe modes object - and here, we retrieve it.
 					*/
-					cm = CodeMirror.modes['harlowe-3'].cm;
-					cm.setOption('placeholder', [
-						"Enter the body text of your passage here.",
-						"''Bold'', //italics//, ^^superscript^^, ~~strikethrough~~, and <p>HTML tags</p> are available.",
-						"To display special symbols without them being transformed, put them between `backticks`.",
-						"To link to another passage, write the link text and the passage name like this: [[link text->passage name]]\nor this: [[passage name<-link text]]\nor this: [[link text]].",
-						"Macros like (set:) and (display:) are the programming of your passage. If you've (set:) a $variable, you can just enter its name to print it out.",
-						"To make a 'hook', put [single square brackets] around text - or leave it empty [] - then put a macro like (if:), a $variable, or a |nametag> outside the front, |like>[so].",
-						"Hooks can be used for many things: showing text (if:) something happened, applying a (text-style:), making a place to (append:) text later on, and much more!",
-						"Consult the Harlowe documentation for more information.",
-						].join('\n\n'));
-					/*
-						Line numbers aren't important for a primarily prose-based form as passage text,
-						but it's good to have some UI element that distinguishes new lines from
-						wrapped lines. So, we use the CM lineNumbers gutter with only bullets in it.
-					*/
-					cm.setOption('lineNumbers', true);
-					cm.setOption('lineNumberFormatter', () => "\u2022");
+					cm = document.querySelector('.CodeMirror').CodeMirror;
 				}
 				/*
 					Install the toolbar, if it's been loaded. (This function will early-exit if the toolbar's already installed.)
@@ -437,7 +414,20 @@
 				return ret;
 			},
 		};
-	});
+	};
+	if (window && window.CodeMirror) {
+		window.CodeMirror.defineMode('harlowe-3', mode);
+	} else {
+		this.editorExtensions = {
+			twine: {
+				"2.4.0-beta1": {
+					codeMirror: {
+						mode,
+					},
+				},
+			},
+		};
+	}
 	/*
 		In order to provide styling to the Harlowe mode, CSS must be dynamically injected
 		when the mode is defined. This is done now, by creating a <style> element with ID

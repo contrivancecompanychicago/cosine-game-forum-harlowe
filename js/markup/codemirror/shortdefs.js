@@ -6,12 +6,12 @@
 		of the currently defined Harlowe macros at compile-time, from the metadata script.
 	*/
 	const ShortDefs = "SHORTDEFS";
-	// Loaded in Twine.
+	// Loaded in TwineJS 2.3.
 	if (this && this.loaded) {
 		this.modules || (this.modules = {});
 		this.modules.ShortDefs = ShortDefs;
 	}
-	// Loaded in HarloweDocs's preview pane.
+	// Loaded in HarloweDocs's preview pane or TwineJS 2.4.
 	else {
 		this.ShortDefs = ShortDefs;
 	}

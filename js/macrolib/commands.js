@@ -2217,6 +2217,10 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		#revision
 	*/
 	["show","rerun"].forEach(name => Macros.addCommand(name,
+		/*
+			The fact that these are variadic macros is unnecessary (due to the existence of the + operator
+			on HookSets) and inconsistent with other macros like (click:), but, nevertheless...
+		*/
 		noop,
 		(cd, section, ...hooks) => {
 			hooks.forEach(hook => hook.forEach(section, elem => {

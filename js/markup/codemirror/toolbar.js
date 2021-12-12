@@ -2694,8 +2694,11 @@
 	*/
 	switchPanel();
 
-	function Toolbar(cmObj) {
-		const passageTagsElem = document[$]('.editor .passageTags');
+	function Toolbar(cmObj /*, {appTheme, locale}*/) {
+		/*
+			Look for the TwineJS toolbar element in either 2.4 or 2.3.
+		*/
+		const passageTagsElem = document[$]('.story-format-toolbar') || document[$]('.editor .passageTags');
 		if (passageTagsElem) {
 			passageTagsElem.after(toolbarElem);
 		}
@@ -2706,5 +2709,8 @@
 	if (this && this.loaded) {
 		({Markup:{lex}, Patterns, ShortDefs} = this.modules);
 		this.modules.Toolbar = Toolbar;
+	}
+	else {
+		this.Toolbar = Toolbar;
 	}
 }.call(eval('this')));

@@ -851,13 +851,14 @@
 			return exporter(Lexer);
 		});
 	}
-	// Loaded as a story format in TwineJS
+	// Loaded as a story format in TwineJS 2.3
 	else if (this && this.loaded && this.modules) {
 		Patterns = this.modules.Patterns;
 		this.modules.Markup = exporter(this.modules.Lexer);
 	}
+	// Loaded in TwineJS 2.4.
 	else {
 		Patterns = this.Patterns;
-		this.TwineMarkup = exporter(this.TwineLexer);
+		this.Markup = exporter(this.Lexer);
 	}
 }).call(eval('this') || (typeof global !== 'undefined' ? global : window));

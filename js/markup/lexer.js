@@ -666,12 +666,13 @@
 			return Lexer;
 		});
 	}
-	// Loaded as a story format in TwineJS
+	// Loaded as a story format in TwineJS 2.3.
 	else if (this && this.loaded) {
 		this.modules || (this.modules = {});
 		this.modules.Lexer = Lexer;
 	}
+	// Loaded in TwineJS 2.4.
 	else {
-		this.TwineLexer = Lexer;
+		this.Lexer = Lexer;
 	}
 }).call(eval('this') || (typeof global !== 'undefined' ? global : window));

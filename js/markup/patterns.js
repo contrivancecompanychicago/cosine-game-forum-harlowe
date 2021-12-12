@@ -1096,11 +1096,12 @@
 			return Patterns;
 		});
 	}
-	// Loaded as a story format in TwineJS
+	// Loaded as a story format in TwineJS 2.3.
 	else if (this && this.loaded) {
 		this.modules || (this.modules = {});
 		this.modules.Patterns = Patterns;
 	}
+	// Loaded in TwineJS 2.4.
 	else {
 		this.Patterns = Patterns;
 	}

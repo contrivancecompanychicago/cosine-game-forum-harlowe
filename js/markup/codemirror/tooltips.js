@@ -253,10 +253,13 @@
 			}
 		}
 	}
-	// This can only be loaded in TwineJS, not any other place.
+	// this.loaded implies TwineJS 2.3.
 	if (this && this.loaded) {
 		this.modules || (this.modules = {});
 		({ShortDefs} = this.modules);
 		this.modules.Tooltips = Tooltips;
+	} else {
+		({ShortDefs} = this);
+		this.Tooltips = Tooltips;
 	}
 }.call(eval('this')));
