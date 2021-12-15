@@ -26,8 +26,14 @@ const versionClass = 'cm-harlowe-3-';
 const outputFile = {
 	root: 'box-sizing:border-box;',
 
+	/*
+		In Twine 2.4+, always put "non-prose" code in monospace.
+	*/
+	[`root:not([class^='${versionClass}text']):not([class^='${versionClass}verbatim'])`]:
+		`font-family:var(--font-monospaced)`,
+
 	// The cursor token highlight should ignore the most common tokens, unwrapped text tokens.
-	["cursor:not([class^='" + versionClass + "text " + versionClass + "root'])"]:
+	[`cursor:not([class^='${versionClass}text ${versionClass}root'])`]:
 		"border-bottom: 2px solid darkgray;",
 
 	CodeMirror: "padding: 0 !important",
@@ -106,7 +112,7 @@ const outputFile = {
 		"text-decoration: line-through dashed " + changerAttachmentColour + ";" + typeColours.changer,
 
 	"verbatim":
-		"background-color: hsla(0,0%,50%,0.1);",
+		"background-color: hsla(0,0%,50%,0.1);font:var(--font-monospaced)",
 
 	"^=bold, ^=strong, ^=italic, ^=em, ^=sup, ^=verbatim, ^=strike":
 		intangible,

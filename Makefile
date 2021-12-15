@@ -80,6 +80,7 @@ build/twinemarkup-min.js: js/markup/*.js js/markup/*/*.js
 	| $(call node_replace, $(shortdefs)) \
 	| $(call node_replace, $(codemirrorcss)) \
 	| babel --presets es2015 \
+	| uglifyjs $(uglify_flags) \
 	> build/twinemarkup-min.js
 
 dist/format.js: build/harlowe-min.js build/twinemarkup-min.js css

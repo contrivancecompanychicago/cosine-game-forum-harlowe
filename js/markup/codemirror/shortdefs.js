@@ -4,6 +4,9 @@
 	/*
 		This SHORTDEFS token is actually replaced with an object literal listing
 		of the currently defined Harlowe macros at compile-time, from the metadata script.
+
+		This is presented in a separate module so that the toolbar and tooltips can access it in addition
+		to the syntax highlighter.
 	*/
 	const ShortDefs = "SHORTDEFS";
 	// Loaded in TwineJS 2.3.
