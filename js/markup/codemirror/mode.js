@@ -11,7 +11,7 @@
 	/*
 		Import the TwineMarkup lexer function, and store it locally.
 	*/
-	let lex, toolbar, tooltips, shortDefs;
+	let lex, toolbar, tooltips, shortDefs, commands;
 	if(typeof module === 'object') {
 		({lex} = require('../lexer'));
 	}
@@ -22,7 +22,7 @@
 	}
 	// Loaded as a story format in TwineJS (any ver) or in HarloweDocs's preview pane.
 	else {
-		({Markup:{lex}, Toolbar:toolbar, Tooltips:tooltips, ShortDefs:shortDefs} = (this.modules || this));
+		({Markup:{lex}, Toolbar:toolbar, ToolbarCommands:commands, Tooltips:tooltips, ShortDefs:shortDefs} = (this.modules || this));
 	}
 	/*
 		Produce an object holding macro names, using both their names and their aliases.
@@ -423,6 +423,8 @@
 				"2.4.0-beta1": {
 					codeMirror: {
 						mode,
+						toolbar,
+						commands,
 					},
 				},
 			},
@@ -443,7 +445,18 @@
 		document.head.appendChild(harloweStyles);
 	}
 	/*
-		The "CODEMIRRORCSS" string is replaced with the output of the script "codemirrorcss.js".
+		The CODEMIRRORCSS string is replaced with the output of the script "codemirrorcss.js".
 	*/
 	harloweStyles.innerHTML = "CODEMIRRORCSS";
+
+	/*
+		Clean up the scope if this is Twine 2.4.
+	*/
+	if (!this.modules) {
+		delete this.Markup;
+		delete this.Toolbar;
+		delete this.ToolbarCommands;
+		delete this.Tooltips;
+		delete this.ShortDefs;
+	}
 }.call(eval('this')));

@@ -36,6 +36,9 @@
 	position:relative;
 }
 
+/*
+	TwineJS 2.3
+*/
 .harlowe-3-toolbarPanel > button {
 	border-radius: 0.8rem;
 	margin: 0px 2px;
@@ -44,7 +47,9 @@
 	font-size: 1.2rem;
 	min-width: 28px;
 }
-
+/*
+	TwineJS 2.3
+*/
 .harlowe-3-toolbarPanel > button:not(:active):not(.active):not(:last-child) {
 	border: 1px solid hsla(0,0%,50%,0.5);
 	border-top: none;
@@ -97,7 +102,8 @@
 	background: transparent;
 	color: inherit;
 	border: none;
-	font-family: 'Source Code Pro',monospace;
+	font-family: 'Source Code Pro', monospace;
+	font-family: var(--font-monospaced);
 	width: 4rem;
 	margin: 0 0.5rem;
 	display: inline-block;
@@ -210,6 +216,7 @@
 }
 .harlowe-3-tooltip {
 	font-family: "Source Sans Pro", sans-serif;
+	font-family: var(--font-system);
 	max-width:20vw;
 	position:absolute;
 	border:1px solid hsla(0,0%,50%,0.5);
@@ -217,10 +224,10 @@
 	display:block;
 	z-index:2;
 }
-.theme-light .harlowe-3-tooltip {
+.theme-light .harlowe-3-tooltip, [data-app-theme="light"] .harlowe-3-tooltip {
 	background:white;
 }
-.theme-dark .harlowe-3-tooltip {
+.theme-dark .harlowe-3-tooltip, [data-app-theme="dark"] .harlowe-3-tooltip {
 	background:black;
 }
 .harlowe-3-hideTooltip ~ * .harlowe-3-tooltip {
@@ -248,17 +255,18 @@
 	top:-10px;
 	border:12px solid transparent;
 }
-.theme-light .harlowe-3-tooltipTail::after {
+.theme-light .harlowe-3-tooltipTail::after, [data-app-theme="light"] .harlowe-3-tooltipTail::after {
 	border-bottom-color: white;
 }
-.theme-dark .harlowe-3-tooltipTail::after {
+.theme-dark .harlowe-3-tooltipTail::after, [data-app-theme="dark"] .harlowe-3-tooltipTail::after  {
 	border-bottom-color: black;
 }
 .harlowe-3-dataEmptyRow:not(:last-child) {
 	display:none;
 }
 .harlowe-3-dataRow .harlowe-3-dropdownRowLabel {
-	font-family:'Source Code Pro',monospace;
+	font-family: 'Source Code Pro', monospace;
+	font-family: var(--font-monospaced);
 }
 .harlowe-3-textareaRows {
 	margin-bottom:0.5em;
@@ -285,3 +293,8 @@
 .harlowe-3-datavalueRows .harlowe-3-datavalueRows .harlowe-3-datavalueRowHint {
 	display:none;
 }
+/*
+	TwineJS 2.4+
+*/
+.story-format-toolbar .icon > img:only-child { margin-right: 0px; }
+.button-bar { flex-flow: wrap; }

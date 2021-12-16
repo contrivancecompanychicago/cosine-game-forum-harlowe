@@ -13,6 +13,7 @@
 	const ON = "addEventListener";
 	const OFF = "removeEventListener";
 	const P = document.createElement('p');
+	const twine23 = !!document[$]('html[data-version^="2.3."]');
 	function el(html) {
 		P.innerHTML = html;
 		return P.firstChild;
@@ -23,15 +24,16 @@
 	/*
 		These icons are copy-pasted from FAIcons.dev.
 	*/
-	const fontIcon = name =>
-		`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="20" height="20"><path d="${
+	const fontIcon = (name, w=20, h=20) =>
+		`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="${w}" height="${h}"><path fill='currentColor' d="${
 			({
 				'align-right': `M16 224h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16zm416 192H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm3.17-384H172.83A12.82 12.82 0 0 0 160 44.83v38.34A12.82 12.82 0 0 0 172.83 96h262.34A12.82 12.82 0 0 0 448 83.17V44.83A12.82 12.82 0 0 0 435.17 32zm0 256H172.83A12.82 12.82 0 0 0 160 300.83v38.34A12.82 12.82 0 0 0 172.83 352h262.34A12.82 12.82 0 0 0 448 339.17v-38.34A12.82 12.82 0 0 0 435.17 288z`,
 				'list-ol': `M48 48a48 48 0 1 0 48 48 48 48 0 0 0-48-48zm0 160a48 48 0 1 0 48 48 48 48 0 0 0-48-48zm0 160a48 48 0 1 0 48 48 48 48 0 0 0-48-48zm448 16H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0-320H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16zm0 160H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16z`,
 				'list-ul': `M61.77 401l17.5-20.15a19.92 19.92 0 0 0 5.07-14.19v-3.31C84.34 356 80.5 352 73 352H16a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8h22.83a157.41 157.41 0 0 0-11 12.31l-5.61 7c-4 5.07-5.25 10.13-2.8 14.88l1.05 1.93c3 5.76 6.29 7.88 12.25 7.88h4.73c10.33 0 15.94 2.44 15.94 9.09 0 4.72-4.2 8.22-14.36 8.22a41.54 41.54 0 0 1-15.47-3.12c-6.49-3.88-11.74-3.5-15.6 3.12l-5.59 9.31c-3.72 6.13-3.19 11.72 2.63 15.94 7.71 4.69 20.38 9.44 37 9.44 34.16 0 48.5-22.75 48.5-44.12-.03-14.38-9.12-29.76-28.73-34.88zM496 224H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0-160H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16zm0 320H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zM16 160h64a8 8 0 0 0 8-8v-16a8 8 0 0 0-8-8H64V40a8 8 0 0 0-8-8H32a8 8 0 0 0-7.14 4.42l-8 16A8 8 0 0 0 24 64h8v64H16a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8zm-3.91 160H80a8 8 0 0 0 8-8v-16a8 8 0 0 0-8-8H41.32c3.29-10.29 48.34-18.68 48.34-56.44 0-29.06-25-39.56-44.47-39.56-21.36 0-33.8 10-40.46 18.75-4.37 5.59-3 10.84 2.8 15.37l8.58 6.88c5.61 4.56 11 2.47 16.12-2.44a13.44 13.44 0 0 1 9.46-3.84c3.33 0 9.28 1.56 9.28 8.75C51 248.19 0 257.31 0 304.59v4C0 316 5.08 320 12.09 320z`,
+				'border-style': `M240 416h-32a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm-96 0h-32a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm192 0h-32a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm96-192h-32a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0 96h-32a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0 96h-32a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0-288h-32a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0-96H32A32 32 0 0 0 0 64v400a16 16 0 0 0 16 16h32a16 16 0 0 0 16-16V96h368a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16z`,
 				columns: `M464 32H48C21.49 32 0 53.49 0 80v352c0 26.51 21.49 48 48 48h416c26.51 0 48-21.49 48-48V80c0-26.51-21.49-48-48-48zM224 416H64V160h160v256zm224 0H288V160h160v256z`,
 				eye: `M288 144a110.94 110.94 0 0 0-31.24 5 55.4 55.4 0 0 1 7.24 27 56 56 0 0 1-56 56 55.4 55.4 0 0 1-27-7.24A111.71 111.71 0 1 0 288 144zm284.52 97.4C518.29 135.59 410.93 64 288 64S57.68 135.64 3.48 241.41a32.35 32.35 0 0 0 0 29.19C57.71 376.41 165.07 448 288 448s230.32-71.64 284.52-177.41a32.35 32.35 0 0 0 0-29.19zM288 400c-98.65 0-189.09-55-237.93-144C98.91 167 189.34 112 288 112s189.09 55 237.93 144C477.1 345 386.66 400 288 400z`,
-				comment: `M256 32C114.6 32 0 125.1 0 240c0 47.6 19.9 91.2 52.9 126.3C38 405.7 7 439.1 6.5 439.5c-6.6 7-8.4 17.2-4.6 26S14.4 480 24 480c61.5 0 110-25.7 139.1-46.3C192 442.8 223.2 448 256 448c141.4 0 256-93.1 256-208S397.4 32 256 32zm0 368c-26.7 0-53.1-4.1-78.4-12.1l-22.7-7.2-19.5 13.8c-14.3 10.1-33.9 21.4-57.5 29 7.3-12.1 14.4-25.7 19.9-40.2l10.6-28.1-20.6-21.8C69.7 314.1 48 282.2 48 240c0-88.2 93.3-160 208-160s208 71.8 208 160-93.3 160-208 160z`,
+				comment: `M256 32C114.6 32 0 125.1 0 240c0 49.6 21.4 95 57 130.7C44.5 421.1 2.7 466 2.2 466.5c-2.2 2.3-2.8 5.7-1.5 8.7S4.8 480 8 480c66.3 0 116-31.8 140.6-51.4 32.7 12.3 69 19.4 107.4 19.4 141.4 0 256-93.1 256-208S397.4 32 256 32z`,
 				plus: `M416 208H272V64c0-17.67-14.33-32-32-32h-32c-17.67 0-32 14.33-32 32v144H32c-17.67 0-32 14.33-32 32v32c0 17.67 14.33 32 32 32h144v144c0 17.67 14.33 32 32 32h32c17.67 0 32-14.33 32-32V304h144c17.67 0 32-14.33 32-32v-32c0-17.67-14.33-32-32-32z`,
 				minus: `M416 208H32c-17.67 0-32 14.33-32 32v32c0 17.67 14.33 32 32 32h384c17.67 0 32-14.33 32-32v-32c0-17.67-14.33-32-32-32z`,
 				times: `M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z`,
@@ -111,7 +113,7 @@
 					});
 				}
 			});
-			panel.onreset();
+			panel.onreset && panel.onreset();
 		});
 		toolbarElem[$$]('.harlowe-3-toolbarPanel').forEach(node => node.remove());
 		/*
@@ -2627,20 +2629,20 @@
 			},
 			confirmRow),
 
-		default: folddownPanel(
+		default: 
+			/*
+				The default panel is present only if this is 2.3. In 2.4, an identical panel is created using the TwineJS extension API.
+			*/
+			!twine23 ? folddownPanel() : folddownPanel(
 			{
 				type: 'buttons',
 				buttons: [
 					{ title:'Bold',                    html:`<div style='font-family:serif;font-weight:bold'>B</div>`,              onClick: () => wrapSelection("''","''")},
 					{ title:'Italic',                  html:`<div style='font-family:serif;font-style:italic'>I</div>`,             onClick: () => wrapSelection("//","//")},
-					{ title:'Strikethrough',           html:`<div style='font-family:serif;line-decoration:line-through'>S</div>`,  onClick: () => wrapSelection("~~","~~")},
+					{ title:'Strikethrough',           html:`<div style='font-family:serif;text-decoration:line-through'>S</div>`,  onClick: () => wrapSelection("~~","~~")},
 					{ title:'Superscript',             html:`<div style='font-family:serif'>X<sup>2</sup></div>`,                   onClick: () => wrapSelection("^^","^^")},
 					{ title:'Text and background colour', html:`<div class='harlowe-3-bgColourButton'>`,                            onClick: () => switchPanel('textcolor')},
-					{
-						title:'Borders',
-						html:'<span style="display:inline-block; height:16px; width:16px; border-style: dotted solid solid dotted; border-size:3px;"></span>',
-						onClick: () => switchPanel('borders'),
-					},
+					{ title:'Borders',                 html:fontIcon('border-style'),                                               onClick: () => switchPanel('borders'),},
 					{ title:'Rotated text',            html: '<div style="transform:rotate(-30deg);font-family:serif;font-weight:bold">R</div>', onClick: () => switchPanel('rotate')},
 					{ title:'Special text style',      html:'Styles…',                    onClick: () => switchPanel('textstyle')},
 					el('<span class="harlowe-3-toolbarBullet">'),
@@ -2714,7 +2716,69 @@
 	*/
 	switchPanel();
 
-	function Toolbar(cmObj /*, {appTheme, locale}*/) {
+	/*
+		Twine 2.4+ toolbar.
+	*/
+	const svgURIPrefix = `data:image/svg+xml,`;
+
+	const svgURI = contents =>
+		`${svgURIPrefix}${window.escape(`<svg viewBox='0 0 14 14' width='80' height='80' xmlns='http://www.w3.org/2000/svg'>${contents}</svg>`)}`;
+
+	const t24Icon = (x,y,style,text) =>
+		svgURI(`<text y='${y}' x='${x}' fill='currentColor' style='/*harlowe-3*/${style}'>${text}</text>`);
+
+	const fontIconURI = name => `${svgURIPrefix}${window.escape(fontIcon(name))}`;
+
+	const t24commands = {};
+	let hideCodeButton, hideTooltipButton;
+	const t24toolbar = twine23 ? [] : [
+		{ type: 'button', command() { wrapSelection("''","''"); },   label:'', icon: t24Icon(2, 14, 'font-weight:bold','B'), },
+		{ type: 'button', command() { wrapSelection("//","//"); },   label:'', icon: t24Icon(4, 14, 'font-style:italic','I'), },
+		{ type: 'button', command() { wrapSelection("~~","~~"); },   label:'', icon: t24Icon(2, 14, 'text-decoration:line-through','S'), },
+		{ type: 'button', command() { wrapSelection("^^","^^"); },   label:'', icon: t24Icon(1, 14, '', "x</text><text y='7' x='10' fill='currentColor' style='font-size:9px'>2"), },
+		{ type: 'button', command() { switchPanel('textcolor'); },   label:'', icon: svgURI(`<defs><linearGradient id="X"><stop offset="0%" stop-color="hsla(0,100%,50%,0.5)"/><stop offset="16%" stop-color="hsla(30,100%,50%,0.5)"/><stop offset="33%" stop-color="hsla(60,100%,50%,0.5)"/><stop offset="50%" stop-color="hsla(120,100%,50%,0.5)"/><stop offset="66%" stop-color="hsla(180,100%,50%,0.5)"/><stop offset="83%" stop-color="hsla(240,100%,50%,0.5)"/><stop offset="100%" stop-color="hsla(320,100%,50%,0.5)"/></linearGradient></defs><circle cx="8" cy="8" r="6" fill="url('#X')"/>`), },
+		{ type: 'button', command() { switchPanel('borders'); },     label:'', icon: fontIconURI('border-style'), },
+		{ type: 'button', command() { switchPanel('rotate'); },      label:'', icon: t24Icon(-3, 14, 'transform:rotate(-30deg);font-family:serif;', 'R'), },
+		{ type: 'button', command() { switchPanel('textstyle'); },   label:'Styles…', icon:'', },
+		{ type: 'button', command() { wrapSelection("\n#",""); },    label:'', icon: t24Icon(0, 14, 'font-weight:bold;font-size:18px;','H'), },
+		{ type: 'button', command() { wrapSelection("\n* ",""); },   label:'', icon: fontIconURI('list-ul'), },
+		{ type: 'button', command() { wrapSelection("\n0. ",""); },  label:'', icon: fontIconURI('list-ol'), },
+		{ type: 'button', command() { wrapSelection("\n---\n",""); },label:'', icon: fontIconURI('minus'), },
+		{ type: 'button', command() { switchPanel('align'); },       label:'', icon: fontIconURI('align-right'), },
+		{ type: 'button', command() { switchPanel('columns'); },     label:'', icon: fontIconURI('columns'), },
+		{ type: 'button', command() { switchPanel('collapse'); },    label:'', icon: t24Icon(0,10,'font-weight:bold;font-size:12px','{ }'), },
+		{ type: 'button',
+			command() {
+				const selection = cm.doc.getSelection();
+				const consecutiveGraves = (selection.match(/`+/g) || []).reduce((a,e) => Math.max(e.length, a), 0);
+				wrapSelection("`".repeat(consecutiveGraves+1), "`".repeat(consecutiveGraves+1));
+			},
+			label:'', icon: t24Icon(1,12,'font-size:11px','Vb'),
+		},
+		{ type: 'button', command() { switchPanel('passagelink'); }, label:'Link…',   icon:'', },
+		{ type: 'button', command() { switchPanel('if'); },          label:'If…',     icon:'', },
+		{ type: 'button', command() { switchPanel('input'); },       label:'Input…',  icon:'', },
+		{ type: 'button', command() { switchPanel('hook'); },        label:'Hook…',   icon:'', },
+		{ type: 'button', command() { switchPanel('basicValue'); },  label:'Value…',  icon:'', },
+		{ type: 'button', command() { switchPanel('macro'); },       label:'Macro…',  icon:'', },
+		hideCodeButton    = { type: 'button', command() { toolbarElem.classList.toggle('harlowe-3-hideCode'); },    label:'',  icon:fontIconURI('eye'), },
+		hideTooltipButton = { type: 'button', command() { toolbarElem.classList.toggle('harlowe-3-hideTooltip'); }, label:'',  icon:fontIconURI('comment'), },
+	].map(function recur(b,i) {
+		/*
+			The above definition is split into separate command and toolbar objects, as per the TwineJS 2.4 spec.
+		*/
+		if (b.type === 'button') {
+			const {command} = b;
+			/*
+				Before each command is run, reassign the cm object.
+			*/
+			t24commands[i] = (cmObj) => { cm = cmObj; command(); };
+			b.command = i + '';
+		}
+		return b;
+	});
+
+	function Toolbar(cmObj, {appTheme} = {}) {
 		/*
 			Look for the TwineJS toolbar element in either 2.4 or 2.3.
 		*/
@@ -2723,6 +2787,18 @@
 			passageTagsElem.after(toolbarElem);
 		}
 		cm = cmObj;
+		/*
+			Colourise the icons for each toolbar button based on the current appTheme (light mode or dark mode).
+		*/
+		t24toolbar.forEach(item => {
+			let replaceColor = (appTheme === "light" ? "4d4d4d" : "b3b3b3");
+			if ((item === hideCodeButton && toolbarElem.classList.contains('harlowe-3-hideCode'))
+					|| (item === hideTooltipButton && !toolbarElem.classList.contains('harlowe-3-hideTooltip'))) {
+				replaceColor = '0a60c2';
+			}
+			item.icon && (item.icon = item.icon.replace(/currentColor/g, "%23" + replaceColor));
+		});
+		return t24toolbar;
 	}
 
 	// This can only be loaded in TwineJS, not any other place.
@@ -2733,5 +2809,6 @@
 	else {
 		({Markup:{lex}, Patterns, ShortDefs} = this);
 		this.Toolbar = Toolbar;
+		this.ToolbarCommands = t24commands;
 	}
 }.call(eval('this')));
