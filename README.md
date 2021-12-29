@@ -6,7 +6,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 #### Bugfixes
 
- n/a
+ * Improved performance of game saving, which includes `(save-game:)` and the automatic game state SessionStorage saving feature (introduced in 3.0.0).
 
 #### Alterations
 

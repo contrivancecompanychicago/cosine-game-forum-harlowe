@@ -2934,7 +2934,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 					*/
 					return false;
 				}
-				const serialisation = State.serialise();
+				const {pastAndPresent:serialisation} = State.serialise(false);
 				if (TwineError.containsError(serialisation)) {
 					/*
 						On the other hand, if serialisation fails, that's presumably

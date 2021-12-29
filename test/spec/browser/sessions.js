@@ -31,6 +31,23 @@ describe("browser sessions", function() {
 		}, 20);
 	});
 
+	it("works after using (undo:)", function(done) {
+		runPassage("uno", "uno");
+		runPassage("dos(set:$foo to 1)", "dos");
+		runPassage("tres(set:$bar to (dm:'X',(font:'Skia')))", "tres");
+		runPassage("cuatro(set:$foo to it + 1)(undo:)","cuatro");
+
+		setTimeout(function() {
+			deserialiseState(retrieveStoredStateString());
+			setTimeout(function() {
+				expect("(history:)").markupToPrint("uno,dos,tres");
+				expect("$foo").markupToPrint("1");
+				expect("(print: $bar's X is (font:'Skia'))").markupToPrint("true");
+				done();
+			}, 20);
+		}, 100);
+	});
+
 	// Currently I can't test whether invalid sessionStorage data results in being silently ignored in harlowe.js.
 
 	afterAll(function() {

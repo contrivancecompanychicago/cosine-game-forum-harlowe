@@ -135,6 +135,13 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 	let serialiseProblem;
 
 	/*
+		A cache of the serialised JSON form of the past moments. Invaldiated (made falsy) whenever pastward temporal movement
+		occurs. Why isn't the present included? Because the present is liable to change as (set:) macros are run. Remember that
+		each past moment reflects the game state as the passage was *left*, not entered.
+	*/
+	let serialisedPast = '';
+
+	/*
 		Debug Mode event handlers are stored here by on(). "forward" and "back" handlers are called
 		when the present changes, and thus when play(), fastForward() and rewind() have been called.
 		"load" handlers are called exclusively in deserialise().
@@ -151,9 +158,8 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		This enables session storage to preserve the game state across reloads, even when the browser
 		(such as that of a phone) doesn't naturally preserve it using something like FF's bfcache.
 	*/
-	function saveSession() {
+	function saveSession(serialisation) {
 		if (State.hasSessionStorage) {
-			const serialisation = State.serialise();
 			/*
 				Since we're in the middle of navigating to another Moment, just silently disregard errors.
 			*/
@@ -174,9 +180,13 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 	*/
 	function newPresent(newPassageName) {
 		present = (timeline[recent] || Moment).create(newPassageName);
-		saveSession();
+
+		let pastAndPresent;
+		({past:serialisedPast, pastAndPresent} = State.serialise(true));
+
+		saveSession(pastAndPresent);
 	}
-	
+
 	/*
 		The current game's state.
 	*/
@@ -334,6 +344,11 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				recent -= 1;
 			}
 			if (moved) {
+				/*
+					Invalidate the serialised timeline cache.
+				*/
+				serialisedPast = '';
+
 				newPresent(timeline[recent].passage);
 				// Call the 'back' event handler.
 				eventHandlers.back.forEach(fn => fn());
@@ -361,6 +376,9 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			}
 			if (moved) {
 				newPresent(timeline[recent].passage);
+				/*
+					TBW
+				*/
 				eventHandlers.forward.forEach(fn => fn(timeline[recent].passage, "fastForward"));
 			}
 			return moved;
@@ -390,6 +408,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			timeline = [];
 			recent = -1;
 			present = Moment.create();
+			serialisedPast = '';
 			serialiseProblem = undefined;
 			eventHandlers.load.forEach(fn => fn(timeline));
 		},
@@ -419,10 +438,19 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			Serialise the game history, from the present backward (ignoring the redo cache)
 			into a JSON string.
 			
-			@return {String|Boolean} The serialised state, or false if serialisation failed.
+			@return {Object|Boolean} The serialised state (in two strings), or false if serialisation failed.
 		*/
-		function serialise() {
-			const ret = timeline.slice(0, recent + 1);
+		function serialise(newPresent) {
+			let whatToSerialise;
+			/*
+				- If serialisedPast isn't set yet, serialise everything up to the present.
+				- At the start of each turn (i.e newPresent == true), serialise the recently finished moment,
+				and the new moment.
+				- During a turn (i.e. (save-game:) or whatever),
+				serialise only the current moment (assume serialisedPast is up to date).
+			*/
+			whatToSerialise = timeline.slice(!serialisedPast ? 0 : newPresent ? recent-1 : recent, recent+1);
+
 			/*
 				We must determine if the state is serialisable.
 				Once it is deemed unserialisable, it remains that way for the rest
@@ -433,7 +461,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				Create an array (of [var, value] pairs) that shows each variable that
 				couldn't be serialised at each particular turn.
 			*/
-			const serialisability = ret.map(
+			const serialisability = whatToSerialise.map(
 				(moment) => Object.keys(moment.variables)
 					.filter((e) => moment.variables[e] && !isSerialisable(moment.variables[e]))
 					.map(e => [e, moment.variables[e]])
@@ -462,40 +490,63 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 					+ "; the game can no longer be saved."
 				);
 			}
-			try {
-				return JSON.stringify(ret, function(name, variable) {
+			/*
+				Note: this MUST NOT be an arrow function, because JSON.stringify uses 'this' in the given callback.
+			*/
+			let serialiseFn = function (name, variable) {
+				/*
+					The timeline, which is an array of Moments with VariableStore objects, should be serialised
+					such that only the variables inside the VariableStore are converted to Harlowe strings
+					with toSource().
+				*/
+				if (this.TwineScript_VariableStore) {
 					/*
-						The timeline, which is an array of Moments with VariableStore objects, should be serialised
-						such that only the variables inside the VariableStore are converted to Harlowe strings
-						with toSource().
+						Serialising the TypeDefs, which is the only VariableStore property
+						that isn't directly user-created, and is a plain JS object,
+						requires a little special-casing.
 					*/
-					if (this.TwineScript_VariableStore) {
-						/*
-							Serialising the TypeDefs, which is the only VariableStore property
-							that isn't directly user-created, and is a plain JS object,
-							requires a little special-casing.
-						*/
-						if (name === "TwineScript_TypeDefs") {
-							return Object.keys(variable).reduce((a,key) => {
-								/*
-									Since the datatypes inside are Harlowe values,
-									they should be serialised to source as well.
-								*/
-								a[key] = toSource(variable[key]);
-								return a;
-							},{});
-						}
-						/*
-							Mock Visits should be stored as well. As of Oct 2021, it's currently not decided
-							what should happen when a mock visits savefile is loaded outside of Debug Mode.
-						*/
-						if (name === "TwineScript_MockVisits") {
-							return variable;
-						}
-						return toSource(variable);
+					if (name === "TwineScript_TypeDefs") {
+						return Object.keys(variable).reduce((a,key) => {
+							/*
+								Since the datatypes inside are Harlowe values,
+								they should be serialised to source as well.
+							*/
+							a[key] = toSource(variable[key]);
+							return a;
+						},{});
 					}
-					return variable;
-				});
+					/*
+						Mock Visits should be stored as well. As of Oct 2021, it's currently not decided
+						what should happen when a mock visits savefile is loaded outside of Debug Mode.
+					*/
+					if (name === "TwineScript_MockVisits") {
+						return variable;
+					}
+					return toSource(variable);
+				}
+				return variable;
+			};
+			try {
+				let pastToSerialise = whatToSerialise.slice(0, -1);
+				let updatedPast = serialisedPast;
+				/*
+					If there's no extra pastToSerialise, serialisedPast doesn't need to be updated.
+				*/
+				if (pastToSerialise.length) {
+					/*
+						The amount of ] marks that must be repeatedly sliced off with .slice(0,-1) and .slice(1) to
+						concatenate these JSON serialised arrays together is very #awkward.
+					*/
+					updatedPast = (!updatedPast ? "[" : updatedPast.slice(0, -1) + ",") + JSON.stringify(pastToSerialise, serialiseFn).slice(1);
+				}
+				return {
+					past: updatedPast,
+					/*
+						Currently, serialiseFn assumes that its input is an array of moments, and can't serialise a single moment by itself.
+						Hence, while whatToSerialise.slice(-1) is a one-element array, the contained element can't be passed itself.
+					*/
+					pastAndPresent: updatedPast.slice(0, -1) + (updatedPast ? ',' : '[') + JSON.stringify(whatToSerialise.slice(-1), serialiseFn).slice(1),
+				};
 			}
 			catch(e) {
 				return false;
@@ -601,6 +652,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			timeline = newTimeline;
 			eventHandlers.load.forEach(fn => fn(timeline));
 			recent = timeline.length - 1;
+			serialisedPast = '';
 			newPresent(timeline[recent].passage);
 			return true;
 		}

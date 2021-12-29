@@ -128,6 +128,7 @@ window.clearState = function() {
 	Passages.clear();
 };
 window.deserialiseState = function(str) {
+	State.reset();
 	State.deserialise(Section.create(),str);
 	Engine.showPassage(State.passage, false /* stretchtext value */);
 }
