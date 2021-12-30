@@ -160,14 +160,14 @@ describe("variables", function() {
 			expect("(set: $a to  (p:'foo',digit-type $a))$a").markupToError();
 		});
 	});
-	xdescribe("performance", function() {
+	describe("performance", function() {
 		it("remains solid across many turns", function() {
 			var p = performance.now();
 			runPassage("(set: $b to 1)");
-			[...Array(600)].forEach(function(_,i) {
+			Array.from(Array(600)).forEach(function(_,i) {
 				runPassage("(set: $a to $a + $b)","test" + i);
 			});
-			expect(performance.now() - p).toBeLessThan(2000);
+			expect(performance.now() - p).toBeLessThan(1500);
 		});
 	});
 	describe("the (put:) macro", function() {

@@ -1,6 +1,6 @@
 "use strict";
 define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerror', 'utils/operationutils', 'markup', 'twinescript/compiler'],
-({impossible}, Passages, ChangerCommand, TwineError, {objectName,toSource}, {lex}, compile) => {
+({impossible}, Passages, ChangerCommand, TwineError, {objectName,toSource,clone}, {lex}, compile) => {
 	const {assign, create, defineProperty} = Object;
 	/*
 		This ensures that serialisation of Maps and Sets works as expected.
@@ -36,37 +36,6 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 	});
 	
 	/*
-		The root prototype for every Moment's variables collection.
-	*/
-	const SystemVariables = assign(create(null), {
-		/*
-			Note that it's not possible for userland TwineScript to directly access or
-			modify this base object.
-		*/
-		TwineScript_ObjectName: "this story's variables",
-
-		/*
-			This is the root prototype of every frame's variable type definitions. Inside a TypeDefs
-			is every variable name that this variables collection contains, mapped to a Harlowe datatype.
-		*/
-		TwineScript_TypeDefs: create(null),
-
-		/*
-			This is used to distinguish to (set:) that this is a variable store,
-			and assigning to its properties does affect game state.
-		*/
-		TwineScript_VariableStore: true,
-
-		/*
-			For testing purposes, there needs to be a way to "mock" having visited certain passages a certain number of times.
-			Because (mock-visits:) calls should be considered modal, and can be undone, their effects need to be tied
-			to the variable store.
-			Note that currently, mock visits are NOT saved using (save-game:).
-		*/
-		TwineScript_MockVisits: null,
-	});
-
-	/*
 		Prototype object for states remembered by the game.
 	*/
 	const Moment = {
@@ -74,11 +43,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			Current passage name
 		*/
 		passage: "",
-		
-		/*
-			As the prototype object, its variable property is the prototype variables object.
-		*/
-		variables: SystemVariables,
+		variables: create(null),
 
 		/*
 			Make a new Moment that comes temporally after this.
@@ -93,10 +58,8 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			const ret = create(Moment);
 			ret.passage = p || "";
 			// Variables are stored as deltas of the previous state's variables.
-			// This is implemented using JS's prototype chain :o
-			// For the first moment, this becomes a call to create(null),
-			// keeping the prototype chain clean.
-			ret.variables = assign(create(this.variables), v);
+			ret.variables = assign(create(null), v);
+			Object.defineProperty(ret.variables, "TwineScript_VariableDelta", { value: true });
 			return ret;
 		}
 	};
@@ -135,7 +98,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 	let serialiseProblem;
 
 	/*
-		A cache of the serialised JSON form of the past moments. Invaldiated (made falsy) whenever pastward temporal movement
+		A cache of the serialised JSON form of the past moments. Invalidated (made falsy) whenever pastward temporal movement
 		occurs. Why isn't the present included? Because the present is liable to change as (set:) macros are run. Remember that
 		each past moment reflects the game state as the passage was *left*, not entered.
 	*/
@@ -152,8 +115,102 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		load: [],
 	};
 
-	let State;
+	/*
+		The global variable scope. This is progressively mutated as the game progresses,
+		and deltas of these changes (on a per-turn basis) are stored in Moments.
+	*/
+	const SystemVariablesProto = assign(create(null), {
+		/*
+			Note that it's not possible for userland TwineScript to directly access or
+			modify this base object.
+		*/
+		TwineScript_ObjectName: "this story's variables",
 
+		/*
+			This is the root prototype of every frame's variable type definitions. Inside a TypeDefs
+			is every variable name that this variables collection contains, mapped to a Harlowe datatype.
+		*/
+		TwineScript_TypeDefs: null,
+
+		/*
+			This is used to distinguish to (set:) that this is a variable store,
+			and assigning to its properties does affect game state.
+		*/
+		TwineScript_VariableStore: "global",
+
+		/*
+			For testing purposes, there needs to be a way to "mock" having visited certain passages a certain number of times.
+			Because (mock-visits:) calls should be considered modal, and can be undone, their effects need to be tied
+			to the variable store.
+			Note that currently, mock visits are NOT saved using (save-game:).
+		*/
+		TwineScript_MockVisits: null,
+
+		/*
+			All read/update/delete operations on this scope also update the delta for the current moment (present).
+		*/
+		TwineScript_Delete(prop) {
+			delete this[prop];
+			present.variables[prop] = undefined;
+		},
+
+		TwineScript_Set(prop, value) {
+			this[prop] = value;
+			/*
+				It's not necessary to clone (pass-by-value) the value when placing it on the delta,
+				because once placed in the variable store, it should be impossible to mutate
+				the value anymore - only by replacing it with another TwineScript_Set().
+			*/
+			present.variables[prop] = value;
+		},
+
+		TwineScript_GetProperty(prop) {
+			return this[prop];
+		},
+
+		TwineScript_DefineType(prop, type) {
+			this.TwineScript_TypeDefs[prop] = type;
+			/*
+				VarRef.defineType() automatically installs TwineScript_TypeDefs on 
+			*/
+			if (!Object.hasOwnProperty.call(present.variables,"TwineScript_TypeDefs")) {
+				present.variables.TwineScript_TypeDefs = create(null);
+			}
+			present.variables.TwineScript_TypeDefs[prop] = type;
+		},
+	});
+
+	/*
+		Whenever a turn is undone or the game state is reloaded entirely, the global variable
+		scope must be rebuilt.
+	*/
+	function reconstructSystemVariables() {
+		const ret = assign(create(SystemVariablesProto), {
+			TwineScript_MockVisits: [],
+			TwineScript_TypeDefs: create(null),
+		});
+		timeline.slice(0, recent + 1).reverse().forEach(({passage,variables}) => {
+			for (let prop in variables) {
+				/*
+					Neither the TwineScript_MockVisits array (of strings), nor the TwineScript_TypeDefs object
+					(of inaccessible/non-writable data structures), need to have their contents cloned.
+				*/
+				if (prop === "TwineScript_MockVisits") {
+					assign(ret.TwineScript_MockVisits, variables[prop]);
+				}
+				else if (prop === "TwineScript_TypeDefs") {
+					assign(ret.TwineScript_TypeDefs, variables[prop]);
+				}
+				else if (!(prop in ret) && !prop.startsWith("TwineScript_")) {
+					ret[prop] = clone(variables[prop]);
+				}
+			}
+		});
+		return ret;
+	}
+	let SystemVariables = reconstructSystemVariables();
+
+	let State;
 	/*
 		This enables session storage to preserve the game state across reloads, even when the browser
 		(such as that of a phone) doesn't naturally preserve it using something like FF's bfcache.
@@ -179,8 +236,13 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		@param {String} The name of the passage the player is now currently at.
 	*/
 	function newPresent(newPassageName) {
-		present = (timeline[recent] || Moment).create(newPassageName);
+		present = Moment.create(newPassageName);
 
+		/*
+			Update the serialisedPast cache, so that the moment that used to be
+			the present is included in it. This is how serialisedPast is incrementally
+			increased as the game progresses.
+		*/
 		let pastAndPresent;
 		({past:serialisedPast, pastAndPresent} = State.serialise(true));
 
@@ -207,7 +269,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			Get the current variables.
 		*/
 		get variables() {
-			return present.variables;
+			return SystemVariables;
 		},
 
 		/*
@@ -228,10 +290,11 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			Get and set the current mockVisits state.
 		*/
 		get mockVisits() {
-			return present.variables.TwineScript_MockVisits || [];
+			return SystemVariables.TwineScript_MockVisits || [];
 		},
 
 		set mockVisits(value) {
+			SystemVariables.TwineScript_MockVisits = value;
 			present.variables.TwineScript_MockVisits = value;
 		},
 
@@ -350,6 +413,10 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				serialisedPast = '';
 
 				newPresent(timeline[recent].passage);
+				/*
+					Recompute the present variables based on the timeline.
+				*/
+				SystemVariables = reconstructSystemVariables();
 				// Call the 'back' event handler.
 				eventHandlers.back.forEach(fn => fn());
 			}
@@ -377,13 +444,18 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			if (moved) {
 				newPresent(timeline[recent].passage);
 				/*
-					TBW
+					Recompute the present variables based on the timeline.
+				*/
+				SystemVariables = reconstructSystemVariables();
+				/*
+					Call the 'fast forward' event handler. This is used exclusively by debug mode,
+					which is why it has the "fastForward" direction string passed in.
 				*/
 				eventHandlers.forward.forEach(fn => fn(timeline[recent].passage, "fastForward"));
 			}
 			return moved;
 		},
-		
+
 		/*
 			This is used only by Debug Mode - it lets event handlers be registered and called when the State changes.
 			"forward" functions have the signature (passageName, isFastForward). "back" functions have no signature.
@@ -409,6 +481,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			recent = -1;
 			present = Moment.create();
 			serialisedPast = '';
+			SystemVariables = reconstructSystemVariables();
 			serialiseProblem = undefined;
 			eventHandlers.load.forEach(fn => fn(timeline));
 		},
@@ -430,7 +503,6 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			return !TwineError.containsError(obj) && (
 				typeof obj.TwineScript_ToSource === "function" || Array.isArray(obj) || obj instanceof Map
 					|| obj instanceof Set || jsType === "string" || jsType === "number" || jsType === "boolean"
-					|| Object.isPrototypeOf.call(SystemVariables.TwineScript_TypeDefs, obj)
 			);
 		}
 
@@ -463,7 +535,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			*/
 			const serialisability = whatToSerialise.map(
 				(moment) => Object.keys(moment.variables)
-					.filter((e) => moment.variables[e] && !isSerialisable(moment.variables[e]))
+					.filter((e) => moment.variables[e] && e !== 'TwineScript_TypeDefs' && !isSerialisable(moment.variables[e]))
 					.map(e => [e, moment.variables[e]])
 			);
 			/*
@@ -499,7 +571,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 					such that only the variables inside the VariableStore are converted to Harlowe strings
 					with toSource().
 				*/
-				if (this.TwineScript_VariableStore) {
+				if (this.TwineScript_VariableDelta) {
 					/*
 						Serialising the TypeDefs, which is the only VariableStore property
 						that isn't directly user-created, and is a plain JS object,
@@ -607,27 +679,15 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 					return Error("The data refers to a passage named '" + moment.passage + "', but it isn't in this story.");
 				}
 				/*
-					Recreate the variables prototype chain. This doesn't use setPrototypeOf() due to
-					compatibility concerns.
-				*/
-				moment.variables = assign(create(lastVariables), moment.variables);
-				/*
-					If the variables object has a TypeDefs object, that needs to be recompiled as well,
-					and have its own prototype chain re-established.
+					If the variables object has a TypeDefs object, that needs to be recompiled as well.
 				*/
 				if (Object.hasOwnProperty.call(moment.variables,'TwineScript_TypeDefs')) {
-					const typeDefs = (moment.variables.TwineScript_TypeDefs =
-						/*
-							Notice that even though TypeDefs are optional on variables objects, JS prototype semantics
-							mean that moment.variables.TwineScript_TypeDefs will always get the previous object in the chain.
-						*/
-						assign(create(lastVariables.TwineScript_TypeDefs), moment.variables.TwineScript_TypeDefs));
 					/*
 						Much like the variables, the datatypes are currently Harlowe code strings - though rather likely to be
 						literals like "number" or "datamap".
 					*/
 					try {
-						recompileValues(section, typeDefs);
+						recompileValues(section, moment.variables.TwineScript_TypeDefs);
 					} catch(e) {
 						return Error(genericError);
 					}
@@ -653,6 +713,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			eventHandlers.load.forEach(fn => fn(timeline));
 			recent = timeline.length - 1;
 			serialisedPast = '';
+			SystemVariables = reconstructSystemVariables();
 			newPresent(timeline[recent].passage);
 			return true;
 		}

@@ -338,7 +338,9 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 		*/
 		scroll(
 			0,
-			stretch ? newPassage.offset().top - ($(window).height() * 0.05) : story.offset().top
+			stretch
+				? newPassage.offset().top - ($(window).height() * 0.05)
+				: story[0].getBoundingClientRect().top + document.body.scrollTop
 		);
 	}
 	

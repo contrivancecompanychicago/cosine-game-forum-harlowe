@@ -6,10 +6,12 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 #### Bugfixes
 
- * Improved performance of game saving, which includes `(save-game:)` and the automatic game state SessionStorage saving feature (introduced in 3.0.0).
+ n/a
 
 #### Alterations
 
+ * Improved performance of game saving, which includes `(save-game:)` and the automatic game state SessionStorage saving feature (introduced in 3.0.0).
+ * Slightly improved performance of changing passages in stories that contain a very large number of passages.
  * Code hooks can now be stored in variables and printed in the passage. This means that instead of storing long strings containing large amounts of markup that doesn't get highlighted in the syntax highlighter, you can instead store code hooks.
  * `(dialog:)`, `(confirm:)` and `(prompt:)` have been altered to permit code hooks in place of the message string value.
  * Also, code hooks can be converted into strings using `(str:)`.

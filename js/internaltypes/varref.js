@@ -516,7 +516,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				prop = convertNegativeProp(obj, prop);
 			}
 			if (obj.TwineScript_Set) {
-				obj.TwineScript_Set(prop);
+				obj.TwineScript_Set(prop, value);
 			} else {
 				obj[prop] = value;
 			}
@@ -548,6 +548,9 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		*/
 		else if (obj instanceof Map || obj instanceof Set) {
 			obj.delete(prop);
+		}
+		else if (obj.TwineScript_Delete) {
+			obj.TwineScript_Delete(prop);
 		}
 		/*
 			Note: The only plain object anticipated to be provided here is the
@@ -786,7 +789,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				}
 
 				/*
-					Only attempt to clone the object if it's not the final iteration.
+					Only clone the object if it's not the final iteration (i.e. the root VariableStore or whatever).
 				*/
 				if (i > 0) {
 					object = clone(object);
@@ -1011,7 +1014,8 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			/*
 				Having done that, simply affix the type.
 			*/
-			defs[prop] = type;
+			(object.TwineScript_DefineType ? object.TwineScript_DefineType(prop, type) : defs[prop] = type);
+			
 			/*
 				As a necessary special case, defining the const type should erase the currently contained
 				value, as it is about to be redefined to its true value in the containing (set:) that

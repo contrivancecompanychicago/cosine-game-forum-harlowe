@@ -48,6 +48,11 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 			metadata,
 		});
 	}
+
+	/*
+		Since new passages can't ever be created (as of Dec 2021), it's safe to cache tag lookups.
+	*/
+	let tagCache = Object.create(null);
 	
 	const Passages = assign(new Map(), {
 		TwineScript_ObjectName: "the Passages datamap",
@@ -56,6 +61,13 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 			This method retrieves passages which have a given tag.
 		*/
 		getTagged(tag) {
+			/*
+				Use the tag cache, if it exists.
+			*/
+			if (tagCache[tag]) {
+				return tagCache[tag];
+			}
+
 			const tagSorter = NaturalSort('en', p => p.get('name'));
 			const ret = [];
 			this.forEach((v) => {
@@ -64,7 +76,19 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 					ret.push(v);
 				}
 			});
-			return ret.sort(tagSorter);
+			ret.sort(tagSorter);
+			/*
+				Cache this result, now that it's computed.
+			*/
+			tagCache[tag] = ret;
+			return ret;
+		},
+
+		/*
+			This is (currently) exclusively used by the Harlowe codebase test runner.
+		*/
+		clearTagCache() {
+			tagCache = Object.create(null);
 		},
 
 		/*
