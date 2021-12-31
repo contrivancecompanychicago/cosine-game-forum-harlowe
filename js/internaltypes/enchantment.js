@@ -19,8 +19,10 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 			scope to enchant.
 		*/
 		create(descriptor) {
-			Utils.assertOnlyHas(descriptor, ['scope', 'localHook', 'section', 'attr', 'data', 'changer', 'functions', 'lambda', 'name']);
-
+			/*
+				Enchantment descriptors should only have 'scope', 'localHook', 'section', 'attr', 'data', 'changer', 'functions', 'lambda' and 'name'
+				properties.
+			*/
 			return Object.assign(Object.create(this), {
 				/*
 					A store for the <tw-enchantment> wrappers created by enchantScope.

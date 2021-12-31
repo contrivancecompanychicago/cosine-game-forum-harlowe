@@ -49,6 +49,7 @@ define(['jquery', 'utils'], ($, Utils) => {
 	},
 	
 	TwineError = {
+		TwineError: true,
 		/*
 			Normally, the type by itself suggests a rudimentary explanation from the above dict.
 			But, a different explanation can be provided by the caller, if they choose.
@@ -123,18 +124,18 @@ define(['jquery', 'utils'], ($, Utils) => {
 			
 			@return {Error|TwineError|Boolean} The first error encountered, or false.
 		*/
-		containsError(...args) {
-			// Due to high usage, this is a simple for-loop.
-			for (let i = 0; i < args.length; i += 1) {
-				const e = args[i];
-				if (e instanceof Error) {
-					return e;
-				}
+		containsError(/*variadic*/) {
+			// Due to high usage, this is a simple for-loop over arguments.
+			for (let i = 0; i < arguments.length; i += 1) {
+				const e = arguments[i];
 				if (TwineError.isPrototypeOf(e)) {
 					return e;
 				}
+				if (e instanceof Error) {
+					return e;
+				}
 				if (Array.isArray(e)) {
-					const f = TwineError.containsError(...e);
+					const f = TwineError.containsError.apply(TwineError, e);
 					if (f) {
 						return f;
 					}

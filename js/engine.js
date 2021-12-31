@@ -68,9 +68,9 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 		or transitionOut (string) to be selected.
 	*/
 	function showPassage (name, displayOptions = {}) {
-		// Confirm that the options object only contains
-		// what this function recognises.
-		Utils.assertOnlyHas(displayOptions, ["stretch", "transition"]);
+		/*
+			displayOptions should only contain 'stretch' and 'transition' properties.
+		*/
 
 		const
 			// The passage

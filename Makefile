@@ -63,7 +63,7 @@ build/harlowe-css.css: scss/*.scss
 
 build/harlowe-min.js: js/*.js js/*/*.js js/*/*/*.js
 	@node_modules/.bin/r.js -o $(requirejs_harlowe_flags) \
-	| babel --presets es2015 \
+	| babel --no-babelrc \
 	| uglifyjs $(uglify_flags) \
 	> build/harlowe-min.js
 
@@ -79,7 +79,7 @@ build/twinemarkup-min.js: js/markup/*.js js/markup/*/*.js
 	| $(call node_replace, $(unwrap)) \
 	| $(call node_replace, $(shortdefs)) \
 	| $(call node_replace, $(codemirrorcss)) \
-	| babel --presets es2015 \
+	| babel --no-babelrc \
 	| uglifyjs $(uglify_flags) \
 	> build/twinemarkup-min.js
 

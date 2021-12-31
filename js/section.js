@@ -470,9 +470,9 @@ define([
 		This is exclusively called by runExpression().
 	*/
 	function runLiveHook(expr, target, delay = 20, event = undefined) {
-		if (event) {
-			Utils.assertMustHave(event, ["when"]);
-		}
+		/*
+			Events given here MUST have a 'when' property.
+		*/
 		/*
 			Obtain the code of the hook that the (live:) or (event:) changer suppressed.
 		*/

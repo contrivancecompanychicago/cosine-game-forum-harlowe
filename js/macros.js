@@ -105,9 +105,13 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		}
 		let rest;
 
-		for(let ind = 0, end = Math.max(args.length, typeSignature.length); ind < end; ind += 1) {
-			let type = typeSignature[ind];
-			const arg = args[ind];
+		/*
+			The use of hoisted vars here is for a Babel performance optimisation (Dec 2021). 
+		*/
+		var ind, end, type, arg, mandatory;
+		for(ind = 0, end = Math.max(args.length, typeSignature.length); ind < end; ind += 1) {
+			type = typeSignature[ind];
+			arg = args[ind];
 
 			/*
 				This is where the majority of errors are propagated, freeing up individual macros from the burden of
@@ -171,7 +175,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 					"not enough values" error.
 				*/
 				if (arg === undefined) {
-					const mandatory = typeSignature.filter(e => !(e.pattern === "optional" || e.pattern === "zero or more")).length;
+					mandatory = typeSignature.filter(e => !(e.pattern === "optional" || e.pattern === "zero or more")).length;
 					return TwineError.create(
 						"datatype",
 						name + " needs "
@@ -237,7 +241,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		/*
 			Type checking has passed - now let the macro run.
 		*/
-		return fn(section, ...args);
+		return fn.apply(null, [section].concat(args));
 	}
 	
 	/*

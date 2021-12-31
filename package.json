@@ -28,8 +28,9 @@
     "jquery": "^3.6"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-preset-es2015": "^6.24.1",
+    "@babel/cli": "^7.16.7",
+    "@babel/core": "^7.16.7",
+    "@babel/preset-env": "^7.16.7",
     "chalk": "2",
     "fs-readdir-recursive": "1",
     "jasmine-core": "^2.5.2",
@@ -39,6 +40,11 @@
     "marked": "0.3.3",
     "replacestream": "4",
     "requirejs": "2",
-    "uglify-es": "^3.3.10"
-  }
+    "uglify-js": "^3.14.5"
+  },
+  "browserslist": [
+    "IE 10",
+    "Firefox ESR",
+    "last 2 versions"
+  ]
 }

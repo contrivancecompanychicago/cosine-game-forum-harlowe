@@ -201,7 +201,12 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 	}
 
 	function compilePropertyChain(object, propertyChain) {
-		const compiledPropertyChain = propertyChain.reduce((arr, prop,i) => {
+		let arr = [];
+		/*
+			These use for-loops for performance reasons.
+		*/
+		for (let i = 0; i < propertyChain.length; i += 1) {
+			let prop = propertyChain[i];
 			/*
 				If the property is computed, just compile its value.
 			*/
@@ -219,19 +224,19 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				Properties can be single values, or arrays.
 			*/
 			if (Array.isArray(prop)) {
-				prop = prop.map(prop => compilePropertyIndex(object, prop));
+				for(let j = 0; j < prop.length; j += 1) {
+					prop[j] = compilePropertyIndex(object, prop[j]);
+				}
 			}
 			else {
 				prop = compilePropertyIndex(object, prop);
 			}
 
 			/*
-				Either the current compiled property contains an error, or a previous
-				property resulted in an error. Due to the inability of .reduce to early-exit,
-				we must check on every loop.
+				Check for errors.
 			*/
 			let error;
-			if ((error = TwineError.containsError(arr, prop))) {
+			if ((error = TwineError.containsError(prop))) {
 				return error;
 			}
 			/*
@@ -242,10 +247,8 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				object = get(object, prop);
 			}
 			arr.push(prop);
-			return arr;
-		},[]);
-
-		return compiledPropertyChain;
+		}
+		return arr;
 	}
 
 	/*

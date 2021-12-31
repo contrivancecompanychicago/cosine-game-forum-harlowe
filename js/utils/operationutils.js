@@ -144,7 +144,12 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 				/*
 					The arg passes the test if it matches some of the types.
 				*/
-				return type.innerType.some(type => singleTypeCheck(arg, type));
+				for (let i = 0; i < type.innerType.length; i += 1) {
+					if (singleTypeCheck(arg, type.innerType[i])) {
+						return true;
+					}
+				}
+				return false;
 			}
 			/*
 				If the type expects a lambda, then check the clauses and kind.

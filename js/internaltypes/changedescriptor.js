@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas, impossible, transitionIn}, {exec}, HookSet) => {
+define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, transitionIn}, {exec}, HookSet) => {
 	const {assign,keys,create,seal} = Object;
 	/*
 		When a new Section (generally a hook or expression) is about to be rendered,
@@ -16,12 +16,6 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 		source.split(/\n/g).reduce((a,e,i,{length}) =>
 			// Even though this can result in the final array having a terminating false, $() will trim it out automatically.
 			a.concat(document.createTextNode(e), i !== length - 1 && document.createElement(e.length ? 'br' : 'tw-consecutive-br')), []);
-
-	/*
-		changeDescriptorShape is an array of all expected properties on
-		ChangeDescriptor instances. It's cached for performance paranoia.
-	*/
-	let changeDescriptorShape;
 
 	const ChangeDescriptor = {
 		
@@ -284,8 +278,6 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 			if (typeof target === "function") {
 				target = target();
 			}
-
-			assertOnlyHas(this, changeDescriptorShape);
 
 			if (!append) {
 				impossible("ChangeDescriptor.render", "This doesn't have an 'append' method chosen.");
@@ -583,7 +575,6 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {assertOnlyHas,
 			return dom;
 		}
 	};
-	changeDescriptorShape = keys(ChangeDescriptor);
 	
 	return seal(ChangeDescriptor);
 });

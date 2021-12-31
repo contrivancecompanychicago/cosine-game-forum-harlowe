@@ -139,6 +139,8 @@ define(['jquery', 'markup', 'utils/polyfills'],
 		!duration ? animate() : requestAnimationFrame(animate);
 	}
 
+	const underscoresAndHyphens = /-|_/g;
+
 	/*
 		A static class with helper methods used throughout Harlowe.
 	*/
@@ -325,7 +327,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 			underscores and hyphens.
 		*/
 		insensitiveName(e) {
-			return (e + "").toLowerCase().replace(/-|_/g, "");
+			return (e + "").toLowerCase().replace(underscoresAndHyphens, "");
 		},
 
 		/*
@@ -695,38 +697,6 @@ define(['jquery', 'markup', 'utils/polyfills'],
 				return;
 			}
 			console.error(where + "(): " + data);
-		},
-
-		/*
-			Asserts that an object doesn't lack a necessary property.
-			This and the next method provide some shape-checking
-			to important functions.
-		*/
-		assertMustHave(object, props) {
-			if (!window.console) {
-				return;
-			}
-			for(let i = 0; i < props.length; i += 1) {
-				if(!(props[i] in object)) {
-					console.error("Assertion failed: object"
-						+ " lacks property " + props[i]);
-				}
-			}
-		},
-
-		/*
-			Asserts that an object has no property extensions.
-		*/
-		assertOnlyHas(object, props) {
-			if (!window.console) {
-				return;
-			}
-			for(let i in object) {
-				if (!props.includes(i)) {
-					console.error("Assertion failed: object"
-						+ " had unexpected property '" + i + "'!");
-				}
-			}
 		},
 
 		/*
