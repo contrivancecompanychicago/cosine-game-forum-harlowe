@@ -1,6 +1,6 @@
 "use strict";
 define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changercommand', 'datatypes/custommacro', 'datatypes/lambda', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/typedvar', 'datatypes/datatype', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
-($, NaturalSort, {insensitiveName, nth, plural, andList, lockProperty}, {clone, objectName, typeName, singleTypeCheck, toSource}, ChangerCommand, CustomMacro, Lambda, HookSet, CodeHook, TypedVar, Datatype, ChangeDescriptor, TwineError) => {
+($, NaturalSort, {insensitiveName, nth, plural, andList, lockProperty}, {clone, objectName, typeName, toSource}, ChangerCommand, CustomMacro, Lambda, HookSet, CodeHook, TypedVar, Datatype, ChangeDescriptor, TwineError) => {
 	/*
 		This contains a registry of macro definitions, and methods to add to that registry.
 	*/
@@ -9,9 +9,130 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 	const
 		// Private collection of registered macros.
 		macroRegistry = {};
+
+	/*
+		This function checks the type of a single macro argument. It's run
+		for every argument passed into a type-signed macro.
+	*/
+	function singleTypeCheck(arg, type) {
+		/*
+			First, check if it's a None type.
+		*/
+		if (type === null) {
+			return arg === undefined;
+		}
+
+		const jsType = typeof arg;
+		/*
+			Now, check if the signature is an Optional, Either, Wrapped, or a Range type.
+		*/
+		if (typeof type !== 'function' && type.pattern) {
+			
+			/*
+				Optional signatures can exit early if the arg is absent.
+			*/
+			if (type.pattern === "optional" || type.pattern === "zero or more") {
+				if (arg === undefined) {
+					return true;
+				}
+				return singleTypeCheck(arg, type.innerType);
+			}
+			/*
+				Either signatures must check every available type.
+			*/
+			if (type.pattern === "either") {
+				/*
+					The arg passes the test if it matches some of the types.
+				*/
+				for (let i = 0; i < type.innerType.length; i += 1) {
+					if (singleTypeCheck(arg, type.innerType[i])) {
+						return true;
+					}
+				}
+				return false;
+			}
+			/*
+				If the type expects a lambda, then check the clauses and kind.
+			*/
+			if (type.pattern === "lambda" && singleTypeCheck(arg, type.innerType)) {
+				return type.clauses.includes("where")  === "where"  in arg
+					&& type.clauses.includes("making") === "making" in arg
+					&& type.clauses.includes("via")    === "via"    in arg
+					&& type.clauses.includes("with")   === "with"   in arg;
+			}
+			/*
+				If the type expects an insensitive set of values, check if there's a match.
+			*/
+			if (type.pattern === "insensitive set") {
+				return type.innerType.includes(insensitiveName(arg));
+			}
+			/*
+				If the type expects a limited range defined by a function, check if there's a match.
+			*/
+			if (type.pattern === "range") {
+				return type.range(arg);
+			}
+			/*
+				Otherwise, if this is a Wrapped signature, ignore the included
+				message and continue.
+			*/
+			if (type.pattern === "wrapped") {
+				return singleTypeCheck(arg, type.innerType);
+			}
+		}
+
+		// If Type but no Arg, then return an error.
+		if(type !== undefined && arg === undefined) {
+			return false;
+		}
 		
+		// The Any type permits any accessible argument, as long as it's present.
+		if (type.TwineScript_TypeName === "anything" && arg !== undefined && !arg.TwineScript_Unstorable) {
+			return true;
+		}
+		// This very rare type should be used only for (ignore:), as well as (test-false:) and (test-true:) changers.
+		if (type.TwineScript_TypeName === "everything" && arg !== undefined) {
+			return true;
+		}
+
+		/*
+			The built-in types. Let's not get tricky here.
+		*/
+		if (type === String) {
+			return jsType === 'string';
+		}
+		if (type === Boolean) {
+			return jsType === 'boolean';
+		}
+		if (type === parseInt) {
+			return jsType === 'number' && !Number.isNaN(arg) && !(arg + '').includes('.');
+		}
+		if (type === Number) {
+			return jsType === 'number' && !Number.isNaN(arg);
+		}
+		if (type === Array) {
+			return Array.isArray(arg);
+		}
+		if (type === Map || type === Set) {
+			return arg instanceof type;
+		}
+		/*
+			For TwineScript-specific types, this check should mostly suffice.
+		*/
+		return Object.isPrototypeOf.call(type,arg);
+	}
+
 	function spreadArguments(args) {
-		return args.reduce((newArgs, el) => {
+		const newArgs = [];
+		for(let i = 0; i < args.length; i += 1) {
+			/*
+				Elisions (like (a:1,,2)) are to be ignored. Note that these aren't
+				just undefineds, but array holes.
+			*/
+			if (!(i in args)) {
+				continue;
+			}
+			let el = args[i];
 			if (el && el.spreader === true) {
 				const {value} = el;
 				/*
@@ -27,9 +148,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 				*/
 				else if (Array.isArray(value)
 						|| typeof value === "string") {
-					for(let i = 0; i < value.length; i++) {
-						newArgs.push(value[i]);
-					}
+					newArgs.push(...value);
 				}
 				else if (value instanceof Set) {
 					newArgs.push(...Array.from(value).sort(NaturalSort("en")));
@@ -47,8 +166,8 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			else {
 				newArgs.push(el);
 			}
-			return newArgs;
-		}, []);
+		}
+		return newArgs;
 	}
 	
 	/*
@@ -56,25 +175,8 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		and type-checks the args passed to it before running it (or, alternatively, returning
 		an error.)
 	*/
-	function typeCheckAndRun(name, {fn, typeSignature, isChanger = false}, args) {
-		/*
-			This is kind of embarrassing... but repeated trailing commas is actually not
-			an invalid syntax in Harlowe. (a:,,,,) simply produces (a:), despite being
-			compiled to "Macros.run("a", [section,,,,,]); The reason
-			is that the .reduce() in spreadArguments filters those empty JS array cells out.
-			However, it won't do that if args is spread out using a rest param, like
-			[section, ...args]. So, that separation between section and args must, currently,
-			be done here.
-		*/
-		const section = args[0];
-		args = spreadArguments(args.slice(1));
-		/*
-			The typeSignature *should* be an Array, but if it's just one item,
-			we can normalise it to Array form.
-			If the item is null or undefined, then that means it should be a 0-length type signature.
-		*/
-		typeSignature = [].concat(typeSignature || []);
-		
+	function typeCheckAndRun(name, {fn, typeSignature, isChanger = false}, section, args) {
+		args = spreadArguments(args);
 		/*
 			Custom macros have no name.
 		*/
@@ -249,6 +351,12 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		If an array of names is given, an identical macro is created under each name.
 	*/
 	function privateAdd(name, fn, typeSignature, isChanger = false) {
+		/*
+			The typeSignature *should* be an Array, but if it's just one item,
+			we can normalise it to Array form.
+			If the item is null or undefined, then that means it should be a 0-length type signature.
+		*/
+		typeSignature = [].concat(typeSignature || []);
 		// Add the fn to the macroRegistry, plus aliases (if name is an array of aliases)
 		const obj = { fn, typeSignature };
 		if (isChanger) {
@@ -452,7 +560,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			In compile(), the myriad arguments given to a macro invocation are
 			converted to 2 arguments to runMacro.
 		*/
-		run(name, args) {
+		run(name, section, args) {
 			/*
 				Check if the macro exists as a built-in.
 			*/
@@ -462,20 +570,20 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 					"Did you mean to run a macro? If you have a word written like (this:), it is regarded as a macro name."
 				);
 			}
-			return typeCheckAndRun(name, Macros.get(name), args);
+			return typeCheckAndRun(name, Macros.get(name), section, args);
 		},
 		
 		/*
 			Runs a custom macro, whose definition is passed in instead of a name.
 		*/
-		runCustom(obj, args) {
+		runCustom(obj, section, args) {
 			/*
 				First, check that the variable is indeed a macro.
 			*/
 			if (!CustomMacro.isPrototypeOf(obj)) {
 				return TwineError.create("macrocall", "I can't call " + objectName(obj) + " because it isn't a custom macro.");
 			}
-			return typeCheckAndRun('', obj, args);
+			return typeCheckAndRun('', obj, section, args);
 		},
 	};
 

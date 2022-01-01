@@ -224,9 +224,11 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				Properties can be single values, or arrays.
 			*/
 			if (Array.isArray(prop)) {
+				let prop2 = [];
 				for(let j = 0; j < prop.length; j += 1) {
-					prop[j] = compilePropertyIndex(object, prop[j]);
+					prop2[j] = compilePropertyIndex(object, prop[j]);
 				}
+				prop = prop2;
 			}
 			else {
 				prop = compilePropertyIndex(object, prop);
@@ -308,9 +310,6 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		than arrays, these tiny utility functions are needed.
 		They have the slight bonus that they can fit into some .reduce() calls
 		below, which potentially offsets the cost of being re-created for each varRef.
-		
-		Note: strings cannot be passed in here as obj because of their UCS-2 .length:
-		you must pass [...str] instead.
 	*/
 	/*
 		Because of the performance concerns of converting strings to arrays repeatedly,

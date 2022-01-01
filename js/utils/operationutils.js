@@ -105,122 +105,6 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		*/
 		return true;
 	}
-	
-	/*
-		This function checks the type of a single macro argument. It's run
-		for every argument passed into a type-signed macro.
-		
-		@param {Anything}     arg  The plain JS argument value to check.
-		@param {Array|Object} type A type description to compare the argument with.
-		@return {Boolean} True if the argument passes the check, false otherwise.
-	*/
-	function singleTypeCheck(arg, type) {
-		/*
-			First, check if it's a None type.
-		*/
-		if (type === null) {
-			return arg === undefined;
-		}
-
-		const jsType = typeof arg;
-		/*
-			Now, check if the signature is an Optional, Either, Wrapped, or a Range type.
-		*/
-		if (typeof type !== sFunction && type.pattern) {
-			
-			/*
-				Optional signatures can exit early if the arg is absent.
-			*/
-			if (type.pattern === "optional" || type.pattern === "zero or more") {
-				if (arg === undefined) {
-					return true;
-				}
-				return singleTypeCheck(arg, type.innerType);
-			}
-			/*
-				Either signatures must check every available type.
-			*/
-			if (type.pattern === "either") {
-				/*
-					The arg passes the test if it matches some of the types.
-				*/
-				for (let i = 0; i < type.innerType.length; i += 1) {
-					if (singleTypeCheck(arg, type.innerType[i])) {
-						return true;
-					}
-				}
-				return false;
-			}
-			/*
-				If the type expects a lambda, then check the clauses and kind.
-			*/
-			if (type.pattern === "lambda" && singleTypeCheck(arg, type.innerType)) {
-				return type.clauses.includes("where")  === "where"  in arg
-					&& type.clauses.includes("making") === "making" in arg
-					&& type.clauses.includes("via")    === "via"    in arg
-					&& type.clauses.includes("with")   === "with"   in arg;
-			}
-			/*
-				If the type expects an insensitive set of values, check if there's a match.
-			*/
-			if (type.pattern === "insensitive set") {
-				return type.innerType.includes(insensitiveName(arg));
-			}
-			/*
-				If the type expects a limited range defined by a function, check if there's a match.
-			*/
-			if (type.pattern === "range") {
-				return type.range(arg);
-			}
-			/*
-				Otherwise, if this is a Wrapped signature, ignore the included
-				message and continue.
-			*/
-			if (type.pattern === "wrapped") {
-				return singleTypeCheck(arg, type.innerType);
-			}
-		}
-
-		// If Type but no Arg, then return an error.
-		if(type !== undefined && arg === undefined) {
-			return false;
-		}
-		
-		// The Any type permits any accessible argument, as long as it's present.
-		if (type.TwineScript_TypeName === "anything" && arg !== undefined && !arg.TwineScript_Unstorable) {
-			return true;
-		}
-		// This very rare type should be used only for (ignore:), as well as (test-false:) and (test-true:) changers.
-		if (type.TwineScript_TypeName === "everything" && arg !== undefined) {
-			return true;
-		}
-
-		/*
-			The built-in types. Let's not get tricky here.
-		*/
-		if (type === String) {
-			return jsType === sString;
-		}
-		if (type === Boolean) {
-			return jsType === sBoolean;
-		}
-		if (type === parseInt) {
-			return jsType === sNumber && !Number.isNaN(arg) && !(arg + '').includes('.');
-		}
-		if (type === Number) {
-			return jsType === sNumber && !Number.isNaN(arg);
-		}
-		if (type === Array) {
-			return Array.isArray(arg);
-		}
-		if (type === Map || type === Set) {
-			return arg instanceof type;
-		}
-		/*
-			For TwineScript-specific types, this check should mostly suffice.
-		*/
-		return Object.isPrototypeOf.call(type,arg);
-	}
 
 	/*
 		A shortcut to determine whether a given value should have
@@ -826,7 +710,6 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 	const OperationUtils = Object.freeze({
 		isObject,
 		isPureObject,
-		singleTypeCheck,
 		isValidDatamapName,
 		collectionType,
 		isSequential,

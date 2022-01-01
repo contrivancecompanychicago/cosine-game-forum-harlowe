@@ -491,11 +491,13 @@ describe("patterns", function() {
 			it("sets the variable in the pattern to their matching values", function() {
 				[
 					["(a:$a)", "(a:2)"],
+					["(a:$c, $b, $a)", "(a:0,1,2)"],
 					["(a:num-type $a)", "(a:2)"],
 					["(a:5,num,num,num-type $a,num)","(a:5,4,3,2,1)"],
 					["(a:(a:num,num-type $a),num)","(a:(a:1,2),3)"],
 				].forEach(function(arr) {
 					expect("(unpack: "+arr[1]+" into "+arr[0]+")$a").markupToPrint("2");
+					expect("(unpack: "+arr[1]+" into "+arr[0].replace(/\$/g,'_')+")_a").markupToPrint("2");
 				});
 			});
 			it("can set multiple variables at once", function() {

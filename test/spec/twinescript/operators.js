@@ -664,6 +664,7 @@ describe("twinescript operators", function () {
 	describe("the '...' operator", function () {
 		it("spreads strings into positional macro arguments, as characters", function (){
 			expect("(a: ...'ABC')").markupToPrint("A,B,C");
+			expect("(a: ...'𝐇𝐇𝐇')").markupToPrint("𝐇,𝐇,𝐇");
 		});
 		it("spreads arrays into positional macro arguments, as elements", function (){
 			expect("(a: ...(a:1,2,'ABC'))").markupToPrint("1,2,ABC");

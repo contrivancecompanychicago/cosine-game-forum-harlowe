@@ -128,10 +128,7 @@ define(['jquery', 'utils'], ($, Utils) => {
 			// Due to high usage, this is a simple for-loop over arguments.
 			for (let i = 0; i < arguments.length; i += 1) {
 				const e = arguments[i];
-				if (TwineError.isPrototypeOf(e)) {
-					return e;
-				}
-				if (e instanceof Error) {
+				if (TwineError.isPrototypeOf(e) || e instanceof Error) {
 					return e;
 				}
 				if (Array.isArray(e)) {

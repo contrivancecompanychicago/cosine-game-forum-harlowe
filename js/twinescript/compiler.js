@@ -776,7 +776,7 @@ define(['utils'], ({impossible}) => {
 				This crudely desugars the twineLink token into a
 				(link-goto:) token, in a manner similar to that in Renderer.
 			*/
-			midString = 'Macros.run("link-goto", [section,'
+			midString = 'Macros.run("link-goto",section,['
 				+ stringify(token.innerText) + ","
 				+ stringify(token.passage) + "])";
 			needsLeft = needsRight = MUSTNT;
@@ -801,16 +801,9 @@ define(['utils'], ({impossible}) => {
 					: '"' + token.name + '"'
 				)
 				/*
-					The arguments given to a macro instance are given in an array.
+					The arguments given to a macro instance (excepting the section) are given in an array.
 				*/
-				+ ', ['
-				/*
-					The first argument to macros must be the current section,
-					so as to give the macros' functions access to data
-					about the runtime state (such as, whether this expression
-					is nested within another one).
-				*/
-				+ "section,"
+				+ ', section, ['
 				/*
 					You may notice here, unseen, is the assumption that Javascript array literals
 					and TwineScript macro invocations use the same character to separate arguments/items.
@@ -844,7 +837,7 @@ define(['utils'], ({impossible}) => {
 				the tokens to the left and right of the matched one.
 			*/
 			left  = (left  || compile(before, {isVarRef, isTypedVar})).trim();
-			right = (right || compile(after)).trim();
+			right = (right || compile(after, {isTypedVar})).trim();
 			/*
 				The compiler should implicitly insert the "it" keyword when the
 				left-hand-side of a comparison operator was omitted.
