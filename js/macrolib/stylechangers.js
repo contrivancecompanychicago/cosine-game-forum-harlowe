@@ -523,7 +523,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 					*/
 					event: {
 						when: true,
-						filter: section => section.eval("Operations").Identifiers.exits !== 0 ? [] : [true],
+						filter: section => section.operations.Identifiers.exits !== 0 ? [] : [true],
 					},
 				};
 			},
@@ -580,7 +580,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 							if (Utils.anyInputDown() && skip) {
 								delay -= skip;
 							}
-							return section.eval("Operations").Identifiers.time > delay ? [true] : [];
+							return section.operations.Identifiers.time > delay ? [true] : [];
 						},
 					},
 				};

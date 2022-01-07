@@ -1,5 +1,5 @@
 "use strict";
-define(['utils', 'engine', 'markup', 'twinescript/compiler', 'twinescript/environ'], function(Utils, Engine, TwineMarkup, Compiler, Environ) {
+define(['utils', 'engine', 'markup', 'section'], function(Utils, Engine, Markup, Section) {
 	Utils.onStartup(() => setTimeout(() => {
 		if (Engine.options.debug) {
 			/*
@@ -8,13 +8,11 @@ define(['utils', 'engine', 'markup', 'twinescript/compiler', 'twinescript/enviro
 				TwineMarkup and the Harlowe compiler.
 			*/
 			window.REPL = function(a) {
-				let r = Compiler(TwineMarkup.lex("(print:" + a + ")"));
-				console.log(r);
-				let result = Environ({}).eval(r);
-				return result.TwineScript_Run ? result.TwineScript_Run().source : result;
+				let r = Section.create().eval(Markup.lex("(print:" + a + ")"));
+				return r.TwineScript_Run ? r.TwineScript_Run().source : r;
 			};
 			window.LEX = function(a) {
-				let r = TwineMarkup.lex(a);
+				let r = Markup.lex(a);
 				return (r.length === 1 ? r[0] : r);
 			};
 		}

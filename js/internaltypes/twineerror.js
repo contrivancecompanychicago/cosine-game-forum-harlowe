@@ -32,8 +32,6 @@ define(['jquery', 'utils'], ($, Utils) => {
 		infinite:      "I almost ended up doing the same thing over and over, forever.",
 		property:      "I tried to access a value in a string/array/datamap, but I couldn't find it.",
 		unimplemented: "I currently don't have this particular feature. I'm sorry.",
-		javascript:    "This error message was reported by your browser's Javascript engine. "
-			+ "I don't understand it either, but it usually means that an expression was badly written.",
 		propagated:    "Click the 'Open' button to see the code hook as it was executed.",
 		user:          "This is a custom error created by (error:). It usually means you used a custom macro incorrectly.",
 		assertion:     "This command exists to provide a helpful error if a certain important condition wasn't true.",
@@ -98,25 +96,9 @@ define(['jquery', 'utils'], ($, Utils) => {
 				appendTitleText: false,
 			});
 		},
-		
+
 		/*
-			This utility function converts a Javascript Error into a TwineError.
-			This allows them to be render()ed by Section.
-			
-			Javascript error messages are presaged with a coffee cup (\u2615),
-			to signify that the browser produced them and not Twine.
-		*/
-		fromError(error) {
-			return TwineError.create("javascript", "\u2615 " + error.message);
-		},
-		
-		/*
-			In Harlowe, both the runtime (operations.js) and Javascript eval()
-			of compiled code (by compiler.js) can throw errors. They should be treated
-			as equivalent within the engine.
-			
-			If the arguments contain a native Error, this will return that error.
-			Or, if it contains a TwineError, return that as well.
+			If the arguments contains a TwineError, return it.
 			This also recursively examines arrays' contents.
 			
 			Maybe in the future, there could be a way to concatenate multiple
@@ -128,7 +110,7 @@ define(['jquery', 'utils'], ($, Utils) => {
 			// Due to high usage, this is a simple for-loop over arguments.
 			for (let i = 0; i < arguments.length; i += 1) {
 				const e = arguments[i];
-				if (TwineError.isPrototypeOf(e) || e instanceof Error) {
+				if (TwineError.isPrototypeOf(e)) {
 					return e;
 				}
 				if (Array.isArray(e)) {
@@ -156,7 +138,6 @@ define(['jquery', 'utils'], ($, Utils) => {
 			*/
 			titleText = titleText || this.source || "";
 			const errorElement = $("<tw-error class='"
-					+ (this.type === "javascript" ? "javascript ": "")
 					+ (this.warning ? "warning" : "error")
 					+ "' title='" + escape(titleText) + "'>" + escape(
 						this.message + (this.appendTitleText ? " " + titleText : "")

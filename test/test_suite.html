@@ -198,18 +198,6 @@ var jasmineMatcher = (function() {
 				}
 			}
 		}),
-		markupToJSError: Object.bind(Object,{
-			compare: function(a,e) {
-				var p = runPassage(a);
-				var error = p.find('tw-error.javascript');
-				if (error.length > 0) {
-					var text = error.contents()[0].textContent;
-					return { pass: true,  message: "Expected markup '" + a + "' not to throw a JS error, but its error was '" + text + "'" };
-				} else {
-					return { pass: false, message: "Expected markup '" + a + "' to throw a JS error, but it rendered '" + p.html() + "'" };
-				}
-			},
-		}),
 		toHaveColour: Object.bind(Object,{
 			compare: function(a,colour) {
 				colour = colour.replace(/(\(|\))/g, "\\$1");

@@ -407,7 +407,7 @@ describe("data structure macros", function () {
 		});
 	});
 	['source','verbatim-source'].forEach(function(e,i) {
-		describe("the (source:) macro", function() {
+		describe("the (" + e + ":) macro", function() {
 			function sourceTest(val,result) {
 				expect(i ? ("(verbatim-source:"+val+")") : ("(print:'`'+(source:"+val+")+'`')")).markupToPrint(result);
 			}

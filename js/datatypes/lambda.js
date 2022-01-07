@@ -69,6 +69,7 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 		get TwineScript_ObjectName() {
 			return "a \""
 				+ (("making" in this) ? "making ... " : "")
+				+ (("each" in this) ? "each ... " : "")
 				+ (("where" in this) ? "where ... " : "")
 				+ (("when" in this) ? "when ... " : "")
 				+ (("via" in this) ? "via ... " : "")
@@ -90,7 +91,7 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 		},
 
 		/*
-			Lambdas store their entire soure entirely for the purposes to ToSource,
+			Lambdas store their entire source entirely for the purposes to ToSource,
 			as decompiling the JS of their clauses is too difficult.
 		*/
 		TwineScript_ToSource() {
@@ -127,11 +128,14 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 
 			Lambdas are constructed by joining one of these clauses with a subject (which is either another
 			lambda - thus adding their clauses - or a temp variable or typed variable).
+			{subject} A VarRef or Lambda (hopefully)
+			{clauseType} 'making', 'via', 'where', 'when' or 'each'
+			{clause} A token tree ('making', 'each') OR a VarRef ('via', 'where', 'when')
+			{source} Harlowe source code
 		*/
 		create(subject, clauseType, clause, source) {
 			let ret;
 			const tempVariableMsg = "temp variable, or typed temp variable";
-
 			/*
 				This function quickly checks that a variable object (either subject or 'making' clause) given to this lambda is valid.
 			*/
@@ -148,7 +152,6 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 						// ...and not a property access on one.
 						&& variable.propertyChain.length === 1));
 			}
-
 			if (clauseType === "making" && !validVariable(clause)) {
 				return TwineError.create('syntax','I need a ' + tempVariableMsg + ', to the right of \'' + clauseType + '\', not ' + objectName(clause) + '.');
 			}
@@ -172,10 +175,8 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 				/*
 					An error only identifiable while adding clauses:
 					two of one clause (such as "where _a > 2 where _b < 2") is a mistake.
-					The only exception is "where true", which can always be replaced (because
-					it's created by the shorthand "each _a").
 				*/
-				if (clauseType in subject && !(clauseType === "where" && subject[clauseType] === "true")) {
+				if (clauseType in subject) {
 					return TwineError.create('syntax', "This lambda has two '" + clauseType + "' clauses.");
 				}
 				/*
@@ -283,7 +284,7 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 				lambdaPos: !this.when ? lambdaPos : undefined,
 			}));
 
-			const Operations = section.eval("Operations");
+			const ops = section.operations;
 			/*
 				If this lambda has no "making" clauses (and isn't a "when" lambda), then the "it"
 				keyword is set to the loop arg. Note that this doesn't require the presence of
@@ -291,14 +292,14 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 				clause using "it".
 			*/
 			if (loopArg && !this.making && !this.when) {
-				Operations.initialiseIt(loopArg);
+				ops.initialiseIt(loopArg);
 			}
 			/*
 				Otherwise, stuff the "it" value with a special error message that should propagate up
 				if "it" is ever used inside this macro.
 			*/
 			else {
-				Operations.initialiseIt(
+				ops.initialiseIt(
 					TwineError.create("operation",
 						"I can't use 'it', or an implied 'it', in " + this.TwineScript_ObjectName
 					)
@@ -312,19 +313,19 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 			*/
 			const via = (!ignoreVia && this.via);
 
-			const ret = section.eval(
-				/*
-					If a lambda has a "where" (or "when") clause, then the "where" clause filters out
-					values. Filtered-out values are replaced by null (which .apply() consumers should handle themselves).
-					If a lambda has a "via" clause, then its result becomes the result of the
-					call. Otherwise, true is returned.
-				*/
-				('where' in this || 'when' in this)
-					? "Operations.where("
-						+ (this.where || this.when) + ","
-						+ (via || 'true') + ",null)"
-					: (via || 'true')
-			);
+			let ret;
+			/*
+				If a lambda has a "where" (or "when") clause, then the "where" clause filters out
+				values. Filtered-out values are replaced by null (which .apply() consumers should handle themselves).
+				If a lambda has a "via" clause, then its result becomes the result of the
+				call. Otherwise, true is returned.
+			*/
+			if ('where' in this || 'when' in this) {
+				ret = ops.where(section.eval(this.where || this.when), section.eval(via) || true, null);
+			}
+			else {
+				ret = via ? section.eval(via) : true;
+			}
 			section.stack.shift();
 			return ret;
 		},

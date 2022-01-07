@@ -2,8 +2,7 @@
 define([
 	'jquery',
 	'utils',
-	'renderer',
-	'twinescript/environ',
+	'twinescript/runner',
 	'twinescript/operations',
 	'state',
 	'utils/operationutils',
@@ -17,7 +16,7 @@ define([
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier',
 ],
-($, Utils, Renderer, Environ, Operations, State, {printBuiltinValue,objectName,typeID,isObject}, {collapse}, ChangerCommand, HookSet, Colour, Lambda, ChangeDescriptor, VarScope, TwineError, TwineNotifier) => {
+($, Utils, run, Operations, State, {printBuiltinValue,objectName,typeID,isObject}, {collapse}, ChangerCommand, HookSet, Colour, Lambda, ChangeDescriptor, VarScope, TwineError, TwineNotifier) => {
 
 	let Section;
 
@@ -163,7 +162,7 @@ define([
 		/*
 			Execute the expression, and obtain its result value.
 		*/
-		let result = this.eval(expr.popAttr('js') || '');
+		let result = this.eval(expr.popData('code'));
 		/*
 			If this stack frame is being rendered in "evaluate only" mode (i.e. it's inside a link's passage name or somesuch)
 			then it's only being rendered to quickly check what the resulting DOM looks like. As such, changers or commands which
@@ -210,7 +209,7 @@ define([
 						It's an expression - we can join them.
 						Add the expressions, and remove the interstitial + and whitespace.
 					*/
-					const nextValue = this.eval(nextElem.popAttr('js'));
+					const nextValue = this.eval(nextElem.popData('code'));
 					/*
 						(But, don't join them if the nextValue contains its own error.)
 					*/
@@ -256,7 +255,7 @@ define([
 				is dropped (by us executing its js early) as well.
 			*/
 			if (nextElem.is('tw-expression')) {
-				const nextValue = this.eval(nextElem.popAttr('js'));
+				const nextValue = this.eval(nextElem.popData('code'));
 				/*
 					Errors produced by expression evaluation should be propagated above changer attachment errors, I guess.
 				*/
@@ -341,9 +340,6 @@ define([
 		*/
 		let error;
 		if ((error = TwineError.containsError(result))) {
-			if (error instanceof Error) {
-				error = TwineError.fromError(error);
-			}
 			expr.replaceWith(error.render(expr.attr('title'), expr));
 		}
 		/*
@@ -395,10 +391,13 @@ define([
 			else if (isObject(result) && result.blocked) {
 				this.stackTop.blocked = result.blocked;
 				/*
-					This #awkward reinjection of JS blocker code is the only way to get errors back from a command (i.e. not a value macro)
+					This is the only way to get errors back from a command (i.e. not a value macro)
 					that blocked the section, and put them in the original initiating <tw-expression>.
 				*/
-				expr.attr('js', "section.blockedValue()");
+				expr.data('code', {
+					type: 'macro',
+					blockedValue: true,
+				});
 				return;
 			}
 			else if (result) {
@@ -614,11 +613,14 @@ define([
 				*/
 				unblockCallbacks: [],
 			});
-			
 			/*
-				Add a TwineScript environ and mix in its eval() method.
+				The operations and runner modules are used to augment this section,
+				allowing expression code to be executed (using this section as a basis
+				for temp variables and time, etc).
+				TODO: Figure out a way to make this less awkward-looking.
 			*/
-			ret = Environ(ret);
+			ret.operations = Operations.create(ret);
+			ret.eval = (args) => run(ret, args);
 			return ret;
 		},
 
@@ -720,7 +722,7 @@ define([
 				ret = code.apply(this, {fail:false, pass:true});
 			}
 			else {
-				ret = this.eval(code);
+				ret = run(this, code);
 			}
 			this.stack.shift();
 			return ret;
@@ -992,10 +994,13 @@ define([
 							Because there are no other side-effect-on-evaluation expressions in Harlowe (as other state-changers
 							like (loadgame:) are Commands, which only perform effects in passage prose), we can safely
 							extract and run the blockers' code separately from the parent expression with peace of mind.
+
+							Blocker expressions are identified by having 'blockers' data, which should persist across
+							however many executions it takes for the passage to become unblocked.
 						*/
-						if (expr.attr('blockers')) {
+						if (expr.data('blockers')) {
 							if (evaluateOnly) {
-								expr.removeAttr('blockers').removeAttr('js').replaceWith(
+								expr.removeData('blockers').removeData('code').replaceWith(
 									TwineError.create("syntax",
 										"I can't use a macro like (prompt:) or (confirm:) in " + evaluateOnly + ".",
 										"Please rewrite this without putting such macros here."
@@ -1003,26 +1008,6 @@ define([
 								);
 								return;
 							}
-							/*
-								Convert the blockers attribute into a JS array, so that each blocker code string
-								can be cleanly shift()ed from it after the previous was unblocked.
-							*/
-							let blockers = [];
-							try {
-								blockers = JSON.parse(expr.popAttr('blockers'));
-								/*
-									Reinsert the blockers array as element data.
-								*/
-								expr.data('blockers', blockers);
-							} catch(e) {
-								Utils.impossible('Section.execute', 'JSON.parse blockers failed.');
-							}
-						}
-						/*
-							Blocker expressions are identified by having 'blockers' data, which should persist across
-							however many executions it takes for the passage to become unblocked.
-						*/
-						if (expr.data('blockers')) {
 							const blockers = expr.data('blockers');
 							if (blockers.length) {
 								/*
@@ -1049,7 +1034,7 @@ define([
 								expr.removeData('blockers');
 							}
 						}
-						if (expr.attr('js')) {
+						if (expr.data('code')) {
 							runExpression.call(this, expr);
 						}
 					}

@@ -497,9 +497,6 @@ describe("twinescript operators", function () {
 			expect("(print: 2 is num)").markupToError();
 			expect("(print: 'red' is str)").markupToError();
 		});
-		it("won't be matched from within text", function (){
-			expect("(print: typeof xxisxx)").markupToPrint("undefined");
-		});
 	});
 	describe("the 'is not' operator", function () {
 		it("compares primitives by value", function (){
@@ -535,9 +532,6 @@ describe("twinescript operators", function () {
 			expect("(print: (dataset:) is not (dataset:))").markupToPrint("false");
 			expect("(print: (dataset:2,3,4) is not (dataset:2,3,4))").markupToPrint("false");
 			expect("(print: (dataset:2,3,4) is not (dataset:2,3,4,5))").markupToPrint("true");
-		});
-		it("won't be matched from within text", function (){
-			expect("(print: typeof xxisxx)").markupToPrint("undefined");
 		});
 	});
 	['contains','does not contain'].forEach(function(name, not) {
@@ -590,11 +584,6 @@ describe("twinescript operators", function () {
 				expect("(print: (a:(dataset:)) "+name+" (dataset:))").markupToPrint(!not + '');
 				expect("(print: (a:(dataset:2,3,4)) "+name+" (dataset:2,3,4))").markupToPrint(!not + '');
 			});
-			if(!not) {
-					it("won't be matched from within text", function (){
-					expect("(print: typeof xxcontainsxx)").markupToPrint("undefined");
-				});
-			}
 			it("has correct order of operations with 'to' and 'into'", function (){
 				expect("(set: $a to 'a' "+name+" 'b')(print:$a)").markupToPrint(!!not + '');
 				expect("(put: 'a' "+name+" 'b' into $a)(print:$a)").markupToPrint(!!not + '');

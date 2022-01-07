@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery','utils/operationutils','internaltypes/changedescriptor', 'internaltypes/varref', 'internaltypes/varscope', 'internaltypes/twineerror', 'internaltypes/twinenotifier'], ($, {objectName, typeName, matches}, ChangeDescriptor, VarRef, VarScope, TwineError, TwineNotifier) => {
+define(['jquery','renderer','utils/operationutils','internaltypes/changedescriptor', 'internaltypes/varref', 'internaltypes/varscope', 'internaltypes/twineerror', 'internaltypes/twinenotifier'], ($, Renderer, {objectName, typeName, matches}, ChangeDescriptor, VarRef, VarScope, TwineError, TwineNotifier) => {
 	const {assign,create} = Object;
 	/*d:
 		CustomMacro data
@@ -143,7 +143,7 @@ define(['jquery','utils/operationutils','internaltypes/changedescriptor', 'inter
 			and attaching a special "output" property used to retrieve the output.
 			The stack frame itself needs to be in a variable because .execute() will pop it off the stackTop.
 		*/
-		let output, dom = $('<p>').append(body.html);
+		let output, dom = $('<p>').append(Renderer.exec(body.source));
 		let stackSize = section.stack.length;
 		section.stack.unshift({
 			tempVariables,

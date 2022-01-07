@@ -1,13 +1,13 @@
 "use strict";
-define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
-({escape, impossible, insensitiveName}, TwineMarkup, Compiler, TwineError) => {
+define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
+($, {escape, impossible, insensitiveName}, Markup, TwineError) => {
 	/*
-		The Renderer takes the syntax tree from TwineMarkup and returns a HTML string.
+		The Renderer takes the syntax tree from Markup and returns a HTML string.
 		
-		Among other responsibilities, it's the intermediary between TwineMarkup and TwineScript -
+		Among other responsibilities, it's the intermediary between Markup and TwineScript -
 		macros and expressions become <tw-expression> and <tw-macro> elements alongside other
-		markup syntax (with their compiled JS code attached as attributes), and the consumer of
-		the HTML (usually Section) can run that code in the Environ.
+		markup syntax (with their lexed ASTs attached) and the consumer of
+		the HTML (usually Section) can run that code.
 	*/
 	let Renderer;
 
@@ -17,15 +17,6 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 	function wrapHTMLTag(text, tagName) {
 		return '<' + tagName + '>' + text + '</' + tagName + '>';
 	}
-	/*
-		This makes a basic enclosing HTML tag with no attributes, given the tag name,
-		and renders the contained text.
-	*/
-	function renderTag(token, tagName) {
-		const contents = Renderer.render(token.children);
-		return contents && wrapHTMLTag(contents, tagName);
-	}
-
 	/*
 		Text constant used by align.
 		The string "text-align: " is selected by the debugmode CSS, so the one space
@@ -37,7 +28,426 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 		This uses Patterns rather than Lexer's rules because those compiled RegExps for macroFront
 		and macroName can't be combined into a single RegExp.
 	*/
-	const macroRegExp = RegExp(TwineMarkup.Patterns.macroFront + TwineMarkup.Patterns.macroName, 'ig');
+	const macroRegExp = RegExp(Markup.Patterns.macroFront + Markup.Patterns.macroName, 'ig');
+
+	/*
+		The internal recursive rendering method.
+	*/
+	function render(tokens,
+			/*
+				codeTrees and blockerTrees are a way to preserve the token trees of macros and variables
+				after rendering to HTML. The internal structure of the macro calls and variable calls
+				is stashed in these arrays, then reused later by Renderer's consumers.
+
+				Note that to save on processing with huge parse trees,
+				and due to the fact that this is entirely internal to Renderer,
+				I have taken the risky step of making these in-place mutable arrays that aren't passed back out.
+			*/
+			trees) {
+
+		/*
+			This makes a basic enclosing HTML tag with no attributes, given the tag name,
+			and renders the contained text.
+		*/
+		function renderTag(token, tagName) {
+			const contents = render(token.children, trees);
+			return contents && wrapHTMLTag(contents, tagName);
+		}
+
+		// The output string.
+		let out = '';
+
+		// Stack of tag tokens whose names match HTML table elements.
+		let HTMLTableStack = [];
+
+		if (!tokens) {
+			return out;
+		}
+		const len = tokens.length;
+		for(let i = 0; i < len; i += 1) {
+			let token = tokens[i];
+			switch(token.type) {
+				case "error": {
+					out += TwineError.create("syntax", token.message, token.explanation)
+						.render(escape(token.text))[0].outerHTML;
+					break;
+				}
+				case "numbered":
+				case "bulleted": {
+					// Run through the tokens, consuming all consecutive list items
+					let tagName = (token.type === "numbered" ? "ol" : "ul");
+					out += "<" + tagName + ">";
+					// This will be used to identify the depth of the initial list compared to the default (1).
+					let depth = 1;
+					/*
+						March through the subsequent tokens of the list item, rendering them until a line break is encountered,
+						whereupon the list item is terminated.
+					*/
+					while(i < len && tokens[i]) {
+						if (tokens[i].type === "br") {
+							out += "</li>";
+							/*
+								If the very next item after the line break is not a similar list item,
+								terminate the whole list.
+							*/
+							if (!tokens[i+1] || tokens[i+1].type !== token.type) {
+								break;
+							}
+						}
+						else if (tokens[i].type === token.type) {
+							/*
+								For differences in depth, raise and lower the <ul> depth
+								in accordance with it.
+							*/
+							out += ("<"  + tagName + ">").repeat(Math.max(0, tokens[i].depth - depth));
+							out += ("</" + tagName + ">").repeat(Math.max(0, depth - tokens[i].depth));
+							out += "<li>";
+							depth = tokens[i].depth;
+						}
+						else {
+							out += render([tokens[i]], trees);
+						}
+						i += 1;
+					}
+					out += ("</" + tagName + ">").repeat(depth + 1);
+					break;
+				}
+				case "align": {
+					while(token && token.type === "align") {
+						const {align} = token;
+						const j = (i += 1);
+						
+						/*
+							Base case.
+						*/
+						if (align === "left") {
+							i -= 1;
+							break;
+						}
+						/*
+							Crankforward until the end tag is found.
+						*/
+						while(i < len && tokens[i] && tokens[i].type !== "align") {
+							i += 1;
+						}
+						
+						const body = render(tokens.slice(j, i), trees);
+						let style = '';
+						
+						switch(align) {
+							case "center":
+								style += center + "margin-left: auto; margin-right: auto;";
+								break;
+							case "justify":
+							case "right":
+								style += "text-align: " + align + ";";
+								break;
+							default:
+								if (+align) {
+									style += center + "margin-left: " + align + "%;";
+								}
+						}
+						
+						out += '<tw-align ' + (style ? ('style="' + style + '"') : '')
+							+ '>' + body + '</tw-align>\n';
+						token = tokens[i];
+					}
+					break;
+				}
+				case "column": {
+					/*
+						We need information about all of the columns before we can produce HTML
+						of them. So, let's collect the information in this array.
+					*/
+					const columns = [];
+					while(token && token.type === "column") {
+						const {column:columnType} = token;
+						const j = (i += 1);
+						
+						/*
+							Base case.
+						*/
+						if (columnType === "none") {
+							i -= 1;
+							break;
+						}
+
+						/*
+							Crankforward until the end tag is found.
+						*/
+						while(i < len && tokens[i] && tokens[i].type !== "column") {
+							i += 1;
+						}
+						/*
+							Store the information about this column.
+						*/
+						columns.push({
+							text: token.text,
+							type: columnType,
+							body: render(tokens.slice(j, i), trees),
+							width: token.width,
+							marginLeft: token.marginLeft,
+							marginRight: token.marginRight,
+						});
+						token = tokens[i];
+					}
+					if (columns.length) {
+						/*jshint -W083 */
+						const
+							totalWidth = columns.reduce((a,e)=> a + e.width, 0);
+
+						out += "<tw-columns>"
+							+ columns.map(e =>
+								`<tw-column type=${e.type} ${''
+								} style="width:${e.width/totalWidth*100}%; margin-left: ${e.marginLeft}em; margin-right: ${e.marginRight}em;">${e.body}</tw-column>\n`
+							).join('')
+							+ "</tw-columns>";
+					}
+					break;
+				}
+				case "heading": {
+					out += '<h' + token.depth + ">";
+					/*
+						March through the subsequent tokens of the heading, rendering them until a line break is encountered,
+						whereupon the heading is terminated.
+					*/
+					while (++i < len && tokens[i]) {
+						if (tokens[i].type === "br") {
+							out += '</h' + token.depth + '>';
+							break;
+						}
+						out += render([tokens[i]], trees);
+					}
+					break;
+				}
+				case "br": {
+					/*
+						The HTMLTableStack is a small hack to suppress implicit <br>s inside <table> elements.
+						Normally, browser DOM parsers will move <br>s inside <table>, <tbody>,
+						<thead>, <tfoot> or <tr> elements outside, which is usually quite undesirable
+						when laying out table HTML in passage text.
+						However, <td> and <th> are, of course, fine.
+					*/
+					if (!HTMLTableStack.length || /td|th/.test(HTMLTableStack[0])) {
+						out += '<br>';
+						/*
+							This causes consecutive line breaks to consume less height than they normally would.
+							The CSS code for [data-cons] is in main.scss
+						*/
+						let lookahead = tokens[i + 1];
+						while (lookahead && (lookahead.type === "br" || (lookahead.type === "tag" && /^<br\b/i.test(lookahead.text)))) {
+							out += "<tw-consecutive-br"
+								/*
+									Preserving the [data-raw] attribute is necessary for the collapsing syntax's collapse code.
+									Non-raw <br>s are collapsed by it.
+								*/
+								+ (lookahead.type === "tag" ? " data-raw" : "")
+								+ "></tw-consecutive-br>";
+							i += 1;
+							lookahead = tokens[i + 1];
+						}
+					}
+					break;
+				}
+				case "hr": {
+					out += '<hr>';
+					break;
+				}
+				case "escapedLine":
+				case "comment": {
+					break;
+				}
+				case "inlineUrl": {
+					out += '<a class="link" href="' + escape(token.text) + '">' + token.text + '</a>';
+					break;
+				}
+				case "scriptStyleTag":
+				case "tag": {
+					/*
+						Populate the HTMLTableStack, as described above. Note that explicit <br> tags
+						are not filtered out by this: these are left to the discretion of the author.
+					*/
+					const insensitiveText = token.text.toLowerCase();
+					if (/^<\/?(?:table|thead|tbody|tr|tfoot|td|th)\b/.test(insensitiveText)) {
+						HTMLTableStack[token.text.startsWith('</') ? "shift" : "unshift"](insensitiveText);
+					}
+					out += token.text.startsWith('</')
+						? token.text
+						: token.text.replace(/>$/, " data-raw>");
+					break;
+				}
+				case "sub": // Note: there's no sub syntax yet.
+				case "sup":
+				case "strong":
+				case "em": {
+					out += renderTag(token, token.type);
+					break;
+				}
+				case "strike": {
+					out += renderTag(token, "s");
+					break;
+				}
+				case "bold": {
+					out += renderTag(token, "b");
+					break;
+				}
+				case "italic": {
+					out += renderTag(token, "i");
+					break;
+				}
+				case "twineLink": {
+					/*
+						This crudely desugars the twineLink token into a
+						(link-goto:) token. However, the original link syntax is preserved
+						for debug mode display.
+					*/
+					const [linkGotoMacroToken] = Markup.lex("(link-goto:"
+						+ JSON.stringify(token.innerText) + ","
+						+ JSON.stringify(token.passage) + ")").children;
+
+					out += '<tw-expression type="macro" name="link-goto"'
+						// Debug mode: show the link syntax as a title.
+						+ (Renderer.options.debug ? ' title="' + escape(token.text) + '"' : '')
+						+ ' code="' + trees.code.length + '">'
+						+ '</tw-expression>';
+					trees.code.push(linkGotoMacroToken);
+					break;
+				}
+				case "hook": {
+					out += '<tw-hook '
+						+ (token.hidden ? 'hidden ' : '')
+						+ (token.name ? 'name="' + insensitiveName(token.name) + '"' : '')
+						// Debug mode: show the hook destination as a title.
+						+ ((Renderer.options.debug && token.name) ? ' title="Hook: ?' + token.name + '"' : '')
+						+ ' source="' + escape(token.innerText) + '">'
+						+'</tw-hook>';
+					break;
+				}
+				case "unclosedHook": {
+					out += '<tw-hook '
+						+ (token.hidden ? 'hidden ' : '')
+						+ (token.name ? 'name="' + insensitiveName(token.name) + '"' : '')
+						+ 'source="' + escape(
+							/*
+								Crank forward to the end of this run of text, un-parsing all of the hard-parsed tokens.
+								Sadly, this is the easiest way to implement the unclosed hook, despite how
+								#awkward it is performance-wise.
+							*/
+							tokens.slice(i + 1, len).map(t => t.text).join('')
+						) + '"></tw-hook>';
+					return out;
+				}
+				case "verbatim": {
+					out += wrapHTMLTag(escape(token.innerText)
+						/*
+							The only replacement that should be done is \n -> <br>. In
+							browsers, even if the CSS is set to preserve whitespace, copying text
+							still ignores line breaks that aren't explicitly set with <br>s.
+						*/
+						.replace(/\n/g,'<br>'), "tw-verbatim");
+					break;
+				}
+				case "collapsed": {
+					out += renderTag(token, "tw-collapsed");
+					break;
+				}
+				case "unclosedCollapsed": {
+					out += '<tw-collapsed>' + render(tokens.slice(i + 1, len), trees) + '</tw-collapsed>';
+					return out;
+				}
+				/*
+					Expressions
+				*/
+				case "variable":
+				case "tempVariable":
+				case "macro": {
+					/*
+						Only macro expressions may contain control flow blockers; these are extracted
+						and compiled separately from the parent expression.
+						Also, this same loop is used to extract and precompile code hooks.
+					*/
+					const blockers = [], innerMarkupErrors = [];
+					if (token.type === "macro") {
+						/*
+							To extract control flow blockers and precompile code hooks in an expression, this performs a depth-first search
+							(much as how statement execution is a depth-first walk over the parse tree).
+						*/
+						(function recur(token) {
+							/*
+								- String tokens have residual children, so their contained "blockers" should be ignored.
+								- Hooks, of course, shouldn't be entered either.
+							*/
+							if (token.type !== "string" && token.type !== "hook") {
+								token.children.every(recur);
+							}
+							const firstChild = token.firstChild();
+							/*
+								Control flow blockers are macros whose name matches one of the aforelisted
+								blocker macros.
+							*/
+							if (token.type === "macro" && firstChild && firstChild.type === "macroName"
+									&& Renderer.options.blockerMacros.includes(insensitiveName(
+										// Slice off the trailing :, which is included in macroName tokens.
+										firstChild.text.slice(0,-1)
+									))) {
+								blockers.push(token);
+							}
+							else if (token.type === "hook") {
+								/*
+									Before compiling the interior into HTML, check for an error token (from a markup error) first.
+									If so, don't bother.
+								*/
+								if (!token.everyLeaf(token => {
+									if (token.type === "error") {
+										innerMarkupErrors.push(token);
+										return false;
+									}
+									return true;
+								})) {
+									return false;
+								}
+							}
+							return true;
+						}(token));
+					}
+					if (innerMarkupErrors.length) {
+						return TwineError.create('syntax',"This code hook\'s markup contained " + innerMarkupErrors.length + " error"
+							+ (innerMarkupErrors.length ? 's' : '') + ":<br>—"
+							+ innerMarkupErrors.map(error => error.message).join("<br>—")
+						).render(escape(token.text))[0].outerHTML;
+					}
+
+					/*
+						Blocker tokens have their blocker IDs recorded here. The full array of blocker IDs is then stapled to
+						the <tw-expression>.
+					*/
+					const blockerTreeIDs = blockers.map(b => {
+						b.blockerTree = trees.blockers.length;
+						trees.blockers.push(b);
+						return b.blockerTree;
+					});
+
+					out += '<tw-expression type="' + token.type + '" name="' + escape(token.name || token.text) + '"'
+						// Debug mode: show the macro name as a title.
+						+ (Renderer.options.debug ? ' title="' + escape(token.text) + '"' : '')
+						+ (blockerTreeIDs.length ? ' blockers="' + blockerTreeIDs + '"' : '')
+						+ ' code="' + trees.code.length + '">'
+						+ '</tw-expression>';
+
+					trees.code.push(token);
+				}
+				break;
+				/*
+					Base case
+				*/
+				default: {
+					out += token.children && token.children.length ? render(token.children, trees) : token.text;
+					break;
+				}
+			}
+		}
+		return out;
+	}
 
 	/*
 		The public Renderer object.
@@ -88,7 +498,7 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 			*/
 			let afterNonMetadataMacro = false;
 			const metadata = {};
-			TwineMarkup.lex(src).children.forEach(function outsideMacroFn(token) {
+			Markup.lex(src).children.forEach(function outsideMacroFn(token) {
 				if (token.type === "macro") {
 					if (metadataMacros.some(f => token.name === f)) {
 						/*
@@ -115,11 +525,7 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 							return;
 						}
 						metadata[token.name] = {
-							/*
-								The matching macros are compiled into JS, which is later executed using
-								section.eval(), where the section has a stack.speculativePassage.
-							*/
-							code:   Compiler(token),
+							code:  token,
 							/*
 								For debug mode and error message display, the original source code of the macros needs to be returned and stored with them.
 								Of course, we could simply re-read the source from the passage itself, but that would be a bit of a waste of cognition
@@ -144,443 +550,54 @@ define(['utils', 'markup', 'twinescript/compiler', 'internaltypes/twineerror'],
 		},
 		
 		/*
-			A composition of TwineMarkup.lex and Renderer.render,
-			but with a (currently rudimentary) memoizer.
+			The public rendering function.
 		*/
-		exec: (() => {
+		exec(src) {
+			// If a non-string is passed into here, there's really nothing to do.
+			if (typeof src !== "string") {
+				impossible("Renderer.exec", "source was not a string, but " + typeof src);
+				return "";
+			}
+
+			const trees = { code: [], blockers: [] };
+			const html = render(Markup.lex(src).children, trees);
+
 			/*
-				These two vars cache the previously rendered source text, and
-				the syntax tree returned by TwineMarkup.lex from that.
+				Parse the HTML into elements.
 			*/
-			let cachedInput,
-				cachedOutput;
+			const elements = $($.parseHTML(html, document, true));
 
-			return (src) => {
-				// If a non-string is passed into here, there's really nothing to do.
-				if (typeof src !== "string") {
-					impossible("Renderer.exec", "source was not a string, but " + typeof src);
-					return "";
-				}
-				
-				if (src === cachedInput) {
-					return cachedOutput;
-				}
-				cachedInput = src;
-				cachedOutput = Renderer.render(TwineMarkup.lex(src).children);
-				return cachedOutput;
-			};
-		})(),
-		
-		/*
-			The recursive rendering method.
-			
-			@param {Array} A TwineMarkup token array.
-			@return {String} The rendered HTML string.
-		*/
-		render: function render(tokens) {
-			// The output string.
-			let out = '';
-			// Stack of tag tokens whose names match HTML table elements.
-			let HTMLTableStack = [];
+			/*
+				Blocker macros must be evaluated prior to the main macros' execution. To do this without
+				disturbing the trees of the macros, "copies" are made of the blockers using
+				Object.create(). The blockers' positions in the tree are marked
+				with 'blockedValue', so that when the main macros are executed,
+				The cached values from the blockers are used rather than running the macro again.
+			*/
+			trees.blockers = trees.blockers.map(e => {
+				e.blockedValue = true;
+				const copy = Object.create(e);
+				copy.blockedValue = false;
+				return copy;
+			});
 
-			if (!tokens) {
-				return out;
-			}
-			const len = tokens.length;
-			for(let i = 0; i < len; i += 1) {
-				let token = tokens[i];
-				switch(token.type) {
-					case "error": {
-						out += TwineError.create("syntax", token.message, token.explanation)
-							.render(escape(token.text))[0].outerHTML;
-						break;
-					}
-					case "numbered":
-					case "bulleted": {
-						// Run through the tokens, consuming all consecutive list items
-						let tagName = (token.type === "numbered" ? "ol" : "ul");
-						out += "<" + tagName + ">";
-						// This will be used to identify the depth of the initial list compared to the default (1).
-						let depth = 1;
-						/*
-							March through the subsequent tokens of the list item, rendering them until a line break is encountered,
-							whereupon the list item is terminated.
-						*/
-						while(i < len && tokens[i]) {
-							if (tokens[i].type === "br") {
-								out += "</li>";
-								/*
-									If the very next item after the line break is not a similar list item,
-									terminate the whole list.
-								*/
-								if (!tokens[i+1] || tokens[i+1].type !== token.type) {
-									break;
-								}
-							}
-							else if (tokens[i].type === token.type) {
-								/*
-									For differences in depth, raise and lower the <ul> depth
-									in accordance with it.
-								*/
-								out += ("<"  + tagName + ">").repeat(Math.max(0, tokens[i].depth - depth));
-								out += ("</" + tagName + ">").repeat(Math.max(0, depth - tokens[i].depth));
-								out += "<li>";
-								depth = tokens[i].depth;
-							}
-							else {
-								out += render([tokens[i]]);
-							}
-							i += 1;
-						}
-						out += ("</" + tagName + ">").repeat(depth + 1);
-						break;
-					}
-					case "align": {
-						while(token && token.type === "align") {
-							const {align} = token;
-							const j = (i += 1);
-							
-							/*
-								Base case.
-							*/
-							if (align === "left") {
-								i -= 1;
-								break;
-							}
-							/*
-								Crankforward until the end tag is found.
-							*/
-							while(i < len && tokens[i] && tokens[i].type !== "align") {
-								i += 1;
-							}
-							
-							const body = render(tokens.slice(j, i));
-							let style = '';
-							
-							switch(align) {
-								case "center":
-									style += center + "margin-left: auto; margin-right: auto;";
-									break;
-								case "justify":
-								case "right":
-									style += "text-align: " + align + ";";
-									break;
-								default:
-									if (+align) {
-										style += center + "margin-left: " + align + "%;";
-									}
-							}
-							
-							out += '<tw-align ' + (style ? ('style="' + style + '"') : '')
-								+ '>' + body + '</tw-align>\n';
-							token = tokens[i];
-						}
-						break;
-					}
-					case "column": {
-						/*
-							We need information about all of the columns before we can produce HTML
-							of them. So, let's collect the information in this array.
-						*/
-						const columns = [];
-						while(token && token.type === "column") {
-							const {column:columnType} = token;
-							const j = (i += 1);
-							
-							/*
-								Base case.
-							*/
-							if (columnType === "none") {
-								i -= 1;
-								break;
-							}
-
-							/*
-								Crankforward until the end tag is found.
-							*/
-							while(i < len && tokens[i] && tokens[i].type !== "column") {
-								i += 1;
-							}
-							/*
-								Store the information about this column.
-							*/
-							columns.push({
-								text: token.text,
-								type: columnType,
-								body: render(tokens.slice(j, i)),
-								width: token.width,
-								marginLeft: token.marginLeft,
-								marginRight: token.marginRight,
-							});
-							token = tokens[i];
-						}
-						if (columns.length) {
-							/*jshint -W083 */
-							const
-								totalWidth = columns.reduce((a,e)=> a + e.width, 0);
-
-							out += "<tw-columns>"
-								+ columns.map(e =>
-									`<tw-column type=${e.type} ${''
-									} style="width:${e.width/totalWidth*100}%; margin-left: ${e.marginLeft}em; margin-right: ${e.marginRight}em;">${e.body}</tw-column>\n`
-								).join('')
-								+ "</tw-columns>";
-						}
-						break;
-					}
-					case "heading": {
-						out += '<h' + token.depth + ">";
-						/*
-							March through the subsequent tokens of the heading, rendering them until a line break is encountered,
-							whereupon the heading is terminated.
-						*/
-						while (++i < len && tokens[i]) {
-							if (tokens[i].type === "br") {
-								out += '</h' + token.depth + '>';
-								break;
-							}
-							out += render([tokens[i]]);
-						}
-						break;
-					}
-					case "br": {
-						/*
-							The HTMLTableStack is a small hack to suppress implicit <br>s inside <table> elements.
-							Normally, browser DOM parsers will move <br>s inside <table>, <tbody>,
-							<thead>, <tfoot> or <tr> elements outside, which is usually quite undesirable
-							when laying out table HTML in passage text.
-							However, <td> and <th> are, of course, fine.
-						*/
-						if (!HTMLTableStack.length || /td|th/.test(HTMLTableStack[0])) {
-							out += '<br>';
-							/*
-								This causes consecutive line breaks to consume less height than they normally would.
-								The CSS code for [data-cons] is in main.scss
-							*/
-							let lookahead = tokens[i + 1];
-							while (lookahead && (lookahead.type === "br" || (lookahead.type === "tag" && /^<br\b/i.test(lookahead.text)))) {
-								out += "<tw-consecutive-br"
-									/*
-										Preserving the [data-raw] attribute is necessary for the collapsing syntax's collapse code.
-										Non-raw <br>s are collapsed by it.
-									*/
-									+ (lookahead.type === "tag" ? " data-raw" : "")
-									+ "></tw-consecutive-br>";
-								i += 1;
-								lookahead = tokens[i + 1];
-							}
-						}
-						break;
-					}
-					case "hr": {
-						out += '<hr>';
-						break;
-					}
-					case "escapedLine":
-					case "comment": {
-						break;
-					}
-					case "inlineUrl": {
-						out += '<a class="link" href="' + escape(token.text) + '">' + token.text + '</a>';
-						break;
-					}
-					case "scriptStyleTag":
-					case "tag": {
-						/*
-							Populate the HTMLTableStack, as described above. Note that explicit <br> tags
-							are not filtered out by this: these are left to the discretion of the author.
-						*/
-						const insensitiveText = token.text.toLowerCase();
-						if (/^<\/?(?:table|thead|tbody|tr|tfoot|td|th)\b/.test(insensitiveText)) {
-							HTMLTableStack[token.text.startsWith('</') ? "shift" : "unshift"](insensitiveText);
-						}
-						out += token.text.startsWith('</')
-							? token.text
-							: token.text.replace(/>$/, " data-raw>");
-						break;
-					}
-					case "sub": // Note: there's no sub syntax yet.
-					case "sup":
-					case "strong":
-					case "em": {
-						out += renderTag(token, token.type);
-						break;
-					}
-					case "strike": {
-						out += renderTag(token, "s");
-						break;
-					}
-					case "bold": {
-						out += renderTag(token, "b");
-						break;
-					}
-					case "italic": {
-						out += renderTag(token, "i");
-						break;
-					}
-					case "twineLink": {
-						/*
-							This crudely desugars the twineLink token into a
-							(link-goto:) token. However, the original link syntax is preserved
-							for debug mode display.
-						*/
-						const [linkGotoMacroToken] = TwineMarkup.lex("(link-goto:"
-							+ JSON.stringify(token.innerText) + ","
-							+ JSON.stringify(token.passage) + ")").children;
-
-						out += '<tw-expression type="macro" name="link-goto"'
-							// Debug mode: show the link syntax as a title.
-							+ (Renderer.options.debug ? ' title="' + escape(token.text) + '"' : '')
-							+ ' js="' + escape(Compiler(linkGotoMacroToken)) + '">'
-							+ '</tw-expression>';
-						break;
-					}
-					case "hook": {
-						out += '<tw-hook '
-							+ (token.hidden ? 'hidden ' : '')
-							+ (token.name ? 'name="' + insensitiveName(token.name) + '"' : '')
-							// Debug mode: show the hook destination as a title.
-							+ ((Renderer.options.debug && token.name) ? ' title="Hook: ?' + token.name + '"' : '')
-							+ ' source="' + escape(token.innerText) + '">'
-							+'</tw-hook>';
-						break;
-					}
-					case "unclosedHook": {
-						out += '<tw-hook '
-							+ (token.hidden ? 'hidden ' : '')
-							+ (token.name ? 'name="' + insensitiveName(token.name) + '"' : '')
-							+ 'source="' + escape(
-								/*
-									Crank forward to the end of this run of text, un-parsing all of the hard-parsed tokens.
-									Sadly, this is the easiest way to implement the unclosed hook, despite how
-									#awkward it is performance-wise.
-								*/
-								tokens.slice(i + 1, len).map(t => t.text).join('')
-							) + '"></tw-hook>';
-						return out;
-					}
-					case "verbatim": {
-						out += wrapHTMLTag(escape(token.innerText)
-							/*
-								The only replacement that should be done is \n -> <br>. In
-								browsers, even if the CSS is set to preserve whitespace, copying text
-								still ignores line breaks that aren't explicitly set with <br>s.
-							*/
-							.replace(/\n/g,'<br>'), "tw-verbatim");
-						break;
-					}
-					case "collapsed": {
-						out += renderTag(token, "tw-collapsed");
-						break;
-					}
-					case "unclosedCollapsed": {
-						out += '<tw-collapsed>' + render(tokens.slice(i + 1, len)) + '</tw-collapsed>';
-						return out;
-					}
-					/*
-						Expressions
-					*/
-					case "variable":
-					case "tempVariable":
-					case "macro": {
-						/*
-							Only macro expressions may contain control flow blockers; these are extracted
-							and compiled separately from the parent expression.
-							Also, this same loop is used to extract and precompile code hooks, which
-							saves Compiler needing to re-call Renderer.
-						*/
-						const blockers = [], innerMarkupErrors = [];
-						if (token.type === "macro") {
-							/*
-								To extract control flow blockers and precompile code hooks in an expression, this performs a depth-first search
-								(much as how statement execution is a depth-first walk over the parse tree).
-							*/
-							(function recur(token) {
-								/*
-									- String tokens have residual children, so their contained "blockers" should be ignored.
-									- Hooks, of course, shouldn't be entered either.
-								*/
-								if (token.type !== "string" && token.type !== "hook") {
-									token.children.every(recur);
-								}
-								const firstChild = token.firstChild();
-								/*
-									Control flow blockers are macros whose name matches one of the aforelisted
-									blocker macros.
-								*/
-								if (token.type === "macro" && firstChild && firstChild.type === "macroName"
-										&& Renderer.options.blockerMacros.includes(insensitiveName(
-											// Slice off the trailing :, which is included in macroName tokens.
-											firstChild.text.slice(0,-1)
-										))) {
-									blockers.push(token);
-								}
-								else if (token.type === "hook") {
-									/*
-										Before compiling the interior into HTML, check for an error token (from a markup error) first.
-										If so, don't bother.
-									*/
-									if (!token.everyLeaf(token => {
-										if (token.type === "error") {
-											innerMarkupErrors.push(token);
-											return false;
-										}
-										return true;
-									})) {
-										return false;
-									}
-									/*
-										Inner hooks' child tokens are converted to HTML early, so that the code hooks'
-										consumers can execute it slightly faster than just lexing the markup aLL over again.
-									*/
-									token.html = render(token.children);
-								}
-								return true;
-							}(token));
-						}
-						if (innerMarkupErrors.length) {
-							return TwineError.create('syntax',"This code hook\'s markup contained " + innerMarkupErrors.length + " error"
-								+ (innerMarkupErrors.length ? 's' : '') + ":<br>—"
-								+ innerMarkupErrors.map(error => error.message).join("<br>—")
-							).render(escape(token.text))[0].outerHTML;
-						}
-
-						const compiledBlockers = blockers.length && blockers.map(b => {
-							const ret = Compiler(b);
-							/*
-								When the blockers' execution completes, the values produced by them are stored by the passage.
-								The original blockers' positions in the expression are (temporarily!) permuted in-place to become "blockedValue"
-								tokens, which retrieve the stored values.
-							*/
-							b.type = 'blockedValue';
-							return ret;
-						});
-
-						out += '<tw-expression type="' + token.type + '" name="' + escape(token.name || token.text) + '"'
-							// Debug mode: show the macro name as a title.
-							+ (Renderer.options.debug ? ' title="' + escape(token.text) + '"' : '')
-							+ (blockers.length ? ' blockers="' + escape(JSON.stringify(compiledBlockers)) + '"' : '')
-							+ ' js="' + escape(Compiler(token)) + '"'
-							+ '>'
-							+ '</tw-expression>';
-						/*
-							"Purely temporary local mutation, externally invisible, is synonymous with no mutation." - an inspiring proverb.
-							Since all the blockers were "macro" tokens, changing them back from "blockedValue" tokens is trivial.
-						*/
-						blockers.forEach(b => b.type = 'macro');
-					}
-					break;
-					/*
-						Base case
-					*/
-					default: {
-						out += token.children && token.children.length ? render(token.children) : token.text;
-						break;
-					}
-				}
-			}
-			return out;
-		}
+			/*
+				Now that the elements are created, we can assign .data() to them.
+				The IDs assigned above (to <tw-expression> elements) are now replaced
+				with data holding the tree with the matching ID.
+				TODO: Are explicit IDs really necessary? Surely they all line up sequentially...
+			*/
+			elements.findAndFilter('[code]:not([data-raw])').each((_,e) => {
+				e = $(e);
+				e.data('code', trees.code[e.popAttr('code')]);
+			});
+			elements.findAndFilter('[blockers]:not([data-raw])').each((_,e) => {
+				e = $(e);
+				const blockers = e.popAttr('blockers').split(',').map(e => e = trees.blockers[e]);
+				e.data('blockers', blockers);
+			});
+			return elements;
+		},
 	};
 	return Object.freeze(Renderer);
 });

@@ -55,7 +55,13 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 				If the type expects a lambda, then check the clauses and kind.
 			*/
 			if (type.pattern === "lambda" && singleTypeCheck(arg, type.innerType)) {
-				return type.clauses.includes("where")  === "where"  in arg
+				return (
+						/*
+							Every type signature permitting a 'where' macro	also permits an 'each'
+							macro.
+						*/
+						type.clauses.includes("where")  === ("where" in arg || "each" in arg)
+					)
 					&& type.clauses.includes("making") === "making" in arg
 					&& type.clauses.includes("via")    === "via"    in arg
 					&& type.clauses.includes("with")   === "with"   in arg;

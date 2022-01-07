@@ -183,12 +183,10 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 		
 		/*
 			Actually do the work of rendering the passage now.
-			First, gather the source of the passage in question.
 		*/
-		let source = passageData.get('source');
-		
+		let source = '';
 		/*
-			Now, we add to it the source of the 'header' and 'footer' tagged passages.
+			We add, to the passage source, the source of the 'header' and 'footer' tagged passages.
 			We explicitly include these passages inside <tw-header> elements
 			so that they're visible to the author when they're in debug mode, and can clearly
 			see the effect they have on the passage.
@@ -242,26 +240,6 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 
 			#transclusion 5
 		*/
-		source =
-			Passages.getTagged('header')
-			.map(setupPassageElement.bind(0, "header"))
-			.join('')
-			+ (options.debug
-				? Passages.getTagged('debug-header')
-					.map(setupPassageElement.bind(0, "debug-header"))
-					.join('')
-				: '')
-			+ source
-			+ Passages.getTagged('footer')
-			.map(setupPassageElement.bind(0, "footer"))
-			.join('')
-			+ (options.debug
-				? Passages.getTagged('debug-footer')
-					.map(setupPassageElement.bind(0, "debug-footer"))
-					.join('')
-				: '')
-			;
-		
 		/*
 			We only add the startup and debug-startup passages if this is the very first passage.
 			Note that the way in which source is modified means that startup code
@@ -301,15 +279,30 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 		if (State.pastLength <= 0) {
 			// Note that this places debug-startup passages after startup passages.
 			if (options.debug) {
-				source = Passages.getTagged('debug-startup')
-					.map(setupPassageElement.bind(0, "debug-startup"))
-					.join('')
-					+ source;
+				for(let p of Passages.getTagged('debug-startup')) {
+					source += setupPassageElement('debug-startup', p);
+				}
 			}
-			source = Passages.getTagged('startup')
-				.map(setupPassageElement.bind(0, "startup"))
-				.join('')
-				+ source;
+			for(let p of Passages.getTagged('startup')) {
+				source += setupPassageElement('startup', p);
+			}
+		}
+		for(let p of Passages.getTagged('header')) {
+			source += setupPassageElement('header', p);
+		}
+		if (options.debug) {
+			for(let p of Passages.getTagged('debug-header')) {
+				source += setupPassageElement('debug-header', p);
+			}
+		}
+		source += passageData.get('source');
+		for(let p of Passages.getTagged('footer')) {
+			source += setupPassageElement('footer', p);
+		}
+		if (options.debug) {
+			for(let p of Passages.getTagged('debug-footer')) {
+				source += setupPassageElement('debug-footer', p);
+			}
 		}
 		
 		/*

@@ -33,16 +33,18 @@ describe("twinescript literals", function() {
 			expect("(print: 1.7s)").markupToPrint("1700");
 			expect("(print: -5ms)").markupToPrint("-5");
 			expect("(print: -5s)").markupToPrint("-5000");
-			expect("(print: 5 ms)").markupToJSError();
-			expect("(print: 5 s)").markupToJSError();
+			expect("(print: 5 ms)").markupToError();
+			expect("(print: 5 s)").markupToError();
 		});
 	});
 	describe("booleans", function() {
-		it("consist of true or false, in lowercase", function() {
+		it("consist of true or false, case-insensitive", function() {
 			expect("(print: true)").markupToPrint("true");
 			expect("(print: false)").markupToPrint("false");
-			expect("(print: True)").markupToJSError();
-			expect("(print: False)").markupToJSError();
+			expect("(print: True)").markupToPrint("true");
+			expect("(print: False)").markupToPrint("false");
+			expect("(print: TRUE)").markupToPrint("true");
+			expect("(print: FALSE)").markupToPrint("false");
 		});
 	});
 	describe("strings", function() {
@@ -79,19 +81,19 @@ describe("twinescript literals", function() {
 			expectColourToBe("#000", "#000000");
 			expectColourToBe("#103", "#110033");
 			expectColourToBe("#fAb", "#FFAABB");
-			expect("(print: #g00)").markupToJSError();
+			expect("(print: #g00)").markupToError();
 		});
 		it("can consist of six case-insensitive hexadecimal digits preceded by #", function() {
 			expectColourToBe("#000000", "#000000");
 			expectColourToBe("#100009", "#100009");
 			expectColourToBe("#abcDEf", "#ABCDEF");
-			expect("(print: #bcdefg)").markupToJSError();
+			expect("(print: #bcdefg)").markupToError();
 		});
 		it("can only be six or three digits long", function() {
-			expect("(print: #12)").markupToJSError();
-			expect("(print: #1234)").markupToJSError();
-			expect("(print: #12345)").markupToJSError();
-			expect("(print: #1234567)").markupToJSError();
+			expect("(print: #12)").markupToError();
+			expect("(print: #1234)").markupToError();
+			expect("(print: #12345)").markupToError();
+			expect("(print: #1234567)").markupToError();
 		});
 	});
 	describe("Harlowe colours", function() {

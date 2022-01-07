@@ -415,7 +415,7 @@
 		hookTagBack  =  "(<|\\()("   + anyLetter + "+)\\|",
 
 		
-		number = '\\b(\\d+(?:\\.\\d+)?(?:[eE][+\\-]?\\d+)?)' + notBefore("m?s") + wb
+		number = '((?:\\b\\d+(?:\\.\\d+)?|\\.\\d+)(?:[eE][+\\-]?\\d+)?)' + notBefore("m?s") + wb
 		;
 	
 	passageLink.main =

@@ -486,7 +486,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 			*/
 			
 			dom = $(source &&
-				(this.verbatim ? verbatim(source) : $.parseHTML(exec(source), document, true)));
+				(this.verbatim ? verbatim(source) : exec(source)));
 
 			/*
 				If the source has any addenda, compile that separately and insert it into the DOM structure.
@@ -494,7 +494,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 			*/
 			if (Array.isArray(appendSource)) {
 				appendSource.forEach(({source, append}) => {
-					const addenda = $(this.verbatim ? verbatim(source) : $.parseHTML(exec(source), document, true));
+					const addenda = $(this.verbatim ? verbatim(source) : exec(source));
 					if (append === "append") {
 						dom = dom.add(addenda);
 					}

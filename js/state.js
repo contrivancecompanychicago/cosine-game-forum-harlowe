@@ -1,6 +1,6 @@
 "use strict";
-define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerror', 'utils/operationutils', 'markup', 'twinescript/compiler'],
-({impossible}, Passages, ChangerCommand, TwineError, {objectName,toSource,clone}, {lex}, compile) => {
+define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerror', 'utils/operationutils', 'markup'],
+({impossible}, Passages, ChangerCommand, TwineError, {objectName,toSource,clone}, {lex}) => {
 	const {assign, create, defineProperty} = Object;
 	/*
 		This ensures that serialisation of Maps and Sets works as expected.
@@ -633,7 +633,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		*/
 		function recompileValues(section, obj) {
 			Object.keys(obj).forEach(key =>
-				!key.startsWith("TwineScript_") && (obj[key] = section.eval(compile(lex(obj[key], 0, 'macro'))))
+				!key.startsWith("TwineScript_") && (obj[key] = section.eval(lex(obj[key], 0, 'macro')))
 			);
 		}
 		
