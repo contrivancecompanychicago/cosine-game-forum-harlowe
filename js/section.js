@@ -55,9 +55,10 @@ define([
 				The use of popAttr prevents the hook from executing normally
 				if it wasn't actually the eventual target of the changer function.
 			*/
-			nextHook.data('originalSource', nextHook.popAttr('source'));
+			const source = nextHook.popData('source');
+			nextHook.data('originalSource', source);
 			const enabled = this.renderInto(
-				nextHook.data('originalSource'),
+				source,
 				/*
 					Don't forget: nextHook may actually be empty.
 					This is acceptable - the result changer could alter the
@@ -108,8 +109,8 @@ define([
 				Removing the 'source' attribute is necessary to prevent this from being rendered
 				by Section.
 			*/
-			if (nextHook.attr('source')) {
-				nextHook.data('originalSource', nextHook.popAttr('source'));
+			if (nextHook.data('source')) {
+				nextHook.data('originalSource', nextHook.popData('source'));
 				nextHook.data('hidden',true);
 			}
 			expr.addClass("false");
@@ -620,7 +621,14 @@ define([
 				TODO: Figure out a way to make this less awkward-looking.
 			*/
 			ret.operations = Operations.create(ret);
-			ret.eval = (args) => run(ret, args);
+			ret.eval = (args) => {
+				try {
+					return run(ret, args);
+				} catch(e) {
+					return TwineError.create('', `An internal error occurred while trying to run ${[].concat(args).map(e=>e.text).join('')}.`,
+						`The error was "${e.message}".\nIf this is the latest version of Harlowe, please consider reporting a bug (see the documentation).`);
+				}
+			};
 			return ret;
 		},
 
@@ -952,9 +960,9 @@ define([
 					case 'tw-hook':
 					{
 						/*
-							Since hooks can be re-ran with (rerun:), their original source needs to be stored.
+							Since hooks can be re-ran with (rerun:), their original content AST needs to be stored.
 						*/
-						let src = expr.popAttr('source') || '';
+						let src = expr.popData('source');
 						if (src) {
 							expr.data('originalSource', src);
 						}
@@ -975,8 +983,8 @@ define([
 						}
 						/*
 							Now we can render visible hooks.
-							Note that hook rendering may be triggered early by attached expressions, so a hook lacking a 'source'
-							attr has probably already been rendered.
+							Note that hook rendering may be triggered early by attached expressions, so a hook lacking 'content'
+							data has probably already been rendered.
 						*/
 						if (src) {
 							this.renderInto(src, expr);

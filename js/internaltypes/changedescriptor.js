@@ -13,7 +13,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 		or <tw-consecutive-br>s. Returns an array designed for use with $().
 	*/
 	const verbatim = (source) =>
-		source.split(/\n/g).reduce((a,e,i,{length}) =>
+		(typeof source === "string" ? source : source.map(e => e.text).join('')).split(/\n/g).reduce((a,e,i,{length}) =>
 			// Even though this can result in the final array having a terminating false, $() will trim it out automatically.
 			a.concat(document.createTextNode(e), i !== length - 1 && document.createElement(e.length ? 'br' : 'tw-consecutive-br')), []);
 
@@ -21,7 +21,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 		
 		// A ChangeDescriptor is a TwineScript internal object with the following values:
 		
-		// {String} source            The hook's source, which can be finagled before it is run.
+		// {String} source            The hook's source (either an array of lexed tokens, or a string), which can be finagled before it is run.
 		source:            "",
 
 		// {Array} appendSource       Used by (append-with:), these are {source,append} objects to apply to the source at render time.

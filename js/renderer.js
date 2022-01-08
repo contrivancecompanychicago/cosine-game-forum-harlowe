@@ -5,7 +5,7 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 		The Renderer takes the syntax tree from Markup and returns a HTML string.
 		
 		Among other responsibilities, it's the intermediary between Markup and TwineScript -
-		macros and expressions become <tw-expression> and <tw-macro> elements alongside other
+		macros, hooks and expressions become <tw-expression>, <tw-hook> and <tw-macro> elements alongside other
 		markup syntax (with their lexed ASTs attached) and the consumer of
 		the HTML (usually Section) can run that code.
 	*/
@@ -35,16 +35,15 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 	*/
 	function render(tokens,
 			/*
-				codeTrees and blockerTrees are a way to preserve the token trees of macros and variables
+				trees.code, trees.source and trees.blockers are a way to preserve the token trees of macros, hooks and variables
 				after rendering to HTML. The internal structure of the macro calls and variable calls
 				is stashed in these arrays, then reused later by Renderer's consumers.
 
 				Note that to save on processing with huge parse trees,
 				and due to the fact that this is entirely internal to Renderer,
-				I have taken the risky step of making these in-place mutable arrays that aren't passed back out.
+				I have taken the risky step of making these in-place mutable arrays on an object.
 			*/
 			trees) {
-
 		/*
 			This makes a basic enclosing HTML tag with no attributes, given the tag name,
 			and renders the contained text.
@@ -319,22 +318,17 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 						+ (token.name ? 'name="' + insensitiveName(token.name) + '"' : '')
 						// Debug mode: show the hook destination as a title.
 						+ ((Renderer.options.debug && token.name) ? ' title="Hook: ?' + token.name + '"' : '')
-						+ ' source="' + escape(token.innerText) + '">'
+						+ ' source="' + trees.source.length + '">'
 						+'</tw-hook>';
+					trees.source.push(token.children);
 					break;
 				}
 				case "unclosedHook": {
 					out += '<tw-hook '
 						+ (token.hidden ? 'hidden ' : '')
 						+ (token.name ? 'name="' + insensitiveName(token.name) + '"' : '')
-						+ 'source="' + escape(
-							/*
-								Crank forward to the end of this run of text, un-parsing all of the hard-parsed tokens.
-								Sadly, this is the easiest way to implement the unclosed hook, despite how
-								#awkward it is performance-wise.
-							*/
-							tokens.slice(i + 1, len).map(t => t.text).join('')
-						) + '"></tw-hook>';
+						+ 'source="' + trees.source.length + '"></tw-hook>';
+					trees.source.push(tokens.slice(i + 1, len));
 					return out;
 				}
 				case "verbatim": {
@@ -550,17 +544,15 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 		},
 		
 		/*
-			The public rendering function.
+			The public rendering function, which returns a jQuery of newly rendered elements.
+			This function can accept both Harlowe markup strings and existing syntax trees.
 		*/
 		exec(src) {
-			// If a non-string is passed into here, there's really nothing to do.
-			if (typeof src !== "string") {
-				impossible("Renderer.exec", "source was not a string, but " + typeof src);
-				return "";
-			}
-
-			const trees = { code: [], blockers: [] };
-			const html = render(Markup.lex(src).children, trees);
+			const trees = { code: [], blockers: [], source: [] };
+			/*
+				Harlowe markup strings are lexed here.
+			*/
+			const html = render((typeof src === "string" ? Markup.lex(src).children : src), trees);
 
 			/*
 				Parse the HTML into elements.
@@ -585,16 +577,19 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 				Now that the elements are created, we can assign .data() to them.
 				The IDs assigned above (to <tw-expression> elements) are now replaced
 				with data holding the tree with the matching ID.
-				TODO: Are explicit IDs really necessary? Surely they all line up sequentially...
 			*/
-			elements.findAndFilter('[code]:not([data-raw])').each((_,e) => {
+			elements.findAndFilter('tw-expression[code]:not([data-raw]), tw-expression[blockers]:not([data-raw]), tw-hook[source]:not([data-raw])').each((_,e) => {
 				e = $(e);
-				e.data('code', trees.code[e.popAttr('code')]);
-			});
-			elements.findAndFilter('[blockers]:not([data-raw])').each((_,e) => {
-				e = $(e);
-				const blockers = e.popAttr('blockers').split(',').map(e => e = trees.blockers[e]);
-				e.data('blockers', blockers);
+				if (e.attr('blockers')) {
+					const blockers = e.popAttr('blockers').split(',').map(e => e = trees.blockers[e]);
+					e.data('blockers', blockers);
+				}
+				if (e.attr('source')) {
+					e.data('source', trees.source[e.popAttr('source')]);
+				}
+				if (e.attr('code')) {
+					e.data('code', trees.code[e.popAttr('code')]);
+				}
 			});
 			return elements;
 		},

@@ -17,6 +17,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * The low-level macro-running code has been heavily rewritten. Formerly, macro code was internally converted to a syntax tree during passage rendering, then compiled into a string of Javascript, which was then executed using the browser's `eval()` function. Now, the macro syntax tree is simply interpreted and executed as-is, without the intermediary step of assembling a string. This provides performance improvements to both macro and lambda execution, which is important for frequently-called lambda-using macros like `(event:)` and `(storylet:)`.
  * Improved performance of game saving, which includes `(save-game:)` and the automatic game state SessionStorage saving feature (introduced in 3.0.0).
  * Slightly improved performance of changing passages in stories that contain a very large number of passages.
+ * Slightly improved performance of rendering and re-rendering hooks.
 
 #### Errors
 
