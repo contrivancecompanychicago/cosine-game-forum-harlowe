@@ -91,7 +91,7 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 				return this.varRef.defineType(this.datatype);
 			}
 		},
-		
+
 		create(datatype, varRef) {
 			/*
 				Errors caught during compiling (and converted to TwineError instantiations) should be returned
@@ -104,6 +104,12 @@ define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'in
 					*/
 					varRef.error)) {
 				return error;
+			}
+			/*
+				TODO: Should this check even be here, or in runtime?
+			*/
+			if (!VarRef.isPrototypeOf(varRef)) {
+				return TwineError.create('syntax', "The -type syntax must have a variable to its right.");
 			}
 			/*
 				TypedVars can only have storable data as datatypes, like "(a:num,num)-type $a". The exception is, of course, structures containing TypedVars

@@ -12,30 +12,34 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 #### Alterations
 
-#### Performance
+##### Performance
 
  * The low-level macro-running code has been heavily rewritten. Formerly, macro code was internally converted to a syntax tree during passage rendering, then compiled into a string of Javascript, which was then executed using the browser's `eval()` function. Now, the macro syntax tree is simply interpreted and executed as-is, without the intermediary step of assembling a string. This provides performance improvements to both macro and lambda execution, which is important for frequently-called lambda-using macros like `(event:)` and `(storylet:)`.
  * Improved performance of game saving, which includes `(save-game:)` and the automatic game state SessionStorage saving feature (introduced in 3.0.0).
  * Slightly improved performance of changing passages in stories that contain a very large number of passages.
  * Slightly improved performance of rendering and re-rendering hooks.
 
-#### Errors
+##### Errors
 
  * As an added bonus from rewriting the macro-running code (see above), the "Javascript error message" has been completely removed, and a proper Harlowe error message will appear in all cases from now on. This eliminates various highly misleading error messages, such as `missing ] after element list`, and replaces them with something more understandable.
 
-#### Coding
+##### Coding
 
- * Code hooks can now be stored in variables and printed in the passage. This means that instead of storing long strings containing large amounts of markup that doesn't get highlighted in the syntax highlighter, you can instead store code hooks.
+ * Code hooks can now be stored in variables and printed in the passage. This means that instead of storing long strings containing large amounts of markup that doesn't get highlighted in the syntax highlighter, you can instead store code hooks. Using a code hook in this way also signals (to anyone reading the code) what its purpose is for (to be displayed in the passage).
  * `(dialog:)`, `(confirm:)` and `(prompt:)` have been altered to permit code hooks in place of the message string value.
  * Also, code hooks can be converted into strings using `(str:)`.
  * `true` and `false` are now case-insensitive. This fixes an inconsistencty between the syntax highlighter (which until now showed different-cased iterals like `TRUE` and `FALSE` as valid) as well as fixes an inconsistency with other keywords, such as datatypes (which were already case-insensitive, such as `INT`).
+ * `(shuffled:)` and `(sorted:)` now accept 1 or 0 values without causing an error. This is to make it easier to sort or shuffle arrays (by spreading `...` them into these macros) without needing to care how many items the arrays contain.
+ * You may now give one or zero values after the rotation number to `(rotated:)` - for instance, `(rotated: 2, ...$arr)` will no longer make an error if $arr is empty.
+   * Similarly, you may now give one value to `(rotated-to:)` after the lambda, instead of a minimum of two - however, if the given lambda doesn't match it, then an error will still result.
 
-#### Compatibility
+##### Compatibility
 
  * A minor (3.x) version increase usually shouldn't have incompatibilities with existing code, but there is something I must mention: arbitrary Javascript syntax embedded in Harlowe macro calls is no longer permitted, and will produce an error. This includes stuff like `(if: (document.title = "Wowie") is 1)[]` (which does nothing except change the window title to "Wowie") or writing `(set: $a = 1)` instead of `(set: $a to 1)`. This was a necessary sacrifice as a result of the aforementioned macro code rewrite. Since these were never part of the Harlowe language description, and were essentially undefined behaviour, I feel that it's fine to remove it in a "minor" version - however, this could inconvenience numerous people, which is why I'd avoided implementing this for so long. If you personally had been using this "feature" for purposes that Harlowe's macros can't fulfill, please post a [bug report](https://foss.heptapod.net/games/harlowe/-/issues) describing it, and I'll see what I can do about adding a macro or some other feature to support it.
 
-#### Additions
+##### Additions
 
+ * Added `(unique:)`, a macro which produces an array containing the unique values in the given sequence, while preserving the order of the values. `(unique:7,6,6,5,4,5)` produces `(a:7,6,5,4)`. Formerly, you could produce the unique values of an array using `(a: ...(ds: ...$arr))`, but this wouldn't preserve the order of values in the array.
  * Added the `codehook` datatype.
 
 ### 3.2.3 changes (October 22, 2021):

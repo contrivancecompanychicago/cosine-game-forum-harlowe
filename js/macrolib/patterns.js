@@ -187,7 +187,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			*/
 			destructure(value) {
 				if (typeof value !== "string") {
-					return [TwineError.create("operation", "I can't unpack " + objectName(value) + " into "
+					return [TwineError.create("operation", "I can't put " + objectName(value) + " into "
 					+ this.TwineScript_ToSource() + " because it isn't a string.")];
 				}
 				/*
@@ -203,7 +203,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 				*/
 				const results = (RegExp("^" + (this.rest ? "(?:" : "") + regExp + (this.rest ? ")*" : "") + "$").exec(value) || []).slice(1);
 				if (!results.length) {
-					return [TwineError.create("operation", "I can't unpack " + objectName(value) + " because it doesn't match the pattern "
+					return [TwineError.create("operation", "I can't put " + objectName(value) + " because it doesn't match the pattern "
 						+ this.TwineScript_ToSource() + ".")];
 				}
 				/*

@@ -50,14 +50,14 @@ describe("data structure macros", function () {
 		});
 	});
 	describe("the (repeated:) macro", function() {
-		it("accepts 1 integer and 2 or more arguments of any type", function() {
+		it("accepts 1 integer and 1 or more arguments of any type", function() {
 			expect("(repeated:)").markupToError();
 			expect("(repeated:1)").markupToError();
 			expect("(repeated:'A')").markupToError();
 			expect("(repeated:'A',2)").markupToError();
 			expect("(repeated:1.1,2)").markupToError();
 			["1", "'X'", "true"].forEach(function(e) {
-				for(var i = 2; i < 10; i += 1) {
+				for(var i = 1; i < 10; i += 1) {
 					expect("(repeated: 1, " + (e + ",").repeat(i) + ")").not.markupToError();
 				}
 			});
@@ -118,16 +118,17 @@ describe("data structure macros", function () {
 		});
 	});
 	describe("the (shuffled:) macro", function() {
-		it("accepts 2 or more arguments of any type", function() {
-			expect("(shuffled:)").markupToError();
-			expect("(shuffled:1)").markupToError();
-			["1", "'X'", "true"].forEach(function(e) {
+		it("accepts 0 or more arguments of any type", function() {
+			expect("(shuffled:)").not.markupToError();
+			expect("(shuffled:1)").not.markupToError();
+			["1", "'X'", "true","empty","via its 1st","red"].forEach(function(e) {
 				for(var i = 2; i < 10; i += 1) {
 					expect("(shuffled:" + (e + ",").repeat(i) + ")").not.markupToError();
 				}
 			});
 		});
 		it("returns an array containing the arguments", function() {
+			expect("(print:(shuffled:) is an array)").markupToPrint("true");
 			runPassage("(set: $a to (shuffled:1,2,3,4,5))");
 			expect("(print: $a's 1st > 0 and $a's 1st < 6)").markupToPrint("true");
 			expect(
@@ -158,6 +159,7 @@ describe("data structure macros", function () {
 			});
 		});
 		it("returns an array containing the arguments in reverse order", function() {
+			expect("(print:(reversed:) is an array)").markupToPrint("true");
 			runPassage("(set: $a to (reversed:1,2,3,5,'foo'))");
 			expect("(print: $a)").markupToPrint("foo,5,3,2,1");
 		});
@@ -168,25 +170,27 @@ describe("data structure macros", function () {
 		});
 	});
 	describe("the (rotated:) macro", function() {
-		it("accepts 1 integer and 2 or more arguments of any type", function() {
+		it("accepts 1 integer and 0 or more arguments of any type", function() {
 			expect("(rotated:)").markupToError();
-			expect("(rotated:1)").markupToError();
-			expect("(rotated:1,2)").markupToError();
+			expect("(rotated:1)").not.markupToError();
+			expect("(rotated:1,2)").not.markupToError();
 			expect("(rotated:1.5,2,3)").markupToError();
-			["1", "'X'", "true"].forEach(function(e) {
+			["1", "'X'", "true","empty","via its 1st","red"].forEach(function(e) {
 				for(var i = 2; i < 10; i += 1) {
 					expect("(rotated: 1, " + (e + ",").repeat(i) + ")").not.markupToError();
 				}
 			});
 		});
 		it("returns an array containing arguments 1+, rotated by the number", function() {
+			expect("(print:(rotated:1) is an array)").markupToPrint("true");
 			runPassage("(set: $a to (rotated:1,1,2,3,4))");
 			expect("(print: $a)").markupToPrint("4,1,2,3");
 			runPassage("(set: $a to (rotated:-2,1,2,3,4))");
 			expect("(print: $a)").markupToPrint("3,4,1,2");
-		});
-		it("produces an error if the number is greater than the quantity of items", function() {
-			expect("(rotated:5,1,2,3,4))").markupToError();
+			expect("(rotated:5,1,2,3,4)").markupToPrint("4,1,2,3");
+			expect("(rotated:9,1,2,3,4)").markupToPrint("4,1,2,3");
+			expect("(rotated:-5,1,2,3,4)").markupToPrint("2,3,4,1");
+			expect("(rotated:-9,1,2,3,4)").markupToPrint("2,3,4,1");
 		});
 		it("produces an error if the number is 0", function() {
 			expect("(rotated:0,1,2,3,4))").markupToError();
@@ -219,10 +223,10 @@ describe("data structure macros", function () {
 		});
 	});
 	describe("the (sorted:) macro", function() {
-		it("accepts 2 or more number or string arguments", function() {
-			expect("(sorted:)").markupToError();
-			expect("(sorted: 'A')").markupToError();
-			expect("(sorted: 3)").markupToError();
+		it("accepts 0 or more number or string arguments", function() {
+			expect("(sorted:)").not.markupToError();
+			expect("(sorted: 'A')").not.markupToError();
+			expect("(sorted: 3)").not.markupToError();
 			expect("(sorted: (a:2))").markupToError();
 			for(var i = 2; i < 10; i += 1) {
 				expect("(sorted:" + ("'X',").repeat(i) + ")").not.markupToError();
@@ -230,12 +234,25 @@ describe("data structure macros", function () {
 			}
 		});
 		it("returns an array of the items, sorted in natural-sort order", function() {
+			expect("(print:(sorted:) is an array)").markupToPrint("true");
 			expect("(sorted:'D1','E','e','É','D11','D2','F',1,' 1',2)").markupToPrint("1, 1,2,D1,D2,D11,e,E,É,F");
 			expect("(sorted:'Foo', 'Bar', 'Baz', 'foo', 'bar', 'baz')").markupToPrint("bar,Bar,baz,Baz,foo,Foo");
 		});
 		it("doesn't coerce the types", function() {
 			expect("(print: (sorted:2,11,1)'s 2nd + 3)").markupToPrint("5");
 			expect("(print: (sorted:'A','D','B','C')'s 2nd + 'OO')").markupToPrint("BOO");
+		});
+	});
+	describe("the (unique:) macro", function() {
+		it("accepts 0 or more arguments of any type", function() {
+			for(var i = 0; i < 10; i+= 1) {
+				expect("(unique:" + ["1", "'X'", "true","empty","via its 1st","red"].slice(0,i) + ")").not.markupToError();
+			}
+		});
+		it("returns an array containing the arguments, in order, skipping repeats after their first occurrence", function() {
+			expect("(verbatim-source:(unique: (a:2), 2, (a:2), 3, 2))").markupToPrint("(a:(a:2),2,3)");
+			expect("(unique:1,1,2,1,1,3,1,3)").markupToPrint("1,2,3");
+			expect("(print:(unique:) is an array)").markupToPrint("true");
 		});
 	});
 	describe("the (datanames:) macro", function() {

@@ -261,7 +261,7 @@ define([
 		("reversed", (_, ...args) => args.reverse().map(clone), zeroOrMore(Any))
 
 		/*d:
-			(shuffled: Any, ...Any) -> Array
+			(shuffled: ...Any) -> Array
 			
 			Similar to (a:), this produces an array of the given values, except that it randomly rearranges the elements instead
 			of placing them in the given order.
@@ -286,8 +286,9 @@ define([
 			can be used as you please.
 			
 			Details:
-			To ensure that it's being used correctly, this macro requires two or more items -
-			providing just one (or none) will cause an error to be presented.
+
+			As of 3.3.0, giving zero or more values to (shuffled:) will cause an empty array (such as by `(a:)`) to be returned,
+			rather than causing an error to occur.
 
 			See also:
 			(a:), (either:), (rotated:)
@@ -296,10 +297,10 @@ define([
 			#data structure
 		*/
 		("shuffled", (_, ...args) => shuffled(...args).map(clone),
-		[Any, rest(Any)])
+		[zeroOrMore(Any)])
 		
 		/*d:
-			(sorted: Number or String, ...Number or String) -> Array
+			(sorted: ...Number or String) -> Array
 			
 			Similar to (a:), except that it requires only numbers or strings, and orders
 			them in English alphanumeric sort order, rather than the order in which they were provided.
@@ -311,10 +312,11 @@ define([
 			```
 			
 			Rationale:
-			Often, you'll be using arrays as 'decks' that will provide values to other parts of
-			your story in a specific order. If you want, for instance, several strings to appear in
-			alphabetical order, this macro can be used to create a sorted array, or (by using the
-			spread `...` syntax) convert an existing array into a sorted one.
+			Arrays are often used as storage for lists of strings: objects or locations the player has encountered,
+			feats the player has performed, visited passage names as produced by (history:), names of file slots as produced
+			by (saved-games:), to name just a few examples. There are times when you want to display the entire list in alphabetical
+			order, or want to manipulate the values without worrying about its current order. This macro can be
+			used to create a sorted array, or (by using the spread `...` syntax) convert an existing array into a sorted one.
 			
 			Details:
 			Unlike other programming languages, strings aren't sorted using ASCII sort order, but alphanumeric sorting:
@@ -327,9 +329,9 @@ define([
 			Currently there is no way to specify an alternative language locale to sort by, but this is likely to
 			be made available in a future version of Harlowe.
 			
-			To ensure that it's being used correctly, this macro requires two or more items -
-			providing just one (or none) will cause an error to be presented.
-			
+			As of 3.3.0, giving zero or more values to (sorted:) will cause an empty array (such as by `(a:)`) to be returned,
+			rather than causing an error to occur.
+
 			See also:
 			(a:), (shuffled:), (rotated:)
 			
@@ -338,7 +340,7 @@ define([
 		*/
 		// Note that since this only accepts primitives, clone() is unnecessary.
 		("sorted", (_, ...args) => args.sort(NaturalSort("en")),
-		[either(Number,String), rest(either(Number,String))])
+		[zeroOrMore(either(Number,String))])
 		
 		/*d:
 			(rotated: Number, ...Any) -> Array
@@ -371,8 +373,11 @@ define([
 			something like this: `(str: ...(rotated: 1, ...$str))`
 			
 			Details:
-			To ensure that it's being used correctly, this macro requires two or more items -
-			providing just one or none will cause an error to be presented.
+			As of 3.3.0, providing fewer than two items to this macro will not result in an error (even though that isn't enough
+			values to meaningfully rotate).
+
+			As of 3.3.0, rotating by a number of positions greater (or, if negative, less) than the number of values
+			will still result in that many rotations occurring, without an error being produced.
 
 			If you can't reliably know how many positions you wish to rotate, but know that you need a certain
 			value to be at the front, simply use the (rotated-to:) variant of this macro instead.
@@ -385,24 +390,24 @@ define([
 		*/
 		("rotated", (_, number, ...array) => {
 			/*
-				The number is thought of as an offset that's added to every index.
-				So, to produce this behaviour, it must be negated.
-			*/
-			number *= -1;
-			/*
 				This macro's range bounds are maybe a bit strict, but ensure that this behaviour
 				could (maybe) be freed up in later versions.
 			*/
 			if (number === 0) {
 				return TwineError.create("macrocall", "I can't rotate these values by 0 positions.");
 			}
-			if (Math.abs(number) >= array.length) {
-				return TwineError.create("macrocall",
-					"I can't rotate these " + array.length + " values by " + number + " positions.");
-			}
-			return array.slice(number).concat(array.slice(0, number)).map(clone);
+			/*
+				If the numer of rotations is greater than the array length, loop them around.
+			*/
+			number = Math.abs(number) % array.length * Math.sign(number);
+			/*
+				The number is thought of as an offset that's added to every index.
+				So, to produce this behaviour, it must be negated.
+			*/
+			const index = number * -1;
+			return array.slice(index).concat(array.slice(0, index)).map(clone);
 		},
-		[parseInt, Any, rest(Any)])
+		[parseInt, zeroOrMore(Any)])
 
 		/*d:
 			(rotated-to: Lambda, [...Any]) -> Array
@@ -428,8 +433,8 @@ define([
 			Details:
 			If the lambda doesn't match any of the values (that is, there's no value to rotate to) then an error will result.
 
-			To ensure that it's being used correctly, this macro requires two or more items -
-			providing just one or none will cause an error to be presented.
+			As of 3.3.0, you may give only one item after the lambda without causing an error (although an error will still occur
+			if the given lambda doesn't match it).
 
 			See also:
 			(sorted:), (rotated:), (find:)
@@ -448,7 +453,7 @@ define([
 			const index = array.indexOf(elems[0]);
 			return array.slice(index).concat(array.slice(0, index)).map(clone);
 		},
-		[Lambda.TypeSignature('where'), Any, rest(Any)])
+		[Lambda.TypeSignature('where'), rest(Any)])
 
 		/*d:
 			(repeated: Number, ...Any) -> Array
@@ -486,6 +491,9 @@ define([
 		*/
 		("repeated", (_, number, ...array) => {
 			const ret = [];
+			if (!array.length) {
+				return ret;
+			}
 			while(number-- > 0) {
 				ret.push(...array);
 			}
@@ -575,6 +583,41 @@ define([
 			#data structure
 		*/
 		("permutations", (_, ...values) =>  !values.length ? [] : permutations(...values), [zeroOrMore(Any)])
+		/*d:
+			(unique: ...Any) -> Array
+
+			When given a sequence of values, this produces an array containing each unique value once, in the order that they appeared.
+
+			Example usage:
+			* `(unique: 1,2,1,2,3,5,5,6,3)` produces `(a: 1,2,3,5,6)`
+			* `(unique: ...(history:))` produces an array listing the name of every passage currently visited, in the order they were first visited.
+			* `(reversed: ...(unique: ...(reversed: ...(history:))))` produces an array listing the name of every passage currently visited,
+			in the order they were **last** visited. This does so by reversing the array before spreading it into (unique:), then un-reversing it.
+			* `(unique: ...(altered: via its address, ...$emails))` produces an array of every unique address from among the datamaps in $emails,
+			in the same order.
+
+			Rationale:
+			Arrays are used to hold values whose ordering matters, such as the sequentially visited passages in the array that (history:) produces.
+			Sometimes, though, you want to eliminate duplicate data from the array in order to use it for some purpose. For instance, you may
+			want to show a list (using (for:)) of every passage the player has visited, in the order they've visited, but without duplicate entries in the
+			list. While (dataset:) and the spread `...` syntax can be used to eliminate duplicate entries from an array, such as by `(a:...(ds: ...(history:)))`,
+			this has a small problem: datasets only hold unordered data, and when the dataset is spread using `...`, the values are sorted instead of
+			in their original order. (unique:) provides an easier method of removing duplicates from an a sequence of values.
+
+			Details:
+			Two values are considered unique if the `is` operator, when placed between them, would produce `false`. This is the same method of uniqueness
+			used by datasets.
+
+			When given no values, this simply returns the empty array `(a:)`. When given values that are all unique, this returns an array of all the
+			values, with no error occurring.
+
+			See also:
+			(dataset:), (sorted:)
+
+			Added in: 3.2.0
+			#data structure
+		*/
+		("unique", (_, ...values) => values.filter(unique), [zeroOrMore(Any)])
 		;
 
 	Macros.add
@@ -1443,7 +1486,8 @@ define([
 			and `is in` to see whether a value is inside (or, by using `any` and `all`, many values).
 
 			* Datasets only contain unique values: adding the string "Go" to a dataset already
-			containing "Go" will do nothing.
+			containing "Go" will do nothing. Values are considered unique if the `is` operator, when placed
+			between them, would produce `false`.
 
 			* Datasets are considered equal (by the `is` operator) if they have the same items, regardless
 			of order (as they have no order).

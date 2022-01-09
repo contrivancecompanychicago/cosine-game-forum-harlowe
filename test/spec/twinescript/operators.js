@@ -20,7 +20,7 @@ describe("twinescript operators", function () {
 		});
 		it("can be used to concatenate datasets", function () {
 			expect("(print: (ds:1) + (ds:2))").markupToPrint("1,2");
-			expect("(print: (ds:1,4,3) + (ds:2,3,4))").markupToPrint("1,2,3,4");
+			expect("(print: (a:...((ds:1,4,3) + (ds:2,3,4))))").markupToPrint("1,2,3,4");
 		});
 		it("can be used to blend colours", function () {
 			expect(runPassage("(print: (rgb:0,255,0) + (rgb:0,0,0))").find('tw-colour')).toHaveBackgroundColour("#009900");
@@ -669,6 +669,9 @@ describe("twinescript operators", function () {
 		});
 		it("works with variables", function (){
 			expect("(set:$a to (a:1,2,3))(a: ...$a)").markupToPrint("1,2,3");
+		});
+		it("works with grouped expressions", function (){
+			expect("(a: ...((a:1,2,3) + (a:4)))").markupToPrint("1,2,3,4");
 		});
 		it("works with other positional arguments", function (){
 			expect("(a: 1, ...(a:2,3))").markupToPrint("1,2,3");

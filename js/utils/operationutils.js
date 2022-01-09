@@ -731,7 +731,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 			instead of Javascript referencing. This manually filters out similar array/map objects which
 			Set()'s constructor won't filter out by itself.
 		*/
-		unique: (val1,ind,arr) => !arr.slice(ind + 1).some(val2 => is(val1, val2)),
+		unique: (val1,ind,arr) => arr.findIndex(val2 => is(val1, val2)) === ind,
 	});
 	return OperationUtils;
 });

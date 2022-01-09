@@ -2478,7 +2478,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			If this macro is used multiple times, only the final usage will count - all the rest will be forgotten. `(mock-visits:"A")(mock-visits:"B")`, for instance,
 			will only cause the "B" passage to be considered visited 1 time. This allows you to remove mock visits in the middle of a story by writing `(mock-visits:)`.
 
-			The effects of (mock-visits:) are NOT saved by (save-game:).
+			The effects of (mock-visits:) are saved by (save-game:) as of version 3.2.3.
 
 			If you undo past a passage that used (mock-visits:), the effects of that macro call will be removed, as if it had been a (set:) macro call.
 
