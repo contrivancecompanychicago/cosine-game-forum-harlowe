@@ -106,12 +106,19 @@ describe("custom macros", function() {
 		it("the containing custom macro returns a command which displays the hook", function() {
 			expect("(set: $e to (macro:[(output:)[baz]]))($e:)").markupToPrint("baz");
 		});
+		it("is aliased as (out:)", function() {
+			expect("(set: $e to (macro:[(out:)[bar]]))($e:)").markupToPrint("bar");
+		});
 		it("can be combined with other changers", function() {
 			expect("(set: $e to (macro:[(append-with:'foo')+(output:)[baz]]))($e:)").markupToPrint("bazfoo");
 		});
 		it("temp variables in the hook retain their values", function() {
 			expect("(set: $e to (macro:str-type _a,[(output:)[(print:_a+'qux')]]))($e:'baz')").markupToPrint("bazqux");
 			expect("($e:'baz')").markupToPrint("bazqux");
+		});
+		it("output hooks run the intended number of times", function() {
+			expect("(set: $foo to 0)(set:$myMacro to (macro:[(set:$foo to it + 1)(out:)[$foo]]))($myMacro:)").markupToPrint('1');
+			expect("(set: $foo to 0)(set:$myMacro to (macro:[(out:)[(set:$foo to it + 1)$foo]]))($myMacro:)").markupToPrint('1');
 		});
 	});
 	describe("(error:)", function() {

@@ -27,6 +27,11 @@ describe("headers and rules", function() {
 				"<br>A B #C"
 			);
 		});
+		it("works if there is a header passage before it", function() {
+			createPassage('Hello\n','',['header']);
+			const p = runPassage("#A");
+			expect(p.find('h1').text()).toBe('A');
+		});
 		it("does not consume preceding line breaks", function() {
 			[1,2,3,4].forEach(function(i) {
 				expect(

@@ -161,7 +161,7 @@ define(['jquery','renderer','utils/operationutils','internaltypes/changedescript
 		});
 		section.execute();
 		/*
-			(output:) and (output-value:) block their stack frame, and Section.execute() doesn't pop the stack frame if it's blocked.
+			(output:) and (output-data:) block their stack frame, and Section.execute() doesn't pop the stack frame if it's blocked.
 			Also, if the (output:) was inside an (if:), the containing stack frame of the (if:) isn't popped either.
 			So, these pops need to be done ourselves.
 		*/
@@ -193,6 +193,11 @@ define(['jquery','renderer','utils/operationutils','internaltypes/changedescript
 			returned, then this custom macro should be considered a command macro.
 		*/
 		if (ChangeDescriptor.isPrototypeOf(output)) {
+			/*
+				Unset the 'output' Boolean, which was used to suppress the CD being rendered inside
+				the custom macro.
+			*/
+			output.output = false;
 			return makeCommandObject(output);
 		}
 		/*

@@ -92,6 +92,9 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 
 		// {Number} timestamp         Used by certain time-specific characteristics of this descriptor (currently, just transitions).
 		timestamp:           0,
+
+		// {Boolean} output           Used by (out:), it prevents the attached hook from being run inside the custom macro (rather than outside).
+		output:            false,
 		
 		/*
 			This method produces a short list of properties this descriptor has, which were altered by the changers
@@ -102,7 +105,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 			return [
 				"source", "appendSource", "enabled", "verbatim", "target", "append", "newTargets",
 				"transition", "transitionTime", "transitionDeferred", "transitionDelay",
-				"transitionSkip", "transitionOrigin", "innerEnchantments", "enablers",
+				"transitionSkip", "transitionOrigin", "innerEnchantments", "enablers", "output",
 			]
 			.filter(e => this.hasOwnProperty(e))
 			.concat([
@@ -267,7 +270,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 		*/
 		render() {
 			const
-				{source, transition, transitionTime, transitionDeferred, enabled, enablers, data, section, newTargets, innerEnchantments, appendSource} = this;
+				{source, transition, transitionTime, transitionDeferred, enabled, enablers, data, section, newTargets, innerEnchantments, appendSource, output} = this;
 			let
 				{target, target:oldTarget, append} = this;
 
@@ -281,6 +284,14 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 
 			if (!append) {
 				impossible("ChangeDescriptor.render", "This doesn't have an 'append' method chosen.");
+				return $();
+			}
+
+			/*
+				If this is an (out:) changer, don't run this at all yet. (Wait until this CD has been outputted from the custom macro,
+				whereupon this boolean is set to false).
+			*/
+			if (output) {
 				return $();
 			}
 

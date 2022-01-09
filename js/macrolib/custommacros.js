@@ -310,6 +310,11 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 				a[key] = [stackTop.tempVariables[key]];
 				return a;
 			},{});
+			/*
+				This is used to suppress the output hook (that which this changer is attached to) from being run inside the
+				custom macro.
+			*/
+			cd.output = true;
 
 			outputValue("output", stack, cd);
 			/*

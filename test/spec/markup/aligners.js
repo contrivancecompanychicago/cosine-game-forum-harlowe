@@ -48,6 +48,12 @@ describe("aligner syntax", function() {
 		expect(align.css('text-align')).toBe('center');
 		expect(align.attr('style')).toMatch(/margin-left:\s*42%/);
 	});
+	it("works if there is a header passage before it", function() {
+		createPassage('Hello\n','',['header']);
+		var align = runPassage("==><====\ngarply").find('tw-align');
+		expect(align.css('text-align')).toBe('center');
+		expect(align.attr('style')).toMatch(/margin-left:\s*17%/);
+	});
 	it("doesn't nest <tw-align> elements", function() {
 		var align = runPassage("<==>\ngarply\n==>\ngrault\n<==").find('tw-align');
 		expect(align.first().text()).toBe('garply');

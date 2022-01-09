@@ -58,7 +58,7 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 			+ escape(setupPassage.get('name'))
 			+ "'>"
 			+ setupPassage.get('source')
-			+ "</tw-include>";
+			+ "</tw-include>\\\n";
 	}
 	
 	/*

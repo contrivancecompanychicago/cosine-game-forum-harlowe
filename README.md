@@ -6,6 +6,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 #### Bugfixes
 
+ * Fixed a long-standing bug where header passages caused aligner, column, heading, and horizontal rule markup to not work in the first line of any passage of the story.
+ * Fixed a custom macro bug where any commands inside an (output:)-attached hook (such as `(output:)[(set:$a to it + 1)]`) would be run twice while being outputted. (Generally, you'd want to place those commands before the (output:) hook, though.)
  * Fixed a bug where using spread `...` to spread the individual characters of a string that contains astral plane Unicode characters (such as 𝐇) wouldn't work at all.
  * Fixed a bug where the `(unpack:)` macro wouldn't work at all unless the destination variables were expressed as typed variables (such as `num-type $a`).
  * `each` lambdas are now called "each…" lambdas (instead of just "where…" lambdas) in the Debug Mode panel.
