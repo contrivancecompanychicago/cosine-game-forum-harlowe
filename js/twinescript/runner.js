@@ -257,7 +257,7 @@ define([
 		tokens = [].concat(tokens);
 
 		if (!tokens.length) {
-			Utils.impossible('Section.run', 'No tokens to run!');
+			Utils.impossible('Runner.run', 'No tokens to run!');
 			return undefined;
 		}
 		/*
@@ -283,7 +283,7 @@ define([
 			/*
 				If no token was found, toss up an error.
 			*/
-			Utils.impossible('Section.run', 'no tokens were passed in!');
+			Utils.impossible('Runner.run', 'no tokens were passed in!');
 			return;
 		}
 
@@ -438,7 +438,11 @@ define([
 				Type errors for 'before' and 'after' are handled by Lambda.create().
 			*/
 			return Lambda.create(
-				run(section,  before, VARREF),
+				/*
+					'when' lambdas don't have a before.
+					TODO: Move the error from Lambda.create to here?
+				*/
+				!before ? undefined : run(section,  before, VARREF),
 				token.type,
 				/*
 					The 'where' or 'when' clause is evaluated only at runtime.

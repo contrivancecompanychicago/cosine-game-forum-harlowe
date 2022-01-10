@@ -59,7 +59,12 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			ret.passage = p || "";
 			// Variables are stored as deltas of the previous state's variables.
 			ret.variables = assign(create(null), v);
-			Object.defineProperty(ret.variables, "TwineScript_VariableDelta", { value: true });
+			Object.defineProperty(ret.variables, "TwineScript_VariableDelta",
+				/*
+					Note that this makes the property non-enumerable, and thus invisible
+					to Object.keys() etc.
+				*/
+				{ value: true });
 			return ret;
 		}
 	};
@@ -596,6 +601,20 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 					}
 					return toSource(variable);
 				}
+				/*
+					Special optimisation: when a Moment has no changed variables,
+					replace it with a string of just the passage name.
+				*/
+				if (Moment.isPrototypeOf(variable)) {
+					/*
+						Because the 'TwineScript_VariableDelta' label on the variables object of
+						Moments is not enumerable, it won't show up in Object.keys(). Therefore,
+						this should only grab actual variable changes.
+					*/
+					if (Object.keys(variable.variables).length === 0) {
+						return variable.passage;
+					}
+				}
 				return variable;
 			};
 			try {
@@ -663,10 +682,16 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			let momentError;
 			if ((momentError = (newTimeline = newTimeline.map((moment) => {
 				/*
+					If it's just a string, uncompress it into a full JSON "moment".
+				*/
+				if (typeof moment === "string") {
+					moment = { passage: moment, variables: {} };
+				}
+				/*
 					Here, we do some brief verification that the moments in the array are
 					objects with "passage" and "variables" keys.
 				*/
-				if (typeof moment !== "object"
+				else if (typeof moment !== "object"
 						|| !moment.hasOwnProperty("passage")
 						|| !moment.hasOwnProperty("variables")) {
 					return Error(genericError);
@@ -710,8 +735,8 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				return momentError;
 			}
 			timeline = newTimeline;
-			eventHandlers.load.forEach(fn => fn(timeline));
 			recent = timeline.length - 1;
+			eventHandlers.load.forEach(fn => fn(timeline));
 			serialisedPast = '';
 			SystemVariables = reconstructSystemVariables();
 			newPresent(timeline[recent].passage);

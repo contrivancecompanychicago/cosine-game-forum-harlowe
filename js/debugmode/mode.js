@@ -58,35 +58,39 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 	});
 
 	/*
-		Set up the turn dropdown, which provides a menu of turns in the state and permits the user
+		Set up the
+		----------
+		Turns dropdown
+		----------
+		which provides a menu of turns in the state and permits the user
 		to travel to any of them at will.
 	*/
+	const updateTurnsDropdown = debounce(function() {
+		const children = turnsDropdown.children();
+		const timeline = State.timelinePassageNames();
+		timeline.forEach((passageName, i) => {
+			const dropdownLabel = (i+1) + ": " + passageName;
+			if (children[i]) {
+				children[i].textContent = dropdownLabel;
+			} else {
+				turnsDropdown.append("<option value=" + i + "'>"
+				+ dropdownLabel
+				+ "</option>");
+			}
+		});
+		if (timeline.length > children.length) {
+			$(children.get().slice(timeline.length)).remove();
+		}
+		/*
+			The turns dropdown should be disabled only if one or fewer turns are
+			in the State history.
+		*/
+		turnsDropdown[timeline.length >= 1 ? 'removeAttr' : 'attr']('disabled');
+	});
 	/*
 		Add the dropdown entries if debug mode was enabled partway through the story.
 	*/
-	State.timelinePassageNames().forEach((passageName, i) => {
-		turnsDropdown.append("<option value=" + i + ">"
-			+ (i+1) + ": " + passageName
-			+ "</option>");
-	});
-	turnsDropdown.val(State.pastLength);
-	/*
-		The turns dropdown should be disabled only if one or less turns is in the State history.
-	*/
-	if (State.pastLength > 0) {
-		turnsDropdown.removeAttr('disabled');
-	}
-	turnsDropdown.change(({target:{value}}) => {
-		/*
-			Work out whether to travel back or forward by subtracting the
-			value from the current State moment index.
-		*/
-		const travel = value - State.pastLength;
-		if (travel !== 0) {
-			State[travel < 0 ? "rewind" : "fastForward"](Math.abs(travel));
-			Engine.showPassage(State.passage);
-		}
-	});
+	updateTurnsDropdown();
 	/*
 		In order for the turnsDropdown view to reflect the state data, these event handlers
 		must be installed on State, to be called whenever the current moment changes.
@@ -94,42 +98,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		'forward' is fired when navigating to a new passage, or redoing a move. This
 		simply adds a turn to the end of the menu.
 	*/
-	State.on('forward', (passageName, isFastForward = false) => {
-		const i = State.pastLength;
-		if (i >= 1) {
-			/*
-				The turns dropdown should be disabled only if one or less turns is
-				in the State history after we move forward.
-			*/
-			turnsDropdown.removeAttr('disabled');
-		}
-		/*
-			If we're not fast forwarding through the redo cache, then we're replacing
-			it outright. Remove all <option> elements after this one.
-		*/
-		if (!isFastForward) {
-			turnsDropdown.children().each((index, e) => {
-				if (index >= i) {
-					$(e).remove();
-				}
-			});
-			/*
-				Create the new <option> element and select it.
-			*/
-			turnsDropdown
-				.append("<option value=" + i + ">"
-					+ (i+1) + ": " + passageName
-					+ "</option>")
-				.val(i);
-		}
-		else {
-			/*
-				Select the new <option>.
-			*/
-			turnsDropdown.find('[selected]').removeAttr('selected');
-			turnsDropdown.val(i);
-		}
-	})
+	State.on('forward', updateTurnsDropdown)
 	/*
 		'back' is fired when undoing a move. This removes the final turn from the menu.
 	*/
@@ -590,28 +559,30 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			Errors.tab.css({ background: count ? 'rgba(230,101,204,0.3)' : '' })
 				.text(`${count} Error${count !== 1 ? 's' : ''}`),
 	});
-	const onError = (error, code) => {
+	const onError = debounce((batch) => {
+		Errors.panelRows.append(batch.reduce((a, [error, code]) => {
+			/*
+				Do NOT put it in the error console if it's a propagated error.
+			*/
+			if (error.type === "propagated") {
+				return a;
+			}
+			return a + '<tr class="error-row">'
+				+ '<td class="error-passage">' + State.passage + '</td>'
+				+ '<td class="error-message" title='+escape(code)+'>' + error.message + '</td>'
+				+ '</tr>';
+		}, ''));
 		/*
-			Do NOT put it in the error console if it's a propagated error.
+			Emergency: if 500+ errors are present in the table, remove the top ones so that the error DOM
+			doesn't become too overloaded.
 		*/
-		if (error.type === "propagated") {
-			return;
+		const c = Errors.panelRows.children();
+		const errorLength = c.length;
+		if (errorLength > 500) {
+			$(Array.prototype.slice.call(Errors.panelRows[0].childNodes, 0, errorLength - 500)).remove();
 		}
-		/*
-			Emergency: if 500+ errors would be present in the table, remove the top one so that the error DOM
-			doesn't become too overloaded. Then, insert the row.
-		*/
-		if (Errors.panelRows.children().length > 500) {
-			Errors.panelRows.children(':first-child').remove();
-		}
-		const elem = $('<tr class="error-row">'
-			+ '<td class="error-passage">' + State.passage + '</td>'
-			+ '<td class="error-message">' + error.message + '</td>'
-			+ '</tr>');
-		elem.find('.error-message').attr('title', code);
-		Errors.panelRows.append(elem);
-		Errors.tabUpdate(Errors.panelRows.children().length);
-	};
+		Errors.tabUpdate(Math.min(500,c.length));
+	}, true);
 	TwineError.on('error', onError);
 
 	/*
@@ -620,7 +591,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 	debugElement.prepend(Variables.panel, Enchantments.panel, Errors.panel, Storylets.panel, Source.panel);
 	debugTabs.prepend(Variables.tab, Enchantments.tab, Errors.tab, Storylets.tab, Source.tab);
 
-	function refresh() {
+	const refresh = debounce(function() {
 		localTempVariables = new Set();
 		updateVariables();
 		updateStorylets();
@@ -630,7 +601,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			const p = Passages.get(State.passage);
 			p && Source.panelRows.text(p.get('source'));
 		}
-	}
+	});
 	/*
 		Having defined those functions, we register them as event handlers now.
 	*/

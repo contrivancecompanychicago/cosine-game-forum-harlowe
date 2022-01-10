@@ -29,7 +29,7 @@ describe("headers and rules", function() {
 		});
 		it("works if there is a header passage before it", function() {
 			createPassage('Hello\n','',['header']);
-			const p = runPassage("#A");
+			var p = runPassage("#A");
 			expect(p.find('h1').text()).toBe('A');
 		});
 		it("does not consume preceding line breaks", function() {

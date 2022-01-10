@@ -167,7 +167,7 @@ const outputFile = {
 	escapedLine:
 		"font-weight:bold; color: hsla(51,100%,30%,1.0);",
 	
-	"identifier, property, belongingProperty, itsProperty, belongingItProperty, belongingItOperator":
+	"identifier, property, belongingProperty, itsProperty, belongingItProperty, belongingItOperator, possessiveOperator, belongingOperator":
 		typeColours.identifier,
 	
 	toString() {

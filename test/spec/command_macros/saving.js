@@ -66,7 +66,7 @@ describe("save macros", function() {
 		});
 		it("can save custom macros", function() {
 			runPassage(
-				"(set:$c1 to (macro: num-type _a, num-type _b, [(output-data:(max:_a,_b,200))]))"
+				"(if:true)[(set:$c1 to (macro: num-type _a, num-type _b, [(output-data:(max:_a,_b,200))]))]"
 			);
 			expect("(savegame:'1')").not.markupToError();
 		});
@@ -76,9 +76,17 @@ describe("save macros", function() {
 			retrieveStoredState(storagePrefix('Saved Game') + "1");
 		});
 		it("stores lots of data", function() {
-			runPassage("(set:" + Array(200).join().split(',').map(function(_, e) {
+			runPassage("(set:" + Array(5000).join().split(',').map(function(_, e) {
 				return "$V" + e + " to " + e;
 			}) + ")");
+			expect("(savegame:'1','Filename')").not.markupToError();
+			
+			retrieveStoredState(storagePrefix('Saved Game') + "1");
+		});
+		it("stores lots of passages", function() {
+			for(var i = 0; i < 5000; i += 1) {
+				runPassage('', 'foo' + i);
+			}
 			expect("(savegame:'1','Filename')").not.markupToError();
 			
 			retrieveStoredState(storagePrefix('Saved Game') + "1");

@@ -57,7 +57,7 @@
 										name.match(/^\d+(?:th|nd|st|rd)(?:last)?(?:to\d+(?:nth|nd|st|rd)(?:last)?)?$/g) ? `position${name.includes('to') ? 's' : ''}` : 'name'
 									}</b> of the container value on the ${type.startsWith('belonging') ? "right" : "left"}.<br><br>` : '')
 								+ "Some types of data values (arrays, datamaps, datasets, strings, colours, gradients, custom macros, and typedvars) are also storage containers for other values. "
-								+ "You can access a specific value stored in them using that value's <b>data name</b> (or a string or number value in brackets) by writing <i>value</i> `'s` <i>name</i>, or <i>name</i> `of` <i>value</i>.",
+								+ "You can access a specific value stored in them using that value's <b>data name</b> (or a string, number, or array value in brackets) by writing <i>value</i> `'s` <i>name</i>, or <i>name</i> `of` <i>value</i>.",
 		possessiveOperator:  token => tooltipMessages.property(token),
 		itsProperty:         token => tooltipMessages.property(token),
 		itsOperator:         token => tooltipMessages.identifier(token),

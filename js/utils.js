@@ -658,13 +658,19 @@ define(['jquery', 'markup', 'utils/polyfills'],
 
 		/*
 			A simple debouncing function that causes a function's call to only run 300ms after the last time it was called.
+			If batching is enabled, arguments from repeated calls are batched together.
 		*/
-		debounce(fn) {
-			let animFrameID, args, lastInvokeTime = 0;
+		debounce(fn, batch = false) {
+			let animFrameID, args = [], lastInvokeTime = 0;
 			const maybeRun = () => {
 				if (Date.now() - lastInvokeTime > 300) {
 					animFrameID = 0;
-					fn(...args);
+					if (batch) {
+						fn(args);
+					}
+					else {
+						fn(...args);
+					}
 				}
 				else {
 					animFrameID = requestAnimationFrame(maybeRun);
@@ -672,17 +678,21 @@ define(['jquery', 'markup', 'utils/polyfills'],
 			};
 			return function() {
 				lastInvokeTime = Date.now();
-				args = arguments;
+				/*
+					Batching slowly builds a buffer of arguments objects, whereas
+					non-batching simply throws away all but the last one.
+				*/
+				if (batch) {
+					args.push(arguments);
+				} else {
+					args = arguments;
+				}
 				if (animFrameID) {
 					cancelAnimationFrame(animFrameID);
 				}
 				animFrameID = requestAnimationFrame(maybeRun);
 			};
 		},
-
-		/*
-			Logging utilities
-		*/
 
 		/*
 			Internal error logging function. Currently a wrapper for console.error.
@@ -709,10 +719,6 @@ define(['jquery', 'markup', 'utils/polyfills'],
 			}
 			else fn();
 		},
-
-		/*
-			Constants
-		*/
 
 		/*
 			This is used as a more semantic shortcut to the <tw-story> element.

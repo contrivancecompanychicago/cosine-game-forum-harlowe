@@ -11,6 +11,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where using spread `...` to spread the individual characters of a string that contains astral plane Unicode characters (such as 𝐇) wouldn't work at all.
  * Fixed a bug where the `(unpack:)` macro wouldn't work at all unless the destination variables were expressed as typed variables (such as `num-type $a`).
  * `each` lambdas are now called "each…" lambdas (instead of just "where…" lambdas) in the Debug Mode panel.
+ * Fixed a bug where `'s` and `of` sometimes wouldn't be syntax-highlighted correctly.
 
 #### Alterations
 
