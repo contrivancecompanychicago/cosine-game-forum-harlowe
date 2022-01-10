@@ -20,7 +20,12 @@
 			lex = markup.lex;
 		});
 	}
-	// Loaded as a story format in TwineJS (any ver) or in HarloweDocs's preview pane.
+	// Loaded in HarloweDocs's preview pane.
+	else if (this.window) {
+		lex = this.Markup.lex;
+		shortDefs = this.ShortDefs;
+	}
+	// Loaded as a story format in TwineJS (any ver)
 	else {
 		({Markup:{lex}, Toolbar:toolbar, ToolbarCommands:commands, Tooltips:tooltips, ShortDefs:shortDefs} = (this.modules || this));
 	}
@@ -249,8 +254,9 @@
 			/*
 				The startState is vacant because all of the computation is done
 				inside token().
+				The purpose of the arrow-function binding is written below.
 			*/
-			startState() {
+			startState: () => {
 				if (!cm) {
 					/*
 						CodeMirror doesn't allow modes to have full access to the text of
@@ -259,6 +265,15 @@
 						the Harlowe modes object - and here, we retrieve it.
 					*/
 					cm = document.querySelector('.CodeMirror').CodeMirror;
+
+					/*
+						This (along with the arrow-function binding above) is used to provide line numbers
+						for everything except TwineJS 2.4.
+					*/
+					if (this.window || this.modules) {
+						cm.setOption('lineNumbers', true);
+						cm.setOption('lineNumberFormatter', () => "\u2022");
+					}
 				}
 				/*
 					Install the toolbar, if it's been loaded. (This function will early-exit if the toolbar's already installed.)
@@ -415,8 +430,8 @@
 			},
 		};
 	};
-	if (window && window.CodeMirror) {
-		window.CodeMirror.defineMode('harlowe-3', mode);
+	if (this.window && this.window.CodeMirror) {
+		this.window.CodeMirror.defineMode('harlowe-3', mode);
 	} else {
 		this.editorExtensions = {
 			twine: {

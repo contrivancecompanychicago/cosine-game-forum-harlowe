@@ -258,7 +258,9 @@
 		this.modules || (this.modules = {});
 		({ShortDefs} = this.modules);
 		this.modules.Tooltips = Tooltips;
-	} else {
+	}
+	// This can't be loaded in HarloweDocs.
+	else if (!this.window) {
 		({ShortDefs} = this);
 		this.Tooltips = Tooltips;
 	}

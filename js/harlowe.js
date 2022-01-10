@@ -151,7 +151,7 @@ require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', '
 				return (pid < id ? pid : id);
 			}, Infinity);
 		}
-		startPassage = $("tw-passagedata[pid=" + startPassage + "]").attr('name');
+		startPassage = $("tw-passagedata[pid='" + startPassage + "']").attr('name');
 
 		// Init game engine
 		installHandlers();

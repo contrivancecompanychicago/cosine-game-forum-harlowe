@@ -241,7 +241,7 @@ This panel ↓ will show any variables that are set by the code.
 $('#preview, #previewCode').show();
 let html = $('html');
 /* CodeMirror setup and Harlowe mode monkeying */
-let cm = CodeMirror.modes['harlowe-3'].cm = CodeMirror.fromTextArea(previewCode.firstChild, { mode: null, lineWrapping:true });
+let cm = CodeMirror.fromTextArea(previewCode.firstChild, { mode: null, lineWrapping:true });
 html.on('click', '.previewCodeButton', function(e) { previewPassage(cm.doc.getValue())});
 try { cm.setOption('mode','harlowe-3'); } catch(e) {}
 

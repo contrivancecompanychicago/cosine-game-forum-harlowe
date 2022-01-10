@@ -2796,7 +2796,7 @@
 					|| (item === hideTooltipButton && !toolbarElem.classList.contains('harlowe-3-hideTooltip'))) {
 				replaceColor = '0a60c2';
 			}
-			item.icon && (item.icon = item.icon.replace(/currentColor/g, "%23" + replaceColor));
+			item.icon && (item.icon = item.icon.replace(/fill%3D%27[^']+?%27/g, ` fill%3D%27%23${replaceColor}%27`));
 		});
 		return t24toolbar;
 	}
@@ -2806,7 +2806,7 @@
 		({Markup:{lex}, Patterns, ShortDefs} = this.modules);
 		this.modules.Toolbar = Toolbar;
 	}
-	else {
+	else if (!this.window) {
 		({Markup:{lex}, Patterns, ShortDefs} = this);
 		this.Toolbar = Toolbar;
 		this.ToolbarCommands = t24commands;
