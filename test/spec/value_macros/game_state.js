@@ -49,6 +49,18 @@ describe("game state macros", function() {
 			expect(runPassage("(history:)","qux").text()).toBe("foo,bar,baz,foo");
 			expect("(print:(history:) is an array)").markupToPrint("true");
 		});
+		it("properly updates when undoing moves", function() {
+			expect(runPassage("(history:)","foo").text()).toBe("");
+			expect(runPassage("(history:)","bar").text()).toBe("foo");
+			expect(runPassage("(history:)","baz").text()).toBe("foo,bar");
+			Engine.goBack();
+			expect(runPassage("(history:)","qux").text()).toBe("foo,bar");
+			expect(runPassage("(history:)","foo").text()).toBe("foo,bar,qux");
+			Engine.goBack();
+			Engine.goBack();
+			Engine.goBack();
+			expect(runPassage("(history:)","bar").text()).toBe("foo");
+		});
 		it("when given a lambda, filters the array using the lambda", function() {
 			expect(runPassage("(history:where its name is not 'bar')","foo").text()).toBe("");
 			expect(runPassage("(history:where its name is not 'bar')","bar").text()).toBe("foo");

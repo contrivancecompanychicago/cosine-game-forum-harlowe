@@ -108,6 +108,23 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		each past moment reflects the game state as the passage was *left*, not entered.
 	*/
 	let serialisedPast = '';
+	/*
+		A cache of the past passage names, as returned by pastPassageNames(). Because (history:) uses this,
+		it's a good idea to cache it.
+	*/
+	let pastPassageNames = [];
+
+	/*
+		A function to invalidate both of thre above at the same time.
+	*/
+	function invalidateCaches() {
+		serialisedPast = '';
+
+		pastPassageNames = [];
+		for (let i = 0; i <= recent-1; i+=1) {
+			timeline[i].passage && pastPassageNames.push(timeline[i].passage);
+		}
+	}
 
 	/*
 		Debug Mode event handlers are stored here by on(). "forward" and "back" handlers are called
@@ -347,14 +364,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			Return an array of names of all previously visited passages, in the order
 			they were visited. This may include doubles. This IS exposed directly to authors.
 		*/
-		pastPassageNames() {
-			const ret = [];
-
-			for (let i = recent-1; i >= 0; i--) {
-				ret.unshift(timeline[i].passage);
-			}
-			return ret;
-		},
+		pastPassageNames: () => pastPassageNames,
 
 		/*
 			Returns an array of all passage names. Used nowhere except for populating the Debug UI.
@@ -375,13 +385,16 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			if (!present) {
 				impossible("State.play","present is undefined!");
 			}
-			// Assign the passage name
+			// Push the soon-to-be past passage name into the cache.
+			present.passage && pastPassageNames.push(present.passage);
+			// Assign the passage name.
 			present.passage = newPassageName;
-			// Clear the future, and add the present to the timeline
+
+			// Clear the future, and add the present to the timeline.
 			timeline = timeline.slice(0,recent+1).concat(present);
 			recent += 1;
 			
-			// create a new present
+			// Create a new present
 			newPresent(newPassageName);
 			// Call the 'forward' event handler with this passage name.
 			eventHandlers.forward.forEach(fn => fn(newPassageName));
@@ -412,10 +425,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				recent -= 1;
 			}
 			if (moved) {
-				/*
-					Invalidate the serialised timeline cache.
-				*/
-				serialisedPast = '';
+				invalidateCaches();
 
 				newPresent(timeline[recent].passage);
 				/*
@@ -485,7 +495,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			timeline = [];
 			recent = -1;
 			present = Moment.create();
-			serialisedPast = '';
+			invalidateCaches();
 			SystemVariables = reconstructSystemVariables();
 			serialiseProblem = undefined;
 			eventHandlers.load.forEach(fn => fn(timeline));
@@ -737,7 +747,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			timeline = newTimeline;
 			recent = timeline.length - 1;
 			eventHandlers.load.forEach(fn => fn(timeline));
-			serialisedPast = '';
+			invalidateCaches();
 			SystemVariables = reconstructSystemVariables();
 			newPresent(timeline[recent].passage);
 			return true;

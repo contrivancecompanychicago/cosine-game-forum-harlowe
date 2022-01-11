@@ -44,6 +44,22 @@ define(['jquery', 'markup', 'utils/polyfills'],
 		return transIndex === "instant" ? 0 : 800;
 	}
 
+	/*
+		Takes a string argument, expressed as a CSS time,
+		and returns the time in milliseconds that it equals.
+
+		If the string can't be parsed as a time, then this returns 0.
+	*/
+	function cssTimeUnit(s) {
+		s = s.toLowerCase();
+
+		if (s.slice(-2) === "ms")
+			return (+s.slice(0, -2)) || 0;
+		if (s.slice(-1) === "s")
+			return (+s.slice(0, -1)) * 1000 || 0;
+		return 0;
+	}
+
 	let
 		//A binding for the cached <tw-story> reference (see below).
 		storyElement,
@@ -120,7 +136,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 			*/
 			if (transitionSkip > 0 && (keysHeldCount + buttonsHeldCount) > 0) {
 				duration -= transitionSkip;
-				el.css('animation-delay', ((Utils.cssTimeUnit(el.css('animation-delay')) || 0) - transitionSkip) + "ms");
+				el.css('animation-delay', ((cssTimeUnit(el.css('animation-delay')) || 0) - transitionSkip) + "ms");
 			}
 			if (duration <= 0) {
 				endFn(elapsedRealTime);
@@ -145,18 +161,6 @@ define(['jquery', 'markup', 'utils/polyfills'],
 		A static class with helper methods used throughout Harlowe.
 	*/
 	Utils = {
-		/*
-			Locks a particular property of an object.
-		*/
-		lockProperty(obj, prop, value) {
-			// Object.defineProperty does walk the prototype chain
-			// when reading a property descriptor dict.
-			const propDesc = Object.create({ configurable: 0, writable: 0 });
-			value && (propDesc.value = value);
-			Object.defineProperty(obj, prop, propDesc);
-			return obj;
-		},
-
 		/*
 			Returns an array of every permutation of the given sequence.
 		*/
@@ -185,6 +189,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 
 		/*
 			The following is an in-place Fisher–Yates shuffle.
+			Used only in data structure macros and value macros.
 		*/
 		shuffled(...list) {
 			return list.reduce((a,e,ind) => {
@@ -199,50 +204,6 @@ define(['jquery', 'markup', 'utils/polyfills'],
 				}
 				return a;
 			},[]);
-		},
-
-		/*
-			Matrix multiplication.
-		*/
-		matMul(m1, m2, ...rest) {
-			if (rest.length > 0) {
-				return Utils.matMul(Utils.matMul(m1, m2), ...rest);
-			}
-			else if (!m2) {
-				return m1;
-			}
-			let result = [];
-			for (let i = 0; i < m1.length; i++) {
-				result[i] = [];
-				for (let j = 0; j < m2[0].length; j++) {
-					let sum = 0;
-					for (let k = 0; k < m1[0].length; k++) {
-						sum += m1[i][k] * m2[k][j];
-					}
-					result[i][j] = sum;
-				}
-			}
-			return result;
-		},
-
-		/*
-			String utilities
-		*/
-
-		/*
-			Takes a string argument, expressed as a CSS time,
-			and returns the time in milliseconds that it equals.
-
-			If the string can't be parsed as a time, then this returns 0.
-		*/
-		cssTimeUnit(s) {
-			s = s.toLowerCase();
-
-			if (s.slice(-2) === "ms")
-				return (+s.slice(0, -2)) || 0;
-			if (s.slice(-1) === "s")
-				return (+s.slice(0, -1)) * 1000 || 0;
-			return 0;
 		},
 
 		/*
@@ -359,6 +320,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 		/*
 			Determines the colours of an element (both colour and backgroundColour) by
 			scanning all of its parent elements, ignoring transparency.
+			Used only by command macros and style changer macros.
 		*/
 		parentColours(elem) {
 			const ret = { colour: null, backgroundColour: null };
@@ -403,6 +365,8 @@ define(['jquery', 'markup', 'utils/polyfills'],
 			
 			This is used to crudely determine whether to make a <tw-transition-container> inline or block,
 			given that block children cannot inherit opacity from inline parents in Chrome (as of April 2015).
+
+			Used only in style changer macros, and here.
 		*/
 		childrenProbablyInline(jq) {
 			/*
@@ -446,54 +410,10 @@ define(['jquery', 'markup', 'utils/polyfills'],
 			})
 			&& unknown.every(a => window.getComputedStyle(a).display.includes('inline'));
 		},
-		/*
-			Replaces oldElem with newElem while transitioning between both.
-		*/
-		transitionReplace(oldElem, newElem, transIndex) {
-			const closest = oldElem.closest('tw-hook');
-			if (closest.length > 0) {
-				oldElem = closest;
-			}
-
-			// Create a transition-main-container
-			const container1 = $('<tw-transition-container>').css('position', 'relative');
-
-			// Insert said container into the DOM (next to oldElem)
-			container1.insertBefore(oldElem.first());
-
-			let container2a;
-			if (newElem) {
-				// Create a transition-in-container
-				container2a = $('<tw-transition-container>').appendTo(container1);
-
-				// Insert new element
-				newElem.appendTo(container2a);
-			}
-
-			// Create a transition-out-container
-			// and insert it into the transition-main-container.
-			const container2b = $('<tw-transition-container>').css('position', 'absolute')
-				.prependTo(container1);
-
-			// Insert the old element into the transition-out-container
-			oldElem.detach().appendTo(container2b);
-
-			// Transition-out the old element, removing it
-
-			Utils.transitionOut(container2b, transIndex);
-
-			// Transition-in the new element
-
-			if (newElem) {
-				Utils.transitionIn(container2a, transIndex, function () {
-					// Remove container1 and container2a
-					container2a.unwrap().children().first().unwrap();
-				});
-			}
-		},
 
 		/*
 			Transition an element out.
+			Used only by Engine?
 		*/
 		transitionOut(el, transIndex, transitionTime, transitionDelay = 0, transitionSkip = 0, expedite = 0, transitionOrigin = undefined) {
 			/*
@@ -566,6 +486,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 
 		/*
 			Transition an element in.
+			Used only by ChangeDescriptor.
 		*/
 		transitionIn(el, transIndex, transitionTime, transitionDelay = 0, transitionSkip = 0, expedite = 0, transitionOrigin = undefined) {
 			/*
@@ -643,7 +564,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 					*/
 					el.find('tw-transition-container').each((_,child) => {
 						child = $(child);
-						child.css('animation-delay', (Utils.cssTimeUnit(child.css('animation-delay') || 0) - elapsedRealTime) + "ms");
+						child.css('animation-delay', (cssTimeUnit(child.css('animation-delay') || 0) - elapsedRealTime) + "ms");
 					});
 					el.contents().unwrap();
 				}

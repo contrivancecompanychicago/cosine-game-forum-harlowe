@@ -1305,6 +1305,13 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			return result;
 		};
 	}
+
+	/*
+		The mandatory first argument of all macro
+		functions is section, so we have to use this to convert the below
+		to use a contract that's amenable to this requirement.
+	*/
+	const ignoreArgumentOne = fn => (_, ...rest) => fn(...rest);
 	
 	({
 		/*d:
@@ -1712,18 +1719,9 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			this method is prohibited from affecting itself.
 		*/
 		""() {
-			Object.keys(this).forEach((key) => {
-				if (key) {
-					let fn = this[key][0];
-					let typeSignature = this[key][1];
-					/*
-						Of course, the mandatory first argument of all macro
-						functions is section, so we have to convert the above
-						to use a contract that's amenable to this requirement.
-					*/
-					Macros.add(key, (_, ...rest) => fn(...rest), typeSignature);
-				}
-			});
+			for (let key in this) {
+				Object.hasOwnProperty.call(this,key) && Macros.add(key, ignoreArgumentOne(this[key][0]), this[key][1]);
+			}
 		}
 	}[""]());
 	

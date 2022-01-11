@@ -252,9 +252,10 @@ define([
 		/*
 			The passed-in tokens are an array when a lambda is run and a single token (the macro itself)
 			when a macro is run.
-			TODO: Rewrite this so that this isn't necessary.
 		*/
-		tokens = [].concat(tokens);
+		if (!Array.isArray(tokens)) {
+			tokens = [tokens];
+		}
 
 		if (!tokens.length) {
 			Utils.impossible('Runner.run', 'No tokens to run!');

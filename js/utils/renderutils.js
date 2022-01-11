@@ -534,5 +534,13 @@ define(['jquery', 'utils', 'renderer'], function($, Utils, Renderer) {
 		return {marginLeft: (left.length/length)*100, size: (inner.length/length)*100};
 	}
 	
-	return Object.freeze({dialog, realWhitespace, textNodeToChars, findTextInNodes, collapse, geomStringRegExp, geomParse });
+	return Object.freeze({
+		dialog,
+		realWhitespace,
+		textNodeToChars,
+		findTextInNodes,
+		collapse,
+		geomStringRegExp,
+		geomParse
+	});
 });

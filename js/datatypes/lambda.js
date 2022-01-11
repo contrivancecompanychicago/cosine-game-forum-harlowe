@@ -1,5 +1,5 @@
 "use strict";
-define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref', 'internaltypes/twineerror'], ({objectName}, VarScope, VarRef, TwineError) => {
+define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref', 'internaltypes/twineerror'], ({objectName, findFreeVariables}, VarScope, VarRef, TwineError) => {
 	/*d:
 		Lambda data
 
@@ -130,7 +130,7 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 			lambda - thus adding their clauses - or a temp variable or typed variable).
 			{subject} A VarRef or Lambda (hopefully)
 			{clauseType} 'making', 'via', 'where', 'when' or 'each'
-			{clause} A token tree ('making', 'each') OR a VarRef ('via', 'where', 'when')
+			{clause} An array of tokens ('making', 'each') OR a VarRef ('via', 'where', 'when')
 			{source} Harlowe source code
 		*/
 		create(subject, clauseType, clause, source) {
@@ -221,9 +221,6 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 				return TwineError.create('syntax', 'This lambda has two variables named \'' + ret.loop.getName() + '\'.',
 					'Lambdas should have all-unique parameter names.');
 			}
-			/*
-				All checks have now succeeded.
-			*/
 			return ret;
 		},
 

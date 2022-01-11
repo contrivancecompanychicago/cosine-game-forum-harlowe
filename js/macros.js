@@ -1,6 +1,6 @@
 "use strict";
 define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changercommand', 'datatypes/custommacro', 'datatypes/lambda', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/typedvar', 'datatypes/datatype', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
-($, NaturalSort, {insensitiveName, nth, plural, andList, lockProperty}, {clone, objectName, typeName, toSource}, ChangerCommand, CustomMacro, Lambda, HookSet, CodeHook, TypedVar, Datatype, ChangeDescriptor, TwineError) => {
+($, NaturalSort, {insensitiveName, nth, andList}, {clone, objectName, typeName, toSource}, ChangerCommand, CustomMacro, Lambda, HookSet, CodeHook, TypedVar, Datatype, ChangeDescriptor, TwineError) => {
 	/*
 		This contains a registry of macro definitions, and methods to add to that registry.
 	*/
@@ -287,7 +287,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 					return TwineError.create(
 						"datatype",
 						name + " needs "
-							+ plural((mandatory - ind), "more value") + ".",
+							+ ((mandatory - ind) + " more value" + ((mandatory - ind) > 1 ? "s" : "")) + ".",
 						signatureInfo
 					);
 				}
@@ -369,11 +369,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			obj.isChanger = true;
 		}
 		Object.freeze(obj);
-		if (Array.isArray(name)) {
-			name.forEach((n) => lockProperty(macroRegistry, insensitiveName(n), obj));
-		} else {
-			lockProperty(macroRegistry, insensitiveName(name), obj);
-		}
+		[].concat(name).forEach(n => Object.defineProperty(macroRegistry, insensitiveName(n), { value: obj }));
 	}
 
 	/*

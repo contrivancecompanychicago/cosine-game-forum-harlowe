@@ -31,6 +31,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 	/*
 		Next, a quick function used for distinguishing the types of collections
 		native to TwineScript.
+		Currently (Jan 2021) only used by Operations, VarRef and data structure macros.
 	*/
 	function collectionType(value) {
 		return Array.isArray(value) ? "array" :
@@ -48,6 +49,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 
 	/*
 		Used to retrieve any unstorable value from a data structure.
+		Currently (Jan 2022) only used by VarRef and TypedVar.
 	*/
 	function unstorableValue(value) {
 		return (value && value.TwineScript_Unstorable && value)
@@ -59,6 +61,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 	/*
 		Next a quick function that determines if a datamap property name is valid.
 		This requires that the datamap itself be passed in.
+		Currently (Jan 2022) only used by VarRef, metadata macros, and data structure macros.
 	*/
 	function isValidDatamapName(map, name) {
 		if(!(map instanceof Map)) {
@@ -109,6 +112,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 	/*
 		A shortcut to determine whether a given value should have
 		sequential collection functionality (e.g. Array, String, HookSet).
+		Currently (Jan 2022) only used by VarRef.
 	*/
 	function isSequential(value) {
 		return typeof value === sString || Array.isArray(value) || typeof value.hooks === sFunction;
@@ -117,6 +121,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		Now, a function to clone arbitrary values.
 		This is only a shallow clone, designed for use by VarRef.set()
 		to make a distinct copy of an object after assignment.
+		Used everywhere.
 	*/
 	function clone(value) {
 		if (!isObject(value)) {
@@ -166,9 +171,8 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 	}
 	
 	/*
-		Most TwineScript objects have an ObjectName method which supplies a name
+		Most Harlowe objects have an ObjectName method which supplies a name
 		string to the error message facilities.
-		@return {String}
 	*/
 	function objectName(obj) {
 		return (isObject(obj) && "TwineScript_ObjectName" in obj)
@@ -184,7 +188,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 	}
 	/*
 		The TypeName method is also used to supply error messages relating to type signature
-		checks. Generally, a TwineScript datatype prototype should be supplied to this function,
+		checks. Generally, a Harlowe datatype prototype should be supplied to this function,
 		compared to objectName, which typically should receive instances.
 		
 		Alternatively, for Javascript types, the global constructors String, Number, Boolean,
@@ -193,8 +197,6 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		Finally, certain "type descriptor" objects are used by Macros, and take the form
 			{ pattern: {String, innerType: {Array|Object|String} }
 		and these should be warmly received as well.
-		
-		@return {String}
 	*/
 	function typeName(obj) {
 		const plain = isPureObject(obj);
@@ -292,6 +294,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		This is used to convert all possible user-storable data back into an executable
 		code serialisation, for use by Debug Mode and the (source:) macro.
 		This should never receive a TwineError.
+		Used everywhere.
 	*/
 	function toSource(obj, isProperty) {
 		let e = TwineError.containsError(obj);
@@ -354,7 +357,6 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		As TwineScript uses pass-by-value rather than pass-by-reference
 		for all objects, it must also use compare-by-value for objects as well.
 		This function implements the "is" operation.
-		@return {Boolean}
 	*/
 	function is(l, r) {
 		/*
@@ -415,7 +417,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		As the base function for Operations.contains,
 		this implements the "x contains y" and "y is in x" keywords.
 		This is placed outside so that Operation.isIn can call it.
-		@return {Boolean}
+		Only used by Operations.
 	*/
 	function contains(container,obj) {
 		/*
@@ -449,6 +451,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 	/*
 		This is the base function for Operations.isA and Operations.typifies, the latter being a purely internal
 		reversal used by elided comparison compilation.
+		Only used by Operations.
 	*/
 	function isA(l,r) {
 		/*
@@ -562,6 +565,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 	/*
 		This calls the slice() method of the given sequence, but takes TwineScript (subarray:)
 		and (substring:) indices (which are 1-indexed), converting them to those preferred by JS.
+		Only used by data structure macros, VarRef and value macros.
 	*/
 	function subset(sequence, a, b) {
 		/*
@@ -621,6 +625,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 	/*
 		This provides a safe means of serialising Arrays, Maps, Sets, and primitives into user-presented HTML.
 		This is usually called by such a value appearing in passage prose, or within a (print:) command.
+		Only used by Section and command macros.
 	*/
 	function printBuiltinValue(value) {
 		/*
@@ -686,6 +691,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 	
 	/*
 		This produces an inclusive range, for the (range:) macro and anything else that needs a similar range.
+		Only used by Macros and data structure macros.
 	*/
 	function range(a, b) {
 		/*
@@ -709,7 +715,6 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 	
 	const OperationUtils = Object.freeze({
 		isObject,
-		isPureObject,
 		isValidDatamapName,
 		collectionType,
 		isSequential,

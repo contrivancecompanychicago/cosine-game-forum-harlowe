@@ -124,13 +124,15 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 			(presumably composed) ChangerCommand as well.
 		*/
 		create(properties, changer) {
+			/*
+				Of course, we can't inherit array contents from the prototype chain,
+				so we have to copy the arrays.
+			*/
 			const ret = assign(create(this), {
-					// Of course, we can't inherit array contents from the prototype chain,
-					// so we have to copy the arrays.
-					attr:          [].concat(this.attr          || []),
-					styles:        [].concat(this.styles        || []),
+					attr:          !this.attr ? []   : this.attr.slice(),
+					styles:        !this.styles ? [] : this.styles.slice(),
 					loopVars:      this.loopVars || {},
-					data:          this.data || {},
+					data:          this.data     || {},
 				}, properties);
 			/*
 				If a ChangerCommand was passed in, run it.
@@ -220,19 +222,19 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 				target = newTargets.map(t => t.target);
 			}
 
-			[].concat(target).forEach(target => {
-				if (HookSet.isPrototypeOf(target)) {
-					target.forEach(section, forEachTarget);
+			if (Array.isArray(target)) {
+				for (let i = 0; i < target.length; i += 1) {
+					HookSet.isPrototypeOf(target[i]) ? target[i].forEach(section, forEachTarget) :
+						/*
+							It's OK for length>1 jQuery collections to be treated as single
+							elements here, because the methods called on them (data(), attr(), css())
+							work regardless of number of contained elements.
+						*/
+						forEachTarget(target[i]);
 				}
-				else {
-					/*
-						It's OK for length>1 jQuery collections to be treated as single
-						elements here, because the methods called on them (data(), attr(), css())
-						work regardless of number of contained elements.
-					*/
-					forEachTarget(target);
-				}
-			});
+			} else {
+				HookSet.isPrototypeOf(target) ? target.forEach(section, forEachTarget) : forEachTarget(target);
+			}
 
 			/*
 				If this isn't a descriptor that's appending/replacing code, a new transition has
