@@ -282,53 +282,6 @@
 	};
 	
 	/*
-		A helper function for lex(), which determines whether a given rule should be tested
-		against the given text, based on a number of factors.
-	*/
-	function shouldTest(rule, text, lastToken, unmatchedLength) {
-		return (
-			/*
-				Check whether this rule is restricted to only being matched
-				directly after another rule has. An example is the "block"
-				rules, which may only match after a "br" or "paragraph"
-				rule.
-			*/
-			!rule.canFollow ||
-				rule.canFollow.indexOf(
-					/*
-						Interesting note: this allows null lastTokens
-						to be passed as-is, and object lastTokens to have
-						their type checked - the short-circuit's falsy
-						value's type matters here.
-					*/
-					lastToken && lastToken.type
-				) >-1) &&
-			/*
-				Conversely, check whether this rule cannot follow after
-				the previous rule.
-			*/
-			(!rule.cannotFollow || (
-				/*
-					For most cannotFollow items, this will suffice:
-				*/
-				rule.cannotFollow.indexOf(
-					lastToken && lastToken.type
-				) === -1 &&
-				/*
-					However, if cannotFollow contains "text", the check is more
-					tricky: the last text token hasn't been forged yet. So,
-					this line must be used:
-				*/
-				!(rule.cannotFollow.indexOf("text") > -1 && unmatchedLength)
-				)) &&
-			/*
-				If a peek is available, check that before running
-				the full match regexp.
-			*/
-			(!rule.peek || rule.peek.toLowerCase() === text.slice(0, rule.peek.length).toLowerCase());
-	}
-	
-	/*
 		The main lexing routine. Given a token with an innerText property and
 		addChild methods, this function will lex its text into new tokens
 		and add them as children.
@@ -388,14 +341,23 @@
 					Before running the pattern, check to see if this rule is valid right now.
 					If so, then do it.
 				*/
-				if (!(shouldTest(rule, slice, lastToken, firstUnmatchedIndex < index) &&
+				if ((rule.constraint && !rule.constraint(lastToken))
+						/*
+							If a token cannot follow text, the check is a bit tricky: the last text token hasn't been forged yet.
+							So, this line must be used:
+						*/
+						|| (rule.cannotFollowText && ((lastToken && lastToken.type === "text") || firstUnmatchedIndex < index))
+						/*
+							If a peek is available, check that before running the full match regexp.
+						*/
+						|| (rule.peek && rule.peek.toLowerCase() !== slice.slice(0, rule.peek.length).toLowerCase())
 						/*
 							.test() is several times faster than .exec(), so only run the latter
 							once the former passes. This means there's a perf hit when a match IS
 							found (as .exec() must be run separately to .test()) but it should be balanced
 							by the number of rules which will not match.
 						*/
-						rule.pattern.test(slice))) {
+						|| !rule.pattern.test(slice)) {
 					continue;
 				}
 				const match = rule.pattern.exec(slice);

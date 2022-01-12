@@ -243,9 +243,16 @@
 		/*
 			All block rules have a single specific canFollow and cannotFollow.
 		*/
+		const blockRuleConstraint = prev => {
+			switch(prev && prev.type) {
+				case null: case "br": case "hr": case "bulleted": case "numbered": case "heading": case "align": case "column": case "escapedLine":
+				return true;
+			}
+			return false;
+		};
 		keys(blockRules).forEach((key) => {
-			blockRules[key].canFollow = [null, "br", "hr", "bulleted", "numbered", "heading", "align", "column", "escapedLine"];
-			blockRules[key].cannotFollow = ["text"];
+			blockRules[key].constraint = blockRuleConstraint;
+			blockRules[key].cannotFollowText = true;
 		});
 		
 		/*
@@ -475,12 +482,12 @@
 			},
 			
 			variable:   {
-				cannotFollow: ['macroFront'],
+				constraint: (prev) => !prev || prev.type !== "macroFront",
 				fn: textTokenFn("name")
 			},
 			
 			tempVariable: {
-				cannotFollow: ['macroFront'],
+				constraint: (prev) => !prev || prev.type !== "macroFront",
 				fn: textTokenFn("name")
 			},
 		}), {
@@ -499,7 +506,7 @@
 		const macroRules = setupRules(macroMode, assign({
 				macroName: {
 					// This must be the first token inside a macro.
-					canFollow: ['macroFront'],
+					constraint: (prev) => prev && prev.type === "macroFront",
 					fn: textTokenFn("name"),
 				},
 
@@ -516,23 +523,30 @@
 				*/
 				property: {
 					fn: textTokenFn("name"),
-					canFollow: ["variable", "hookName", "property", "tempVariable", "colour",
-						"itsProperty", "belongingItProperty", "macro", "grouping", "string",
-						/*
-							These must also be included so that the correct error can be reported.
-						*/
-						"datatype", "hook", "boolean", "number"],
+					constraint(prev) {
+						if (prev) {
+							switch(prev.type) {
+								case "variable": case "hookName": case "property": case "tempVariable": case "colour":
+								case "itsProperty": case "belongingItProperty": case "macro": case "grouping": case "string":
+								/*
+									These must also be included so that the correct error can be reported.
+								*/
+								case "datatype": case "hook": case "boolean": case "number":
+									return true;
+							}
+						}
+					},
 				},
 				
 				possessiveOperator: { fn: emptyFn },
 				
 				itsProperty: {
-					cannotFollow: ["text"],
+					cannotFollowText: true,
 					fn: textTokenFn("name"),
 				},
 				
 				itsOperator: {
-					cannotFollow: ["text"],
+					cannotFollowText: true,
 					fn: emptyFn,
 				},
 				
@@ -541,22 +555,22 @@
 					this must come before it.
 				*/
 				belongingItProperty: {
-					cannotFollow: ["text"],
+					cannotFollowText: true,
 					fn: textTokenFn("name"),
 				},
 				
 				belongingItOperator: {
-					cannotFollow: ["text"],
+					cannotFollowText: true,
 					fn: emptyFn
 				},
 				
 				belongingProperty: {
-					cannotFollow: ["text"],
+					cannotFollowText: true,
 					fn: textTokenFn("name"),
 				},
 				
 				belongingOperator: {
-					cannotFollow: ["text"],
+					cannotFollowText: true,
 					fn: emptyFn
 				},
 				
@@ -597,14 +611,14 @@
 				},
 				
 				datatype: {
-					cannotFollow: ["text"],
+					cannotFollowText: true,
 					fn: (match) => ({
 						name: match[0].toLowerCase(),
 					}),
 				},
 
 				colour: {
-					cannotFollow: ["text"],
+					cannotFollowText: true,
 					/*
 						The colour names are translated into hex codes here,
 						rather than later in TwineScript.
@@ -671,7 +685,7 @@
 				},
 				identifier: {
 					fn: textTokenFn("name"),
-					cannotFollow: ["text"],
+					cannotFollowText: true,
 				},
 
 				whitespace: {
@@ -681,7 +695,7 @@
 						this restriction is in place. It should have no effect
 						on syntactic whitespace.
 					*/
-					cannotFollow: "text",
+					cannotFollowText: true,
 				},
 
 				incorrectOperator: {
@@ -710,7 +724,7 @@
 							explanation: "In the interests of readability, I want certain operators to be in a specific form.",
 						};
 					},
-					cannotFollow: "text",
+					cannotFollowText: true,
 				},
 			},
 			// As these consist of word characters, they cannot follow text nodes, lest they
@@ -719,7 +733,7 @@
 			"isNot", "contains", "doesNotContain", "isIn", "isA", "isNotA", "isNotIn", "matches", "doesNotMatch", "bind"].reduce((a, e) => {
 				a[e] = {
 					fn: emptyFn,
-					cannotFollow: ["text"],
+					cannotFollowText: true,
 				};
 				return a;
 			},{}),

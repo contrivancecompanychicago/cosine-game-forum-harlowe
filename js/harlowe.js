@@ -125,6 +125,7 @@ require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', '
 		const header = $('tw-storydata');
 
 		if (header.length === 0) {
+			// TODO: Maybe some sort of error?
 			return;
 		}
 

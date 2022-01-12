@@ -34,7 +34,7 @@ define(['jquery'], ($) => {
 			/*
 				Base case: this collection contains a single text node.
 			*/
-			if (this.length === 1 && this[0] instanceof Text) {
+			if (this.length === 1 && this[0] && this[0].nodeType === Node.TEXT_NODE) {
 				return [this[0]];
 			}
 			/*
@@ -42,7 +42,7 @@ define(['jquery'], ($) => {
 				which are text nodes.
 			*/
 			return this.get().concat(this.contents().get(), this.find(selector).contents().get()).filter(function(e,i,a) {
-				return e instanceof Text && a.indexOf(e) === i;
+				return e && e.nodeType === Node.TEXT_NODE && a.indexOf(e) === i;
 			})
 			/*
 				We must sort the returned array using compareDocumentPosition.
@@ -56,7 +56,9 @@ define(['jquery'], ($) => {
 			if it also matches.
 		*/
 		findAndFilter(selector) {
-			return this.filter(selector).add(this.find(selector));
+			const lowerElements = this.find(selector);
+			const topElements = this.filter(selector);
+			return (!topElements.length ? lowerElements : lowerElements.add(topElements));
 		},
 	});
 });

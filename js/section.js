@@ -197,7 +197,7 @@ define([
 				Check if the next non-whitespace element is a +, an attachable expression, or a hook.
 			*/
 			({whitespace, nextElem} = nextNonWhitespace(nextElem));
-			if (nextElem[0] instanceof Text && nextElem[0].textContent.trim() === "+") {
+			if (nextElem[0] && nextElem[0].nodeType === Node.TEXT_NODE && nextElem[0].textContent.trim() === "+") {
 				/*
 					Having found a +, we must confirm the non-ws element after it is an expression.
 					If it is, we try to + it with the changer.

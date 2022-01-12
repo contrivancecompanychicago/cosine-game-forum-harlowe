@@ -253,7 +253,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 		read every <tw-passagedata> from the <tw-storydata> HTML and store them in Passages until then.
 	*/
 	onStartup(() => {
-		Array.from($("tw-storydata > tw-passagedata")).forEach(e => {
+		$("tw-storydata > tw-passagedata").get().forEach(e => {
 			e = $(e);
 			Passages.set(e.attr('name'), new Passage(e));
 		});
