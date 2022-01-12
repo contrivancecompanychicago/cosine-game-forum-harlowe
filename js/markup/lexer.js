@@ -348,25 +348,27 @@
 						*/
 						|| (rule.cannotFollowText && ((lastToken && lastToken.type === "text") || firstUnmatchedIndex < index))
 						/*
-							If a peek is available, check that before running the full match regexp.
+							PlainCompare rules are compared only as strings.
 						*/
-						|| (rule.peek && rule.peek.toLowerCase() !== slice.slice(0, rule.peek.length).toLowerCase())
-						/*
-							.test() is several times faster than .exec(), so only run the latter
-							once the former passes. This means there's a perf hit when a match IS
-							found (as .exec() must be run separately to .test()) but it should be balanced
-							by the number of rules which will not match.
-						*/
-						|| !rule.pattern.test(slice)) {
+						|| (rule.plainCompare ? !slice.startsWith(rule.pattern) :
+							/*
+								.test() is several times faster than .exec(), so only run the latter
+								once the former passes. This means there's a perf hit when a match IS
+								found (as .exec() must be run separately to .test()) but it should be balanced
+								by the number of rules which will not match.
+							*/
+							!rule.pattern.test(slice))) {
 					continue;
 				}
-				const match = rule.pattern.exec(slice);
 				/*
-					Having run the pattern, we now create tokenData from the match. We use this
-					to create the token, but we shouldn't do so if certain invalidation criteria
+					Having run the pattern, we now create tokenData from the match. PlainCompare
+					rules only need to pass in themselves (as they equal the matched portion),
+					but normal rules need to pass in .exec() sub-matches.
+
+					We use this to create the token, but we shouldn't do so if certain invalidation criteria
 					are met...
 				*/
-				const tokenData = rule.fn(match);
+				const tokenData = rule.fn(rule.plainCompare ? rule.pattern : rule.pattern.exec(slice));
 				/*
 					...such as this: if it would be a Back token, it must match with a Front token.
 				*/

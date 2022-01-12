@@ -486,13 +486,7 @@
 		escapedLine,
 		
 		br,
-		
-		/*
-			Twine currently just uses HTML comment syntax for comments.
-		*/
-		commentFront:         "<!--",
-		commentBack:          "-->",
-		
+
 		/*d:
 			HTML markup
 
@@ -527,7 +521,6 @@
 			#extra
 		*/
 		tag:         "<\\/?" + tag.name + tag.attrs + ">",
-		tagPeek:                                      "<",
 		
 		/*
 			<textarea> elements also have the exemption from their contents being interpreted as Harlowe code.
@@ -547,52 +540,6 @@
 		column,
 		bulleted,
 		numbered,
-		
-		/*d:
-			Style markup
-
-			It's expected that you'd want to apply styles to your text – to italicise a word in dialogue,
-			for example. You can do this with simple formatting codes that
-			are similar to the double brackets of a link. Here is what's available to you:
-			
-			| Styling | Markup code | Result | HTML produced
-			|---
-			| Italics | `//text//` | <i>text</i> |`<i>text</i>`
-			| Boldface | `''text''` | <b>text</b> |`<b>text</b>`
-			| Strikethrough text | `~~text~~` | <s>text</s> | `<s>text</s>`
-			| Emphasis | `*text*` | *text* |`<em>text</em>`
-			| Strong emphasis | `**text**` | **text** |`<strong>text</strong>`
-			| Superscript | `meters/second^^2^^` | meters/second<sup>2</sup> | `meters/second<sup>2</sup>`
-
-			Example usage:
-			```
-			You //can't// be serious! I have to go through the ''whole game''
-			again? ^^Jeez, louise!^^
-			```
-
-			Details:
-			You can nest these codes - `''//text//''` will produce ***bold italics*** - but they must nest
-			symmetrically. `''//text''//` will not work.
-
-			A larger variety of text styles can be produced by using the (text-style:) macro, attaching it to
-			a text hook you'd like to style. And, furthermore, you can use HTML tags like `<mark>` as an additional
-			styling option.
-
-			#basics
-		*/
-		strikeOpener:     escape("~~"),
-		italicOpener:     escape("//"),
-		boldOpener:       escape("''"),
-		supOpener:        escape("^^"),
-		/*
-			To avoid ambiguities between adjacent strong and em openers,
-			these must be specified as separate front and back tokens
-			with different precedence.
-		*/
-		strongFront:      escape("**"),
-		strongBack:       escape("**"),
-		emFront:          escape("*"),
-		emBack:           escape("*"),
 		
 		/*d:
 			Verbatim markup
@@ -619,52 +566,6 @@
 			differentiated by adding more ` marks to each pair.
 		*/
 		verbatimOpener:    "`+",
-		
-		/*d:
-			Collapsing whitespace markup
-
-			When working with macros, HTML tags and such, it's convenient for readability purposes to space and indent
-			the text. However, this whitespace will also appear in the compiled passage text. You can get around this by
-			placing the text between `{` and `}` marks. Inside, all runs of consecutive whitespace (line breaks, spaces)
-			will be reduced to just one space.
-
-			Example usage:
-			```
-			{
-			    This sentence
-			    will be
-			    (set: $event to true)
-			    written on one line
-			    with only single spaces.
-			}
-			```
-
-			Details:
-
-			If you wish to still have line breaks within the markup that won't be collapsed, you can use HTML `<br>` tags (see
-			the HTML markup section for more information about raw HTML tags).
-
-			You can nest this markup within itself - `{Good  { gumballs!}}` - but the inner pair won't behave any
-			differently as a result of being nested.
-
-			Text inside macro calls (in particular, text inside strings provided to macro) will not be collapsed.
-			Neither will text *outputted* by macro calls, either - `{(print:"   ")}` will still print all 3 spaces,
-			and `{(display:"Attic")}` will still display all of the whitespace in the "Attic" passage.
-
-			Also, text inside the verbatim syntax, such as `` Thunder`   `hound ``, will not be collapsed either.
-
-			If the markup contains a (replace:) command attached to a hook, the hook will still have its whitespace
-			collapsed, even if it is commanded to replace text outside of the markup.
-
-			You may apply this collapsing effect to specific hooks using the (collapse:) macro. In particular,
-			if you wish for the entire passage's whitespace to collapse, consider using (change: ?passage) and (collapse:).
-
-			If you only want to remove specific line breaks, consider the escaped line break markup.
-
-			#whitespace 2
-		*/
-		collapsedFront:    "{",
-		collapsedBack:     "}",
 		
 		/*d:
 			Named hook markup
@@ -867,7 +768,6 @@
 		passageLink:
 			passageLink.main
 			+ passageLink.closer,
-		passageLinkPeek:    "[[",
 		
 		legacyLink:
 			/*
@@ -881,7 +781,6 @@
 			passageLink.opener
 			+ passageLink.legacyText + passageLink.legacySeparator
 			+ passageLink.legacyText + passageLink.closer,
-		legacyLinkPeek:    "[[",
 		
 		simpleLink:
 			/*
@@ -889,7 +788,6 @@
 				use legacyText here to disambiguate.
 			*/
 			passageLink.opener + passageLink.legacyText + passageLink.closer,
-		simpleLinkPeek:    "[[",
 		
 		/*d:
 			Macro markup
@@ -946,19 +844,14 @@
 			#coding 1
 		*/
 		macroFront: macro.opener + before(macro.name),
-		macroFrontPeek: "(",
 		macroName: macro.name,
 		
 		/*
 			This must be differentiated from macroFront
 		*/
 		groupingFront: "\\(" + notBefore(macro.name),
-		groupingFrontPeek: "(",
-		
-		groupingBack:  "\\)",
 		
 		twine1Macro,
-		twine1MacroPeek: "<<",
 		
 		/*
 			Property accesses
@@ -967,31 +860,23 @@
 		validPropertyName,
 		
 		property,
-		propertyPeek: "'s",
 		
 		belongingProperty,
 		
 		possessiveOperator,
 		
 		belongingOperator,
-		belongingOperatorPeek:
-			"of",
 		
 		itsOperator,
-		itsOperatorPeek: "its",
 		
 		belongingItOperator,
-		belongingItOperatorPeek: "of",
 		
 		variable,
-		variablePeek: "$",
 
 		tempVariable,
-		tempVariablePeek: "_",
 		
 		hookName:
 			"\\?(" + anyLetter + "+)\\b",
-		hookNamePeek: "?",
 		
 		/*
 			Artificial types (non-JS primitives, semantic sugar)
@@ -1028,7 +913,6 @@
 		// Special identifiers
 		identifier,
 		itsProperty,
-		itsPropertyPeek: "its",
 		belongingItProperty,
 		
 		// This sad-looking property is designed to disambiguate escaped quotes inside string literals.
@@ -1070,7 +954,6 @@
 		multiplication:    escape("*")      + notBefore("="),
 		division:          either("/", "%") + notBefore("="),
 		
-		comma:      ",",
 		spread:     "\\.\\.\\." + notBefore("\\."),
 		
 		to:         either("to" + wb, "="),
@@ -1086,6 +969,108 @@
 		typeSignature: escape("-type") + wb,
 
 		incorrectOperator,
+
+		PlainCompare: {
+			comma: ",",
+			/*
+				Twine currently just uses HTML comment syntax for comments.
+			*/
+			commentFront: "<!--",
+			commentBack: "-->",
+
+			/*d:
+				Style markup
+
+				It's expected that you'd want to apply styles to your text – to italicise a word in dialogue,
+				for example. You can do this with simple formatting codes that
+				are similar to the double brackets of a link. Here is what's available to you:
+
+				| Styling | Markup code | Result | HTML produced
+				|---
+				| Italics | `//text//` | <i>text</i> |`<i>text</i>`
+				| Boldface | `''text''` | <b>text</b> |`<b>text</b>`
+				| Strikethrough text | `~~text~~` | <s>text</s> | `<s>text</s>`
+				| Emphasis | `*text*` | *text* |`<em>text</em>`
+				| Strong emphasis | `**text**` | **text** |`<strong>text</strong>`
+				| Superscript | `meters/second^^2^^` | meters/second<sup>2</sup> | `meters/second<sup>2</sup>`
+
+				Example usage:
+				```
+				You //can't// be serious! I have to go through the ''whole game''
+				again? ^^Jeez, louise!^^
+				```
+
+				Details:
+				You can nest these codes - `''//text//''` will produce ***bold italics*** - but they must nest
+				symmetrically. `''//text''//` will not work.
+
+				A larger variety of text styles can be produced by using the (text-style:) macro, attaching it to
+				a text hook you'd like to style. And, furthermore, you can use HTML tags like `<mark>` as an additional
+				styling option.on.
+
+				#basics
+			*/
+			strikeOpener: "~~",
+			italicOpener: "//",
+			boldOpener: "''",
+			supOpener: "^^",
+			/*
+				To avoid ambiguities between adjacent strong and em openers,
+				these must be specified as separate front and back tokens
+				with different precedence.
+			*/
+			strongFront: "**",
+			strongBack: "**",
+			emFront: "*",
+			emBack: "*",
+
+			/*d:
+				Collapsing whitespace markup
+
+				When working with macros, HTML tags and such, it's convenient for readability purposes to space and indent
+				the text. However, this whitespace will also appear in the compiled passage text. You can get around this by
+				placing the text between `{` and `}` marks. Inside, all runs of consecutive whitespace (line breaks, spaces)
+				will be reduced to just one space.
+
+				Example usage:
+				```
+				{
+					This sentence
+					will be
+					(set: $event to true)
+					written on one line
+					with only single spaces.
+				}
+				```
+
+				Details:
+
+				If you wish to still have line breaks within the markup that won't be collapsed, you can use HTML `<br>` tags (see
+				the HTML markup section for more information about raw HTML tags).
+
+				You can nest this markup within itself - `{Good  { gumballs!}}` - but the inner pair won't behave any
+				differently as a result of being nested.
+
+				Text inside macro calls (in particular, text inside strings provided to macro) will not be collapsed.
+				Neither will text *outputted* by macro calls, either - `{(print:"   ")}` will still print all 3 spaces,
+				and `{(display:"Attic")}` will still display all of the whitespace in the "Attic" passage.
+
+				Also, text inside the verbatim syntax, such as `` Thunder`   `hound ``, will not be collapsed either.
+
+				If the markup contains a (replace:) command attached to a hook, the hook will still have its whitespace
+				collapsed, even if it is commanded to replace text outside of the markup.up.
+
+				You may apply this collapsing effect to specific hooks using the (collapse:) macro. In particular,
+				if you wish for the entire passage's whitespace to collapse, consider using (change: ?passage) and (collapse:).
+
+				If you only want to remove specific line breaks, consider the escaped line break markup.
+
+				#whitespace 2
+			*/
+			collapsedFront: "{",
+			collapsedBack: "}",
+			groupingBack: ")",
+		},
 	};
 	
 	if (typeof module === 'object') {

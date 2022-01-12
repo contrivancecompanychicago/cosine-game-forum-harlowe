@@ -257,7 +257,7 @@ define([
 			tokens = [tokens];
 		}
 
-		if (!tokens.length) {
+		if (!tokens.length || !tokens[0]) {
 			Utils.impossible('Runner.run', 'No tokens to run!');
 			return undefined;
 		}
@@ -279,15 +279,11 @@ define([
 				after = false;
 			}
 		}
-		const type = (token || {}).type;
+		const type = token.type;
 		if (!type) {
-			/*
-				If no token was found, toss up an error.
-			*/
-			Utils.impossible('Runner.run', 'no tokens were passed in!');
-			return;
+			Utils.impossible('Runner.run', 'Token has no type!');
+			return undefined;
 		}
-
 		/*
 			Perform the error-checking for tokens requiring or prohibiting more
 			precedent tokens on their sides.

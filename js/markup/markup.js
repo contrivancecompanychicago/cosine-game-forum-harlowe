@@ -99,7 +99,7 @@
 						Attach the matched text, if it isn't already.
 					*/
 					if (!ret.text) {
-						ret.text = match[0];
+						ret.text = typeof match === "string" ? match : match[0];
 					}
 					/*
 						Give the returned data a type if it didn't
@@ -795,26 +795,21 @@
 				That is, each rule key *should* map directly to a Pattern key.
 				The Patterns are added now.
 			*/
-			const re = Patterns[key];
-			if (typeof re !== "string") {
-				allRules[key].pattern = re;
+			/*
+				Plain-compare patterns are used as-is without being converted to RegExp.
+			*/
+			if (Patterns.PlainCompare[key]) {
+				allRules[key].pattern =  Patterns.PlainCompare[key];
+				allRules[key].plainCompare = true;
 			}
 			else {
 				allRules[key].pattern = RegExp(
-					"^(?:" + re + ")",
+					"^(?:" + Patterns[key] + ")",
 					/*
 						All TwineMarkup patterns are case-insensitive.
 					*/
 					"i"
 				);
-			}
-			/*
-				If a peek is available, include that as well.
-				Peeks are used as lookaheads to save calling
-				the entire pattern regexp every time.
-			*/
-			if (Patterns[key + "Peek"]) {
-				allRules[key].peek = Patterns[key + "Peek"];
 			}
 		});
 		assign(Lexer.rules, allRules);
