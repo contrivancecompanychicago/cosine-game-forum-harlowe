@@ -3,6 +3,7 @@ define([
 	'macros',
 	'state',
 	'utils',
+	'twinescript/operations',
 	'datatypes/colour',
 	'datatypes/hookset',
 	'datatypes/lambda',
@@ -13,10 +14,7 @@ define([
 	'internaltypes/varref',
 	'internaltypes/twineerror'
 ],
-/*
-	To keep the eval scope very clean in compiled code, no destructuring is done here.
-*/
-(Macros, State, Utils, Colour, HookSet, Lambda, Datatype, VarBind, CodeHook, TypedVar, VarRef, TwineError) => {
+(Macros, State, Utils, Operations, Colour, HookSet, Lambda, Datatype, VarBind, CodeHook, TypedVar, VarRef, TwineError) => {
 
 	const precedenceTable = 
 		/*
@@ -246,7 +244,7 @@ define([
 		@return {Any} The result.
 	*/
 	return function run(section, tokens, isVarRef = false, isTypedVar = false) {
-		const ops = section.operations;
+		const ops = Operations;
 		let token;
 
 		/*
@@ -259,7 +257,7 @@ define([
 
 		if (!tokens.length || !tokens[0]) {
 			Utils.impossible('Runner.run', 'No tokens to run!');
-			return undefined;
+			return;
 		}
 		/*
 			Obtain the least precedent token, its index i, and its type.
@@ -282,7 +280,7 @@ define([
 		const type = token.type;
 		if (!type) {
 			Utils.impossible('Runner.run', 'Token has no type!');
-			return undefined;
+			return;
 		}
 		/*
 			Perform the error-checking for tokens requiring or prohibiting more
@@ -336,9 +334,9 @@ define([
 		}
 		else if (type === "identifier") {
 			if (isVarRef) {
-				return VarRef.create(ops.Identifiers, token.text.toLowerCase());
+				return VarRef.create(section.Identifiers, token.text.toLowerCase());
 			}
-			return ops.Identifiers[token.text.toLowerCase()];
+			return section.Identifiers[token.text.toLowerCase()];
 		}
 		else if (type === "variable" || type === "tempVariable") {
 			let ret = VarRef.create(type === "tempVariable" ? section.stackTop.tempVariables : State.variables,
@@ -397,7 +395,7 @@ define([
 		}
 		else if (type === "to") {
 			return ops.makeAssignmentRequest(
-				ops.setIt(run(section,  before, VARREF, TYPEDVAR)),
+				section.setIt(run(section,  before, VARREF, TYPEDVAR)),
 				/*
 					This needs to be a VarRef so that (set: $b to 0, $d to $b) can work.
 				*/
@@ -406,7 +404,7 @@ define([
 		}
 		else if (type === "into") {
 			return ops.makeAssignmentRequest(
-				ops.setIt(run(section,  after, VARREF, TYPEDVAR)),
+				section.setIt(run(section,  after, VARREF, TYPEDVAR)),
 				/*
 					This needs to be a VarRef so that (set: $b to 0, $d to $b) can work.
 				*/
@@ -567,7 +565,7 @@ define([
 				}
 				return ops[type](
 					run(section, before),
-					ops.elidedComparisonOperator(token.type, operator,
+					ops.elidedComparisonOperator(token.type, operator, section.Identifiers.it,
 						...getElisionOperands(after)/*all elided comparisons in after*/
 					)
 				);
@@ -613,7 +611,7 @@ define([
 						}),
 						...tokens.slice(i + 1, rightIndex),
 					]),
-					ops.elidedComparisonOperator(token.type, operator,
+					ops.elidedComparisonOperator(token.type, operator, section.Identifiers.it,
 						...getElisionOperands(before)/*all elided comparisons in before*/
 					)
 				);
@@ -635,7 +633,7 @@ define([
 				missingSideError(false, true, token);
 			}
 			return ops[compileComparisonOperator(token)](
-				!before ? ops.Identifiers.it : run(section,  before),
+				!before ? section.Identifiers.it : (section.Identifiers.it = run(section,  before)),
 				run(section,  after)
 			);
 		}
@@ -704,7 +702,7 @@ define([
 		}
 		else if (type === "belongingOperator" || type === "belongingItOperator") {
 			const ret = VarRef.create(
-				token.type.includes("It") ? ops.Identifiers.it :
+				token.type.includes("It") ? section.Identifiers.it :
 					// Since, as with belonging properties, the variable is on the right,
 					// we must compile the right side as a varref.
 					run(section,  after, VARREF),
@@ -728,7 +726,7 @@ define([
 		}
 		else if (type === "itsProperty" || type === "belongingItProperty") {
 			const ret = VarRef.create(
-				ops.Identifiers.it,
+				section.Identifiers.it,
 				token.name
 			);
 			return isVarRef ? ret : ret.get();
@@ -742,7 +740,7 @@ define([
 				num-type $a's ('foo') shouldn't compile "num-type $a" into a TypedVar.
 			*/
 			const ret = VarRef.create(
-				token.type === "itsOperator" ? ops.Identifiers.it : run(section,  before, isVarRef),
+				token.type === "itsOperator" ? section.Identifiers.it : run(section,  before, isVarRef),
 				{computed:true, value:run(section,  after)}
 			);
 			return isVarRef ? ret : ret.get();

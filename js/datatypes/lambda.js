@@ -62,6 +62,25 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 		They may seem complicated, but as long as you think of them as just a special way of writing a repeating instruction,
 		and understand how their macros work, you may find that they are very convenient.
 	*/
+
+	/*
+		The only user-produced value which is passed into this operation is the bool -
+		the passVal and failVal are internally supplied.
+	*/
+	function where(bool, passVal, failVal) {
+		let err;
+		if ((err = TwineError.containsError(bool))) {
+			return err;
+		}
+		if (typeof bool !== "boolean") {
+			return TwineError.create("operation",
+				"This lambda's 'where' clause must evaluate to true or false, not "
+				+ objectName(bool)
+				+ ".");
+		}
+		return bool ? passVal : failVal;
+	}
+
 	const Lambda = Object.freeze({
 		TwineScript_TypeID: "lambda",
 		TwineScript_TypeName:   "a lambda",
@@ -281,7 +300,6 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 				lambdaPos: !this.when ? lambdaPos : undefined,
 			}));
 
-			const ops = section.operations;
 			/*
 				If this lambda has no "making" clauses (and isn't a "when" lambda), then the "it"
 				keyword is set to the loop arg. Note that this doesn't require the presence of
@@ -289,17 +307,15 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 				clause using "it".
 			*/
 			if (loopArg && !this.making && !this.when) {
-				ops.initialiseIt(loopArg);
+				section.Identifiers.it = loopArg;
 			}
 			/*
 				Otherwise, stuff the "it" value with a special error message that should propagate up
 				if "it" is ever used inside this macro.
 			*/
 			else {
-				ops.initialiseIt(
-					TwineError.create("operation",
-						"I can't use 'it', or an implied 'it', in " + this.TwineScript_ObjectName
-					)
+				section.Identifiers.it = TwineError.create("operation",
+					"I can't use 'it', or an implied 'it', in " + this.TwineScript_ObjectName
 				);
 			}
 
@@ -318,7 +334,7 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 				call. Otherwise, true is returned.
 			*/
 			if ('where' in this || 'when' in this) {
-				ret = ops.where(section.eval(this.where || this.when), section.eval(via) || true, null);
+				ret = where(section.eval(this.where || this.when), section.eval(via) || true, null);
 			}
 			else {
 				ret = via ? section.eval(via) : true;

@@ -712,8 +712,55 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		}
 		return ret;
 	}
-	
+
+	/*
+		This is used to find which lexer tokens represent "free variables" instead of pure deterministic data.
+		A free variable is:
+		- Anything that takes user input as part of its evaluation
+		- Anything that queries the system time or section time
+		- Any variable or temp variable
+		- Anything that queries the passage (exits, hookSets)
+		- Anything with RNG
+	*/
+	function isFreeVariable(token) {
+		if (token.type === "macro") {
+			const name = insensitiveName(token.name);
+			if (name === "prompt" ||
+					name === "confirm" ||
+					name === "random" ||
+					name === "either" ||
+					name === "shuffled" ||
+					name === "current-time" ||
+					name === "current-date" ||
+					name === "monthday" ||
+					name === "weekday" ||
+					name === "history") {
+				return true;
+			}
+		}
+		else if (token.type === "identifier") {
+			const name = insensitiveName(token.text);
+			if (name === "time" || name === "exits") {
+				return true;
+			}
+		}
+		/*
+			TODO: Can't do anything with this because you need the before and after of this token, too.
+		*/
+		else if (token.type === "property" || token.type === "belongingProperty") {
+			const name = insensitiveName(token.name);
+			if (name === 'random') {
+				return true;
+			}
+		}
+		else if (token.type === "variable" || token.type === "tempVariable" || token.type === "hookSet") {
+			return true;
+		}
+		return false;
+	}
+
 	const OperationUtils = Object.freeze({
+		isFreeVariable,
 		isObject,
 		isValidDatamapName,
 		collectionType,

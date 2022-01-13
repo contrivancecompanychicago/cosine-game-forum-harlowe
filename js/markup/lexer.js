@@ -60,20 +60,6 @@
 		},
 		
 		/*
-			A shortcut to the first element in the children array.
-		*/
-		firstChild() {
-			return this.children ? this.children[0] || null : null;
-		},
-
-		/*
-			A shortcut to the last element in the children array.
-		*/
-		lastChild() {
-			return this.children ? this.children[this.children.length-1] || null : null;
-		},
-		
-		/*
 			lastChildEnd provides the end index of the last child token,
 			allowing the start index of a new token to be calculated.
 			
@@ -81,7 +67,7 @@
 			index of this token.
 		*/
 		lastChildEnd() {
-			const lastToken = this.lastChild();
+			const lastToken = this.children ? this.children[this.children.length-1] || null : null;
 			return lastToken ? lastToken.end : this.start +
 				/*
 					Some macros' children do not exactly overlap their parents in terms of
@@ -183,35 +169,6 @@
 		},
 		
 		/*
-			Check if all leaf nodes contain just whitespace.
-		*/
-		isWhitespace() {
-			return this.everyLeaf((e) => {
-				/*
-					Check if it's the 'whitespace' type... or if it's a
-					mislabeled text leaf.
-				*/
-				return e.type === "whitespace" || !e.text.trim();
-			});
-		},
-		
-		/*
-			Check if this token is a Front token or not. A semantic shorthand for a simple test.
-			Currently unused inside Lexer itself.
-		*/
-		isFrontToken() {
-			return this.isFront;
-		},
-		
-		/*
-			In the same vein, this checks if this token is a Back token or not.
-			Currently unused inside Lexer itself.
-		*/
-		isBackToken() {
-			return 'matches' in this;
-		},
-		
-		/*
 			Convert this token in-place into a text token, in the simplest manner possible.
 			
 			TODO: Really, this should combine this with all adjacent text tokens.
@@ -274,7 +231,7 @@
 						}
 					}
 				}
-				if (!folded && token.isFrontToken()) {
+				if (!folded && token.isFront) {
 					frontTokenStack.unshift(token);
 				}
 			}
@@ -296,7 +253,7 @@
 				that pair up with a "back" token to make a token representing
 				an arbitrarily nestable rule.
 			*/
-			frontTokenStack = [],
+			frontTokenStack = null,
 			/*
 				index ticks upward as we advance through the src.
 				firstUnmatchedIndex is bumped up whenever a match is made,
@@ -327,7 +284,7 @@
 				either parentToken.innerMode, or the innerMode of the recentmost
 				unmatched frontToken.
 			*/
-			let mode = (frontTokenStack.length ? frontTokenStack[0] : parentToken).innerMode;
+			let mode = (frontTokenStack && frontTokenStack.length ? frontTokenStack[0] : parentToken).innerMode;
 			/*
 				Run through all the rules in the current mode in turn.
 				Note that modeStack[0] means "the current mode in the modeStack".
@@ -380,7 +337,7 @@
 						ft to either the index of the rightmost frontToken matching
 						tokenData's matches, or -1.
 					*/
-					for(; ft < frontTokenStack.length; ft += 1) {
+					for(; frontTokenStack && ft < frontTokenStack.length; ft += 1) {
 						let {type, aka} = frontTokenStack[ft];
 						if (type in tokenData.matches) {
 							isMatchingBack = true;
@@ -410,7 +367,7 @@
 					/*
 						If it doesn't match, then abandon this rule and try the next one.
 					*/
-					if (ft >= frontTokenStack.length && !tokenData.isFront) {
+					if ((!frontTokenStack || ft >= frontTokenStack.length) && !tokenData.isFront) {
 						continue;
 					}
 				}
@@ -464,8 +421,13 @@
 					later that can match it. This MUST come after the isMatchingBack check
 					so that the tokens which are both Front and Back will work properly.
 				*/
-				if (!folded && lastToken.isFrontToken()) {
-					frontTokenStack.unshift(lastToken);
+				if (!folded && lastToken.isFront) {
+					if (!frontTokenStack) {
+						frontTokenStack = [lastToken];
+					}
+					else {
+						frontTokenStack.unshift(lastToken);
+					}
 				}
 				/*
 					Break from the for-loop.
@@ -491,13 +453,13 @@
 			parentToken.addChild({
 				type: "text",
 				text: src.slice(firstUnmatchedIndex, index),
-				innerMode: (frontTokenStack.length ? frontTokenStack[0] : parentToken).innerMode,
+				innerMode: (frontTokenStack && frontTokenStack.length ? frontTokenStack[0] : parentToken).innerMode,
 			});
 		}
 		/*
 			We're done, except that we may still have unmatched frontTokens.
 		*/
-		while(frontTokenStack.length > 0) {
+		while(frontTokenStack && frontTokenStack.length > 0) {
 			frontTokenStack.shift().demote();
 		}
 		return parentToken;

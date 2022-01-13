@@ -374,7 +374,7 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 							if (token.type !== "string" && token.type !== "hook") {
 								token.children.every(recur);
 							}
-							const firstChild = token.firstChild();
+							const firstChild = token.children ? token.children[0] || null : null;
 							/*
 								Control flow blockers are macros whose name matches one of the aforelisted
 								blocker macros.
