@@ -234,7 +234,7 @@ define(['utils/operationutils','datatypes/typedvar','datatypes/datatype','intern
 					// Unwrap the varRef from the TypedVar.
 					dest = dest.varRef;
 				}
-				error = dest.set(value);
+				error = dest.set(value, this.pure);
 				/*
 					If the setting caused an error to occur, abruptly return the error.
 				*/
@@ -257,7 +257,14 @@ define(['utils/operationutils','datatypes/typedvar','datatypes/datatype','intern
 			return debugMessage.join('; ');
 		},
 		
-		create(dest, src, operator) {
+		create(dest, src, operator, freeVariables) {
+			let error;
+			if ((error = TwineError.containsError(dest))) {
+				return error;
+			}
+			if ((error = TwineError.containsError(src))) {
+				return error;
+			}
 			/*
 				AssignmentRequests currently cannot accept rest TypedVars. However, due to the compiler giving spread
 				higher precedence than "to" or "into", it's currently not possible for AssignmentRequests to be generated
@@ -267,6 +274,11 @@ define(['utils/operationutils','datatypes/typedvar','datatypes/datatype','intern
 				dest:              dest,
 				src:               src,
 				operator:          operator,
+				/*
+					The "pure" boolean indicates that this value used no free variables,
+					and thus can be reconstructed from the original (set:) or (put:) call in the passage.
+				*/
+				pure:             !freeVariables.length,
 			});
 		},
 	});

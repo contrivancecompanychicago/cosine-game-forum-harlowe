@@ -11,10 +11,64 @@ define([
 	'datatypes/varbind',
 	'datatypes/codehook',
 	'datatypes/typedvar',
+	'datatypes/assignmentrequest',
 	'internaltypes/varref',
 	'internaltypes/twineerror'
 ],
-(Macros, State, Utils, Operations, Colour, HookSet, Lambda, Datatype, VarBind, CodeHook, TypedVar, VarRef, TwineError) => {
+(Macros, State, Utils, Operations, Colour, HookSet, Lambda, Datatype, VarBind, CodeHook, TypedVar, AssignmentRequest, VarRef, TwineError) => {
+
+	/*
+		This is used to find which lexer tokens represent "free variables" instead of pure deterministic data.
+		A free variable is:
+		- Anything that takes user input as part of its evaluation
+		- Anything that queries the system time or section time
+		- Any variable or temp variable
+		- Anything that queries the passage (exits, hookSets)
+		- Anything with RNG
+	*/
+	function isFreeVariable(token) {
+		if (token.type === "macro") {
+			const name = Utils.insensitiveName(token.name);
+			if (name === "prompt" ||
+					name === "confirm" ||
+					name === "random" ||
+					name === "either" ||
+					name === "shuffled" ||
+					name === "current-time" ||
+					name === "current-date" ||
+					name === "monthday" ||
+					name === "weekday" ||
+					name === "history") {
+				return true;
+			}
+		}
+		else if (token.type === "identifier") {
+			const name = Utils.insensitiveName(token.text);
+			if (name === "time" || name === "exits") {
+				return true;
+			}
+		}
+		/*
+			TODO: Can't do anything with this because you need the before and after of this token, too.
+		*/
+		else if (token.type === "property" || token.type === "belongingProperty") {
+			const name = Utils.insensitiveName(token.name);
+			if (name === 'random') {
+				return true;
+			}
+		}
+		else if (token.type === "variable") {
+			/*
+				TODO: Variables are declared pure if they were pure in a previous State moment,
+				and their purity means that their uses are deterministic.
+			*/
+			return true;
+		}
+		else if (token.type === "tempVariable" || token.type === "hookSet") {
+			return true;
+		}
+		return false;
+	}
 
 	const precedenceTable = 
 		/*
@@ -246,7 +300,6 @@ define([
 	return function run(section, tokens, isVarRef = false, isTypedVar = false) {
 		const ops = Operations;
 		let token;
-
 		/*
 			The passed-in tokens are an array when a lambda is run and a single token (the macro itself)
 			when a macro is run.
@@ -281,6 +334,13 @@ define([
 		if (!type) {
 			Utils.impossible('Runner.run', 'Token has no type!');
 			return;
+		}
+		/*
+			If section has a "freeVariables" array (which is only present when it's being mutated during
+			a run() call by "to" and "into") then this token should be collected by it if it's a free variable.
+		*/
+		if (section.freeVariables && isFreeVariable(token)) {
+			section.freeVariables.push(token);
 		}
 		/*
 			Perform the error-checking for tokens requiring or prohibiting more
@@ -372,10 +432,7 @@ define([
 				(a === "\\" ? "\\\\" : a === "\n" ? "\\n" : a) + "\\n"));
 		}
 		else if (type === "hook") {
-			/*
-				Slice off the opening [ and closing ] of the source.
-			*/
-			return CodeHook.create(token.text.slice(1,-1), token.html || '');
+			return CodeHook.create(token.children, token.text);
 		}
 		else if (type === "colour") {
 			return Colour.create(token.colour);
@@ -394,22 +451,29 @@ define([
 			return VarBind.create(run(section,  after, VARREF), token.text.startsWith('2') ? 'two way' : '');
 		}
 		else if (type === "to") {
-			return ops.makeAssignmentRequest(
-				section.setIt(run(section,  before, VARREF, TYPEDVAR)),
-				/*
-					This needs to be a VarRef so that (set: $b to 0, $d to $b) can work.
-				*/
-				run(section,  after, VARREF),
-				'to');
+			const dest = section.setIt(run(section,  before, VARREF, TYPEDVAR));
+			/*
+				For the purposes of State optimisation, each assignmentRequest collects the
+				"free variables" used in the source. This is currently (Jan 2022) done by
+				permuting section to have a "freeVariables" array, running the source,
+				then removing it, rather than adding an additional argument to run().
+			*/
+			section.freeVariables = [];
+			/*
+				This needs to be a VarRef so that (set: $b to 0, $d to $b) can work.
+			*/
+			const src = run(section,  after, VARREF);
+			const ret = AssignmentRequest.create(dest, src, 'to', section.freeVariables);
+			section.freeVariables = null;
+			return ret;
 		}
 		else if (type === "into") {
-			return ops.makeAssignmentRequest(
-				section.setIt(run(section,  after, VARREF, TYPEDVAR)),
-				/*
-					This needs to be a VarRef so that (set: $b to 0, $d to $b) can work.
-				*/
-				run(section,  before, VARREF),
-				'into');
+			const dest = run(section,  after, VARREF, TYPEDVAR);
+			section.freeVariables = [];
+			const src = section.setIt(run(section,  before, VARREF));
+			const ret = AssignmentRequest.create(dest, src, 'into', section.freeVariables);
+			section.freeVariables = null;
+			return ret;
 		}
 		else if (type === "typeSignature") {
 			/*

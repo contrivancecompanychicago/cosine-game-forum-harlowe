@@ -388,7 +388,7 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 							}
 							else if (token.type === "hook") {
 								/*
-									Before compiling the interior into HTML, check for an error token (from a markup error) first.
+									Before compiling the interior, check for an error token (from a markup error) first.
 									If so, don't bother.
 								*/
 								if (!token.everyLeaf(token => {

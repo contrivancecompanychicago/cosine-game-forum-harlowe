@@ -58,13 +58,24 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			const ret = create(Moment);
 			ret.passage = p || "";
 			// Variables are stored as deltas of the previous state's variables.
-			ret.variables = assign(create(null), v);
-			Object.defineProperty(ret.variables, "TwineScript_VariableDelta",
+			ret.variables = create(null);
+			if (v) {
+				assign(ret.variables, v);
+			}
+
+			defineProperty(ret.variables, "TwineScript_VariableDelta",
 				/*
 					Note that this makes the property non-enumerable, and thus invisible
 					to Object.keys() etc.
 				*/
 				{ value: true });
+
+			/*
+				Purity (whether or not the variable can be reconstructed from just
+				top-level (set:) macros) is tracked as well. This doesn't matter to
+				the System Variables, so it isn't included.
+			*/
+			defineProperty(ret.variables, "TwineScript_VariablePurity", { value: create(null) });
 			return ret;
 		}
 	};
@@ -140,6 +151,8 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 	/*
 		The global variable scope. This is progressively mutated as the game progresses,
 		and deltas of these changes (on a per-turn basis) are stored in Moments.
+
+		TODO: Move all methods (EXCEPT TwineScript_Set() and TwineScript_Delete(), which are called by VarRef) off this and onto State itself.
 	*/
 	const SystemVariablesProto = assign(create(null), {
 		/*
@@ -173,10 +186,16 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		*/
 		TwineScript_Delete(prop) {
 			delete this[prop];
-			present.variables[prop] = undefined;
+			/*
+				Setting this Moment's variable to 'null' marks it as deleted, for serialisation.
+				Note that the SystemVariables store has this as 'undefined' (via the previous
+				statement) so this (probably) isn't visible outside of State.
+			*/
+			present.variables[prop] = null;
+			present.variables.TwineScript_VariablePurity[prop] = false;
 		},
 
-		TwineScript_Set(prop, value) {
+		TwineScript_Set(prop, value, pure) {
 			this[prop] = value;
 			/*
 				It's not necessary to clone (pass-by-value) the value when placing it on the delta,
@@ -184,6 +203,10 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				the value anymore - only by replacing it with another TwineScript_Set().
 			*/
 			present.variables[prop] = value;
+			/*
+				Variable purity is also recorded on each set.
+			*/
+			present.variables.TwineScript_VariablePurity[prop] = pure;
 		},
 
 		TwineScript_GetProperty(prop) {
@@ -201,6 +224,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			present.variables.TwineScript_TypeDefs[prop] = type;
 		},
 	});
+	let SystemVariables;
 
 	/*
 		Whenever a turn is undone or the game state is reloaded entirely, the global variable
@@ -224,13 +248,21 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 					assign(ret.TwineScript_TypeDefs, variables[prop]);
 				}
 				else if (!(prop in ret) && !prop.startsWith("TwineScript_")) {
-					ret[prop] = clone(variables[prop]);
+					/*
+						The JSON value "null" represents variables deleted by (move:).
+					*/
+					if (variables[prop] === null) {
+						delete ret[prop];
+					}
+					else {
+						ret[prop] = variables[prop];
+					}
 				}
 			}
 		});
-		return ret;
+		SystemVariables = ret;
 	}
-	let SystemVariables = reconstructSystemVariables();
+	reconstructSystemVariables();
 
 	let State;
 	/*
@@ -431,7 +463,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				/*
 					Recompute the present variables based on the timeline.
 				*/
-				SystemVariables = reconstructSystemVariables();
+				reconstructSystemVariables();
 				// Call the 'back' event handler.
 				eventHandlers.back.forEach(fn => fn());
 			}
@@ -461,7 +493,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				/*
 					Recompute the present variables based on the timeline.
 				*/
-				SystemVariables = reconstructSystemVariables();
+				reconstructSystemVariables();
 				/*
 					Call the 'fast forward' event handler. This is used exclusively by debug mode,
 					which is why it has the "fastForward" direction string passed in.
@@ -496,7 +528,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			recent = -1;
 			present = Moment.create();
 			invalidateCaches();
-			SystemVariables = reconstructSystemVariables();
+			reconstructSystemVariables();
 			serialiseProblem = undefined;
 			eventHandlers.load.forEach(fn => fn(timeline));
 		},
@@ -609,6 +641,21 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 					if (name === "TwineScript_MockVisits") {
 						return variable;
 					}
+					// If this is the purity object, don't serialise it
+					if (name === "TwineScript_VariablePurity") {
+						return undefined;
+					}
+					// TODO: pure variables are serialised as "reconstruct"
+					// rather than their entire values, UNLESS it's a number or boolean.
+					if (this.TwineScript_VariablePurity[name]) {
+						;
+					}
+					/*
+						"null", representing deleted variables, is passed as-is to become a JSON null.
+					*/
+					if (variable === null) {
+						return variable;
+					}
 					return toSource(variable);
 				}
 				/*
@@ -661,9 +708,11 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			scope of the eval().
 		*/
 		function recompileValues(section, obj) {
-			Object.keys(obj).forEach(key =>
-				!key.startsWith("TwineScript_") && (obj[key] = section.eval(lex(obj[key], 0, 'macro')))
-			);
+			Object.keys(obj).forEach(key => {
+				if (!key.startsWith("TwineScript_")) {
+					obj[key] = section.eval(lex(obj[key], 0, 'macro'));
+				}
+			});
 		}
 		
 		/*
@@ -748,7 +797,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			recent = timeline.length - 1;
 			eventHandlers.load.forEach(fn => fn(timeline));
 			invalidateCaches();
-			SystemVariables = reconstructSystemVariables();
+			reconstructSystemVariables();
 			newPresent(timeline[recent].passage);
 			return true;
 		}

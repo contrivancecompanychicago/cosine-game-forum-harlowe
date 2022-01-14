@@ -423,7 +423,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				*/
 				const type = obj.TwineScript_TypeDefs[prop];
 				/*
-					Simply due to weariness, I've decided to simply hard-code the special case for the "const" datatype.
+					Simply due to weariness, I've decided to hard-code the special case for the "const" datatype.
 				*/
 				if (type.name === "const") {
 					/*
@@ -497,7 +497,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		if (obj.TwineScript_Identifiers && prop in obj) {
 			return TwineError.create('keyword',
 				"I can't alter the value of the '"
-				+ prop + "' identifier.", "You can only alter data in variables and hooks, not fixed identifiers.");
+				+ prop + "' identifier.", "You can only alter data in variables, not fixed identifiers.");
 		}
 
 		return TwineError.create('operation', "I can't modify " + objectName(obj),
@@ -509,7 +509,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 	/*
 		This should only be run after canSet(), above, has verified it is safe.
 	*/
-	function objectOrMapSet(obj, prop, value) {
+	function objectOrMapSet(obj, prop, value, pure) {
 		const origProp = prop;
 		if (obj instanceof Map) {
 			obj.set(prop, value);
@@ -517,8 +517,11 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			if (isSequential(obj)) {
 				prop = convertNegativeProp(obj, prop);
 			}
+			/*
+				This is currently only used by the System Variables in State.
+			*/
 			if (obj.TwineScript_Set) {
-				obj.TwineScript_Set(prop, value);
+				obj.TwineScript_Set(prop, value, pure);
 			} else {
 				obj[prop] = value;
 			}
@@ -741,7 +744,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			A wrapper around Javascript's [[set]], which does a lot of
 			preparation before the assignment is performed.
 		*/
-		set(value) {
+		set(value, pure) {
 			/*
 				If this is an error-wrapped VarRef, return the wrapped error now.
 			*/
@@ -887,10 +890,10 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 							would set "wow" to the position "1"
 						*/
 						property.map((prop,i) => [prop, value[i]])
-							.forEach(([e, value]) => objectOrMapSet(object, e, value));
+							.forEach(([e, value]) => objectOrMapSet(object, e, value,pure));
 					}
 					else {
-						objectOrMapSet(object, property, value);
+						objectOrMapSet(object, property, value, pure);
 					}
 				}
 				return object;
@@ -976,7 +979,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 					updating this object-property pair.
 				*/
 				else {
-					objectOrMapSet(object, property, value);
+					objectOrMapSet(object, property, value, false);
 				}
 				return object;
 			}, null);

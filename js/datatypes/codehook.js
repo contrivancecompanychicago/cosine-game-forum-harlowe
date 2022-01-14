@@ -1,5 +1,5 @@
 "use strict";
-define(['internaltypes/twineerror', 'renderer'], (TwineError, {exec}) => {
+define([], () => {
 	/*d:
 		CodeHook data
 
@@ -27,7 +27,7 @@ define(['internaltypes/twineerror', 'renderer'], (TwineError, {exec}) => {
 		TwineScript_ObjectName: "a code hook",
 		
 		TwineScript_ToSource() {
-			return "[" + this.source + "]";
+			return this.source;
 		},
 
 		/*
@@ -47,25 +47,21 @@ define(['internaltypes/twineerror', 'renderer'], (TwineError, {exec}) => {
 		},
 
 		TwineScript_Clone() {
-			return CodeHook.create(this.source, this.html);
+			/*
+				Cloning is permitted to pass the code tree by reference, since there shouldn't be anything
+				that can permute it.
+			*/
+			return CodeHook.create(this.code, this.source);
 		},
 
 		/*
-			To save on processing when running custom macros, CodeHooks store their pre-compiled HTML.
 			Passages could do this, too, but there isn't currently much call for it, since they're usually
 			visited only a few times.
 			Note that revived values from (loadgame:) don't have HTML, so they need to be
 			compiled anyway...
 		*/
-		create(source, html) {
-			if (!html) {
-				html = exec(source);
-			}
-			const error = TwineError.containsError(html);
-			if (error) {
-				return error;
-			}
-			return Object.assign(Object.create(this), { source, html });
+		create(code, source) {
+			return Object.assign(Object.create(this), { code, source });
 		},
 	});
 	return CodeHook;

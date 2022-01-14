@@ -143,7 +143,7 @@ define(['jquery','renderer','utils/operationutils','internaltypes/changedescript
 			and attaching a special "output" property used to retrieve the output.
 			The stack frame itself needs to be in a variable because .execute() will pop it off the stackTop.
 		*/
-		let output, dom = $('<p>').append(Renderer.exec(body.source));
+		let output, dom = $('<p>').append(Renderer.exec(body.code));
 		let stackSize = section.stack.length;
 		section.stack.unshift({
 			tempVariables,

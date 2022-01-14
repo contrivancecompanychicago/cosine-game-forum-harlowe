@@ -387,27 +387,6 @@ define([
 				TwineScript_Unstorable: true,
 			};
 		},
-
-		/*
-			And here is the function for creating AssignmentRequests.
-			Because a lot of error checking must be performed, and
-			appropriate error messages must be generated, all of this
-			is part of TwineScript instead of the AssignmentRequest module.
-		*/
-		makeAssignmentRequest(dest, src, operator) {
-			const
-				/*
-					Refuse if the object or value is an error.
-				*/
-				error = TwineError.containsError(dest, src);
-			
-			if (error) {
-				return error;
-			}
-			
-			// The input is all clear, it seems.
-			return AssignmentRequest.create(dest, src, operator);
-		},
 	};
 	return Object.freeze(Operations);
 });

@@ -260,9 +260,7 @@
 				if (!cm) {
 					/*
 						CodeMirror doesn't allow modes to have full access to the text of
-						the document. This hack overcomes this respectable limitation:
-						TwineJS's PassageEditor stashes a reference to the CodeMirror instance in
-						the Harlowe modes object - and here, we retrieve it.
+						the document. This hack overcomes this respectable limitation.
 					*/
 					cm = document.querySelector('.CodeMirror').CodeMirror;
 
@@ -430,8 +428,8 @@
 			},
 		};
 	};
-	if (this.window && this.window.CodeMirror) {
-		this.window.CodeMirror.defineMode('harlowe-3', mode);
+	if (window.CodeMirror) {
+		CodeMirror.defineMode('harlowe-3', mode);
 	} else {
 		this.editorExtensions = {
 			twine: {

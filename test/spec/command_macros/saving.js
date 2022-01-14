@@ -207,6 +207,27 @@ describe("save macros", function() {
 				done();
 			},20);
 		});
+		/*
+			These aren't (move:)'s semantics in Harlowe 3.
+		*/
+		xit("can restore variable deletions caused by (move:)", function(done) {
+			runPassage("(set:$e to 12)",'baz');
+			runPassage("(move:$e into $f)(SAVEGAME:'1')",'qux');
+			expect("(loadgame:'1')",'foo').not.markupToError();
+			setTimeout(function() {
+				expect("$e").markupToPrint('0');
+				expect("$f").markupToPrint('12');
+				runPassage("(set:$c to 12)",'bar');
+				runPassage("(move:$c into $d)",'baz');
+				runPassage("(SAVEGAME:'2')",'qux');
+				expect("(loadgame:'2')",'foo').not.markupToError();
+				setTimeout(function() {
+					expect("$c").markupToPrint('0');
+					expect("$d").markupToPrint('12');
+					done();
+				},20);
+			},20);
+		});
 		it("produces a user-friendly prompt for deletion if the save data is invalid", function(done) {
 			runPassage("uno", "uno");
 			runPassage("dos", "dos");

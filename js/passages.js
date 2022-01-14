@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internaltypes/twineerror'], ($, NaturalSort, {unescape,onStartup}, TwineMarkup, Renderer, TwineError) => {
+define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internaltypes/twineerror'], ($, NaturalSort, {unescape,onStartup}, Markup, Renderer, TwineError) => {
 	const {assign} = Object;
 	/*
 		Passages
@@ -53,6 +53,10 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 		Since new passages can't ever be created (as of Dec 2021), it's safe to cache tag lookups.
 	*/
 	let tagCache = Object.create(null);
+	/*
+		Cache of lexed passage trees, so that passages visited frequently aren't lexed repeatedly.
+	*/
+	let passageTreeCache = [];
 	
 	const Passages = assign(new Map(), {
 		TwineScript_ObjectName: "the Passages datamap",
@@ -89,6 +93,40 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 		*/
 		clearTagCache() {
 			tagCache = Object.create(null);
+		},
+
+		/*
+			Retrieve a cached lexed code tree for this passage's source,
+			or lex it here and now.
+		*/
+		getTree(name) {
+			/*
+				First, retrieve it from the cache if it exists for this name.
+			*/
+			for (let i = 0; i < passageTreeCache.length; i += 1) {
+				if (passageTreeCache[i] && passageTreeCache[i].name === name) {
+					/*
+						In addition to finding the tree, move it to the front to make
+						it quicker to find later. Since the cache's limit is only 16
+						entries, it shouldn't be too costly to do this that often.
+					*/
+					const entry = passageTreeCache.splice(i, 1)[0];
+					passageTreeCache.unshift(entry);
+					return entry.tree;
+				}
+			}
+			/*
+				Entries in the cache are ordered by most recent retrieval, then by name.
+				Again, the small size of the cache means that this shouldn't be too costly.
+			*/
+			const entry = { tree: Markup.lex(this.get(name).source), name };
+			passageTreeCache.unshift(entry);
+			/*
+				This maximum cache size is hard-coded.
+			*/
+			if (passageTreeCache.length > 16) {
+				passageTreeCache.pop();
+			}
 		},
 
 		/*

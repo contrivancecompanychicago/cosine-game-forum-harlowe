@@ -616,6 +616,11 @@ define([
 				*/
 				unblockCallbacks: [],
 				/*
+					This is only used for a purely encapsulated mutation inside Runner to pass data up and down the
+					run() calls. Nevertheless, it exists.
+				*/
+				freeVariables: null,
+				/*
 					The identifiers reference aspects of the currently rendered passage, such as the number of exits
 					or the time since rendering.
 				*/
@@ -779,16 +784,18 @@ define([
 							return TwineError.create("operation", "'exit' and 'exits' can't be used in " + ret.stackTop.evaluateOnly + ".");
 						}
 						return ret.dom.find('tw-enchantment, tw-link')
-							.filter((_,e) =>
-								$(e).data('enchantmentEvent') ||
-								$(e).parent().data('linkPassageName')  ||
-								/*
-									Currently, (link:) <tw-link>s' parent <tw-hook>s have the clickEvent on them,
-									which makes sense in the context of changeDescriptors (the link is created by
-									replacing the <tw-hook>'s contents with the <tw-link> and giving the hook the
-									clickEvent) but does feel a little #awkward.
-								*/
-								$(e).parent().data('clickEvent'))
+							.filter((_,e) => {
+								e = $(e);
+								return e.data('enchantmentEvent') ||
+									e.parent().data('linkPassageName')  ||
+									/*
+										Currently, (link:) <tw-link>s' parent <tw-hook>s have the clickEvent on them,
+										which makes sense in the context of changeDescriptors (the link is created by
+										replacing the <tw-hook>'s contents with the <tw-link> and giving the hook the
+										clickEvent) but does feel a little #awkward.
+									*/
+									e.parent().data('clickEvent');
+							})
 							.length;
 					},
 
@@ -839,6 +846,7 @@ define([
 			try {
 				return run(this, args);
 			} catch(e) {
+				console.error(e);
 				return TwineError.create('', `An internal error occurred while trying to run ${[].concat(args).map(e=>e.text).join('')}.`,
 					`The error was "${e.message}".\nIf this is the latest version of Harlowe, please consider reporting a bug (see the documentation).`);
 			}
