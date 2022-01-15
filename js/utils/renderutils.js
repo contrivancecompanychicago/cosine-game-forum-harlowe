@@ -7,11 +7,11 @@ define(['jquery', 'utils', 'renderer'], function($, Utils, Renderer) {
 	*/
 	function dialog({section, parent = Utils.storyElement, cd, message = '', defaultValue, buttons = [{name:"OK", confirm:true, callback: Object}] } = {}) {
 		/*
-			If the message is a CodeHook, convert it to a string.
-			Yes, this means the stored HTML compilation is discarded...
+			If the message is a CodeHook, use its lexed code tree.
+			This can be passed to renderInto and Renderer.exec freely.
 		*/
 		if (message.TwineScript_TypeName === "a code hook") {
-			message = message.source;
+			message = message.code;
 		}
 
 		const ret = $("<tw-backdrop><tw-dialog>"

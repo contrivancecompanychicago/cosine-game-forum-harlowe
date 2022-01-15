@@ -38,7 +38,10 @@ else {
 <script src="../node_modules/jasmine-core/lib/jasmine-core/jasmine-html.js"></script>
 <script src="../node_modules/jasmine-core/lib/jasmine-core/boot.js"></script>
 <script role="script" type="text/twine-javascript">
-window.createPassage = function(text, name, tags) {
+window.createPassage = function(text, name, tags, keepCache) {
+	if (!keepCache) {
+		Passages.clearTreeCache();
+	}
 	Passages.set(name, Passages.create($('<div name="' + name + '" tags="' + (Array.isArray(tags) ? tags : tags ? [tags] : []).join(' ') + '">').text(text)));
 	return Passages.loadMetadata(Section.create($('<p>')));
 };
@@ -46,14 +49,15 @@ window.goToPassage = function(text, name) {
 	Engine.goToPassage(text, name);
 	return $('tw-passage > tw-transition-container, tw-passage > tw-hook');
 };
-window.runPassage = function(text, name, tags) {
+window.runPassage = function(text, name, tags, keepCache) {
 	name = name || "test";
-	createPassage(text, name, tags);
+	createPassage(text, name, tags, keepCache);
 	Engine.goToPassage(name);
 	
 	return $('tw-passage:last-of-type > tw-transition-container, tw-passage > tw-hook');
 };
 window.deletePassage = function(name) {
+	Passages.clearTreeCache();
 	Passages.delete(name);
 };
 var combinations = new Set(function recur(prefix, arr) {
@@ -127,6 +131,7 @@ window.clearState = function() {
 	State.reset();
 	Passages.clear();
 	Passages.clearTagCache();
+	Passages.clearTreeCache();
 };
 window.deserialiseState = function(str) {
 	State.reset();
@@ -134,6 +139,7 @@ window.deserialiseState = function(str) {
 	Engine.showPassage(State.passage, false /* stretchtext value */);
 }
 window.Engine = Engine;
+window.Passages = Passages;
 </script>
 <script>
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
@@ -398,7 +404,8 @@ beforeEach(function f(done) {
 <script src="spec/command_macros/debugging.js"></script>
 <script src="spec/command_macros/saving.js"></script>
 
-<script src="spec/browser/sessions.js"></script>
+<script src="spec/misc/sessions.js"></script>
+<script src="spec/misc/caching.js"></script>
 
 <tw-story></tw-story>
 <tw-storydata options="debug" ifid="107370AE-1D5A-4A33-A52C-D1180BA69750" startnode="1">

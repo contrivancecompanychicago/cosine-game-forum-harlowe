@@ -14,8 +14,8 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 	/*
 		A simple function to wrap text in a given HTML tag, with no attributes.
 	*/
-	function wrapHTMLTag(text, tagName) {
-		return '<' + tagName + '>' + text + '</' + tagName + '>';
+	function wrapHTMLTag(text, tagName, attrs = '') {
+		return '<' + tagName + (attrs ? ' ' + attrs : '') + '>' + text + '</' + tagName + '>';
 	}
 	/*
 		Text constant used by align.
@@ -48,9 +48,9 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 			This makes a basic enclosing HTML tag with no attributes, given the tag name,
 			and renders the contained text.
 		*/
-		function renderTag(token, tagName) {
+		function renderTag(token, tagName, attrs) {
 			const contents = render(token.children, trees);
-			return contents && wrapHTMLTag(contents, tagName);
+			return contents && wrapHTMLTag(contents, tagName, attrs);
 		}
 
 		// The output string.
@@ -62,10 +62,24 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 		if (!tokens) {
 			return out;
 		}
+		/*
+			tokens is usually an array (when this is called by Engine) but sometimes (when this is running a <tw-expression>) it is just
+			a root token that should be wrapped.
+		*/
+		if (!Array.isArray(tokens)) {
+			tokens = [tokens];
+		}
 		const len = tokens.length;
 		for(let i = 0; i < len; i += 1) {
 			let token = tokens[i];
 			switch(token.type) {
+				/*
+					This is a special token type synthesised by Engine, used for holding header, startup, and other passages.
+				*/
+				case "include": {
+					out += renderTag(token, 'tw-' + token.type, `type="${token.tag}" name="${token.name}"`);
+					break;
+				}
 				case "error": {
 					out += TwineError.create("syntax", token.message, token.explanation)
 						.render(escape(token.text))[0].outerHTML;

@@ -497,7 +497,6 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 				the third arg is true) and it wouldn't do to execute them and then
 				early-exit from this method.
 			*/
-			
 			dom = $(source &&
 				(this.verbatim ? verbatim(source) : exec(source)));
 

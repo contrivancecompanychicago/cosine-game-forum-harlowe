@@ -5,7 +5,7 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 		Utils.storyElement is a getter, so we need a reference to Utils as well
 		as all of these methods.
 	*/
-	const {escape, impossible, passageSelector, transitionOut} = Utils;
+	const {impossible, passageSelector, transitionOut} = Utils;
 	
 	/*
 		Engine is a singleton class, responsible for rendering passages to the DOM.
@@ -50,15 +50,24 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 	}
 	
 	/*
-		A small helper that generates a HTML tag containing injected
-		setup passage source. Used in showPassage.
+		A small helper that grabs the tree Used in showPassage=, then returns a new 'include' token wrapping it. Used by showPassage.
 	*/
 	function setupPassageElement(tagType, setupPassage) {
-		return "<tw-include type=" + tagType + " name='"
-			+ escape(setupPassage.get('name'))
-			+ "'>"
-			+ setupPassage.get('source')
-			+ "</tw-include>\\\n";
+		const name = setupPassage.get('name');
+		const tree = Passages.getTree(name);
+		if (tree && tree.children.length) {
+			return {
+				type: 'include',
+				tag: tagType,
+				name,
+				children: tree.children,
+				text: tree.text,
+			};
+		}
+		/*
+			If the setup passage was completely empty, just return this void token that does nothing.
+		*/
+		return { type: 'comment', text: '', children: [], };
 	}
 	
 	/*
@@ -184,7 +193,7 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 		/*
 			Actually do the work of rendering the passage now.
 		*/
-		let source = '';
+		const source = [];
 		/*
 			We add, to the passage source, the source of the 'header' and 'footer' tagged passages.
 			We explicitly include these passages inside <tw-header> elements
@@ -280,28 +289,28 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 			// Note that this places debug-startup passages after startup passages.
 			if (options.debug) {
 				for(let p of Passages.getTagged('debug-startup')) {
-					source += setupPassageElement('debug-startup', p);
+					source.push(setupPassageElement('debug-startup', p));
 				}
 			}
 			for(let p of Passages.getTagged('startup')) {
-				source += setupPassageElement('startup', p);
+				source.push(setupPassageElement('startup', p));
 			}
 		}
 		for(let p of Passages.getTagged('header')) {
-			source += setupPassageElement('header', p);
+			source.push(setupPassageElement('header', p));
 		}
 		if (options.debug) {
 			for(let p of Passages.getTagged('debug-header')) {
-				source += setupPassageElement('debug-header', p);
+				source.push(setupPassageElement('debug-header', p));
 			}
 		}
-		source += passageData.get('source');
+		source.push(Passages.getTree(name));
 		for(let p of Passages.getTagged('footer')) {
-			source += setupPassageElement('footer', p);
+			source.push(setupPassageElement('debug-footer', p));
 		}
 		if (options.debug) {
 			for(let p of Passages.getTagged('debug-footer')) {
-				source += setupPassageElement('debug-footer', p);
+				source.push(setupPassageElement('debug-footer', p));
 			}
 		}
 		

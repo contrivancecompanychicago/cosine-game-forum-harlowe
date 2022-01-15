@@ -414,7 +414,10 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 					);
 				}
 			},
-			(cd, _, name) => assign(cd, { source: Utils.unescape(Passages.get(name).get('source')) }),
+			(cd, _, name) => {
+				cd.source = Passages.getTree(name);
+				return cd;
+			},
 			[String])
 		
 		/*d:

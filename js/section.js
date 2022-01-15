@@ -977,7 +977,7 @@ define([
 		},
 		
 		/*
-			Renders the given TwineMarkup code into a given element,
+			Renders the given markup, or a lexed tree, into a given element,
 			transitioning it in. A ChangerCommand can be provided to
 			modify the ChangeDescriptor object that controls how the code
 			is rendered.
@@ -1159,8 +1159,8 @@ define([
 
 		/*
 			This runs a single flow of execution throughout a freshly rendered DOM,
-			replacing <tw-expression> and <tw-hook> elements that have latent [source]
-			or [js] attributes with their renderings. It should be run whenever renderInto()
+			replacing <tw-expression> and <tw-hook> elements that have "source"
+			or "code" data with their renderings. It should be run whenever renderInto()
 			creates new DOM elements, and whenever a blocker finishes and calls unblock().
 		*/
 		execute() {

@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internaltypes/twineerror'], ($, NaturalSort, {unescape,onStartup}, Markup, Renderer, TwineError) => {
+define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internaltypes/twineerror'], ($, NaturalSort, {unescape,onStartup,impossible}, Markup, Renderer, TwineError) => {
 	const {assign} = Object;
 	/*
 		Passages
@@ -46,6 +46,11 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 				which is crunched during loadMetadata() and removed.
 			*/
 			metadata,
+			/*
+				This is used to cache the lexed syntax tree. However, to save memory, only header and footer passages
+				have their tree permanently stored. The others use the limited cache below.
+			*/
+			tree: null
 		});
 	}
 
@@ -100,6 +105,21 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 			or lex it here and now.
 		*/
 		getTree(name) {
+			if (!this.has(name)) {
+				impossible('Passages.getTree', 'No passage name?');
+				return [];
+			}
+			/*
+				'header' and 'footer' passages are stored in their own cache which is never emptied.
+			*/
+			const p = this.get(name);
+			const tags = p.get('tags');
+			if (tags.includes('header') || tags.includes('footer') || tags.includes('debug-header') || tags.includes('debug-footer')) {
+				if (!p.tree) {
+					p.tree = Markup.lex(p.get('source'));
+				}
+				return p.tree;
+			}
 			/*
 				First, retrieve it from the cache if it exists for this name.
 			*/
@@ -119,7 +139,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 				Entries in the cache are ordered by most recent retrieval, then by name.
 				Again, the small size of the cache means that this shouldn't be too costly.
 			*/
-			const entry = { tree: Markup.lex(this.get(name).source), name };
+			const entry = { tree: Markup.lex(p.get('source')), name };
 			passageTreeCache.unshift(entry);
 			/*
 				This maximum cache size is hard-coded.
@@ -127,6 +147,11 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 			if (passageTreeCache.length > 16) {
 				passageTreeCache.pop();
 			}
+			return entry.tree;
+		},
+
+		clearTreeCache() {
+			passageTreeCache = [];
 		},
 
 		/*
