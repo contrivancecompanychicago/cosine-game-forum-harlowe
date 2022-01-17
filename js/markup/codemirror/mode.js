@@ -206,7 +206,7 @@
 					colour token is to re-lex it separately from the tree, but since it's a single token, it should nonetheless be quick enough.
 					(Plus, colour tokens are relatively rare in most passage prose).
 				*/
-				const {colour} = lex(elem.textContent, 0, "macro").tokenAt(0);
+				const {colour} = lex(elem.textContent, '', "macro").tokenAt(0);
 				/*
 					The following CSS produces a colour stripe below colour literals, which doesn't interfere with the cursor border.
 				*/
@@ -375,7 +375,7 @@
 								break;
 							}
 							const macroName = insensitiveName(currentBranch[i].text.slice(0,-1));
-							if (!validMacros.hasOwnProperty(macroName)) {
+							if (!hasOwnProperty.call(validMacros, macroName)) {
 								name += " harlowe-3-error";
 							}
 							else {

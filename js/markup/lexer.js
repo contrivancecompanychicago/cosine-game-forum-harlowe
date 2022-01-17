@@ -40,6 +40,10 @@
 			*/
 			childToken.start = index;
 			childToken.end = tokenData.text && index + tokenData.text.length;
+			/*
+				"Place" holds the original passage name of the source code.
+			*/
+			childToken.place = this.place;
 			childToken.children = [];
 			
 			/*
@@ -532,11 +536,11 @@
 			This uses Object.keys() because Chrome deopts for-in over
 			the frontToken object.
 		*/
-		Object.keys(frontToken).forEach((key) => {
-			if(!Object.hasOwnProperty.call(backToken, key)) {
+		for (let key in frontToken) {
+			if(hasOwnProperty.call(frontToken, key) && !hasOwnProperty.call(backToken, key)) {
 				backToken[key] = frontToken[key];
 			}
-		});
+		}
 		/*
 			Do not inherit the isFront property from the frontToken.
 		*/
@@ -561,10 +565,11 @@
 			Flat refers to whether the tokens are folded (front and back
 			tokens converted into a single subtree node).
 		*/
-		lex(src, initIndex, innerMode = 'start', flat = false) {
+		lex(src, place = '', innerMode = 'start', flat = false) {
 			return lex(new Token({
 				type:                 "root",
-				start:        initIndex || 0,
+				place,
+				start:                     0,
 				end:              src.length,
 				text:                    src,
 				innerText:               src,

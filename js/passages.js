@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internaltypes/twineerror'], ($, NaturalSort, {unescape,onStartup,impossible}, Markup, Renderer, TwineError) => {
+define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internaltypes/twineerror'], ($, NaturalSort, {insensitiveName,unescape,onStartup,impossible}, Markup, Renderer, TwineError) => {
 	const {assign} = Object;
 	/*
 		Passages
@@ -9,16 +9,92 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 	*/
 
 	/*
+		For a tiny bit of efficiency, the quick regexp used in preprocess() is stored here.
+		This uses Patterns rather than Lexer's rules because those compiled RegExps for macroFront
+		and macroName can't be combined into a single RegExp.
+	*/
+	const macroRegExp = RegExp(Markup.Patterns.macroFront + Markup.Patterns.macroName, 'ig');
+	/*
+		When the game starts, each passage is scanned for metadata macros using this method. An object
+		holding one macro call for each metadata macro name is returned.
+	*/
+	function preprocess(src,name) {
+		const {metadataMacros} = Renderer.options;
+		/*
+			Since lexing all the passages at bootup is potentially rather expensive, these quick and hacky RegExp tests are
+			used to check whether preprocessing is necessary.
+		*/
+		if (!(
+			/*
+				This does a quick RegExp query for metadata macros, instead of lexing the entire source.
+			*/
+			(src.match(macroRegExp) || []).some(e => metadataMacros.some(f => insensitiveName(e.slice(1,-1)) === f ))
+		)) {
+			return {};
+		}
+		/*
+			For each macro:
+			if it's a metadata macro outside macro scope, get its call
+			if it's a metadata macro inside macro scope, error
+			if it's a non-metadata macro after a metadata macro outside macro scope, error
+		*/
+		let afterNonMetadataMacro = false;
+		const metadata = {};
+		Markup.lex(src,name).children.forEach(function outsideMacroFn(token) {
+			if (token.type === "macro") {
+				if (metadataMacros.some(f => token.name === f)) {
+					/*
+						If an error was already reported for this metadata name, don't replace it.
+					*/
+					if (TwineError.isPrototypeOf(metadata[token.name])) {
+						return;
+					}
+					/*
+						Metadata macros can't appear after non-metadata macros.
+					*/
+					if (afterNonMetadataMacro) {
+						metadata[token.name] = TwineError.create("syntax", 'The (' + token.name + ":) macro can't appear after non-metadata macros.");
+						return;
+					}
+					/*
+						Having two metadata macros of the same kind is an error. If there was already a match, produce a TwineError about it
+						and store it in that slot.
+						Technically we don't need this, because Passage.loadMetadata() raises a separate error if two metadata macros
+						override each other's data. But, this one is more incisively descriptive.
+					*/
+					if (metadata[token.name]) {
+						metadata[token.name] = TwineError.create("syntax", 'There is more than one (' + token.name + ":) macro.");
+						return;
+					}
+					metadata[token.name] = token;
+				}
+				else {
+					afterNonMetadataMacro = true;
+				}
+				token.children.forEach(function nestedMacroFn(token) {
+					if (token.type === "macro" && metadataMacros.some(f => token.name === f)) {
+						metadata[token.name] = TwineError.create("syntax", 'The (' + token.name + ":) macro can't be inside another macro.");
+					}
+					else token.children.forEach(nestedMacroFn);
+				});
+			}
+			else token.children.forEach(outsideMacroFn);
+		});
+		return metadata;
+	}
+
+	/*
 		Pass a <tw-passagedata> element into this constructor,
 		and a Passage datamap will be produced.
 	*/
 	function Passage(elem) {
+		const name = elem.attr('name');
 		const source = unescape(elem.html());
 		/*
 			Metadata macros (such as (storylet:)) need to be extracted and applied to the passage datamap itself.
 			The source is exclusively used by error messages and Debug Mode.
 		*/
-		const metadata = Renderer.preprocess(source);
+		const metadata = preprocess(source,name);
 
 		return assign(new Map([
 			/*
@@ -33,7 +109,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 			/*
 				name: its name.
 			*/
-			["name", elem.attr('name')],
+			["name", name],
 		]),{
 			/*
 				These must unfortunately be own-properties, as passages must inherit from
@@ -116,7 +192,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 			const tags = p.get('tags');
 			if (tags.includes('header') || tags.includes('footer') || tags.includes('debug-header') || tags.includes('debug-footer')) {
 				if (!p.tree) {
-					p.tree = Markup.lex(p.get('source'));
+					p.tree = Markup.lex(p.get('source'), name);
 				}
 				return p.tree;
 			}
@@ -124,7 +200,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 				First, retrieve it from the cache if it exists for this name.
 			*/
 			for (let i = 0; i < passageTreeCache.length; i += 1) {
-				if (passageTreeCache[i] && passageTreeCache[i].name === name) {
+				if (passageTreeCache[i] && passageTreeCache[i].place === name) {
 					/*
 						In addition to finding the tree, move it to the front to make
 						it quicker to find later. Since the cache's limit is only 16
@@ -132,14 +208,14 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 					*/
 					const entry = passageTreeCache.splice(i, 1)[0];
 					passageTreeCache.unshift(entry);
-					return entry.tree;
+					return entry;
 				}
 			}
 			/*
 				Entries in the cache are ordered by most recent retrieval, then by name.
 				Again, the small size of the cache means that this shouldn't be too costly.
 			*/
-			const entry = { tree: Markup.lex(p.get('source')), name };
+			const entry = Markup.lex(p.get('source'), name);
 			passageTreeCache.unshift(entry);
 			/*
 				This maximum cache size is hard-coded.
@@ -147,7 +223,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 			if (passageTreeCache.length > 16) {
 				passageTreeCache.pop();
 			}
-			return entry.tree;
+			return entry;
 		},
 
 		clearTreeCache() {
@@ -261,7 +337,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 						errors.push(p.metadata[name]);
 						return;
 					}
-					const {code,source} = p.metadata[name];
+					const code = p.metadata[name];
 					const result = section.speculate(code, p.get('name'), "a (" + name + ":) macro");
 					const passageErrorOpener = "In \"" + p.get('name') + "\":\n";
 					if (TwineError.containsError(result)) {
@@ -270,7 +346,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 							tweaked to account for the leading description in the metadata error dialog.
 						*/
 						result.message = passageErrorOpener + result.message;
-						result.source = source;
+						result.source = code.text;
 						errors.push(result);
 						return;
 					}

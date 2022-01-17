@@ -239,8 +239,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			right-hand-side that match the datatype. `(set: (a: str, ...bool-type $examAnswers) to (a: "ANSWER KEY", true, false, false, true, false))`
 			sets $examAnswers to `(a:true, false, false, true, false)`.
 			
-			If the destination doesn't contain any variables - for instance, if you write `(set: (a:2,3)'s 1st to 1)`,
-			or `(set: true to 2)` - then an error will be printed.
+			If the destination doesn't contain any variables - for instance, if you write `(unpack: (a:2,3) into (a:3,2))` - then an error will be printed.
 
 			For obvious reasons, (unpack:) can't be used with datasets - you'll have to convert them to arrays on the right side.
 

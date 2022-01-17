@@ -107,7 +107,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 				"transition", "transitionTime", "transitionDeferred", "transitionDelay",
 				"transitionSkip", "transitionOrigin", "innerEnchantments", "enablers", "output",
 			]
-			.filter(e => this.hasOwnProperty(e))
+			.filter(e => hasOwnProperty.call(this,e))
 			.concat([
 				this.attr.length && "attr",
 				this.styles.length && "styles",

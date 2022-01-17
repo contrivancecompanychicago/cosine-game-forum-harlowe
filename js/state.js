@@ -34,7 +34,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			return false;
 		}
 	});
-	
+
 	/*
 		Prototype object for states remembered by the game.
 	*/
@@ -54,14 +54,11 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			@param {String} The name of the passage that the player is at in this moment.
 			@param {Object} Variables to include in this moment.
 		*/
-		create(p, v) {
+		create(p) {
 			const ret = create(Moment);
 			ret.passage = p || "";
 			// Variables are stored as deltas of the previous state's variables.
 			ret.variables = create(null);
-			if (v) {
-				assign(ret.variables, v);
-			}
 
 			defineProperty(ret.variables, "TwineScript_VariableDelta",
 				/*
@@ -218,7 +215,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			/*
 				VarRef.defineType() automatically installs TwineScript_TypeDefs on 
 			*/
-			if (!Object.hasOwnProperty.call(present.variables,"TwineScript_TypeDefs")) {
+			if (!hasOwnProperty.call(present.variables,"TwineScript_TypeDefs")) {
 				present.variables.TwineScript_TypeDefs = create(null);
 			}
 			present.variables.TwineScript_TypeDefs[prop] = type;
@@ -582,7 +579,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			*/
 			const serialisability = whatToSerialise.map(
 				(moment) => Object.keys(moment.variables)
-					.filter((e) => moment.variables[e] && e !== 'TwineScript_TypeDefs' && !isSerialisable(moment.variables[e]))
+					.filter((e) => moment.variables[e] && !e.startsWith('TwineScript_') && !isSerialisable(moment.variables[e]))
 					.map(e => [e, moment.variables[e]])
 			);
 			/*
@@ -708,11 +705,23 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			scope of the eval().
 		*/
 		function recompileValues(section, obj) {
-			Object.keys(obj).forEach(key => {
-				if (!key.startsWith("TwineScript_")) {
-					obj[key] = section.eval(lex(obj[key], 0, 'macro'));
+			for (let key in obj) {
+				if (hasOwnProperty.call(obj, key) && !key.startsWith("TwineScript_")) {
+					/*
+						Note that TypeDefs values can't be serialised as "reconstruct",
+						so this check won't do anything unwanted to them.
+					*/
+					if (obj[key] === "reconstruct") {
+						/*
+							TODO: reconstruct the value
+						*/
+						obj.TwineScript_VariablePurity[key] = true;
+					}
+					else {
+						obj[key] = section.eval(lex(obj[key], '', 'macro'));
+					}
 				}
-			});
+			}
 		}
 		
 		/*
@@ -721,8 +730,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			by this function aren't TwineErrors.
 		*/
 		function deserialise(section, str) {
-			let newTimeline,
-				lastVariables = SystemVariables;
+			let newTimeline;
 			const genericError = "The save data is unintelligible.";
 			
 			try {
@@ -751,10 +759,14 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 					objects with "passage" and "variables" keys.
 				*/
 				else if (typeof moment !== "object"
-						|| !moment.hasOwnProperty("passage")
-						|| !moment.hasOwnProperty("variables")) {
+						|| !hasOwnProperty.call(moment,"passage")
+						|| !hasOwnProperty.call(moment,"variables")) {
 					return Error(genericError);
 				}
+				/*
+					Clean the prototype of the variables object.
+				*/
+				moment.variables = assign(create(null), moment.variables);
 				/*
 					Check that the passage name in this moment corresponds to a real passage.
 					As this is the most likely issue with invalid save data, this gets a precise message.
@@ -765,7 +777,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				/*
 					If the variables object has a TypeDefs object, that needs to be recompiled as well.
 				*/
-				if (Object.hasOwnProperty.call(moment.variables,'TwineScript_TypeDefs')) {
+				if (hasOwnProperty.call(moment.variables,'TwineScript_TypeDefs')) {
 					/*
 						Much like the variables, the datatypes are currently Harlowe code strings - though rather likely to be
 						literals like "number" or "datamap".
@@ -777,6 +789,10 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 					}
 				}
 				/*
+					The VariablePurity record is restored here (as it wasn't saved in the savefile for obvious reasons).
+				*/
+				moment.variables.TwineScript_VariablePurity = create(null);
+				/*
 					Compile all of the variables (which are currently Harlowe code strings) back into Harlowe values.
 				*/
 				try {
@@ -784,8 +800,6 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				} catch(e) {
 					return Error(genericError);
 				}
-
-				lastVariables = moment.variables;
 				/*
 					Re-establish the moment objects' prototype link to Moment.
 				*/

@@ -15,7 +15,7 @@
 		for(let i = 1; i < arguments.length; i++) {
 			const target = arguments[i];
 			for(let key in target) {
-				if(Object.hasOwnProperty.call(target, key)) {
+				if(hasOwnProperty.call(target, key)) {
 					obj[key] = target[key];
 				}
 			}
@@ -650,7 +650,7 @@
 								"grey"   : "888",
 							};
 						
-						if (Object.hasOwnProperty.call(mapping, m)) {
+						if (hasOwnProperty.call(mapping, m)) {
 							colour = "#" + mapping[m];
 						}
 						else {

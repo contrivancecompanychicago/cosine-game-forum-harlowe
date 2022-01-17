@@ -1073,7 +1073,7 @@ define([
 
 				(The target should always be truthy, but, just in case...)
 			*/
-			if (!tempVariables.hasOwnProperty('TwineScript_VariableStoreName')) {
+			if (!hasOwnProperty.call(tempVariables,'TwineScript_VariableStoreName')) {
 				const targetTag = target && target.tag();
 				tempVariables.TwineScript_VariableStoreName = (
 					targetTag === 'tw-hook' ? (target.attr('name') ? ("?" + target.attr('name')) : "an unnamed hook") :

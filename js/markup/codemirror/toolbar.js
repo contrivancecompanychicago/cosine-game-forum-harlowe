@@ -636,7 +636,7 @@
 							/*
 								Attempt to lex the data, and consider it invalid if it contains any text nodes.
 							*/
-							const lexed = lex(v, 0, 'macro');
+							const lexed = lex(v, '', 'macro');
 							if (lexed.children.every(function recur(token) {
 								return token.type !== "text" && token.type !== "error" &&
 									(token.type === "string" || token.type === "hook" || token.children.every(recur));

@@ -23,12 +23,6 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 		must be present.
 	*/
 	const center = "text-align: center; max-width:50%; ";
-	/*
-		For a tiny bit of efficiency, the quick regexp used in preprocess() is stored here.
-		This uses Patterns rather than Lexer's rules because those compiled RegExps for macroFront
-		and macroName can't be combined into a single RegExp.
-	*/
-	const macroRegExp = RegExp(Markup.Patterns.macroFront + Markup.Patterns.macroName, 'ig');
 
 	/*
 		The internal recursive rendering method.
@@ -478,83 +472,6 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 				code and attached to the passage map itself during startup.
 			*/
 			metadataMacros: [],
-		},
-
-		/*
-			When the game starts, each passage is scanned for metadata macros using this method. An object
-			holding one macro call for each metadata macro name is returned.
-		*/
-		preprocess(src) {
-			const {metadataMacros} = Renderer.options;
-			/*
-				Since lexing all the passages at bootup is potentially rather expensive, these quick and hacky RegExp tests are
-				used to check whether preprocessing is necessary.
-			*/
-			if (!(
-				/*
-					This does a quick RegExp query for metadata macros, instead of lexing the entire source.
-				*/
-				(src.match(macroRegExp) || []).some(e => metadataMacros.some(f => insensitiveName(e.slice(1,-1)) === f ))
-			)) {
-				return {};
-			}
-			/*
-				For each macro:
-				if it's a metadata macro outside macro scope, get its call
-				if it's a metadata macro inside macro scope, error
-				if it's a non-metadata macro after a metadata macro outside macro scope, error
-			*/
-			let afterNonMetadataMacro = false;
-			const metadata = {};
-			Markup.lex(src).children.forEach(function outsideMacroFn(token) {
-				if (token.type === "macro") {
-					if (metadataMacros.some(f => token.name === f)) {
-						/*
-							If an error was already reported for this metadata name, don't replace it.
-						*/
-						if (TwineError.isPrototypeOf(metadata[token.name])) {
-							return;
-						}
-						/*
-							Metadata macros can't appear after non-metadata macros.
-						*/
-						if (afterNonMetadataMacro) {
-							metadata[token.name] = TwineError.create("syntax", 'The (' + token.name + ":) macro can't appear after non-metadata macros.");
-							return;
-						}
-						/*
-							Having two metadata macros of the same kind is an error. If there was already a match, produce a TwineError about it
-							and store it in that slot.
-							Technically we don't need this, because Passage.loadMetadata() raises a separate error if two metadata macros
-							override each other's data. But, this one is more incisively descriptive.
-						*/
-						if (metadata[token.name]) {
-							metadata[token.name] = TwineError.create("syntax", 'There is more than one (' + token.name + ":) macro.");
-							return;
-						}
-						metadata[token.name] = {
-							code:  token,
-							/*
-								For debug mode and error message display, the original source code of the macros needs to be returned and stored with them.
-								Of course, we could simply re-read the source from the passage itself, but that would be a bit of a waste of cognition
-								when we've got it available right here.
-							*/
-							source: token.text,
-						};
-					}
-					else {
-						afterNonMetadataMacro = true;
-					}
-					token.children.forEach(function nestedMacroFn(token) {
-						if (token.type === "macro" && metadataMacros.some(f => token.name === f)) {
-							metadata[token.name] = TwineError.create("syntax", 'The (' + token.name + ":) macro can't be inside another macro.");
-						}
-						else token.children.forEach(nestedMacroFn);
-					});
-				}
-				else token.children.forEach(outsideMacroFn);
-			});
-			return metadata;
 		},
 		
 		/*

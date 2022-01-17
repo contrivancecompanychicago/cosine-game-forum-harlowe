@@ -436,7 +436,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		*/
 		has(e) {
 			e = insensitiveName(e);
-			return macroRegistry.hasOwnProperty(e);
+			return hasOwnProperty.call(macroRegistry, e);
 		},
 		
 		/*
@@ -444,7 +444,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		*/
 		get(e) {
 			e = insensitiveName(e);
-			return (macroRegistry.hasOwnProperty(e) && macroRegistry[e]);
+			return (hasOwnProperty.call(macroRegistry, e) && macroRegistry[e]);
 		},
 		
 		/*

@@ -804,7 +804,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				*/
 				else if (object.TwineScript_VariableStore && object !== State.variables) {
 					let parent = object;
-					while(parent.TwineScript_VariableStore && !parent.hasOwnProperty(property)) {
+					while(parent.TwineScript_VariableStore && !hasOwnProperty.call(parent, property)) {
 						parent = Object.getPrototypeOf(parent);
 					}
 					if (parent.TwineScript_VariableStore) {
@@ -1001,7 +1001,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				added once it's first needed.
 			*/
 			const prop = compiledPropertyChain[0];
-			if (!Object.hasOwnProperty.call(object,"TwineScript_TypeDefs")) {
+			if (!hasOwnProperty.call(object,"TwineScript_TypeDefs")) {
 				object.TwineScript_TypeDefs = Object.create(object.TwineScript_TypeDefs);
 			}
 			/*
