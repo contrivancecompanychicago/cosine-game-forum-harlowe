@@ -509,7 +509,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 	/*
 		This should only be run after canSet(), above, has verified it is safe.
 	*/
-	function objectOrMapSet(obj, prop, value, pure) {
+	function objectOrMapSet(obj, prop, value, valueRef) {
 		const origProp = prop;
 		if (obj instanceof Map) {
 			obj.set(prop, value);
@@ -521,7 +521,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				This is currently only used by the System Variables in State.
 			*/
 			if (obj.TwineScript_Set) {
-				obj.TwineScript_Set(prop, value, pure);
+				obj.TwineScript_Set(prop, value, valueRef);
 			} else {
 				obj[prop] = value;
 			}
@@ -744,7 +744,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			A wrapper around Javascript's [[set]], which does a lot of
 			preparation before the assignment is performed.
 		*/
-		set(value, pure) {
+		set(value, valueRef) {
 			/*
 				If this is an error-wrapped VarRef, return the wrapped error now.
 			*/
@@ -890,10 +890,15 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 							would set "wow" to the position "1"
 						*/
 						property.map((prop,i) => [prop, value[i]])
-							.forEach(([e, value]) => objectOrMapSet(object, e, value,pure));
+							.forEach(([e, value]) => objectOrMapSet(object, e, value,
+								/*
+									Passing valueRef to each iteration is fine because
+									only the final set to SystemVariables uses it.
+								*/
+								valueRef));
 					}
 					else {
-						objectOrMapSet(object, property, value, pure);
+						objectOrMapSet(object, property, value, valueRef);
 					}
 				}
 				return object;

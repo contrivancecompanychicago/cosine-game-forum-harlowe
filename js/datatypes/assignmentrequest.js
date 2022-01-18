@@ -22,7 +22,7 @@ define(['utils/operationutils','datatypes/typedvar','datatypes/datatype','intern
 		required is true) or boolean false (if required is false) is inserted into the array.
 	*/
 	function destructure(pattern, src, required = true) {
-		let error, ret = [];
+		let ret = [];
 		/*
 			If src is a VarRef, obtain its current value.
 			Note that this could differ from its value at compilation time -
@@ -38,8 +38,8 @@ define(['utils/operationutils','datatypes/typedvar','datatypes/datatype','intern
 			If the get() produced an error (though a bad property access on the source)
 			then return it. This should be the only error that a non-required destructuring returns.
 		*/
-		if ((error = TwineError.containsError(value))) {
-			return error;
+		if (TwineError.containsError(value)) {
+			return value;
 		}
 		/*
 			Array destructuring involves destructuring each value in the pattern using each value in a corresponding position
@@ -146,8 +146,8 @@ define(['utils/operationutils','datatypes/typedvar','datatypes/datatype','intern
 				probably be changed to checking the const restriction here and now, as it is in varref.js.
 			*/
 			if (!matches(value, pattern.datatype)) {
-				return [required && TwineError.create("operation", "I can't unpack " + objectName(value) + " into "
-					+ pattern.varRef.TwineScript_ToSource() + " because it doesn't match " + objectName(pattern.datatype) + ".")];
+				return required && TwineError.create("operation", "I can't unpack " + objectName(value) + " into "
+					+ pattern.varRef.TwineScript_ToSource() + " because it doesn't match " + objectName(pattern.datatype) + ".");
 			}
 			/*
 				The datatype of this TypedVar may contain sub-TypedVars to examine. So, recursively call destructure() on it.
@@ -234,7 +234,7 @@ define(['utils/operationutils','datatypes/typedvar','datatypes/datatype','intern
 					// Unwrap the varRef from the TypedVar.
 					dest = dest.varRef;
 				}
-				error = dest.set(value, this.pure);
+				error = dest.set(value, this.srcRef);
 				/*
 					If the setting caused an error to occur, abruptly return the error.
 				*/
@@ -257,13 +257,12 @@ define(['utils/operationutils','datatypes/typedvar','datatypes/datatype','intern
 			return debugMessage.join('; ');
 		},
 		
-		create(dest, src, operator, freeVariables) {
-			let error;
-			if ((error = TwineError.containsError(dest))) {
-				return error;
+		create(dest, src, operator, srcRef) {
+			if (TwineError.containsError(dest)) {
+				return dest;
 			}
-			if ((error = TwineError.containsError(src))) {
-				return error;
+			if (TwineError.containsError(src)) {
+				return src;
 			}
 			/*
 				AssignmentRequests currently cannot accept rest TypedVars. However, due to the compiler giving spread
@@ -275,10 +274,10 @@ define(['utils/operationutils','datatypes/typedvar','datatypes/datatype','intern
 				src:               src,
 				operator:          operator,
 				/*
-					The "pure" boolean indicates that this value used no free variables,
-					and thus can be reconstructed from the original (set:) or (put:) call in the passage.
+					The srcRef indicates that the value can be reconstructed from the original (set:) or (put:) call in the passage,
+					and provides the passage code coordinates.
 				*/
-				pure:             !freeVariables.length,
+				srcRef,
 			});
 		},
 	});

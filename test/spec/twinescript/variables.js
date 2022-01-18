@@ -209,6 +209,10 @@ describe("variables", function() {
 			runPassage("(set:$y to (a:))");
 			expect("$y").markupToPrint("");
 		});
+		it("for code hooks, prints the hook", function() {
+			runPassage("(set:$x to [foo bar (set:$y to 'qux')(print:'baz') $y])");
+			expect("$x").markupToPrint("foo bar baz qux");
+		});
 		it("names cannot contain just underscores or numbers", function() {
 			expect("$_").markupToPrint("$_");
 			expect("$2").markupToPrint("$2");

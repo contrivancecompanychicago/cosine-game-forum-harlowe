@@ -161,7 +161,7 @@ describe("save macros", function() {
 		it("can restore changer command variables", function(done) {
 			runPassage(
 				"(set:$c1 to (text-style:'underline'))" +
-				"(set:$c2 to (a: $c1 + (hook: 'luge')))");
+				"(set:$c2 to (a: $c1 + (hook: 'luge')))", 'corge');
 			runPassage("(savegame:'1')");
 			expect("(loadgame:'1')").not.markupToError();
 			requestAnimationFrame(function() {
@@ -174,7 +174,7 @@ describe("save macros", function() {
 			});
 		});
 		it("can restore gradients", function(done) {
-			runPassage("(set:$c1 to (gradient:90,0,white,1,black))");
+			runPassage("(set:$c1 to (gradient:90,0,white,1,black))", 'corge');
 			runPassage("(savegame:'1')");
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
@@ -183,7 +183,7 @@ describe("save macros", function() {
 			}, 20);
 		});
 		it("can restore code hooks", function(done) {
-			runPassage("(set:$c1 to [Foo bar baz])");
+			runPassage("(set:$c1 to [Foo bar baz])", 'corge');
 			runPassage("(savegame:'1')");
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
@@ -195,7 +195,7 @@ describe("save macros", function() {
 			runPassage(
 				"(set:$c1 to (macro: num-type _a, num-type _b, [(output-data:(max:_a,_b,200))]))"
 				+ "(set:$c2 to (macro: num-type _a, str-type _b, [(output-data:(str:($c1:_a,150))+_b)]))"
-				+ "(set:$c3 to (macro: [(output:)[foo bar]]))"
+				+ "(set:$c3 to (macro: [(output:)[foo bar]]))", 'corge'
 			);
 			expect("(savegame:'1')").not.markupToError();
 			expect("(loadgame:'1')").not.markupToError();
@@ -205,7 +205,105 @@ describe("save macros", function() {
 				expect("($c2:312,' bears')").markupToPrint('312 bears');
 				expect("($c3:)").markupToPrint('foo bar');
 				done();
-			},20);
+			}, 90);
+		});
+		it("can restore variables set in (display:)", function(done) {
+			createPassage("(set:$arr to (a:'" + "E".repeat(30) + "'))", 'baz');
+			runPassage("(display:'baz')(set:$gee to 2)", "corge");
+			expect("(savegame:'1')").not.markupToError();
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("$arr $gee").markupToPrint("E".repeat(30) + " 2");
+
+				done();
+			}, 90);
+		});
+		it("can restore variables set in code hooks", function(done) {
+			runPassage("(set:$hook to [(set:$arr to (a:'" + "E".repeat(30) + "'))])", 'baz');
+			runPassage("$hook", "corge");
+			expect("$arr").markupToPrint("E".repeat(30));
+			expect("(savegame:'1')").not.markupToError();
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("$arr").markupToPrint("E".repeat(30));
+				done();
+			}, 90);
+		});
+		it("can restore variables set in custom macros", function(done) {
+			runPassage("(set:$macro to (macro:[(set:$arr to '"+ "E".repeat(30) + "')(out-data:'')]))", 'baz');
+			runPassage("($macro:)", "corge");
+			expect("$arr").markupToPrint("E".repeat(30));
+			expect("(savegame:'1')").not.markupToError();
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("$arr").markupToPrint("E".repeat(30));
+				done();
+			}, 90);
+		});
+		it("can restore variables set in evaluated strings", function(done) {
+			runPassage("(set:$str to '(' + 'set:$arr to (a:\\'" + "E".repeat(30) + "\\'))')", 'baz');
+			runPassage("$str", "corge");
+			expect("$arr").markupToPrint("E".repeat(30));
+			expect("(savegame:'1')").not.markupToError();
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("$arr").markupToPrint("E".repeat(30));
+				done();
+			}, 90);
+		});
+		['header','footer'].forEach(function(name) {
+			it("can restore variables set in "+name+" passages", function(done) {
+				createPassage("(set:$arr to (a:'" + "E".repeat(30) + "'))", 'baz', [name]);
+				runPassage("(set:$gee to 2)", "corge");
+				expect("(savegame:'1')").not.markupToError();
+				expect("(loadgame:'1')").not.markupToError();
+				setTimeout(function() {
+					expect("$arr $gee").markupToPrint("E".repeat(30) + " 2");
+					done();
+				}, 90);
+			});
+		});
+		it("can restore variables with impure values", function(done) {
+			runPassage("(set:$a to 1)(set:$arr to (a:'" + "E".repeat(30) + "', $a))", 'baz');
+			expect("(savegame:'1')").not.markupToError();
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("$arr").markupToPrint("E".repeat(30) + ",1");
+				done();
+			}, 90);
+		});
+		it("can restore variables across multiple turns", function(done) {
+			runPassage("(set:$arr to (a:'" + "E".repeat(30) + "'))", 'baz');
+			runPassage("(set:$arr to (a:'" + "J".repeat(30) + "'))", 'qux');
+			expect("$arr").markupToPrint("J".repeat(30));
+			expect("(savegame:'1')").not.markupToError();
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("$arr").markupToPrint("J".repeat(30));
+				Engine.goBack();
+				Engine.goBack();
+				Engine.goBack();
+				Engine.goBack();
+				setTimeout(function() {
+					expect("$arr").markupToPrint("E".repeat(30));
+					done();
+				}, 90);
+			}, 90);
+		});
+		it("can restore variables multiple times", function(done) {
+			runPassage("(set:$arr to (a:'" + "E".repeat(30) + "'))", 'baz');
+			expect("$arr").markupToPrint("E".repeat(30));
+			expect("(savegame:'1')").not.markupToError();
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("$arr").markupToPrint("E".repeat(30));
+				expect("(savegame:'1')").not.markupToError();
+				expect("(loadgame:'1')").not.markupToError();
+				setTimeout(function() {
+					expect("$arr").markupToPrint("E".repeat(30));
+					done();
+				}, 90);
+			}, 90);
 		});
 		/*
 			These aren't (move:)'s semantics in Harlowe 3.

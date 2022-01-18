@@ -10,6 +10,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a custom macro bug where any commands inside an (output:)-attached hook (such as `(output:)[(set:$a to it + 1)]`) would be run twice while being outputted. (Generally, you'd want to place those commands before the (output:) hook, though.)
  * Fixed a bug where using spread `...` to spread the individual characters of a string that contains astral plane Unicode characters (such as 𝐇) wouldn't work at all.
  * Fixed a bug where the `(unpack:)` macro wouldn't work at all unless the destination variables were expressed as typed variables (such as `num-type $a`).
+ * Fixed a bug where `(folded:)` couldn't be provided with a lambda which had `where`, `via` and `making` clauses, where the `making` clause was between the `where` and `via` clauses.
  * `each` lambdas are now called "each…" lambdas (instead of just "where…" lambdas) in the Debug Mode panel.
  * Fixed a bug where `'s` and `of` sometimes wouldn't be syntax-highlighted correctly.
  * The `it` identifier is now cleared (to the default value of 0) whenever the player changes passages.
@@ -19,7 +20,13 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 ##### Performance
 
  * The low-level macro-running code has been heavily rewritten. Formerly, macro code was internally converted to a syntax tree during passage rendering, then compiled into a string of Javascript, which was then executed using the browser's `eval()` function. Now, the macro syntax tree is simply interpreted and executed as-is, without the intermediary step of assembling a string. This provides performance improvements to both macro and lambda execution, which is important for frequently-called lambda-using macros like `(event:)` and `(storylet:)`. (However, see "Compatibility" below for a caveat regarding this change.)
- * Improved performance of game saving, which includes `(save-game:)` and the automatic game state SessionStorage saving feature (introduced in 3.0.0).
+ * Improved performance of game saving after a very large number of turns have elapsed. This affects both `(save-game:)` and the automatic game state SessionStorage saving feature (introduced in 3.0.0).
+ * Formerly, all global variables' contents were saved in game save files as pure Harlowe source code representation. Now, if a value in a variable is considered "pure", it will be saved as an index to the passage prose in which it was originally `(set:)` or `(put:)`, and will be reconstructed from that index when the game is loaded. This should save major localStorage space when a story has loads of stored strings and custom macros.
+   * A variable is considered "pure" if its value was changed using a `(set:)` or `(put:)` that did not call any of the following macros or features: `(prompt:)`, `(confirm:)`, `(random:)`, `(either:)`, `(shuffled:)`, `(current-time:)`, `(current-date:)`, `(monthday:)`, `(weekday:)`, `(history:)`, `(passage:)`, `(hooks-named:)`, `it`, `time`, `visits`, `exits`, `'s random`, `random of`, Hook Names, or any other variable (*except* typed variables, such as those given to `(macro:)`).
+   * Note that code hooks *can* use these inside them and still be considered "pure", as a code hook is essentially a special kind of string, and nothing inside it is called until it is used.
+   * Also, number and boolean variables are short enough that saving them as a reference isn't necessary, so they won't be saved as indexes even if they are "pure".
+   * Variables changed using `(unpack:)` or `2bind` currently aren't considered "pure".
+   * As a consequence of this change, save files from older versions of your story are much more likely to become invalidated whenever you make minor changes to passage prose, so do take note of that.
  * Slightly improved performance of changing passages in stories that contain a very large number of passages.
  * Slightly improved performance of rendering and re-rendering hooks.
  * Now, the most recent 16 visited passages (as well as all "header", "footer", "debug-header" and "debug-footer" tagged passages), have their source code's syntax trees cached, to save on rendering time if they're visited or shown by `(display:)` again within 16 turns.

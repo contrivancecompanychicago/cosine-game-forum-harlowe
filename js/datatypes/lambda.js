@@ -334,7 +334,7 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 				call. Otherwise, true is returned.
 			*/
 			if ('where' in this || 'when' in this) {
-				ret = where(section.eval(this.where || this.when), section.eval(via) || true, null);
+				ret = where(section.eval(this.where || this.when), via ? section.eval(via) : true, null);
 			}
 			else {
 				ret = via ? section.eval(via) : true;

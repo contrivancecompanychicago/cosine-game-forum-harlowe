@@ -433,17 +433,13 @@ define([
 			*/
 			result = printBuiltinValue(result);
 			/*
-				Errors (which may be TwineErrors but could also be raw JS errors from try {} blocks)
-				directly replace the element.
+				Errors directly replace the element.
 			*/
 			if (TwineError.containsError(result)) {
-				if (result instanceof Error) {
-					result = TwineError.fromError(result);
-				}
 				expr.replaceWith(result.render(expr.attr('title')));
 			}
-			else if (typeof result !== "string") {
-				Utils.impossible("printBuiltinValue() produced a non-string " + typeof result);
+			else if (typeof result !== "string" && !Array.isArray(result)) {
+				Utils.impossible("printBuiltinValue() produced a non-string non-array " + typeof result);
 			}
 			else {
 				/*
@@ -619,7 +615,7 @@ define([
 					This is only used for a purely encapsulated mutation inside Runner to pass data up and down the
 					run() calls. Nevertheless, it exists.
 				*/
-				freeVariables: null,
+				pureValueCheck: false,
 				/*
 					The identifiers reference aspects of the currently rendered passage, such as the number of exits
 					or the time since rendering.
@@ -864,7 +860,7 @@ define([
 		setIt(e) {
 			/*
 				Only set the it identifier if the given value is a VarRef or TypedVar.
-				Notice that this also returns errors.
+				Notice that this also returns TwineErrors.
 			*/
 			if (!(VarRef.isPrototypeOf(e) || TypedVar.isPrototypeOf(e))) {
 				return e;
@@ -969,7 +965,7 @@ define([
 			if (Lambda.isPrototypeOf(code)) {
 				ret = code.apply(this, {fail:false, pass:true});
 			}
-			else {
+			else if (code) {
 				ret = run(this, code);
 			}
 			this.stack.shift();

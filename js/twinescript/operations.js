@@ -366,6 +366,9 @@ define([
 			This is created by the spread (...) operator.
 		*/
 		makeSpreader(val) {
+			if (TwineError.containsError(val)) {
+				return val;
+			}
 			/*
 				TypedVars and Datatypes have a special response to the spread operator: turn into
 				"rest parameter" versions of themselves.

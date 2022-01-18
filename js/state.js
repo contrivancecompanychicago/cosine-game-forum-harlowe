@@ -68,11 +68,10 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				{ value: true });
 
 			/*
-				Purity (whether or not the variable can be reconstructed from just
-				top-level (set:) macros) is tracked as well. This doesn't matter to
-				the System Variables, so it isn't included.
+				Value Refs (used to reconstruct long values from save files) are tracked as well.
+				This doesn't matter to the System Variables, so it isn't included.
 			*/
-			defineProperty(ret.variables, "TwineScript_VariablePurity", { value: create(null) });
+			defineProperty(ret.variables, "TwineScript_ValueRefs", { value: create(null) });
 			return ret;
 		}
 	};
@@ -189,10 +188,10 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				statement) so this (probably) isn't visible outside of State.
 			*/
 			present.variables[prop] = null;
-			present.variables.TwineScript_VariablePurity[prop] = false;
+			delete present.variables.TwineScript_ValueRefs[prop];
 		},
 
-		TwineScript_Set(prop, value, pure) {
+		TwineScript_Set(prop, value, valueRef) {
 			this[prop] = value;
 			/*
 				It's not necessary to clone (pass-by-value) the value when placing it on the delta,
@@ -201,9 +200,9 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			*/
 			present.variables[prop] = value;
 			/*
-				Variable purity is also recorded on each set.
+				The value reference (used for save file reconstruction) is also recorded.
 			*/
-			present.variables.TwineScript_VariablePurity[prop] = pure;
+			present.variables.TwineScript_ValueRefs[prop] = valueRef;
 		},
 
 		TwineScript_GetProperty(prop) {
@@ -638,17 +637,21 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 					if (name === "TwineScript_MockVisits") {
 						return variable;
 					}
-					// If this is the purity object, don't serialise it
-					if (name === "TwineScript_VariablePurity") {
+					// If this is the ValueRefs object, don't serialise it
+					if (name === "TwineScript_ValueRefs") {
 						return undefined;
 					}
-					// TODO: pure variables are serialised as "reconstruct"
-					// rather than their entire values, UNLESS it's a number or boolean.
-					if (this.TwineScript_VariablePurity[name]) {
-						;
+					/*
+						Values with a reference are serialised as an array (generated in Runner by the "to" and "into" handler)
+						of [passage name, passage text start index, passage text end index], which is used to reconstruct the value
+						when loading the save file.
+					*/
+					if (this.TwineScript_ValueRefs[name]) {
+						return this.TwineScript_ValueRefs[name];
 					}
 					/*
 						"null", representing deleted variables, is passed as-is to become a JSON null.
+						(Currently (Jan 2022), though, nothing can delete values.)
 					*/
 					if (variable === null) {
 						return variable;
@@ -711,11 +714,12 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 						Note that TypeDefs values can't be serialised as "reconstruct",
 						so this check won't do anything unwanted to them.
 					*/
-					if (obj[key] === "reconstruct") {
-						/*
-							TODO: reconstruct the value
-						*/
-						obj.TwineScript_VariablePurity[key] = true;
+					if (Array.isArray(obj[key])) {
+						obj.TwineScript_ValueRefs[key] = obj[key];
+
+						const [passageName, start, end] = obj[key];
+						const source = Passages.get(passageName).get('source');
+						obj[key] = section.eval(lex(source.slice(start, end), '', 'macro'));
 					}
 					else {
 						obj[key] = section.eval(lex(obj[key], '', 'macro'));
@@ -789,9 +793,9 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 					}
 				}
 				/*
-					The VariablePurity record is restored here (as it wasn't saved in the savefile for obvious reasons).
+					The TwineScript_ValueRefs record is restored here (as it wasn't saved in the savefile for obvious reasons).
 				*/
-				moment.variables.TwineScript_VariablePurity = create(null);
+				moment.variables.TwineScript_ValueRefs = create(null);
 				/*
 					Compile all of the variables (which are currently Harlowe code strings) back into Harlowe values.
 				*/

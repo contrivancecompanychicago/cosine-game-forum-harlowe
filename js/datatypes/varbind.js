@@ -96,6 +96,9 @@ define(['jquery', 'utils', 'utils/operationutils', 'internaltypes/varref', 'inte
 			changed).
 		*/
 		create(varRef, bind = "one way") {
+			if (TwineError.containsError(varRef)) {
+				return varRef;
+			}
 			/*
 				Produce a user-facing error if a non-varRef was given.
 				Since "bind" is just another operator, this can't be picked up in compilation until now.

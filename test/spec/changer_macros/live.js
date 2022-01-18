@@ -85,7 +85,9 @@ describe("live macros", function() {
 			setTimeout(function() {
 				expect(p.text()).toBe("bar");
 				done();
-			},40);
+			},
+			// Because Firefox randomly permutes setTimeout's timeout to avoid fingerprinting, the time has to be this generous.
+			80);
 		});
 	});
 	describe("the (more:) macro", function() {

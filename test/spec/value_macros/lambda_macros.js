@@ -238,6 +238,7 @@ describe("lambda macros", function() {
 			expect("(folded: _a via _a + _b making _b)").markupToError();
 			for(var i = 2; i < 10; i += 1) {
 				expect("(folded: _a making _b via _a + _b," + "2,".repeat(i) + ")").not.markupToError();
+				expect("(folded: _a where _a > 0 making _b via _a + _b," + "2,".repeat(i) + ")").not.markupToError();
 			}
 		});
 		it("performs a fold using the lambda's additional arguments", function() {

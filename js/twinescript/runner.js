@@ -3,6 +3,7 @@ define([
 	'macros',
 	'state',
 	'utils',
+	'utils/operationutils',
 	'twinescript/operations',
 	'datatypes/colour',
 	'datatypes/hookset',
@@ -15,7 +16,7 @@ define([
 	'internaltypes/varref',
 	'internaltypes/twineerror'
 ],
-(Macros, State, Utils, Operations, Colour, HookSet, Lambda, Datatype, VarBind, CodeHook, TypedVar, AssignmentRequest, VarRef, TwineError) => {
+(Macros, State, Utils, {toSource}, Operations, Colour, HookSet, Lambda, Datatype, VarBind, CodeHook, TypedVar, AssignmentRequest, VarRef, TwineError) => {
 
 	/*
 		This is used to find which lexer tokens represent "free variables" instead of pure deterministic data.
@@ -38,13 +39,15 @@ define([
 					name === "current-date" ||
 					name === "monthday" ||
 					name === "weekday" ||
-					name === "history") {
+					name === "history" ||
+					name === "hooks-named" ||
+					name === "passage") {
 				return true;
 			}
 		}
 		else if (token.type === "identifier") {
 			const name = Utils.insensitiveName(token.text);
-			if (name === "time" || name === "exits") {
+			if (name === "time" || name === "exits" || name === "it" || name === "visits") {
 				return true;
 			}
 		}
@@ -57,14 +60,7 @@ define([
 				return true;
 			}
 		}
-		else if (token.type === "variable") {
-			/*
-				TODO: Variables are declared pure if they were pure in a previous State moment,
-				and their purity means that their uses are deterministic.
-			*/
-			return true;
-		}
-		else if (token.type === "tempVariable" || token.type === "hookSet") {
+		else if (token.type === "variable" || token.type === "tempVariable" || token.type === "hookSet") {
 			return true;
 		}
 		return false;
@@ -82,8 +78,7 @@ define([
 			["error"],
 			["comma"],
 			["to","into"],
-			["where", "when", "via"],
-			["making", "each"],
+			["where", "when", "via", "making", "each"],
 			["typeSignature"], // the "-type" operator
 			["augmentedAssign"],
 			["and", "or"],
@@ -336,11 +331,11 @@ define([
 			return;
 		}
 		/*
-			If section has a "freeVariables" array (which is only present when it's being mutated during
-			a run() call by "to" and "into") then this token should be collected by it if it's a free variable.
+			If section has the "pureValueCheck" flag (which is only present when it's being mutated during
+			a run() call by "to" and "into") then invalidate it if this token is a free variable.
 		*/
-		if (section.freeVariables && isFreeVariable(token)) {
-			section.freeVariables.push(token);
+		if (section.pureValueCheck && isFreeVariable(token)) {
+			section.pureValueCheck = false;
 		}
 		/*
 			Perform the error-checking for tokens requiring or prohibiting more
@@ -450,40 +445,68 @@ define([
 		else if (type === "bind") {
 			return VarBind.create(run(section,  after, VARREF), token.text.startsWith('2') ? 'two way' : '');
 		}
-		else if (type === "to") {
-			const dest = section.setIt(run(section,  before, VARREF, TYPEDVAR));
+		else if (type === "to" || type === "into") {
+			const dest = (type === "to") ? section.setIt(run(section, before, VARREF, TYPEDVAR)) : run(section, after, VARREF, TYPEDVAR);
+			if (TwineError.containsError(dest)) {
+				return dest;
+			}
 			/*
 				For the purposes of State optimisation, each assignmentRequest collects the
 				"free variables" used in the source. This is currently (Jan 2022) done by
 				permuting section to have a "freeVariables" array, running the source,
 				then removing it, rather than adding an additional argument to run().
 			*/
-			section.freeVariables = [];
+			/*
+				Currently, (unpack:) is too complicated to generate prose references for, even if
+				it is pure. This check confirms that this is only a (set:) or (put:) command.
+			*/
+			if (VarRef.isPrototypeOf(dest) || TypedVar.isPrototypeOf(dest)) {
+				section.pureValueCheck = true;
+			}
 			/*
 				This needs to be a VarRef so that (set: $b to 0, $d to $b) can work.
 			*/
-			const src = run(section,  after, VARREF);
-			const ret = AssignmentRequest.create(dest, src, 'to', section.freeVariables);
-			section.freeVariables = null;
-			return ret;
-		}
-		else if (type === "into") {
-			const dest = run(section,  after, VARREF, TYPEDVAR);
-			section.freeVariables = [];
-			const src = section.setIt(run(section,  before, VARREF));
-			const ret = AssignmentRequest.create(dest, src, 'into', section.freeVariables);
-			section.freeVariables = null;
+			const src = (type === "to") ? run(section, after, VARREF) : section.setIt(run(section, before, VARREF));
+			if (TwineError.containsError(src)) {
+				return src;
+			}
+			const isPure = section.pureValueCheck;
+			section.pureValueCheck = null;
+			/*
+				If it is indeed pure, create a prose reference to this location.
+			*/
+			let srcRef;
+			if (isPure &&
+					/*
+						ValueRefs shouldn't be used if the value was a Number or Boolean.
+					*/
+					(typeof src !== 'boolean' && typeof src !== 'number')) {
+				srcRef = [token.place, after[0].start, after[after.length-1].end];
+				/*
+					Don't bother if the stringified Harlowe source of the value is longer than its reference.
+				*/
+				if (srcRef < toSource(src)) {
+					srcRef = undefined;
+				}
+			}
+			const ret = AssignmentRequest.create(dest, src, type, srcRef);
 			return ret;
 		}
 		else if (type === "typeSignature") {
+			const datatype = run(section,  before, isVarRef);
 			/*
-				Because this is already being compiled into a TypedVar, the variable on the right does not need
-				to be compiled into a TypedVar as well.
+				TypedVars are the one case where variables shouldn't invalidate the
+				"pureValueCheck" that AssignmentRequests make. So, reinstate the current value
+				after the right side is run.
 			*/
-			return TypedVar.create(
-				run(section,  before, isVarRef),
-				run(section,  after, VARREF)
-			);
+			const free = section.pureValueCheck;
+				/*
+					Because this is already being compiled into a TypedVar, the variable on the right does not need
+					to be compiled into a TypedVar as well.
+				*/
+			const variable = run(section,  after, VARREF);
+			section.pureValueCheck = free;
+			return TypedVar.create(datatype, variable);
 		}
 		else if (type === "where" || type === "when" || type === "via") {
 			if (!after) {

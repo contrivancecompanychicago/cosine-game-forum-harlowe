@@ -31,11 +31,10 @@ define([], () => {
 		},
 
 		/*
-			Because printed values are encased in <tw-expression>s, the enclosing hook syntax doesn't need to be
-			included here.
+			Because printed values are pumped directly to renderInto, it's OK to return the code tree.
 		*/
 		TwineScript_Print() {
-			return this.source;
+			return this.code;
 		},
 
 		TwineScript_toString() {
