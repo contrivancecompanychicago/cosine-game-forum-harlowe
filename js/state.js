@@ -771,6 +771,8 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 					Clean the prototype of the variables object.
 				*/
 				moment.variables = assign(create(null), moment.variables);
+				defineProperty(moment.variables, "TwineScript_VariableDelta", { value: true });
+
 				/*
 					Check that the passage name in this moment corresponds to a real passage.
 					As this is the most likely issue with invalid save data, this gets a precise message.
@@ -795,7 +797,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				/*
 					The TwineScript_ValueRefs record is restored here (as it wasn't saved in the savefile for obvious reasons).
 				*/
-				moment.variables.TwineScript_ValueRefs = create(null);
+				defineProperty(moment.variables, 'TwineScript_ValueRefs', { value: create(null) });
 				/*
 					Compile all of the variables (which are currently Harlowe code strings) back into Harlowe values.
 				*/

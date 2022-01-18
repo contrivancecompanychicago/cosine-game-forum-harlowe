@@ -291,16 +291,15 @@ describe("save macros", function() {
 			}, 90);
 		});
 		it("can restore variables multiple times", function(done) {
-			runPassage("(set:$arr to (a:'" + "E".repeat(30) + "'))", 'baz');
-			expect("$arr").markupToPrint("E".repeat(30));
+			runPassage("(set:$arr to (a:'" + "E".repeat(30) + "'), $foo to (font:'Roboto'))", 'baz');
 			expect("(savegame:'1')").not.markupToError();
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
-				expect("$arr").markupToPrint("E".repeat(30));
 				expect("(savegame:'1')").not.markupToError();
 				expect("(loadgame:'1')").not.markupToError();
 				setTimeout(function() {
 					expect("$arr").markupToPrint("E".repeat(30));
+					expect("(verbatim-source:$foo)").markupToPrint("(font:\"Roboto\")");
 					done();
 				}, 90);
 			}, 90);

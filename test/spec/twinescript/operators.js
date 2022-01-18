@@ -648,6 +648,10 @@ describe("twinescript operators", function () {
 				expect("(set: $b to $a " + name + " $a)(print:$b)").markupToPrint(!not + '');
 				expect("(put: $a " + name + " $a into $b)(print:$b)").markupToPrint(!not + '');
 			});
+			it("works with 'it'", function (){
+				expect("(print:'Bee' is a string and 'Be' " + name + " it)").markupToPrint(!not + '');
+				expect("(print:3 > 2 and 'Be' " + name + " it)").markupToError();
+			});
 		});
 	});
 	describe("the '...' operator", function () {

@@ -719,10 +719,13 @@ define([
 			if (!after) {
 				missingSideError(false, true, token);
 			}
-			return ops[compileComparisonOperator(token)](
-				!before ? section.Identifiers.it : (section.Identifiers.it = run(section,  before)),
+			const leftOp = !before ? section.Identifiers.it : run(section,  before);
+			const ret = ops[compileComparisonOperator(token)](
+				leftOp,
 				run(section,  after)
 			);
+			section.Identifiers.it = leftOp;
+			return ret;
 		}
 		else if (type === "addition" || type === "subtraction") {
 			if (!after) {

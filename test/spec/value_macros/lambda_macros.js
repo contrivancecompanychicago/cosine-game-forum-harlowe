@@ -123,6 +123,8 @@ describe("lambda macros", function() {
 		});
 		it("sets the 'it' identifier to the loop value", function() {
 			expect("(print: (find: _a where it > 2, 1,3)'s 1st + 1)").markupToPrint("4");
+			expect("(print: (find: _a where its length is 2, 'AE','AFE','E','AF','AG','A'))").markupToPrint("AE,AF,AG");
+			expect("(print: (find: _a where 'A' is in it, 'AE','AFE','E','AF','AG','A'))").markupToPrint("AE,AFE,AF,AG,A");
 		});
 		it("errors if the optional datatype doesn't match", function() {
 			expect("(print: (find: str-type _a where it is not '2', 1))").markupToError();
