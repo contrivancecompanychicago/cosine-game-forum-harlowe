@@ -1,6 +1,6 @@
 "use strict";
-define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatypes/gradient', 'datatypes/datatype', 'datatypes/hookset', 'datatypes/codehook', 'internaltypes/twineerror'],
-(Macros, {realWhitespace, nth, anyRealLetter}, {subset, objectName, clone, toSource}, Colour, Gradient, Datatype, HookSet, CodeHook, TwineError) => {
+define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatypes/gradient', 'datatypes/datatype', 'datatypes/hookset', 'datatypes/codehook', 'internaltypes/twineerror'],
+(Macros, State, {realWhitespace, nth, anyRealLetter}, {subset, objectName, clone, toSource}, Colour, Gradient, Datatype, HookSet, CodeHook, TwineError) => {
 	/*
 		Built-in value macros.
 		These macros manipulate the primitive values - boolean, string, number.
@@ -85,6 +85,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			| `random` | A random character in the string. | `"aeiou"'s random` (is `"a"`, `"e"`, `"i"`, `"o"` or `"u"`).
 			| Arrays of numbers, such as `(a:3,5)` | `$str's (a:1,-1)` | A substring containing just the characters at the given positions in the string.
 
+			A note about `random`: this is one of the features that uses Harlowe's pseudo-random number generator. If you use (seed:) at the start of the story,
+			the selected values will be predetermined based on the seed string, and how many other random macros and features have been used before it.
 		*/
 		/*d:
 			(str: ...[Number or String or Boolean or Array]) -> String
@@ -1604,6 +1606,10 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Example usage:
 			`(random: 1,6)` simulates a six-sided die roll.
 
+			Details:
+			This is one of the features that uses Harlowe's pseudo-random number generator. If you use (seed:) at the start of the story,
+			the number will be predetermined based on the seed string, and how many other random macros and features have been used before it.
+
 			See also:
 			(either:), (shuffled:)
 
@@ -1620,7 +1626,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 				to = max(a, b);
 			}
 			to += 1;
-			return ~~((Math.random() * (to - from))) + from;
+			return ~~((State.random() * (to - from))) + from;
 		}, [parseInt, Macros.TypeSignature.optional(parseInt)]],
 		
 		/*d:
@@ -1642,6 +1648,9 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			macro provides this functionality.
 
 			Details:
+			This is one of the features that uses Harlowe's pseudo-random number generator. If you use (seed:) at the start of the story,
+			the chosen value will be predetermined based on the seed string, and how many other random macros and features have been used before it.
+
 			As with many macros, you can use the spread `...` operator to place all of the values in an array or dataset
 			into (either:), and pick them randomly. `(either: ...$array)`, for instance, will choose one possibility from
 			all of the array contents.
@@ -1659,7 +1668,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatype
 			Added in: 1.0.0
 			#basics 11
 		*/
-		either: [(...args) => args[~~(Math.random() * args.length)], rest(Any)],
+		either: [(...args) => args[~~(State.random() * args.length)], rest(Any)],
 
 		/*d:
 			(nth: Number, ...Any) -> Any

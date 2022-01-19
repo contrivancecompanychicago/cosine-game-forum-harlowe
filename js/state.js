@@ -2,6 +2,7 @@
 define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerror', 'utils/operationutils', 'markup'],
 ({impossible}, Passages, ChangerCommand, TwineError, {objectName,toSource,clone}, {lex}) => {
 	const {assign, create, defineProperty} = Object;
+	const {imul} = Math;
 	/*
 		This ensures that serialisation of Maps and Sets works as expected.
 	*/
@@ -12,6 +13,46 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		State
 		Singleton controlling the running game state.
 	*/
+
+	/*
+		PRNG settings.
+	*/
+	let seed = '', seedIter = 0;
+	/*
+		mulberry32 by tommyettinger, seeded with MurmurHash3 by Austin Appleby.
+		This is seeded with a single character to save space in save files (where this is saved
+		alongside the seedIter).
+	*/
+	function mulberryMurmur32(s = String.fromCodePoint(Date.now()%0x110000), iter=0) {
+		seedIter = iter;
+		seed = s;
+		let k, i = 0, h = 2166136261;
+		for(; i < seed.length; i+=1) {
+			k = imul(seed.charCodeAt(i), 3432918353);
+			k = k << 15 | k >>> 17;
+			h ^= imul(k, 461845907);
+			h = h << 13 | h >>> 19;
+			h = imul(h, 5) + 3864292196 | 0;
+		}
+		h ^= seed.length;
+		h ^= h >>> 16; h = imul(h, 2246822507);
+		h ^= h >>> 13; h = imul(h, 3266489909);
+		h ^= h >>> 16;
+		h = (h >>> 0) + 0x6D2B79F5 * seedIter;
+		return () => {
+			seedIter += 1;
+			let t = (h += 0x6D2B79F5);
+			t = imul(t ^ t >>> 15, t | 1);
+			t ^= t + imul(t ^ t >>> 7, t | 61);
+			return ((t ^ t >>> 14) >>> 0) / 4294967296;
+		};
+	}
+	let PRNG = mulberryMurmur32();
+	/*
+		The intiial seed for this "game", which cannot be undone using the story Undo features.
+		This can only be changed by (load-game:). Additional explicit (seed:) calls override this, obviously.
+	*/
+	let initialSeed = seed;
 	
 	/*
 		A browser compatibility check for localStorage and sessionStorage.
@@ -243,7 +284,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				else if (prop === "TwineScript_TypeDefs") {
 					assign(ret.TwineScript_TypeDefs, variables[prop]);
 				}
-				else if (!(prop in ret) && !prop.startsWith("TwineScript_")) {
+				else if (!(prop in ret) && (!prop.startsWith("TwineScript_") || prop.startsWith("TwineScript_Seed"))) {
 					/*
 						The JSON value "null" represents variables deleted by (move:).
 					*/
@@ -257,6 +298,21 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			}
 		});
 		SystemVariables = ret;
+		/*
+			Reset the PRNG based on the most recent TwineScript_SeedIter.
+
+			Changes to the Seed are always accompanied with changes to the SeedIter,
+			so we only need to write this check.
+		*/
+		if (hasOwnProperty.call(ret, 'TwineScript_SeedIter')) {
+			PRNG = mulberryMurmur32(ret.TwineScript_Seed || seed, ret.TwineScript_SeedIter);
+		}
+		/*
+			If we're undoing to the start, restore the initial seed state.
+		*/
+		else if (recent === 0) {
+			PRNG = mulberryMurmur32(initialSeed);
+		}
 	}
 	reconstructSystemVariables();
 
@@ -302,7 +358,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 	/*
 		The current game's state.
 	*/
-	State = assign({
+	State = {
 		/*
 			Getters/setters
 		*/
@@ -523,6 +579,8 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			timeline = [];
 			recent = -1;
 			present = Moment.create();
+			PRNG = mulberryMurmur32();
+			initialSeed = seed;
 			invalidateCaches();
 			reconstructSystemVariables();
 			serialiseProblem = undefined;
@@ -531,298 +589,366 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 
 		hasStorage: hasStorage[0],
 		hasSessionStorage: hasStorage[1],
-	},
+
+		/*
+			A way to set the RNG seed.
+			The new seed and seedIter is stored as a hidden variable in present.variables.
+		*/
+		setSeed(seed) {
+			PRNG = mulberryMurmur32(seed);
+
+			present.variables.TwineScript_Seed = seed;
+			present.variables.TwineScript_SeedIter = seedIter;
+		},
+
+		/*
+			A way to call the current PRNG, while also storing the changed seedIter
+			as a hidden variable in present.variables.
+		*/
+		random: () => {
+			const ret = PRNG();
+			present.variables.TwineScript_SeedIter = seedIter;
+			return ret;
+		},
+
+		/*
+			The following is an in-place Fisher–Yates shuffle.
+			Used only in data structure macros and value macros.
+		*/
+		shuffled(...list) {
+			return list.reduce((a,e,ind) => {
+				// Obtain a random number from 0 to ind inclusive.
+				const j = (this.random()*(ind+1)) | 0;
+				if (j === ind) {
+					a.push(e);
+				}
+				else {
+					a.push(a[j]);
+					a[j] = e;
+				}
+				return a;
+			},[]);
+		},
+	};
+
 	/*
 		In addition to the above simple methods, two serialisation methods are also present.
-		These have a number of helper functions which are wrapped in this block.
+		These have a number of helper functions.
 	*/
-	(()=>{
 
+	/*
+		This helper checks if serialisation is possible for this data value.
+	*/
+	function isSerialisable(obj) {
+		const jsType = typeof obj;
+		return !TwineError.containsError(obj) && (
+			typeof obj.TwineScript_ToSource === "function" || Array.isArray(obj) || obj instanceof Map
+				|| obj instanceof Set || jsType === "string" || jsType === "number" || jsType === "boolean"
+		);
+	}
+
+	/*
+		Serialise the game history, from the present backward (ignoring the redo cache)
+		into a JSON string.
+		
+		@return {Object|Boolean} The serialised state (in two strings), or false if serialisation failed.
+	*/
+	State.serialise = newPresent => {
+		let whatToSerialise;
 		/*
-			This helper checks if serialisation is possible for this data value.
+			- If serialisedPast isn't set yet, serialise everything up to the present.
+			- At the start of each turn (i.e newPresent == true), serialise the recently finished moment,
+			and the new moment.
+			- During a turn (i.e. (save-game:) or whatever),
+			serialise only the current moment (assume serialisedPast is up to date).
 		*/
-		function isSerialisable(obj) {
-			const jsType = typeof obj;
-			return !TwineError.containsError(obj) && (
-				typeof obj.TwineScript_ToSource === "function" || Array.isArray(obj) || obj instanceof Map
-					|| obj instanceof Set || jsType === "string" || jsType === "number" || jsType === "boolean"
-			);
+		whatToSerialise = timeline.slice(!serialisedPast ? 0 : newPresent ? recent-1 : recent, recent+1);
+		/*
+			In order to save the initial PRNG state (which is decided upon when the HTML is loaded, and
+			NOT storable in the first moment) an additional "initial seed" object must #awkwardly be included.
+		*/
+		if (!serialisedPast) {
+			whatToSerialise.unshift({ seed: initialSeed });
 		}
 
 		/*
-			Serialise the game history, from the present backward (ignoring the redo cache)
-			into a JSON string.
-			
-			@return {Object|Boolean} The serialised state (in two strings), or false if serialisation failed.
+			We must determine if the state is serialisable.
+			Once it is deemed unserialisable, it remains that way for the rest
+			of the story. (Note: currently, rewinding back past a point
+			where an unserialisable object was (set:) does NOT revert the
+			serialisability status.)
+
+			Create an array (of [var, value] pairs) that shows each variable that
+			couldn't be serialised at each particular turn.
 		*/
-		function serialise(newPresent) {
-			let whatToSerialise;
-			/*
-				- If serialisedPast isn't set yet, serialise everything up to the present.
-				- At the start of each turn (i.e newPresent == true), serialise the recently finished moment,
-				and the new moment.
-				- During a turn (i.e. (save-game:) or whatever),
-				serialise only the current moment (assume serialisedPast is up to date).
-			*/
-			whatToSerialise = timeline.slice(!serialisedPast ? 0 : newPresent ? recent-1 : recent, recent+1);
+		const serialisability = whatToSerialise.map(
+			(moment) => hasOwnProperty.call(moment,'seed') ? [] : Object.keys(moment.variables)
+				.filter((e) => moment.variables[e] && !e.startsWith('TwineScript_') && !isSerialisable(moment.variables[e]))
+				.map(e => [e, moment.variables[e]])
+		);
+		/*
+			Identify the variable and value that can't be serialised, and the turn it occurred,
+			and save them into serialiseProblem. But, if such a problem was already found previously,
+			use that instead.
+		*/
+		if (!serialiseProblem) {
+			serialiseProblem = (serialisability.reduce(
+				(problem, [name, value], turn) => (problem || (name && [name, value, turn + 1])),
+				undefined
+			));
+		}
+		/*
+			If it can't be serialised, return a TwineError with all the details.
+		*/
+		if (serialiseProblem) {
+			const [problemVar, problemValue, problemTurn] = serialiseProblem;
 
-			/*
-				We must determine if the state is serialisable.
-				Once it is deemed unserialisable, it remains that way for the rest
-				of the story. (Note: currently, rewinding back past a point
-				where an unserialisable object was (set:) does NOT revert the
-				serialisability status.)
-
-				Create an array (of [var, value] pairs) that shows each variable that
-				couldn't be serialised at each particular turn.
-			*/
-			const serialisability = whatToSerialise.map(
-				(moment) => Object.keys(moment.variables)
-					.filter((e) => moment.variables[e] && !e.startsWith('TwineScript_') && !isSerialisable(moment.variables[e]))
-					.map(e => [e, moment.variables[e]])
+			return TwineError.create(
+				"saving",
+				"The variable $" + problemVar + " holds " + objectName(problemValue)
+				+ " (which is, or contains, a complex data value) on turn " + problemTurn
+				+ "; the game can no longer be saved."
 			);
+		}
+		/*
+			Note: this MUST NOT be an arrow function, because JSON.stringify uses 'this' in the given callback.
+		*/
+		let serialiseFn = function (name, variable) {
 			/*
-				Identify the variable and value that can't be serialised, and the turn it occurred,
-				and save them into serialiseProblem. But, if such a problem was already found previously,
-				use that instead.
+				The timeline, which is an array of Moments with VariableStore objects, should be serialised
+				such that only the variables inside the VariableStore are converted to Harlowe strings
+				with toSource().
 			*/
-			if (!serialiseProblem) {
-				serialiseProblem = (serialisability.reduce(
-					(problem, [name, value], turn) => (problem || (name && [name, value, turn + 1])),
-					undefined
-				));
-			}
-			/*
-				If it can't be serialised, return a TwineError with all the details.
-			*/
-			if (serialiseProblem) {
-				const [problemVar, problemValue, problemTurn] = serialiseProblem;
-
-				return TwineError.create(
-					"saving",
-					"The variable $" + problemVar + " holds " + objectName(problemValue)
-					+ " (which is, or contains, a complex data value) on turn " + problemTurn
-					+ "; the game can no longer be saved."
-				);
-			}
-			/*
-				Note: this MUST NOT be an arrow function, because JSON.stringify uses 'this' in the given callback.
-			*/
-			let serialiseFn = function (name, variable) {
+			if (this.TwineScript_VariableDelta) {
 				/*
-					The timeline, which is an array of Moments with VariableStore objects, should be serialised
-					such that only the variables inside the VariableStore are converted to Harlowe strings
-					with toSource().
+					Serialising the TypeDefs, which is the only VariableStore property
+					that isn't directly user-created, and is a plain JS object,
+					requires a little special-casing.
 				*/
-				if (this.TwineScript_VariableDelta) {
-					/*
-						Serialising the TypeDefs, which is the only VariableStore property
-						that isn't directly user-created, and is a plain JS object,
-						requires a little special-casing.
-					*/
-					if (name === "TwineScript_TypeDefs") {
-						return Object.keys(variable).reduce((a,key) => {
-							/*
-								Since the datatypes inside are Harlowe values,
-								they should be serialised to source as well.
-							*/
-							a[key] = toSource(variable[key]);
-							return a;
-						},{});
-					}
-					/*
-						Mock Visits should be stored as well. As of Oct 2021, it's currently not decided
-						what should happen when a mock visits savefile is loaded outside of Debug Mode.
-					*/
-					if (name === "TwineScript_MockVisits") {
-						return variable;
-					}
-					// If this is the ValueRefs object, don't serialise it
-					if (name === "TwineScript_ValueRefs") {
-						return undefined;
-					}
-					/*
-						Values with a reference are serialised as an array (generated in Runner by the "to" and "into" handler)
-						of [passage name, passage text start index, passage text end index], which is used to reconstruct the value
-						when loading the save file.
-					*/
-					if (this.TwineScript_ValueRefs[name]) {
-						return this.TwineScript_ValueRefs[name];
-					}
-					/*
-						"null", representing deleted variables, is passed as-is to become a JSON null.
-						(Currently (Jan 2022), though, nothing can delete values.)
-					*/
-					if (variable === null) {
-						return variable;
-					}
-					return toSource(variable);
+				if (name === "TwineScript_TypeDefs") {
+					return Object.keys(variable).reduce((a,key) => {
+						/*
+							Since the datatypes inside are Harlowe values,
+							they should be serialised to source as well.
+						*/
+						a[key] = toSource(variable[key]);
+						return a;
+					},{});
 				}
 				/*
-					Special optimisation: when a Moment has no changed variables,
-					replace it with a string of just the passage name.
+					Mock Visits should be stored as well. As of Oct 2021, it's currently not decided
+					what should happen when a mock visits savefile is loaded outside of Debug Mode.
 				*/
-				if (Moment.isPrototypeOf(variable)) {
-					/*
-						Because the 'TwineScript_VariableDelta' label on the variables object of
-						Moments is not enumerable, it won't show up in Object.keys(). Therefore,
-						this should only grab actual variable changes.
-					*/
-					if (Object.keys(variable.variables).length === 0) {
-						return variable.passage;
-					}
+				if (name === "TwineScript_MockVisits") {
+					return variable;
 				}
-				return variable;
+				// If this is the ValueRefs object, don't serialise it
+				if (name === "TwineScript_ValueRefs") {
+					return undefined;
+				}
+				// Serialise the RNG seed values as-is.
+				if (name.startsWith("TwineScript_Seed")) {
+					return variable;
+				}
+				/*
+					Values with a reference are serialised as an array (generated in Runner by the "to" and "into" handler)
+					of [passage name, passage text start index, passage text end index], which is used to reconstruct the value
+					when loading the save file.
+				*/
+				if (this.TwineScript_ValueRefs[name]) {
+					return this.TwineScript_ValueRefs[name];
+				}
+				/*
+					"null", representing deleted variables, is passed as-is to become a JSON null.
+					(Currently (Jan 2022), though, nothing can delete values.)
+				*/
+				if (variable === null) {
+					return variable;
+				}
+				return toSource(variable);
+			}
+			/*
+				Special optimisation: when a Moment has no changed variables,
+				replace it with a string of just the passage name.
+			*/
+			if (Moment.isPrototypeOf(variable)) {
+				/*
+					Because the 'TwineScript_VariableDelta' label on the variables object of
+					Moments is not enumerable, it won't show up in Object.keys(). Therefore,
+					this should only grab actual variable changes.
+				*/
+				if (Object.keys(variable.variables).length === 0) {
+					return variable.passage;
+				}
+			}
+			return variable;
+		};
+		let pastToSerialise = whatToSerialise.slice(0, -1);
+		let updatedPast = serialisedPast;
+		/*
+			If there's no extra pastToSerialise, serialisedPast doesn't need to be updated.
+		*/
+		try {
+			if (pastToSerialise.length) {
+				/*
+					The amount of ] marks that must be repeatedly sliced off with .slice(0,-1) and .slice(1) to
+					concatenate these JSON serialised arrays together is very #awkward.
+				*/
+				updatedPast = (!updatedPast ? "[" : updatedPast.slice(0, -1) + ",") + JSON.stringify(pastToSerialise, serialiseFn).slice(1);
+			}
+			return {
+				past: updatedPast,
+				/*
+					Currently, serialiseFn assumes that its input is an array of moments, and can't serialise a single moment by itself.
+					Hence, while whatToSerialise.slice(-1) is a one-element array, the contained element can't be passed itself.
+				*/
+				pastAndPresent: updatedPast.slice(0, -1) + (updatedPast ? ',' : '[') + JSON.stringify(whatToSerialise.slice(-1), serialiseFn).slice(1),
 			};
-			try {
-				let pastToSerialise = whatToSerialise.slice(0, -1);
-				let updatedPast = serialisedPast;
+		}
+		catch(e) {
+			return { past: false, pastAndPresent: false };
+		}
+	};
+
+	/*
+		A quick method to recompile objects whose values are Harlowe code strings, taken directly
+		from localStorage.
+		Since this should only receive formerly-serialised data, we don't really need to care about the
+		scope of the eval().
+	*/
+	function recompileValues(section, obj) {
+		for (let key in obj) {
+			if (hasOwnProperty.call(obj, key) && !key.startsWith("TwineScript_")) {
 				/*
-					If there's no extra pastToSerialise, serialisedPast doesn't need to be updated.
+					Note that TypeDefs values can't be serialised as "reconstruct",
+					so this check won't do anything unwanted to them.
 				*/
-				if (pastToSerialise.length) {
-					/*
-						The amount of ] marks that must be repeatedly sliced off with .slice(0,-1) and .slice(1) to
-						concatenate these JSON serialised arrays together is very #awkward.
-					*/
-					updatedPast = (!updatedPast ? "[" : updatedPast.slice(0, -1) + ",") + JSON.stringify(pastToSerialise, serialiseFn).slice(1);
+				if (Array.isArray(obj[key])) {
+					obj.TwineScript_ValueRefs[key] = obj[key];
+
+					const [passageName, start, end] = obj[key];
+					const source = Passages.get(passageName).get('source');
+					obj[key] = section.eval(lex(source.slice(start, end), '', 'macro'));
 				}
-				return {
-					past: updatedPast,
-					/*
-						Currently, serialiseFn assumes that its input is an array of moments, and can't serialise a single moment by itself.
-						Hence, while whatToSerialise.slice(-1) is a one-element array, the contained element can't be passed itself.
-					*/
-					pastAndPresent: updatedPast.slice(0, -1) + (updatedPast ? ',' : '[') + JSON.stringify(whatToSerialise.slice(-1), serialiseFn).slice(1),
-				};
-			}
-			catch(e) {
-				return false;
+				else {
+					obj[key] = section.eval(lex(obj[key], '', 'macro'));
+				}
 			}
 		}
-
+	}
+	
+	/*
+		Deserialise the string and replace the current history.
+		Since an error with save data isn't necessarily an author error, the errors returned
+		by this function aren't TwineErrors.
+	*/
+	State.deserialise = (section, str) => {
+		let newTimeline;
+		const genericError = "The save data is unintelligible.";
+		
+		try {
+			newTimeline = JSON.parse(str);
+		}
+		catch(e) {
+			return Error(genericError);
+		}
 		/*
-			A quick method to recompile objects whose values are Harlowe code strings, taken directly
-			from localStorage.
-			Since this should only receive formerly-serialised data, we don't really need to care about the
-			scope of the eval().
+			Verify that the timeline is an array.
 		*/
-		function recompileValues(section, obj) {
-			for (let key in obj) {
-				if (hasOwnProperty.call(obj, key) && !key.startsWith("TwineScript_")) {
-					/*
-						Note that TypeDefs values can't be serialised as "reconstruct",
-						so this check won't do anything unwanted to them.
-					*/
-					if (Array.isArray(obj[key])) {
-						obj.TwineScript_ValueRefs[key] = obj[key];
-
-						const [passageName, start, end] = obj[key];
-						const source = Passages.get(passageName).get('source');
-						obj[key] = section.eval(lex(source.slice(start, end), '', 'macro'));
-					}
-					else {
-						obj[key] = section.eval(lex(obj[key], '', 'macro'));
-					}
-				}
-			}
+		if (!Array.isArray(newTimeline)) {
+			return Error(genericError);
 		}
 		
-		/*
-			Deserialise the string and replace the current history.
-			Since an error with save data isn't necessarily an author error, the errors returned
-			by this function aren't TwineErrors.
-		*/
-		function deserialise(section, str) {
-			let newTimeline;
-			const genericError = "The save data is unintelligible.";
-			
-			try {
-				newTimeline = JSON.parse(str);
-			}
-			catch(e) {
-				return Error(genericError);
+		for(let i = 0; i < newTimeline.length; i += 1) {
+			let moment = newTimeline[i];
+			/*
+				If it's just a string, uncompress it into a full JSON "moment".
+			*/
+			if (typeof moment === "string") {
+				moment = { passage: moment, variables: {} };
 			}
 			/*
-				Verify that the timeline is an array.
+				If it's the special "initial seed" object, process it.
 			*/
-			if (!Array.isArray(newTimeline)) {
-				return Error(genericError);
+			else if (typeof moment === "object" && hasOwnProperty.call(moment,"seed")) {
+				/*
+					If there's erroneously more "initial seed" objects than in the first position, ignore them.
+				*/
+				if (i === 0) {
+					initialSeed = moment.seed;
+					PRNG = mulberryMurmur32(moment.seed);
+				}
+				/*
+					Seamlessly remove this non-state object from the timeline.
+				*/
+				newTimeline.splice(i--,1);
+				continue;
 			}
-			
-			let momentError;
-			if ((momentError = (newTimeline = newTimeline.map((moment) => {
+			/*
+				Here, we do some brief verification that the remaining moments in the array are
+				objects with "passage" and "variables" keys.
+			*/
+			else if (typeof moment !== "object"
+					|| !hasOwnProperty.call(moment,"passage")
+					|| !hasOwnProperty.call(moment,"variables")) {
 				/*
-					If it's just a string, uncompress it into a full JSON "moment".
+					Rather than freak out, just disregard this object altogether.
 				*/
-				if (typeof moment === "string") {
-					moment = { passage: moment, variables: {} };
-				}
-				/*
-					Here, we do some brief verification that the moments in the array are
-					objects with "passage" and "variables" keys.
-				*/
-				else if (typeof moment !== "object"
-						|| !hasOwnProperty.call(moment,"passage")
-						|| !hasOwnProperty.call(moment,"variables")) {
-					return Error(genericError);
-				}
-				/*
-					Clean the prototype of the variables object.
-				*/
-				moment.variables = assign(create(null), moment.variables);
-				defineProperty(moment.variables, "TwineScript_VariableDelta", { value: true });
+				newTimeline.splice(i--,1);
+				continue;
+			}
+			/*
+				Clean the prototype of the variables object.
+			*/
+			moment.variables = assign(create(null), moment.variables);
+			defineProperty(moment.variables, "TwineScript_VariableDelta", { value: true });
 
+			/*
+				Check that the passage name in this moment corresponds to a real passage.
+				As this is the most likely issue with invalid save data, this gets a precise message.
+			*/
+			if (!Passages.hasValid(moment.passage)) {
+				return Error(`The data refers to a passage named '${moment.passage}', but it isn't in this story.`);
+			}
+			/*
+				If the variables object has a TypeDefs object, that needs to be recompiled as well.
+			*/
+			if (hasOwnProperty.call(moment.variables,'TwineScript_TypeDefs')) {
 				/*
-					Check that the passage name in this moment corresponds to a real passage.
-					As this is the most likely issue with invalid save data, this gets a precise message.
-				*/
-				if (!Passages.hasValid(moment.passage)) {
-					return Error("The data refers to a passage named '" + moment.passage + "', but it isn't in this story.");
-				}
-				/*
-					If the variables object has a TypeDefs object, that needs to be recompiled as well.
-				*/
-				if (hasOwnProperty.call(moment.variables,'TwineScript_TypeDefs')) {
-					/*
-						Much like the variables, the datatypes are currently Harlowe code strings - though rather likely to be
-						literals like "number" or "datamap".
-					*/
-					try {
-						recompileValues(section, moment.variables.TwineScript_TypeDefs);
-					} catch(e) {
-						return Error(genericError);
-					}
-				}
-				/*
-					The TwineScript_ValueRefs record is restored here (as it wasn't saved in the savefile for obvious reasons).
-				*/
-				defineProperty(moment.variables, 'TwineScript_ValueRefs', { value: create(null) });
-				/*
-					Compile all of the variables (which are currently Harlowe code strings) back into Harlowe values.
+					Much like the variables, the datatypes are currently Harlowe code strings - though rather likely to be
+					literals like "number" or "datamap".
 				*/
 				try {
-					recompileValues(section, moment.variables);
+					recompileValues(section, moment.variables.TwineScript_TypeDefs);
 				} catch(e) {
-					return Error(genericError);
+					return Error(`The variable types on turn ${i+1} couldn't be reconstructed.`);
 				}
-				/*
-					Re-establish the moment objects' prototype link to Moment.
-				*/
-				return assign(create(Moment), moment);
-			})).find(e => e instanceof Error))) {
-				return momentError;
 			}
-			timeline = newTimeline;
-			recent = timeline.length - 1;
-			eventHandlers.load.forEach(fn => fn(timeline));
-			invalidateCaches();
-			reconstructSystemVariables();
-			newPresent(timeline[recent].passage);
-			return true;
+			/*
+				The TwineScript_ValueRefs record is restored here (as it wasn't saved in the savefile for obvious reasons).
+			*/
+			defineProperty(moment.variables, 'TwineScript_ValueRefs', { value: create(null) });
+			/*
+				Compile all of the variables (which are currently Harlowe code strings) back into Harlowe values.
+			*/
+			try {
+				recompileValues(section, moment.variables);
+			} catch(e) {
+				return Error(`The variables on turn ${i+1} couldn't be reconstructed.`);
+			}
+			/*
+				Re-establish the moment objects' prototype link to Moment.
+			*/
+			newTimeline[i] = assign(create(Moment), moment);
 		}
-		return { serialise, deserialise, };
-	})());
+		timeline = newTimeline;
+		recent = timeline.length - 1;
+		eventHandlers.load.forEach(fn => fn(timeline));
+		invalidateCaches();
+		reconstructSystemVariables();
+		newPresent(timeline[recent].passage);
+		return true;
+	};
 	
 	Object.seal(Moment);
 	return Object.freeze(State);

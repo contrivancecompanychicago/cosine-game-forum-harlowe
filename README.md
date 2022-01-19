@@ -52,6 +52,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 ##### Additions
 
  * Added `(unique:)`, a macro which produces an array containing the unique values in the given sequence, while preserving the order of the values. `(unique:7,6,6,5,4,5)` produces `(a:7,6,5,4)`. Formerly, you could produce the unique values of an array using `(a: ...(ds: ...$arr))`, but this wouldn't preserve the order of values in the array.
+ * Added `(seed:)`, a macro used to seed the pseudo-random number generator used for `(random:)`, `(either:)`, `(shuffled:)`, `'s random`, and `random of`. Pass a string to it, such as by `(seed:"AAA")`, and random macros and features from then on will be predetermined based on that seed. The seed is also automatically saved using `(save-game:)` and loaded using `(load-game:)`. This finally brings Harlowe into line with the other built-in formats regarding random number generator seeding.
  * Added the `codehook` datatype.
 
 ### 3.2.3 changes (October 22, 2021):

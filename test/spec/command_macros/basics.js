@@ -639,4 +639,46 @@ describe("basic command macros", function() {
 			expect(p.find('[data-t8n="pulse"]').css('animation-duration')).toMatch(/^9000ms$|^9s$/);
 		});
 	});
+	describe("the (seed:) macro", function() {
+		it("takes a single string", function() {
+			expect("(seed:)").markupToError();
+			expect("(seed:2)").markupToError();
+			expect("(seed:?A)").markupToError();
+			expect("(seed:'Good')").not.markupToError();
+			expect("(seed:'Good','Bad')").markupToError();
+		});
+		it("changes (random:) to generate random numbers based on the seed", function() {
+			expect('(seed:"A")(random:1,10) (random:1,10)').markupToPrint('4 2');
+			expect('(seed:"B")(random:1,10) (random:1,10)').markupToPrint('2 3');
+			expect('(seed:"A")(random:1,10) (random:1,10)').markupToPrint('4 2');
+		});
+		it("changes (either:) to pick based on the seed", function() {
+			expect('(seed:"A")(either:1,2,3,4,5,6,7,8,9,10) (either:1,2,3,4,5,6,7,8,9,10)').markupToPrint('4 2');
+			expect('(seed:"B")(either:1,2,3,4,5,6,7,8,9,10) (either:1,2,3,4,5,6,7,8,9,10)').markupToPrint('2 3');
+			expect('(seed:"A")(either:1,2,3,4,5,6,7,8,9,10) (either:1,2,3,4,5,6,7,8,9,10)').markupToPrint('4 2');
+		});
+		it("changes (shuffled:) to pick based on the seed", function() {
+			expect('(seed:"A")(shuffled:1,2,3,4,5,6,7,8,9,10)').markupToPrint('2,4,9,8,5,10,7,1,3,6');
+			expect('(seed:"B")(shuffled:1,2,3,4,5,6,7,8,9,10)').markupToPrint('6,8,1,5,4,7,10,3,2,9');
+			expect('(seed:"A")(shuffled:1,2,3,4,5,6,7,8,9,10)').markupToPrint('2,4,9,8,5,10,7,1,3,6');
+		});
+		it("changes the 'random' data name to pick based on the seed", function() {
+			expect('(seed:"A")' + '(print:(shuffled:1,2,3,4,5,6,7,8,9,10)\'s random)'.repeat(10)).markupToPrint('56106249763');
+			expect('(seed:"B")' + '(print:(shuffled:1,2,3,4,5,6,7,8,9,10)\'s random)'.repeat(10)).markupToPrint('102666271041');
+			expect('(seed:"A")' + '(print:(shuffled:1,2,3,4,5,6,7,8,9,10)\'s random)'.repeat(10)).markupToPrint('56106249763');
+			expect('(seed:"A")' + '(print:random of (shuffled:1,2,3,4,5,6,7,8,9,10))'.repeat(10)).markupToPrint('56106249763');
+			expect('(seed:"B")' + '(print:random of (shuffled:1,2,3,4,5,6,7,8,9,10))'.repeat(10)).markupToPrint('102666271041');
+			expect('(seed:"A")' + '(print:random of (shuffled:1,2,3,4,5,6,7,8,9,10))'.repeat(10)).markupToPrint('56106249763');
+		});
+		it("similar seeds produce different numbers", function() {
+			expect('(seed:"A")(random:1,100000000)').markupToPrint('39697500');
+			expect('(seed:"B")(random:1,100000000)').markupToPrint('19769511');
+			expect('(seed:"AA")(random:1,100000000)').markupToPrint('32938063');
+			expect('(seed:"AB")(random:1,100000000)').markupToPrint('75176786');
+			expect('(seed:"AAA")(random:1,100000000)').markupToPrint('6035339');
+		});
+		it("all random features increment the same RNG", function() {
+			expect('(seed:"A")(random:1,10)(either:1,2,3,4,5,6,7,8,9,10)(shuffled:1,2,3,4,5,6,7,8,9,10)(print:(shuffled:1,2,3,4,5,6,7,8,9,10)\'s random)').markupToPrint('422,7,10,9,8,3,1,5,4,64');
+		});
+	});
 });

@@ -1961,6 +1961,9 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 						},
 						fidget: {
 							animation() {
+								/*
+									Because this animation has no effect on game state, it's OK to use Math.random() here.
+								*/
 								return "fidget step-end 60s " + (-Math.random()*60) + "s infinite" + (Math.random()<0.5 ? " reverse" : "");
 							},
 						},

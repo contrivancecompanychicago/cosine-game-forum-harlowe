@@ -148,7 +148,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				/*
 					Again, to get the true code point length of strings, Array.from() is called for.
 				*/
-				prop = Math.random() * Array.from(obj).length | 0;
+				prop = State.random() * Array.from(obj).length | 0;
 			}
 			/*
 				HookSets should be the only sequential with additional string properties.

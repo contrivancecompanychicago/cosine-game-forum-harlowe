@@ -322,8 +322,8 @@ describe("save macros", function() {
 					expect("$c").markupToPrint('0');
 					expect("$d").markupToPrint('12');
 					done();
-				},20);
-			},20);
+				},90);
+			},90);
 		});
 		it("produces a user-friendly prompt for deletion if the save data is invalid", function(done) {
 			runPassage("uno", "uno");
@@ -340,8 +340,8 @@ describe("save macros", function() {
 				setTimeout(function() {
 					expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(0);
 					done();
-				},120);
-			},120);
+				},90);
+			},90);
 			//TODO: Test that the save data is actually deleted.
 		});
 		it("can restore mock visits", function(done) {
@@ -352,7 +352,48 @@ describe("save macros", function() {
 			setTimeout(function() {
 				expect("(print:visits)").markupToPrint('5'); // 3 mocks, 1 visit above, plus this passage
 				done();
-			},120);
+			},90);
+		});
+		it("can restore the PRNG seed", function(done) {
+			runPassage("(seed:'AAA')(random:1,100000000)",'test');
+			runPassage("(savegame:'1')",'bar');
+			expect("(random:1,100000000)").markupToPrint('24547054');
+			runPassage("(seed:'AB')",'baz');
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("(random:1,100000000)").markupToPrint('24547054');
+				done();
+			},90);
+		});
+		it("can restore the PRNG seed across many turns", function(done) {
+			runPassage("(seed:'BAA')",'foo');
+			runPassage("**(random:1,100000000)**",'bar');
+			runPassage("**(random:1,100000000)**",'baz');
+			runPassage("**(random:1,100000000)**",'qux');
+			runPassage("(savegame:'1')",'quux');
+			runPassage("(random:1,2)",'garply');
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				Engine.goBack();
+				expect($('tw-passage strong').text()).toBe('84127778');
+				Engine.goBack();
+				expect($('tw-passage strong').text()).toBe('64751555');
+				Engine.goBack();
+				expect($('tw-passage strong').text()).toBe('97814911');
+				done();
+			},90);
+		});
+		it("can restore the PRNG seed even when it isn't set", function(done) {
+			runPassage("**(random:1,100000000)**",'foo');
+			var result = $('tw-passage strong').text();
+			runPassage("(random:1,2)(random:1,2)(savegame:'1')(random:1,2)",'bar');
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				Engine.goBack();
+				Engine.goBack();
+				expect($('tw-passage strong').text()).toBe(result);
+				done();
+			},90);
 		});
 	});
 });

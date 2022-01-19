@@ -57,7 +57,6 @@ window.runPassage = function(text, name, tags, keepCache) {
 	return $('tw-passage:last-of-type > tw-transition-container, tw-passage > tw-hook');
 };
 window.deletePassage = function(name) {
-	Passages.clearTreeCache();
 	Passages.delete(name);
 };
 var combinations = new Set(function recur(prefix, arr) {
@@ -130,8 +129,6 @@ window.checkMacroTypeSignature = function(macroname, signature, afterward) {
 window.clearState = function() {
 	State.reset();
 	Passages.clear();
-	Passages.clearTagCache();
-	Passages.clearTreeCache();
 };
 window.deserialiseState = function(str) {
 	State.reset();

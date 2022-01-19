@@ -13,7 +13,7 @@ define([
 	'datatypes/typedvar',
 	'internaltypes/varref',
 	'internaltypes/twineerror'],
-($, {shuffled, permutations}, NaturalSort, Macros, {objectName, subset, collectionType, isValidDatamapName, is, unique, clone, range}, State, Engine, Passages, Lambda, Datatype, TypedVar, VarRef, TwineError) => {
+($, {permutations}, NaturalSort, Macros, {objectName, subset, collectionType, isValidDatamapName, is, unique, clone, range}, State, Engine, Passages, Lambda, Datatype, TypedVar, VarRef, TwineError) => {
 	
 	const {optional, rest, either, zeroOrMore, Any, nonNegativeInteger}   = Macros.TypeSignature;
 
@@ -118,6 +118,9 @@ define([
 			| `any`, `all` | `all of (a:1,2) < 3` | Usable only with comparison operators, these allow all or any of the values to be quickly compared.
 			| `start`, `end` | `start of (a:1,2,3,4) is (a:1,2)`, `(a:1,2,3,4)'s end is not (a:2,4)` | Usable only with the `is`, `is not`, `matches` and `does not match` operators, these allow you to compare the start or end of arrays without having to specify an exact range of values to compare.
 			| Arrays of numbers, such as `(a:3,5)` | `$array's (a:1,-1)` | A subarray containing just the data values at the given positions in the array.
+
+			A note about `random`: this is one of the features that uses Harlowe's pseudo-random number generator. If you use (seed:) at the start of the story,
+			the selected values will be predetermined based on the seed string, and how many other random macros and features have been used before it.
 		*/
 		/*d:
 			(a: [...Any]) -> Array
@@ -286,6 +289,8 @@ define([
 			can be used as you please.
 			
 			Details:
+			This is one of the features that uses Harlowe's pseudo-random number generator. If you use (seed:) at the start of the story,
+			the order will be predetermined based on the seed string, and how many other random macros and features have been used before it.
 
 			As of 3.3.0, giving zero or more values to (shuffled:) will cause an empty array (such as by `(a:)`) to be returned,
 			rather than causing an error to occur.
@@ -296,7 +301,7 @@ define([
 			Added in: 1.1.0
 			#data structure
 		*/
-		("shuffled", (_, ...args) => shuffled(...args).map(clone),
+		("shuffled", (_, ...args) => State.shuffled(...args).map(clone),
 		[zeroOrMore(Any)])
 		
 		/*d:

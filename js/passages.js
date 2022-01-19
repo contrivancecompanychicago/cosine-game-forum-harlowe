@@ -177,6 +177,22 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 		},
 
 		/*
+			Overrides for clear() and delete() that wipe the caches. Note that only the test runner
+			should call these.
+		*/
+		clear() {
+			Map.prototype.clear.call(this);
+			this.clearTagCache();
+			this.clearTreeCache();
+		},
+
+		delete() {
+			Map.prototype.delete.call(this, ...arguments);
+			this.clearTagCache();
+			this.clearTreeCache();
+		},
+
+		/*
 			Retrieve a cached lexed code tree for this passage's source,
 			or lex it here and now.
 		*/

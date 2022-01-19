@@ -188,25 +188,6 @@ define(['jquery', 'markup', 'utils/polyfills'],
 		},
 
 		/*
-			The following is an in-place Fisher–Yates shuffle.
-			Used only in data structure macros and value macros.
-		*/
-		shuffled(...list) {
-			return list.reduce((a,e,ind) => {
-				// Obtain a random number from 0 to ind inclusive.
-				const j = (Math.random()*(ind+1)) | 0;
-				if (j === ind) {
-					a.push(e);
-				}
-				else {
-					a.push(a[j]);
-					a[j] = e;
-				}
-				return a;
-			},[]);
-		},
-
-		/*
 			A quick method for turning a number into an "nth" string.
 		*/
 		nth(num) {
