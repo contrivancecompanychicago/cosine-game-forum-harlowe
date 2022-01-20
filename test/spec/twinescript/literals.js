@@ -36,6 +36,13 @@ describe("twinescript literals", function() {
 			expect("(print: 5 ms)").markupToError();
 			expect("(print: 5 s)").markupToError();
 		});
+		it("negative numbers aren't interpreted as subtractions", function() {
+			expect("(print: 5 * -1)").markupToPrint("-5");
+			expect("(print: 5 * - 1)").markupToPrint("-5");
+			expect("(print: --5)").markupToPrint("5");
+			expect("(print: --5-5)").markupToPrint("0");
+			expect("(print: (a:2)'s (-1))").markupToPrint("2");
+		});
 	});
 	describe("booleans", function() {
 		it("consist of true or false, case-insensitive", function() {

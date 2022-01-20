@@ -223,11 +223,13 @@ describe("data structure macros", function () {
 		});
 	});
 	describe("the (sorted:) macro", function() {
-		it("accepts 0 or more number or string arguments", function() {
+		it("accepts an optional 'via' lambda, plus 0 or more number or string arguments", function() {
 			expect("(sorted:)").not.markupToError();
 			expect("(sorted: 'A')").not.markupToError();
 			expect("(sorted: 3)").not.markupToError();
+			expect("(sorted: via it, 3)").not.markupToError();
 			expect("(sorted: (a:2))").markupToError();
+			expect("(sorted: via its 1st, (a:2))").not.markupToError();
 			for(var i = 2; i < 10; i += 1) {
 				expect("(sorted:" + ("'X',").repeat(i) + ")").not.markupToError();
 				expect("(sorted:" + ("61,").repeat(i) + ")").not.markupToError();
@@ -241,6 +243,18 @@ describe("data structure macros", function () {
 		it("doesn't coerce the types", function() {
 			expect("(print: (sorted:2,11,1)'s 2nd + 3)").markupToPrint("5");
 			expect("(print: (sorted:'A','D','B','C')'s 2nd + 'OO')").markupToPrint("BOO");
+		});
+		it("when given an optional 'via' lambda, sorts the values using the lambda", function() {
+			expect("(sorted:via (str:it)'s length,'garply',2,200,2000)").markupToPrint("2,200,2000,garply");
+			expect('(sorted: via its length * -1, "Gus", "Arthur", "William")').markupToPrint("William,Arthur,Gus");
+			expect('(sorted: via its last, "Gus", "Arthur", "William")').markupToPrint("William,Arthur,Gus");
+			expect("(print:(sorted: via its h, orange, red, blue, yellow)'s 1st is red)").markupToPrint('true');
+		});
+		it("errors if the first value is a lambda but not a 'via' lambda", function() {
+			expect("(sorted:where it > 0,1,2)").markupToError();
+		});
+		it("errors if the 'via' lambda doesn't produce a number or string", function() {
+			expect("(sorted:via (a:it),1,2)").markupToError();
 		});
 	});
 	describe("the (unique:) macro", function() {

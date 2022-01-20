@@ -268,11 +268,11 @@ define([
 	};
 
 	function missingSideError(needsLeft, needsRight, token) {
-		return TwineError.create('operation', `I need usable code to be ${needsLeft ? "left " : ""}${needsLeft && needsRight ? "and " : ""}${needsRight ? "right " : ""}of ${token.text}.`);
+		return TwineError.create('syntax', `I need usable code to be ${needsLeft ? "left " : ""}${needsLeft && needsRight ? "and " : ""}${needsRight ? "right " : ""}of ${token.text}.`);
 	}
 
 	function wrongSideError(wrongLeft, wrongRight, token) {
-		return TwineError.create('operation',
+		return TwineError.create('syntax',
 			`There can't be a ${
 					(wrongLeft && wrongRight)
 					? wrongLeft.map(e => e.text).join('') + ' or ' + wrongRight.map(e => e.text).join('')
@@ -739,8 +739,12 @@ define([
 			*/
 			let convert = !before;
 			if (before) {
+				/*
+					Find the precedent token of the 'before' side. if it needs something on its right,
+					convert this to "positive" or "negative" and re-run this whole set of tokens.
+				*/
 				const [previousPrecedentToken,i] = precedentToken(before, "least");
-				const sides = tokenSides[previousPrecedentToken], pType = previousPrecedentToken.type;
+				const sides = tokenSides[previousPrecedentToken.type], pType = previousPrecedentToken.type;
 				convert = (
 					(sides === "both" || sides === "after" ||
 					pType === "addition" || pType === "subtraction") &&

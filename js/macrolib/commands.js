@@ -2513,7 +2513,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			predetermined values based on the given "seed" string.
 
 			Example usage:
-			`(seed:"aeiouy")` sets the seed.
+			`(seed:"aeiouy")(random:1,10) (random:1,10) (random:1,10)` will print `3 2 6`.
 
 			Rationale:
 			One of the appeals of randomness in games is its unpredictability, but one of the detriments of it is its
@@ -2573,7 +2573,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			(random:), (either:), (shuffled:)
 
 			Added in: 3.3.0
-			#saving
+			#game state
 		*/
 		("seed",
 			noop,

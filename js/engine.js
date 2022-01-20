@@ -306,7 +306,7 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 		}
 		source.push(Passages.getTree(name));
 		for(let p of Passages.getTagged('footer')) {
-			source.push(setupPassageElement('debug-footer', p));
+			source.push(setupPassageElement('footer', p));
 		}
 		if (options.debug) {
 			for(let p of Passages.getTagged('debug-footer')) {

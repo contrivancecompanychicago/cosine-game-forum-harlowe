@@ -1611,7 +1611,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			the number will be predetermined based on the seed string, and how many other random macros and features have been used before it.
 
 			See also:
-			(either:), (shuffled:)
+			(either:), (shuffled:), (seed:)
 
 			Added in: 1.0.0
 			#number

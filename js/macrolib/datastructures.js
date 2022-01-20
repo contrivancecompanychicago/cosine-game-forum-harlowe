@@ -16,6 +16,7 @@ define([
 ($, {permutations}, NaturalSort, Macros, {objectName, subset, collectionType, isValidDatamapName, is, unique, clone, range}, State, Engine, Passages, Lambda, Datatype, TypedVar, VarRef, TwineError) => {
 	
 	const {optional, rest, either, zeroOrMore, Any, nonNegativeInteger}   = Macros.TypeSignature;
+	const EnSort = NaturalSort("en");
 
 	Macros.add
 		/*
@@ -305,36 +306,53 @@ define([
 		[zeroOrMore(Any)])
 		
 		/*d:
-			(sorted: ...Number or String) -> Array
+			(sorted: [Lambda], ...Any) -> Array
 			
-			Similar to (a:), except that it requires only numbers or strings, and orders
-			them in English alphanumeric sort order, rather than the order in which they were provided.
+			This macro produces an array in which the values are sorted in English alphanumeric sort order. If any of the values are not
+			numbers or strings, a "via" lambda must be given first, which is used to translate the value into a number or string that
+			it should be sorted by.
 			
 			Example usage:
-			```
-			(set: $a to (a: 'A','C','E','G', 2, 1))
-			(print: (sorted: ...$a))
-			```
+			* `(set: $a to (a: 'A','C','E','G', 2, 1))(sorted: ...$a)` prints `1,2,A,C,E,G`.
+			* `(sorted: via its name, ...$creatures)` sorts the datamaps in the array stored in $creatures by their "name" values. Datamaps with an alphanumerically earlier "name" appear first.
+			* `(sorted: via its length * -1, "Gus", "Arthur", "William")` produces `(a: "William", "Arthur", "Gus"))`. This lambda produces negative numbers for each string.
+			* `(sorted: via its tags's length, ...(passages:))` produces a version of the (passages:) array, sorted by ascending number of tags each passage datamap has.
+			* `(sorted: via (passage:it)'s exclusivity, ...(history:))` produces a version of the (history:) array (which is an array of passage name strings), sorted
+			by the (exclusivity:) metadata the passage with that name has.
+			* `(sorted: via its h, orange, red, blue, yellow)` produces `(a: red, orange, yellow, blue)`.
+			* `(sorted: via (random:1,100), ...$arr)` is mostly the same as `(shuffled:...$arr)`.
 			
 			Rationale:
-			Arrays are often used as storage for lists of strings: objects or locations the player has encountered,
-			feats the player has performed, visited passage names as produced by (history:), names of file slots as produced
-			by (saved-games:), to name just a few examples. There are times when you want to display the entire list in alphabetical
-			order, or want to manipulate the values without worrying about its current order. This macro can be
-			used to create a sorted array, or (by using the spread `...` syntax) convert an existing array into a sorted one.
+			The main purpose of arrays is to store data values in a specific order - feats the player has performed,
+			names of open storylets from (open-storylets:), visited passage names from (history:), names of file slots as produced
+			by `(dataentries:(saved-games:))`, to name just a few examples. However, there are times when you want to work with
+			the same array in a different order, either because the default ordering isn't to your needs - for instance, you wish to list open
+			storylets by one of their metadata values - or you need to include special exceptions to the normal ordering - for instance, you want to sort
+			(history:) passages with a certain tag higher than others. This macro can be used to create a sorted array,
+			organising the given values in either alphanumeric order, or by a particular alphanumeric key.
 			
 			Details:
-			Unlike other programming languages, strings aren't sorted using ASCII sort order, but alphanumeric sorting:
+			The optional "via" lambda must translate each value into either a number or string - otherwise, it will produce an error. It can be provided even if
+			any of the values are already numbers or strings.
+
+			The values are sorted *as if* they were the value that the "via" lambda produced. In the example of `(sorted: via its length * -1, "Gus", "Arthur", "William")`. the string
+			"Gus" is sorted *as if* it was `"Gus"'s length * -1` (which is -3), "Arthur" is sorted *as if* it was `"Arthur"'s length * -1` (which is -6),
+			and "William" is sorted *as if* it was `"William"'s length * -1` (which is -7). This allows a variety of sorting options.
+			Datamaps may be sorted by any one of their string or number values, and strings may be sorted in different ways than just their alphanumeric order.
+
+			Unlike other programming languages, strings aren't sorted using ASCII sort order, but *alphanumeric* sorting:
 			the string "A2" will be sorted after "A1" and before "A11". Moreover, if the player's web browser
-			supports internationalisation (that is, every current browser except Safari 6-8 and IE 10), then
+			supports internationalisation (that is, every current browser except IE 10), then
 			the strings will be sorted using English language rules (for instance, "é" comes after "e" and before
 			"f", and regardless of the player's computer's language settings. Otherwise, it will sort
 			using ASCII comparison (whereby "é" comes after "z").
+
+			If there is no "via" lambda, and a non-string, non-number is given to this macro, an error will be produced.
 			
 			Currently there is no way to specify an alternative language locale to sort by, but this is likely to
 			be made available in a future version of Harlowe.
 			
-			As of 3.3.0, giving zero or more values to (sorted:) will cause an empty array (such as by `(a:)`) to be returned,
+			As of 3.3.0, giving zero or more values (after the optional lambda) to (sorted:) will cause an empty array (such as by `(a:)`) to be returned,
 			rather than causing an error to occur.
 
 			See also:
@@ -343,9 +361,46 @@ define([
 			Added in: 1.1.0
 			#data structure
 		*/
-		// Note that since this only accepts primitives, clone() is unnecessary.
-		("sorted", (_, ...args) => args.sort(NaturalSort("en")),
-		[zeroOrMore(either(Number,String))])
+		("sorted", (section, ...args) => {
+			/*
+				If there's no lambda, NaturalSort can handle everything.
+			*/
+			if (!Lambda.isPrototypeOf(args[0])) {
+				/*
+					(sorted:)'s type restrictions are complex enough that we must check the major restriction ourselves here.
+				*/
+				const invalid = args.find(e => typeof e !== "string" && typeof e !== "number");
+				if (invalid && invalid.length) {
+					return TwineError.create('datatype', `If (sorted:) isn't given a 'via' lambda, it must be given only numbers and strings, not ${objectName(invalid[0])}.`);
+				}
+				return args.sort(EnSort);
+			}
+			let lambda = args.shift();
+			if ("making" in lambda || "where" in lambda || "when" in lambda || !("via" in lambda)) {
+				return TwineError.create('datatype', `The optional lambda given to (sorted:) must be a 'via' lambda, not ${objectName(lambda)}.`);
+			}
+			/*
+				Convert the values into key-value pairs using the lambda.
+			*/
+			for (let i = 0; i < args.length; i += 1) {
+				const key = lambda.apply(section, {loop:args[i], pos:i+1});
+				/*
+					Check for the usual errors.
+				*/
+				if (TwineError.containsError(key)) {
+					return key;
+				}
+				if (typeof key !== "string" && typeof key !== "number") {
+					return TwineError.create('datatype', `The "via" lambda given to (sorted:) couldn't convert ${objectName(args[i])} into a string or number.`);
+				}
+				/*
+					For simplicity, key-value pairs are simply an array pair.
+				*/
+				args[i] = [args[i], key];
+			}
+			return args.sort((a,b) => EnSort(a[1],b[1])).map(e => e[0]);
+		},
+		[zeroOrMore(Any)])
 		
 		/*d:
 			(rotated: Number, ...Any) -> Array
@@ -619,7 +674,7 @@ define([
 			See also:
 			(dataset:), (sorted:)
 
-			Added in: 3.2.0
+			Added in: 3.3.0
 			#data structure
 		*/
 		("unique", (_, ...values) => values.filter(unique), [zeroOrMore(Any)])

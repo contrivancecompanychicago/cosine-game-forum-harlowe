@@ -13,19 +13,11 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 		as *search terms*, such as those you'd type into a search engine - terms like `(ulysses or odysseus) -joyce` -
 		but lambdas can do significantly more than just search.
 
-		There are several types of lambdas.
+		There are several types of lambdas, as well as lambdas that comprise multiple types.
 
 		* **"where"** lambdas, used by the (find:) macro, are used to search for and filter data. The lambda `_item where _item's
 		1st is "A"` tells the macro to searches for items whose `1st` is the string "A".
 		
-		* **"via"** lambdas, used by the (altered:) macro, are used to transform and change data. The lambda `_item via _item + "s"`
-		tells the macro to add the string "s" to the end of each item.
-		
-		* **"making"** lambdas, used by the (folded:) are used to build or "make" a single data value by adding something from
-		each item to it. The lambda `_item making _total via _total + (max: _item, 0)` tells the macro to add each item to
-		the total, but only if the item is greater than 0. (Incidentally, you can also use "where" inside a "making" lambda -
-		you could rewrite that lambda as `_item making _total via _total + _item where _item > 0`.)
-
 		* For certain macros, like (for:), you may want to use a "where" lambda that doesn't filter out any of the values -
 		`_item where true`, for instance, will include every item. There is a special, more readable **"each"** shorthand for this type
 		of "where" lambda: writing just `each _item` is equivalent.
@@ -34,6 +26,15 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 		be shown. The lambda `when $fuel > 8` tells (event:) to show the attached hook when `$fuel` is increased (due to an interaction macro
 		like (link-repeat:), a (live:) macro, or anything else). This really shouln't be called a "lambda", but you can perhaps think of it in
 		terms of it filtering moments in time that pass or fail the condition.
+
+		* **"via"** lambdas, used by the (altered:) and (sorted:) macro, are used to translate or change data. The lambda `_item via _item + "s"`
+		tells the macro to add the string "s" to the end of each item. Only the (altered:) macro uses this to change values: the (sorted:)
+		macro uses this to sort the data value as if it was another value.
+		
+		* **"making"** lambdas, used by the (folded:) are used to build or "make" a single data value by adding something from
+		each item to it. The lambda `_item making _total via _total + (max: _item, 0)` tells the macro to add each item to
+		the total, but only if the item is greater than 0. (Incidentally, you can also use "where" inside a "making" lambda -
+		you could rewrite that lambda as `_item making _total via _total + _item where _item > 0`.)
 
 		Lambdas use temp variables to hold the actual values. For instance, in `(find: _num where _num > 2, 5,6,0)`,
 		the temp variable `_num` is used to mean each individual value given to the macro, in turn. It will be 5, 6 and 0, respectively.
