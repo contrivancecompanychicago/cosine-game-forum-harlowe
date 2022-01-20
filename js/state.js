@@ -85,6 +85,11 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		*/
 		passage: "",
 		variables: create(null),
+		/*
+			This optional string is only used for (redirect:)s, and represents the original passage
+			in the redirect chain that led to here.
+		*/
+		redirect: undefined,
 
 		/*
 			Make a new Moment that comes temporally after this.
@@ -463,7 +468,6 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 
 		/*
 			Push the present state to the timeline, and create a new state.
-			@param {String} The name of the passage the player is now currently at.
 		*/
 		play(newPassageName) {
 			if (!present) {
@@ -485,10 +489,31 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		},
 
 		/*
-			Rewind the state. This will fail if the player is at the first moment.
-			
-			@param {String|Number} Either a string (passage id) or a number of steps to rewind.
-			@return {Boolean} Whether the rewind was actually performed.
+			Push the present state to the timeline, and create a new state.
+		*/
+		redirect(newPassageName) {
+			if (!present) {
+				impossible("State.redirect","present is undefined!");
+			}
+			/*
+				If there is no redirect for this moment (this is the first redirect), stash the present passage
+				on the moment as "redirect". When undoing into a redirected moment, you go to the start
+				of the chain of redirects.
+			*/
+			if (!present.redirect) {
+				present.redirect = present.passage;
+			}
+			// The departing passage name still goes into the cache.
+			present.passage && pastPassageNames.push(present.passage);
+			// Assign the passage name.
+			present.passage = newPassageName;
+			// That's all!
+
+			//TODO: Debug Mode redirect listing
+		},
+
+		/*
+			Rewind the state. This will fail and return false if the player is at the first moment.
 		*/
 		rewind(arg) {
 			let steps = 1,
@@ -777,7 +802,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 					Moments is not enumerable, it won't show up in Object.keys(). Therefore,
 					this should only grab actual variable changes.
 				*/
-				if (Object.keys(variable.variables).length === 0) {
+				if (Object.keys(variable.variables).length === 0 && !variable.redirect) {
 					return variable.passage;
 				}
 			}

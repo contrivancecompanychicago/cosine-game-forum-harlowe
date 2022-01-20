@@ -596,7 +596,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			forgetting the current turn, then you may use (undo:).
 			
 			See also:
-			(link-goto:), (undo:), (loadgame:)
+			(link-goto:), (undo:), (redirect:)
 
 			Added in: 1.0.0
 			#navigation
@@ -608,9 +608,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				*/
 				if (!Passages.hasValid(name)) {
 					return TwineError.create("macrocall",
-						"I can't (go-to:) the passage '"
-						+ name
-						+ "' because it doesn't exist."
+						`I can't (go-to:) to the passage '${name}' because it doesn't exist.`,
+						"Check that you didn't mistype the passage name, or rename the passage to something else."
 					);
 				}
 			},
@@ -626,6 +625,77 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				/*
 					Blocking the passage immediately ceases rendering; note that this should never get unblocked.
 				*/
+				return { blocked: true };
+			},
+			[String])
+
+		/*d:
+			(redirect: String) -> Command
+			This command sends the player to a new passage. However, unlike (goto:), this does
+			*not* start a new turn - undoing after this will send the player to the turn before the
+			redirect occurred.
+			
+			Example usage:
+			`(redirect: "Workdesk")`
+			
+			Rationale:
+			(go-to:) is useful for transferring the player to a new passage after performing some
+			interaction or waiting for some (event:), but is less useful for
+			transferring the player from a passage unconditionally. Attempting to undo a turn, using
+			(undo:) or (link-undo:), will simply cause the (go-to:) to activate again immediately,
+			nullifying the attempt to undo the turn.
+
+			While it's possible to use (display:) in place of a (go-to:), displaying the next passage
+			instead of navigating to it, there are a few problems: the displayed passage won't be the name
+			produced by (passage:), it won't be present in the (history:) array, the header and footer passages
+			won't be re-run, and, of course, the text of the original passage remains onscreen.
+
+			(redirect:) exists as an alternative to (go-to:) that avoids these problems. Furthermore,
+			a use of (redirect:) typically indicates to other readers of the code that the change of passages is for
+			technical reasons, not for in-story reasons, so the meaning of the two is distinct.
+
+			Details:
+			When a (redirect:) macro is used, the departing passage (the one containing the (redirect:) call)
+			remains in the (history:) array, and is still considered visited by `visits`. However, no additional
+			turn will result.
+
+			Also, temp variables that were (set:) in the departing passage will not be accessible in the new passage.
+
+			Transition changers that can be attached to (go-to:) can be attached to (redirect:), including
+			(t8n-depart:) and (t8n-arrive:).
+
+			If it is performed, (redirect:) will "halt" the passage and prevent any macros and text
+			after it from running. So, a passage that contains:
+			```
+			(set: $listen to "I love")
+			(redirect: "Train")
+			(set: $listen to it + " you")
+			```
+			will *not* cause `$listen` to become `"I love you"` when it runs.
+			
+			See also:
+			(go-to:), (undo:)
+
+			Added in: 3.3.0
+			#navigation
+		*/
+		("redirect",
+			(name) => {
+				/*
+					First, of course, check for the passage's existence.
+				*/
+				if (!Passages.hasValid(name)) {
+					return TwineError.create("macrocall",
+						`I can't (redirect:) to the passage '${name}' because it doesn't exist.`,
+						"Check that you didn't mistype the passage name, or rename the passage to something else."
+					);
+				}
+			},
+			(cd, _, name) => {
+				/*
+					As above for (goto:), so too for this.
+				*/
+				requestAnimationFrame(()=> Engine.redirect(name, { transition: cd.data.passageT8n }));
 				return { blocked: true };
 			},
 			[String])

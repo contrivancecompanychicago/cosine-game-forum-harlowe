@@ -375,6 +375,14 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 			showPassage(id, displayOptions);
 		},
 
+		/*
+			Displays a new passage, WITHOUT advancing the game state forward.
+		*/
+		redirect(id, displayOptions) {
+			State.redirect(id);
+			showPassage(id, displayOptions);
+		},
+
 		toggleFullscreen() {
 			const html = document.documentElement;
 			/*

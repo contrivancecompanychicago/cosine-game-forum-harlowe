@@ -143,76 +143,96 @@ describe("basic command macros", function() {
 			});
 		});
 	});
-	describe("the (go-to:) macro", function() {
-		
-		function waitForGoto(callback) {
-			setTimeout(function f() {
-				if($('tw-passage:last-of-type tw-expression[name=go-to]').length > 0) {
-					return setTimeout(f, 20);
-				}
-				callback();
-			}, 20);
-		}
-		
-		it("requires exactly 1 string argument", function() {
-			expect("(go-to:)").markupToError();
-			expect("(go-to: 1)").markupToError();
-			expect("(go-to:'A','B')").markupToError();
-		});
-		it("when placed in a passage, navigates the player to another passage", function(done) {
-			createPassage("''Red''", "croak");
-			runPassage("(go-to: 'croak')");
-			waitForGoto(function() {
-				var expr = $('tw-passage:last-child').find('b');
-				expect(expr.text()).toBe("Red");
-				done();
+	function waitForGoto(callback) {
+		setTimeout(function f() {
+			if($('tw-passage:last-of-type tw-expression[name=go-to], tw-passage:last-of-type tw-expression[name=redirect]').length > 0) {
+				return setTimeout(f, 20);
+			}
+			callback();
+		}, 20);
+	}
+	['go-to','redirect'].forEach(function(name){
+		describe("the ("+name+":) macro", function() {
+			it("requires exactly 1 string argument", function() {
+				expect("("+name+":)").markupToError();
+				expect("("+name+": 1)").markupToError();
+				expect("("+name+":'A','B')").markupToError();
 			});
-		});
-		it("will count as a new turn in the session history", function(done) {
-			createPassage("", "grault");
-			runPassage("(go-to: 'grault')","garply");
-			waitForGoto(function() {
-				expect('(print:(history:))').markupToPrint('garply,grault');
-				done();
+			it("when placed in a passage, navigates the player to another passage", function(done) {
+				createPassage("''Red''", "croak");
+				runPassage("("+name+": 'croak')");
+				waitForGoto(function() {
+					var expr = $('tw-passage:last-child').find('b');
+					expect(expr.text()).toBe("Red");
+					done();
+				});
 			});
-		});
-		it("prevents macros after it from running", function(done) {
-			createPassage("", "flunk");
-			runPassage("(set:$a to 1)(go-to:'flunk')(set:$a to 2)");
-			expect("$a").markupToPrint("1");
-			waitForGoto(done);
-		});
-		it("prevents macros even outside of its home hook", function(done) {
-			createPassage("", "flunk");
-			runPassage("(set:$a to 1)(if:true)[(go-to:'flunk')](set:$a to 2)");
-			expect("$a").markupToPrint("1");
-			waitForGoto(done);
-		});
-		it("does not run until placed in passage text", function() {
-			createPassage("''Red''", "croak");
-			expect("(print:(go-to: 'croak'))").markupToPrint("[A (go-to:) command]");
-		});
-		it("evaluates to a command object that can't be +'d", function() {
-			expect("(print: (go-to:'crepax') + (go-to:'crepax'))").markupToError();
-		});
-		it("can be (set:) into a variable", function(done) {
-			createPassage("''Red''", "waldo");
-			runPassage("(set: $x to (go-to:'waldo'))$x");
-			waitForGoto(function() {
-				var expr = $('tw-passage:last-child').find('b');
-				expect(expr.text()).toBe("Red");
-				done();
+			it("will count as a new passage in the (history:) array", function(done) {
+				createPassage("", "grault");
+				runPassage("("+name+": 'grault')","garply");
+				waitForGoto(function() {
+					expect('(print:(history:))').markupToPrint('garply,grault');
+					done();
+				});
 			});
-		});
-		it("produces an error if the passage doesn't exist", function() {
-			expect("(go-to: 'freek')").markupToError();
-		});
-		it("transitions out the preceding <tw-passage> when stretchtext is off", function(done) {
-			createPassage("''Red''", "waldo");
-			runPassage("(set: $x to (go-to:'waldo'))$x");
-			waitForGoto(function() {
-				expect($('tw-passage').length).toBe(1);
-				done();
+			if (name === "redirect") {
+				it("counts as the same turn", function(done) {
+					createPassage("", "grault");
+					runPassage("[Hello]",'baz');
+					runPassage("("+name+": 'grault')","garply");
+					waitForGoto(function() {
+						Engine.goBack();
+						expect($('tw-passage tw-hook').text()).toBe('Hello');
+						done();
+					});
+				});
+				it("changes the current passage", function(done) {
+					createPassage("[(print: name of (passage:))]", "grault");
+					runPassage("("+name+": 'grault')","garply");
+					waitForGoto(function() {
+						expect($('tw-passage tw-hook').text()).toBe('grault');
+						done();
+					});
+				});
+			}
+			it("prevents macros after it from running", function(done) {
+				createPassage("", "flunk");
+				runPassage("(set:$a to 1)("+name+":'flunk')(set:$a to 2)");
+				expect("$a").markupToPrint("1");
+				waitForGoto(done);
+			});
+			it("prevents macros even outside of its home hook", function(done) {
+				createPassage("", "flunk");
+				runPassage("(set:$a to 1)(if:true)[("+name+":'flunk')](set:$a to 2)");
+				expect("$a").markupToPrint("1");
+				waitForGoto(done);
+			});
+			it("does not run until placed in passage text", function() {
+				createPassage("''Red''", "croak");
+				expect("(print:("+name+": 'croak'))").markupToPrint("[A ("+name+":) command]");
+			});
+			it("evaluates to a command object that can't be +'d", function() {
+				expect("(print: ("+name+":'crepax') + ("+name+":'crepax'))").markupToError();
+			});
+			it("can be (set:) into a variable", function(done) {
+				createPassage("''Red''", "waldo");
+				runPassage("(set: $x to ("+name+":'waldo'))$x");
+				waitForGoto(function() {
+					var expr = $('tw-passage:last-child').find('b');
+					expect(expr.text()).toBe("Red");
+					done();
+				});
+			});
+			it("produces an error if the passage doesn't exist", function() {
+				expect("("+name+": 'freek')").markupToError();
+			});
+			it("transitions out the preceding <tw-passage> when stretchtext is off", function(done) {
+				createPassage("''Red''", "waldo");
+				runPassage("(set: $x to ("+name+":'waldo'))$x");
+				waitForGoto(function() {
+					expect($('tw-passage').length).toBe(1);
+					done();
+				});
 			});
 		});
 	});
@@ -679,6 +699,13 @@ describe("basic command macros", function() {
 		});
 		it("all random features increment the same RNG", function() {
 			expect('(seed:"A")(random:1,10)(either:1,2,3,4,5,6,7,8,9,10)(shuffled:1,2,3,4,5,6,7,8,9,10)(print:(shuffled:1,2,3,4,5,6,7,8,9,10)\'s random)').markupToPrint('422,7,10,9,8,3,1,5,4,64');
+		});
+		it("continues working if you redo", function() {
+			runPassage("",'baz');
+			expect('(seed:"A")[(random:1,10) (random:1,10)]').markupToPrint('4 2');
+			Engine.goBack();
+			Engine.goForward();
+			expect($('tw-passage tw-hook').text()).toBe('4 2');
 		});
 	});
 });
