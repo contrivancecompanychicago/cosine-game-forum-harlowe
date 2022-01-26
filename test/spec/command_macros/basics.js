@@ -199,6 +199,18 @@ describe("basic command macros", function() {
 						done();
 					});
 				});
+				it("doesn't affect the turns identifier", function(done) {
+					createPassage("", "quux");
+					createPassage("("+name+": 'quux')", "qux");
+					createPassage("("+name+": 'qux')", "waldo");
+					createPassage("("+name+": 'waldo')", "grault");
+					runPassage("[Hello]",'baz');
+					runPassage("("+name+": 'grault')","garply");
+					waitForGoto(function() {
+						expect("(print:turns)").markupToPrint('3');
+						done();
+					});
+				});
 				it("changes the current passage", function(done) {
 					createPassage("[(print: name of (passage:))]", "grault");
 					runPassage("("+name+": 'grault')","garply");

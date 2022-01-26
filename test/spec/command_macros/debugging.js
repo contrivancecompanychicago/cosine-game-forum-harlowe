@@ -38,9 +38,45 @@ describe("debugging macros", function() {
 			Engine.goBack();
 			expect($('tw-passage > :last-child').text()).toBe('4');
 		});
-		it("alters the (history:) keyword, adding its strings to the start", function() {
+		it("alters the (history:) macro, adding its strings to the start", function() {
 			runPassage("(mock-visits:'qux','qux','qux','grault')");
 			expect('(history:)').markupToPrint('qux,qux,qux,grault,test');
+		});
+		it("alters the (visited:) macro", function() {
+			createPassage('BEEP','grault');
+			createPassage('BOOP','qux');
+			runPassage("(mock-visits:'qux','qux','qux','grault')");
+			expect('(print:(visited:"grault"))').markupToPrint('true');
+			expect('(print:(visited:where its source is "BOOP"))').markupToPrint('true');
+		});
+	});
+	describe("the (mock-turns:) macro", function() {
+		beforeEach(function() {
+			runPassage("");
+			runPassage("");
+			runPassage("");
+		});
+		it("takes a non-negative integer", function() {
+			expect("(mock-turns:)").markupToError();
+			expect("(mock-turns:'bar')").markupToError();
+			expect("(mock-turns:0.1)").markupToError();
+			expect("(mock-turns:1)").not.markupToError();
+			expect("(mock-turns:0)").not.markupToError();
+			expect("(mock-turns:2,2)").markupToError();
+		});
+		// Can't test that it only works in debug mode, unfortunately.
+		it("alters the 'turns' keyword to mock additional turns", function() {
+			runPassage("(mock-turns:15)");
+			expect("(print:turns)").markupToPrint('20');
+		});
+		it("each successive (mock-turns:) call overrides the last", function(done) {
+			expect("(mock-turns:15)(print:turns)").markupToPrint('19');
+			expect(runPassage("(mock-turns:1)(print:turns)",'garply').find(":last-child").text()).toBe('6');
+			Engine.goBack();
+			setTimeout(function(){
+				expect($('tw-passage > :last-child').text()).toBe('19');
+				done();
+			},80);
 		});
 	});
 	describe("the (assert:) macro", function() {

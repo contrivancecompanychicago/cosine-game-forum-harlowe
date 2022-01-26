@@ -35,6 +35,7 @@ define(['jquery', 'utils'], ($, Utils) => {
 		propagated:    "Click the 'Open' button to see the code hook as it was executed.",
 		user:          "This is a custom error created by (error:). It usually means you used a custom macro incorrectly.",
 		assertion:     "This command exists to provide a helpful error if a certain important condition wasn't true.",
+		debugonly:     'This macro is not meant to be used outside of debugging your story.',
 	},
 
 	/*

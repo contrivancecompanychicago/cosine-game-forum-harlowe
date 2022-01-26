@@ -702,27 +702,58 @@ define([
 						}
 						return (Date.now() - ret.timestamp);
 					},
+
+					/*d:
+						turns -> Number
+						Also known as: turn
+
+						This keyword evaluates to the number of turns that have occurred in this game. A "turn" is any movement to a
+						passage, including movements back to the same passage, by passage links or by various (go-to:)-related macros.
+						(redirect:) does not cause a new turn to occur, so
+
+						Much like the "visits" keyword, its main purpose is to be used with simple macros like (nth:) or (if:) to change what
+						text is displayed, such as by `(if: turns > 7)`. It is also useful in (storylet:) lambdas, such as `(storylet: when turns > 7)`,
+						for storylets that should only be available when a certain number of turns have elapsed.
+
+						For testing purposes, it can be convenient to temporarily alter `visits`'s value, so as to recreate a
+						certain game state. The (mock-turns:) macro, usable only in debug mode, lets you artificially increase the number
+						that this evaluates to.
+	
+						Added in: 3.3.0
+					*/
+					get turns() {
+						return State.turns;
+					},
+
+					get turn() {
+						return State.turns;
+					},
+
 					/*d:
 						visits -> Number
 
 						Also known as: visit
 
 						This keyword (which can alternatively be written as "visit") evaluates to the number of times
-						the current passage has been visited this game, including the current visit. In (storylet:) macros,
-						when Harlowe decides whether this passage is available to (open-storylets:), this will often be 0, but when
-						actually visiting the passage, it will be at least 1.
+						the current passage has been visited this game, including the current visit.
 
-						Its main purpose is to be used in (if:) macros, such as `(if: visits is 1)`, or `(if: visits > 4)`. If you
-						use one particular formulation a lot in your story, such as `(if: visits is 1)`, you can (set:) the (if:)
+						Much like the "turns" keyword, its main purpose is to be used in (if:) macros, such as `(if: visits is 1)`,
+						or `(if: visits > 4)`. If you use one particular formulation a lot in your story, such as `(if: visits is 1)`, you can (set:) the (if:)
 						into a variable using `(set: $first to (if:visits is 1))` and then use $first in its place, such as in
 						`$first[You've discovered a new island.]`.
 
 						Similarly, it is also useful with the (cond:) and (nth:) macros - the latter letting you simply use `visit`
 						as its first value to vary the results based on the number of times the passage is visited.
 
-						`visits` used in (display:) macros will still produce the number of times the host passage was visited,
+						This can also be used to great effect in (storylet:) macros, such as `(storylet: when visits is 0)`, where it will always refer to the containing
+						passage itself. When Harlowe decides whether this passage is available to (open-storylets:), this will often be 0, but when
+						actually visiting the passage, it will be at least 1.
+
+						`visits` used in (display:) macros will still produce the number of times the *host* passage was visited,
 						not the contained passage. So, you can't use it to determine how many times the (display:)ed passage
 						has been (display:)ed.
+
+						Using (redirect:) to go to a passage will count as a "visit" for that passage, even though it doesn't start a new turn.
 
 						For testing purposes, it can be convenient to temporarily alter `visits`'s value, so as to recreate a
 						certain game state. The (mock-visits:) macro, usable only in debug mode, lets you increase the number of

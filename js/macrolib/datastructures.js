@@ -340,7 +340,12 @@ define([
 			and "William" is sorted *as if* it was `"William"'s length * -1` (which is -7). This allows a variety of sorting options.
 			Datamaps may be sorted by any one of their string or number values, and strings may be sorted in different ways than just their alphanumeric order.
 
-			Unlike other programming languages, strings aren't sorted using ASCII sort order, but *alphanumeric* sorting:
+			Values sorted by a "via" lambda, but which have the same value to that lambda, are kept in the same order. This is known as a "stable" sort.
+			`(sorted:via its 1st, 'Bob', 'Alice', 'Blake', 'Bella', 'Bertrude')`, which only sorts the strings by their first letter,
+			will always produce `(a:"Alice","Bob","Blake","Bella","Bertrude")`, even though "Blake" is alphabetically sooner than "Bob".
+
+			Unlike other programming languages, strings (either produced by the "via" lambda, or sorted by themselves when no lambda was given)
+			aren't sorted using ASCII sort order, but *alphanumeric* sorting:
 			the string "A2" will be sorted after "A1" and before "A11". Moreover, if the player's web browser
 			supports internationalisation (that is, every current browser except IE 10), then
 			the strings will be sorted using English language rules (for instance, "é" comes after "e" and before
@@ -1053,20 +1058,27 @@ define([
 			can, during debugging, artifically add values to this array to simulate having visited various passages.
 
 			Example usage:
-			* `(history:) contains "Cellar"` is true if the player has visited a passage called
-			"Cellar" at some point.
 			* `(history: where "Intermission" is not in its name)` is an array of visited passage names,
 			but not including passages whose name contains "Intermission" anywhere in it.
-			* `(history: where its tags contains "Forest") is (a:)` is true if the player visited no passages
-			with the "Forest" tag (because then the returned array would be empty, the same as (a:)),
-			and false if they have.
+			* `(history: where its tags contains "Forest")'s length` is the number of times a passage tagged with "Forest" was
+			visited during this game.
+			* `(unique:(history: where its tags contains "Forest"))'s length` is the same as the above, but excludes duplicate
+			visits to the same passages.
+			* `(if: (history:)'s 3rdlasttolast is (a:"Cliff", "Leap", "Fly"))` checks if the previous 3 passages visited
+			were "Cliff", "Leap" and "Fly".
 
 			Rationale:
+			This macro provides easy access to the names of passages visited on past turns. Non-linear stories
+			may result in a lot of possible paths for the player to take, and so, it is often desirable
+			to look back and see which passages the player visited, and when.
 			Often, you may find yourself using "flag" variables to keep track of whether
 			the player has visited a certain passage in the past. In some cases, you can use (history:), along with
 			data structure operators, such as the `contains` operator, to obviate this necessity.
 
 			Details:
+			If you simply wish to check that a particular passage, or set of passages, has been visited
+			even once, you may find the (visited:) macro more suited to your needs.
+
 			The array includes duplicate names if the player has visited a passage more than once, or visited
 			the same passage two or more turns in a row.
 
@@ -1077,7 +1089,8 @@ define([
 
 			This macro can optionally be given a `where` lambda, which is used to only include passage names in the
 			returned array if they match the lambda. Note that even though this produces an array of strings,
-			the variable in the lambda is always a **datamap** -
+			the variable in the lambda  (referred to by the `it` keyword or by a temp variable
+			placed before the word `where`) is always a **datamap** -
 			the same datamap as would be returned by (passage:) for that passage name. That datamap contains
 			these values:
 
@@ -1091,7 +1104,7 @@ define([
 			| urgency | The storylet urgency number. Usually only present if an (urgency:) call is in the passage.
 
 			So, you can think of `(history: where its tags contains "Forest")` as a shorthand for
-			`(find: _name where (passage: _name)'s tags contains "Forest", ...(history:))`,
+			`(find: where (passage: it)'s tags contains "Forest", ...(history:))`,
 			which takes the normal (history:) array, and finds only those names for passages whose tags contain "Forest".
 
 			If you're testing your story in debug mode using (mock-visits:), then each of the "mock" visits you simulate
@@ -1101,7 +1114,7 @@ define([
 			to produce an array starting with `"A"`.
 
 			See also:
-			(passage:), (savedgames:), (passages:)
+			(visited:), (passage:), (mock-visits:)
 
 			Added in: 1.0.0
 			#game state
@@ -1118,6 +1131,74 @@ define([
 			return passages.map(dm => dm.get('name'));
 		},
 		[optional(Lambda.TypeSignature('where'))])
+
+		/*d:
+			(visited: String or Lambda) -> Boolean
+
+			When given a string, this macro produces true if the passage has ever been visited during this game, and false otherwise.
+			When given a "where" lambda, this returns true if any passage matching the lambda has ever been visited during this game.
+			The (mock-visits:) macro can, during debugging, make this macro return true in cases where it would otherwise be false.
+
+			Example usage:
+			* `(visited:"Cellar")` is true if the player has visited a passage called
+			"Cellar" at some point.
+			* `(visited: where its tags contains "Forest")` is false if the player visited no passages
+			with the "Forest" tag.
+
+			Rationale:
+			Often, you may find yourself using "flag" variables simply to keep track of whether
+			the player has visited a certain passage in the past. In most such cases, you can use (visited:)
+			instead of having to use these variables. 
+
+			Details:
+			If a string name is given, and no passages of that name are in the story, an error will be produced.
+
+			Passages visited via (redirect:) will be considered "visited" by this macro, just as they are considered
+			"visited" by the `visits` keyword.
+
+			When given a `where` lambda, the variable in the lambda (referred to by the `it` keyword or by a temp variable
+			placed before the word `where`) is always a **datamap** - the same datamap as would be returned by (passage:) for that passage name. That datamap contains
+			these values:
+
+			| Name | Value |
+			|---
+			| source | The source markup of the passage, exactly as you entered it in the Twine editor |
+			| name | The string name of this passage. |
+			| tags | An array of strings, which are the tags you gave to this passage. |
+			| storylet | If a (storylet:) call is in the passage, this holds the lambda for that call. Otherwise, it's absent. |
+			| exclusivity | The storylet exclusivity number. Usually only present if an (exclusivity:) call is in the passage.
+			| urgency | The storylet urgency number. Usually only present if an (urgency:) call is in the passage.
+
+			So, you can think of `(visited: where its tags contains "Forest")` as a shorthand for
+			`(some-pass:where (passage: it)'s tags contains "Forest", ...(history:))`.
+
+			If you're testing your story in debug mode using (mock-visits:), then any "mock" visit you simulate
+			will be counted as a visit.
+
+			See also:
+			(history:), (passage:), (mock-visits:)
+
+			Added in: 1.0.0
+			#game state
+		*/
+		("visited", (section, condition) => {
+			let history = State.history();
+			if (typeof condition === "string") {
+				if (!Passages.has(condition)) {
+					return TwineError.create('macrocall', "There's no passage named '" + condition + "' in this story.");
+				}
+				return State.passage === condition || history.includes(condition);
+			}
+			/*
+				From here, the condition is a lambda.
+			*/
+			history = condition.filter(section, history.concat(State.passage).map(p => Passages.get(p)));
+			if (TwineError.containsError(history)) {
+				return history;
+			}
+			return history.length > 0;
+		},
+		[either(String, Lambda.TypeSignature('where'))])
 		
 		/*d:
 			(passage: [String]) -> Datamap

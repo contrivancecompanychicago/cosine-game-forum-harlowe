@@ -20,7 +20,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		by applying (t8n-depart:) and (t8n-arrive:). (Note that since normal passage links are identical to the
 		(link-goto:) macro, you can also attach changers to passage links.)
 	*/
-	const {Any, Everything, rest, either, optional, zeroOrMore, positiveInteger, positiveNumber} = Macros.TypeSignature;
+	const {Any, Everything, rest, either, optional, zeroOrMore, nonNegativeInteger, positiveInteger, positiveNumber} = Macros.TypeSignature;
 	const {assign} = Object;
 	const {floor,ceil,abs,max,min} = Math;
 	const {noop} = $;
@@ -2575,7 +2575,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			This command can't have changers attached - attempting to do so will produce an error.
 
 			See also:
-			(history:), (set:)
+			(history:), (set:), (mock-turns:)
 
 			Added in: 3.2.0
 			#debugging
@@ -2583,8 +2583,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		("mock-visits",
 			(...names) => {
 				if (!Engine.options.debug) {
-					return TwineError.create('operation', '(mock-visits:) cannot be used outside of debug mode.',
-						'This macro is not meant to be used outside of debugging your story.');
+					return TwineError.create('debugonly', '(mock-visits:) cannot be used outside of debug mode.');
 				}
 				const incorrect = names.find(name => !Passages.hasValid(name));
 				if (incorrect) {
@@ -2593,6 +2592,56 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			},
 			(_, ...names) => { State.mockVisits = clone(names); },
 		[rest(String)], false /* Can't have attachments.*/)
+
+		/*d:
+			(mock-turns: Number) -> Command
+
+			A macro that can only be used in debug mode, this allows you to artificially increase the number that the `visits` keyword
+			evaluates to, without having to play through that many turns yourself.
+
+			Example usage:
+			* `(mock-turns: 3)` means that from here on, `turns` (and its alias `turn`) will produce a number 3 higher than the actual number of visits.
+
+			Rationale:
+			Using the `turns` keyword as a way to track the amount of "moves" the player has performed instead of using Boolean variables and (set:)
+			can produce simpler, more understandable code - it's obvious what `(if: turns > 15)` means just by looking at it. But, it comes
+			with a cost: when testing your story using the "Play from here" feature in the Twine editor, you may want to pretend that you have already
+			performed a certain number of turns, so as to examine the resulting prose. If you were using variables, you could add a few temporary
+			(set:) macros to the passage, or put them in a "debug-header" tagged passage, to adjust the variables to match a game in progress. This macro
+			provides that same functionality to the `turns` keyword, letting you temporarily adjust it for testing purposes.
+
+			Details:
+			It's critical to understand that these are **mock** turns - no additional passages have actually been visited.
+
+			As stated above, this macro will cause an error if it's used outside debug mode. This is NOT intended for use in a final game - while temporarily
+			tweaking the meaning of `turns` is convenient for testing, the author should be able to trust that in the "real" game, they
+			correctly report the turns the player has actually made, so that the story's code can be properly understood.
+
+			If this macro is used multiple times, only the final usage will count - all the rest will be forgotten. `(mock-turns:7)(mock-turns:0)`, for instance,
+			will cause `turns` to behave normally.
+
+			The effects of (mock-turns:) are saved by (save-game:), so you can use save files for testing your story with these effects.
+
+			If you undo past a passage that used (mock-turns:), the effects of that macro call will be removed, as if it had been a (set:) macro call.
+
+			Giving negative values, or non-whole numbers to this macro will produce an error.
+
+			This command can't have changers attached - attempting to do so will produce an error.
+
+			See also:
+			(history:), (set:), (mock-visits:)
+
+			Added in: 3.3.0
+			#debugging
+		*/
+		("mock-turns",
+			() => {
+				if (!Engine.options.debug) {
+					return TwineError.create('debugonly', '(mock-turns:) cannot be used outside of debug mode.');
+				}
+			},
+			(_, number) => { State.mockTurns = number; },
+		[nonNegativeInteger], false /* Can't have attachments.*/)
 
 		/*d:
 			(seed: String) -> Command

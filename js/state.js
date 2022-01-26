@@ -1,6 +1,6 @@
 "use strict";
-define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerror', 'utils/operationutils', 'markup'],
-({impossible}, Passages, ChangerCommand, TwineError, {objectName,toSource,clone}, {lex}) => {
+define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils', 'markup'],
+({impossible}, Passages, TwineError, {objectName,toSource}, {lex}) => {
 	const {assign, create, defineProperty} = Object;
 	const {imul} = Math;
 	/*
@@ -294,11 +294,10 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 	let SystemVariables;
 	/*
 		For testing purposes, there needs to be a way to "mock" having visited certain passages a certain number of times.
-		Because (mock-visits:) calls should be considered modal, and can be undone, their effects need to be tied
+		Because (mock-visits:) and (mock-turns:) calls should be considered modal, and can be undone, their effects need to be tied
 		to the variable store.
-		Note that currently, mock visits are NOT saved using (save-game:).
 	*/
-	let mockVisits;
+	let mockVisits, mockTurns;
 
 	/*
 		This is used to flatten a timeline into a single moment, which is either the present (for reconstructSystemVariables),
@@ -308,9 +307,10 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		for (let i = 0; i < array.length; i += 1) {
 			const moment = array[i];
 			/*
-				Each moment's mockVisits and seed replaces the previous.
+				Each moment's mockVisits, mockTurns and seed replaces the previous.
 			*/
 			moment.mockVisits !== undefined && (mockVisits = moment.mockVisits);
+			moment.mockTurns !== undefined && (mockTurns = moment.mockTurns);
 			moment.seed !== undefined       && (seed = moment.seed);
 			moment.seedIter !== undefined   && (seedIter = moment.seedIter);
 			for (let prop in moment.variables) {
@@ -340,7 +340,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		scope must be rebuilt.
 	*/
 	function reconstructSystemVariables() {
-		mockVisits = undefined;
+		mockVisits = mockTurns = undefined;
 		/*
 			Start with just the epoch.
 		*/
@@ -433,7 +433,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			Used by the "turns" identifier.
 		*/
 		get turns() {
-			return recent + 1 + (epoch.turns || 0);
+			return recent + 1 + (epoch.turns || 0) + (mockTurns || 0);
 		},
 
 		/*
@@ -444,7 +444,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		},
 
 		/*
-			Get and set the current mockVisits state.
+			Get and set the current mockVisits and mockTurns state.
 		*/
 		get mockVisits() {
 			return mockVisits || [];
@@ -453,6 +453,15 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		set mockVisits(value) {
 			mockVisits = value;
 			present.mockVisits = value;
+		},
+
+		get mockTurns() {
+			return mockTurns || 0;
+		},
+
+		set mockTurns(value) {
+			mockTurns = value;
+			present.mockTurns = value;
 		},
 
 		/*
@@ -813,8 +822,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			);
 		}
 		/*
-			Note 1: This MUST NOT be an arrow function, because JSON.stringify uses 'this' in the given callback.
-			Note 2: This serialises mockVisits as-is.
+			Note: This MUST NOT be an arrow function, because JSON.stringify uses 'this' in the given callback.
 			As of Oct 2021, it's currently not decided what should happen when a mock visits savefile is loaded outside of Debug Mode.
 		*/
 		let serialiseFn = function (name, variable) {
@@ -825,6 +833,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			if (Moment.isPrototypeOf(variable)) {
 				if (variable.visits  === undefined
 						&& variable.mockVisits  === undefined
+						&& variable.mockTurns  === undefined
 						&& variable.seed === undefined
 						&& variable.seedIter === undefined
 						&& Object.keys(variable.variables).every(e => e.startsWith("TwineScript_"))) {

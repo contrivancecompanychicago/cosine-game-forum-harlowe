@@ -1677,8 +1677,10 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			larger than the number of items in the sequence, the selection loops around to the start.
 
 			Example usage:
-			`(nth: visit, "Hi!", "Hello again!", "Oh, it's you!", "Hey!")` will display a different salutation, in sequence,
-			on the first, second, third and fourth visits, then return to "Hi!" on the fifth visit, and so on.
+			* `(nth: visit, "Hi!", "Hello again!", "Oh, it's you!", "Hey!")` will display a different salutation, in sequence,
+			on the first, second, third and fourth visits, then return to "Hi!" on the fifth visit, and so on. This uses the "visits" identifier (also known as "visit").
+			* `(nth: turn, "Full Moon", "Waning", "Halfmoon", "Crescent", "New Moon", "Crescent", "Halfmoon", "Waxing")` displays a different moon phase
+			based on the current turn. This uses the "turns" identifier (also known as "turn"). This could be used in a "header" tagged passage to display a moon phase in every passage.
 
 			Rationale:
 			This macro is designed to be used in passage prose, letting you quickly display one of a varying range of phrases or sentences based

@@ -20,7 +20,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		The following custom macro creates a text string based on how many turns the player has taken. It takes no data.
 		```
 		(set: $fancyTimeName to (macro: [
-			(set: _timeOfDay to (history: )'s length % 24 + 1)
+			(set: _timeOfDay to turns % 24 + 1)
 			(output-data: (a:
 				"midnight", "dreamshour", "wolfshour", "dark's end", "lightbreak", "afterdawn", "early rise", "awakening",
 				"early warming", "joyshour", "first lunch", "shadow's end", "zenith", "shadow's birth", "second lunch", "hopeshour", "early cooling",

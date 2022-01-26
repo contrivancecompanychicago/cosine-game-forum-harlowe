@@ -33,6 +33,37 @@ describe("game state macros", function() {
 			expect("(passage: (str:2/0))").markupToError();
 		});
 	});
+	describe("the (visited:) macro", function() {
+		it("accepts a 'where' lambda or a passage name string", function() {
+			expect("(visited:)").markupToError();
+			expect("(visited:'foo')").markupToError();
+			expect("(visited:'test')").not.markupToError();
+			expect("(visited:where its tags contains 'foo')").not.markupToError();
+		});
+		it("returns true if the named passage was ever visited", function() {
+			createPassage('','qux');
+			createPassage('','bar');
+			expect(runPassage("(print:(visited:'bar'))1","foo").text()).toBe("false1");
+			expect(runPassage("(print:(visited:'bar'))2","bar").text()).toBe("true2");
+			expect(runPassage("(print:(visited:'bar'))3","corge").text()).toBe("true3");
+			expect(runPassage("(print:(visited:'qux'))4","baz").text()).toBe("false4");
+		});
+		it("properly updates when undoing moves", function() {
+			createPassage('','bar');
+			expect(runPassage("(print:(visited:'bar'))","foo").text()).toBe("false");
+			expect(runPassage("(print:(visited:'bar'))","bar").text()).toBe("true");
+			expect(runPassage("(print:(visited:'bar'))","baz").text()).toBe("true");
+			Engine.goBack();
+			Engine.goBack();
+			expect(runPassage("(print:(visited:'bar'))","qux").text()).toBe("false");
+		});
+		it("when given a lambda, returns true if any matching passage was ever visited", function() {
+			expect(runPassage("(print:(visited:where its name is 'bar'))1","foo").text()).toBe("false1");
+			expect(runPassage("(print:(visited:where its name is 'bar'))2","bar").text()).toBe("true2");
+			expect(runPassage("(print:(visited:where its name is 'bar'))3","baz").text()).toBe("true3");
+			expect(runPassage("(print:(visited:where its name is 'corge'))4","qux").text()).toBe("false4");
+		});
+	});
 	describe("the (history:) macro", function() {
 		it("accepts 0 or 1 'where' lambdas", function() {
 			expect("(history:)").not.markupToError();

@@ -103,6 +103,31 @@ describe("identifiers", function () {
 			expect("(print:exit)").not.markupToError();
 		});
 	});
+	describe("the 'turns' identifier", function () {
+		it("refers to the number of turns that have elapsed", function (done){
+			["foo","bar","baz","foo","bar","foo","baz"].forEach(function(e) {
+				runPassage("", e);
+			});
+			expect(runPassage("(print: turns)", 'qux').find('tw-expression').text()).toBe("8");
+			expect("(print: turns + 1)").markupToPrint("10");
+			Engine.goBack();
+			setTimeout(function(){
+				expect($('tw-passage tw-expression').text()).toBe('8');
+				done();
+			},80);
+		});
+		it("is case-insensitive", function () {
+			expect("(print: tuRNS)(print: TURNS)(print: TuRNs)").not.markupToError();
+		});
+		it("can also be written as 'turn'", function () {
+			expect("(print: turn)(print: TURN)(print: tuRn)").not.markupToError();
+			expect("(print: turn is 2)").markupToPrint("true");
+		});
+		it("can't be used as the subject in an 'into' or 'to' operation", function () {
+			expect("(put: 2 into turns)").markupToError();
+			expect("(set: turns to 2)").markupToError();
+		});
+	});
 	describe("the 'visits' identifier", function () {
 		it("refers to the number of times this passage was visited, including the current time", function (){
 			["foo","bar","baz","foo","bar","foo","baz"].forEach(function(e) {
@@ -126,10 +151,8 @@ describe("identifiers", function () {
 			expect("(print: viSiT)(print: VISIT)(print: vISIT)").not.markupToError();
 			expect(runPassage("(print: visit is 1)","qux").text()).markupToPrint("true");
 		});
-		it("can't be used in an 'into' operation", function () {
+		it("can't be used as the subject in an 'into' or 'to' operation", function () {
 			expect("(put: 2 into visits)").markupToError();
-		});
-		it("can't be used as the subject of a 'to' operation", function () {
 			expect("(set: visits to 2)").markupToError();
 		});
 	});

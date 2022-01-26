@@ -378,6 +378,16 @@ describe("save macros", function() {
 				done();
 			},90);
 		});
+		it("can restore mock turns", function(done) {
+			runPassage("(mock-turns:11)",'qux');
+			runPassage("(savegame:'1')",'bar');
+			expect("(mock-turns:0)(print:turns)").markupToPrint('3');
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("(print:turns)").markupToPrint('14'); // 3 mocks, 1 visit above, plus this passage
+				done();
+			},90);
+		});
 		it("can restore the PRNG seed", function(done) {
 			runPassage("(seed:'AAA')(random:1,100000000)",'test');
 			runPassage("(savegame:'1')",'bar');
