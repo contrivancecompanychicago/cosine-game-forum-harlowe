@@ -1,7 +1,7 @@
 "use strict";
 define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 'internaltypes/twineerror',
-	'internaltypes/twinenotifier', 'datatypes/assignmentrequest', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/lambda', 'datatypes/colour', 'datatypes/gradient', 'internaltypes/varref', 'datatypes/typedvar', 'datatypes/varbind', 'utils/operationutils', 'utils/renderutils'],
-($, Macros, Utils, State, Passages, Renderer, Engine, TwineError, TwineNotifier, AssignmentRequest, HookSet, CodeHook, Lambda, Colour, Gradient, VarRef, TypedVar, VarBind, {printBuiltinValue, objectName, clone, toSource}, {dialog, geomParse, geomStringRegExp}) => {
+	'internaltypes/twinenotifier', 'datatypes/assignmentrequest', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/colour', 'datatypes/gradient', 'internaltypes/varref', 'datatypes/typedvar', 'datatypes/varbind', 'utils/operationutils', 'utils/renderutils'],
+($, Macros, Utils, State, Passages, Renderer, Engine, TwineError, TwineNotifier, AssignmentRequest, HookSet, CodeHook, Colour, Gradient, VarRef, TypedVar, VarBind, {printBuiltinValue, objectName, clone, toSource}, {dialog, geomParse, geomStringRegExp}) => {
 	
 	/*d:
 		Command data
@@ -557,8 +557,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 
 		/*d:
 			(go-to: String) -> Command
-			This command stops passage code and sends the player to a new passage.
-			If the passage named by the string does not exist, this produces an error.
+			This command stops passage code and sends the player to a new passage, starting a new turn
+			as if a passage link was clicked. If the passage named by the string does not exist, this produces an error.
 			
 			Example usage:
 			`(go-to: "The Distant Future")`
@@ -590,10 +590,13 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			(set: $listen to it + " you")
 			```
 			will *not* cause `$listen` to become `"I love you"` when it runs.
-			
-			Going to a passage using this macro will count as a new "turn" in the game's passage history,
-			much as if a passage link was clicked. If you want to go back to the previous passage,
-			forgetting the current turn, then you may use (undo:).
+
+			You should generally avoid using (go-to:) unconditionally in the passage - that is, avoid using it such
+			that it would immediately run when the player enters, regardless of anything. This has a few side-effects:
+			it makes it difficult to use (undo:) to return to this passage, and it counts as a new turn for the "turns" identifier even
+			though the player didn't do or see anything. You can use (redirect:) in place of (go-to:) to avoid these issues.
+
+			If you simply want to go back to the previous passage, forgetting the current turn, then you may use (undo:).
 			
 			See also:
 			(link-goto:), (undo:), (redirect:)
@@ -725,6 +728,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			
 			If this is the first turn of the game session, (undo:) will produce an error. You can check which turn it is
 			by examining the `length` of the (history:) array.
+
+			If the previous turn featured the use of (redirect:), (undo:) will take the player to the passage in which the
+			turn started, before any (redirect:) macros were run.
 
 			Just like (go-to:), (undo:) will "halt" the passage and prevent any macros and text
 			after it from running.
@@ -2458,6 +2464,11 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 
 			This command can't have changers attached - attempting to do so will produce an error.
 
+			To avoid a potential infinite loop, whereby (load-game:) loads a game whose current passage contains
+			another (load-game:) call, an error will occur if (load-game:) is run immediately after a game is loaded.
+			("Immediately" means that the second (load-game:) call occurs with no time delay, such as by (after:), or with
+			no player input, such as by (link:).)
+
 			In the event that the saved data exists, but contains an error - for instance, if it refers to a passage
 			which doesn't exist in this story, which could happen if one version of the story is used to save it, and
 			another is used to open it - then a polite dialog box will appear asking the reader whether or not the data
@@ -2479,6 +2490,13 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		("load-game",
 			noop,
 			(/* no cd because this is attachable:false */ section, slotName) => {
+				/*
+					Throw an error if (load-game:) was already used to load this passage.
+				*/
+				if (section.loadedGame) {
+					return TwineError.create('infinite',"I can't use (load-game:) immediately after loading a game.");
+				}
+
 				const saveData = localStorage.getItem(storagePrefix("Saved Game") + slotName);
 				
 				if (!saveData) {
@@ -2514,7 +2532,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 					});
 					return { blocked: d };
 				}
-				requestAnimationFrame(Engine.showPassage.bind(Engine, State.passage, false /* stretchtext value */));
+				requestAnimationFrame(Engine.showPassage.bind(Engine, State.passage, { loadedGame: true }));
 			},
 			[String], false /* Can't have attachments.*/)
 

@@ -19,7 +19,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 	*/
 	let seed = '', seedIter = 0;
 	/*
-		mulberry32 by tommyettinger, seeded with MurmurHash3 by Austin Appleby.
+		mulberry32 by Tommy Ettinger, seeded with MurmurHash3 by Austin Appleby.
 		This is seeded with a single character to save space in save files (where this is saved
 		alongside the seedIter).
 	*/
@@ -48,11 +48,6 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		};
 	}
 	let PRNG = mulberryMurmur32();
-	/*
-		The intiial seed for this "game", which cannot be undone using the story Undo features.
-		This can only be changed by (load-game:). Additional explicit (seed:) calls override this, obviously.
-	*/
-	let initialSeed = seed;
 	
 	/*
 		A browser compatibility check for localStorage and sessionStorage.
@@ -81,15 +76,22 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 	*/
 	const Moment = {
 		/*
-			Current passage name
+			Current passage name and variables store.
 		*/
 		passage: "",
 		variables: create(null),
 		/*
-			This optional string is only used for (redirect:)s, and represents the original passage
-			in the redirect chain that led to here.
+			This optional string is only used for (redirect:)s, and represents each passage redirected to during the previous moment.
+			These are added to (history:).
 		*/
-		redirect: undefined,
+		visits: undefined,
+		/*
+			(seed:) and (mock-visits:) calls produce these stateful changes, which are also recorded.
+		*/
+		seed: undefined,
+		seedIter: undefined,
+		mockVisits: undefined,
+		mockTurns: undefined,
 
 		/*
 			Make a new Moment that comes temporally after this.
@@ -106,20 +108,40 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			// Variables are stored as deltas of the previous state's variables.
 			ret.variables = create(null);
 
-			defineProperty(ret.variables, "TwineScript_VariableDelta",
-				/*
-					Note that this makes the property non-enumerable, and thus invisible
-					to Object.keys() etc.
-				*/
-				{ value: true });
-
 			/*
 				Value Refs (used to reconstruct long values from save files) are tracked as well.
-				This doesn't matter to the System Variables, so it isn't included.
+				This doesn't matter to the System Variables or the epoch, so it isn't included.
 			*/
-			defineProperty(ret.variables, "TwineScript_ValueRefs", { value: create(null) });
+			ret.valueRefs = create(null);
 			return ret;
 		}
+	};
+
+	/*
+		A special "moment-like object" that holds stuff that took place before the first moment,
+		either because it was erased by (erase-past:), or it occurred during page initialisation.
+		This is distinguished from other moments by lacking a "passage" property.
+	*/
+	let epoch = {
+		/*
+			A list of passages which were visited (either by (redirect:) or normally), but whose visits were erased by (erase-past:).
+		*/
+		visits: undefined,
+		/*
+			A number of additional turns which were erased by (erase-past:).
+		*/
+		turns: undefined,
+		/*
+			The initial seed for this "game", which cannot be undone using the story Undo features.
+			This can only be changed by (load-game:) or (erase-past:). Additional explicit (seed:) calls override this, obviously.
+		*/
+		seed,
+		seedIter: 0,
+		/*
+			The epoch should only have variables when (erase-past:) erased some moments which had (set:) various variables,
+			thus flattening them onto here.
+		*/
+		variables: create(null),
 	};
 	
 	/*
@@ -162,20 +184,31 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 	*/
 	let serialisedPast = '';
 	/*
-		A cache of the past passage names, as returned by pastPassageNames(). Because (history:) uses this,
-		it's a good idea to cache it.
+		A cache of the past passage names. Because (history:) uses this, it's a good idea to cache it.
 	*/
 	let pastPassageNames = [];
 
 	/*
-		A function to invalidate both of thre above at the same time.
+		A function to invalidate both of the above at the same time.
 	*/
 	function invalidateCaches() {
 		serialisedPast = '';
 
 		pastPassageNames = [];
-		for (let i = 0; i <= recent-1; i+=1) {
-			timeline[i].passage && pastPassageNames.push(timeline[i].passage);
+		for (let i = 0; i <= recent; i+=1) {
+			/*
+				"visits" represents redirects accrued at the end of the previous moment
+				Add them before this moment's passage name.
+			*/
+			if (timeline[i].visits) {
+				pastPassageNames.push(...timeline[i].visits);
+			}
+			/*
+				Don't include the present passage's name as a "past" passage name.
+			*/
+			if (i !== recent) {
+				pastPassageNames.push(timeline[i].passage);
+			}
 		}
 	}
 
@@ -216,14 +249,6 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		TwineScript_VariableStore: "global",
 
 		/*
-			For testing purposes, there needs to be a way to "mock" having visited certain passages a certain number of times.
-			Because (mock-visits:) calls should be considered modal, and can be undone, their effects need to be tied
-			to the variable store.
-			Note that currently, mock visits are NOT saved using (save-game:).
-		*/
-		TwineScript_MockVisits: null,
-
-		/*
 			All read/update/delete operations on this scope also update the delta for the current moment (present).
 		*/
 		TwineScript_Delete(prop) {
@@ -234,7 +259,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				statement) so this (probably) isn't visible outside of State.
 			*/
 			present.variables[prop] = null;
-			delete present.variables.TwineScript_ValueRefs[prop];
+			delete present.valueRefs[prop];
 		},
 
 		TwineScript_Set(prop, value, valueRef) {
@@ -248,7 +273,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			/*
 				The value reference (used for save file reconstruction) is also recorded.
 			*/
-			present.variables.TwineScript_ValueRefs[prop] = valueRef;
+			present.valueRefs[prop] = valueRef;
 		},
 
 		TwineScript_GetProperty(prop) {
@@ -267,57 +292,71 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		},
 	});
 	let SystemVariables;
+	/*
+		For testing purposes, there needs to be a way to "mock" having visited certain passages a certain number of times.
+		Because (mock-visits:) calls should be considered modal, and can be undone, their effects need to be tied
+		to the variable store.
+		Note that currently, mock visits are NOT saved using (save-game:).
+	*/
+	let mockVisits;
+
+	/*
+		This is used to flatten a timeline into a single moment, which is either the present (for reconstructSystemVariables),
+		or the epoch (for erasePast).
+	*/
+	const flattenMomentVariables = (array, dest) => {
+		for (let i = 0; i < array.length; i += 1) {
+			const moment = array[i];
+			/*
+				Each moment's mockVisits and seed replaces the previous.
+			*/
+			moment.mockVisits !== undefined && (mockVisits = moment.mockVisits);
+			moment.seed !== undefined       && (seed = moment.seed);
+			moment.seedIter !== undefined   && (seedIter = moment.seedIter);
+			for (let prop in moment.variables) {
+				/*
+					The TwineScript_TypeDefs object (of inaccessible/non-writable data structures) doesn't need to have its contents cloned.
+				*/
+				if (prop === "TwineScript_TypeDefs") {
+					assign(dest.TwineScript_TypeDefs, moment.variables[prop]);
+				}
+				else if (!prop.startsWith("TwineScript_")) {
+					/*
+						The JSON value "null" represents variables deleted by (move:).
+					*/
+					if (moment.variables[prop] === null) {
+						delete dest[prop];
+					}
+					else {
+						dest[prop] = moment.variables[prop];
+					}
+				}
+			}
+		}
+	};
 
 	/*
 		Whenever a turn is undone or the game state is reloaded entirely, the global variable
 		scope must be rebuilt.
 	*/
 	function reconstructSystemVariables() {
-		const ret = assign(create(SystemVariablesProto), {
-			TwineScript_MockVisits: [],
-			TwineScript_TypeDefs: create(null),
-		});
-		timeline.slice(0, recent + 1).reverse().forEach(({passage,variables}) => {
-			for (let prop in variables) {
-				/*
-					Neither the TwineScript_MockVisits array (of strings), nor the TwineScript_TypeDefs object
-					(of inaccessible/non-writable data structures), need to have their contents cloned.
-				*/
-				if (prop === "TwineScript_MockVisits") {
-					assign(ret.TwineScript_MockVisits, variables[prop]);
-				}
-				else if (prop === "TwineScript_TypeDefs") {
-					assign(ret.TwineScript_TypeDefs, variables[prop]);
-				}
-				else if (!(prop in ret) && (!prop.startsWith("TwineScript_") || prop.startsWith("TwineScript_Seed"))) {
-					/*
-						The JSON value "null" represents variables deleted by (move:).
-					*/
-					if (variables[prop] === null) {
-						delete ret[prop];
-					}
-					else {
-						ret[prop] = variables[prop];
-					}
-				}
-			}
-		});
-		SystemVariables = ret;
+		mockVisits = undefined;
 		/*
-			Reset the PRNG based on the most recent TwineScript_SeedIter.
-
-			Changes to the Seed are always accompanied with changes to the SeedIter,
-			so we only need to write this check.
+			Start with just the epoch.
 		*/
-		if (hasOwnProperty.call(ret, 'TwineScript_SeedIter')) {
-			PRNG = mulberryMurmur32(ret.TwineScript_Seed || seed, ret.TwineScript_SeedIter);
-		}
+		const ret = assign(create(SystemVariablesProto), { TwineScript_TypeDefs: create(null), }, epoch.variables || {});
+		/*
+			Then flatten every moment into this one.
+		*/
+		flattenMomentVariables(timeline.slice(0, recent + 1), ret);
+		/*
+			Now we're done, except for recalibrating the PRNG.
+		*/
+		SystemVariables = ret;
 		/*
 			If we're undoing to the start, restore the initial seed state.
 		*/
-		else if (recent === 0) {
-			PRNG = mulberryMurmur32(initialSeed);
-		}
+		PRNG = mulberryMurmur32(recent === 0 ? epoch.seed : seed, recent === 0 ? epoch.seedIter : seedIter);
 	}
 	reconstructSystemVariables();
 
@@ -391,6 +430,13 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		},
 
 		/*
+			Used by the "turns" identifier.
+		*/
+		get turns() {
+			return recent + 1 + (epoch.turns || 0);
+		},
+
+		/*
 			Is there a redo cache?
 		*/
 		get futureLength() {
@@ -401,12 +447,44 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			Get and set the current mockVisits state.
 		*/
 		get mockVisits() {
-			return SystemVariables.TwineScript_MockVisits || [];
+			return mockVisits || [];
 		},
 
 		set mockVisits(value) {
-			SystemVariables.TwineScript_MockVisits = value;
-			present.variables.TwineScript_MockVisits = value;
+			mockVisits = value;
+			present.mockVisits = value;
+		},
+
+		/*
+			Used by (history:). Because storylets are liable to call (history:) a lot,
+			it's ideal to do as little work as necessary in this.
+		*/
+		history() {
+			let ret = State.pastPassageNames();
+			if (epoch.visits) {
+				ret = epoch.visits.concat(ret);
+			}
+			if (mockVisits) {
+				ret = mockVisits.concat(ret);
+			}
+			return ret;
+		},
+
+		/*
+			Used by (erase-past:). All moments before the specified index are flattened into the epoch.
+
+			Note that this should simply never be called when used in a past moment (not the one at the end of the timeline).
+		*/
+		erasePast(ind) {
+			if (ind < 0) {
+				ind = timeline.length-1;
+			}
+			const excised = timeline.splice(0, ind);
+			excised.forEach(e => {
+				flattenMomentVariables(e, epoch);
+				epoch.visits.push(...(e.visits || []), e.passage);
+			});
+			epoch.turns += excised.length;
 		},
 
 		/*
@@ -496,20 +574,16 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				impossible("State.redirect","present is undefined!");
 			}
 			/*
-				If there is no redirect for this moment (this is the first redirect), stash the present passage
-				on the moment as "redirect". When undoing into a redirected moment, you go to the start
-				of the chain of redirects.
+				Each moment stores the passages visited by (redirect:)s that occured during it,
+				solely for the sake of (history:).
 			*/
-			if (!present.redirect) {
-				present.redirect = present.passage;
-			}
+			present.visits = (present.visits || []).concat(newPassageName);
 			// The departing passage name still goes into the cache.
 			present.passage && pastPassageNames.push(present.passage);
 			// Assign the passage name.
 			present.passage = newPassageName;
 			// That's all!
-
-			//TODO: Debug Mode redirect listing
+			//TODO: Debug Mode redirect event
 		},
 
 		/*
@@ -605,7 +679,11 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			recent = -1;
 			present = Moment.create();
 			PRNG = mulberryMurmur32();
-			initialSeed = seed;
+			epoch = {
+				seed,
+				seedIter,
+				variables: create(null),
+			};
 			invalidateCaches();
 			reconstructSystemVariables();
 			serialiseProblem = undefined;
@@ -622,8 +700,8 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		setSeed(seed) {
 			PRNG = mulberryMurmur32(seed);
 
-			present.variables.TwineScript_Seed = seed;
-			present.variables.TwineScript_SeedIter = seedIter;
+			present.seed = seed;
+			present.seedIter = seedIter;
 		},
 
 		/*
@@ -632,7 +710,7 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		*/
 		random: () => {
 			const ret = PRNG();
-			present.variables.TwineScript_SeedIter = seedIter;
+			present.seedIter = seedIter;
 			return ret;
 		},
 
@@ -689,11 +767,10 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		*/
 		whatToSerialise = timeline.slice(!serialisedPast ? 0 : newPresent ? recent-1 : recent, recent+1);
 		/*
-			In order to save the initial PRNG state (which is decided upon when the HTML is loaded, and
-			NOT storable in the first moment) an additional "initial seed" object must #awkwardly be included.
+			The epoch object must be included first.
 		*/
 		if (!serialisedPast) {
-			whatToSerialise.unshift({ seed: initialSeed });
+			whatToSerialise.unshift(epoch);
 		}
 
 		/*
@@ -736,75 +813,71 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 			);
 		}
 		/*
-			Note: this MUST NOT be an arrow function, because JSON.stringify uses 'this' in the given callback.
+			Note 1: This MUST NOT be an arrow function, because JSON.stringify uses 'this' in the given callback.
+			Note 2: This serialises mockVisits as-is.
+			As of Oct 2021, it's currently not decided what should happen when a mock visits savefile is loaded outside of Debug Mode.
 		*/
 		let serialiseFn = function (name, variable) {
 			/*
-				The timeline, which is an array of Moments with VariableStore objects, should be serialised
-				such that only the variables inside the VariableStore are converted to Harlowe strings
-				with toSource().
-			*/
-			if (this.TwineScript_VariableDelta) {
-				/*
-					Serialising the TypeDefs, which is the only VariableStore property
-					that isn't directly user-created, and is a plain JS object,
-					requires a little special-casing.
-				*/
-				if (name === "TwineScript_TypeDefs") {
-					return Object.keys(variable).reduce((a,key) => {
-						/*
-							Since the datatypes inside are Harlowe values,
-							they should be serialised to source as well.
-						*/
-						a[key] = toSource(variable[key]);
-						return a;
-					},{});
-				}
-				/*
-					Mock Visits should be stored as well. As of Oct 2021, it's currently not decided
-					what should happen when a mock visits savefile is loaded outside of Debug Mode.
-				*/
-				if (name === "TwineScript_MockVisits") {
-					return variable;
-				}
-				// If this is the ValueRefs object, don't serialise it
-				if (name === "TwineScript_ValueRefs") {
-					return undefined;
-				}
-				// Serialise the RNG seed values as-is.
-				if (name.startsWith("TwineScript_Seed")) {
-					return variable;
-				}
-				/*
-					Values with a reference are serialised as an array (generated in Runner by the "to" and "into" handler)
-					of [passage name, passage text start index, passage text end index], which is used to reconstruct the value
-					when loading the save file.
-				*/
-				if (this.TwineScript_ValueRefs[name]) {
-					return this.TwineScript_ValueRefs[name];
-				}
-				/*
-					"null", representing deleted variables, is passed as-is to become a JSON null.
-					(Currently (Jan 2022), though, nothing can delete values.)
-				*/
-				if (variable === null) {
-					return variable;
-				}
-				return toSource(variable);
-			}
-			/*
-				Special optimisation: when a Moment has no changed variables,
+				Special optimisation: when a Moment has no changed variables, redirects, seeds, or whatever,
 				replace it with a string of just the passage name.
 			*/
 			if (Moment.isPrototypeOf(variable)) {
-				/*
-					Because the 'TwineScript_VariableDelta' label on the variables object of
-					Moments is not enumerable, it won't show up in Object.keys(). Therefore,
-					this should only grab actual variable changes.
-				*/
-				if (Object.keys(variable.variables).length === 0 && !variable.redirect) {
+				if (variable.visits  === undefined
+						&& variable.mockVisits  === undefined
+						&& variable.seed === undefined
+						&& variable.seedIter === undefined
+						&& Object.keys(variable.variables).every(e => e.startsWith("TwineScript_"))) {
 					return variable.passage;
 				}
+			}
+			// If this is the ValueRefs object, don't serialise it
+			// Note that the epoch doesn't have a valueRefs.
+			if (Moment.isPrototypeOf(this) && name === "valueRefs") {
+				return undefined;
+			}
+			/*
+				Variables objects should be serialised such that only the variables inside
+				the VariableStore are converted to Harlowe strings with toSource().
+			*/
+			if ((Moment.isPrototypeOf(this) || epoch === this) && name === "variables") {
+				const ret = {};
+				for (let key in this.variables) {
+					/*
+						Serialising the TypeDefs, which is the only VariableStore property
+						that isn't directly user-created, and is a plain JS object,
+						requires a little special-casing.
+					*/
+					if (key === "TwineScript_TypeDefs") {
+						ret[key] = {};
+						for (let typeDef in this.variables[key]) {
+							/*
+								Since the datatypes inside are Harlowe values,
+								they should be serialised to source as well.
+							*/
+							ret[key][typeDef] = toSource(this.variables[key][typeDef]);
+						}
+					}
+					/*
+						"null", representing deleted variables, is passed as-is to become a JSON null.
+						(Currently (Jan 2022), though, nothing can delete values.)
+					*/
+					else if (this.variables[key] === null) {
+						 ret[key] = null;
+					}
+					else if (this.valueRefs[key]) {
+						/*
+							Values with a reference are serialised as an array (generated in Runner by the "to" and "into" handler)
+							of [passage name, passage text start index, passage text end index], which is used to reconstruct the value
+							when loading the save file.
+						*/
+						ret[key] = this.valueRefs[key];
+					}
+					else {
+						ret[key] = toSource(this.variables[key]);
+					}
+				}
+				return ret;
 			}
 			return variable;
 		};
@@ -841,15 +914,22 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 		Since this should only receive formerly-serialised data, we don't really need to care about the
 		scope of the eval().
 	*/
-	function recompileValues(section, obj) {
+	function recompileValues(section, moment, obj) {
 		for (let key in obj) {
 			if (hasOwnProperty.call(obj, key) && !key.startsWith("TwineScript_")) {
 				/*
+					ValueRefs are arrays consisting of
+					[ passage name, start index, end index, other execution state ],
+					whereas normal variables are strings of Harlowe source.
+
 					Note that TypeDefs values can't be serialised as "reconstruct",
 					so this check won't do anything unwanted to them.
 				*/
 				if (Array.isArray(obj[key])) {
-					obj.TwineScript_ValueRefs[key] = obj[key];
+					/*
+						Save and re-use this ValueRef for the next time the game is saved.
+					*/
+					moment.valueRefs[key] = obj[key];
 
 					const [passageName, start, end] = obj[key];
 					const source = Passages.get(passageName).get('source');
@@ -858,6 +938,12 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				else {
 					obj[key] = section.eval(lex(obj[key], '', 'macro'));
 				}
+			}
+			/*
+				Compatibility with Harlowe 3.2.3.
+			*/
+			else if (key === "TwineScript_MockVisits") {
+				moment.mockVisits = obj[key];
 			}
 		}
 	}
@@ -893,15 +979,15 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				moment = { passage: moment, variables: {} };
 			}
 			/*
-				If it's the special "initial seed" object, process it.
+				If it's the epoch object, process it.
 			*/
-			else if (typeof moment === "object" && hasOwnProperty.call(moment,"seed")) {
+			else if (typeof moment === "object" && !hasOwnProperty.call(moment,"passage")) {
 				/*
-					If there's erroneously more "initial seed" objects than in the first position, ignore them.
+					If there's erroneously more epoch objects than in the first position, ignore them.
 				*/
 				if (i === 0) {
-					initialSeed = moment.seed;
-					PRNG = mulberryMurmur32(moment.seed);
+					epoch = moment;
+					PRNG = mulberryMurmur32(moment.seed, moment.seedIter);
 				}
 				/*
 					Seamlessly remove this non-state object from the timeline.
@@ -914,7 +1000,6 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				objects with "passage" and "variables" keys.
 			*/
 			else if (typeof moment !== "object"
-					|| !hasOwnProperty.call(moment,"passage")
 					|| !hasOwnProperty.call(moment,"variables")) {
 				/*
 					Rather than freak out, just disregard this object altogether.
@@ -923,11 +1008,13 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 				continue;
 			}
 			/*
+				The valueRefs record is restored here (as it wasn't saved in the savefile for obvious reasons).
+			*/
+			moment.valueRefs = create(null);
+			/*
 				Clean the prototype of the variables object.
 			*/
 			moment.variables = assign(create(null), moment.variables);
-			defineProperty(moment.variables, "TwineScript_VariableDelta", { value: true });
-
 			/*
 				Check that the passage name in this moment corresponds to a real passage.
 				As this is the most likely issue with invalid save data, this gets a precise message.
@@ -944,20 +1031,16 @@ define(['utils', 'passages', 'datatypes/changercommand', 'internaltypes/twineerr
 					literals like "number" or "datamap".
 				*/
 				try {
-					recompileValues(section, moment.variables.TwineScript_TypeDefs);
+					recompileValues(section, moment, moment.variables.TwineScript_TypeDefs);
 				} catch(e) {
 					return Error(`The variable types on turn ${i+1} couldn't be reconstructed.`);
 				}
 			}
 			/*
-				The TwineScript_ValueRefs record is restored here (as it wasn't saved in the savefile for obvious reasons).
-			*/
-			defineProperty(moment.variables, 'TwineScript_ValueRefs', { value: create(null) });
-			/*
 				Compile all of the variables (which are currently Harlowe code strings) back into Harlowe values.
 			*/
 			try {
-				recompileValues(section, moment.variables);
+				recompileValues(section, moment, moment.variables);
 			} catch(e) {
 				return Error(`The variables on turn ${i+1} couldn't be reconstructed.`);
 			}

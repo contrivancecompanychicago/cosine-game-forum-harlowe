@@ -162,12 +162,12 @@ describe("save macros", function() {
 			runPassage(
 				"(set:$c1 to (text-style:'underline'))" +
 				"(set:$c2 to (a: $c1 + (hook: 'luge')))", 'corge');
-			runPassage("(savegame:'1')");
+			runPassage("(savegame:'1')",'baz');
 			expect("(loadgame:'1')").not.markupToError();
 			requestAnimationFrame(function() {
 				var hook = runPassage("(either:$c2's 1st)[goop]").find('tw-hook');
 				setTimeout(function() {
-					expect(hook.css('text-decoration')).toBe('underline');
+					expect(hook.css('text-decoration')).toMatch(/^underline/);
 					expect(hook.attr('name')).toBe('luge');
 					done();
 				}, 20);
@@ -175,7 +175,7 @@ describe("save macros", function() {
 		});
 		it("can restore gradients", function(done) {
 			runPassage("(set:$c1 to (gradient:90,0,white,1,black))", 'corge');
-			runPassage("(savegame:'1')");
+			runPassage("(savegame:'1')",'baz');
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
 				expect("(print:'`'+(source:$c1)+'`')").markupToPrint('(gradient:90,0,white,1,black)');
@@ -184,7 +184,7 @@ describe("save macros", function() {
 		});
 		it("can restore code hooks", function(done) {
 			runPassage("(set:$c1 to [Foo bar baz])", 'corge');
-			runPassage("(savegame:'1')");
+			runPassage("(savegame:'1')",'baz');
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
 				expect("(print:'`'+(source:$c1)+'`')").markupToPrint('[Foo bar baz]');
@@ -197,7 +197,7 @@ describe("save macros", function() {
 				+ "(set:$c2 to (macro: num-type _a, str-type _b, [(output-data:(str:($c1:_a,150))+_b)]))"
 				+ "(set:$c3 to (macro: [(output:)[foo bar]]))", 'corge'
 			);
-			expect("(savegame:'1')").not.markupToError();
+			runPassage("(savegame:'1')",'baz');
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
 				expect("($c1:198,197)").markupToPrint('200');
@@ -210,7 +210,7 @@ describe("save macros", function() {
 		it("can restore variables set in (display:)", function(done) {
 			createPassage("(set:$arr to (a:'" + "E".repeat(30) + "'))", 'baz');
 			runPassage("(display:'baz')(set:$gee to 2)", "corge");
-			expect("(savegame:'1')").not.markupToError();
+			runPassage("(savegame:'1')",'grault');
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
 				expect("$arr $gee").markupToPrint("E".repeat(30) + " 2");
@@ -222,7 +222,7 @@ describe("save macros", function() {
 			runPassage("(set:$hook to [(set:$arr to (a:'" + "E".repeat(30) + "'))])", 'baz');
 			runPassage("$hook", "corge");
 			expect("$arr").markupToPrint("E".repeat(30));
-			expect("(savegame:'1')").not.markupToError();
+			runPassage("(savegame:'1')",'grault');
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
 				expect("$arr").markupToPrint("E".repeat(30));
@@ -244,7 +244,7 @@ describe("save macros", function() {
 			runPassage("(set:$str to '(' + 'set:$arr to (a:\\'" + "E".repeat(30) + "\\'))')", 'baz');
 			runPassage("$str", "corge");
 			expect("$arr").markupToPrint("E".repeat(30));
-			expect("(savegame:'1')").not.markupToError();
+			runPassage("(savegame:'1')",'grault');
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
 				expect("$arr").markupToPrint("E".repeat(30));
@@ -255,7 +255,7 @@ describe("save macros", function() {
 			it("can restore variables set in "+name+" passages", function(done) {
 				createPassage("(set:$arr to (a:'" + "E".repeat(30) + "'))", 'baz', [name]);
 				runPassage("(set:$gee to 2)", "corge");
-				expect("(savegame:'1')").not.markupToError();
+			runPassage("(savegame:'1')",'grault');
 				expect("(loadgame:'1')").not.markupToError();
 				setTimeout(function() {
 					expect("$arr $gee").markupToPrint("E".repeat(30) + " 2");
@@ -265,7 +265,7 @@ describe("save macros", function() {
 		});
 		it("can restore variables with impure values", function(done) {
 			runPassage("(set:$a to 1)(set:$arr to (a:'" + "E".repeat(30) + "', $a))", 'baz');
-			expect("(savegame:'1')").not.markupToError();
+			runPassage("(savegame:'1')",'grault');
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
 				expect("$arr").markupToPrint("E".repeat(30) + ",1");
@@ -276,7 +276,7 @@ describe("save macros", function() {
 			runPassage("(set:$arr to (a:'" + "E".repeat(30) + "'))", 'baz');
 			runPassage("(set:$arr to (a:'" + "J".repeat(30) + "'))", 'qux');
 			expect("$arr").markupToPrint("J".repeat(30));
-			expect("(savegame:'1')").not.markupToError();
+			runPassage("(savegame:'1')",'grault');
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
 				expect("$arr").markupToPrint("J".repeat(30));
@@ -292,10 +292,10 @@ describe("save macros", function() {
 		});
 		it("can restore variables multiple times", function(done) {
 			runPassage("(set:$arr to (a:'" + "E".repeat(30) + "'), $foo to (font:'Roboto'))", 'baz');
-			expect("(savegame:'1')").not.markupToError();
+			runPassage("(savegame:'1')",'grault');
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
-				expect("(savegame:'1')").not.markupToError();
+				runPassage("(savegame:'1')",'grault');
 				expect("(loadgame:'1')").not.markupToError();
 				setTimeout(function() {
 					expect("$arr").markupToPrint("E".repeat(30));
@@ -324,6 +324,30 @@ describe("save macros", function() {
 					done();
 				},90);
 			},90);
+		});
+		it("doesn't disrupt (history:)'s cache", function(done) {
+			runPassage("", 'baz');
+			runPassage("", 'qux');
+			runPassage("(savegame:'1')",'grault');
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("(history:)").markupToPrint('baz,qux,grault');
+				done();
+			}, 90);
+		});
+		it("doesn't disrupt (history:)'s cache even with (redirect:) uses", function(done) {
+			createPassage("", 'corge');
+			runPassage("", 'baz');
+			runPassage("(redirect:'corge')", 'qux');
+			setTimeout(function() {
+				runPassage("(savegame:'1')",'grault');
+				expect("(history:)").markupToPrint('baz,qux,corge,grault');
+				expect("(loadgame:'1')").not.markupToError();
+				setTimeout(function() {
+					expect("(history:)").markupToPrint('baz,qux,corge,grault');
+					done();
+				}, 90);
+			}, 90);
 		});
 		it("produces a user-friendly prompt for deletion if the save data is invalid", function(done) {
 			runPassage("uno", "uno");
@@ -367,9 +391,9 @@ describe("save macros", function() {
 		});
 		it("can restore the PRNG seed across many turns", function(done) {
 			runPassage("(seed:'BAA')",'foo');
-			runPassage("**(random:1,100000000)**",'bar');
-			runPassage("**(random:1,100000000)**",'baz');
-			runPassage("**(random:1,100000000)**",'qux');
+			expect(runPassage("**(random:1,100000000)**",'bar').find('strong').text()).toBe('97814911');
+			expect(runPassage("**(random:1,100000000)**",'baz').find('strong').text()).toBe('64751555');
+			expect(runPassage("**(random:1,100000000)**",'qux').find('strong').text()).toBe('84127778');
 			runPassage("(savegame:'1')",'quux');
 			runPassage("(random:1,2)",'garply');
 			expect("(loadgame:'1')").not.markupToError();
@@ -394,6 +418,15 @@ describe("save macros", function() {
 				expect($('tw-passage strong').text()).toBe(result);
 				done();
 			},90);
+		});
+		it("can't create an infinite loop", function(done) {
+			spyOn($,'noop');
+			runPassage("<script>$.noop()</script>(savegame:'1')(loadgame:'1')");
+			setTimeout(function() {
+				expect($.noop).toHaveBeenCalledTimes(2);
+				expect($('tw-passage tw-error').length).toBe(1);
+				done();
+			},120);
 		});
 	});
 });

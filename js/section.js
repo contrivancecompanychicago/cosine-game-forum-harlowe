@@ -617,6 +617,11 @@ define([
 				*/
 				pureValueCheck: false,
 				/*
+					This is set by Engine whenever it navigates to a passage as a result of (load-game:). It prevents
+					(load-game:) from running again in that passage until initial rendering ends.
+				*/
+				loadedGame: false,
+				/*
 					The identifiers reference aspects of the currently rendered passage, such as the number of exits
 					or the time since rendering.
 				*/

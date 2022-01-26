@@ -1070,9 +1070,12 @@ define([
 			The array includes duplicate names if the player has visited a passage more than once, or visited
 			the same passage two or more turns in a row.
 
+			Passages visited via (redirect:) will be included in this array. Each passage redirected to will appear
+			immediately after the passage that the (redirect:) macro was called in.
+
 			This does *not* include the name of the current passage the player is visiting.
 
-			This macro can optionally be given a `where` lambda, which is used to only include passage names from the
+			This macro can optionally be given a `where` lambda, which is used to only include passage names in the
 			returned array if they match the lambda. Note that even though this produces an array of strings,
 			the variable in the lambda is always a **datamap** -
 			the same datamap as would be returned by (passage:) for that passage name. That datamap contains
@@ -1104,10 +1107,7 @@ define([
 			#game state
 		*/
 		("history", (section, lambda) => {
-			/*
-				Add the mock visits to the front of the pastPassageNames array.
-			*/
-			const history = State.mockVisits.concat(State.pastPassageNames());
+			const history = State.history();
 			if (!lambda) {
 				return history;
 			}

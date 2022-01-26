@@ -78,8 +78,9 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 	*/
 	function showPassage (name, displayOptions = {}) {
 		/*
-			displayOptions should only contain 'stretch' and 'transition' properties.
+			displayOptions should only contain 'stretch', 'transition' and 'loadgame' properties.
 		*/
+		const {loadedGame} = displayOptions;
 
 		const
 			// The passage
@@ -189,7 +190,14 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 		story.attr({tags});
 		
 		const section = Section.create(newPassage);
-		
+		/*
+			The 'loadgame' display option should prevent (load-game:) loops from happening
+			(loading directly into a (load-game:) macro).
+		*/
+		if (loadedGame) {
+			section.loadedGame = true;
+		}
+
 		/*
 			Actually do the work of rendering the passage now.
 		*/
@@ -327,6 +335,13 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 			*/
 			{ transition: arrive, transitionTime: time, transitionOrigin: arriveOrigin }
 		);
+
+		/*
+			Re-enable (load-game:) usage immediately after the passage has rendered. While this won't
+			certain (load-game:) loops caused by guarding each call with very low (after:) timeouts or whatnot,
+			it's still fairly good at stopping unintentional loops.
+		*/
+		section.loadedGame = false;
 		
 		/*
 			Reattach the <tw-story> and any <tw-enchantment> elements (or whatnot)

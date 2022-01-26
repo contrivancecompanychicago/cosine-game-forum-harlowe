@@ -186,6 +186,19 @@ describe("basic command macros", function() {
 						done();
 					});
 				});
+				it("counts as the same turn even after multiple uses", function(done) {
+					createPassage("", "quux");
+					createPassage("("+name+": 'quux')", "qux");
+					createPassage("("+name+": 'qux')", "waldo");
+					createPassage("("+name+": 'waldo')", "grault");
+					runPassage("[Hello]",'baz');
+					runPassage("("+name+": 'grault')","garply");
+					waitForGoto(function() {
+						Engine.goBack();
+						expect($('tw-passage tw-hook').text()).toBe('Hello');
+						done();
+					});
+				});
 				it("changes the current passage", function(done) {
 					createPassage("[(print: name of (passage:))]", "grault");
 					runPassage("("+name+": 'grault')","garply");
