@@ -512,7 +512,7 @@
 			containing passage code is rendered.
 
 			You can also include a `<style>` tag containing CSS code. The CSS should affect the entire page
-			until the element is removed from the DOM. You could use this in a "header" tagged passage, inside an (if:) hook,
+			until the element is removed from the DOM. You could use this in a "header" or "footer" tagged passage, inside an (if:) hook,
 			to make the CSS apply to every passage where the (if:) condition is fulfilled.
 
 			Finally, you can also include HTML comments `<!-- Comment -->` in your code, if you wish to leave

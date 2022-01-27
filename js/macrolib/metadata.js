@@ -168,7 +168,7 @@ define(['macros','renderer', 'utils/operationutils', 'datatypes/lambda', 'intern
 			The data names and values are provided to (metadata:) as if it was a (dm:) macro call – first the string names, then the values, in alternation.
 
 			Being a metadata macro, a (metadata:) macro call must appear in the passage *before* every other non-metadata macro in the passage, such as (set:) and (if:).
-			(This doesn't include macros inside a "header" tagged passage.) The recommended place to put it is at the top of the passage.
+			(This doesn't include macros inside a "header" or "footer" tagged passage.) The recommended place to put it is at the top of the passage.
 
 			Every passage's (metadata:) macro is run just once, at startup. If an error occurs while doing so (for instance, if a value is given without a matching name)
 			then a dialog box will appear at startup, displaying the error.

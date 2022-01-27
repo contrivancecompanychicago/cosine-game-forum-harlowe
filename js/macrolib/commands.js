@@ -704,9 +704,10 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			[String])
 
 		/*d:
-			(undo:) -> Command
+			(undo: [String]) -> Command
 			This command stops passage code and "undoes" the current turn, sending the player to the previous visited
-			passage and forgetting any variable changes that occurred in this passage.
+			passage and forgetting any variable changes that occurred in this passage. You may provide an optional
+			string to display if undos aren't available.
 
 			Example usage:
 			`You scurry back whence you came... (after:2s)[(undo:)]` will undo the current turn after 2 seconds.
@@ -726,8 +727,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			alter the transition animation used when (undo:) activates. Other kinds of changers
 			won't do anything, though.
 			
-			If this is the first turn of the game session, (undo:) will produce an error. You can check which turn it is
-			by examining the `length` of the (history:) array.
+			If undos aren't available (either due to this being the start of the story, or (erase-past:) being used)
+			then either the optional second string will be displayed (as markup) instead, or (if that wasn't provided) nothing will be displayed.
 
 			If the previous turn featured the use of (redirect:), (undo:) will take the player to the passage in which the
 			turn started, before any (redirect:) macros were run.
@@ -743,9 +744,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		*/
 		("undo",
 			noop,
-			(cd) => {
+			(cd, _, str) => {
 				if (State.pastLength < 1) {
-					return TwineError.create("macrocall", "I can't (undo:) on the first turn.");
+					return assign(cd, { source: str });
 				}
 				/*
 					As with the (goto:) macro, the change of passage must be deferred until
@@ -758,7 +759,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				*/
 				return { blocked: true };
 			},
-			[]);
+			[optional(String)]);
 
 	/*
 		An onchange event for <select> elements must be registered for the sake of the (dropdown:) macro,
@@ -820,7 +821,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			(icon-undo: [String], [String]) -> Command
 
 			Creates an icon, similar to those in the sidebar, that, if visible and clicked, undoes the current turn, returning to the previous passage, as if by (undo:). It is not
-			visible on the first turn of the game.
+			visible if undos aren't available.
 
 			Example usage:
 			* `(replace:?sidebar)[(icon-undo: )(size:2)[(str-repeated:$flowers + 1, "✿ ")]]` alters the sidebar such that there is only an undo button, followed
@@ -852,7 +853,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			with 0.2 opacity that changes to 0.4 when hovered over.
 
 			Like all sidebar icons, these will automatically hide themselves when they cannot be clicked, leaving a conspicuous space. In the
-			case of the "Undo" icon, it will be hidden if it's the first turn of the game, and there is nothing to undo.
+			case of the "Undo" icon, it will be hidden if it's the first turn of the game, and there is nothing to undo - or if (erase-past:)
+			is used to prevent undos. If this is used in a passage, and (erase-past:) is used later in the passage to prevent undoing, then this will automatically,
+			instantly hide itself.
 
 			See also:
 			(icon-redo:), (undo:), (link-undo:), (click-undo:)
@@ -1018,6 +1021,19 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			(cd, _, icon, label) => {
 				if ((typeof label === "string" && [...label].length === 1) || (typeof icon === "string" && [...icon].length > 1)) {
 					[icon,label] = [label,icon];
+				}
+				/*
+					The (icon-undo:) macro shares some code with (link-undo:) it will auto-update itself when the
+					past is entirely erased. However, unlike (link-undo:), it has no alternative string to render, making this
+					callback a little simpler.
+				*/
+				if (name === "Undo") {
+					cd.data.erasePastEvent = icon => {
+						/*
+							Because (erase-past:) could have occurred inside a (dialog:), the icon should only be hidden when the section is unblocked.
+						*/
+						cd.section.whenUnblocked(() => $(icon).css('visibility','hidden'));
+					};
 				}
 				return assign(cd, { source: `<tw-icon tabindex=0 alt="${name}" ${label ? `data-label="${label.replace('"',"&quot;")}"` : '' } title="${name}" ${visibilityTest() ? "" : 'style="visibility:hidden"'}>${icon || defaultIcon}</tw-icon>`});
 			},
@@ -2537,6 +2553,71 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			[String], false /* Can't have attachments.*/)
 
 		/*d:
+			(erase-past: Number) -> Command
+
+			This macro, when used, "erases" previous turns, preventing the player from using undo features (like (link-undo:))
+			to return to them. Providing a positive number will erase that many turns from the start of the game, and providing a
+			negative number will erase all the turns up to that point from the end.
+
+			Example usage:
+			* `(erase-past:-2)` erases all previous turns up to and including the second-last turn.
+			* `(erase-past:-1)` erases all previous turns.
+			* `(erase-past:1)` erases the first turn. This could be useful for erasing a "title screen" turn
+			from the story, which doesn't make sense for the player to "undo".
+
+			Rationale:
+			By default, Harlowe allows the player (via the default sidebar) to undo any number of turns, all the way up to
+			the start of the game. This macro makes it easy to limit this ability, either at key moments in the story (such as
+			the starts of chapters or viewpoint switches) or constantly, by placing it in a "header" or "footer" tagged passage.
+
+			Note that while it's possible to limit the player's ability to undo by simply removing or replacing the default (icon-undo:)
+			instance from the sidebar (such as, for example, `(replace:?sidebar)[(if:$canUndo)(icon-undo:)]`, and then conditionally changing the $canUndo variable
+			throughout the story), this macro provides a more direct way of limiting undos. In particular, it makes it
+			easy to limit the *distance* that a player can undo from the current turn.
+
+			Be careful and judicious in your use of this macro. In most cases, limiting the player's ability to undo actions isn't
+			a particularly interesting or clever game design restriction. However, there are certain genres of game, such as
+			survival horror games or experiential dream simulators, where suddenly limiting the ability to undo at periodic intervals
+			can have a desirable disempowering effect.
+
+			Details:
+			This macro does nothing if it is run in a passage that has been returned to by "undo" (i.e. where there is one or more turns
+			one could "redo" using (icon-redo:)). It only functions in the "present".
+
+			If there aren't enough past turns to erase (for instance, when `(erase-past:4)` is run when only two turns have been taken) then
+			all past turns will be erased.
+
+			There is no way to "un-erase" the erased turns when this macro is used. Its effects are permanent.
+
+			Use of this macro will *not* affect the (history:) macro, the (visited:) macro, or the `visits` and `turns` keywords (nor
+			the debug-only (mock-visits:) and (mock-turns:) macros). These will continue to perform as if (erase-past:) was never called.
+			However, the turns that they refer to (in which the "visits" occurred) will no longer be accessible to the player.
+
+			This macro will internally "flatten" every erased turn into a single data structure, which is used to ensure that
+			(history:) and (visited:) and other such features continue to behave as expected.
+			As a result, using this macro will reduce the size of the data saved to browser localStorage by (save-game:). However, you should
+			*not* use this macro solely on the hunch that it provides performance benefits for your story - such benefits only
+			come to stories that take place over a very large number of turns, and who store a large amount of data in global
+			variables (such as expansive datamaps and arrays that are changed frequently).
+
+			If 0 is given, no past turns will be erased.
+
+			See also:
+			(restart:)
+
+			Added in: 3.3.0
+			#saving
+		*/
+		("erase-past",
+			noop,
+			(_, number) => {
+				if (!State.futureLength) {
+					State.erasePast(number);
+				}
+			},
+		[parseInt], false /* Can't have attachments.*/)
+
+		/*d:
 			(mock-visits: ...String) -> Command
 
 			A macro that can only be used in debug mode, this allows you to mark various passages as "visited", even though the player
@@ -2873,13 +2954,15 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			Normally, Harlowe stories will attempt to preserve their current game state across browser page reloads.
 			This macro will suppress this behaviour, guaranteeing that the story restarts from the beginning.
 
-			If the first passage in the story contains this macro, the story will be caught in a "reload
-			loop", and won't be able to proceed. No error will be reported in this case.
+			In order to prevent an endless "restart loop", this macro can't be used in the first passatge of the story.
+			Attempting to do so will cause an error.
+
+			Using (restart:) will *not* erase any games that have been saved with (save-game:).
 
 			This command can't have changers attached - attempting to do so will produce an error.
 
 			See also:
-			(icon-restart:)
+			(icon-restart:), (erase-past:)
 
 			Added in: 1.0.0
 			#navigation
@@ -2887,7 +2970,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		(["restart","reload"],
 			noop,
 			(/* no cd because this is attachable:false */ ) => {
-				if (State.pastLength < 1) {
+				if (State.turns <= 1) {
 					return TwineError.create("infinite", "I mustn't (restart:) the story in the starting passage.");
 				}
 				if (State.hasSessionStorage) {
@@ -3125,9 +3208,13 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			it (because they're using private browsing, their browser's storage is full, or some other reason).
 			Since there's always a possibility of a save failing, you should use (if:) and (else:) with (save-game:)
 			to display an apology message in the event that it returns false (as seen above).
+
+			Using the (erase-past:) macro will, as a side effect of its turn-erasing functionality, reduce the size of the data saved
+			to browser localStorage by (save-game:). However, you should *not* use that macro solely on the hunch that it provides
+			performance benefits for your story. See the (erase-past:) macro's article for slightly more details.
 			
 			See also:
-			(load-game:), (saved-games:)
+			(load-game:), (saved-games:), (erase-past:)
 
 			Added in: 1.0.0
 			#saving

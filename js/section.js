@@ -764,8 +764,7 @@ define([
 					get visits() {
 						const {stackTop:{speculativePassage}} = ret;
 						const filter = name => name === (speculativePassage || State.passage);
-						return State.pastPassageNames().filter(filter).length
-							+ State.mockVisits.filter(filter).length
+						return State.history().filter(filter).length
 							// Only add 1 (counting the current visit) if this isn't speculation, or the speculative passage equals State.passage (i.e. we're at that passage now).
 							+ (!speculativePassage || speculativePassage === State.passage);
 					},

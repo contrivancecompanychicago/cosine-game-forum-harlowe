@@ -524,6 +524,16 @@ describe("interface macros", function(){
 			it("works with (link:)", function() {
 				expect('(link:"Hey")(icon-' + name + ':)').not.markupToError();
 			});
+			if (name === "Undo") {
+				it("is not visible if undos aren't available", function() {
+					expect(runPassage("(icon-" + name + ":'X')").find('tw-icon').css('visibility')).toBe('hidden');
+					expect(runPassage("(erase-past:1)(icon-" + name + ":'X')").find('tw-icon').css('visibility')).toBe('hidden');
+				});
+				it("vanishes if (erase-past:) erases the entire past after it", function() {
+					runPassage("","grault");
+					expect(runPassage("(icon-" + name + ":'X')(erase-past:1)").find('tw-icon').css('visibility')).toBe('hidden');
+				});
+			}
 			//TODO: Click tests
 		});
 	});

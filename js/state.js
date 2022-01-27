@@ -1,6 +1,6 @@
 "use strict";
-define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils', 'markup'],
-({impossible}, Passages, TwineError, {objectName,toSource}, {lex}) => {
+define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils', 'markup'],
+($, Utils, Passages, TwineError, {objectName,toSource}, {lex}) => {
 	const {assign, create, defineProperty} = Object;
 	const {imul} = Math;
 	/*
@@ -9,46 +9,6 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 	defineProperty(Map.prototype, 'toJSON', { value: undefined });
 	defineProperty(Set.prototype, 'toJSON', { value: undefined });
 
-	/*
-		State
-		Singleton controlling the running game state.
-	*/
-
-	/*
-		PRNG settings.
-	*/
-	let seed = '', seedIter = 0;
-	/*
-		mulberry32 by Tommy Ettinger, seeded with MurmurHash3 by Austin Appleby.
-		This is seeded with a single character to save space in save files (where this is saved
-		alongside the seedIter).
-	*/
-	function mulberryMurmur32(s = String.fromCodePoint(Date.now()%0x110000), iter=0) {
-		seedIter = iter;
-		seed = s;
-		let k, i = 0, h = 2166136261;
-		for(; i < seed.length; i+=1) {
-			k = imul(seed.charCodeAt(i), 3432918353);
-			k = k << 15 | k >>> 17;
-			h ^= imul(k, 461845907);
-			h = h << 13 | h >>> 19;
-			h = imul(h, 5) + 3864292196 | 0;
-		}
-		h ^= seed.length;
-		h ^= h >>> 16; h = imul(h, 2246822507);
-		h ^= h >>> 13; h = imul(h, 3266489909);
-		h ^= h >>> 16;
-		h = (h >>> 0) + 0x6D2B79F5 * seedIter;
-		return () => {
-			seedIter += 1;
-			let t = (h += 0x6D2B79F5);
-			t = imul(t ^ t >>> 15, t | 1);
-			t ^= t + imul(t ^ t >>> 7, t | 61);
-			return ((t ^ t >>> 14) >>> 0) / 4294967296;
-		};
-	}
-	let PRNG = mulberryMurmur32();
-	
 	/*
 		A browser compatibility check for localStorage and sessionStorage.
 	*/
@@ -72,6 +32,50 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 	});
 
 	/*
+		State
+		Singleton controlling the running game state.
+	*/
+	let CurrentVariables;
+
+	/*
+		PRNG settings.
+	*/
+	/*
+		mulberry32 by Tommy Ettinger, seeded with MurmurHash3 by Austin Appleby.
+		This is seeded with a single character to save space in save files (where this is saved
+		alongside the seedIter).
+	*/
+	function mulberryMurmur32(s = String.fromCodePoint(Date.now()%0x110000), iter=0) {
+		CurrentVariables.seedIter = iter;
+		CurrentVariables.seed = s;
+		let k, i = 0, h = 2166136261;
+		for(; i < s.length; i+=1) {
+			k = imul(s.charCodeAt(i), 3432918353);
+			k = k << 15 | k >>> 17;
+			h ^= imul(k, 461845907);
+			h = h << 13 | h >>> 19;
+			h = imul(h, 5) + 3864292196 | 0;
+		}
+		h ^= s.length;
+		h ^= h >>> 16; h = imul(h, 2246822507);
+		h ^= h >>> 13; h = imul(h, 3266489909);
+		h ^= h >>> 16;
+		h = (h >>> 0) + 0x6D2B79F5 * iter;
+		return () => {
+			/*
+				So that the seedIter can be properly serialised, each mulberry32 iteration
+				increases it even though it's not used in the calculation. (The actual
+				PRNG state is stored in h.)
+			*/
+			CurrentVariables.seedIter += 1;
+			let t = (h += 0x6D2B79F5);
+			t = imul(t ^ t >>> 15, t | 1);
+			t ^= t + imul(t ^ t >>> 7, t | 61);
+			return ((t ^ t >>> 14) >>> 0) / 4294967296;
+		};
+	}
+	let PRNG;
+	/*
 		Prototype object for states remembered by the game.
 	*/
 	const Moment = {
@@ -83,13 +87,23 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 		/*
 			This optional string is only used for (redirect:)s, and represents each passage redirected to during the previous moment.
 			These are added to (history:).
+			When (erase-past:) is used, it also holds 
 		*/
 		visits: undefined,
+		/*
+			A number of additional turns which were erased by (erase-past:).
+		*/
+		turns: undefined,
 		/*
 			(seed:) and (mock-visits:) calls produce these stateful changes, which are also recorded.
 		*/
 		seed: undefined,
 		seedIter: undefined,
+		/*
+			For testing purposes, there needs to be a way to "mock" having visited certain passages a certain number of times.
+			Because (mock-visits:) and (mock-turns:) calls should be considered modal, and can be undone, their effects need to be tied
+			to the variable store.
+		*/
 		mockVisits: undefined,
 		mockTurns: undefined,
 
@@ -116,34 +130,18 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 			return ret;
 		}
 	};
-
-	/*
-		A special "moment-like object" that holds stuff that took place before the first moment,
-		either because it was erased by (erase-past:), or it occurred during page initialisation.
-		This is distinguished from other moments by lacking a "passage" property.
-	*/
-	let epoch = {
-		/*
-			A list of passages which were visited (either by (redirect:) or normally), but whose visits were erased by (erase-past:).
-		*/
-		visits: undefined,
-		/*
-			A number of additional turns which were erased by (erase-past:).
-		*/
-		turns: undefined,
-		/*
-			The initial seed for this "game", which cannot be undone using the story Undo features.
-			This can only be changed by (load-game:) or (erase-past:). Additional explicit (seed:) calls override this, obviously.
-		*/
-		seed,
-		seedIter: 0,
-		/*
-			The epoch should only have variables when (erase-past:) erased some moments which had (set:) various variables,
-			thus flattening them onto here.
-		*/
-		variables: create(null),
-	};
 	
+	/*
+		Debug Mode event handlers are stored here by on(). "forward" and "back" handlers are called
+		when the present changes, and thus when play(), fastForward() and rewind() have been called.
+		"load" handlers are called exclusively in deserialise().
+	*/
+	const eventHandlers = {
+		forward: [],
+		back: [],
+		load: [],
+	};
+
 	/*
 		Stack of previous states.
 		This includes both the past (moments the player has created) as well as the future (moments
@@ -183,152 +181,128 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 		each past moment reflects the game state as the passage was *left*, not entered.
 	*/
 	let serialisedPast = '';
-	/*
-		A cache of the past passage names. Because (history:) uses this, it's a good idea to cache it.
-	*/
-	let pastPassageNames = [];
-
-	/*
-		A function to invalidate both of the above at the same time.
-	*/
-	function invalidateCaches() {
-		serialisedPast = '';
-
-		pastPassageNames = [];
-		for (let i = 0; i <= recent; i+=1) {
-			/*
-				"visits" represents redirects accrued at the end of the previous moment
-				Add them before this moment's passage name.
-			*/
-			if (timeline[i].visits) {
-				pastPassageNames.push(...timeline[i].visits);
-			}
-			/*
-				Don't include the present passage's name as a "past" passage name.
-			*/
-			if (i !== recent) {
-				pastPassageNames.push(timeline[i].passage);
-			}
-		}
-	}
-
-	/*
-		Debug Mode event handlers are stored here by on(). "forward" and "back" handlers are called
-		when the present changes, and thus when play(), fastForward() and rewind() have been called.
-		"load" handlers are called exclusively in deserialise().
-	*/
-	const eventHandlers = {
-		forward: [],
-		back: [],
-		load: [],
-	};
 
 	/*
 		The global variable scope. This is progressively mutated as the game progresses,
-		and deltas of these changes (on a per-turn basis) are stored in Moments.
+		and deltas of these changes (on a per-turn basis) are stored in Moments in the Timeline array.
 
 		TODO: Move all methods (EXCEPT TwineScript_Set() and TwineScript_Delete(), which are called by VarRef) off this and onto State itself.
 	*/
-	const SystemVariablesProto = assign(create(null), {
+	function newCurrentVariables() {
+		const ret = Moment.create();
 		/*
-			Note that it's not possible for userland TwineScript to directly access or
-			modify this base object.
+			The CurrentVariables always has a visits array, which increases with each turn (with visited passage names and (redirect:)s).
 		*/
-		TwineScript_ObjectName: "this story's variables",
-
-		/*
-			This is the root prototype of every frame's variable type definitions. Inside a TypeDefs
-			is every variable name that this variables collection contains, mapped to a Harlowe datatype.
-		*/
-		TwineScript_TypeDefs: null,
-
-		/*
-			This is used to distinguish to (set:) that this is a variable store,
-			and assigning to its properties does affect game state.
-		*/
-		TwineScript_VariableStore: "global",
-
-		/*
-			All read/update/delete operations on this scope also update the delta for the current moment (present).
-		*/
-		TwineScript_Delete(prop) {
-			delete this[prop];
+		ret.visits = [];
+		assign(ret.variables, {
 			/*
-				Setting this Moment's variable to 'null' marks it as deleted, for serialisation.
-				Note that the SystemVariables store has this as 'undefined' (via the previous
-				statement) so this (probably) isn't visible outside of State.
+				Note that it's not possible for userland TwineScript to directly access or
+				modify this base object.
 			*/
-			present.variables[prop] = null;
-			delete present.valueRefs[prop];
-		},
-
-		TwineScript_Set(prop, value, valueRef) {
-			this[prop] = value;
+			TwineScript_ObjectName: "this story's variables",
+	
 			/*
-				It's not necessary to clone (pass-by-value) the value when placing it on the delta,
-				because once placed in the variable store, it should be impossible to mutate
-				the value anymore - only by replacing it with another TwineScript_Set().
+				This is the root prototype of every frame's variable type definitions. Inside a TypeDefs
+				is every variable name that this variables collection contains, mapped to a Harlowe datatype.
 			*/
-			present.variables[prop] = value;
+			TwineScript_TypeDefs: create(null),
+	
 			/*
-				The value reference (used for save file reconstruction) is also recorded.
+				This is used to distinguish to (set:) that this is a variable store,
+				and assigning to its properties does affect game state.
 			*/
-			present.valueRefs[prop] = valueRef;
-		},
-
-		TwineScript_GetProperty(prop) {
-			return this[prop];
-		},
-
-		TwineScript_DefineType(prop, type) {
-			this.TwineScript_TypeDefs[prop] = type;
+			TwineScript_VariableStore: "global",
+	
 			/*
-				VarRef.defineType() automatically installs TwineScript_TypeDefs on 
+				All read/update/delete operations on this scope also update the delta for the current moment (present).
 			*/
-			if (!hasOwnProperty.call(present.variables,"TwineScript_TypeDefs")) {
-				present.variables.TwineScript_TypeDefs = create(null);
-			}
-			present.variables.TwineScript_TypeDefs[prop] = type;
-		},
-	});
-	let SystemVariables;
+			TwineScript_Delete(prop) {
+				delete this[prop];
+				/*
+					Setting this Moment's variable to 'null' marks it as deleted, for serialisation.
+					Note that the SystemVariables store has this as 'undefined' (via the previous
+					statement) so this (probably) isn't visible outside of State.
+				*/
+				present.variables[prop] = null;
+				delete present.valueRefs[prop];
+			},
+	
+			TwineScript_Set(prop, value, valueRef) {
+				this[prop] = value;
+				/*
+					It's not necessary to clone (pass-by-value) the value when placing it on the delta,
+					because once placed in the variable store, it should be impossible to mutate
+					the value anymore - only by replacing it with another TwineScript_Set().
+				*/
+				present.variables[prop] = value;
+				/*
+					The value reference (used for save file reconstruction) is also recorded.
+				*/
+				present.valueRefs[prop] = valueRef;
+			},
+	
+			TwineScript_GetProperty(prop) {
+				return this[prop];
+			},
+	
+			TwineScript_DefineType(prop, type) {
+				this.TwineScript_TypeDefs[prop] = type;
+				/*
+					VarRef.defineType() automatically installs TwineScript_TypeDefs on 
+				*/
+				if (!hasOwnProperty.call(present.variables,"TwineScript_TypeDefs")) {
+					present.variables.TwineScript_TypeDefs = create(null);
+				}
+				present.variables.TwineScript_TypeDefs[prop] = type;
+			},
+		});
+		return ret;
+	}
+
 	/*
-		For testing purposes, there needs to be a way to "mock" having visited certain passages a certain number of times.
-		Because (mock-visits:) and (mock-turns:) calls should be considered modal, and can be undone, their effects need to be tied
-		to the variable store.
-	*/
-	let mockVisits, mockTurns;
-
-	/*
-		This is used to flatten a timeline into a single moment, which is either the present (for reconstructSystemVariables),
-		or the epoch (for erasePast).
+		This is used to flatten a timeline into a single moment, which is either the present (for reconstructCurrentVariables),
+		or a past moment (for erasePast).
 	*/
 	const flattenMomentVariables = (array, dest) => {
+		const varDest = dest.variables;
+		
 		for (let i = 0; i < array.length; i += 1) {
 			const moment = array[i];
 			/*
 				Each moment's mockVisits, mockTurns and seed replaces the previous.
 			*/
-			moment.mockVisits !== undefined && (mockVisits = moment.mockVisits);
-			moment.mockTurns !== undefined && (mockTurns = moment.mockTurns);
-			moment.seed !== undefined       && (seed = moment.seed);
-			moment.seedIter !== undefined   && (seedIter = moment.seedIter);
+			for (let name of ["mockVisits","mockTurns","seed","seedIter"]) {
+				moment[name] !== undefined && (dest[name] = moment[name]);
+			}
+			/*
+				These, however, are cumulative.
+			*/
+			moment.turns !== undefined      && (dest.turns = (dest.turns || 0) + moment.turns);
+			dest.visits || (dest.visits = []);
+			moment.visits !== undefined     && dest.visits.push(...moment.visits);
+			/*
+				"visits" only refers to past visits, such as those given to (history:),
+				so the final moment's passage name shouldn't be included.
+			*/
+			if (i !== array.length-1) {
+				dest.visits.push(moment.passage);
+			}
 			for (let prop in moment.variables) {
 				/*
 					The TwineScript_TypeDefs object (of inaccessible/non-writable data structures) doesn't need to have its contents cloned.
 				*/
 				if (prop === "TwineScript_TypeDefs") {
-					assign(dest.TwineScript_TypeDefs, moment.variables[prop]);
+					assign(varDest.TwineScript_TypeDefs, moment.variables[prop]);
 				}
 				else if (!prop.startsWith("TwineScript_")) {
 					/*
 						The JSON value "null" represents variables deleted by (move:).
 					*/
 					if (moment.variables[prop] === null) {
-						delete dest[prop];
+						delete varDest[prop];
 					}
 					else {
-						dest[prop] = moment.variables[prop];
+						varDest[prop] = moment.variables[prop];
 					}
 				}
 			}
@@ -336,29 +310,26 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 	};
 
 	/*
-		Whenever a turn is undone or the game state is reloaded entirely, the global variable
-		scope must be rebuilt.
+		Whenever a turn is undone or the game state is reloaded entirely, the CurrentVariables must be rebuilt.
 	*/
-	function reconstructSystemVariables() {
-		mockVisits = mockTurns = undefined;
+	function reconstructCurrentVariables() {
 		/*
-			Start with just the epoch.
+			Flatten every moment into the new CurrentVariables object.
 		*/
-		const ret = assign(create(SystemVariablesProto), { TwineScript_TypeDefs: create(null), }, epoch.variables || {});
-		/*
-			Then flatten every moment into this one.
-		*/
+		const ret = newCurrentVariables();
 		flattenMomentVariables(timeline.slice(0, recent + 1), ret);
 		/*
 			Now we're done, except for recalibrating the PRNG.
 		*/
-		SystemVariables = ret;
+		CurrentVariables = ret;
 		/*
 			If we're undoing to the start, restore the initial seed state.
 		*/
-		PRNG = mulberryMurmur32(recent === 0 ? epoch.seed : seed, recent === 0 ? epoch.seedIter : seedIter);
+		PRNG = mulberryMurmur32(ret.seed, ret.seedIter);
 	}
-	reconstructSystemVariables();
+	reconstructCurrentVariables();
+	present.seed = CurrentVariables.seed;
+	present.seedIter = 0;
 
 	let State;
 	/*
@@ -419,7 +390,7 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 			Get the current variables.
 		*/
 		get variables() {
-			return SystemVariables;
+			return CurrentVariables.variables;
 		},
 
 		/*
@@ -433,7 +404,7 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 			Used by the "turns" identifier.
 		*/
 		get turns() {
-			return recent + 1 + (epoch.turns || 0) + (mockTurns || 0);
+			return recent + 1 + (CurrentVariables.turns || 0) + (CurrentVariables.mockTurns || 0);
 		},
 
 		/*
@@ -445,22 +416,23 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 
 		/*
 			Get and set the current mockVisits and mockTurns state.
+			These replace all previous instantiations.
 		*/
 		get mockVisits() {
-			return mockVisits || [];
+			return CurrentVariables.mockVisits || [];
 		},
 
 		set mockVisits(value) {
-			mockVisits = value;
+			CurrentVariables.mockVisits = value;
 			present.mockVisits = value;
 		},
 
 		get mockTurns() {
-			return mockTurns || 0;
+			return CurrentVariables.mockTurns || 0;
 		},
 
 		set mockTurns(value) {
-			mockTurns = value;
+			CurrentVariables.mockTurns = value;
 			present.mockTurns = value;
 		},
 
@@ -469,36 +441,86 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 			it's ideal to do as little work as necessary in this.
 		*/
 		history() {
-			let ret = State.pastPassageNames();
-			if (epoch.visits) {
-				ret = epoch.visits.concat(ret);
+			let ret = CurrentVariables.visits;
+			/*
+				(mock-visits:) always adds its strings to the start.
+			*/
+			if (CurrentVariables.mockVisits) {
+				ret = CurrentVariables.mockVisits.concat(ret);
 			}
-			if (mockVisits) {
-				ret = mockVisits.concat(ret);
-			}
+			
 			return ret;
 		},
 
 		/*
-			Used by (erase-past:). All moments before the specified index are flattened into the epoch.
+			Used by (erase-past:). All moments before the specified index are flattened into the new first moment.
+			This cannot erase timeline[recent];
 
-			Note that this should simply never be called when used in a past moment (not the one at the end of the timeline).
+			Note that this should simply never be called when used in a past moment (not the one at the end of the timeline)
+			so we can assume that recent is always timeline.length-1.
 		*/
 		erasePast(ind) {
 			if (ind < 0) {
-				ind = timeline.length-1;
+				ind = (timeline.length) + ind;
 			}
-			const excised = timeline.splice(0, ind);
-			excised.forEach(e => {
-				flattenMomentVariables(e, epoch);
-				epoch.visits.push(...(e.visits || []), e.passage);
-			});
-			epoch.turns += excised.length;
+			const excised = timeline.splice(0, Math.min(timeline.length - 1, ind));
+			if (!excised.length) {
+				return;
+			}
+			/*
+				We can freely change recent to be the *new* end of the timeline, because of the aforementioned
+				prohibition of using this in past moments.
+			*/
+			recent = timeline.length - 1;
+			/*
+				Flatten the excised moments onto the first moment.
+			*/
+			const first = timeline[0];
+			/*
+				A small problem emerges: if the new first moment has its own "seed", "seedIter" and other
+				values, those shouldn't be overwritten by flattenMomentVariables(). Currently,
+				rather than rewriting flattenMomentVariables more carefully, this #awkward-ly
+				stores those values and copies them back over afterward.
+			*/
+			const copy = assign(create(null), first);
+			flattenMomentVariables(excised, first);
+			for (let name of ["mockVisits","mockTurns","seed","seedIter"]) {
+				copy[name] && (first[name] = copy[name]);
+			}
+			/*
+				Also, because flattenMomentVariables won't put the final moment's "passage" into the visits
+				array yet (because "visits" only applies to past passages, as per (history:)) we must do it
+				ourselves here.
+			*/
+			first.visits.push(excised[excised.length-1].passage);
+			/*
+				"turns" is only ever increased by (erase-past:), and represents erased turns that must
+				nonetheless be counted by the turns identifier. Here, each excised turn increments the counter.
+			*/
+			first.turns = (first.turns || 0) + excised.length;
+			/*
+				Rather than reconstruct the entire CurrentVariables based on the above change,
+				it's simpler to just update its own "turns" in kind.
+			*/
+			CurrentVariables.turns = (CurrentVariables.turns || 0) + excised.length;
+		
+			serialisedPast = '';
+			/*
+				This handler updates all (link-undo:) and (icon-undo:) links
+				whenever the *entire* past has been erased.
+			*/
+			if (recent === 0) {
+				$("tw-link[undo], tw-icon[alt='Undo']", Utils.storyElement).each((_, link) => {
+					($(link).closest('tw-expression, tw-hook').data('erasePastEvent') || Object)(link);
+				});
+			}
 		},
 
 		/*
 			Did we ever visit this passage, given its name?
 			Return the number of times visited.
+
+			TODO: rewrite to use CurrentVariables's visits, and make (visited:) use this
 		*/
 		passageNameVisited(name) {
 			let ret = 0;
@@ -517,6 +539,8 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 			Return how long ago this named passage has been visited,
 			or infinity if it was never visited.
 			This isn't exposed directly to authors.
+
+			TODO: rewrite to use CurrentVariables's visits.
 		*/
 		passageNameLastVisited(name) {
 			if (!Passages.get(name)) {
@@ -537,12 +561,6 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 		},
 
 		/*
-			Return an array of names of all previously visited passages, in the order
-			they were visited. This may include doubles. This IS exposed directly to authors.
-		*/
-		pastPassageNames: () => pastPassageNames,
-
-		/*
 			Returns an array of all passage names. Used nowhere except for populating the Debug UI.
 		*/
 		timelinePassageNames() {
@@ -558,10 +576,10 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 		*/
 		play(newPassageName) {
 			if (!present) {
-				impossible("State.play","present is undefined!");
+				Utils.impossible("State.play","present is undefined!");
 			}
 			// Push the soon-to-be past passage name into the cache.
-			present.passage && pastPassageNames.push(present.passage);
+			present.passage && CurrentVariables.visits.push(present.passage);
 			// Assign the passage name.
 			present.passage = newPassageName;
 
@@ -580,7 +598,7 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 		*/
 		redirect(newPassageName) {
 			if (!present) {
-				impossible("State.redirect","present is undefined!");
+				Utils.impossible("State.redirect","present is undefined!");
 			}
 			/*
 				Each moment stores the passages visited by (redirect:)s that occured during it,
@@ -588,7 +606,7 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 			*/
 			present.visits = (present.visits || []).concat(newPassageName);
 			// The departing passage name still goes into the cache.
-			present.passage && pastPassageNames.push(present.passage);
+			present.passage && CurrentVariables.visits.push(present.passage);
 			// Assign the passage name.
 			present.passage = newPassageName;
 			// That's all!
@@ -617,13 +635,13 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 				recent -= 1;
 			}
 			if (moved) {
-				invalidateCaches();
+				serialisedPast = '';
 
 				newPresent(timeline[recent].passage);
 				/*
 					Recompute the present variables based on the timeline.
 				*/
-				reconstructSystemVariables();
+				reconstructCurrentVariables();
 				// Call the 'back' event handler.
 				eventHandlers.back.forEach(fn => fn());
 			}
@@ -653,7 +671,7 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 				/*
 					Recompute the present variables based on the timeline.
 				*/
-				reconstructSystemVariables();
+				reconstructCurrentVariables();
 				/*
 					Call the 'fast forward' event handler. This is used exclusively by debug mode,
 					which is why it has the "fastForward" direction string passed in.
@@ -670,7 +688,7 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 		*/
 		on(name, fn) {
 			if (!(name in eventHandlers)) {
-				impossible('State.on', 'invalid event name');
+				Utils.impossible('State.on', 'invalid event name');
 				return;
 			}
 			if (typeof fn === "function" && !eventHandlers[name].includes(fn)) {
@@ -686,15 +704,12 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 		reset() {
 			timeline = [];
 			recent = -1;
+			reconstructCurrentVariables();
 			present = Moment.create();
+			present.seed = CurrentVariables.seed;
+			present.seedIter = 0;
+			serialisedPast = '';
 			PRNG = mulberryMurmur32();
-			epoch = {
-				seed,
-				seedIter,
-				variables: create(null),
-			};
-			invalidateCaches();
-			reconstructSystemVariables();
 			serialiseProblem = undefined;
 			eventHandlers.load.forEach(fn => fn(timeline));
 		},
@@ -708,9 +723,8 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 		*/
 		setSeed(seed) {
 			PRNG = mulberryMurmur32(seed);
-
-			present.seed = seed;
-			present.seedIter = seedIter;
+			present.seed = CurrentVariables.seed;
+			present.seedIter = 0;
 		},
 
 		/*
@@ -719,7 +733,7 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 		*/
 		random: () => {
 			const ret = PRNG();
-			present.seedIter = seedIter;
+			present.seedIter = CurrentVariables.seedIter;
 			return ret;
 		},
 
@@ -728,7 +742,7 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 			Used only in data structure macros and value macros.
 		*/
 		shuffled(...list) {
-			return list.reduce((a,e,ind) => {
+			const ret = list.reduce((a,e,ind) => {
 				// Obtain a random number from 0 to ind inclusive.
 				const j = (this.random()*(ind+1)) | 0;
 				if (j === ind) {
@@ -740,6 +754,8 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 				}
 				return a;
 			},[]);
+			present.seedIter = CurrentVariables.seedIter;
+			return ret;
 		},
 	};
 
@@ -775,12 +791,6 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 			serialise only the current moment (assume serialisedPast is up to date).
 		*/
 		whatToSerialise = timeline.slice(!serialisedPast ? 0 : newPresent ? recent-1 : recent, recent+1);
-		/*
-			The epoch object must be included first.
-		*/
-		if (!serialisedPast) {
-			whatToSerialise.unshift(epoch);
-		}
 
 		/*
 			We must determine if the state is serialisable.
@@ -793,7 +803,7 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 			couldn't be serialised at each particular turn.
 		*/
 		const serialisability = whatToSerialise.map(
-			(moment) => hasOwnProperty.call(moment,'seed') ? [] : Object.keys(moment.variables)
+			(moment) => Object.keys(moment.variables || {})
 				.filter((e) => moment.variables[e] && !e.startsWith('TwineScript_') && !isSerialisable(moment.variables[e]))
 				.map(e => [e, moment.variables[e]])
 		);
@@ -817,7 +827,7 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 			return TwineError.create(
 				"saving",
 				"The variable $" + problemVar + " holds " + objectName(problemValue)
-				+ " (which is, or contains, a complex data value) on turn " + problemTurn
+				+ " (which is, or contains, a complex data value) at start of turn " + problemTurn
 				+ "; the game can no longer be saved."
 			);
 		}
@@ -831,7 +841,8 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 				replace it with a string of just the passage name.
 			*/
 			if (Moment.isPrototypeOf(variable)) {
-				if (variable.visits  === undefined
+				if (variable.visits === undefined
+						&& variable.turns === undefined
 						&& variable.mockVisits  === undefined
 						&& variable.mockTurns  === undefined
 						&& variable.seed === undefined
@@ -849,7 +860,7 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 				Variables objects should be serialised such that only the variables inside
 				the VariableStore are converted to Harlowe strings with toSource().
 			*/
-			if ((Moment.isPrototypeOf(this) || epoch === this) && name === "variables") {
+			if (Moment.isPrototypeOf(this) && name === "variables") {
 				const ret = {};
 				for (let key in this.variables) {
 					/*
@@ -988,23 +999,6 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 				moment = { passage: moment, variables: {} };
 			}
 			/*
-				If it's the epoch object, process it.
-			*/
-			else if (typeof moment === "object" && !hasOwnProperty.call(moment,"passage")) {
-				/*
-					If there's erroneously more epoch objects than in the first position, ignore them.
-				*/
-				if (i === 0) {
-					epoch = moment;
-					PRNG = mulberryMurmur32(moment.seed, moment.seedIter);
-				}
-				/*
-					Seamlessly remove this non-state object from the timeline.
-				*/
-				newTimeline.splice(i--,1);
-				continue;
-			}
-			/*
 				Here, we do some brief verification that the remaining moments in the array are
 				objects with "passage" and "variables" keys.
 			*/
@@ -1061,8 +1055,8 @@ define(['utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils',
 		timeline = newTimeline;
 		recent = timeline.length - 1;
 		eventHandlers.load.forEach(fn => fn(timeline));
-		invalidateCaches();
-		reconstructSystemVariables();
+		serialisedPast = '';
+		reconstructCurrentVariables();
 		newPresent(timeline[recent].passage);
 		return true;
 	};

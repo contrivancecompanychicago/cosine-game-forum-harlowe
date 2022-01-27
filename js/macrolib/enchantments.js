@@ -277,7 +277,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		and boldness to links by default, but you'll often want to apply your own styles to links to suit your story. Rather than manually attach a changer holding those styles to
 		every link where it appears, you can instead use this macro to style several links at once.
 
-		If you wish to style every link in the passage or story equally, using (enchant:) with `?link` in a "header" tagged passage is most effective. But, if you only wish to apply a
+		If you wish to style every link in the passage or story equally, using (enchant:) with `?link` in a "header" or "footer" tagged passage is most effective. But, if you only wish to apply a
 		style to links in certain sections of a passage, this macro is most effective.
 
 		Details:

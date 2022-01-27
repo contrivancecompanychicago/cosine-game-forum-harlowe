@@ -702,14 +702,15 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 
 
 		/*d:
-			(link-undo: String) -> Command
+			(link-undo: String, [String]) -> Command
 
 			Takes a string of link text, and produces a link that, when clicked, undoes the current turn and
 			sends the player back to the previously visited passage. The link appears identical to a typical
-			passage link.
+			passage link. An optional second string can be provided, which is shown instead of the link if it's not possible to undo.
 
 			Example usage:
-			`(link-undo:"Retreat")` behaves the same as `(link:"Retreat")[(undo: )]`.
+			`(link-undo:"Retreat", "Can't retreat!")` will produce a link reading "Retreat" if undos are available. If not,
+			the text "Can't retreat!" is displayed instead.
 
 			Rationale:
 			The ability to undo the player's last turn, as an alternative to (go-to:), is explained in the documentation
@@ -720,9 +721,12 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			by using this macro.
 
 			Details:
-			As with (undo:), if this command is used on the play session's first turn, an error will be produced (as there
-			is yet nothing to undo at that time). You can check which turn it is by examining the `length` of the (history:)
-			array.
+			As with (undo:), (link-storylet:) and such, if undos aren't available (either due to this being the start of the story, or (erase-past:) being used)
+			then either the optional second string will be displayed instead, or (if that wasn't provided) nothing will be displayed.
+
+			If this is used in a passage, and (erase-past:) is used later in the passage to prevent undoing, then this link's text will automatically
+			be replaced with the optional second string (or disappear if it's not provided). This is similar to how (link-fullscreen:) will
+			update itself if another macro changes the player's fullscreen status.
 
 			Note that (link-undo:), unlike (link:), doesn't accept a changer value to style the produced link. This is because, as
 			this produces a command (and not a changer), you can simply attach changers to the front of it to style the link.
@@ -739,19 +743,39 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 					return TwineError.create("datatype", emptyLinkTextMessages[0]);
 				}
 			},
-			(cd, section, text) => {
-				/*
-					Users of (link-undo:) should always check that (history:) is longer than 1.
-					(This isn't in the checkFn because this check only matters at Run() time).
-				*/
+			(cd, section, text, alt = '') => {
 				if (State.pastLength < 1) {
-					return TwineError.create("macrocall", "I can't use (link-undo:) on the first turn.");
+					return assign(cd, { source: alt });
 				}
 				/*
 					All links need to store their section as jQuery data, so that clickLinkEvent can
 					check if the section is blocked (thus preventing clicks).
 				*/
 				cd.data.section = section;
+				/*
+					Since (erase-past:) means there is a possibility this link text could abruptly change, the current tempVariables
+					object must be stored for reuse, as the section pops it when normal rendering finishes.
+				*/
+				const {tempVariables} = section.stackTop;
+				cd.data.erasePastEvent = () =>
+					/*
+						Because (erase-past:) could have occurred inside a (dialog:), the text should only be updated when the section is unblocked.
+					*/
+					cd.data.section.whenUnblocked(() => {
+						/*
+							Display the next label, reusing the ChangeDescriptor that the original run received.
+						*/
+						const cd2 = assign({}, cd, {
+							append: 'replace',
+							source: alt,
+							transitionDeferred: false,
+						});
+						/*
+							Since cd2's target SHOULD equal expr, passing anything as the second argument won't do anything useful
+							(much like how the first argument is overwritten by cd2's source). So, null is given.
+						*/
+						cd.section.renderInto("", null, cd2, tempVariables);
+					});
 				/*
 					This currently reveals its purpose in the player-readable DOM by including an 'undo' attribute,
 					which is used by the "click.passage-link" event handler.
@@ -761,7 +785,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 					transitionDeferred: true,
 				});
 			},
-			[String]
+			[String, optional(String)]
 		)
 
 		/*d:

@@ -99,6 +99,57 @@ describe("game state macros", function() {
 			expect(runPassage("(history:where its name is not 'foo')","qux").text()).toBe("bar,baz");
 		});
 	});
+
+	describe("the (erase-past:) macro", function() {
+		it("takes an integer", function() {
+			expect("(erase-past:)").markupToError();
+			expect("(erase-past:'A')").markupToError();
+			expect("(erase-past:2)").not.markupToError();
+			expect("(erase-past:2.1)").markupToError();
+			expect("(erase-past:-2)").not.markupToError();
+		});
+		it("deletes past turns from the start of the history, preventing undos", function() {
+			runPassage("", "foo1");
+			runPassage("", "foo2");
+			expect("(erase-past:2)(undo:'foo bar')").markupToPrint('foo bar');
+			runPassage("", "foo1");
+			runPassage("(undo:'foo bar')", "foo2");
+			runPassage("(erase-past:2)", "foo3");
+			Engine.goBack();
+			expect($('tw-passage tw-expression').text()).toBe('foo bar');
+		});
+		it("negative indices delete up to that far from the end of history", function() {
+			for(var i = 0; i < 100; i += 1) {
+				runPassage("", "foo" + i);
+			}
+			expect("(erase-past:-1)(undo:'foo bar')").markupToPrint('foo bar');
+		});
+		it("doesn't interfere with (history:)", function() {
+			runPassage("", "foo1");
+			runPassage("", "foo2");
+			runPassage("(erase-past:2)","qux");
+			expect("(history:)").markupToPrint("foo1,foo2,qux");
+		});
+		it("doesn't interfere with (visited:)", function() {
+			runPassage("", "foo1");
+			runPassage("", "foo2");
+			runPassage("(erase-past:2)","qux");
+			expect("(print:(visited:'foo1'))").markupToPrint("true");
+		});
+		it("doesn't interfere with visits", function() {
+			runPassage("");
+			runPassage("", "foo2");
+			runPassage("(erase-past:2)","qux");
+			expect("(print:visits)").markupToPrint("2");
+		});
+		it("doesn't interfere with turns", function() {
+			runPassage("");
+			runPassage("", "foo2");
+			runPassage("(erase-past:2)","qux");
+			expect("(print:turns)").markupToPrint("4");
+		});
+	});
+
 	describe("the (passages:) macro", function() {
 		it("accepts 0 or 1 'where' lambdas", function() {
 			expect("(passages:)").not.markupToError();

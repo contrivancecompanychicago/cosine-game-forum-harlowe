@@ -261,6 +261,7 @@ describe("basic command macros", function() {
 			});
 		});
 	});
+	
 	describe("the (dialog:) macro", function() {
 		it("requires many string arguments (or a codehook followed by strings), and an optional bound variable", function() {
 			expect("(dialog:)").markupToError();
@@ -625,9 +626,11 @@ describe("basic command macros", function() {
 			}, 20);
 		}
 
-		it("takes no arguments", function() {
+		it("takes an optional string", function() {
 			expect("(set: $x to (undo:1))").markupToError();
-			expect("(set: $x to (undo:'e'))").markupToError();
+			expect("(set: $x to (undo:'e'))").not.markupToError();
+			expect("(set: $x to (undo:))").not.markupToError();
+			expect("(set: $x to (undo:'e','f'))").markupToError();
 		});
 		it("when run, undoes the current turn", function(done) {
 			runPassage("(set: $a to 1)","one");
@@ -637,9 +640,11 @@ describe("basic command macros", function() {
 				done();
 			});
 		});
-		it("errors when run in the first turn", function(){
+		it("displays the optional second string, or nothing, if undos aren't available", function(){
 			clearState();
-			expect("(undo:)").markupToError();
+			expect("(undo:)").markupToPrint('');
+			clearState();
+			expect("(undo:'foo **bar**')").markupToPrint('foo bar');
 		});
 		it("prevents macros after it from running", function(done) {
 			runPassage("");
@@ -725,9 +730,23 @@ describe("basic command macros", function() {
 		it("all random features increment the same RNG", function() {
 			expect('(seed:"A")(random:1,10)(either:1,2,3,4,5,6,7,8,9,10)(shuffled:1,2,3,4,5,6,7,8,9,10)(print:(shuffled:1,2,3,4,5,6,7,8,9,10)\'s random)').markupToPrint('422,7,10,9,8,3,1,5,4,64');
 		});
-		it("continues working if you redo", function() {
+		it("(random:) continues working if you redo", function() {
 			runPassage("",'baz');
 			expect('(seed:"A")[(random:1,10) (random:1,10)]').markupToPrint('4 2');
+			Engine.goBack();
+			Engine.goForward();
+			expect($('tw-passage tw-hook').text()).toBe('4 2');
+		});
+		it("(shuffled:) continues working if you redo", function() {
+			runPassage("",'baz');
+			expect('(seed:"A")[(shuffled:1,2,3,4,5,6,7,8,9,10)]').markupToPrint('2,4,9,8,5,10,7,1,3,6');
+			Engine.goBack();
+			Engine.goForward();
+			expect($('tw-passage tw-hook').text()).toBe('2,4,9,8,5,10,7,1,3,6');
+		});
+		it("(either:) continues working if you redo", function() {
+			runPassage("",'baz');
+			expect('(seed:"A")[(either:1,2,3,4,5,6,7,8,9,10) (either:1,2,3,4,5,6,7,8,9,10)]').markupToPrint('4 2');
 			Engine.goBack();
 			Engine.goForward();
 			expect($('tw-passage tw-hook').text()).toBe('4 2');

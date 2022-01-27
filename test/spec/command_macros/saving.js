@@ -304,6 +304,16 @@ describe("save macros", function() {
 				}, 90);
 			}, 90);
 		});
+		it("can restore variables even after using (erase-past:)", function(done) {
+			runPassage("(set:str-type $foo to 'A')", "uno");
+			runPassage("(erase-past:-1)(set:$foo to it+'B')(savegame:'1','Filename')", "dos");
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("(set:num-type $bar to 2)").not.markupToError();
+				expect("(set:num-type $foo to 2)").markupToError();
+				done();
+			}, 20);
+		});
 		/*
 			These aren't (move:)'s semantics in Harlowe 3.
 		*/
@@ -349,13 +359,23 @@ describe("save macros", function() {
 				}, 90);
 			}, 90);
 		});
+		it("doesn't disrupt (history:)'s cache even after using (erase-past:)", function(done) {
+			runPassage("", 'baz');
+			runPassage("", 'qux');
+			runPassage("(erase-past:2)(savegame:'1')",'grault');
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("(history:)").markupToPrint('baz,qux,grault');
+				done();
+			}, 90);
+		});
 		it("produces a user-friendly prompt for deletion if the save data is invalid", function(done) {
 			runPassage("uno", "uno");
 			runPassage("dos", "dos");
 			runPassage("(savegame:'1')", "tres");
 			runPassage("quatro", "quatro");
 			deletePassage('dos');
-			var p = runPassage("(loadgame:'1')");
+			runPassage("(loadgame:'1')");
 			setTimeout(function() {
 				expect($("tw-story").find("tw-backdrop > tw-dialog").length).toBe(1);
 				expect($("tw-dialog").find('tw-link').first().text()).toBe("Yes");
@@ -378,10 +398,28 @@ describe("save macros", function() {
 				done();
 			},90);
 		});
+		it("can restore mock visits even after using (erase-past:)", function(done) {
+			runPassage("(mock-visits:'test','test','test')",'test');
+			runPassage("(erase-past:1)(savegame:'1')",'bar');
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("(print:visits)").markupToPrint('5'); // 3 mocks, 1 visit above, plus this passage
+				done();
+			},90);
+		});
 		it("can restore mock turns", function(done) {
 			runPassage("(mock-turns:11)",'qux');
 			runPassage("(savegame:'1')",'bar');
 			expect("(mock-turns:0)(print:turns)").markupToPrint('3');
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("(print:turns)").markupToPrint('14'); // 3 mocks, 1 visit above, plus this passage
+				done();
+			},90);
+		});
+		it("can restore mock turns even after using (erase-past:)", function(done) {
+			runPassage("(mock-turns:11)",'qux');
+			runPassage("(erase-past:1)(savegame:'1')",'bar');
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
 				expect("(print:turns)").markupToPrint('14'); // 3 mocks, 1 visit above, plus this passage
@@ -426,6 +464,15 @@ describe("save macros", function() {
 				Engine.goBack();
 				Engine.goBack();
 				expect($('tw-passage strong').text()).toBe(result);
+				done();
+			},90);
+		});
+		it("can restore the PRNG seed even after using (erase-past:)", function(done) {
+			runPassage("(seed:'AAA')(random:1,100000000)",'test');
+			runPassage("(erase-past:1)(savegame:'1')",'bar');
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("(random:1,100000000)").markupToPrint('24547054');
 				done();
 			},90);
 		});
