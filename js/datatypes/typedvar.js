@@ -1,5 +1,5 @@
 "use strict";
-define(['utils/operationutils','datatypes/datatype', 'internaltypes/varref', 'internaltypes/twineerror'], ({typeName, matches, toSource, unstorableValue}, Datatype, VarRef, TwineError) => {
+define(['utils/operationutils','internaltypes/varref', 'internaltypes/twineerror'], ({typeName, matches, toSource, unstorableValue}, VarRef, TwineError) => {
 	const {freeze,assign,create} = Object;
 	/*d:
 		TypedVar data

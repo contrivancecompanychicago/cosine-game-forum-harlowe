@@ -3433,10 +3433,4 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 			#url
 		*/
 		("page-url", () => window.location.href, []);
-	/*
-		The two macros which block control flow during evaluation, (prompt:) and (confirm:), need to be registered with
-		Renderer, to ensure they are executed before the rest of the expression containing them.
-	*/
-	Renderer.options.blockerMacros.push("prompt","confirm");
-
 });

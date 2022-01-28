@@ -728,6 +728,16 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 		},
 
 		/*
+			Used only by Runner.
+		*/
+		get seed() {
+			return CurrentVariables.seed;
+		},
+		get seedIter() {
+			return CurrentVariables.seedIter;
+		},
+
+		/*
 			A way to call the current PRNG, while also storing the changed seedIter
 			as a hidden variable in present.variables.
 		*/
@@ -887,8 +897,8 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 					}
 					else if (this.valueRefs[key]) {
 						/*
-							Values with a reference are serialised as an array (generated in Runner by the "to" and "into" handler)
-							of [passage name, passage text start index, passage text end index], which is used to reconstruct the value
+							Values with a reference are serialised as an object (generated in Runner by the "to" and "into" handler)
+							of at least {at: passage name, from: index, to: index}, which is used to reconstruct the value
 							when loading the save file.
 						*/
 						ret[key] = this.valueRefs[key];
@@ -938,22 +948,59 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 		for (let key in obj) {
 			if (hasOwnProperty.call(obj, key) && !key.startsWith("TwineScript_")) {
 				/*
-					ValueRefs are arrays consisting of
-					[ passage name, start index, end index, other execution state ],
+					ValueRefs are objects consisting of { at, from, to } plus execution environment.
 					whereas normal variables are strings of Harlowe source.
 
 					Note that TypeDefs values can't be serialised as "reconstruct",
 					so this check won't do anything unwanted to them.
 				*/
-				if (Array.isArray(obj[key])) {
+				if (typeof obj[key] === "object") {
 					/*
 						Save and re-use this ValueRef for the next time the game is saved.
 					*/
 					moment.valueRefs[key] = obj[key];
 
-					const [passageName, start, end] = obj[key];
-					const source = Passages.get(passageName).get('source');
-					obj[key] = section.eval(lex(source.slice(start, end), '', 'macro'));
+					const {at,from,to,seed,seedIter,blockedValues} = obj[key];
+					/*
+						The tokens comprising the value ref are lexed. But, some preprocessing
+						(currently, just blockedValues) must be done on them.
+					*/
+					const source = Passages.get(at).get('source');
+					const tokens = lex(source.slice(from, to), '', 'macro');
+					/*
+						If the value contains any number of random features, set the PRNG
+						to the state it was at from the start.
+						Note that since every recompileValues() consumer resets the PRNG afterward,
+						this is safe.
+					*/
+					if (seed !== undefined && seedIter !== undefined) {
+						PRNG = mulberryMurmur32(seed,seedIter);
+					}
+					/*
+						Blocked values pose a problem: normally, Renderer marks these with blockedValue:true
+						and creates instances of them that Section runs first as "blockers" to populate blockedValues.
+						So, when Section is unblocked, the macros with blockedValue:true are replaced with a matching
+						blockedValue. To replicate this phenomenon, we have to #awkward-ly copy the marking loop from Renderer.
+					*/
+					if (blockedValues !== undefined) {
+						section.stackTop.blockedValues = blockedValues;
+						/*jshint -W083*/
+						tokens.forEach(function recur(token) {
+							if (token.type !== "string" && token.type !== "hook") {
+								token.children.every(recur);
+							}
+							if (token.type === "macro") {
+								const name = Utils.insensitiveName(token.name);
+								/*
+									As with Renderer, these two names are hard-coded.
+								*/
+								if (name === "prompt" || name === "confirm") {
+									token.blockedValue = true;
+								}
+							}
+						});
+					}
+					obj[key] = section.eval(tokens);
 				}
 				else {
 					obj[key] = section.eval(lex(obj[key], '', 'macro'));

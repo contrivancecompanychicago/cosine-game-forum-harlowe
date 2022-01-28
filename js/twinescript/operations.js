@@ -1,15 +1,11 @@
 "use strict";
 define([
-	'jquery',
-	'state',
-	'datatypes/assignmentrequest',
 	'utils/operationutils',
-	'internaltypes/varref',
 	'datatypes/typedvar',
 	'datatypes/datatype',
 	'internaltypes/twineerror',
 ],
-($, State, AssignmentRequest, {isObject, collectionType, is, isA, clone, unique, contains, matches, objectName}, VarRef, TypedVar, Datatype, TwineError) => {
+({isObject, collectionType, is, isA, clone, unique, contains, matches, objectName}, TypedVar, Datatype, TwineError) => {
 	/*
 		Operation objects are a table of operations which TwineScript proxies
 		for/sugars over JavaScript. These include basic fixes like the elimination

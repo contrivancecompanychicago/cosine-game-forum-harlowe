@@ -1,6 +1,6 @@
 "use strict";
 define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
-($, {escape, impossible, insensitiveName}, Markup, TwineError) => {
+($, {escape, insensitiveName}, Markup, TwineError) => {
 	/*
 		The Renderer takes the syntax tree from Markup and returns a HTML string.
 		
@@ -382,16 +382,15 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 							if (token.type !== "string" && token.type !== "hook") {
 								token.children.every(recur);
 							}
-							const firstChild = token.children ? token.children[0] || null : null;
 							/*
 								Control flow blockers are macros whose name matches one of the aforelisted
 								blocker macros.
 							*/
-							if (token.type === "macro" && firstChild && firstChild.type === "macroName"
-									&& Renderer.options.blockerMacros.includes(insensitiveName(
-										// Slice off the trailing :, which is included in macroName tokens.
-										firstChild.text.slice(0,-1)
-									))) {
+							const name = insensitiveName(token.name);
+							/*
+								(prompt:) and (confirm:)'s names are hard-coded as blocker macros.
+							*/
+							if (token.type === "macro" && (name === "prompt" || name === "confirm")) {
 								blockers.push(token);
 							}
 							else if (token.type === "hook") {
@@ -458,20 +457,10 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 		
 		/*
 			Renderer accepts the same story options that Harlowe does, as well as one more.
-			Currently it uses { debug, blockerMacros, metadataMacros }.
+			Currently it uses { debug }.
 		*/
 		options: {
 			debug: false,
-			/*
-				Flow control blockers are macro tokens which have specific names, stored here.
-				This is currently permuted by Macrolib, which registers two such names.
-			*/
-			blockerMacros: [],
-			/*
-				Metadata macros contain lambdas and other data, which is extracted from the passage
-				code and attached to the passage map itself during startup.
-			*/
-			metadataMacros: [],
 		},
 		
 		/*

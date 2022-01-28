@@ -1,5 +1,5 @@
 "use strict";
-define(['macros','renderer', 'utils/operationutils', 'datatypes/lambda', 'internaltypes/twineerror'], (Macros, Renderer, {clone, objectName, isValidDatamapName}, Lambda, TwineError) => {
+define(['macros','utils/operationutils', 'datatypes/lambda', 'internaltypes/twineerror'], (Macros, {clone, objectName, isValidDatamapName}, Lambda, TwineError) => {
 	/*d:
 		Metadata data
 
@@ -8,7 +8,6 @@ define(['macros','renderer', 'utils/operationutils', 'datatypes/lambda', 'intern
 		because they attach metadata to the passage. These macros must appear at the very start of those passages, ahead of every other kind of macro.
 	*/
 	const {zeroOrMore, Any} = Macros.TypeSignature;
-	const {options:{metadataMacros}} = Renderer;
 
 	/*
 		The dual nature of metadata macros - that they aren't visible in the passage itself but
@@ -137,7 +136,6 @@ define(['macros','renderer', 'utils/operationutils', 'datatypes/lambda', 'intern
 		["exclusivity", Number],
 	].forEach(([name, signature]) => {
 		Macros.add(name, (section, arg) =>  !section.stackTop.speculativePassage ? unstorableObject(name) : arg, signature);
-		metadataMacros.push(name);
 	});
 
 	Macros.add
@@ -247,9 +245,4 @@ define(['macros','renderer', 'utils/operationutils', 'datatypes/lambda', 'intern
 			},
 			zeroOrMore(Any)
 		);
-
-	/*
-		Metadata macros need to be registered with Renderer, just like blockers.
-	*/
-	metadataMacros.push("metadata");
 });

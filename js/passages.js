@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internaltypes/twineerror'], ($, NaturalSort, {insensitiveName,unescape,onStartup,impossible}, Markup, Renderer, TwineError) => {
+define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'internaltypes/twineerror'], ($, NaturalSort, {insensitiveName,unescape,onStartup,impossible}, Markup, TwineError) => {
 	const {assign} = Object;
 	/*
 		Passages
@@ -19,7 +19,12 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'renderer', 'internalt
 		holding one macro call for each metadata macro name is returned.
 	*/
 	function preprocess(src,name) {
-		const {metadataMacros} = Renderer.options;
+		/*
+			Metadata macros contain lambdas and other data, which is extracted from the passage
+			code and attached to the passage map itself during startup.
+			These names are hard-coded.
+		*/
+		const metadataMacros = ["metadata","storylet","exclusivity","urgency"];
 		/*
 			Since lexing all the passages at bootup is potentially rather expensive, these quick and hacky RegExp tests are
 			used to check whether preprocessing is necessary.

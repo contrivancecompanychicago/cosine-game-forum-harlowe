@@ -1,5 +1,5 @@
 "use strict";
-define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref', 'internaltypes/twineerror'], ({objectName, findFreeVariables}, VarScope, VarRef, TwineError) => {
+define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref', 'internaltypes/twineerror'], ({objectName}, VarScope, VarRef, TwineError) => {
 	/*d:
 		Lambda data
 

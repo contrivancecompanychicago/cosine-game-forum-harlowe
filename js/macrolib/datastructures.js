@@ -1,6 +1,5 @@
 "use strict";
 define([
-	'jquery',
 	'utils',
 	'utils/naturalsort',
 	'macros',
@@ -9,11 +8,9 @@ define([
 	'engine',
 	'passages',
 	'datatypes/lambda',
-	'datatypes/datatype',
 	'datatypes/typedvar',
-	'internaltypes/varref',
 	'internaltypes/twineerror'],
-($, {permutations}, NaturalSort, Macros, {objectName, subset, collectionType, isValidDatamapName, is, unique, clone, range}, State, Engine, Passages, Lambda, Datatype, TypedVar, VarRef, TwineError) => {
+({permutations}, NaturalSort, Macros, {objectName, subset, collectionType, isValidDatamapName, is, unique, clone, range}, State, Engine, Passages, Lambda, TypedVar, TwineError) => {
 	
 	const {optional, rest, either, zeroOrMore, Any, nonNegativeInteger}   = Macros.TypeSignature;
 	const EnSort = NaturalSort("en");

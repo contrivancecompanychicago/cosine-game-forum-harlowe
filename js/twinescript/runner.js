@@ -24,46 +24,81 @@ define([
 		- Anything that takes user input as part of its evaluation
 		- Anything that queries the system time or section time
 		- Any variable or temp variable
-		- Anything that queries the passage (exits, hookSets)
-		- Anything with RNG
+		- Anything that queries the passage on evaluation (exits etc.)
+		- Anything with PRNG
+
+		Free variables' environment can potentially be captured, allowing them to be serialised.
+		Those that do add these environment parameters to section.freeVariables.
+		Those that can't simply replace section.freeVariables with "true".
 	*/
-	function isFreeVariable(token) {
+	function addFreeVariable(section, token) {
+		const f = section.freeVariables;
 		if (token.type === "macro") {
 			const name = Utils.insensitiveName(token.name);
-			if (name === "prompt" ||
-					name === "confirm" ||
-					name === "random" ||
-					name === "either" ||
-					name === "shuffled" ||
-					name === "current-time" ||
+			/*
+				Currently, these macros' environment isn't captured.
+			*/
+			if (name === "current-time" ||
 					name === "current-date" ||
 					name === "monthday" ||
 					name === "weekday" ||
 					name === "history" ||
-					name === "hooks-named" ||
 					name === "passage") {
-				return true;
+				section.freeVariables = true;
 			}
-		}
-		else if (token.type === "identifier") {
-			const name = Utils.insensitiveName(token.text);
-			if (name === "time" || name === "exits" || name === "it" || name === "visits") {
-				return true;
+			/*
+				Because the only two blocking macros are (prompt:), which produces a string,
+				and (confirm:), which produces a boolean, both of which are JSON values,
+				their results (which are currently accessible in section.stackTop.blockedValues -
+				or rather, they /should/ be) can be captured as-is.
+
+				Note that this environment capture isn't actually useful when (confirm:) or (prompt:)'s result
+				is saved to a variable as-is, and only matters when they are included
+				as part of a much larger data structure. Which is admittedly not a common idiom. 
+			*/
+			else if (token.blockedValue && !f.blockedValues) {
+				f.blockedValues = section.stackTop.blockedValues.concat();
+			}
+			/*
+				For random values, simply store the seed and seedIter. If these are already stored,
+				that means an earlier part of a larger composite value was also random,
+				and provided both that and this are run in the same order in State.recompileValues(),
+				only the seed and seedIter for the first one is necessary.
+			*/
+			else if ((name === "random" ||
+					name === "either" ||
+					name === "shuffled") && !f.seed) {
+				f.seed = State.seed;
+				f.seedIter = State.seedIter;
 			}
 		}
 		/*
-			TODO: Can't do anything with this because you need the before and after of this token, too.
+			Identifiers are currently not captured either.
+			TODO: capture that environment elsewhere, akin to possessive operators.
+		*/
+		else if (token.type === "identifier") {
+			const name = Utils.insensitiveName(token.text);
+			if (name === "time" || name === "exits" || name === "it" || name === "visits") {
+				section.freeVariables = true;
+			}
+		}
+		/*
+			Possessive operators and belonging operators have to be handled elsewhere,
+			because they could be operating on computed properties.
 		*/
 		else if (token.type === "property" || token.type === "belongingProperty") {
 			const name = Utils.insensitiveName(token.name);
-			if (name === 'random') {
-				return true;
+			if (name === 'random' && !f.seed) {
+				f.seed = State.seed;
+				f.seedIter = State.seedIter;
 			}
 		}
-		else if (token.type === "variable" || token.type === "tempVariable" || token.type === "hookSet") {
-			return true;
+		/*
+			Variables aren't captured either.
+		*/
+		else if (token.type === "variable" || token.type === "tempVariable") {
+			section.freeVariables = true;
 		}
-		return false;
 	}
 
 	const precedenceTable = 
@@ -328,14 +363,7 @@ define([
 		const type = token.type;
 		if (!type) {
 			Utils.impossible('Runner.run', 'Token has no type!');
-			return;
-		}
-		/*
-			If section has the "pureValueCheck" flag (which is only present when it's being mutated during
-			a run() call by "to" and "into") then invalidate it if this token is a free variable.
-		*/
-		if (section.pureValueCheck && isFreeVariable(token)) {
-			section.pureValueCheck = false;
+			return 0;
 		}
 		/*
 			Perform the error-checking for tokens requiring or prohibiting more
@@ -366,6 +394,13 @@ define([
 			}
 		}
 		/*
+			If section has the "freeVariables" array (which is only present when it's being mutated during
+			a run() call by "to" and "into") then add this token if it's a free variable.
+		*/
+		if (section.freeVariables && typeof section.freeVariables === "object") {
+			addFreeVariable(section, token);
+		}
+		/*
 			These exist simply to document the arguments to recursive run() calls.
 		*/
 		const VARREF = true, TYPEDVAR = true;
@@ -378,7 +413,7 @@ define([
 		*/
 		if (type === "comma") {
 			Utils.impossible('Section.run', 'a comma token was run() somehow.');
-			return;
+			return 0;
 		}
 		/*
 			Root tokens are usually never passed in, but let's
@@ -461,7 +496,7 @@ define([
 				it is pure. This check confirms that this is only a (set:) or (put:) command.
 			*/
 			if (VarRef.isPrototypeOf(dest) || TypedVar.isPrototypeOf(dest)) {
-				section.pureValueCheck = true;
+				section.freeVariables = Object.create(null);
 			}
 			/*
 				This needs to be a VarRef so that (set: $b to 0, $d to $b) can work.
@@ -470,22 +505,25 @@ define([
 			if (TwineError.containsError(src)) {
 				return src;
 			}
-			const isPure = section.pureValueCheck;
-			section.pureValueCheck = null;
+			const freeVariables = section.freeVariables;
+			section.freeVariables = null;
 			/*
-				If it is indeed pure, create a prose reference to this location.
+				If it is indeed pure, or its environment has been captured, create a prose reference to this location.
 			*/
 			let srcRef;
-			if (isPure &&
+			if (freeVariables && typeof freeVariables === "object" &&
 					/*
 						ValueRefs shouldn't be used if the value was a Number or Boolean.
 					*/
 					(typeof src !== 'boolean' && typeof src !== 'number')) {
-				srcRef = [token.place, after[0].start, after[after.length-1].end];
+				srcRef = freeVariables;
+				srcRef.at = token.place;
+				srcRef.from = after[0].start;
+				srcRef.to = after[after.length-1].end;
 				/*
 					Don't bother if the stringified Harlowe source of the value is longer than its reference.
 				*/
-				if (srcRef < toSource(src)) {
+				if (JSON.stringify(srcRef) < toSource(src)) {
 					srcRef = undefined;
 				}
 			}
@@ -495,17 +533,17 @@ define([
 		else if (type === "typeSignature") {
 			const datatype = run(section,  before, isVarRef);
 			/*
-				TypedVars are the one case where variables shouldn't invalidate the
-				"pureValueCheck" that AssignmentRequests make. So, reinstate the current value
-				after the right side is run.
+				TypedVars are the one case where variable children shouldn't be considered freeVariables.
+				So, reinstate the current value after the right (NOT left) side is run.
 			*/
-			const free = section.pureValueCheck;
-				/*
-					Because this is already being compiled into a TypedVar, the variable on the right does not need
-					to be compiled into a TypedVar as well.
-				*/
+			const free = section.freeVariables;
+			section.freeVariables = null;
+			/*
+				Because this is already being compiled into a TypedVar, the variable on the right does not need
+				to be compiled into a TypedVar as well.
+			*/
 			const variable = run(section,  after, VARREF);
-			section.pureValueCheck = free;
+			section.freeVariables = free;
 			return TypedVar.create(datatype, variable);
 		}
 		else if (type === "where" || type === "when" || type === "via") {
@@ -795,12 +833,25 @@ define([
 			return isVarRef ? ret : ret.get();
 		}
 		else if (type === "belongingOperator" || type === "belongingItOperator") {
+			const value = run(section,  before);
+			/*
+				addFreeVariable() couldn't capture the environment of "random" datanames
+				because this value could only be found by computing the tokens before this.
+				But, we CAN capture that environment now.
+
+				Note that isVarRef (below) doesn't matter here, because section.freeVariables wouldn't be truthy
+				if that was the case.
+			*/
+			if (value === "random" && section.freeVariables && typeof section.freeVariables === "object" && !section.freeVariables.seed) {
+				section.freeVariables.seed = State.seed;
+				section.freeVariables.seedIter = State.seedIter;
+			}
 			const ret = VarRef.create(
 				token.type.includes("It") ? section.Identifiers.it :
 					// Since, as with belonging properties, the variable is on the right,
 					// we must compile the right side as a varref.
 					run(section,  after, VARREF),
-				{computed:true,value:run(section,  before)}
+				{computed:true,value}
 			);
 			return isVarRef ? ret : ret.get();
 		}
@@ -830,12 +881,21 @@ define([
 				return missingSideError(!before, !after, token);
 			}
 			/*
+				See the note above for belongingOperator.
+			*/
+			const value = run(section, after);
+			if (value === "random" && section.freeVariables && typeof section.freeVariables === "object" && !section.freeVariables.seed) {
+				section.freeVariables.seed = State.seed;
+				section.freeVariables.seedIter = State.seedIter;
+			}
+
+			/*
 				The left side should not be compiled into a TypedVar even if it's in position - for instance,
 				num-type $a's ('foo') shouldn't compile "num-type $a" into a TypedVar.
 			*/
 			const ret = VarRef.create(
 				token.type === "itsOperator" ? section.Identifiers.it : run(section,  before, isVarRef),
-				{computed:true, value:run(section,  after)}
+				{computed:true, value}
 			);
 			return isVarRef ? ret : ret.get();
 		}
@@ -854,7 +914,12 @@ define([
 				produced by their execution.
 			*/
 			if (token.blockedValue && !section.blocked) {
-				return section.blockedValue();
+				const ret = section.blockedValue();
+				if (ret === undefined) {
+					Utils.impossible('Runner.run', 'section.blockedValue() returned undefined');
+					return 0;
+				}
+				return ret;
 			}
 			/*
 				The first child token in a macro is always the method name.
@@ -862,7 +927,7 @@ define([
 			const macroNameToken = token.children[0];
 			const variableCall = macroNameToken.text[0] === "$" || macroNameToken.text[0] === "_";
 			if(macroNameToken.type !== "macroName" && !variableCall) {
-				Utils.impossible('Section.run', 'macro token had no macroName child token');
+				Utils.impossible('Runner.run', 'macro token had no macroName child token');
 			}
 			return Macros[variableCall ? "runCustom" : "run"](
 				variableCall

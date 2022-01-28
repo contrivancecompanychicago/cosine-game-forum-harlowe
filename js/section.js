@@ -615,7 +615,7 @@ define([
 					This is only used for a purely encapsulated mutation inside Runner to pass data up and down the
 					run() calls. Nevertheless, it exists.
 				*/
-				pureValueCheck: false,
+				freeVariables: null,
 				/*
 					This is set by Engine whenever it navigates to a passage as a result of (load-game:). It prevents
 					(load-game:) from running again in that passage until initial rendering ends.
@@ -1449,9 +1449,11 @@ define([
 			const {stackTop} = this;
 			if (!stackTop) {
 				Utils.impossible('Section.blockedValue', 'stack is empty');
+				return 0;
 			}
 			if (!stackTop.blockedValues || !stackTop.blockedValues.length) {
 				Utils.impossible('Section.blockedValue', 'blockedValues is missing or empty');
+				return 0;
 			}
 			return stackTop.blockedValues.shift();
 		},
