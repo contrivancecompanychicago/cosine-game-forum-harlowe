@@ -136,7 +136,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 	*/
 	["enchant", "change"].forEach((name) => {
 		Macros.addCommand(name,
-			(scope, changer) => {
+			(_, changer) => {
 				const error = notRevisionChanger(name, changer);
 				if (error) {
 					return error;
@@ -753,7 +753,13 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 				*/
 				enchantDesc.event.map(e => e + ".enchantment").join(' '),
 				selector,
-				function generalEnchantmentEvent() {
+				function generalEnchantmentEvent(e) {
+					/*
+						The debug "open" buttons shouldn't activate enchantments.
+					*/
+					if ($(e.target).is('tw-open-button')) {
+						return;
+					}
 					/*
 						When multiple <tw-enchantment>s wrap the same element, they wrap it outward-to-inward
 						first-to-last. So, we should execute the outermost enchantment first, as it is first
@@ -1181,7 +1187,13 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 						Since this event is on <tw-story>, it can't select its parent in a selector. So, that parent
 						must be selected in the function.
 					*/
-					function() {
+					function(e) {
+						/*
+							The debug "open" buttons shouldn't activate enchantments.
+						*/
+						if ($(e.target).is('tw-open-button')) {
+							return;
+						}
 						/*
 							When multiple <tw-enchantment>s wrap the same element, they wrap it outward-to-inward
 							first-to-last. So, we should execute the outermost enchantment first, as it is first

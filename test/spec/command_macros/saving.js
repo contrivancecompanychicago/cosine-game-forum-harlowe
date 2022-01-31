@@ -444,40 +444,48 @@ describe("save macros", function() {
 			//TODO: Test that the save data is actually deleted.
 		});
 		it("can restore mock visits", function(done) {
+			Utils.options.debug = true;
 			runPassage("(mock-visits:'test','test','test')",'test');
 			runPassage("(savegame:'1')",'bar');
 			runPassage("(mock-visits:'bar')",'baz');
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
 				expect("(print:visits)").markupToPrint('5'); // 3 mocks, 1 visit above, plus this passage
+				Utils.options.debug = false;
 				done();
 			},90);
 		});
 		it("can restore mock visits even after using (erase-past:)", function(done) {
+			Utils.options.debug = true;
 			runPassage("(mock-visits:'test','test','test')",'test');
 			runPassage("(erase-past:1)(savegame:'1')",'bar');
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
 				expect("(print:visits)").markupToPrint('5'); // 3 mocks, 1 visit above, plus this passage
+				Utils.options.debug = false;
 				done();
 			},90);
 		});
 		it("can restore mock turns", function(done) {
+			Utils.options.debug = true;
 			runPassage("(mock-turns:11)",'qux');
 			runPassage("(savegame:'1')",'bar');
 			expect("(mock-turns:0)(print:turns)").markupToPrint('3');
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
 				expect("(print:turns)").markupToPrint('14'); // 3 mocks, 1 visit above, plus this passage
+				Utils.options.debug = false;
 				done();
 			},90);
 		});
 		it("can restore mock turns even after using (erase-past:)", function(done) {
+			Utils.options.debug = true;
 			runPassage("(mock-turns:11)",'qux');
 			runPassage("(erase-past:1)(savegame:'1')",'bar');
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
 				expect("(print:turns)").markupToPrint('14'); // 3 mocks, 1 visit above, plus this passage
+				Utils.options.debug = false;
 				done();
 			},90);
 		});

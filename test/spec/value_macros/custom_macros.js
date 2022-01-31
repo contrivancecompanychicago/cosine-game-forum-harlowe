@@ -37,12 +37,17 @@ describe("custom macros", function() {
 			expect("($m:5)").markupToPrint("15");
 			expect("(print:($m:5)+5)").markupToPrint("20");
 			expect("(print:($m:10/5))").markupToPrint("12");
+			expect("(set: _n to (macro:...num-type _e, [(output-data:_e)]))(print:(_n:21))").markupToPrint("21");
 		});
 		it("supplying the wrong number of arguments produces an error", function() {
 			expect("($m:5,10)").markupToError();
 			expect("($m:)").markupToError();
 			expect("($m:1,2,3)").markupToError();
 			expect("($n:1,2,3,4,5,6,7,8)").not.markupToError();
+		});
+		it("calling a non-macro produces an error", function() {
+			expect("(_n:)").markupToError();
+			expect("($w:)").markupToError();
 		});
 		it("values given to spread parameters become arrays", function() {
 			expect("(print:array matches ($n:1,2,3,4,5))").markupToPrint('true');

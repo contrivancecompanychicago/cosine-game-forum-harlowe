@@ -16,7 +16,7 @@ define([
 	'internaltypes/varref',
 	'internaltypes/twineerror'
 ],
-(Macros, State, Utils, {toSource}, Operations, Colour, HookSet, Lambda, Datatype, VarBind, CodeHook, TypedVar, AssignmentRequest, VarRef, TwineError) => {
+(Macros, State, {insensitiveName, impossible, escape}, {toSource,typeName,objectName}, Operations, Colour, HookSet, Lambda, Datatype, VarBind, CodeHook, TypedVar, AssignmentRequest, VarRef, TwineError) => {
 
 	/*
 		This is used to find which lexer tokens represent "free variables" instead of pure deterministic data.
@@ -34,7 +34,7 @@ define([
 	function addFreeVariable(section, token) {
 		const f = section.freeVariables;
 		if (token.type === "macro") {
-			const name = Utils.insensitiveName(token.name);
+			const name = insensitiveName(token.name);
 			/*
 				Currently, these macros' environment isn't captured.
 			*/
@@ -54,7 +54,7 @@ define([
 
 				Note that this environment capture isn't actually useful when (confirm:) or (prompt:)'s result
 				is saved to a variable as-is, and only matters when they are included
-				as part of a much larger data structure. Which is admittedly not a common idiom. 
+				as part of a much larger data structure. Which is admittedly not a common idiom.
 			*/
 			else if (token.blockedValue && !f.blockedValues) {
 				f.blockedValues = section.stackTop.blockedValues.concat();
@@ -77,7 +77,7 @@ define([
 			TODO: capture that environment elsewhere, akin to possessive operators.
 		*/
 		else if (token.type === "identifier") {
-			const name = Utils.insensitiveName(token.text);
+			const name = insensitiveName(token.text);
 			if (name === "time" || name === "exits" || name === "it" || name === "visits") {
 				section.freeVariables = true;
 			}
@@ -87,7 +87,7 @@ define([
 			because they could be operating on computed properties.
 		*/
 		else if (token.type === "property" || token.type === "belongingProperty") {
-			const name = Utils.insensitiveName(token.name);
+			const name = insensitiveName(token.name);
 			if (name === 'random' && !f.seed) {
 				f.seed = State.seed;
 				f.seedIter = State.seedIter;
@@ -329,7 +329,7 @@ define([
 	*/
 	return function run(section, tokens, isVarRef = false, isTypedVar = false) {
 		const ops = Operations;
-		let token;
+		let token, ret;
 		/*
 			The passed-in tokens are an array when a lambda is run and a single token (the macro itself)
 			when a macro is run.
@@ -339,8 +339,8 @@ define([
 		}
 
 		if (!tokens.length || !tokens[0]) {
-			Utils.impossible('Runner.run', 'No tokens to run!');
-			return;
+			impossible('Runner.run', 'No tokens to run!');
+			return 0;
 		}
 		/*
 			Obtain the least precedent token, its index i, and its type.
@@ -362,7 +362,7 @@ define([
 		}
 		const type = token.type;
 		if (!type) {
-			Utils.impossible('Runner.run', 'Token has no type!');
+			impossible('Runner.run', 'Token has no type!');
 			return 0;
 		}
 		/*
@@ -372,25 +372,25 @@ define([
 		const sides = tokenSides[type] || '';
 
 		if (sides === "both" && (!before || !after)) {
-			return missingSideError(!before, !after, token);
+			ret = missingSideError(!before, !after, token);
 		}
-		if (sides === "neither" && (before || after)) {
-			return wrongSideError(before, after, token);
+		else if (sides === "neither" && (before || after)) {
+			ret = wrongSideError(before, after, token);
 		}
-		if (sides === "before") {
+		else if (sides === "before") {
 			if (!before) {
-				return missingSideError(true, false, token);
+				ret = missingSideError(true, false, token);
 			}
-			if (after) {
-				return wrongSideError(null, after, token);
+			else if (after) {
+				ret = wrongSideError(null, after, token);
 			}
 		}
-		if (sides === "after") {
+		else if (sides === "after") {
 			if (!after) {
-				return missingSideError(false, true, token);
+				ret = missingSideError(false, true, token);
 			}
-			if (before) {
-				return wrongSideError(before, null, token);
+			else if (before) {
+				ret = wrongSideError(before, null, token);
 			}
 		}
 		/*
@@ -411,8 +411,14 @@ define([
 			This should never appear because commas are handled by "macro" tokens
 			by themselves, and commas shouldn't appear in other jurisdictions.
 		*/
-		if (type === "comma") {
-			Utils.impossible('Section.run', 'a comma token was run() somehow.');
+		if (ret) {
+			/*
+				If the previous checks already set the return value to an error,
+				don't do anything more.
+			*/
+		}
+		else if (type === "comma") {
+			impossible('Section.run', 'a comma token was run() somehow.');
 			return 0;
 		}
 		/*
@@ -420,16 +426,18 @@ define([
 			harmlessly handle them anyway.
 		*/
 		else if (type === "root") {
-			return run(section, token.children);
+			ret = run(section, token.children);
 		}
 		else if (type === "identifier") {
 			if (isVarRef) {
-				return VarRef.create(section.Identifiers, token.text.toLowerCase());
+				ret = VarRef.create(section.Identifiers, token.text.toLowerCase());
 			}
-			return section.Identifiers[token.text.toLowerCase()];
+			else {
+				ret = section.Identifiers[token.text.toLowerCase()];
+			}
 		}
 		else if (type === "variable" || type === "tempVariable") {
-			let ret = VarRef.create(type === "tempVariable" ? section.stackTop.tempVariables : State.variables,
+			ret = VarRef.create(type === "tempVariable" ? section.stackTop.tempVariables : State.variables,
 				token.name);
 
 			if (isTypedVar) {
@@ -438,16 +446,15 @@ define([
 			else if (!isVarRef) {
 				ret = ret.get();
 			}
-			return ret;
 		}
 		else if (type === "hookName") {
-			return HookSet.create({type:'name', data:token.name});
+			ret = HookSet.create({type:'name', data:token.name});
 		}
 		else if (type === "number" || type === "cssTime") {
-			return token.value;
+			ret = token.value;
 		}
 		else if (type === "boolean") {
-			return token.text.toLowerCase() === "true";
+			ret = token.text.toLowerCase() === "true";
 		}
 		else if (type === "string") {
 			/*
@@ -455,80 +462,80 @@ define([
 				literals are currently exactly equal to JS string literals (minus template
 				strings and newlines).
 			*/
-			return eval(token.text.replace(/(.?)\n/g, (_,a) =>
+			ret = eval(token.text.replace(/(.?)\n/g, (_,a) =>
 				/*
 					If a literal newline has a \ before it (such as when invoking the escaped line ending syntax), DON'T escape the newline without escaping the \ first.
 				*/
 				(a === "\\" ? "\\\\" : a === "\n" ? "\\n" : a) + "\\n"));
 		}
 		else if (type === "hook") {
-			return CodeHook.create(token.children, token.text);
+			ret = CodeHook.create(token.children, token.text);
 		}
 		else if (type === "colour") {
-			return Colour.create(token.colour);
+			ret = Colour.create(token.colour);
 		}
 		else if (type === "datatype") {
-			return Datatype.create(token.name);
+			ret = Datatype.create(token.name);
 		}
 		else if (type === "spread") {
 			/*
 				Whether or not this actually makes sense as a "mid"string
 				is probably easily disputed.
 			*/
-			return ops.makeSpreader(run(section,  after, false, isTypedVar));
+			ret = ops.makeSpreader(run(section,  after, false, isTypedVar));
 		}
 		else if (type === "bind") {
-			return VarBind.create(run(section,  after, VARREF), token.text.startsWith('2') ? 'two way' : '');
+			ret = VarBind.create(run(section,  after, VARREF), token.text.startsWith('2') ? 'two way' : '');
 		}
 		else if (type === "to" || type === "into") {
 			const dest = (type === "to") ? section.setIt(run(section, before, VARREF, TYPEDVAR)) : run(section, after, VARREF, TYPEDVAR);
 			if (TwineError.containsError(dest)) {
-				return dest;
-			}
-			/*
-				For the purposes of State optimisation, each assignmentRequest collects the
-				"free variables" used in the source. This is currently (Jan 2022) done by
-				permuting section to have a "freeVariables" array, running the source,
-				then removing it, rather than adding an additional argument to run().
-			*/
-			/*
-				Currently, (unpack:) is too complicated to generate prose references for, even if
-				it is pure. This check confirms that this is only a (set:) or (put:) command.
-			*/
-			if (VarRef.isPrototypeOf(dest) || TypedVar.isPrototypeOf(dest)) {
-				section.freeVariables = Object.create(null);
-			}
-			/*
-				This needs to be a VarRef so that (set: $b to 0, $d to $b) can work.
-			*/
-			const src = (type === "to") ? run(section, after, VARREF) : section.setIt(run(section, before, VARREF));
-			if (TwineError.containsError(src)) {
-				return src;
-			}
-			const freeVariables = section.freeVariables;
-			section.freeVariables = null;
-			/*
-				If it is indeed pure, or its environment has been captured, create a prose reference to this location.
-			*/
-			let srcRef;
-			if (freeVariables && typeof freeVariables === "object" &&
-					/*
-						ValueRefs shouldn't be used if the value was a Number or Boolean.
-					*/
-					(typeof src !== 'boolean' && typeof src !== 'number')) {
-				srcRef = freeVariables;
-				srcRef.at = token.place;
-				srcRef.from = after[0].start;
-				srcRef.to = after[after.length-1].end;
+				ret = dest;
+			} else {
 				/*
-					Don't bother if the stringified Harlowe source of the value is longer than its reference.
+					For the purposes of State optimisation, each assignmentRequest collects the
+					"free variables" used in the source. This is currently (Jan 2022) done by
+					permuting section to have a "freeVariables" array, running the source,
+					then removing it, rather than adding an additional argument to run().
 				*/
-				if (JSON.stringify(srcRef) < toSource(src)) {
-					srcRef = undefined;
+				/*
+					Currently, (unpack:) is too complicated to generate prose references for, even if
+					it is pure. This check confirms that this is only a (set:) or (put:) command.
+				*/
+				if (VarRef.isPrototypeOf(dest) || TypedVar.isPrototypeOf(dest)) {
+					section.freeVariables = Object.create(null);
 				}
+				/*
+					This needs to be a VarRef so that (set: $b to 0, $d to $b) can work.
+				*/
+				const src = (type === "to") ? run(section, after, VARREF) : section.setIt(run(section, before, VARREF));
+				if (TwineError.containsError(src)) {
+					return src;
+				}
+				const freeVariables = section.freeVariables;
+				section.freeVariables = null;
+				/*
+					If it is indeed pure, or its environment has been captured, create a prose reference to this location.
+				*/
+				let srcRef;
+				if (freeVariables && typeof freeVariables === "object" &&
+						/*
+							ValueRefs shouldn't be used if the value was a Number or Boolean.
+						*/
+						(typeof src !== 'boolean' && typeof src !== 'number')) {
+					srcRef = freeVariables;
+					srcRef.at = token.place;
+					srcRef.from = after[0].start;
+					srcRef.to = after[after.length-1].end;
+					/*
+						Don't bother if the stringified Harlowe source of the value is longer than its reference.
+					*/
+					if (JSON.stringify(srcRef) < toSource(src)) {
+						srcRef = undefined;
+					}
+				}
+				ret = AssignmentRequest.create(dest, src, type, srcRef);
 			}
-			const ret = AssignmentRequest.create(dest, src, type, srcRef);
-			return ret;
 		}
 		else if (type === "typeSignature") {
 			const datatype = run(section,  before, isVarRef);
@@ -544,65 +551,69 @@ define([
 			*/
 			const variable = run(section,  after, VARREF);
 			section.freeVariables = free;
-			return TypedVar.create(datatype, variable);
+			ret = TypedVar.create(datatype, variable);
 		}
 		else if (type === "where" || type === "when" || type === "via") {
 			if (!after) {
-				return missingSideError(false, true, token);
+				ret = missingSideError(false, true, token);
 			}
-			/*
-				Lambdas need to store their entire Harlowe source, for display with (source:)
-			*/
-			const source = tokens.map(e => e.text).join('');
-			/*
-				Type errors for 'before' and 'after' are handled by Lambda.create().
-			*/
-			return Lambda.create(
+			else {
 				/*
-					'when' lambdas don't have a before.
-					TODO: Move the error from Lambda.create to here?
+					Lambdas need to store their entire Harlowe source, for display with (source:)
 				*/
-				!before ? undefined : run(section,  before, VARREF),
-				token.type,
+				const source = tokens.map(e => e.text).join('');
 				/*
-					The 'where' or 'when' clause is evaluated only at runtime.
+					Type errors for 'before' and 'after' are handled by Lambda.create().
 				*/
-				after,
-				source
-			);
+				ret = Lambda.create(
+					/*
+						'when' lambdas don't have a before.
+						TODO: Move the error from Lambda.create to here?
+					*/
+					!before ? undefined : run(section,  before, VARREF),
+					token.type,
+					/*
+						The 'where' or 'when' clause is evaluated only at runtime.
+					*/
+					after,
+					source
+				);
+			}
 		}
 		else if (type === "making" || type === "each") {
 			if (!after) {
-				return missingSideError(false, true, token);
+				ret = missingSideError(false, true, token);
 			}
-			/*
-				Lambdas need to store their entire Harlowe source, for display with (source:)
-			*/
-			const source = [].concat(tokens).map(e => e.text).join('');
-			/*
-				The optional "each" keyword simply permits a originalSource to be created using a bare
-				successive temp variable, without any other clauses. As such, it doesn't have a
-				temp variable preceding it, and its "clause" (the temp variable) is really its subject.
-			*/
-			if (type === "each") {
-				return Lambda.create(
-					run(section,  after, VARREF),
-					'each',
-					null,
-					source
-				);
-			}
-			// Other keywords can have a preceding temp variable, though.
 			else {
-				return Lambda.create(
-					run(section,  before, VARREF),
-					token.type,
-					/*
-						The 'making' or 'each' clause must be a VarRef, which is computed now.
-					*/
-					run(section,  after, VARREF),
-					source
-				);
+				/*
+					Lambdas need to store their entire Harlowe source, for display with (source:)
+				*/
+				const source = [].concat(tokens).map(e => e.text).join('');
+				/*
+					The optional "each" keyword simply permits a originalSource to be created using a bare
+					successive temp variable, without any other clauses. As such, it doesn't have a
+					temp variable preceding it, and its "clause" (the temp variable) is really its subject.
+				*/
+				if (type === "each") {
+					ret = Lambda.create(
+						run(section,  after, VARREF),
+						'each',
+						null,
+						source
+					);
+				}
+				// Other keywords can have a preceding temp variable, though.
+				else {
+					ret = Lambda.create(
+						!before ? undefined : run(section,  before, VARREF),
+						token.type,
+						/*
+							The 'making' or 'each' clause must be a VarRef, which is computed now.
+						*/
+						run(section,  after, VARREF),
+						source
+					);
+				}
 			}
 		}
 		/*
@@ -610,7 +621,7 @@ define([
 			one can do (set: $x to it+1), and += is sort of an overly abstract token.
 		*/
 		else if (type === "augmentedAssign") {
-			return ops.makeAssignmentRequest(
+			ret = ops.makeAssignmentRequest(
 				run(section,  before, VARREF),
 				/*
 					This line converts the "b" in "a += b" into "a + b" (for instance),
@@ -686,14 +697,16 @@ define([
 					because of its semantic ambiguity ("a is not b and c") in English.
 				*/
 				if (leftSide.type === 'isNot' || leftSide.type === 'isNotA' || leftSide.type === 'untypifies') {
-					return ambiguityError;
+					ret = ambiguityError;
 				}
-				return ops[type](
-					run(section, before),
-					ops.elidedComparisonOperator(token.type, operator, section.Identifiers.it,
-						...getElisionOperands(after)/*all elided comparisons in after*/
-					)
-				);
+				else {
+					ret = ops[type](
+						run(section, before),
+						ops.elidedComparisonOperator(token.type, operator, section.Identifiers.it,
+							...getElisionOperands(after)/*all elided comparisons in after*/
+						)
+					);
+				}
 			}
 			/*
 				If the right side is a comparsion operator, and the left side is not,
@@ -713,33 +726,34 @@ define([
 					Again, "is not" should not be transformed.
 				*/
 				if (rightSide.type === 'isNot' || rightSide.type === 'isNotA' || rightSide.type === "untypifies") {
-					return ambiguityError;
+					ret = ambiguityError;
 				}
+				else {
+					ret = ops[type](
+						/*
+							The following additional action swaps the tokens to the right and left of rightSide,
+							and changes rightSide's type into its inverse. This changes ($b < 3) into (3 > $b),
+							and thus alters the It value of the expression from $b to 3.
 
-				return ops[type](
-					/*
-						The following additional action swaps the tokens to the right and left of rightSide,
-						and changes rightSide's type into its inverse. This changes ($b < 3) into (3 > $b),
-						and thus alters the It value of the expression from $b to 3.
+							For multi-part comparisons, (3 and 4 and 5 < 6) becomes (6 > 5 and it > 3 and it > 4).
 
-						For multi-part comparisons, (3 and 4 and 5 < 6) becomes (6 > 5 and it > 3 and it > 4).
-
-						This could cause issues when "it" is used explicitly in the expression, but frankly such
-						uses are already kinda nonsensical ("(if: $a is in it and $b)"?).
-					*/
-					run(section, [
-						...tokens.slice(rightIndex + 1),
-						// Create a copy of rightSide with the type changed, rather than mutate it in-place.
-						Object.assign(Object.create(rightSide), {
-							[rightSide.type === "inequality" ? "operator" : "type"]:
-								reverseComparisonOperator(rightSide),
-						}),
-						...tokens.slice(i + 1, rightIndex),
-					]),
-					ops.elidedComparisonOperator(token.type, operator, section.Identifiers.it,
-						...getElisionOperands(before)/*all elided comparisons in before*/
-					)
-				);
+							This could cause issues when "it" is used explicitly in the expression, but frankly such
+							uses are already kinda nonsensical ("(if: $a is in it and $b)"?).
+						*/
+						run(section, [
+							...tokens.slice(rightIndex + 1),
+							// Create a copy of rightSide with the type changed, rather than mutate it in-place.
+							Object.assign(Object.create(rightSide), {
+								[rightSide.type === "inequality" ? "operator" : "type"]:
+									reverseComparisonOperator(rightSide),
+							}),
+							...tokens.slice(i + 1, rightIndex),
+						]),
+						ops.elidedComparisonOperator(token.type, operator, section.Identifiers.it,
+							...getElisionOperands(before)/*all elided comparisons in before*/
+						)
+					);
+				}
 			}
 			/*
 				Note for comparison operations:
@@ -748,7 +762,7 @@ define([
 				(such as (set: $x to $a < $y)) then don't compile the variables into VarRefs
 				(because comparison operations can't, and shouldn't, process VarRefs instead of values.)
 			*/
-			return ops[type](run(section, before), run(section, after));
+			else ret = ops[type](run(section, before), run(section, after));
 		}
 		/*
 			The following are the comparison operators.
@@ -758,12 +772,11 @@ define([
 				missingSideError(false, true, token);
 			}
 			const leftOp = !before ? section.Identifiers.it : run(section,  before);
-			const ret = ops[compileComparisonOperator(token)](
+			ret = ops[compileComparisonOperator(token)](
 				leftOp,
 				run(section,  after)
 			);
 			section.Identifiers.it = leftOp;
-			return ret;
 		}
 		else if (type === "addition" || type === "subtraction") {
 			if (!after) {
@@ -800,37 +813,36 @@ define([
 					entirely.
 				*/
 				token.type = type === 'addition' ? "positive" : "negative";
-				const ret = run(section,  tokens);
+				ret = run(section,  tokens);
 				token.type = type;
-				return ret;
 			} else {
-				return ops[token.text](
+				ret = ops[token.text](
 					run(section,  before),
 					run(section,  after)
 				);
 			}
 		}
 		else if (type === "multiplication" || type === "division") {
-			return ops[token.text](
+			ret = ops[token.text](
 				run(section,  before),
 				run(section,  after)
 			);
 		}
 		else if (type === "positive" || type === "negative") {
-			return ops['*'](
+			ret = ops['*'](
 				(type === "negative" ? -1 : 1),
 				run(section, after)
 			);
 		}
 		else if (type === "not") {
-			return ops.not(run(section,  after));
+			ret = ops.not(run(section,  after));
 		}
 		else if (type === "belongingProperty") {
-			const ret = VarRef.create(
+			ret = VarRef.create(
 				run(section,  after, VARREF),
 				token.name
 			);
-			return isVarRef ? ret : ret.get();
+			ret = isVarRef ? ret : ret.get();
 		}
 		else if (type === "belongingOperator" || type === "belongingItOperator") {
 			const value = run(section,  before);
@@ -846,14 +858,14 @@ define([
 				section.freeVariables.seed = State.seed;
 				section.freeVariables.seedIter = State.seedIter;
 			}
-			const ret = VarRef.create(
+			ret = VarRef.create(
 				token.type.includes("It") ? section.Identifiers.it :
 					// Since, as with belonging properties, the variable is on the right,
 					// we must compile the right side as a varref.
 					run(section,  after, VARREF),
 				{computed:true,value}
 			);
-			return isVarRef ? ret : ret.get();
+			ret = isVarRef ? ret : ret.get();
 		}
 		/*
 			Notice that this one is right-associative instead of left-associative.
@@ -863,48 +875,50 @@ define([
 				VarRef.create(a,1).get() VarRef.create(,2).get()
 		*/
 		else if (type === "property") {
-			const ret = VarRef.create(
+			ret = VarRef.create(
 				run(section, before, VARREF),
 				token.name
 			);
-			return isVarRef ? ret : ret.get();
+			ret = isVarRef ? ret : ret.get();
 		}
 		else if (type === "itsProperty" || type === "belongingItProperty") {
-			const ret = VarRef.create(
+			ret = VarRef.create(
 				section.Identifiers.it,
 				token.name
 			);
-			return isVarRef ? ret : ret.get();
+			ret = isVarRef ? ret : ret.get();
 		}
 		else if (type === "possessiveOperator" || type === "itsOperator") {
 			if (!after || (!before && token.type !== "itsOperator")) {
-				return missingSideError(!before, !after, token);
+				ret = missingSideError(!before, !after, token);
 			}
-			/*
-				See the note above for belongingOperator.
-			*/
-			const value = run(section, after);
-			if (value === "random" && section.freeVariables && typeof section.freeVariables === "object" && !section.freeVariables.seed) {
-				section.freeVariables.seed = State.seed;
-				section.freeVariables.seedIter = State.seedIter;
-			}
+			else {
+				/*
+					See the note above for belongingOperator.
+				*/
+				const value = run(section, after);
+				if (value === "random" && section.freeVariables && typeof section.freeVariables === "object" && !section.freeVariables.seed) {
+					section.freeVariables.seed = State.seed;
+					section.freeVariables.seedIter = State.seedIter;
+				}
 
-			/*
-				The left side should not be compiled into a TypedVar even if it's in position - for instance,
-				num-type $a's ('foo') shouldn't compile "num-type $a" into a TypedVar.
-			*/
-			const ret = VarRef.create(
-				token.type === "itsOperator" ? section.Identifiers.it : run(section,  before, isVarRef),
-				{computed:true, value}
-			);
-			return isVarRef ? ret : ret.get();
+				/*
+					The left side should not be compiled into a TypedVar even if it's in position - for instance,
+					num-type $a's ('foo') shouldn't compile "num-type $a" into a TypedVar.
+				*/
+				ret = VarRef.create(
+					token.type === "itsOperator" ? section.Identifiers.it : run(section,  before, isVarRef),
+					{computed:true, value}
+				);
+				ret = isVarRef ? ret : ret.get();
+			}
 		}
 		else if (type === "twineLink") {
 			/*
 				This crudely desugars the twineLink token into a
 				(link-goto:) token, in a manner similar to that in Renderer.
 			*/
-			return Macros.run("link-goto",section,[token.innerText,token.passage]);
+			ret = Macros.run("link-goto",section,[token.innerText,token.passage]);
 		}
 		else if (type === "macro") {
 			/*
@@ -914,64 +928,149 @@ define([
 				produced by their execution.
 			*/
 			if (token.blockedValue && !section.blocked) {
-				const ret = section.blockedValue();
+				ret = section.blockedValue();
 				if (ret === undefined) {
-					Utils.impossible('Runner.run', 'section.blockedValue() returned undefined');
+					impossible('Runner.run', 'section.blockedValue() returned undefined');
 					return 0;
 				}
-				return ret;
 			}
-			/*
-				The first child token in a macro is always the method name.
-			*/
-			const macroNameToken = token.children[0];
-			const variableCall = macroNameToken.text[0] === "$" || macroNameToken.text[0] === "_";
-			if(macroNameToken.type !== "macroName" && !variableCall) {
-				Utils.impossible('Runner.run', 'macro token had no macroName child token');
-			}
-			return Macros[variableCall ? "runCustom" : "run"](
-				variableCall
-					? VarRef.create(
-						macroNameToken.text[0] === "_" ? section.stackTop.tempVariables : State.variables,
-						macroNameToken.text.trim().slice(1,-1)
-					).get()
-					: token.name,
-				section,
+			else {
 				/*
-					Divide all of the children of this macro call (minus the macro name) into
-					sets of arrays broken by 'comma' tokens. In effect, this is token.children.split(comma tokens).
-
-					Each child array of children is run separately and immediately.
+					The first child token in a macro is always the method name.
 				*/
-				token.children.slice(1).reduce((a, e) => {
-					if (e.type === "comma") {
-						a.push([]);
-					}
-					else {
-						a[a.length-1].push(e);
-					}
-					return a;
-				},[[]]).filter(e => e.length && (e.length > 1 || e[0].type !== "whitespace")).map(e => run(section,  e,
+				const macroNameToken = token.children[0];
+				const variableCall = macroNameToken.text[0] === "$" || macroNameToken.text[0] === "_";
+				if(macroNameToken.type !== "macroName" && !variableCall) {
+					impossible('Runner.run', 'macro token had no macroName child token');
+					return 0;
+				}
+				ret = Macros[variableCall ? "runCustom" : "run"](
+					variableCall
+						? VarRef.create(
+							macroNameToken.text[0] === "_" ? section.stackTop.tempVariables : State.variables,
+							macroNameToken.text.trim().slice(1,-1)
+						).get()
+						: token.name,
+					section,
 					/*
-						To allow destructuring patterns to work, macros in destructuring position should
-						compile all of their contained VarRefs to TypedVars.
+						Divide all of the children of this macro call (minus the macro name) into
+						sets of arrays broken by 'comma' tokens. In effect, this is token.children.split(comma tokens).
+
+						Each child array of children is run separately and immediately.
 					*/
-					false, isTypedVar))
-			);
+					token.children.slice(1).reduce((a, e) => {
+						if (e.type === "comma") {
+							a.push([]);
+						}
+						else {
+							a[a.length-1].push(e);
+						}
+						return a;
+					},[[]]).filter(e => e.length && (e.length > 1 || e[0].type !== "whitespace")).map(e => run(section,  e,
+						/*
+							To allow destructuring patterns to work, macros in destructuring position should
+							compile all of their contained VarRefs to TypedVars.
+						*/
+						false, isTypedVar))
+				);
+			}
 		}
 		else if (type === "grouping") {
-			return run(section,  token.children, isVarRef);
+			ret = run(section,  token.children, isVarRef);
 		}
 		else if (type === "error") {
-			return TwineError.create('syntax', token.message, token.explanation || '');
+			ret = TwineError.create('syntax', token.message, token.explanation || '');
 		}
 		else if (type === "text") {
-			return TwineError.create('syntax', `"${token.text}" isn't valid Harlowe syntax for the inside of a macro call`,
+			ret = TwineError.create('syntax', `"${token.text}" isn't valid Harlowe syntax for the inside of a macro call`,
 				"Maybe you misspelled something? Also, as of 3.3.0, Javascript syntax is not allowed inside macro calls.");
 		}
 		else {
-			Utils.impossible("Section.run", `unknown syntax token type: ${type}!!`);
-			return token.text;
+			impossible("Section.run", `unknown syntax token type: ${type}!!`);
+			return 0;
 		}
+
+		if (ret === undefined) {
+			impossible("Section.run", `token ${type}${token.name ? ` (${token.name}:)` : ''} produced undefined`);
+			return 0;
+		}
+		if (ret === section) {
+			impossible("Section.run", `token ${type}${token.name ? ` (${token.name}:)` : ''} produced the section`);
+			return 0;
+		}
+		/*
+			Having got the return value of this token, if debug mode is on, a replay frame of this
+			evaluation is added to the evalReplay array.
+		*/
+		const {evalReplay} = section;
+		if (evalReplay && evalReplay.length
+				/*
+					Replays should stop at the first error, because seeing the same error propagate
+					upward isn't particularly enlightening.
+				*/
+				&& !evalReplay[evalReplay.length-1].error) {
+			const isError = TwineError.containsError(ret);
+			const fullCode = evalReplay[evalReplay.length-1].code;
+			/*
+				The basis is used to convert string indexes from passage-wise to expression-wise.
+				It equals the passage-wise index of the expression's first element.
+			*/
+			const basis = evalReplay[0].basis;
+			const resultSource = ` ${isError ? "🐞" :
+				ret && !ret.TwineScript_ToSource && ret.TwineScript_Unstorable ? objectName(ret) :
+				toSource(ret)} `;
+
+			/*
+				Don't create a replay frame for tokens whose source representation doesn't change at all.
+			*/
+			if (!before && !after && resultSource.trim() === token.text.trim()) {
+				return ret;
+			}
+			/*
+				For the purposes of simplifying token tree descent, whitespace tokens were removed from before and after.
+				However, this replay system needs their text lengths, so they're restored here.
+			*/
+			before = tokens.slice(0, i);
+			after = tokens.slice(i + 1);
+			/*
+				Splicing a string in-place multiple times is a little tricky. We need the changes in
+				length produced by each splice before this.
+				Calculate the start and end of this token + its inferiors, relative to the original
+				source, and then re-compute it for each replay frame before this.
+			*/
+			let start = (before.length ? before[0] : token).start - basis;
+			let end = (after.length ? after[after.length-1] : token).end - basis;
+			for (let i of evalReplay) {
+				/*
+					Previous substitutions that start before this push both the start and end forward.
+				*/
+				if (i.start < start) {
+					start += i.diff;
+					end += i.diff;
+				}
+				/*
+					Substitutions that start inside this (i.e. child tokens) only push the end forward.
+				*/
+				else if (i.start < end) {
+					end += i.diff;
+				}
+			}
+			/*
+				This difference is that of the result source length vs. the original (token + inferiors) text length.
+			*/
+			const diff = resultSource.length - (end - start);
+			evalReplay.push({
+				code: fullCode.slice(0, start) + resultSource + fullCode.slice(end),
+				/*
+					Each step depicts either the permution of a code structure into a Harlowe value, or an error being produced.
+				*/
+				desc: `<code>${escape(fullCode.slice(start, end))}</code> ` + (isError ? `produced an error: ` : `became <code>${escape(resultSource)}</code> (${typeName(ret)}).`),
+				start,
+				end,
+				diff,
+				error: isError && ret.render(fullCode.slice(start, end)),
+			});
+		}
+		return ret;
 	};
 });

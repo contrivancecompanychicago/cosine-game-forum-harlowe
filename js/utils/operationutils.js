@@ -1,6 +1,6 @@
 "use strict";
 define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
-	(NaturalSort, {impossible, nth, insensitiveName, permutations}, TwineError, {validPropertyName}) => {
+	(NaturalSort, {impossible, nth, permutations}, TwineError, {validPropertyName}) => {
 	
 	/*
 		Some cached strings to save a few characters when this is compiled. Yes, these are Hungarian Notated... well spotted.

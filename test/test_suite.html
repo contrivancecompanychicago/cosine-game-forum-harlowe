@@ -41,6 +41,7 @@ else {
 window.createPassage = function(text, name, tags, keepCache) {
 	if (!keepCache) {
 		Passages.clearTreeCache();
+		Passages.clearStoryletCache();
 	}
 	Passages.set(name, Passages.create($('<div name="' + name + '" tags="' + (Array.isArray(tags) ? tags : tags ? [tags] : []).join(' ') + '">').text(text)));
 	return Passages.loadMetadata(Section.create($('<p>')));
@@ -137,6 +138,7 @@ window.deserialiseState = function(str) {
 }
 window.Engine = Engine;
 window.Passages = Passages;
+window.Utils = Utils;
 </script>
 <script>
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
@@ -145,6 +147,7 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 var debugElement;
 afterAll(function() {
 	debugElement && debugElement.appendTo(document.body);
+	Utils.options.debug = false;
 });
 
 var jasmineMatcher = (function() {
@@ -328,6 +331,9 @@ var jasmineMatcher = (function() {
 beforeEach(function() {
 	if (window.$ && !debugElement) {
 		debugElement = debugElement || $('tw-debugger').detach();
+		if (location.search.indexOf("?spec=") === -1) {
+			Utils.options.debug = false;
+		}
 	}
 	jasmine.addMatchers(jasmineMatcher);
 });

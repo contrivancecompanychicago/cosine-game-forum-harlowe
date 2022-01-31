@@ -15,6 +15,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * `each` lambdas are now called "each…" lambdas (instead of just "where…" lambdas) in the Debug Mode panel.
  * Fixed a bug where `'s` and `of` sometimes wouldn't be syntax-highlighted correctly.
  * The `it` identifier is now cleared (to the default value of 0) whenever the player changes passages.
+ * Fixed a bug where using a custom macro in a storylet lambda would cause Debug Mode to constantly reload the Storylets and Variables panels, hurting performance.
 
 #### Alterations
 
@@ -53,7 +54,13 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * A minor (3.x) version increase usually shouldn't have incompatibilities with existing code, but there is something I must mention: arbitrary Javascript syntax embedded in Harlowe macro calls is no longer permitted, and will produce an error. This includes stuff like `(if: (document.title = "Wowie") is 1)[]` (which does nothing except change the window title to "Wowie") or writing `(set: $a = 1)` instead of `(set: $a to 1)`. This was a necessary sacrifice as a result of the aforementioned macro code rewrite. Since these were never part of the Harlowe language description, and were essentially undefined behaviour, I feel that it's fine to remove it in a "minor" version - however, this could inconvenience numerous people, which is why I'd avoided implementing this for so long. If you personally had been using this "feature" for purposes that Harlowe's macros can't fulfill, please post a [bug report](https://foss.heptapod.net/games/harlowe/-/issues) describing it, and I'll see what I can do about adding a macro or some other feature to support it.
    * Furthermore, as a result of the implementation of both this and `(seed:)` (see below), random macros will no longer produce different "rolls" when the player uses Undo to return to a previous turn - instead, the exact same roll that occurred on that turn will happen again. While this may be welcomed as a desired feature (in that it makes the Undo feature more intuitive in its behaviour), it may impact certain niche uses of these macros, so do take care.
 
+##### Debug Mode
+
+ * Debug Mode's colour scheme is now white-on-black, to match Harlowe's default colour scheme.
+
 #### Additions
+
+##### Coding & Macros
 
  * Added `(visited:)`, which, when given a passage name or a 'where' lambda (similar to `(history:)`), returns true if a matching passage has ever been visited and false if it hasn't. I suppose you're wondering why a macro for such a common idiom has only been introduced now instead of in 1.x. The answer is that prior to 3.2.0, I kept a firm guideline (barring very old exceptions like `(put:)`) to not needlessly introduce highly specific macros whose functionality could be replicated with a relatively short idiomatic use of a more general macro (this is also why `(live:)` was the only "live" macro until 3.0.0.) However, I've now grown to regret this direction, and appreciate that even "relatively short" idioms have room for improvement (which is why `(after:)` was added in 3.2.0). In that spirit, this macro is now available.
  * Added `(unique:)`, a macro which produces an array containing the unique values in the given sequence, while preserving the order of the values. `(unique:7,6,6,5,4,5)` produces `(a:7,6,5,4)`. Formerly, you could produce the unique values of an array using `(a: ...(ds: ...$arr))`, but this wouldn't preserve the order of values in the array.
@@ -64,6 +71,11 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added `(erase-past:)`, a macro that removes turns from the "undo cache", preventing the player from undoing to that point ever again. `(erase-past:-2)` erases all but the last two turns (including the current turn). `(erase-past:2)` erases the first two turns. This does *not* affect `(history:)`, `(visited:)`, or the `visits` and `turns` keywords, which will continue to behave as if `(erase-past:)` was never used.
    * Using this to erase the entire undo cache will automatically cause `(link-undo:)` links to update themselves using their optional second string.
  * Added the `codehook` datatype.
+
+##### Debug Mode
+
+ * Added an "expression replay" feature to Debug Mode. When you use Debug View, special 🔍 icons will appear on variables and macro calls in the passage. Clicking those will produce a dialog showing a step-by-step view of how the macro call's code was interpreted by Harlowe.
+ * Added a close button to the panel, which exits Debug Mode when clicked. Re-enabling Debug Mode can only be done by reloading the page.
 
 ### 3.2.3 changes (October 22, 2021):
 
@@ -251,11 +263,11 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
    * `empty`, which matches only empty arrays, strings, datamaps and datasets.
  * Added a `transparent` built-in colour value.
 
-##### Macros
-
-###### Markup
+##### Markup
 
  * Added unclosed collapsing whitespace markup `{=` (`{` followed by any number of `=`) to match the unclosed hook markup.
+
+##### Macros
 
 ###### Metadata
 
@@ -878,7 +890,7 @@ Use these commands to build Harlowe:
 
 * `make`: As the JS files can be run directly in a browser without compilation (as is used by the test suite), this only lints the JS source files and builds the CSS file using `make css`.
 * `make jshint`: Lints the JS source files.
-* `make css`: Builds the CSS file, `build/harlowe-css.css`, from the Sass sources. This is an intermediate build product whose contents are included in the final `format.js` file. **You need Ruby Sass installed, via the command `gem install sass`, prior to using this.** This is because node-sass doesn't work on my computer for some reason.
+* `make css`: Builds the CSS file, `build/harlowe-css.css`, from the Sass sources. This is an intermediate build product whose contents are included in the final `format.js` file.
 * `make docs`: Builds the official documentation file, `dist/harloweDocs.html`, deriving macro and markup definitions from specially-marked comments in the JS files.
 * `make format`: Builds the Harlowe `format.js` file.
 * `make all`: Builds the Harlowe `format.js` file, the documentation, and an example file, `dist/exampleOutput.html`, which is a standalone game that displays "Success!" when run, to confirm that the story format is capable of being bundled by Twine 2 correctly.

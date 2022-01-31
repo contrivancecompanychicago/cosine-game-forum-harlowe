@@ -583,7 +583,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 				First, check that the variable is indeed a macro.
 			*/
 			if (!CustomMacro.isPrototypeOf(obj)) {
-				return TwineError.create("macrocall", "I can't call " + objectName(obj) + " because it isn't a custom macro.");
+				return TwineError.containsError(obj) ? obj : TwineError.create("macrocall", `I can't call ${objectName(obj)} because it isn't a custom macro.`);
 			}
 			return typeCheckAndRun('', obj, section, args);
 		},

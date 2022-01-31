@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'engine', 'passages', 'section', 'debugmode/panel'],
-($, {escape,nth,storyElement,debounce}, State, VarRef, TwineError, {objectName, isObject, toSource}, Engine, Passages, Section, Panel) => (initialError, code) => {
+define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'utils/renderutils', 'passages', 'section', 'debugmode/panel'],
+($, Utils, State, VarRef, TwineError, {objectName, isObject, toSource}, {dialog}, Passages, Section, Panel) => (initialError, code) => {
 	/*
 		Debug Mode
 
@@ -10,17 +10,83 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 
 		This module exports a single function which, when run, performs all of the Debug Mode setup.
 	*/
+	const {escape,nth,debounce} = Utils;
 	const root = $(document.documentElement);
-	const debugElement = $(`<tw-debugger>
-		<div class='panel panel-errors' hidden><table></table></div>
-		<div class='tabs'></div>
-		<label style='user-select:none'>Turns: </label><select class='turns' disabled></select><button class='show-invisibles'>Debug View</button><button class='show-dom'>DOM View</button>
-		<div class='resizer'>
-		</tw-debugger>`);
+	let debugElement = $(`<tw-debugger>
+<div class='panel panel-errors' hidden><table></table></div>
+<div class='tabs'></div>
+<label style='user-select:none'>Turns: </label><select class='turns' disabled></select>
+<button class='show-invisibles'>🔍 Debug View</button>
+<button class='show-dom'><sup>&lt;</sup><sub>&gt;</sub> DOM View</button>
+<button class='close'>✖</button>
+<div class='resizer'>
+</tw-debugger>`);
 	const debugTabs = debugElement.find('.tabs');
 	const showDOM = debugElement.find('.show-dom');
 	const showInvisibles = debugElement.find('.show-invisibles');
+	const closeButton = debugElement.find('.close');
 	const turnsDropdown = debugElement.find('.turns');
+
+	/*
+		Every updater callback in this module should be disabled if the debug element is missing.
+	*/
+	const updater = fn => debounce(function() {
+		if (!debugElement) {
+			return;
+		}
+		return fn.apply(this,arguments);
+	});
+
+	/*
+		Set up the Debug Eval Replay.
+	*/
+	function evalReplay(replay) {
+		/*
+			Due to a circular dependency, RenderUtils sadly can't be used here.
+			So, simply create a barebones dialog from pure DOM nodes.
+		*/
+		let ind = 0;
+		const dialogElem = dialog({ buttons: [{name:"Understood", confirm:true, callback: Object}]});
+		const replayEl = $(`<tw-eval-replay><tw-eval-code></tw-eval-code><tw-eval-explanation></tw-eval-explanation><tw-dialog-links><tw-link style='visibility:hidden'>← ←</tw-link><b></b><tw-link>→ →</tw-link></tw-dialog-links></tw-eval-replay>`);
+		dialogElem.find('tw-dialog').css({width:'75vw','max-width':'75vw'}).prepend(replayEl);
+		const left = replayEl.find('tw-link:first-of-type');
+		const center = left.next();
+		const right = center.next();
+		function doReplay() {
+			/*
+				Get the current frame of the replay, which is an object with { code, start, end, diff, desc, error } properties.
+				The first one also has { basis }.
+			*/
+			const f = replay[ind];
+			/*
+				Do some simple jQuery permutation to display the current frame.
+			*/
+			replayEl.find('tw-eval-explanation')
+				.html(f.desc)
+				.append(f.error)
+				.prev()
+				.html(ind === 0 ? f.code : `${escape(f.code.slice(0,f.start))}<mark>${escape(f.code.slice(f.start,f.end + f.diff))}</mark>${escape(f.code.slice(f.end + f.diff))}`);
+			left.css('visibility', ind <= 0 ? 'hidden' : 'visible');
+			right.css('visibility', ind >= replay.length-1 ? 'hidden' : 'visible');
+			center.html(`( ${ind+1}/${replay.length} )`);
+		}
+		doReplay();
+		left.on('click', () => { ind = Math.max(0,ind-1); doReplay(); });
+		right.on('click', () => { ind = Math.min(replay.length-1,ind+1); doReplay(); });
+		/*
+			This has to be a prepend, so that inner errors' dialogs cover the current dialog.
+		*/
+		debugElement.append(dialogElem);
+	}
+	$(document.documentElement).on('click', 'tw-expression, tw-error', debounce((e) => {
+		if ($(document.documentElement).is('.debug-mode')) {
+			const replay = $(e.target).data('evalReplay');
+			if (replay) {
+				evalReplay(replay);
+			}
+		}
+		e.stopPropagation();
+	}));
 	/*
 		Set up the resizer area.
 	*/
@@ -56,6 +122,14 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		showDOM.toggleClass('enabled');
 		showInvisibles.removeClass('enabled');
 	});
+	/*
+		Set up the close button, which disposes of the Debug Panel entirely.
+	*/
+	closeButton.click(() => {
+		root.removeClass('debug-mode dom-debug-mode');
+		debugElement.remove();
+		debugElement = null;
+	});
 
 	/*
 		Set up the
@@ -65,7 +139,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		which provides a menu of turns in the state and permits the user
 		to travel to any of them at will.
 	*/
-	const updateTurnsDropdown = debounce(function() {
+	const updateTurnsDropdown = updater(function() {
 		const children = turnsDropdown.children();
 		const timeline = State.timelinePassageNames();
 		timeline.forEach((passageName, i) => {
@@ -249,7 +323,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		This event handler updates variables whenever the state is changed. Each row of data is either a global
 		variable, or a temp variable stored in the localTempVariables set, above.
 	*/
-	const updateVariables = debounce(function() {
+	const updateVariables = updater(function() {
 		const rows = [];
 		const globals = State.variables;
 		let count = rows.length;
@@ -436,7 +510,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			return `<tr class="panel-head"><th>Scope</th><th>Value</th></div>`;
 		},
 	});
-	const updateEnchantments = debounce(function(section) {
+	const updateEnchantments = updater((section) => {
 		Enchantments.update(section.enchantments, section.enchantments.length);
 	});
 	Section.on('add', updateEnchantments).on('remove', updateEnchantments);
@@ -450,7 +524,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		The number of possible storylets in a story is fixed at startup. Active storylets
 		are determined by running their lambdas whenever State changes, using the following blank Section.
 	*/
-	const storyletSection = Section.create(storyElement);
+	const storyletSection = Section.create();
 	const Storylets = Panel.create({
 		className: "storylets", tabName: "Storylet",
 		rowWrite({name, active, storyletSource, exclusive, urgent}, row) {
@@ -485,22 +559,23 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		The Storylets tab is hidden if there are no Storylets.
 	*/
 	Storylets.tab.hide();
-	updateStorylets = debounce(() => {
+	updateStorylets = updater(() => {
 		const activeStorylets = Passages.getStorylets(storyletSection);
 		const error = (TwineError.containsError(activeStorylets));
-		/*
-			While I could cache Passages.allStorylets on startup, doing so interferes with
-			the unit tests (which change the initialised storylets frequently, unlike actual
-			Harlowe code).
-		*/
 		const allStorylets = Passages.allStorylets();
-		Storylets.update(allStorylets.map(e => ({
-			name: e.get('name'),
-			storyletSource: e.get('storylet').TwineScript_ToSource(),
-			active: !error && activeStorylets.some(map => map.get('name') === e.get('name')),
-			exclusive: typeof e.get('exclusivity') === "number" ? e.get('exclusivity') : 0,
-			urgent: typeof e.get('urgency') === "number" ? e.get('urgency') : 0,
-		})), error ? 0 : activeStorylets.length);
+		let anyExclusives, anyUrgents;
+		Storylets.update(allStorylets.map(e => {
+			const exclusive = typeof e.get('exclusivity') === "number" ? e.get('exclusivity') : 0;
+			const urgent = typeof e.get('urgency') === "number" ? e.get('urgency') : 0;
+			anyExclusives = anyExclusives || exclusive;
+			anyUrgents = anyUrgents || exclusive; 
+			return {
+				name: e.get('name'),
+				storyletSource: e.get('storylet').TwineScript_ToSource(),
+				active: !error && activeStorylets.some(map => map.get('name') === e.get('name')),
+				exclusive, urgent,
+			};
+		}), error ? 0 : activeStorylets.length);
 		/*
 			If the list was indeed an error, simply close and mark every storylet row,
 			because storylet-listing macros currently won't work.
@@ -509,8 +584,6 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		/*
 			Hide the "exclusive" or "urgent" columns if all of the values are 0 or a non-number.
 		*/
-		const anyExclusives = allStorylets.some(e => e.get('exclusivity') && typeof e.get('exclusivity') === "number");
-		const anyUrgents = allStorylets.some(e => e.get('urgency') && typeof e.get('urgency') === "number");
 		Storylets.panel[(anyExclusives ? 'add' : 'remove') + 'Class']('panel-exclusive');
 		Storylets.panel[(anyUrgents ? 'add' : 'remove') + 'Class']('panel-urgent');
 		/*
@@ -560,6 +633,9 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 				.text(`${count} Error${count !== 1 ? 's' : ''}`),
 	});
 	const onError = debounce((batch) => {
+		if (!debugElement) {
+			return;
+		}
 		Errors.panelRows.append(batch.reduce((a, [error, code]) => {
 			/*
 				Do NOT put it in the error console if it's a propagated error.
@@ -582,7 +658,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 			$(Array.prototype.slice.call(Errors.panelRows[0].childNodes, 0, errorLength - 500)).remove();
 		}
 		Errors.tabUpdate(Math.min(500,c.length));
-	}, true);
+	}, {batch: true});
 	TwineError.on('error', onError);
 
 	/*
@@ -591,7 +667,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 	debugElement.prepend(Variables.panel, Enchantments.panel, Errors.panel, Storylets.panel, Source.panel);
 	debugTabs.prepend(Variables.tab, Enchantments.tab, Errors.tab, Storylets.tab, Source.tab);
 
-	const refresh = debounce(function() {
+	const refresh = updater(function() {
 		localTempVariables = new Set();
 		updateVariables();
 		updateStorylets();

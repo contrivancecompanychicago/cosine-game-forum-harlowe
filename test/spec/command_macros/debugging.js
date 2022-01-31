@@ -1,5 +1,11 @@
 describe("debugging macros", function() {
 	'use strict';
+	beforeEach(function() {
+		Utils.options.debug = true;
+	});
+	afterEach(function() {
+		Utils.options.debug = false;
+	});
 	describe("the (mock-visits:) macro", function() {
 		beforeEach(function() {
 			var t = "(print:visits)";

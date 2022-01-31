@@ -63,6 +63,8 @@ define(['jquery', 'markup', 'utils/polyfills'],
 	let
 		//A binding for the cached <tw-story> reference (see below).
 		storyElement,
+		//A binding for story options (which are already visible in the DOM).
+		options = {},
 		/*
 			An array of functions to run only after page load. This is set to null
 			once page load has completed, causing onStartup() to just run the passed function
@@ -561,24 +563,30 @@ define(['jquery', 'markup', 'utils/polyfills'],
 		/*
 			A simple debouncing function that causes a function's call to only run 300ms after the last time it was called.
 			If batching is enabled, arguments from repeated calls are batched together.
+			Recursion (which would cause the function to enqueue itself) is disabled by default.
 		*/
-		debounce(fn, batch = false) {
-			let animFrameID, args = [], lastInvokeTime = 0;
+		debounce(fn, { batch = false, recur = false } = {}) {
+			let animFrameID, args = [], lastInvokeTime = 0, suppress = false;
 			const maybeRun = () => {
 				if (Date.now() - lastInvokeTime > 300) {
 					animFrameID = 0;
+					suppress = !recur;
 					if (batch) {
 						fn(args);
 					}
 					else {
 						fn(...args);
 					}
+					suppress = false;
 				}
 				else {
 					animFrameID = requestAnimationFrame(maybeRun);
 				}
 			};
 			return function() {
+				if (suppress) {
+					return;
+				}
 				lastInvokeTime = Date.now();
 				/*
 					Batching slowly builds a buffer of arguments objects, whereas
@@ -629,6 +637,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 			return storyElement;
 		},
 
+		options
 	};
 	
 	/*

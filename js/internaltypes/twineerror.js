@@ -161,7 +161,7 @@ define(['jquery', 'utils'], ($, Utils) => {
 				The button's text is controlled by a CSS "content" attribute for <tw-error-dom>.
 			*/
 			if (this.innerDOM) {
-				$("<tw-open-button>").on('click', () => {
+				$("<tw-open-button label='Open'>").on('click', () => {
 					/*
 						Due to a circular dependency, RenderUtils sadly can't be used here.
 						So, simply create a barebones dialog from pure DOM nodes.

@@ -56,9 +56,8 @@ jshint:
 	@jshint test/spec --config test/spec/.jshintrc $(jshint_flags)
 
 build/harlowe-css.css: scss/*.scss
-	@-test sass || { echo "Please install Sass via 'gem install sass'"; exit 1 }
 	@cat scss/*.scss \
-	| sass --stdin --style compressed --scss \
+	| sass --stdin --style compressed \
 	> build/harlowe-css.css
 
 build/harlowe-min.js: js/*.js js/*/*.js js/*/*/*.js

@@ -1,6 +1,6 @@
 "use strict";
 define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
-($, {escape, insensitiveName}, Markup, TwineError) => {
+($, {escape, insensitiveName, options}, Markup, TwineError) => {
 	/*
 		The Renderer takes the syntax tree from Markup and returns a HTML string.
 		
@@ -314,7 +314,7 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 
 					out += '<tw-expression type="macro" name="link-goto"'
 						// Debug mode: show the link syntax as a title.
-						+ (Renderer.options.debug ? ' title="' + escape(token.text) + '"' : '')
+						+ (options.debug ? ' title="' + escape(token.text) + '"' : '')
 						+ ' code="' + trees.code.length + '">'
 						+ '</tw-expression>';
 					trees.code.push(linkGotoMacroToken);
@@ -325,7 +325,7 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 						+ (token.hidden ? 'hidden ' : '')
 						+ (token.name ? 'name="' + insensitiveName(token.name) + '"' : '')
 						// Debug mode: show the hook destination as a title.
-						+ ((Renderer.options.debug && token.name) ? ' title="Hook: ?' + token.name + '"' : '')
+						+ ((options.debug && token.name) ? ' title="Hook: ?' + token.name + '"' : '')
 						+ ' source="' + trees.source.length + '">'
 						+'</tw-hook>';
 					trees.source.push(token.children);
@@ -430,7 +430,7 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 
 					out += '<tw-expression type="' + token.type + '" name="' + escape(token.name || token.text) + '"'
 						// Debug mode: show the macro name as a title.
-						+ (Renderer.options.debug ? ' title="' + escape(token.text) + '"' : '')
+						+ (options.debug ? ' title="' + escape(token.text) + '"' : '')
 						+ (blockerTreeIDs.length ? ' blockers="' + blockerTreeIDs + '"' : '')
 						+ ' code="' + trees.code.length + '">'
 						+ '</tw-expression>';
@@ -454,14 +454,6 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 		The public Renderer object.
 	*/
 	Renderer = {
-		
-		/*
-			Renderer accepts the same story options that Harlowe does, as well as one more.
-			Currently it uses { debug }.
-		*/
-		options: {
-			debug: false,
-		},
 		
 		/*
 			The public rendering function, which returns a jQuery of newly rendered elements.

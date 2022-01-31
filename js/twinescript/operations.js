@@ -5,7 +5,7 @@ define([
 	'datatypes/datatype',
 	'internaltypes/twineerror',
 ],
-({isObject, collectionType, is, isA, clone, unique, contains, matches, objectName}, TypedVar, Datatype, TwineError) => {
+({isObject, collectionType, is, isA, clone, unique, contains, matches, objectName, toSource}, TypedVar, Datatype, TwineError) => {
 	/*
 		Operation objects are a table of operations which TwineScript proxies
 		for/sugars over JavaScript. These include basic fixes like the elimination
@@ -88,8 +88,16 @@ define([
 						so don't throw this error, please.
 					*/
 				const msg = objectName(left) + " isn't the same type of data as " + objectName(right);
+				/*
+					Special hints for type conversion.
+				*/
+				let hint;
+				if (typeof left + typeof right === "stringnumber" || typeof left + typeof right === "numberstring") {
+					hint = "You might want to convert one side to a number using (num:), or to a string using (str:).";
+				}
 				return TwineError.create("operation",
-					msg[0].toUpperCase() + msg.slice(1)
+					msg[0].toUpperCase() + msg.slice(1),
+					hint
 				);
 			}
 			return fn(left, right);
@@ -384,6 +392,9 @@ define([
 				TwineScript_TypeName: "a spreaded '...' value",
 				TwineScript_ObjectName: "a spreaded '...' value",
 				TwineScript_Unstorable: true,
+				TwineScript_ToSource() {
+					return ''+[...val].map(toSource);
+				},
 			};
 		},
 	};

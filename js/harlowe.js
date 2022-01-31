@@ -130,19 +130,15 @@ require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', '
 		}
 
 		// Load options from attribute into story object
-		const options = header.attr('options');
-
-		if (options) {
-			options.split(/\s/).forEach((b) => {
-				Renderer.options[b] = Engine.options[b] = true;
-			});
-		}
+		(header.attr('options') || '').split(/\s/).forEach((b) => {
+			b && (Utils.options[b] = true);
+		});
 		let startPassage = header.attr('startnode');
 
 		/*
 			The IFID is currently only used with the saving macros.
 		*/
-		Renderer.options.ifid = Engine.options.ifid = header.attr('ifid');
+		Utils.options.ifid = header.attr('ifid');
 		
 		// If there's no set start passage, find the passage with the
 		// lowest passage ID, and use that.
@@ -175,9 +171,9 @@ require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', '
 		});
 		
 		// Apply the stylesheets
-		$("[role=stylesheet]").each(function(i) {
+		$("[role=stylesheet]").each((i,e) => {
 			// In the future, pre-processing may occur.
-			$(document.head).append('<style data-title="Story stylesheet ' + (i + 1) + '">' + $(this).html());
+			$(document.head).append(`<style data-title="Story stylesheet '${ i + 1 }'">${ $(e).html() }`);
 		});
 
 		// Set up the passage metadata

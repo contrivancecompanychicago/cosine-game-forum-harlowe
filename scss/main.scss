@@ -233,11 +233,11 @@ tw-error-explanation {
 tw-open-button, tw-folddown {
 	cursor: pointer;
 	line-height: 0em;
-	border-radius: 1px;
-	border: 1px solid black;
+	border-radius: 4px;
+	border: 1px solid hsla(0, 0%, 100%, 0.5);
 	font-size: 0.8rem;
 	margin: 0 0.4rem;
-	padding:2px;
+	padding:3px;
 	white-space:pre;
 }
 tw-folddown {
@@ -248,8 +248,14 @@ tw-folddown {
 		content: "\25bc";
 	}
 }
+/*
+	This is only visible in Debug View.
+*/
+tw-open-button[replay] {
+	display:none;
+}
 tw-open-button::after {
-	content: "Open";
+	content: attr(label);
 }
 tw-notifier {
 	border-radius: 0.2em;

@@ -1,5 +1,11 @@
 describe("setup passages", function() {
 	'use strict';
+	beforeAll(function() {
+		Utils.options.debug = true;
+	});
+	afterAll(function() {
+		Utils.options.debug = false;
+	});
 	[false,true].forEach(function headerFooterTests(debug) {
 		var header = debug ? "debug-header" : "header";
 		var footer = debug ? "debug-footer" : "footer";

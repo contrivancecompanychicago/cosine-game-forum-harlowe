@@ -299,8 +299,9 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		#custom macros 2
 	*/
 	addChanger(["output", "out"],
-		(section) => Object.assign(ChangerCommand.create("output", [section])),
-		(cd, {stack,stackTop}) => {
+		() => Object.assign(ChangerCommand.create("output", [])),
+		(cd) => {
+			const {section:{stack,stackTop}} = cd;
 			/*
 				(output:) commands are deferred render commands, but they need access to the temp variables
 				present at the time of creation, inside the custom macro. This #awkward hack leverages

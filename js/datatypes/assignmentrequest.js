@@ -1,5 +1,5 @@
 "use strict";
-define(['utils/operationutils','datatypes/typedvar','datatypes/datatype','internaltypes/varref','internaltypes/twineerror'], ({objectName, matches}, TypedVar, Datatype, VarRef, TwineError) => {
+define(['utils/operationutils','datatypes/typedvar','datatypes/datatype','internaltypes/varref','internaltypes/twineerror'], ({objectName, matches, toSource}, TypedVar, Datatype, VarRef, TwineError) => {
 	/*
 		AssignmentRequests represent an assignment statement. Different
 		macros may handle this request differently (for instance,
@@ -195,6 +195,15 @@ define(['utils/operationutils','datatypes/typedvar','datatypes/datatype','intern
 		*/
 		TwineScript_TypeName: "a 'to' or 'into' expression",
 		TwineScript_ObjectName: "a 'to' or 'into' expression",
+
+		/*
+			This is only used by the Debug Eval Replay system.
+		*/
+		TwineScript_ToSource() {
+			return (this.operator === "into"
+				? (`${toSource(this.src)} ${this.operator} ${toSource(this.dest)}`)
+				: (`${toSource(this.dest)} ${this.operator} ${toSource(this.src)}`));
+		},
 
 		TwineScript_Unstorable: true,
 

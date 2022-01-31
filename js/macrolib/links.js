@@ -24,7 +24,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 		from this <tw-story> handler.
 	*/
 	Utils.onStartup(() => {
-		$(Utils.storyElement).on(
+		Utils.storyElement.on(
 			/*
 				The jQuery event namespace is "passage-link".
 			*/
@@ -49,6 +49,14 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 						(which means the click input should be dropped).
 					*/
 					section = closest.data('section');
+
+				/*
+					The debug "open" buttons shouldn't activate enchantments on click.
+				*/
+				if (link.is('tw-open-button')) {
+					return;
+				}
+
 				if (section && section.stackTop && section.stackTop.blocked &&
 						/*
 							However, links inside (dialog:)s and other blocking elements may still have their

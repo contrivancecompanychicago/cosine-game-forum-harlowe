@@ -1,7 +1,7 @@
 "use strict";
-define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 'internaltypes/twineerror',
+define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltypes/twineerror',
 	'internaltypes/twinenotifier', 'datatypes/assignmentrequest', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/colour', 'datatypes/gradient', 'internaltypes/varref', 'datatypes/typedvar', 'datatypes/varbind', 'utils/operationutils', 'utils/renderutils'],
-($, Macros, Utils, State, Passages, Renderer, Engine, TwineError, TwineNotifier, AssignmentRequest, HookSet, CodeHook, Colour, Gradient, VarRef, TypedVar, VarBind, {printBuiltinValue, objectName, clone, toSource}, {dialog, geomParse, geomStringRegExp}) => {
+($, Macros, Utils, State, Passages, Engine, TwineError, TwineNotifier, AssignmentRequest, HookSet, CodeHook, Colour, Gradient, VarRef, TypedVar, VarBind, {printBuiltinValue, objectName, clone, toSource}, {dialog, geomParse, geomStringRegExp}) => {
 	
 	/*d:
 		Command data
@@ -30,7 +30,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		is necessary to ensure that multiple stories on a domain have their save files properly namespaced.
 	*/
 	function storagePrefix(text) {
-		return "(" + text + " " + Engine.options.ifid + ") ";
+		return "(" + text + " " + Utils.options.ifid + ") ";
 	}
 	
 	/*d:
@@ -766,7 +766,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		which is implemented similar to the link macros - the ChangeDescriptor's data.dropdownEvent indicates
 		what to do when the <select> is interacted with.
 	*/
-	Utils.onStartup(() => $(Utils.storyElement).on(
+	Utils.onStartup(() => Utils.storyElement.on(
 		/*
 			The jQuery event namespace is "dropdown-macro".
 		*/
@@ -1557,7 +1557,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 		which is implemented similar to the link macros - the ChangeDescriptor's data.dropdownEvent indicates
 		what to do when the <select> is interacted with.
 	*/
-	Utils.onStartup(() => $(Utils.storyElement).on(
+	Utils.onStartup(() => Utils.storyElement.on(
 		/*
 			The jQuery event namespace is "dropdown-macro".
 		*/
@@ -1715,7 +1715,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 	/*
 		This is the handler for (checkbox:).
 	*/
-	Utils.onStartup(() => $(Utils.storyElement).on(
+	Utils.onStartup(() => Utils.storyElement.on(
 		/*
 			The jQuery event namespace is "checkbox-macro".
 		*/
@@ -1885,7 +1885,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 	/*
 		This is the shared handler for (input-box:) and (force-input-box:).
 	*/
-	Utils.onStartup(() => $(Utils.storyElement).on(
+	Utils.onStartup(() => Utils.storyElement.on(
 		/*
 			The jQuery event namespace is "input-box-macro".
 		*/
@@ -3351,6 +3351,10 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 				section.stackTop.blocked = d;
 				// Regrettably, this arbitrary timeout seems to be the only reliable way to focus the <input>.
 				setTimeout(() => d.find('input').last().focus(), 100);
+				/*
+					This return value shouldn't be used anywhere.
+				*/
+				return 0;
 			},
 			[either(String, CodeHook), String, optional(String), optional(String)])
 
@@ -3414,6 +3418,10 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'renderer', 'engine', 
 					certain local events within the dialog (such as (link:)s) to still be usable.
 				*/
 				section.stackTop.blocked = d;
+				/*
+					This return value shouldn't be used anywhere.
+				*/
+				return 0;
 			},
 			[either(String, CodeHook), optional(String), optional(String)])
 

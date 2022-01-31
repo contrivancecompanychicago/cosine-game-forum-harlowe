@@ -8,3 +8,4 @@ build/*
 *.sh
 package-lock.json
 .vscode
+untracked/*

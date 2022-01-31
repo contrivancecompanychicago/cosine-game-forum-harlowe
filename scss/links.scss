@@ -16,7 +16,7 @@ tw-link, .link, tw-icon, .enchantment-clickblock {
 	tw-passage [style^="color"] &:not(:hover),
 	tw-passage [style*=" color"] &:not(:hover),
 	tw-passage [style^="color"][hover="true"] &:hover,
-	tw-passage [style*=" color"][hover="true"] &:hover, {
+	tw-passage [style*=" color"][hover="true"] &:hover {
 		color: inherit;
 	}
 }

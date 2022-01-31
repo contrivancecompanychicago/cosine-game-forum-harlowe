@@ -143,6 +143,11 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'internaltypes/twineer
 		Cache of lexed passage trees, so that passages visited frequently aren't lexed repeatedly.
 	*/
 	let passageTreeCache = [];
+	/*
+		Cache of Passages.allStorylets(). This is used by Debug Mode. Unlike the above, an empty array
+		is a valid final value, so the 'uninitialised' value is null.
+	*/
+	let storyletCache = null;
 	
 	const Passages = assign(new Map(), {
 		TwineScript_ObjectName: "the Passages datamap",
@@ -189,12 +194,14 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'internaltypes/twineer
 			Map.prototype.clear.call(this);
 			this.clearTagCache();
 			this.clearTreeCache();
+			this.clearStoryletCache();
 		},
 
 		delete() {
 			Map.prototype.delete.call(this, ...arguments);
 			this.clearTagCache();
 			this.clearTreeCache();
+			this.clearStoryletCache();
 		},
 
 		/*
@@ -332,7 +339,14 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'internaltypes/twineer
 			A quick getter that provides every passage with storylet code.
 		*/
 		allStorylets() {
-			return [...Passages.values()].filter(e => e.get('storylet'));
+			if (!storyletCache) {
+				storyletCache = [...Passages.values()].filter(e => e.get('storylet'));
+			}
+			return storyletCache;
+		},
+
+		clearStoryletCache() {
+			storyletCache = null;
 		},
 
 		/*

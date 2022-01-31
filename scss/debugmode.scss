@@ -87,6 +87,10 @@ $zindex: 999999;
 		vertical-align: top;
 	}
 
+	tw-open-button[replay] {
+		display:inline;
+	}
+
 	tw-expression {
 		display:inline-block !important;
 		
@@ -214,6 +218,21 @@ $zindex: 999999;
 			content: attr(type) " \"" attr(name) "\"";
 		}
 	}
+	tw-eval-replay {
+		tw-eval-code, tw-eval-explanation {
+			display: block;
+			max-height: 20vh;
+			overflow: auto;
+			margin:10px auto;
+		}
+		tw-eval-code {
+			font-family: monospace;
+		}
+		tw-dialog-links {
+			@include flexbox;
+			@include justify-content(space-around);
+		}
+	}
 }
 
 @keyframes enchantment {
@@ -223,8 +242,14 @@ $zindex: 999999;
 
 $borderwidth: 2px;
 $borderradius: 0.5em;
-$background: white;
-$color: black;
+$colorLit: hsl(0, 0%, 90%);
+$color: hsl(0, 0%, 85%);
+$colorDimmer: hsl(0, 0%, 66%);
+$bg: black;
+$bgDim: hsl(0, 0%, 13%);
+$bgDimmer: hsl(0, 0%, 26%);
+$bgDimmest: hsl(0, 0%, 40%);
+$size: 1.25em;
 
 tw-debugger {
 	// Dimensions and position
@@ -238,17 +263,17 @@ tw-debugger {
 	padding: 0em 0.5em 0.5em 1em;
 
 	// Font
-	font-size: 1.25em;
+	font-size: $size;
 	font-family: sans-serif;
 	color: $color;
 
 	// Design
 	border: {
-		left: solid #000 $borderwidth;
-		top: solid #000 $borderwidth;
+		left: solid $color $borderwidth;
+		top: solid $color $borderwidth;
 		top-left-radius: $borderradius;
 	}
-	background: $background;
+	background: $bg;
 	opacity: 1;
 
 	// Components
@@ -256,17 +281,39 @@ tw-debugger {
 		margin-right: 1em;
 		width: 12em;
 	}
-	button {
+	button, tw-link {
 		border-radius: 3px;
-		border: solid #999 1px;
+		border: solid $bgDimmest 1px;
 		margin: auto 4px;
-		background-color: #fff;
-		font-size: inherit;
+		background-color: $bg;
 		color: $color;
+		cursor: pointer;
 		&.enabled {
-			background-color: #eee;
-			box-shadow: inset #ddd 3px 5px 0.5em;
+			color:$colorLit;
+			background-color: $bgDimmer;
+			box-shadow: inset $bgDimmest 3px 5px 0.5em;
 		}
+	}
+	button {
+		font-size: $size - 0.25em;
+	}
+	tw-link {
+		font-size: $size;
+		border-radius: 16px;
+		border-style: solid;
+		border-width: 2px;
+		text-align:center;
+		padding:0px 8px;
+		display:block;
+		&:hover {
+			border-color: $color;
+			color: $color;
+		}
+	}
+	tw-dialog {
+		background-color: $bg;
+		font-size: $size;
+		color: $colorLit;
 	}
 	.panel {
 		@include flexbox;
@@ -281,12 +328,11 @@ tw-debugger {
 		max-height:40vh;
 		overflow-y: scroll;
 		overflow-x: hidden;
-		z-index:$zindex - 1;
 
 		// Design
-		background:$background;
+		background:$bg;
 		border:inherit;
-		border-bottom: solid #999 $borderwidth;
+		border-bottom: solid $bgDimmest $borderwidth;
 		border-top-left-radius: $borderradius;
 		border-bottom-left-radius: $borderradius;
 
@@ -309,7 +355,7 @@ tw-debugger {
 	}
 	@mixin emptyMsg {
 		font-style:italic;
-		color:#888;
+		color:$colorDimmer;
 		text-align:center;
 	}
 	.panel-rows {
@@ -321,7 +367,7 @@ tw-debugger {
 		// nth-of=type() is necessary, as there are interstitial rows (<tr> instead of <div>) that represent
 		// the (source:) of the previous row, which should be ignored with respect to row colouring.
 		> div:nth-of-type(2n) {
-			background:#EEE;
+			background:$bgDim;
 		}
 	}
 	.panel-row-buttons {
@@ -369,7 +415,7 @@ tw-debugger {
 		font-weight:bold;
 	}
 	.variable-type {
-		color:#444;
+		color:$colorDimmer;
 		font-weight:normal;
 		text-overflow: ellipsis;
 		overflow: hidden;
@@ -389,7 +435,7 @@ tw-debugger {
 			cursor: help;
 		}
 		.error-passage {
-			color:#444;
+			color:$colorDimmer;
 		}
 	}
 	.storylet-row {
@@ -426,8 +472,8 @@ tw-debugger {
 	.resizer {
 		position: absolute;
 		height: 3em;
-		border-left: 2px solid #ccc;
-		border-right: 2px solid #ccc;
+		border-left: 2px solid $bgDimmest;
+		border-right: 2px solid $bgDimmest;
 		top: 10px;
 		left: 4px;
 		width: 8px;

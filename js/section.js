@@ -8,7 +8,6 @@ define([
 	'utils/operationutils',
 	'utils/renderutils',
 	'datatypes/changercommand',
-	'datatypes/hookset',
 	'datatypes/colour',
 	'datatypes/lambda',
 	'datatypes/typedvar',
@@ -18,7 +17,7 @@ define([
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier',
 ],
-($, Utils, run, Operations, State, {printBuiltinValue,objectName,typeID,isObject}, {collapse}, ChangerCommand, HookSet, Colour, Lambda, TypedVar, ChangeDescriptor, VarRef, VarScope, TwineError, TwineNotifier) => {
+($, Utils, run, Operations, State, {printBuiltinValue,objectName,typeID,isObject}, {collapse}, ChangerCommand, Colour, Lambda, TypedVar, ChangeDescriptor, VarRef, VarScope, TwineError, TwineNotifier) => {
 
 	let Section;
 
@@ -154,6 +153,11 @@ define([
 		}
 		return { whitespace: $(), nextElem: $(nextSibling) };
 	}
+
+	/*
+		The debug-only eval replay button is appended to both <tw-expression>s and <tw-error>s, with the replay data attached.
+	*/
+	const makeReplayButton = replay => $("<tw-open-button replay label='🔍'>").data('evalReplay', replay);
 	
 	/*
 		Run a newly rendered <tw-expression> element's code, obtain the resulting value,
@@ -166,6 +170,12 @@ define([
 			Execute the expression, and obtain its result value.
 		*/
 		let result = this.eval(expr.popData('code'));
+		if (this.evalReplay) {
+			/*
+				Add the replay button if replay data is available.
+			*/
+			expr.append(makeReplayButton(this.evalReplay));
+		}
 		/*
 			If this stack frame is being rendered in "evaluate only" mode (i.e. it's inside a link's passage name or somesuch)
 			then it's only being rendered to quickly check what the resulting DOM looks like. As such, changers or commands which
@@ -259,6 +269,9 @@ define([
 			*/
 			if (nextElem.is('tw-expression')) {
 				const nextValue = this.eval(nextElem.popData('code'));
+				if (this.evalReplay) {
+					nextElem.append(makeReplayButton(this.evalReplay));
+				}
 				/*
 					Errors produced by expression evaluation should be propagated above changer attachment errors, I guess.
 				*/
@@ -343,7 +356,10 @@ define([
 		*/
 		let error;
 		if ((error = TwineError.containsError(result))) {
-			expr.replaceWith(error.render(expr.attr('title'), expr));
+			/*
+				Errors have the debug replay button attached, too, if replay data is available.
+			*/
+			expr.replaceWith(error.render(expr.attr('title'), expr).append(this.evalReplay && makeReplayButton(this.evalReplay)));
 		}
 		/*
 			If we're in debug mode, a TwineNotifier may have been sent.
@@ -563,7 +579,7 @@ define([
 			@param {jQuery} The DOM that comprises this section.
 			@return {Section} Object that inherits from this one.
 		*/
-		create(dom) {
+		create(dom = Utils.storyElement) {
 			/*
 				Install all of the non-circular properties.
 			*/
@@ -578,7 +594,7 @@ define([
 					The root element for this section. Macros, hookRefs, etc.
 					can only affect those in this Section's DOM.
 				*/
-				dom: dom || Utils.storyElement,
+				dom,
 				/*
 					The expression stack is an array of plain objects,
 					each housing runtime data that is local to the expression being
@@ -616,6 +632,11 @@ define([
 					run() calls. Nevertheless, it exists.
 				*/
 				freeVariables: null,
+				/*
+					Only used in Debug Mode, this allows any <tw-expression>'s result evaluation to be reviewed step-by-step.
+					See this.eval().
+				*/
+				evalReplay: null,
 				/*
 					This is set by Engine whenever it navigates to a passage as a result of (load-game:). It prevents
 					(load-game:) from running again in that passage until initial rendering ends.
@@ -874,10 +895,37 @@ define([
 			Lexer tokens, usually from <tw-expression> elements, are evaluated here.
 		*/
 		eval(args) {
+			/*
+				This sets up the debug-only evalReplay array, which records each step of the evaluation process
+				for viewing when the player clicks the replay button. Runner checsk for the mere presence of this
+				array, and populates it itself. Because of the number of varied eval() consumers out there,
+				the replay data can't be succinctly included as a return value of this, but is instead
+				left as a mutated property on this section.
+			*/
+			if (Utils.options.debug) {
+				/*
+					The initial code listing is the full text of all tokens.
+				*/
+				const code = Array.isArray(args) ? args.reduce((a,e) => a + e.text, '') : args.text || '';
+				this.evalReplay = [{
+					code,
+					desc: `Once upon a time, there was <code>${Utils.escape(code)}</code>.`,
+					/*
+						Because tokens' starts and ends are in passage-wise coordinates,
+						recording the passage-wise start of the first token allows Runner to
+						convert them to expression-wise coordinates.
+					*/
+					basis:(Array.isArray(args) ? args[0] : args).start,
+					start: 0,
+					end: code.length,
+					diff: 0,
+				}];
+			}
 			try {
 				return run(this, args);
 			} catch(e) {
 				console.error(e);
+				this.evalReplay = null;
 				return TwineError.create('', `An internal error occurred while trying to run ${[].concat(args).map(e=>e.text).join('')}.`,
 					`The error was "${e.message}".\nIf this is the latest version of Harlowe, please consider reporting a bug (see the documentation).`);
 			}
@@ -916,7 +964,7 @@ define([
 			Currently only used by runLiveHook().
 		*/
 		inDOM() {
-			return $(Utils.storyElement).find(this.dom).length > 0;
+			return Utils.storyElement.find(this.dom).length > 0;
 		},
 		
 		/*

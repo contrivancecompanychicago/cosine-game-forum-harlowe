@@ -5,22 +5,12 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 		Utils.storyElement is a getter, so we need a reference to Utils as well
 		as all of these methods.
 	*/
-	const {impossible, passageSelector, transitionOut} = Utils;
+	const {impossible, passageSelector, transitionOut, options} = Utils;
 	
 	/*
 		Engine is a singleton class, responsible for rendering passages to the DOM.
 	*/
 	let Engine;
-	
-	/*
-		Story options, loaded at startup and provided to other modules that may use them.
-		
-		Implemented values:
-		
-		debug : debug mode is ready.
-		ifid : the UUID of the story. The only non-boolean option.
-	*/
-	const options = Object.create(null);
 
 	/*
 		Creates the HTML structure of the <tw-passage>. Sub-function of showPassage().

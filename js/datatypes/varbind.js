@@ -25,7 +25,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'internaltypes/varref', 'inte
 				Sadly, there isn't quite a more efficient way of sleuthing out every DOM element
 				that could be a two-way bound interaction element, beyond a DOM query with an attachable attribute.
 			*/
-			$(Utils.storyElement).find('[data-2bind]').each((_,elem) => {
+			Utils.storyElement.find('[data-2bind]').each((_,elem) => {
 				elem = $(elem);
 				/*
 					Retrieve and run the twoWayBindEvent handler, which should've been installed by the macro.

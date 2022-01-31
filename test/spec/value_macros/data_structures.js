@@ -466,7 +466,8 @@ describe("data structure macros", function () {
 			it("serialises changers and combined changers", function() {
 				['(link:"foo")','(hidden:)','(text-indent:2)','(transition:"instant")','(if:true)',
 					'(text-indent:2)+(css:"display:block;")','(transition:"instant")+(transition-delay:20)',
-					'(replace:?foo\'s 1st)','(append:"bar")',"(prepend:?foo's last + ?bar's 3rdlast + ?baz's (a:2,5))"
+					'(replace:?foo\'s 1st)','(append:"bar")',"(prepend:?foo's last + ?bar's 3rdlast + ?baz's (a:2,5))",
+					"(output:)"
 				].forEach(function(e){ sourceTest(e,e); });
 				sourceTest("(size:10)",'(text-size:10)');
 			});
