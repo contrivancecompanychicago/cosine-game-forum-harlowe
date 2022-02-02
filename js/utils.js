@@ -573,6 +573,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 					suppress = !recur;
 					if (batch) {
 						fn(args);
+						args = [];
 					}
 					else {
 						fn(...args);

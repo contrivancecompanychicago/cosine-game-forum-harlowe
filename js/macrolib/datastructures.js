@@ -152,7 +152,7 @@ define([
 			Added in: 1.0.0
 			#data structure 1
 		*/
-		(["a", "array"], (_, ...args) => args, zeroOrMore(
+		(["a", "array"], "Array", (_, ...args) => args, zeroOrMore(
 			/*
 				In order for destructuring patterns to be syntactically permitted, (a:) needs to allow TypedVars
 				in addition to "Any", even though TypedVars have TwineScript_Unstorable and can't be (set:) as data.
@@ -187,7 +187,7 @@ define([
 			Added in: 1.0.0
 			#data structure
 		*/
-		("range", (_, a, b) => range(a,b),
+		("range", "Array", (_, a, b) => range(a,b),
 		[parseInt, parseInt])
 		
 		/*d:
@@ -230,7 +230,7 @@ define([
 			Added in: 1.0.0
 			#data structure
 		*/
-		("subarray", (_, array, a, b) => subset(array, a, b),
+		("subarray", "Array", (_, array, a, b) => subset(array, a, b),
 		[Array, parseInt, parseInt])
 		
 		/*d:
@@ -259,7 +259,7 @@ define([
 			Added in: 3.0.0
 			#data structure
 		*/
-		("reversed", (_, ...args) => args.reverse().map(clone), zeroOrMore(Any))
+		("reversed", "Array", (_, ...args) => args.reverse().map(clone), zeroOrMore(Any))
 
 		/*d:
 			(shuffled: ...Any) -> Array
@@ -299,7 +299,7 @@ define([
 			Added in: 1.1.0
 			#data structure
 		*/
-		("shuffled", (_, ...args) => State.shuffled(...args).map(clone),
+		("shuffled", "Array", (_, ...args) => State.shuffled(...args).map(clone),
 		[zeroOrMore(Any)])
 		
 		/*d:
@@ -363,7 +363,7 @@ define([
 			Added in: 1.1.0
 			#data structure
 		*/
-		("sorted", (section, ...args) => {
+		("sorted", "Array", (section, ...args) => {
 			/*
 				If there's no lambda, NaturalSort can handle everything.
 			*/
@@ -450,7 +450,7 @@ define([
 			Added in: 1.1.0
 			#data structure
 		*/
-		("rotated", (_, number, ...array) => {
+		("rotated", "Array", (_, number, ...array) => {
 			/*
 				This macro's range bounds are maybe a bit strict, but ensure that this behaviour
 				could (maybe) be freed up in later versions.
@@ -504,7 +504,7 @@ define([
 			Added in: 3.2.0
 			#data structure
 		*/
-		("rotated-to", (section, lambda, ...array) => {
+		("rotated-to", "Array", (section, lambda, ...array) => {
 			const elems = lambda.filter(section, array);
 			if (TwineError.containsError(elems)) {
 				return elems;
@@ -551,7 +551,7 @@ define([
 			Added in: 2.0.0
 			#data structure
 		*/
-		("repeated", (_, number, ...array) => {
+		("repeated", "Array", (_, number, ...array) => {
 			const ret = [];
 			if (!array.length) {
 				return ret;
@@ -597,7 +597,7 @@ define([
 			Added in: 2.0.0
 			#data structure
 		*/
-		("interlaced", (_, ...arrays) => {
+		("interlaced", "Array", (_, ...arrays) => {
 			/*
 				Determine the length of the longest array.
 			*/
@@ -644,7 +644,7 @@ define([
 			Added in: 3.2.0
 			#data structure
 		*/
-		("permutations", (_, ...values) =>  !values.length ? [] : permutations(...values), [zeroOrMore(Any)])
+		("permutations", "Array", (_, ...values) =>  !values.length ? [] : permutations(...values), [zeroOrMore(Any)])
 		/*d:
 			(unique: ...Any) -> Array
 
@@ -679,10 +679,7 @@ define([
 			Added in: 3.3.0
 			#data structure
 		*/
-		("unique", (_, ...values) => values.filter(unique), [zeroOrMore(Any)])
-		;
-
-	Macros.add
+		("unique", "Array", (_, ...values) => values.filter(unique), [zeroOrMore(Any)])
 		/*d:
 			(altered: Lambda, [...Any]) -> Array
 
@@ -726,7 +723,7 @@ define([
 			Added in: 2.0.0
 			#data structure
 		*/
-		("altered", (section, lambda, ...args) => args.map((loop, pos) => lambda.apply(section, {loop, pos:pos+1})),
+		("altered", "Array", (section, lambda, ...args) => args.map((loop, pos) => lambda.apply(section, {loop, pos:pos+1})),
 		[Lambda.TypeSignature('via'), zeroOrMore(Any)])
 		/*d:
 			(find: Lambda, [...Any]) -> Array
@@ -779,7 +776,7 @@ define([
 			Added in: 2.0.0
 			#data structure
 		*/
-		("find", (section, lambda, ...args) => lambda.filter(section, args),
+		("find", "Array", (section, lambda, ...args) => lambda.filter(section, args),
 		[Lambda.TypeSignature('where'), zeroOrMore(Any)])
 		/*d:
 			(all-pass: Lambda, [...Any]) -> Boolean
@@ -823,7 +820,7 @@ define([
 			Added in: 2.0.0
 			#data structure
 		*/
-		(["all-pass", "pass"], (section, lambda, ...args) => {
+		(["all-pass", "pass"], "Boolean", (section, lambda, ...args) => {
 			const ret = lambda.filter(section, args);
 			return TwineError.containsError(ret) || ret.length === args.length;
 		},
@@ -845,7 +842,7 @@ define([
 			Added in: 2.0.0
 			#data structure
 		*/
-		("some-pass", (section, lambda, ...args) => {
+		("some-pass", "Boolean", (section, lambda, ...args) => {
 			const ret = lambda.filter(section, args);
 			return TwineError.containsError(ret) || ret.length > 0;
 		},
@@ -866,7 +863,7 @@ define([
 			Added in: 2.0.0
 			#data structure
 		*/
-		("none-pass", (section, lambda, ...args) => {
+		("none-pass", "Boolean", (section, lambda, ...args) => {
 			const ret = lambda.filter(section, args);
 			return TwineError.containsError(ret) || ret.length === 0;
 		},
@@ -942,7 +939,7 @@ define([
 			Added in: 2.0.0
 			#data structure
 		*/
-		("folded", (section, lambda, ...args) => {
+		("folded", "Any", (section, lambda, ...args) => {
 			// Run the optional "where" clause to filter out values, if it's present.
 			if ("where" in lambda) {
 				args = lambda.filter(section, args);
@@ -951,9 +948,6 @@ define([
 				.reduce((making,loop,pos) => lambda.apply(section,{making,loop,pos:pos+1}));
 		},
 		[either(Lambda.TypeSignature('where','via','making'), Lambda.TypeSignature('via','making')), rest(Any)])
-		;
-		
-	Macros.add
 		/*d:
 			(datanames: Datamap) -> Array
 			
@@ -976,7 +970,7 @@ define([
 			Added in: 1.1.0
 			#data structure
 		*/
-		("datanames", (_, map) =>  Array.from(map.keys()).sort(NaturalSort("en")),
+		("datanames", "Array", (_, map) =>  Array.from(map.keys()).sort(NaturalSort("en")),
 		[Map])
 		/*d:
 			(datavalues: Datamap) -> Array
@@ -1001,7 +995,7 @@ define([
 			Added in: 1.1.0
 			#data structure
 		*/
-		("datavalues", (_, map) =>
+		("datavalues", "Array", (_, map) =>
 			/*
 				We first need to sort values by their keys (thus necessitating using .entries())
 				then extracting just the values.
@@ -1035,7 +1029,7 @@ define([
 			Added in: 2.0.0
 			#data structure
 		*/
-		("dataentries", (_, map) =>
+		("dataentries", "Array", (_, map) =>
 			/*
 				As with (datavalues:), we need to sort values by their keys.
 			*/
@@ -1116,7 +1110,7 @@ define([
 			Added in: 1.0.0
 			#game state
 		*/
-		("history", (section, lambda) => {
+		("history", "Array", (section, lambda) => {
 			const history = State.history();
 			if (!lambda) {
 				return history;
@@ -1178,7 +1172,7 @@ define([
 			Added in: 1.0.0
 			#game state
 		*/
-		("visited", (section, condition) => {
+		("visited", "Boolean", (section, condition) => {
 			let history = State.history();
 			if (typeof condition === "string") {
 				if (!Passages.has(condition)) {
@@ -1239,7 +1233,7 @@ define([
 			Added in: 1.1.0
 			#game state
 		*/
-		("passage", (_, passageName) => clone(Passages.get(passageName || State.passage))
+		("passage", "Datamap", (_, passageName) => clone(Passages.get(passageName || State.passage))
 			|| TwineError.create('macrocall', "There's no passage named '" + passageName + "' in this story."),
 		[optional(String)])
 
@@ -1285,7 +1279,7 @@ define([
 			Added in: 3.1.0
 			#game state
 		*/
-		("passages", (section, lambda) => {
+		("passages", "Array", (section, lambda) => {
 			const sort = NaturalSort("en"),
 				values = [...Passages.values()].map(e => clone(e));
 			const result = (lambda ? lambda.filter(section, values) : values);
@@ -1347,7 +1341,7 @@ define([
 			Added in: 3.2.0
 			#storylet 2
 		*/
-		("open-storylets", (section, lambda) => {
+		("open-storylets", "Array", (section, lambda) => {
 			/*
 				To avoid (open-storylets:) entering into an infinite loop, it can't be used inside metadata lambdas.
 			*/
@@ -1397,7 +1391,7 @@ define([
 			Added in: 1.0.0
 			#saving
 		*/
-		("savedgames", () => {
+		("savedgames", "Datamap", () => {
 			/*
 				This should be identical to the internal function in macrolib/commands.js.
 				TODO: Add this to Engine itself, maybe.
@@ -1543,7 +1537,7 @@ define([
 			Added in: 1.0.0
 			#data structure 2
 		*/
-		(["datamap","dm"], (_, ...args) => {
+		(["datamap","dm"], "Datamap", (_, ...args) => {
 			let key;
 			const map = new Map();
 			/*
@@ -1676,7 +1670,7 @@ define([
 			Added in: 1.0.0
 			#data structure 3
 		*/
-		(["dataset","ds"], (_, ...args) => new Set(args.filter(unique).map(clone)), zeroOrMore(Any))
+		(["dataset","ds"], "Dataset", (_, ...args) => new Set(args.filter(unique).map(clone)), zeroOrMore(Any))
 		
 		/*
 			COLLECTION OPERATIONS
@@ -1717,7 +1711,7 @@ define([
 			Added in: 1.0.0
 			#data structure
 		*/
-		("count", function count(_, collection, ...values) {
+		("count", "Number", function count(_, collection, ...values) {
 			/*
 				As with many other macros, this handles multiple data values by recursively calling itself.
 			*/

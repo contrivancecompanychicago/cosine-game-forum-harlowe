@@ -107,9 +107,8 @@ describe("data structure macros", function () {
 			expect("(subarray: (a:8,7,6,5,4), -2, 1)").markupToPrint("8,7,6,5");
 			expect("(subarray: (a:8,7,6,5,4), -1, -3)").markupToPrint("6,5,4");
 		});
-		it("refuses zero and NaN indices", function() {
+		it("refuses zero indices", function() {
 			expect("(subarray: (a:8,7,6,5,4), 0, 2)").markupToError();
-			expect("(subarray: (a:8,7,6,5,4), 2, NaN)").markupToError();
 		});
 		it("doesn't pass contained data by reference", function() {
 			expect("(set:$a to (a:1,2,3))"

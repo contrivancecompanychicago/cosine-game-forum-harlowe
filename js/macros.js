@@ -181,7 +181,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		and type-checks the args passed to it before running it (or, alternatively, returning
 		an error.)
 	*/
-	function typeCheckAndRun(name, {fn, typeSignature, isChanger = false}, section, args) {
+	function typeCheckAndRun(name, {fn, typeSignature, returnType}, section, args) {
 		args = spreadArguments(args);
 		/*
 			Custom macros have no name.
@@ -232,7 +232,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 			/*
 				Passing a hook as an argument to a changer gives a unique hint.
 			*/
-			if (CodeHook.isPrototypeOf(arg) && isChanger) {
+			if (CodeHook.isPrototypeOf(arg) && returnType === "Changer") {
 				return TwineError.create(
 					"syntax", "Please put this hook outside the parentheses of the changer macro, not inside it.",
 					"Hooks should appear after a macro" + (custom ? '.' : ": " + invocation + "[Some text]")
@@ -356,7 +356,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		The bare-metal macro registration function.
 		If an array of names is given, an identical macro is created under each name.
 	*/
-	function privateAdd(name, fn, typeSignature, isChanger = false) {
+	function privateAdd(name, returnType, fn, typeSignature) {
 		/*
 			The typeSignature *should* be an Array, but if it's just one item,
 			we can normalise it to Array form.
@@ -364,10 +364,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		*/
 		typeSignature = [].concat(typeSignature || []);
 		// Add the fn to the macroRegistry, plus aliases (if name is an array of aliases)
-		const obj = { fn, typeSignature };
-		if (isChanger) {
-			obj.isChanger = true;
-		}
+		const obj = { fn, typeSignature, returnType };
 		Object.freeze(obj);
 		[].concat(name).forEach(n => Object.defineProperty(macroRegistry, insensitiveName(n), { value: obj }));
 	}
@@ -377,7 +374,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		that macro's Command objects. Currently, Commands do not have a shared prototype,
 		so this function performs their initialisation in its stead.
 	*/
-	const commandMaker = (firstName, checkFn, runFn, attachable) => (section, ...args) => {
+	const commandMaker = (firstName, checkFn, runFn, attachable) => (_, ...args) => {
 		/*
 			The passed-in checkFn should only return a value if the check fails,
 			and that value must be a TwineError. I'm so confident about this that I'm not even
@@ -450,8 +447,8 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		/*
 			A wrapper for privateAdd() that can be chained.
 		*/
-		add: function add(name, fn, typeSignature) {
-			privateAdd(name, fn, typeSignature);
+		add: function add(name, returnType, fn, typeSignature) {
+			privateAdd(name, returnType, fn, typeSignature);
 			// Return the function to enable "bubble chaining".
 			return add;
 		},
@@ -472,7 +469,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		*/
 		addChanger: function addChanger(name, fn, changerCommandFn, typeSignature) {
 			
-			privateAdd(name, fn, typeSignature, true);
+			privateAdd(name, "Changer", fn, typeSignature, true);
 			ChangerCommand.register(Array.isArray(name) ? name[0] : name, changerCommandFn);
 			
 			// Return the function to enable "bubble chaining".
@@ -495,7 +492,7 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 				to unwrap it.
 			*/
 			const firstName = [].concat(name)[0];
-			privateAdd(name, commandMaker(firstName, checkFn, runFn, attachable), typeSignature);
+			privateAdd(name, "Command", commandMaker(firstName, checkFn, runFn, attachable), typeSignature);
 			// Return the function to enable "bubble chaining".
 			return addCommand;
 		},

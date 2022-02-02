@@ -158,9 +158,8 @@ describe("primitive value macros", function() {
 			expect("(substring: 'ga𐌎ply', -2, 1)").markupToPrint("ga𐌎pl");
 			expect("(substring: 'ga𐌎ply', -1, -3)").markupToPrint("ply");
 		});
-		it("refuses zero and NaN indices", function() {
+		it("refuses zero indices", function() {
 			expect("(substring: 'garply', 0, 2)").markupToError();
-			expect("(substring: 'garply', 2, NaN)").markupToError();
 		});
 	});
 	['lower','upper'].forEach(function(level, i) {

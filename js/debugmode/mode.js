@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'utils/renderutils', 'passages', 'section', 'debugmode/panel'],
-($, Utils, State, VarRef, TwineError, {objectName, isObject, toSource}, {dialog}, Passages, Section, Panel) => (initialError, code) => {
+define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'utils/renderutils', 'passages', 'section', 'debugmode/panel', 'utils/typecolours'],
+($, Utils, State, VarRef, TwineError, {objectName, isObject, toSource}, {dialog}, Passages, Section, Panel, {CSS:syntaxCSS}) => { let DebugMode = (initialError, code) => {
 	/*
 		Debug Mode
 
@@ -8,10 +8,12 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		the page, which contains a few tools to examine your story, the current state, and how the macros in the current passage are
 		behaving.
 
-		This module exports a single function which, when run, performs all of the Debug Mode setup.
+		This module exports a single function which, when run, performs all of the Debug Mode setup. Additional calls simply
+		cause debug mode to be re-enabled if it was disabled.
 	*/
 	const {escape,nth,debounce} = Utils;
 	const root = $(document.documentElement);
+
 	let debugElement = $(`<tw-debugger>
 <div class='panel panel-errors' hidden><table></table></div>
 <div class='tabs'></div>
@@ -28,10 +30,10 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 	const turnsDropdown = debugElement.find('.turns');
 
 	/*
-		Every updater callback in this module should be disabled if the debug element is missing.
+		Every updater callback in this module should be disabled if debug mode has been disabled.
 	*/
 	const updater = fn => debounce(function() {
-		if (!debugElement) {
+		if (!Utils.options.debug) {
 			return;
 		}
 		return fn.apply(this,arguments);
@@ -123,12 +125,12 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		showInvisibles.removeClass('enabled');
 	});
 	/*
-		Set up the close button, which disposes of the Debug Panel entirely.
+		Set up the close button.
 	*/
 	closeButton.click(() => {
 		root.removeClass('debug-mode dom-debug-mode');
-		debugElement.remove();
-		debugElement = null;
+		debugElement.detach();
+		Utils.options.debug = false;
 	});
 
 	/*
@@ -633,7 +635,7 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 				.text(`${count} Error${count !== 1 ? 's' : ''}`),
 	});
 	const onError = debounce((batch) => {
-		if (!debugElement) {
+		if (!Utils.options.debug) {
 			return;
 		}
 		Errors.panelRows.append(batch.reduce((a, [error, code]) => {
@@ -683,16 +685,32 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 	*/
 	State.on('forward', refresh).on('back', refresh).on('load', refresh);
 
+	const enableMode = () => {
+		$(document.body).append(debugElement);
+		Utils.options.debug = true;
+	};
 	/*
-		If an error prompted Debug Mode to be enabled, add it to the pane, and also refresh the other panes.
+		Because this first call adds a bunch of DOM elements and callbacks, it shouldn't run as-is when re-enabling Debug Mode.
+		Subsequent calls simply re-enable debug mode.
+	*/
+	DebugMode = enableMode;
+	/*
+		Finally, append both the <tw-debugger> and the syntax highlighter CSS.
+	*/
+	$(document.head).append($('<style>').html(syntaxCSS));
+	enableMode();
+	
+	/*
+		If an error prompted Debug Mode to be enabled (i.e. before the OnError handler was installed),
+		then we have to insert that error into the pane manually, and also refresh the other panes.
 	*/
 	if (initialError) {
 		onError(initialError, code);
 		refresh();
 	}
-
-	/*
-		Finally, append the debug mode element to the <body>.
-	*/
-	$(document.body).append(debugElement);
-});
+};
+/*
+	Don't re-enable Debug Mode if it's already enabled. This prevents
+	doubled-up errors in the error log.
+*/
+return (initialError, code) => !Utils.options.debug && DebugMode(initialError, code); });

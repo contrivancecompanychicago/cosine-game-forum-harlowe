@@ -135,7 +135,7 @@ define(['macros','utils/operationutils', 'datatypes/lambda', 'internaltypes/twin
 		["urgency", Number],
 		["exclusivity", Number],
 	].forEach(([name, signature]) => {
-		Macros.add(name, (section, arg) =>  !section.stackTop.speculativePassage ? unstorableObject(name) : arg, signature);
+		Macros.add(name, "Metadata", (section, arg) =>  !section.stackTop.speculativePassage ? unstorableObject(name) : arg, signature);
 	});
 
 	Macros.add
@@ -182,7 +182,7 @@ define(['macros','utils/operationutils', 'datatypes/lambda', 'internaltypes/twin
 			Added in: 3.2.0
 			#game state
 		*/
-		("metadata",
+		("metadata", "Metadata",
 			(section, ...args) => {
 				let key;
 				const map = new Map();

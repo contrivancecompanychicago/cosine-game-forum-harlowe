@@ -133,7 +133,7 @@ define(['jquery', 'utils'], ($, Utils) => {
 			});
 		},
 		
-		render(titleText) {
+		render(titleText, noEvents = false) {
 			/*
 				The title text defaults to the error's Harlowe source code.
 			*/
@@ -197,7 +197,9 @@ define(['jquery', 'utils'], ($, Utils) => {
 			/*
 				Fire any event handlers that were registered.
 			*/
-			eventHandlers.error.forEach(f => f(this, titleText));
+			if (!noEvents) {
+				eventHandlers.error.forEach(f => f(this, titleText));
+			}
 
 			return errorElement;
 		},

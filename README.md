@@ -16,6 +16,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where `'s` and `of` sometimes wouldn't be syntax-highlighted correctly.
  * The `it` identifier is now cleared (to the default value of 0) whenever the player changes passages.
  * Fixed a bug where using a custom macro in a storylet lambda would cause Debug Mode to constantly reload the Storylets and Variables panels, hurting performance.
+ * Fixed a bug where single errors would sometimes be listed multiple times in Debug Mode's error log.
 
 #### Alterations
 

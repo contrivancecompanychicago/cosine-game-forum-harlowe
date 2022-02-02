@@ -329,7 +329,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			Added in: 3.2.0.
 			#patterns 1
 		*/
-		(["p","pattern"],
+		(["p","pattern"], "Datatype",
 			(_, ...fullArgs) => createPattern({
 				name:"p", fullArgs,
 			}),
@@ -366,7 +366,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			Added in: 3.2.0.
 			#patterns 2
 		*/
-		(["p-either","pattern-either"],
+		(["p-either","pattern-either"], "Datatype",
 			(_, ...fullArgs) => createPattern({
 				name: "p-either", fullArgs, canContainTypedVars: false,
 				makeRegExpString: subargs => "(?:" + subargs.join('|') + ")"
@@ -399,7 +399,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			Added in: 3.2.0.
 			#patterns 3
 		*/
-		(["p-opt","pattern-opt","p-optional","pattern-optional"],
+		(["p-opt","pattern-opt","p-optional","pattern-optional"], "Datatype",
 			(_, ...fullArgs) => createPattern({
 				name: "p-opt", fullArgs, canContainTypedVars: false,
 				makeRegExpString: subargs => "(?:" + subargs.join('') + ")?"
@@ -437,7 +437,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			Added in: 3.2.0.
 			#patterns
 		*/
-		(["p-not","pattern-not"],
+		(["p-not","pattern-not"], "Datatype",
 			(_, ...fullArgs) => {
 				const wrong = fullArgs.find(e =>
 					/*
@@ -500,7 +500,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			Added in: 3.2.0.
 			#patterns 4
 		*/
-		(["p-many","pattern-many"],
+		(["p-many","pattern-many"], "Datatype",
 			(_, ...args) => {
 				const fullArgs = args.slice();
 				let min, max;
@@ -563,7 +563,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			Added in: 3.2.0.
 			#patterns 5
 		*/
-		(["p-ins","pattern-ins","p-insensitive","pattern-insensitive"],
+		(["p-ins","pattern-ins","p-insensitive","pattern-insensitive"], "Datatype",
 			(_, ...fullArgs) => createPattern({
 				name:"p-ins", fullArgs, insensitive: true,
 			}),
@@ -604,7 +604,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			Added in: 3.2.0
 			#string
 		*/
-		(["split", "splitted"],
+		(["split", "splitted"], "Array",
 			(_, pattern, str) => {
 				pattern = createPattern({
 					name: "split", fullArgs: [pattern],
@@ -684,7 +684,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			Added in: 3.2.0
 			#string
 		*/
-		("trimmed",
+		("trimmed", "String",
 			(_, pattern, str) => {
 				if (str === undefined || (Datatype.isPrototypeOf(pattern) && pattern.name === "whitespace")) {
 					/*

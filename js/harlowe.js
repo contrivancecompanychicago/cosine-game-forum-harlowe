@@ -59,7 +59,7 @@ require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', '
 		}
 		// Otherwise, add the callback to enable Debug Mode as soon as the first error occurs.
 		else {
-			TwineError.on('error', (error, code) => !$('tw-debugger').length && DebugMode(error, code));
+			TwineError.on('error', DebugMode);
 		}
 		installHandlers = null;
 	};

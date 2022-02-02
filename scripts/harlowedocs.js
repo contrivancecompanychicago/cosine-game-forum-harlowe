@@ -51,11 +51,10 @@ outputFile = require('marked')(outputFile);
 /*
 	Add animations from animations.scss.
 */
-let animations = require('child_process').execSync("sass --style compressed --scss ./scss/animations.scss");
+let animations = require('child_process').execSync("sass --style compressed ./scss/animations.scss");
 /*
 	Find the <code> elements and syntax-highlight their contents.
 */
-const {modes} = require('../js/markup/lexer.js');
 const {lex} = require('../js/markup/markup.js');
 // These are used to determine what lexing mode to use for code blocks.
 const sectionMarkupStart = outputFile.search('<h1 id="section_markup">');
@@ -202,11 +201,14 @@ ${navElement}</ul></nav>
 <tw-storydata startnode=1 options="debug"><tw-passagedata pid=1 name=Test>&lt;==>\nClick on ▶ on code samples in this documentation to preview the resulting Twine passage here!
 </tw-passagedata></tw-storydata>
 <script role="script" type="twine/javascript">
-window.previewPassage = function(text) {
+window.previewPassage = function(text, el) {
 	State.reset();
 	Passages.clear();
 	Passages.set("Test", Passages.create($('<div name="Test" tags="">').text(text)));
+	let Y = scrollY;
 	Engine.goToPassage("Test");
+	// Cancel the scrolling caused by goToPassage()
+	scroll(0, Y);
 };
 /* Debug Mode variables panel transplant */
 let vars = $('tw-debugger .panel-variables');
@@ -242,7 +244,7 @@ $('#preview, #previewCode').show();
 let html = $('html');
 /* CodeMirror setup and Harlowe mode monkeying */
 let cm = CodeMirror.fromTextArea(previewCode.firstChild, { mode: null, lineWrapping:true });
-html.on('click', '.previewCodeButton', function(e) { previewPassage(cm.doc.getValue())});
+html.on('click', '.previewCodeButton', function(e) { previewPassage(cm.doc.getValue(), e.target)});
 try { cm.setOption('mode','harlowe-3'); } catch(e) {}
 
 /* Night Mode and Preview Buttons */
@@ -254,7 +256,7 @@ html.on('click', '#night', function() { html.addClass('night'); $('#previewCode'
                 if (!(e.target.compareDocumentPosition(document) & 1) && !$(e.target).parents('#previewCode, #preview').length) { html.removeClass('fullPreview').off('.previewOff') }
             });
     })
-    .on('click', '.previewButton:not(.previewCodeButton)', function(e) { previewPassage(e.target.parentNode.textContent.replace(/\\u200B/g,'')); });
+    .on('click', '.previewButton:not(.previewCodeButton)', function(e) { previewPassage(e.target.parentNode.textContent.replace(/\\u200B/g,''), e.target); });
 $('pre > code').append("<div class='previewButton' title='Run this Harlowe code.'></div>");
 }
 /* Chrome performance hack */

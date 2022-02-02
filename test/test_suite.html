@@ -147,7 +147,7 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 var debugElement;
 afterAll(function() {
 	debugElement && debugElement.appendTo(document.body);
-	Utils.options.debug = false;
+	Utils.options.debug = true;
 });
 
 var jasmineMatcher = (function() {
@@ -331,7 +331,7 @@ var jasmineMatcher = (function() {
 beforeEach(function() {
 	if (window.$ && !debugElement) {
 		debugElement = debugElement || $('tw-debugger').detach();
-		if (location.search.indexOf("?spec=") === -1) {
+		if (location.search.indexOf("spec=") === -1) {
 			Utils.options.debug = false;
 		}
 	}

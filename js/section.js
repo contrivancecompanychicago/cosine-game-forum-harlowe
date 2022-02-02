@@ -156,8 +156,13 @@ define([
 
 	/*
 		The debug-only eval replay button is appended to both <tw-expression>s and <tw-error>s, with the replay data attached.
+		Since the consumer is always $().append(), returning undefined is fine.
 	*/
-	const makeReplayButton = replay => $("<tw-open-button replay label='🔍'>").data('evalReplay', replay);
+	const makeReplayButton = replay => {
+		if (replay && replay.length > 1) {
+			return $("<tw-open-button replay label='🔍'>").data('evalReplay', replay);
+		}
+	};
 	
 	/*
 		Run a newly rendered <tw-expression> element's code, obtain the resulting value,
@@ -170,12 +175,10 @@ define([
 			Execute the expression, and obtain its result value.
 		*/
 		let result = this.eval(expr.popData('code'));
-		if (this.evalReplay) {
-			/*
-				Add the replay button if replay data is available.
-			*/
-			expr.append(makeReplayButton(this.evalReplay));
-		}
+		/*
+			Add the replay button if replay data is available.
+		*/
+		expr.append(makeReplayButton(this.evalReplay));
 		/*
 			If this stack frame is being rendered in "evaluate only" mode (i.e. it's inside a link's passage name or somesuch)
 			then it's only being rendered to quickly check what the resulting DOM looks like. As such, changers or commands which
@@ -269,9 +272,7 @@ define([
 			*/
 			if (nextElem.is('tw-expression')) {
 				const nextValue = this.eval(nextElem.popData('code'));
-				if (this.evalReplay) {
-					nextElem.append(makeReplayButton(this.evalReplay));
-				}
+				nextElem.append(makeReplayButton(this.evalReplay));
 				/*
 					Errors produced by expression evaluation should be propagated above changer attachment errors, I guess.
 				*/
@@ -359,7 +360,7 @@ define([
 			/*
 				Errors have the debug replay button attached, too, if replay data is available.
 			*/
-			expr.replaceWith(error.render(expr.attr('title'), expr).append(this.evalReplay && makeReplayButton(this.evalReplay)));
+			expr.replaceWith(error.render(expr.attr('title')).append(makeReplayButton(this.evalReplay)));
 		}
 		/*
 			If we're in debug mode, a TwineNotifier may have been sent.
@@ -924,7 +925,7 @@ define([
 			try {
 				return run(this, args);
 			} catch(e) {
-				console.error(e);
+				window.console && console.error(e);
 				this.evalReplay = null;
 				return TwineError.create('', `An internal error occurred while trying to run ${[].concat(args).map(e=>e.text).join('')}.`,
 					`The error was "${e.message}".\nIf this is the latest version of Harlowe, please consider reporting a bug (see the documentation).`);

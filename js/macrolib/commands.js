@@ -249,7 +249,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			Added in: 3.2.0
 			#data structure
 		*/
-		Macros.add(name, (_, ...assignmentRequests) => {
+		Macros.add(name, "Instant", (_, ...assignmentRequests) => {
 			let debugMessage = "";
 			/*
 				This has to be a plain for-loop so that an early return
@@ -339,7 +339,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			Added in: 1.0.0
 			#basics 3
 		*/
-		("move", (_, ...assignmentRequests) => {
+		("move", "Instant", (_, ...assignmentRequests) => {
 			let debugMessage = "";
 			/*
 				This has to be a plain for-loop so that an early return
@@ -3141,7 +3141,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			Added in: 3.2.0
 			#debugging 4
 		*/
-		("assert",
+		("assert", "Instant",
 			(_, condition) => condition ? ({
 				TwineScript_TypeID:       "instant",
 				TwineScript_TypeName:     "an (assert:) operation",
@@ -3219,7 +3219,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			Added in: 1.0.0
 			#saving
 		*/
-		("save-game",
+		("save-game", "Boolean",
 			(_, slotName, fileName) => {
 				/*
 					The default filename is the empty string.
@@ -3319,7 +3319,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			Added in: 1.0.0
 			#popup
 		*/
-		("prompt",
+		("prompt", "String",
 			(section, message, defaultValue, cancelButton, confirmButton) => {
 				/*
 					Since (prompt:) and (confirm:) create dialogs as soon as they're evaluated, we need this extra check,
@@ -3392,7 +3392,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			Added in: 1.0.0
 			#popup
 		*/
-		("confirm",
+		("confirm", "Boolean",
 			(section, message, cancelButton, confirmButton) => {
 				if (section.stackTop && section.stackTop.evaluateOnly) {
 					return TwineError.create("macrocall", ...dialogError(section.stackTop.evaluateOnly));
@@ -3440,5 +3440,5 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			Added in: 1.0.0
 			#url
 		*/
-		("page-url", () => window.location.href, []);
+		("page-url", "String", () => window.location.href, []);
 });

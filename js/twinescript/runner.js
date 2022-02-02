@@ -110,7 +110,7 @@ define([
 			chainable with themselves (you can't write "$a to 2 to 2", for instance).
 		*/
 		[
-			["error"],
+			["error", "text"],
 			["comma"],
 			["to","into"],
 			["where", "when", "via", "making", "each"],
@@ -1068,7 +1068,7 @@ define([
 				start,
 				end,
 				diff,
-				error: isError && ret.render(fullCode.slice(start, end)),
+				error: isError && ret.render(fullCode.slice(start, end), /*NoEvents*/ true),
 			});
 		}
 		return ret;

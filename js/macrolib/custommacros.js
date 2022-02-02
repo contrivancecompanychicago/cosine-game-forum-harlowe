@@ -124,7 +124,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		Added in: 3.2.0
 		#custom macros 1
 	*/
-	add("macro", (_, ...parameters) => {
+	add("macro", "CustomMacro", (_, ...parameters) => {
 		/*
 			The type-signature given below isn't as precise as it could be (because this macro, unlike all others,
 			requires a different-typed final parameter after a rest parameter) so this loop corrects that.

@@ -124,7 +124,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 1.0.0
 			#string 1
 		*/
-		(["str", "string", "text"],
+		(["str", "string", "text"], "String",
 			(_, ...args) => args.map(e => CodeHook.isPrototypeOf(e) ? e.source : e).join(''),
 		[zeroOrMore(Macros.TypeSignature.either(String, Number, Boolean, Array, CodeHook))])
 
@@ -162,7 +162,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 3.2.0
 			#string
 		*/
-		("source", (_, val) => {
+		("source", "String", (_, val) => {
 			/*
 				Note that since custom macro commands cannot be serialised, they can't have a TwineScript_ToSource() method that would return this error
 				by itself. Also note that every built-in command has a TwineScript_ToSource() installed by Macros.
@@ -209,7 +209,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 1.0.0
 			#string
 		*/
-		("substring", (_, string, a, b) => subset(string, a, b),
+		("substring", "String", (_, string, a, b) => subset(string, a, b),
 		[String, parseInt, parseInt])
 
 		/*d:
@@ -230,7 +230,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 2.0.0
 			#string
 		*/
-		("lowercase", (_, string) => string.toLowerCase(),
+		("lowercase", "String", (_, string) => string.toLowerCase(),
 		[String])
 		
 		/*d:
@@ -251,7 +251,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 2.0.0
 			#string
 		*/
-		("uppercase", (_, string) => string.toUpperCase(),
+		("uppercase", "String", (_, string) => string.toUpperCase(),
 		[String])
 		
 		/*d:
@@ -276,7 +276,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 2.0.0
 			#string
 		*/
-		("lowerfirst", (_, string) =>
+		("lowerfirst", "String", (_, string) =>
 			// This has to be an entire word, to handle surrogate pairs and single characters alike.
 			string.replace(RegExp(anyRealLetter + "+"), word => {
 				// Split the word into code points first.
@@ -308,7 +308,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 2.0.0
 			#string
 		*/
-		("upperfirst", (_, string) =>
+		("upperfirst", "String", (_, string) =>
 			// This has to be an entire word, to handle surrogate pairs and single characters alike.
 			string.replace(RegExp(anyRealLetter + "+"), word => {
 				// Split the word into code points first.
@@ -347,7 +347,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 2.0.0
 			#string
 		*/
-		("words", (_, string) => string.split(RegExp(realWhitespace + "+")).filter(Boolean),
+		("words", "Array", (_, string) => string.split(RegExp(realWhitespace + "+")).filter(Boolean),
 		[String])
 		/*d:
 			(str-repeated: Number, String) -> String
@@ -373,7 +373,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 3.0.0
 			#string
 		*/
-		(["str-repeated", "string-repeated"], (_, number, string) => {
+		(["str-repeated", "string-repeated"], "String", (_, number, string) => {
 			if (string.length === 0) {
 				return TwineError.create("macrocall", "I can't repeat an empty string.");
 			}
@@ -407,7 +407,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 3.0.0
 			#string
 		*/
-		(["str-reversed", "string-reversed"], (_, string) => [...string].reverse().join(''), [String])
+		(["str-reversed", "string-reversed"], "String", (_, string) => [...string].reverse().join(''), [String])
 		/*d:
 			(joined: ...String) -> String
 			
@@ -430,7 +430,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 3.2.0
 			#string
 		*/
-		("joined", (_, joiner, ...strings) => strings.join(joiner), [rest(String)])
+		("joined", "String", (_, joiner, ...strings) => strings.join(joiner), [rest(String)])
 		/*d:
 			(plural: Number, String, [String]) -> String
 			
@@ -459,7 +459,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 3.2.0
 			#string
 		*/
-		("plural", (_, num, noun, plural) => {
+		("plural", "String", (_, num, noun, plural) => {
 			if (!noun || plural === "") {
 				return TwineError.create("macrocall", "The (plural:) macro can't be given empty strings.");
 			}
@@ -496,7 +496,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 3.2.0
 			#string
 		*/
-		(["str-nth","string-nth"], (_, num) => nth(num), [parseInt])
+		(["str-nth","string-nth"], "String", (_, num) => nth(num), [parseInt])
 
 		/*d:
 			Number data
@@ -567,7 +567,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 1.0.0
 			#number
 		*/
-		(["num", "number"], (_, expr) => {
+		(["num", "number"], "Number", (_, expr) => {
 			/*
 				This simply uses JS's toNumber conversion, meaning that
 				decimals and leading spaces are handled, but leading letters etc. are not.
@@ -610,7 +610,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 3.2.0
 			#custom macros 5
 		*/
-		("datatype", (_, value) => Datatype.from(value), [Any])
+		("datatype", "Datatype", (_, value) => Datatype.from(value), [Any])
 
 		/*d:
 			(datapattern: Any) -> Any
@@ -642,7 +642,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 3.2.0
 			#custom macros 6
 		*/
-		("datapattern", (_, data) => {
+		("datapattern", "Any", (_, data) => {
 			return (function recur(data) {
 				let ret, error;
 				if (Array.isArray(data)) {
@@ -703,7 +703,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 2.0.0
 			#colour 2
 		*/
-		(["rgb","rgba"], (_, ...values) => Colour.create({r: values[0], g: values[1], b: values[2], a: values[3]}),
+		(["rgb","rgba"], "Colour", (_, ...values) => Colour.create({r: values[0], g: values[1], b: values[2], a: values[3]}),
 		[numberRange(0,255), numberRange(0,255), numberRange(0,255), optional(percent)])
 
 		/*d:
@@ -747,7 +747,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 2.0.0
 			#colour 1
 		*/
-		(["hsl","hsla"], (_, h, s, l, a) => {
+		(["hsl","hsla"], "Colour", (_, h, s, l, a) => {
 			/*
 				Unlike S and L, H is silently rounded and truncated to the 0..359 range. This allows increasing counters
 				to be given directly to the (hsl:) macro, to cycle through the hues continuously.
@@ -816,7 +816,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 3.2.0
 			#colour 3
 		*/
-		(["lch","lcha"], (_, l, c, h, a) => {
+		(["lch","lcha"], "Colour", (_, l, c, h, a) => {
 			/*
 				As with (hsl:), H is silently rounded and truncated to the 0..359 range.
 			*/
@@ -850,7 +850,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 
 			#colour 4
 		*/
-		("complement", (_, colour) => colour.LCHRotate(180),
+		("complement", "Colour", (_, colour) => colour.LCHRotate(180),
 		[Colour])
 
 		/*d:
@@ -861,9 +861,9 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 
 			Example usage:
 			```
-			{(set: _p to (palette: "mono", orange + black))
-			(enchant: ?page, (background: _p's 1st) + (text-colour: _p's 2nd))
-			(enchant: ?link, (colour: _p's 3rd) + (hover-style: (colour:_p's 4th)))}
+			{(unpack: (palette: "mono", orange + black) into (a:_bg, _c, _lc, _hc))
+			(enchant: ?page, (background: _bg) + (text-colour:_c))
+			(enchant: ?link, (text-colour:_lc) + (hover-style: (text-colour:_hc)))}
 			This passage uses (link:"(more)")[a brown palette.]
 			```
 
@@ -893,7 +893,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 
 			#colour 5
 		*/
-		("palette", (_, type, bg) => {
+		("palette", "Array", (_, type, bg) => {
 			const {l,h} = bg.toLCHA();
 			const lcha = {
 				// This formula was devised entirely through trial and error.
@@ -1010,7 +1010,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 3.1.0
 			#colour 6
 		*/
-		("gradient", (_, degree, ...args) => {
+		("gradient", "Gradient", (_, degree, ...args) => {
 			/*
 				Just like with (hsl:), we silently rounded and truncate degrees to the 0..359 range.
 			*/
@@ -1112,7 +1112,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 3.2.0
 			#colour 7
 		*/
-		("stripes", (_, degree, width, ...colours) => {
+		("stripes", "Gradient", (_, degree, width, ...colours) => {
 			/*
 				Just like with (hsl:), we silently rounded and truncate degrees to the 0..359 range.
 			*/
@@ -1168,7 +1168,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 3.2.0
 			#basics
 		*/
-		("hooks-named", (_, data) => {
+		("hooks-named", "HookName", (_, data) => {
 			if (!data) {
 				return TwineError.create("datatype", "(hooks-named:) can't be given an empty string.");
 			}
@@ -1220,7 +1220,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 3.1.0
 			#basics 12
 		*/
-		("cond", (_, ...args) => {
+		("cond", "Any", (_, ...args) => {
 			for(let i = 0; i < args.length; i += 2) {
 				const boolean = args[i];
 				/*
@@ -1628,7 +1628,21 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			to += 1;
 			return ~~((State.random() * (to - from))) + from;
 		}, [parseInt, Macros.TypeSignature.optional(parseInt)]],
-		
+		/*
+			This method takes all of the above and registers them
+			as Twine macros.
+			
+			By giving this JS's only falsy object key,
+			this method is prohibited from affecting itself.
+		*/
+		""() {
+			for (let key in this) {
+				Object.hasOwnProperty.call(this,key) && Macros.add(key, "Number", ignoreArgumentOne(this[key][0]), this[key][1]);
+			}
+		}
+	}[""]());
+
+	Macros.add
 		/*d:
 			(either: ...Any) -> Any
 			
@@ -1668,7 +1682,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 1.0.0
 			#basics 11
 		*/
-		either: [(...args) => args[~~(State.random() * args.length)], rest(Any)],
+		("either", "Any", (_, ...args) => args[~~(State.random() * args.length)], rest(Any))
 
 		/*d:
 			(nth: Number, ...Any) -> Any
@@ -1711,7 +1725,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 3.1.0
 			#basics 13
 		*/
-		nth: [(index, ...args) => {
+		("nth", "Any", (_, index, ...args) => {
 			if (index <= 0) {
 				return TwineError.create(
 					"datatype",
@@ -1719,21 +1733,6 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 				);
 			}
 			return args[(index-1) % args.length];
-		},
-		[parseInt, rest(Any)]],
-		
-		/*
-			This method takes all of the above and registers them
-			as Twine macros.
-			
-			By giving this JS's only falsy object key,
-			this method is prohibited from affecting itself.
-		*/
-		""() {
-			for (let key in this) {
-				Object.hasOwnProperty.call(this,key) && Macros.add(key, ignoreArgumentOne(this[key][0]), this[key][1]);
-			}
-		}
-	}[""]());
-	
+		}, [parseInt, rest(Any)])
+		;
 });
