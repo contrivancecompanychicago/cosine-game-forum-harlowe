@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'utils/renderutils', 'passages', 'section', 'debugmode/panel', 'utils/typecolours'],
-($, Utils, State, VarRef, TwineError, {objectName, isObject, toSource}, {dialog}, Passages, Section, Panel, {CSS:syntaxCSS}) => { let DebugMode = (initialError, code) => {
+define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'utils/renderutils', 'passages', 'section', 'debugmode/panel', 'utils/typecolours'],
+($, Utils, State, Engine, VarRef, TwineError, {objectName, isObject, toSource}, {dialog}, Passages, Section, Panel, {CSS:syntaxCSS}) => { let DebugMode = (initialError, code) => {
 	/*
 		Debug Mode
 
@@ -142,26 +142,46 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		to travel to any of them at will.
 	*/
 	const updateTurnsDropdown = updater(function() {
-		const children = turnsDropdown.children();
-		const timeline = State.timelinePassageNames();
-		timeline.forEach((passageName, i) => {
-			const dropdownLabel = (i+1) + ": " + passageName;
+		const children = turnsDropdown.children().get();
+		const { timeline } = State;
+		/*
+			This number reflects the actual turn number, which includes turns erased by (erase-past:).
+		*/
+		let num = 0;
+		timeline.forEach(({turns = 0, passage}, i) => {
+			num += 1 + turns;
+			const dropdownLabel = num + ": " + passage;
 			if (children[i]) {
 				children[i].textContent = dropdownLabel;
 			} else {
-				turnsDropdown.append("<option value=" + i + "'>"
+				turnsDropdown.append("<option value='" + i + "'>"
 				+ dropdownLabel
 				+ "</option>");
 			}
 		});
-		if (timeline.length > children.length) {
-			$(children.get().slice(timeline.length)).remove();
+		/*
+			If something (such as (erase-past:), or erasing the future by advancing from a past turn)
+			reduces the timeline length from what it once was, remove those unneeded <option>s.
+		*/
+		if (timeline.length < children.length) {
+			$(children.slice(timeline.length)).remove();
 		}
 		/*
 			The turns dropdown should be disabled only if one or fewer turns are
 			in the State history.
 		*/
 		turnsDropdown[timeline.length >= 1 ? 'removeAttr' : 'attr']('disabled');
+	});
+	turnsDropdown.change(({target:{value}}) => {
+		/*
+			Work out whether to travel back or forward by subtracting the
+			value from the current State moment index.
+		*/
+		const travel = value - State.pastLength;
+		if (travel !== 0) {
+			State[travel < 0 ? "rewind" : "fastForward"](Math.abs(travel));
+			Engine.showPassage(State.passage);
+		}
 	});
 	/*
 		Add the dropdown entries if debug mode was enabled partway through the story.
@@ -171,48 +191,30 @@ define(['jquery', 'utils', 'state', 'internaltypes/varref', 'internaltypes/twine
 		In order for the turnsDropdown view to reflect the state data, these event handlers
 		must be installed on State, to be called whenever the current moment changes.
 
-		'forward' is fired when navigating to a new passage, or redoing a move. This
-		simply adds a turn to the end of the menu.
+		Most events simply trigger an update of the dropdown.
 	*/
 	State.on('forward', updateTurnsDropdown)
-	/*
-		'back' is fired when undoing a move. This removes the final turn from the menu.
-	*/
-	.on('back', () => {
+		.on('load', updateTurnsDropdown)
+		.on('erasePast', () => updateTurnsDropdown)
 		/*
-			As above, disable if only one turn remains in the timeline.
+			'back', however, can simply remove the final turn from the menu.
 		*/
-		if (State.pastLength <= 1) {
-			turnsDropdown.attr('disabled');
-		}
-		/*
-			Deselect the current selected <option>.
-		*/
-		turnsDropdown.find('[selected]').removeAttr('selected');
-		/*
-			Select the new last element.
-		*/
-		turnsDropdown.val(State.pastLength);
-	})
-	/*
-		'load' is fired when saved games are deserialised. This replaces the
-		entire menu. Immediately after, 'forward' is also fired, so we don't
-		need to set the val() here.
-	*/
-	.on('load', (timeline) => {
-		turnsDropdown.empty();
-		/*
-			As above, disable only if one turn remains in the timeline.
-		*/
-		turnsDropdown[timeline.length <= 1 ? 'attr' : 'removeAttr']('disabled');
-
-		timeline.forEach((turn, i) =>
-			turnsDropdown.append("<option value=" + i + ">"
-				+ (i+1) + ": " + turn.passage
-				+ "</option>"
-			)
-		);
-	});
+		.on('back', () => {
+			/*
+				As above, disable if only one turn remains in the timeline.
+			*/
+			if (State.pastLength <= 1) {
+				turnsDropdown.attr('disabled');
+			}
+			/*
+				Deselect the current selected <option>.
+			*/
+			turnsDropdown.find('[selected]').removeAttr('selected');
+			/*
+				Select the new last element.
+			*/
+			turnsDropdown.val(State.pastLength);
+		});
 
 	/*
 		Set up the

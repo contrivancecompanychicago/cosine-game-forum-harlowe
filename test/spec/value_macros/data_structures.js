@@ -252,6 +252,7 @@ describe("data structure macros", function () {
 		it("lambda sorts are stable", function() {
 			expect("(sorted:via its 1st, 'Bob', 'Alice', 'Blake', 'Bella', 'Bertrude')").markupToPrint("Alice,Bob,Blake,Bella,Bertrude");
 			expect("(sorted:via (str:it)'s 1st, 10,12,11,14,13,16)").markupToPrint("10,12,11,14,13,16");
+			expect("(sorted:via its 1st, ...(sorted:via its last, (a:1,2),(a:1,5),(a:2,6),(a:1,1),(a:2,4),(a:1,7),(a:2,9),(a:1,8)))").markupToPrint("1,1,1,2,1,5,1,7,1,8,2,4,2,6,2,9");
 		});
 		it("errors if the first value is a lambda but not a 'via' lambda", function() {
 			expect("(sorted:where it > 0,1,2)").markupToError();

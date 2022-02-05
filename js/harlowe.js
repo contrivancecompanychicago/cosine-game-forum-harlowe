@@ -23,7 +23,7 @@ require.config({
 require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', 'passages', 'utils', 'utils/renderutils', 'internaltypes/varscope', 'internaltypes/twineerror', 'macros',
 	'macrolib/values', 'macrolib/commands', 'macrolib/datastructures', 'macrolib/stylechangers', 'macrolib/enchantments', 'macrolib/metadata', 'macrolib/patterns',
 	'macrolib/links', 'macrolib/custommacros', 'repl'],
-		($, DebugMode, Renderer, State, Section, Engine, Passages, Utils, {dialog}, VarScope, TwineError) => {
+		($, DebugMode, Renderer, State, Section, Engine, Passages, Utils, {dialog}, VarScope) => {
 	/*
 		Harlowe, the default story format for Twine 2.
 		
@@ -34,36 +34,6 @@ require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', '
 	function __HarloweEval(text) {
 		return eval(text + '');
 	}
-	
-	/*
-		Sets up event handlers for specific Twine elements. This should only be called
-		once at setup.
-	*/
-	let installHandlers = () => {
-		const html = $(document.documentElement);
-		
-		/*
-			This gives interactable elements that should have keyboard access (via possessing
-			a tabindex property) some basic keyboard accessibility, by making their
-			enter-key event trigger their click event.
-		*/
-		html.on('keydown', function(event) {
-			if (event.which === 13 && event.target.getAttribute('tabindex') === "0") {
-				$(event.target).trigger('click');
-			}
-		});
-		
-		// If the debug option is on, add the debugger.
-		if (Engine.options.debug) {
-			DebugMode();
-		}
-		// Otherwise, add the callback to enable Debug Mode as soon as the first error occurs.
-		else {
-			TwineError.on('error', DebugMode);
-		}
-		installHandlers = null;
-	};
-
 
 	/*
 		This function pretty-prints JS errors using Harlowe markup, for display in the two error dialogs below.
@@ -94,7 +64,7 @@ require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', '
 		onerror method.
 	*/
 	((oldOnError) => {
-		window.onerror = function (message, _, __, ___, e) {
+		window.onerror = function (_, __, ___, ____, e) {
 			/*
 				First, to ensure this function only fires once, we restore the previous onError function.
 			*/
@@ -131,6 +101,14 @@ require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', '
 
 		// Load options from attribute into story object
 		(header.attr('options') || '').split(/\s/).forEach((b) => {
+			/*
+				Enable Debug Mode if it's set in the HTML.
+				Note: because DebugMode() doesn't do anything if Utils.options.debug
+				is already true, this must come first.
+			*/
+			if (b === "debug") {
+				DebugMode();
+			}
 			b && (Utils.options[b] = true);
 		});
 		let startPassage = header.attr('startnode');
@@ -150,8 +128,16 @@ require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', '
 		}
 		startPassage = $("tw-passagedata[pid='" + startPassage + "']").attr('name');
 
-		// Init game engine
-		installHandlers();
+		/*
+			This gives interactable elements that should have keyboard access (via possessing
+			a tabindex property) some basic keyboard accessibility, by making their
+			enter-key event trigger their click event.
+		*/
+		$(document.documentElement).on('keydown', function(event) {
+			if (event.which === 13 && event.target.getAttribute('tabindex') === "0") {
+				$(event.target).trigger('click');
+			}
+		});
 		
 		// Execute the custom scripts
 		let scriptError = false;
@@ -195,7 +181,7 @@ require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', '
 		}
 		
 		// Load the sessionStorage if it's present (and we're not testing)
-		const sessionData = !Engine.options.debug && State.hasSessionStorage && sessionStorage.getItem("Saved Session");
+		const sessionData = !Utils.options.debug && State.hasSessionStorage && sessionStorage.getItem("Saved Session");
 		if (sessionData) {
 			// If deserialisation fails (i.e. it returned an Error instead of true),
 			// it means the sessionData is invalid. Just ignore it - it's only temporary data.

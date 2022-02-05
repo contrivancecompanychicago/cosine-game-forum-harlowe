@@ -318,6 +318,7 @@ define([
 			by the (exclusivity:) metadata the passage with that name has.
 			* `(sorted: via its h, orange, red, blue, yellow)` produces `(a: red, orange, yellow, blue)`.
 			* `(sorted: via (random:1,100), ...$arr)` is mostly the same as `(shuffled:...$arr)`.
+			* `(sorted: via its urgency, ...(sorted: via its exclusivity, ...(passages:)))` sorts the (passages:) array by urgency, and sorts ties by exclusivity.
 			
 			Rationale:
 			The main purpose of arrays is to store data values in a specific order - feats the player has performed,
@@ -339,7 +340,8 @@ define([
 
 			Values sorted by a "via" lambda, but which have the same value to that lambda, are kept in the same order. This is known as a "stable" sort.
 			`(sorted:via its 1st, 'Bob', 'Alice', 'Blake', 'Bella', 'Bertrude')`, which only sorts the strings by their first letter,
-			will always produce `(a:"Alice","Bob","Blake","Bella","Bertrude")`, even though "Blake" is alphabetically sooner than "Bob".
+			will always produce `(a:"Alice","Bob","Blake","Bella","Bertrude")`, even though "Blake" is alphabetically sooner than "Bob". This means that, if one needs
+			to sort an array of datamaps by multiple values (such as sorting a set of characters by name, then by age), 
 
 			Unlike other programming languages, strings (either produced by the "via" lambda, or sorted by themselves when no lambda was given)
 			aren't sorted using ASCII sort order, but *alphanumeric* sorting:

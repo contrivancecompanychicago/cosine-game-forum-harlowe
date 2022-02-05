@@ -134,12 +134,14 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 	/*
 		Debug Mode event handlers are stored here by on(). "forward" and "back" handlers are called
 		when the present changes, and thus when play(), fastForward() and rewind() have been called.
-		"load" handlers are called exclusively in deserialise().
+		"load" handlers are called exclusively in deserialise(). "redirect" and "erasePast" are
+		called for their respective methods.
 	*/
 	const eventHandlers = {
 		forward: [],
 		back: [],
 		load: [],
+		erasePast: [],
 	};
 
 	/*
@@ -514,6 +516,9 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 					($(link).closest('tw-expression, tw-hook').data('erasePastEvent') || Object)(link);
 				});
 			}
+			
+			// Call the 'erasePast' event handler.
+			eventHandlers.erasePast.forEach(fn => fn());
 		},
 
 		/*
@@ -561,10 +566,10 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 		},
 
 		/*
-			Returns an array of all passage names. Used nowhere except for populating the Debug UI.
+			Direct access to the timeline. Used nowhere except for populating the Debug UI.
 		*/
-		timelinePassageNames() {
-			return timeline.map(t => t.passage);
+		get timeline() {
+			return timeline;
 		},
 
 		/*
@@ -609,8 +614,6 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			present.passage && CurrentVariables.visits.push(present.passage);
 			// Assign the passage name.
 			present.passage = newPassageName;
-			// That's all!
-			//TODO: Debug Mode redirect event
 		},
 
 		/*
