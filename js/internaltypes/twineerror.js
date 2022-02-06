@@ -39,15 +39,12 @@ define(['jquery', 'utils'], ($, Utils) => {
 	},
 
 	/*
-		If other modules need certain events should occur when an error is rendered, such handlers can
-		be registered here. Currently, only the "error" event handler is used, by Debug Mode.
+		If other modules need certain events to occur when an error is rendered, such handlers can
+		be registered here.
 	*/
-	eventHandlers = {
-		error: [],
-		warning: [],
-	},
+	eventHandlers = [];
 	
-	TwineError = {
+	const TwineError = {
 		TwineError: true,
 		/*
 			Normally, the type by itself suggests a rudimentary explanation from the above dict.
@@ -137,7 +134,7 @@ define(['jquery', 'utils'], ($, Utils) => {
 			/*
 				The title text defaults to the error's Harlowe source code.
 			*/
-			titleText = titleText || this.source || "";
+			titleText = typeof titleText === "string" ? titleText : this.source || "";
 			const errorElement = $("<tw-error class='"
 					+ (this.warning ? "warning" : "error")
 					+ "' title='" + escape(titleText) + "'>" + escape(
@@ -198,7 +195,7 @@ define(['jquery', 'utils'], ($, Utils) => {
 				Fire any event handlers that were registered.
 			*/
 			if (!noEvents) {
-				eventHandlers.error.forEach(f => f(this, titleText));
+				eventHandlers.forEach(f => f(this, titleText));
 			}
 
 			return errorElement;
@@ -208,17 +205,13 @@ define(['jquery', 'utils'], ($, Utils) => {
 			This is used only by Debug Mode - it lets event handlers be registered and called when different Errors are rendered.
 			Each function is passed the TwineError object itself.
 		*/
-		on(name, fn) {
-			if (!(name in eventHandlers)) {
-				impossible('TwineError.on', 'invalid event name');
-				return;
-			}
-			if (typeof fn === "function" && !eventHandlers[name].includes(fn)) {
-				eventHandlers[name].push(fn);
+		on(fn) {
+			if (typeof fn === "function" && !eventHandlers.includes(fn)) {
+				eventHandlers.push(fn);
 			}
 			return TwineError;
 		},
 
 	};
-	return TwineError;
+	return Object.preventExtensions(TwineError);
 });

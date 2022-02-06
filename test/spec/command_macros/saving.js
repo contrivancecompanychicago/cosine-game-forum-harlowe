@@ -14,7 +14,7 @@ describe("save macros", function() {
 		This should be identical to the internal function in macrolib/commands.js
 	*/
 	function storagePrefix(text) {
-		return "(" + text + " " + Engine.options.ifid + ") ";
+		return "(" + text + " 107370AE-1D5A-4A33-A52C-D1180BA69750) ";
 	}
 
 	describe("the (savegame:) macro", function() {

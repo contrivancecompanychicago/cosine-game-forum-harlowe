@@ -17,7 +17,8 @@ describe("patterns", function() {
 		['whitespace','datatype',undefined],
 		['(_a where _a is 2)','lambda',undefined,'no structural equality'],
 		['(macro:[(output:1)])','macro',undefined,'no structural equality'],
-		['(gradient:90,0,red,1,white)','gradient']
+		['(gradient:90,0,red,1,white)','gradient'],
+		['(print:2)',"command",undefined],
 	];
 	describe("datatypes", function() {
 		it("are keywords matching permitted storable values", function() {

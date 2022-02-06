@@ -8,8 +8,11 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
  * Fixed a long-standing bug where header passages caused aligner, column, heading, and horizontal rule markup to not work in the first line of any passage of the story.
  * Fixed a long-standing bug where it was possible to put Harlowe in an infinite loop using `(save-game:)` and `(load-game:)` unconditionally in the same passage.
+ * Fixed a long-standing bug where temp variables created outside a live hook (a hook with `(live:)`, `(event:)`, `(more:)`, or `(after:)` attached) couldn't then be used inside it.
+ * Most of the other changers, including `(t8n:)`, should now work correctly when combined with `(live:)`, `(event:)`, `(more:)`, or `(after:)`.
  * Fixed a custom macro bug where any commands inside an (output:)-attached hook (such as `(output:)[(set:$a to it + 1)]`) would be run twice while being outputted. (Generally, you'd want to place those commands before the (output:) hook, though.)
  * Fixed a bug where using spread `...` to spread the individual characters of a string that contains astral plane Unicode characters (such as 𝐇) wouldn't work at all.
+ * Fixed a bug where the `command` datatype didn't work at all.
  * Fixed a bug where the `(unpack:)` macro wouldn't work at all unless the destination variables were expressed as typed variables (such as `num-type $a`).
  * Fixed a bug where `(folded:)` couldn't be provided with a lambda which had `where`, `via` and `making` clauses, where the `making` clause was between the `where` and `via` clauses.
  * `each` lambdas are now called "each…" lambdas (instead of just "where…" lambdas) in the Debug Mode panel.
@@ -58,6 +61,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 ##### Debug Mode
 
  * Debug Mode's colour scheme is now white-on-black, to match Harlowe's default colour scheme.
+ * Debug Mode no longer automatically, immediately enables itself whenever the first error of your story appears. Instead, this functionality can be added using the new `(after-error:)` and `(debug:)` macros (see below).
 
 #### Additions
 
@@ -71,12 +75,14 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added `(mock-turns:)`, a debug-only macro for artificially increasing the value that `turns` produces.
  * Added `(erase-past:)`, a macro that removes turns from the "undo cache", preventing the player from undoing to that point ever again. `(erase-past:-2)` erases all but the last two turns (including the current turn). `(erase-past:2)` erases the first two turns. This does *not* affect `(history:)`, `(visited:)`, or the `visits` and `turns` keywords, which will continue to behave as if `(erase-past:)` was never used.
    * Using this to erase the entire undo cache will automatically cause `(link-undo:)` links to update themselves using their optional second string.
+ * Added `(after-error:)`, a variant of `(after:)` which only displays the attached hook when an error message is displayed. You may use this (in a "header" tagged passage) to show a personalised message to the story's players, possibly advising them to report a bug. Or, you might use this to try and recover the story by redirecting to another passage.
+ * Added `(debug:)`, a command which causes Debug Mode to activate (or reactivate if it was exited), even if the story wasn't a test build initially.
  * Added the `codehook` datatype.
 
 ##### Debug Mode
 
  * Added an "expression replay" feature to Debug Mode. When you use Debug View, special 🔍 icons will appear on variables and macro calls in the passage. Clicking those will produce a dialog showing a step-by-step view of how the macro call's code was interpreted by Harlowe.
- * Added a close button to the panel, which exits Debug Mode when clicked. Re-enabling Debug Mode can only be done by reloading the page.
+ * Added a close button to the panel, which exits Debug Mode when clicked.
 
 ### 3.2.3 changes (October 22, 2021):
 

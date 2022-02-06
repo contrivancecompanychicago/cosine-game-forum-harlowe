@@ -25,5 +25,5 @@ define(['jquery', 'utils'], ($, {impossible}) => {
 		},
 
 	};
-	return TwineNotifier;
+	return Object.preventExtensions(TwineNotifier);
 });

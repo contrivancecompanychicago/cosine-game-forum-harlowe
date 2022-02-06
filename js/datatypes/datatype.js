@@ -230,6 +230,7 @@ define([
 		lambda:   obj => Lambda.isPrototypeOf(obj),
 		macro:    obj => CustomMacro.isPrototypeOf(obj),
 		codehook: obj => CodeHook.isPrototypeOf(obj),
+		command:  obj => obj && (obj.TwineScript_TypeID === "command"),
 		str:      obj => typeof obj === "string",
 		num:      obj => typeof obj === "number",
 		bool:     obj => typeof obj === "boolean",

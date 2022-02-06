@@ -649,7 +649,7 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 			}
 			return a + '<tr class="error-row">'
 				+ '<td class="error-passage">' + State.passage + '</td>'
-				+ '<td class="error-message" title='+escape(code)+'>' + error.message + '</td>'
+				+ '<td class="error-message" title=' + escape(code) + '>' + error.message + '</td>'
 				+ '</tr>';
 		}, ''));
 		/*
@@ -663,7 +663,7 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 		}
 		Errors.tabUpdate(Math.min(500,c.length));
 	}, {batch: true});
-	TwineError.on('error', onError);
+	TwineError.on(onError);
 
 	/*
 		Place all the panel elements inside, in order.
@@ -690,6 +690,7 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 	const enableMode = () => {
 		$(document.body).append(debugElement);
 		Utils.options.debug = true;
+		refresh();
 	};
 	/*
 		Because this first call adds a bunch of DOM elements and callbacks, it shouldn't run as-is when re-enabling Debug Mode.
@@ -708,11 +709,15 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 	*/
 	if (initialError) {
 		onError(initialError, code);
-		refresh();
 	}
 };
 /*
 	Don't re-enable Debug Mode if it's already enabled. This prevents
 	doubled-up errors in the error log.
 */
-return (initialError, code) => !Utils.options.debug && DebugMode(initialError, code); });
+Engine.registerDebugMode((initialError, code) => !Utils.options.debug && DebugMode(initialError, code));
+/*
+	The only consumer of the unguarded enabler should be Harlowe (which runs it on startup if the debug story option is present).
+*/
+return DebugMode;
+});

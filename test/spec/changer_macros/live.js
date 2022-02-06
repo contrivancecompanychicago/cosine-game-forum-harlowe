@@ -30,7 +30,7 @@ describe("live macros", function() {
 				done();
 			},20);
 		});
-		xit("works with temp variables in the hook", function(done) {
+		it("works with temp variables in the hook", function(done) {
 			var p = runPassage("(link:'foo')[(set:$a to 2, _b to 'bar')](event: when $a is 2)[_b]");
 			expect(p.text()).toBe("foo");
 			p.find('tw-link').click();
@@ -45,6 +45,24 @@ describe("live macros", function() {
 			p.find('tw-link').click();
 			setTimeout(function() {
 				expect(p.text()).toBe("bar");
+				done();
+			},20);
+		});
+		it("works with style changers", function(done) {
+			var p = runPassage("(text-color:'#fadaba')+(event: when $a is 2)[Wow](link:'foo')[(set:$a to 2)]");
+			expect(p.text()).toBe("foo");
+			p.find('tw-link').click();
+			setTimeout(function() {
+				expect(p.find('tw-hook')).toHaveColour('#fadaba');
+				done();
+			},20);
+		});
+		it("works with (transition:)", function(done) {
+			var p = runPassage("(t8n:'pulse')+(t8n-time:2s)+(event: when $a is 2)[Wow](link:'foo')[(set:$a to 2)]");
+			expect(p.text()).toBe("foo");
+			p.find('tw-link').click();
+			setTimeout(function() {
+				expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
 				done();
 			},20);
 		});
@@ -84,6 +102,30 @@ describe("live macros", function() {
 			expect(p.text()).toBe("");
 			setTimeout(function() {
 				expect(p.text()).toBe("bar");
+				done();
+			},
+			// Because Firefox randomly permutes setTimeout's timeout to avoid fingerprinting, the time has to be this generous.
+			80);
+		});
+	});
+	describe("the (after-error:) macro", function() {
+		it("takes no values", function() {
+			expect("(after-error:)[]").not.markupToError();
+			expect("(after-error:1)[]").markupToError();
+			expect("(after-error:1,1)[]").markupToError();
+		});
+		it("doesn't immediately display the hook", function(done) {
+			var p = runPassage("(after-error:)[baz]");
+			setTimeout(function() {
+				expect(p.text()).not.toBe('baz');
+				done();
+			},20);
+		});
+		it("displays the attached hook only when an error occurs elsewhere", function(done) {
+			var p = runPassage("(after-error:)[bar](link:'Yo')[(primt:2)]");
+			p.find('tw-link').click();
+			setTimeout(function() {
+				expect(p.find('tw-hook:first-of-type').text()).toBe("bar");
 				done();
 			},
 			// Because Firefox randomly permutes setTimeout's timeout to avoid fingerprinting, the time has to be this generous.

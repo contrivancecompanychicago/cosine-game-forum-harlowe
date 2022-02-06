@@ -19,6 +19,7 @@ define([
 ],
 ($, Utils, run, Operations, State, {printBuiltinValue,objectName,typeID,isObject}, {collapse}, ChangerCommand, Colour, Lambda, TypedVar, ChangeDescriptor, VarRef, VarScope, TwineError, TwineNotifier) => {
 
+	const {assign} = Object;
 	let Section;
 
 	/*
@@ -58,15 +59,33 @@ define([
 			*/
 			const source = nextHook.popData('source');
 			nextHook.data('originalSource', source);
-			const enabled = this.renderInto(
-				source,
+			/*
+				Rather than simply passing the changer to renderInto(),
+				run a fresh CD through it. If it was a live changer, this will be re-used
+				for each additional iteration.
+			*/
+			const desc = ChangeDescriptor.create({
 				/*
 					Don't forget: nextHook may actually be empty.
 					This is acceptable - the result changer could alter the
 					target appropriately.
 				*/
-				nextHook,
-				result
+				target: nextHook, source, section: this, append: "append"});
+			/*
+				(for:) changers can produce errors on running instead of just on creation.
+			*/
+			const error = result.run(desc);
+			if (TwineError.containsError(error)) {
+				expr.replaceWith(error.render(expr.attr('title')));
+			}
+
+			const enabled = this.renderInto(
+				source,
+				/*
+					Because we're passing in a ChangeDescriptor, the target may be null.
+				*/
+				null,
+				desc
 			);
 
 			if (!enabled) {
@@ -90,8 +109,7 @@ define([
 					set up the intervals to live-update the attached macro.
 				*/
 				if (nextHook.data('live')) {
-					const {delay, event} = nextHook.data('live');
-					runLiveHook.call(this, expr, nextHook, delay, event);
+					runLiveHook.call(this, expr, desc, nextHook);
 				}
 				return;
 			}
@@ -417,6 +435,12 @@ define([
 				expr.data('code', {
 					type: 'macro',
 					blockedValue: true,
+					/*
+						These three things are used only by the Debug Replay feature.
+					*/
+					text: expr.attr('title') || '',
+					start: 0,
+					end: (expr.attr('title') || '').length,
 				});
 				return;
 			}
@@ -484,10 +508,21 @@ define([
 
 		This is exclusively called by runExpression().
 	*/
-	function runLiveHook(expr, target, delay = 20, event = undefined) {
+	function runLiveHook(expr, cd, target) {
 		/*
 			Events given here MUST have a 'when' property.
 		*/
+		const {delay, event} = target.data('live');
+		/*
+			Prepare a new changeDescriptor to use once the hook is finally being run.
+			This always has 'replace' because currently (Feb 2022) no live macros
+			purely append or prepend.
+		*/
+		cd = assign({}, cd, {append:'replace', transitionDeferred: false, enabled:true});
+		/*
+			But, remove the liveness from the new ChangeDescriptor, for obvious reasons.
+		*/
+		cd.data = assign({}, cd.data, { live: undefined });
 		/*
 			Obtain the code of the hook that the (live:) or (event:) changer suppressed.
 		*/
@@ -497,7 +532,10 @@ define([
 			this too must store the current stack tempVariables object, so that it can
 			give the event access to the temp variables visible at render time.
 		*/
-		const [{tempVariables}] = this.stack;
+		const {tempVariables} = this.stackTop;
+		/*
+			Store the target's current parent, to check that it's still in the DOM.
+		*/
 		/*
 			This closure runs every frame (that the section is unblocked) from now on, until
 			the target hook is gone.
@@ -522,17 +560,17 @@ define([
 			*/
 			const eventFired = (event && event.filter(this, [true], tempVariables));
 			if (TwineError.containsError(eventFired)) {
-				eventFired.render(expr.attr('title')).replaceAll(expr);
+				eventFired.render(this, expr.attr('title')).replaceAll(expr);
 				return;
 			}
+			/*
+				(live:) macros always render; (event:), (more:) and (after:) macros only render once the event fired.
+			*/
 			if (event && !eventFired[0]) {
 				setTimeout(recursive, delay);
 				return;
 			}
-			/*
-				(live:) macros always render; (event:) macros only render once the event fired.
-			*/
-			this.renderInto(source, target, {append:'replace'});
+			this.renderInto(source, target, cd, tempVariables);
 			/*
 				If the event DID fire, on the other hand, we should stop.
 			*/

@@ -11,6 +11,7 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 		Engine is a singleton class, responsible for rendering passages to the DOM.
 	*/
 	let Engine;
+	let DebugMode;
 
 	/*
 		Creates the HTML structure of the <tw-passage>. Sub-function of showPassage().
@@ -420,8 +421,21 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 			Used exclusively by state-loading routines.
 		*/
 		showPassage,
-		
-		options,
+
+		/*
+			Used by (debug:) to launch the debugger if it's not open already.
+		*/
+		enableDebugMode() {
+			DebugMode && DebugMode();
+		},
+
+		/*
+			Used to resolve a circular dependency with debugmode/mode and engine. debugmode/mode registers itself using
+			this one-time method.
+		*/
+		registerDebugMode(mode) {
+			!DebugMode && (DebugMode = mode);
+		},
 	};
 	
 	return Object.freeze(Engine);

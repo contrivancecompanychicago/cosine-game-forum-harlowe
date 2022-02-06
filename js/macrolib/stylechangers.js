@@ -94,6 +94,15 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 				.attr('hover',false);
 		}
 	));
+	/*
+		The (after-error:) macro uses this event.
+	*/
+	TwineError.on(() => {
+		$("tw-expression, tw-hook", Utils.storyElement).each((_, hook) => {
+			hook = $(hook);
+			(hook.data('errorEvent') || Object)(hook);
+		});
+	});
 
 	/*
 		A list of valid transition names. Used by (transition:).
@@ -391,7 +400,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			```
 			
 			Rationale:
-			Twine passage text generally behaves like a HTML document: it starts as code, is changed into a
+			Passage text generally behaves like a HTML document: it starts as code, is changed into a
 			rendered page when you "open" it, and remains so until you leave. But, you may want a part of the
 			page to change itself before the player's eyes, for its code to be re-renders "live"
 			in front of the player, while the remainder of the passage remains the same.
@@ -422,9 +431,10 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			#live 1
 		*/
 		("live",
-			(_, delay) => ChangerCommand.create("live", [delay]),
+			(_, delay) => ChangerCommand.create("live", delay ? [delay] : []),
 			(d, delay) => {
 				d.enabled = false;
+				d.transitionDeferred = true;
 				d.data.live = {delay};
 			},
 			optional(Number)
@@ -436,18 +446,21 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			Hooks that have this changer attached will only be run when the given condition becomes true.
 
 			Example usage:
+			This example causes a new string to be displayed after some time has passed, *or* if the (cycling-link:) cycles to a certain value.
 			```
-			(event: when time > 5s)[==Oops, I forgot the next link: [[Go east]].
+			(cycling-link: bind _recall, "Dennis?", "Denver?", "Denzel?", "Duncan?", "Danny?", "Denton?")
+			(event: when time > 10s or _recall is 'Denton?')[==No, you don't remember his name. [[Go east]].
 			```
 
 			Rationale:
 			While the (live:) macro is versatile in providing time-based text updating, one of its common uses - checking if some
 			variable has changed using (if:), and then displaying a hook and stopping the macro with (stop:) - is rather
-			cumbersome. This macro provides that functionality in a shorter form - the example above is equivalent to:
+			cumbersome. This macro provides that functionality in a shorter form - the example above is roughly equivalent to:
 			```
-			{(live: 0.2s)[
-			    (if: time > 5s)[
-			        Oops, I forgot the next link: [[Go east]].(stop: )
+			(cycling-link: bind _recall, "Dennis?", "Denver?", "Denzel?", "Duncan?", "Danny?", "Denton?")
+			{(live: )[
+			    (if: time > 10s or _recall is 'Denton?')[
+			        No, you don't remember his name. [[Go east]].(stop: )
 			    ]
 			]}
 			```
@@ -472,6 +485,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			(_, event) => ChangerCommand.create("event", [event]),
 			(d, event) => {
 				d.enabled = false;
+				d.transitionDeferred = true;
 				d.data.live = {event};
 			},
 			Lambda.TypeSignature('when')
@@ -515,6 +529,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			() => ChangerCommand.create("more"),
 			d => {
 				d.enabled = false;
+				d.transitionDeferred = true;
 				d.data.live = {
 					/*
 						In order to implement (more:), I decided to leverage the existing implementation for (event:).
@@ -573,7 +588,11 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			(_, delay, skip) => ChangerCommand.create("after", [delay].concat(skip !== undefined ? [skip] : [])),
 			(d, delay, skip) => {
 				d.enabled = false;
+				d.transitionDeferred = true;
 				d.data.live = {
+					/*
+						See (more:) for information about this "event" property.
+					*/
 					event: {
 						when: true,
 						filter: section => {
@@ -586,6 +605,63 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 				};
 			},
 			[positiveNumber, optional(nonNegativeNumber)]
+		)
+
+		/*d:
+			(after-error:) -> Changer
+
+			A bug-specific event macro, this hides the hook and only causes it to run once an error occurs.
+
+			Example usage:
+			```
+			(after-error:)[(dialog:"Sorry, folks, seems like I messed up. DM me on GregsGameMakingBungalow with a screenshot!")]
+			(link:"Click here for an error")[Can't use (metadata:) here!]
+			```
+
+			Rationale:
+			While you should generally test your story enough to be fairly certain that no error messages will occur,
+			it can sometimes be difficult to be absolutely certain. As such, you may want to be prepared for the worst.
+			If an error message does occur, you might want to show a custom message of your own to the player, instructing
+			them to report the bug in your story, or giving them a chance to continue the story from a later passage. (You may want
+			to use this in a "header" or "footer" tagged passage, so that this notification message may appear anywhere in the story.)
+
+			Alternatively, you may want to use it during testing, by combining it with the (debug:) command macro, so that
+			the Debug Mode panel will pop up when the first error occurs, potentially letting testers obtain deeper information
+			about the game's current state.
+
+			Details:
+			This will only display the attached hook at the moment an error message is displayed. If this is used inside a larger hook
+			which only appears after an error is displayed, its attached hook won't appear until another error occurs.
+
+			Added in: 3.3.0
+			#live 5
+		*/
+		("after-error",
+			() => ChangerCommand.create("after-error", []),
+			(d) => {
+				d.enabled = false;
+				d.transitionDeferred = true;
+				/*
+					The current tempVariables object must be stored for reuse, as the section pops it when normal rendering finishes.
+				*/
+				const {tempVariables} = d.section.stackTop;
+				d.data.errorEvent = (elem) => {
+					/*
+						This is a one-time event.
+					*/
+					elem.removeData('errorEvent');
+					/*
+						Run the same ChangeDescriptor without the error event.
+					*/
+					const cd2 =  assign({}, d, { enabled: true, transitionDeferred: false });
+					cd2.data && (cd2.data.errorEvent = undefined);
+					/*
+						The text should only be updated when the section is unblocked.
+					*/
+					d.section.whenUnblocked(() => d.section.renderInto("", null, cd2, tempVariables));
+				};
+			},
+			[]
 		)
 
 		/*d:

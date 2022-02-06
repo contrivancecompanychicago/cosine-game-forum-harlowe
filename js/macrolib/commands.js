@@ -288,7 +288,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 				TwineScript_ObjectName:   "a (" + name + ":) operation",
 				TwineScript_Unstorable: true,
 				// Being unstorable and not used by any other data strctures, this doesn't need a ToSource() function.
-				TwineScript_Print:        () => Engine.options.debug && debugMessage && TwineNotifier.create(debugMessage).render()[0].outerHTML || '',
+				TwineScript_Print:        () => Utils.options.debug && debugMessage && TwineNotifier.create(debugMessage).render()[0].outerHTML || '',
 			};
 		},
 		[rest(AssignmentRequest)])
@@ -362,7 +362,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 				TwineScript_ObjectName:   "a (move:) operation",
 				TwineScript_Unstorable: true,
 				// Being unstorable and not used by any other data strctures, this doesn't need a ToSource() function.
-				TwineScript_Print:        () => Engine.options.debug && debugMessage && TwineNotifier.create(debugMessage).render()[0].outerHTML || '',
+				TwineScript_Print:        () => Utils.options.debug && debugMessage && TwineNotifier.create(debugMessage).render()[0].outerHTML || '',
 			};
 		},
 		[rest(AssignmentRequest)]);
@@ -759,7 +759,42 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 				*/
 				return { blocked: true };
 			},
-			[optional(String)]);
+			[optional(String)])
+
+		/*d:
+			(debug:) -> Command
+
+			This command, which takes no values, opens the Debug Mode panel if it wasn't open already. This can be used even if the story
+			didn't begin in Debug Mode initially.
+
+			Example usage:
+			* `(link:"DEBUG")[(debug:)]` creates a link that opens the Debug Mode panel.
+			* `(after-error: )[(debug:)]` causes Debug Mode to open if any error occurs in the current passage. This is best used in a "header" or
+			"footer" tagged passage.
+
+			Rationale:
+			Designed for use in testing, this macro allows you to selectively open the Debug Mode panel at certain parts of the game, after having played through
+			the game normally without its presence. It's designed especially for use with (after-error:) - combining them as in the example above will allow
+			you to start debugging immediately upon any error occurring.
+
+			Details:
+			Note that, to ensure that Harlowe runs at optimal performance, some Debug Mode features will not be immediately available if the panel is opened mid-game.
+			In particular, the "replay" dialogs (available in Debug View) won't be available for macros and variables that have already been rendered prior to
+			the panel opening.
+
+			Using this macro will *not* cause the contents of passages tagged with "debug-header" or "debug-footer" to suddenly be added to the current passage. However,
+			if the Debug Mode panel remains open after changing passages, those will be added to subsequent passages.
+
+			See also:
+			(after-error:)
+
+			Added in: 3.3.0
+			#debugging
+		*/
+		("debug",
+			noop,
+			Engine.enableDebugMode,
+			[], false);
 
 	/*
 		An onchange event for <select> elements must be registered for the sake of the (dropdown:) macro,
@@ -2663,7 +2698,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 		*/
 		("mock-visits",
 			(...names) => {
-				if (!Engine.options.debug) {
+				if (!Utils.options.debug) {
 					return TwineError.create('debugonly', '(mock-visits:) cannot be used outside of debug mode.');
 				}
 				const incorrect = names.find(name => !Passages.hasValid(name));
@@ -2717,7 +2752,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 		*/
 		("mock-turns",
 			() => {
-				if (!Engine.options.debug) {
+				if (!Utils.options.debug) {
 					return TwineError.create('debugonly', '(mock-turns:) cannot be used outside of debug mode.');
 				}
 			},
@@ -3253,6 +3288,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 				/*
 					In case setItem() fails, let's run this in a try block.
 				*/
+				console.log(storagePrefix("Saved Game") + slotName);
 				try {
 					localStorage.setItem(
 						/*

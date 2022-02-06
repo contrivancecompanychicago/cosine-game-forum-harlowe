@@ -70,13 +70,13 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 				if (lambda) {
 					changer = lambda.apply(section, { loop: scope.TwineScript_GetProperty(i), pos: i+1 });
 					if (TwineError.containsError(changer)) {
-						e.replaceWith(changer.render(''));
+						e.replaceWith(changer.render());
 						lambda = changer = null;
 					}
 					else if (!ChangerCommand.isPrototypeOf(changer)) {
 						e.replaceWith(TwineError.create("macrocall",
 							"The 'via' lambda given to enchantment macros must return a changer, not " + objectName(changer) + "."
-						).render(""));
+						).render());
 						lambda = changer = null;
 					}
 					else {
@@ -89,7 +89,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 							*/
 							e.replaceWith(TwineError.create("macrocall",
 								"The changer produced by the 'via' lambda given to enchantment macros can't include a revision or enchantment changer like (replace:) or (click:)."
-							).render(""));
+							).render());
 							lambda = changer = null;
 						}
 					}

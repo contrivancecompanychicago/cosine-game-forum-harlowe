@@ -110,4 +110,38 @@ describe("debugging macros", function() {
 			expect("(assert-exists:'bess')bess").not.markupToError();
 		});
 	});
+	describe("the (debug:) macro", function() {
+		beforeEach(function() {
+			$('tw-debugger').detach();
+			Utils.options.debug = false;
+		});
+		afterAll(function() {
+			if (location.search.indexOf("spec=") === -1) {
+				Utils.options.debug = false;
+			}
+		});
+
+		it("takes nothing", function() {
+			expect("(debug:3)").markupToError();
+			expect("(debug:)").not.markupToError();
+		});
+		it("produces a command that opens the debug mode panel", function() {
+			expect($('tw-debugger').length).toBe(0);
+			expect("(print:(Debug:) is a command)").markupToPrint('true');
+			runPassage('(Debug:)');
+			expect($('tw-debugger').length).toBe(1);
+		});
+		it("reopens the debug mode panel if debug mode is closed", function(done) {
+			expect($('tw-debugger').length).toBe(0);
+			runPassage('(Debug:)');
+			expect($('tw-debugger').length).toBe(1);
+			$('tw-debugger button.close').click();
+			setTimeout(function(){
+				expect($('tw-debugger').length).toBe(0);
+				runPassage('(Debug:)');
+				expect($('tw-debugger').length).toBe(1);
+				done();
+			},80);
+		});
+	});
 });

@@ -10,7 +10,7 @@ define([
 	'datatypes/lambda',
 	'datatypes/typedvar',
 	'internaltypes/twineerror'],
-({permutations}, NaturalSort, Macros, {objectName, subset, collectionType, isValidDatamapName, is, unique, clone, range}, State, Engine, Passages, Lambda, TypedVar, TwineError) => {
+({permutations, options}, NaturalSort, Macros, {objectName, subset, collectionType, isValidDatamapName, is, unique, clone, range}, State, Engine, Passages, Lambda, TypedVar, TwineError) => {
 	
 	const {optional, rest, either, zeroOrMore, Any, nonNegativeInteger}   = Macros.TypeSignature;
 	const EnSort = NaturalSort("en");
@@ -1399,7 +1399,7 @@ define([
 				TODO: Add this to Engine itself, maybe.
 			*/
 			function storagePrefix(text) {
-				return "(" + text + " " + Engine.options.ifid + ") ";
+				return "(" + text + " " + options.ifid + ") ";
 			}
 			/*
 				This reads all of the localStorage keys with save slot-related names.

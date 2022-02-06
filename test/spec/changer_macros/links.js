@@ -297,7 +297,7 @@ describe("link macros", function() {
 					setTimeout(function() {
 						expect($('tw-passage p').text()).toBe("bar");
 						done();
-					});
+					},40);
 				});
 				it("can be altered with the optional style changer", function(done) {
 					createPassage("<p>$foo</p>","mire");
@@ -324,7 +324,7 @@ describe("link macros", function() {
 					setTimeout(function() {
 						expect(expr.attr('style')).toMatch(/rotate\(20deg\)/);
 						done();
-					});
+					},40);
 				});
 			}
 			it("can be focused", function() {

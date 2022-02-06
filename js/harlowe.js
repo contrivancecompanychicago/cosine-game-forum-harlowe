@@ -101,15 +101,13 @@ require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', '
 
 		// Load options from attribute into story object
 		(header.attr('options') || '').split(/\s/).forEach((b) => {
+			b && (Utils.options[b] = true);
 			/*
 				Enable Debug Mode if it's set in the HTML.
-				Note: because DebugMode() doesn't do anything if Utils.options.debug
-				is already true, this must come first.
 			*/
 			if (b === "debug") {
 				DebugMode();
 			}
-			b && (Utils.options[b] = true);
 		});
 		let startPassage = header.attr('startnode');
 
@@ -177,7 +175,7 @@ require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', '
 				message: "These errors occurred when running the `(metadata:)` macro calls in this story's passages:<p></p>",
 			});
 			// Because these TwineErrors have their 'source' property modified to list their actual source, render() doesn't need an argument.
-			metadataErrors.forEach(error => d.find('p').append(error.render('')));
+			metadataErrors.forEach(error => d.find('p').append(error.render()));
 		}
 		
 		// Load the sessionStorage if it's present (and we're not testing)
