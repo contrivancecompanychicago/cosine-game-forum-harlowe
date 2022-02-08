@@ -43,13 +43,13 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 		Set up the Debug Eval Replay.
 	*/
 	function evalReplay(replay) {
-		/*
-			Due to a circular dependency, RenderUtils sadly can't be used here.
-			So, simply create a barebones dialog from pure DOM nodes.
-		*/
 		let ind = 0;
 		const dialogElem = dialog({ buttons: [{name:"Understood", confirm:true, callback: Object}]});
-		const replayEl = $(`<tw-eval-replay><tw-eval-code></tw-eval-code><tw-eval-explanation></tw-eval-explanation><tw-dialog-links><tw-link style='visibility:hidden'>← ←</tw-link><b></b><tw-link>→ →</tw-link></tw-dialog-links></tw-eval-replay>`);
+		const replayEl = $(`<tw-eval-replay>${
+				replay.length === 1 ? '' : `<tw-eval-code></tw-eval-code>`
+			}<tw-eval-explanation></tw-eval-explanation>${
+				replay.length === 1 ? '' : `<tw-dialog-links><tw-link style='visibility:hidden'>← ←</tw-link><b></b><tw-link>→ →</tw-link></tw-dialog-links>`
+			}</tw-eval-replay>`);
 		dialogElem.find('tw-dialog').css({width:'75vw','max-width':'75vw'}).prepend(replayEl);
 		const left = replayEl.find('tw-link:first-of-type');
 		const center = left.next();

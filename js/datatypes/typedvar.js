@@ -111,6 +111,10 @@ define(['utils/operationutils','internaltypes/varref', 'internaltypes/twineerror
 			if (!VarRef.isPrototypeOf(varRef)) {
 				return TwineError.create('syntax', "The -type syntax must have a variable to its right.");
 			}
+			const {object, compiledPropertyChain} = varRef;
+			if (!object || !object.TwineScript_VariableStore || compiledPropertyChain.length !== 1 || !object.TwineScript_TypeDefs) {
+				return TwineError.create("unimplemented", "I can only restrict the datatypes of variables, not data names or anything else.");
+			}
 			/*
 				TypedVars can only have storable data as datatypes, like "(a:num,num)-type $a". The exception is, of course, structures containing TypedVars
 				themselves, such as (p: "Red", alnum-type _a), which should still be permitted.

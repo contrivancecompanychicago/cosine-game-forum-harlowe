@@ -262,7 +262,10 @@ describe("patterns", function() {
 			['whitespace',' '],
 			['linebreak','\n']
 		];
-		function basicTest(name, arg, canBeUsedAlone) {
+		function basicTest(name, arg, canBeUsedAlone, canContainTypedVars) {
+			if (arguments.length < 4) {
+				canContainTypedVars = true;
+			}
 			if (arguments.length < 3) {
 				canBeUsedAlone = true;
 			}
@@ -277,6 +280,16 @@ describe("patterns", function() {
 				expect("(print: (" + name + ":2))").markupToError();
 				expect("(print: (" + name + ":))").markupToError();
 			});
+			if (!canContainTypedVars) {
+				it("can't contain typed vars", function() {
+					expect("(print: (" + name + ":(p:" + arg + ")-type _a) matches 'red blue green')").markupToError();
+				});
+			}
+			else {
+				it("can't contain typed vars with the same name", function() {
+					expect("(print: (" + name + ":alnum-type _a, alnum-type _b, alnum-type _a) matches 'red blue green')").markupToError();
+				});
+			}
 			if (name === 'p') {
 				return;
 			}
@@ -312,12 +325,14 @@ describe("patterns", function() {
 			basicTest("p-many", 'whitespace,"green"');
 			it("matches strings matching the sequence, repeated any positive number of times", function() {
 				expect("(print: (pmany:'r','b') matches 'rbrbrbrb' and 'rbrb' and 'rb')").markupToPrint('true');
+				expect("(print: (pmany:'r','b') matches '')").markupToPrint('false');
 				expect("(print: (pmany:'r','b') does not match 'r' and it does not match 'redrb' and it does not match '')").markupToPrint('true');
 			});
 			it("takes optional min and max numbers limiting the number of matches, including zero", function() {
 				expect("(print: (pmany:2, 'r','b') matches 'rbrb' and it does not match 'rb' and it matches 'rbrbrbrb')").markupToPrint('true');
 				expect("(print: (pmany:2,4, 'r','b') matches 'rbrbrb' and it does not match 'rb' and it matches 'rbrbrbrb' and it does not match 'rbrbrbrbrb')").markupToPrint('true');
 				expect("(print: (p:'g',(p-many:0,whitespace,'r'),'b') matches 'g r r r r r rb' and 'g rb' and 'gb')").markupToPrint('true');
+				expect("(print: (pmany:0,'r','b') matches '')").markupToPrint('true');
 			});
 			it("errors if the numbers are negative, or if the max number is smaller than the min number", function() {
 				expect("(print: (pmany:-2, 'r','b'))").markupToError();
@@ -326,16 +341,19 @@ describe("patterns", function() {
 			it("when used in (p:), it matches the sequence for the greatest possible number of repetitions", function() {
 				expect("(print: (p:'g',(p-many:whitespace,'r'),'b') matches 'g r r r r r rb')").markupToPrint('true');
 			});
+			it("can't contain typed vars if the min number is 0", function() {
+				expect("(print: (p-many:0, (p:'Red')-type _a) matches 'red blue green')").markupToError();
+			});
 		});
 		describe("(p-either:)", function() {
-			basicTest("p-either", '(p:whitespace,"green")');
+			basicTest("p-either", '(p:whitespace,"green")', true, false);
 			it("matches strings matching any of the arguments", function() {
 				expect("(print: (p-either:'red','blue') matches 'red' and 'blue')").markupToPrint('true');
 				expect("(print: (p-either:'red','blue') does not match 'blu' and it does not match 'reb')").markupToPrint('true');
 			});
 		});
 		describe("(p-opt:)", function() {
-			basicTest("p-opt", '" green"');
+			basicTest("p-opt", '" green"', true, false);
 			it("matches the sequence, or the empty string", function() {
 				expect("(print: (popt:'r','b') matches '' and 'rb')").markupToPrint('true');
 				expect("(print: (popt:'r','b') does not match 'r' and it does not match 'rbrb')").markupToPrint('true');
@@ -487,6 +505,88 @@ describe("patterns", function() {
 			expect('(trimmed: (p:digit-type _a, "B"), "foo")').markupToError();
 		});
 	});
+	describe("the (str-replaced:) macro", function() {
+		it("accepts an optional non-negative integer, a string or string pattern, a string or lambda, and a string", function() {
+			expect("(str-replaced: )").markupToError();
+			expect("(str-replaced: 1)").markupToError();
+			expect("(str-replaced: 'a', 'b', 'ab')").not.markupToError();
+			expect("(str-replaced: 'a', via 'b', 'ab')").not.markupToError();
+			expect("(str-replaced: alnum, 'b', 'ab')").not.markupToError();
+			expect("(str-replaced: (p:'a'), 'b', 'ab')").not.markupToError();
+			expect("(str-replaced: alnum, via 'b', 'ab')").not.markupToError();
+			expect("(str-replaced: (p:'a'), via 'b', 'ab')").not.markupToError();
+			expect("(str-replaced: 2, 'a', 'b', 'ab')").not.markupToError();
+			expect("(str-replaced: 2, 'a', via 'b', 'ab')").not.markupToError();
+			expect("(str-replaced: 2, alnum, 'b', 'ab')").not.markupToError();
+			expect("(str-replaced: 2, (p:'a'), 'b', 'ab')").not.markupToError();
+			expect("(str-replaced: 2, alnum, via 'b', 'ab')").not.markupToError();
+			expect("(str-replaced: 2, (p:'a'), via 'b', 'ab')").not.markupToError();
+			expect("(str-replaced: 'a', 'b', via 'ab')").markupToError();
+			expect("(str-replaced: 'a', via 'b', via 'ab')").markupToError();
+			expect("(str-replaced: alnum, 'b', via 'ab')").markupToError();
+			expect("(str-replaced: (p:'a'), 'b', via 'ab')").markupToError();
+			expect("(str-replaced: alnum, via 'b', via 'ab')").markupToError();
+			expect("(str-replaced: (p:'a'), via 'b', via 'ab')").markupToError();
+			expect("(str-replaced: 2, via 'a', 'b', 'ab')").markupToError();
+			expect("(str-replaced: 2, via 'a', via 'b', 'ab')").markupToError();
+			expect("(str-replaced: alnum, alnum, 'b', 'ab')").markupToError();
+			expect("(str-replaced: alnum, alnum, via 'b', 'ab')").markupToError();
+			expect("(str-replaced: 2, 'a', 'b')").markupToError();
+			expect("(str-replaced: 2, alnum, 'b')").markupToError();
+			expect("(str-replaced: 2, via 'a', 'b')").markupToError();
+			expect("(str-replaced: 'a', where true via 'b', 'ab')").markupToError();
+			expect("(str-replaced: 'a', via _a + 'a', 'ab')").markupToError();
+			expect("(str-replaced: int, 'b', 'ab')").markupToError();
+			expect("(str-replaced: 2.1, 'a', 'b', 'ab')").markupToError();
+			expect("(str-replaced: -2, 'a', 'b', 'ab')").markupToError();
+		});
+		it("when given a string replacement, replaces each match with the given string", function() {
+			expect('(str-replaced: "http://", "https://", "http://www.com")').markupToPrint("https://www.com");
+			expect('(str-replaced: "a", "b", "bananas")').markupToPrint("bbnbnbs");
+			expect('(str-replaced: (p-many:"an"), "b", "bananas")').markupToPrint("bbas");
+			expect('(str-replaced: digit, "b", "ace4u2a")').markupToPrint("acebuba");
+		});
+		describe("when given a lambda replacement", function() {
+			it("replaces each match using the lambda", function() {
+				expect("(str-replaced: '-A', via '2', ' -A- ')").markupToPrint(" 2- ");
+				expect("(str-replaced: alnum, via '2', ' -A- ')").markupToPrint(" -2- ");
+			});
+			it("'it' equals the current match", function() {
+				expect("(str-replaced: alnum, via (lowercase:it), ' -A- ')").markupToPrint(" -a- ");
+				expect("(str-replaced: (p:alnum,':'), via it + ')', 'BE:E:EEP')").markupToPrint("BE:)E:)EEP");
+			});
+			it("'pos' equals the number of the current match", function() {
+				expect("(str-replaced: alnum, via (str:pos*2), 'BRED')").markupToPrint("2468");
+			});
+			it("typed variables in the pattern are accessible in the lambda", function() {
+				expect('(str-replaced: (p: (p-many:digit)-type _a, "%"), via _a + " percent", "5% 10%")').markupToPrint("5 percent 10 percent");
+				expect('(str-replaced: (p: (p-opt:"8")-type _a, "0", digit-type _b), via _b + (str:length of _a), "80506")').markupToPrint("5160");
+			});
+			it("temp variables in the passage are accessible in the lambda, and don't override typed variables in the pattern", function() {
+				expect('(set:_a to "W", _b to "X")(str-replaced: (p: alnum-type _a, "0"), via _a + _b, "203040")').markupToPrint("2X3X4X");
+			});
+			it("errors if given a pattern containing TypedVars that aren't plain temp variables with no property accesses", function() {
+				expect('(str-replaced: (p:digit-type $a, "B"), "AB", "foo")').markupToError();
+				expect('(str-replaced: (p:digit-type _a\'s 1st, "B"), "AB", "foo")').markupToError();
+				expect('(str-replaced: (p:digit-type $a\'s 1st, "B"), "AB", "foo")').markupToError();
+			});
+		});
+		it("matches are non-overlapping", function() {
+			expect('(str-replaced: "ABAB", "W", "ABABAB")').markupToPrint("WAB");
+		});
+		it("if the optional number is provided, only performs a limited number of replacements", function() {
+			expect('(str-replaced: 2, digit, "W", "12345")').markupToPrint("WW345");
+			expect('(str-replaced: 0, alnum, "W", "ABECDEFGEH")').markupToPrint("ABECDEFGEH");
+		});
+		it("returns the entire string if there are no matches", function() {
+			expect('(str-replaced: "ABAB", "W", "ABECDEFGEH")').markupToPrint("ABECDEFGEH");
+			expect('(str-replaced: "", "W", "ABECDEFGEH")').markupToPrint("ABECDEFGEH");
+			expect('(str-replaced: (p:whitespace,digit), "W", "ABECDEFGEH")').markupToPrint("ABECDEFGEH");
+		});
+		it("is also known as (replaced:)", function() {
+			expect('(replaced: "http://", "https://", "http://www.com")').markupToPrint("https://www.com");
+		});
+	});
 	describe("the (unpack:) macro", function() {
 		describe("when given an array pattern assignment request", function() {
 			it("sets the variable in the pattern to their matching values", function() {
@@ -503,6 +603,7 @@ describe("patterns", function() {
 			});
 			it("can set multiple variables at once", function() {
 				expect("(unpack: (a:2,3) into (a:num-type $a, num-type $b))$a $b").markupToPrint("2 3");
+				expect("(unpack: (a:2,3) into (a:$a, $b))$a $b").markupToPrint("2 3");
 				expect("(unpack: (a:2,3,(a:4)) into (a:num,num-type $c, (a:num-type _d)))$c _d").markupToPrint("3 4");
 			});
 			it("works with spread datatypes", function() {
@@ -605,6 +706,10 @@ describe("patterns", function() {
 			it("errors if nothing in the pattern matches", function() {
 				expect("(unpack: 121 into (p:'baz', str-type _a))").markupToError();
 				expect("(unpack: 'foobar' into (p:'baz', str-type _a))").markupToError();
+			});
+			it("errors if multiple vars in the pattern have the same name", function() {
+				expect("(unpack: 'bazbarbaz' into (p:'baz', alnum-type _a, str-type _a))").markupToError();
+				expect("(unpack: 'bazbarbaz' into (p:'baz', alnum-type _a, alnum-type _a))").markupToError();
 			});
 		});
 	});

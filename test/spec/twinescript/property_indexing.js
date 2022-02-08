@@ -196,6 +196,7 @@ describe("property indexing", function() {
 			'[(output:2)]',
 			'str',
 			'(str-type _a)',
+			'str-type _a',
 			'(bind _a)'].map(function(e) {
 				expect("(set:" + e + "'s 1st to 2)").markupToError();
 				expect("(set:$foo to "+e+")(set:$foo's 1st to 2)").markupToError();
@@ -209,6 +210,9 @@ describe("property indexing", function() {
 			});
 			it("'datatype' produces its datatype", function() {
 				expect("(print: (num-type _a)'s datatype is num)").markupToPrint('true');
+			});
+			it("errors if used on the variable itself", function() {
+				expect("(set:_a to (a:1))(put: 2 into array-type _a's 1st)").markupToError();
 			});
 		});
 		describe("for custom macros", function() {

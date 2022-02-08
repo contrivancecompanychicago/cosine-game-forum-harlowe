@@ -250,7 +250,8 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			TwineScript_DefineType(prop, type) {
 				this.TwineScript_TypeDefs[prop] = type;
 				/*
-					VarRef.defineType() automatically installs TwineScript_TypeDefs on 
+					VarRef.defineType() automatically installs TwineScript_TypeDefs on destination objects,
+					but we need to also install it on the present moment.
 				*/
 				if (!hasOwnProperty.call(present.variables,"TwineScript_TypeDefs")) {
 					present.variables.TwineScript_TypeDefs = create(null);

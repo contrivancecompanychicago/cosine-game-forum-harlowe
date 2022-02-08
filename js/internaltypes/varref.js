@@ -323,12 +323,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		if (obj === undefined) {
 			return obj;
 		}
-		if (obj instanceof Map
-				/*
-					This should only be wrapped errors from wrapError(),
-					such as in "_foo of $corge" where _foo doesn't exist.
-				*/
-				|| VarRefProto.isPrototypeOf(obj)) {
+		if (obj instanceof Map) {
 			return obj.get(prop);
 		}
 		if ((prop === "any" || prop === "all" || prop === "start" || prop === "end") && !obj.TwineScript_VariableStoreName) {
@@ -564,15 +559,6 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		else delete obj[prop];
 		eventHandlers.delete.forEach(fn => fn(obj, origProp));
 	}
-	
-	/*
-		This helper function wraps a TwineError so that it can be a valid return
-		value for VarRefProto.create(), due to a number of its consumers being
-		ill-equipped to deal with errors there and then.
-	*/
-	function wrapError(error) {
-		return Object.assign(Object.create(VarRefProto), { error });
-	}
 
 	/*
 		A wrapper around Javascript's [[get]], which
@@ -718,12 +704,6 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 	VarRefProto = Object.freeze({
 		get() {
 			/*
-				If this is an error-wrapped VarRef, return the wrapped error now.
-			*/
-			if (this.error) {
-				return this.error;
-			}
-			/*
 				For speed concerns, this is a for-loop.
 			*/
 			let deepestObject = this.object;
@@ -745,12 +725,6 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			preparation before the assignment is performed.
 		*/
 		set(value, valueRef) {
-			/*
-				If this is an error-wrapped VarRef, return the wrapped error now.
-			*/
-			if (this.error) {
-				return this.error;
-			}
 			/*
 				Show an error if this request is attempting to assign to a value which isn't
 				stored in the variables or temp. variables.
@@ -912,12 +886,6 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			This is only used by the (move:) macro.
 		*/
 		delete() {
-			/*
-				If this is an error-wrapped VarRef, return the wrapped error now.
-			*/
-			if (this.error) {
-				return this.error;
-			}
 			return mutateRight.call(this, (value, [object, property], i) => {
 				/*
 					First, propagate errors from the preceding iteration, or from
@@ -996,9 +964,10 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		*/
 		defineType(type) {
 			const {object, compiledPropertyChain} = this;
-			if (!object || !object.TwineScript_VariableStore || compiledPropertyChain.length !== 1 || !object.TwineScript_TypeDefs) {
-				return TwineError.create("unimplemented", "I can only restrict the datatypes of variables, not data names or anything else.");
-			}
+			/*
+				Because this is only ever called (by AssignmentRequest, Lambda, and Patterns) after having constructed a TypedVar using this
+				VarRef, checking that this is a proper defineType() target (i.e. the compiledPropertyChain's length is 1) is not necessary.
+			*/
 			/*
 				The TypeDefs property chain is constructed here.
 				Each stack frame's variables collection can have a TypeDefs object as an own-property.
@@ -1007,7 +976,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			*/
 			const prop = compiledPropertyChain[0];
 			if (!hasOwnProperty.call(object,"TwineScript_TypeDefs")) {
-				object.TwineScript_TypeDefs = Object.create(object.TwineScript_TypeDefs);
+				object.TwineScript_TypeDefs = Object.create(object.TwineScript_TypeDefs || null);
 			}
 			/*
 				Here is the check that this variable's type isn't being redefined, and the error.
@@ -1063,7 +1032,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			*/
 			let error;
 			if ((error = TwineError.containsError(object))) {
-				return wrapError(error);
+				return error;
 			}
 			/*
 				The propertyChain argument can be an arrays of strings and/or
@@ -1076,12 +1045,6 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				propertyChain to include its own, and use its object.
 			*/
 			if (VarRefProto.isPrototypeOf(object)) {
-				/*
-					Propagate passed-in wrapped errors.
-				*/
-				if (isObject(object.error)) {
-					return object;
-				}
 				propertyChain = object.propertyChain.concat(propertyChain);
 				object = object.object;
 			}
@@ -1090,7 +1053,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			*/
 			const compiledPropertyChain = compilePropertyChain(object, propertyChain);
 			if ((error = TwineError.containsError(compiledPropertyChain))) {
-				return wrapError(error);
+				return error;
 			}
 
 			/*

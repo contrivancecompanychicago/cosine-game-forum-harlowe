@@ -86,7 +86,8 @@ define(['jquery','renderer','utils/operationutils','internaltypes/changedescript
 			make sure that rest params turn into arrays.
 		*/
 		let i = 0;
-		args.forEach((arg, argIndex) => {
+		for (let argIndex = 0; argIndex < args.length; argIndex += 1) {
+			const arg = args[argIndex];
 			const name = varNames[i];
 			/*
 				Load up the runtime type constraints, first. Note that rests become arrays, so they must be
@@ -104,6 +105,9 @@ define(['jquery','renderer','utils/operationutils','internaltypes/changedescript
 				the VarRef 'set' event, as well as updating the TwineScript_KnownName of the value.
 			*/
 			const ref = VarRef.create(tempVariables, name);
+			if (TwineError.containsError(ref)) {
+				return ref;
+			}
 			if (params[i].datatype.rest) {
 				/*
 					Because each .set() activates the 'set' event for VarRef, which includes Debug Mode's
@@ -116,7 +120,7 @@ define(['jquery','renderer','utils/operationutils','internaltypes/changedescript
 					.concat([arg]);
 				if (argIndex < args.length-1) {
 					tempVariables[name] = newArray;
-					return;
+					continue;
 				} else {
 					ref.set(newArray);
 				}
@@ -126,7 +130,7 @@ define(['jquery','renderer','utils/operationutils','internaltypes/changedescript
 				i += 1;
 			}
 			notifiers.push(TwineNotifier.create(objectName(ref) + " is now " + objectName(tempVariables[name])));
-		});
+		}
 		/*
 			Of course, giving no values to a rest param is valid, too.
 		*/
@@ -134,7 +138,11 @@ define(['jquery','renderer','utils/operationutils','internaltypes/changedescript
 			i += 1;
 		}
 		if (params[i] && params[i].datatype.rest) {
-			VarRef.create(tempVariables, varNames[i]).set([]);
+			const ref = VarRef.create(tempVariables, varNames[i]);
+			if (TwineError.containsError(ref)) {
+				return ref;
+			}
+			ref.set([]);
 			tempVariables.TwineScript_TypeDefs[name] = params[i].datatype.create('array');
 		}
 

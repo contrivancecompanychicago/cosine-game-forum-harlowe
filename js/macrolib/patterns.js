@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype', 'datatypes/typedvar', 'internaltypes/twineerror'],
-($, Macros, {anyRealLetter, anyUppercase, anyLowercase, anyCasedLetter, realWhitespace, impossible}, {objectName, toSource}, Datatype, TypedVar, TwineError) => {
+define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatypes/datatype', 'datatypes/typedvar', 'internaltypes/twineerror', 'internaltypes/varscope'],
+($, Macros, {anyRealLetter, anyUppercase, anyLowercase, anyCasedLetter, realWhitespace, impossible}, {objectName, toSource}, Lambda, Datatype, TypedVar, TwineError, VarScope) => {
 
 	const {rest, either, optional, nonNegativeInteger} = Macros.TypeSignature;
 	const {assign, create} = Object;
@@ -12,24 +12,43 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 		The base function for constructing Pattern datatypes, using the Pattern constructor's args, and a function to make the
 		internal RegExp using the args (which the function preprocesses to ensure they're all capable of being turned into RegExps).
 	*/
-	const createPattern = ({name, fullArgs, args, makeRegExpString = subargs => subargs.join(''), insensitive=false, canContainTypedVars = true, canBeUsedAlone = true}) => {
+	const createPattern = ({name, fullArgs, args, makeRegExpString = subargs => subargs.join(''), insensitive=false, canContainTypedVars = true, canBeUsedAlone = true, canContainTypedGlobals = true}) => {
 		/*
 			"fullArgs" includes non-pattern arguments like (p-many:)'s min and max. args, which is optionally provided, does not.
 		*/
 		const patternArgs = args || fullArgs;
 		/*
 			Convert the args into their regexp string representations, if that's possible.
+
+			Notice that this map of typed var names is used across all recursive mapper() calls.
 		*/
+		const typedVarNames = create(null);
 		const compiledArgs = patternArgs.map(function mapper(pattern) {
 			/*
 				If this pattern has a TypedVar in it (i.e. it's a destructuring/capture pattern) then
 				convert it into a RegExp capture, so that RegExp.exec() can capture the matched substring.
 			*/
 			if (TypedVar.isPrototypeOf(pattern)) {
+				const {varRef} = pattern;
 				if (!canContainTypedVars) {
 					return TwineError.create("operation",
-						"Optional string patterns, like (" + name + ":)" + (name === "p-many" ? " with min 0" : '') + ", can't have typed variables inside them.");
+						"Optional string patterns, like (" + name + ":)" + (name === "p-many" ? " with a minimum of 0 matches" : '') + ", can't have typed variables inside them.");
 				}
+				/*
+					If typed globals aren't allowed, check that it's a temp variable without a property access.
+				*/
+				if (!canContainTypedGlobals && !VarScope.isPrototypeOf(varRef.object)) {
+					return TwineError.create("operation", "Only typed temp variables can be used in patterns given to (" + name + ":)");
+				}
+				/*
+					Check that this TypedVar name isn't repeated.
+				*/
+				const varName = varRef.getName();
+				if (varName in typedVarNames) {
+					return TwineError.create("operation", "There's already a typed temp variable named _" + varName + " inside this (" + name + ":) call.");
+				}
+				typedVarNames[varName] = true;
+
 				const subPattern = mapper(pattern.datatype);
 				return TwineError.containsError(subPattern) ? subPattern : "(" + subPattern + ")";
 			}
@@ -41,9 +60,18 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 				/*
 					The canContainTypedVars constraint must be obeyed for all sub-patterns of this pattern.
 				*/
-				if (!canContainTypedVars && "typedVars" in pattern && pattern.typedVars().length) {
-					return TwineError.create("operation",
-						"(" + name + ":) can't have typed variables inside its pattern.");
+				if ((!canContainTypedVars || !canContainTypedGlobals) && typeof pattern.typedVars === "function") {
+					const typedVars = pattern.typedVars();
+					if (!canContainTypedVars && typedVars.length) {
+						return TwineError.create("operation",
+							"(" + name + ":) can't have typed variables inside its pattern.");
+					}
+					/*
+						If typed globals aren't allowed, check that it's a temp variable without a property access.
+					*/
+					if (!canContainTypedGlobals && typedVars.some(v => !VarScope.isPrototypeOf(v.varRef.object))) {
+						return TwineError.create("operation", "Only typed temp variables can be used in patterns given to (" + name + ":)");
+					}
 				}
 				if (pattern.regExp) {
 					return (pattern.rest ? "(?:" : "") + (
@@ -341,7 +369,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			Creates a string pattern that matches either of the single strings or datatypes given.
 
 			Example usage:
-			* `"Lovegyre" matches (p: (p-either: ...$emotions), "gyre")` checks if the string is any of the strings in $emotions, followed by "gyre".
+			* `"Lovegyre" matches (p: (p-either: ...$emotions), "gyre")` checks if the string is any of the strings in $emotions (which is assumed to be an array), followed by "gyre".
 			* `(set: (p-either:"","Hugged","Charmed","Dazed")-type $statusEffect to "")` creates a variable that can only be set to either
 			"Hugged", "Charmed", "Dazed" or the empty string.
 
@@ -540,7 +568,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 
 			Example usage:
 			* `"Hocus pocus" matches (p-ins:"hocus", (p-opt:" "), "pocus")` checks if the magic words match the pattern, regardless of any letter's capitalisation.
-			* `(set: (p:(p-ins:"SCP-"), ...digit-type _codeNum) to "Scp-991")` uses destructuring to extract "991" from the right-side string, checking if it matched
+			* `(unpack: "Scp-991" into (p:(p-ins:"SCP-"), ...digit-type _codeNum))` uses (unpack:) to extract "991" from the right-side string, checking if it matched
 			the given prefix case-insensitively first.
 
 			Details:
@@ -599,7 +627,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			The pattern given to this macro cannot contained TypedVars (such as `(split: (p: alnum-type _letter), "A")`). Doing so will cause an error.
 
 			See also:
-			(words:), (folded:), (joined:), (trimmed:)
+			(words:), (folded:), (joined:), (trimmed:), (str-replaced:)
 
 			Added in: 3.2.0
 			#string
@@ -679,7 +707,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 			The pattern given to this macro cannot contained TypedVars (such as `(split: (p: alnum-type _letter), "A")`). Doing so will cause an error.
 
 			See also:
-			(words:), (split:)
+			(words:), (split:), (str-replaced:)
 
 			Added in: 3.2.0
 			#string
@@ -711,5 +739,177 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/datatype
 				}
 				return str.replace(RegExp("^(" + pattern.regExp + ")*|(" + pattern.regExp + ")*$",'g'),'');
 			},
-			[either(String, Datatype), optional(String)]);
+			[either(String, Datatype), optional(String)])
+
+		/*d:
+			(str-replaced: [Number], String or Datatype, String or Lambda, String) -> String
+
+			Also known as: (replaced:)
+			
+			This macro produces a copy of the content string (the last string given), with all instances of a certain search string (or pattern) replaced using a given string (or a "via" lambda that constructs a replacement string).
+			Giving an optional number N lets you only replace the first N instances. If a pattern is given, TypedVars may be used inside it, and they will be accessible in the "via" lambda.
+
+			Example usage:
+			* `(str-replaced: "http://", 'https://', $URL)` produces a copy of the string in $URL with all occurrences of "http://" replaced with "https://".
+			* `(str-replaced: (p-many: whitespace), ' ', $playerName)` produces a copy of the string in $playerName with all runs of whitespace (including multiple spaces) replaced with a single space.
+			* `(str-replaced: 1, '*', '☆', _nextLine)` produces a copy of _nextLine with the first occurrence of "*" replaced with "☆".
+			* `(str-replaced: (p-many:alnum), via (str-reversed: it), "09-4128-3253")` produces `"90-8214-3523"`.
+			* `(str-replaced: (p: (p-many:digit)-type _a, "%"), via _a + " percent", "5% 10%")` produces `"5 percent 10 percent"`.
+
+			Rationale:
+			Replacing the contents of strings is a very common computing operation, and can serve a variety of uses. Player-inputted text, such as by (input-box:), will often
+			need to have unwanted characters (such as newlines) removed. Strings used for procedurally describing certain objects or game states, like the player's
+			physical status, may need to be subtly modified to fit in specific sentences. Or, you may want to do something more esoteric, like "corrupting" or "censoring" a string
+			by replacing certain characters arbitrarily.
+
+			While you can replace text that's already been rendered into the passage using (replace:) or (replace-with:), this macro is better suited for modifying strings that
+			are stored in variables and used throughout the story.
+
+			Details:
+			While this macro does have the shorter alias as (replaced:), it is recommended that (str-replaced:) be used to avoid confusion with the (replace:) macro, which is a changer that
+			performs immediate replacements (using the attached hook) on passage hooks and text, not strings.
+
+			Matches and replacements are non-overlapping - if the search string or pattern would overlap certain locations in the string, only the leftmost location is replaced.
+			So, `(str-replaced: "1010", 'X', "101010")` will produce `"X10"`, not `"10X"` or `"XX"`.
+
+			You can supply a "via" lambda to specify a more complicated replacement than just a single string.	The `it` identifier in the lambda will be the matched portion of the string.
+			In the case of `(str-replaced: alnum, via it + "-", "Fred...?")`, `it` will be "F", "r", "e", and "d", respectively.
+			Of course, as always, you can provide a temp variable in front of the "via" keyword, which will be usable in the lambda as a more readable alternative  to the `it` identifier.
+			In the case of `(str-replaced: (p:(p-many:digit), "-", (p-many:digit)), _phoneNum via "(131) " + _phoneNum, "Call me on 999-000!")`, both _phoneNum and `it` will be "999-000".
+
+			Interestingly, any pattern (using the (p:) macro and its relatives) given to (str-replaced:) *can* have TypedVars inside it. These TypedVars will be accessible within the "via" lambda.
+			In the case of `(str-replaced: (p: (p-many:digit)-type _a, "%"), via _a + " percent", "5% 10%")`, above, the "via" lambda will be run twice: the first time, `it` will be "5%", and _a will be "5"
+			(because it contains only the `(p-many:digit)` portion of the matched string). The second time, `it` will be "10%", and _a will be "10". This feature allows you to
+			capture "sub-groups" within the matched sub-string, and use them in the "via" lambda to make a custom replacement for every match in the content string.
+
+			By the way, the `pos` identifier can also be used inside the "via" lambda. It equals the number of replacements before and including this one.
+
+			Here's a short table summarising some of the above information.
+
+			| Macro call | `it` | `pos` | `_a` | `_phoneNum` | Replacement made by the lambda
+			|---
+			| `(str-replaced: (p: (p-many:digit)-type _a, "%"), via _a + " percent", "5% 10%")` | `"5%"` | `1` | `"5"` | n/a | `"5 percent"`
+			| |`"10%"` | `2` | `"10"` | n/a | `"10 percent"`
+			| `(str-replaced: alnum, via it + "-", "Fred...?")` | `"F"` | `1` | n/a | n/a | `"F-"`
+			| |`"r"` | `2` | n/a | n/a  | `"r-"`
+			| |`"e"` | `3` | n/a | n/a  | `"e-"`
+			| |`"d"` | `4` | n/a | n/a  | `"d-"`
+
+			The optional number decides how many replacements, starting from the left of the content string, should be made. If no string is given, all possible replacements are made.
+			If 0 is given, no replacements will be made, the content string will be returned as-is, and no error will occur. Giving negative numbers or non-whole numbers *will* produce an error, though.
+
+			If an empty or meaningless pattern is given as a search value (for instance, `(p:)` or `""`) then no replacements will be made and the content string will be returned as-is.
+
+			See also:
+			(trimmed:), (split:), (unpack:)
+
+			Added in: 3.3.0
+			#string
+		*/
+		(["str-replaced", "replaced"], "String",
+			(section, num, pattern, replacement, str) => {
+				/*
+					If there's not an optional first number, shift every argument left by a slot.
+				*/
+				if (typeof num !== "number") {
+					if (str !== undefined) {
+						return TwineError.create("macrocall", `1 too many values were given to (str-replaced:).`,
+							"If this is given 5 values, the first value must be a number of replacements.");
+					}
+					str = replacement;
+					replacement = pattern;
+					pattern = num;
+					num = Infinity;
+				} else if (str === undefined) {
+					return TwineError.create("macrocall", `The (str-replaced:) macro needs 1 more value.`,
+						"The final string seems to be missing.");
+				}
+				/*
+					Due to the dubious type signature of this macro (needed to allow the optional first number), some more type-checking
+					needs to be done.
+				*/
+				if (Datatype.isPrototypeOf(replacement)) {
+					return TwineError.create("datatype", `The replacement value for (str-replaced:) must be a string or lambda, not ${objectName(replacement)}`);
+				}
+				if (Lambda.isPrototypeOf(str) || Lambda.isPrototypeOf(pattern)) {
+					return TwineError.create("datatype", `The ${Lambda.isPrototypeOf(str) ? "final string" : 'search pattern'} given to (str-replaced:) can't be a lambda.`,
+						"Only the replacement value (after the search pattern) can be a 'via' lambda.");
+				}
+
+				/*
+					Create the pattern (and specifically its RegExp and TypedVars). Note that even plain strings should be given as fullArgs to createPattern().
+				*/
+				pattern = createPattern({ name: "str-replaced", fullArgs: [pattern], canContainTypedGlobals: false });
+				if (TwineError.containsError(pattern)) {
+					return pattern;
+				}
+				/*
+					If the pattern was (p:) or something equally vacuous, then it won't have a useful regExp string.
+				*/
+				if (!pattern.regExp) {
+					return str;
+				}
+				/*
+					Note that because of the while-exec loop below, this will freeze the game without 'g'.
+				*/
+				const regExp = RegExp(pattern.regExp,'g');
+				const typedVars = Lambda.isPrototypeOf(replacement) ? pattern.typedVars() : [];
+				let match;
+				/*
+					Slowly build up the new string by performing every replacement manually, running the lambda (if any)
+					with the specified typedVars visible.
+				*/
+				let pos = 1;
+				let oldIndex = 0;
+				let ret = '';
+				while (str && (match = regExp.exec(str)) && num > 0) {
+					/*
+						This should be the same as the default produced internally by Lambda.apply() (if tempVariables isn't given).
+					*/
+					const tempVariables = Object.create(section.stack.length ? section.stackTop.tempVariables : VarScope);
+					/*
+						For each subgroup in the RegExp match, assign to the matching typedVar. Note that typedVars() returns them
+						in the same order as the RegExp has matches.
+					*/
+					for (let i = 0; i < typedVars.length; i += 1) {
+						const typedVar = typedVars[i];
+						/*
+							Again, as in Lambda.apply(), a more formal defineType() and set() call may be performed to assign the match
+						*/
+						const ref = typedVar.varRef.create(tempVariables, typedVar.varRef.propertyChain);
+						if (TwineError.containsError(ref)) {
+							return ref;
+						}
+						const error = ref.defineType(typedVar.datatype);
+						if (TwineError.containsError(error)) {
+							return error;
+						}
+						/*
+							There really, really should not be an error here, so bothering to check isn't necessary.
+						*/
+						ref.set(match
+							/*
+								Remember that 0 is the full match, including subgroups. Hence, subgroups use 1-indexing.
+							*/
+							[i + 1]);
+					}
+					/*
+						Now that the tempVariables are in place.
+					*/
+					const repl = Lambda.isPrototypeOf(replacement) ? replacement.apply(section, {loop: match[0], pos, tempVariables}) : replacement;
+					if (typeof repl !== "string") {
+						return TwineError.create("datatype", `(str-replaced:)'s lambda must produce a string, but it produced ${objectName(repl)} when given "${match[0]}".`);
+					}
+					/*
+						Now that the replacement has been computed, perform it here.
+					*/
+					ret += str.slice(oldIndex, match.index) + repl;
+					pos += 1;
+					num -= 1;
+					oldIndex = match.index + match[0].length;
+				}
+				ret += str.slice(oldIndex);
+				return ret;
+			},
+			[either(nonNegativeInteger, String, Datatype), either(Datatype, String, Lambda.TypeSignature('via')), either(String, Lambda.TypeSignature('via')), optional(String)]);
 });

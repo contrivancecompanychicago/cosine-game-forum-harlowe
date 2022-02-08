@@ -177,7 +177,7 @@ define([
 		Since the consumer is always $().append(), returning undefined is fine.
 	*/
 	const makeReplayButton = replay => {
-		if (replay && replay.length > 1) {
+		if (replay && replay.length) {
 			return $("<tw-open-button replay label='🔍'>").data('evalReplay', replay);
 		}
 	};
@@ -960,14 +960,22 @@ define([
 					diff: 0,
 				}];
 			}
+			let ret;
 			try {
-				return run(this, args);
+				ret = run(this, args);
 			} catch(e) {
 				window.console && console.error(e);
 				this.evalReplay = null;
 				return TwineError.create('', `An internal error occurred while trying to run ${[].concat(args).map(e=>e.text).join('')}.`,
 					`The error was "${e.message}".\nIf this is the latest version of Harlowe, please consider reporting a bug (see the documentation).`);
 			}
+			/*
+				For replays with only two frames, remove the first "Once upon a time" frame.
+			*/
+			if (this.evalReplay && this.evalReplay.length === 2) {
+				this.evalReplay.shift();
+			}
+			return ret;
 		},
 
 		/*

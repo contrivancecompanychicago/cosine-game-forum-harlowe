@@ -272,8 +272,14 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 							Create new VarRefs that use this tempVariable scope as a base.
 						*/
 						const ref = variable.varRef.create(tempVariables, variable.varRef.propertyChain);
-						ref.defineType(variable.datatype);
-						const error = ref.set(arg);
+						if (TwineError.containsError(ref)) {
+							return ref;
+						}
+						let error = ref.defineType(variable.datatype);
+						if (TwineError.containsError(error)) {
+							return error;
+						}
+						error = ref.set(arg);
 						if (TwineError.containsError(error)) {
 							return error;
 						}

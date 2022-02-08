@@ -443,7 +443,7 @@ define([
 			if (isTypedVar) {
 				ret = TypedVar.create(Datatype.create('any'),ret);
 			}
-			else if (!isVarRef) {
+			else if (!isVarRef && !TwineError.containsError(ret)) {
 				ret = ret.get();
 			}
 		}
@@ -842,7 +842,7 @@ define([
 				run(section,  after, VARREF),
 				token.name
 			);
-			ret = isVarRef ? ret : ret.get();
+			ret = isVarRef || TwineError.containsError(ret) ? ret : ret.get();
 		}
 		else if (type === "belongingOperator" || type === "belongingItOperator") {
 			const value = run(section,  before);
@@ -865,7 +865,7 @@ define([
 					run(section,  after, VARREF),
 				{computed:true,value}
 			);
-			ret = isVarRef ? ret : ret.get();
+			ret = isVarRef || TwineError.containsError(ret) ? ret : ret.get();
 		}
 		/*
 			Notice that this one is right-associative instead of left-associative.
@@ -879,14 +879,14 @@ define([
 				run(section, before, VARREF),
 				token.name
 			);
-			ret = isVarRef ? ret : ret.get();
+			ret = isVarRef || TwineError.containsError(ret) ? ret : ret.get();
 		}
 		else if (type === "itsProperty" || type === "belongingItProperty") {
 			ret = VarRef.create(
 				section.Identifiers.it,
 				token.name
 			);
-			ret = isVarRef ? ret : ret.get();
+			ret = isVarRef || TwineError.containsError(ret) ? ret : ret.get();
 		}
 		else if (type === "possessiveOperator" || type === "itsOperator") {
 			if (!after || (!before && token.type !== "itsOperator")) {
@@ -910,7 +910,7 @@ define([
 					token.type === "itsOperator" ? section.Identifiers.it : run(section,  before, isVarRef),
 					{computed:true, value}
 				);
-				ret = isVarRef ? ret : ret.get();
+				ret = isVarRef || TwineError.containsError(ret) ? ret : ret.get();
 			}
 		}
 		else if (type === "twineLink") {
@@ -944,13 +944,21 @@ define([
 					impossible('Runner.run', 'macro token had no macroName child token');
 					return 0;
 				}
+				let macroRef; 
+				if (variableCall) {
+					macroRef = VarRef.create(
+						macroNameToken.text[0] === "_" ? section.stackTop.tempVariables : State.variables,
+						macroNameToken.text.trim().slice(1,-1)
+					);
+					if (!TwineError.containsError(macroRef)) {
+						macroRef = macroRef.get();
+					}
+				}
+				else {
+					macroRef = token.name;
+				}
 				ret = Macros[variableCall ? "runCustom" : "run"](
-					variableCall
-						? VarRef.create(
-							macroNameToken.text[0] === "_" ? section.stackTop.tempVariables : State.variables,
-							macroNameToken.text.trim().slice(1,-1)
-						).get()
-						: token.name,
+					macroRef,
 					section,
 					/*
 						Divide all of the children of this macro call (minus the macro name) into
