@@ -374,7 +374,7 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 			if (this.property || this.next) {
 				return "a complex hook name";
 			}
-			return "?" + this.selector.data + " (a hook name)";
+			return this.TwineScript_ToSource() + " (a hook name)";
 		},
 
 		TwineScript_TypeID: "hookName",

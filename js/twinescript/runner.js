@@ -1017,14 +1017,14 @@ define([
 					upward isn't particularly enlightening.
 				*/
 				&& !evalReplay[evalReplay.length-1].error) {
-			const isError = TwineError.containsError(ret);
+			const error = TwineError.containsError(ret);
 			const fullCode = evalReplay[evalReplay.length-1].code;
 			/*
 				The basis is used to convert string indexes from passage-wise to expression-wise.
 				It equals the passage-wise index of the expression's first element.
 			*/
 			const basis = evalReplay[0].basis;
-			const resultSource = ` ${isError ? "🐞" :
+			const resultSource = ` ${error ? "🐞" :
 				ret && !ret.TwineScript_ToSource && ret.TwineScript_Unstorable ? objectName(ret) :
 				toSource(ret)} `;
 
@@ -1072,11 +1072,11 @@ define([
 				/*
 					Each step depicts either the permution of a code structure into a Harlowe value, or an error being produced.
 				*/
-				desc: `<code>${escape(fullCode.slice(start, end))}</code> ` + (isError ? `produced an error: ` : `became <code>${escape(resultSource)}</code> (${typeName(ret)}).`),
+				desc: `<code>${escape(fullCode.slice(start, end))}</code> ` + (error ? `produced an error: ` : `became <code>${escape(resultSource)}</code> (${typeName(ret)}).`),
 				start,
 				end,
 				diff,
-				error: isError && ret.render(fullCode.slice(start, end), /*NoEvents*/ true),
+				error: error && error.render(fullCode.slice(start, end), /*NoEvents*/ true),
 			});
 		}
 		return ret;

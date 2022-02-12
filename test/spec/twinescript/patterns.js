@@ -474,6 +474,10 @@ describe("patterns", function() {
 			it("errors if given a pattern containing TypedVars", function() {
 				expect('(split: (p:digit-type _a, "B"), "foo")').markupToError();
 			});
+			it("avoids infinite regress", function() {
+				expect("(splitted: (p-many:0,alnum), 'R&B')").not.markupToError();
+				expect("(splitted: (p-many:0,alnum), '&')").not.markupToError();
+			});
 		});
 		it("returns the entire string if there are no matches", function() {
 			expect('(print:(split:"J","ABECDEFGEH"))').markupToPrint("ABECDEFGEH");
@@ -504,7 +508,54 @@ describe("patterns", function() {
 		it("errors if given a pattern containing TypedVars", function() {
 			expect('(trimmed: (p:digit-type _a, "B"), "foo")').markupToError();
 		});
+		it("avoids infinite regress", function() {
+			expect("(trimmed: (p-many:0,alnum), 'R&B')").not.markupToError();
+			expect("(trimmed: (p-many:0,alnum), '&')").not.markupToError();
+		});
 	});
+	describe("the (str-find:) macro", function() {
+		it("accepts a string pattern, and a string", function() {
+			expect("(str-find: )").markupToError();
+			expect("(str-find: 1)").markupToError();
+			expect("(str-find: 'a')").markupToError();
+			expect("(str-find: alnum)").markupToError();
+			expect("(str-find: 'a', 'b')").markupToError();
+			expect("(str-find: alnum, 'b')").not.markupToError();
+			expect("(str-find: (p:'a'), 'b')").not.markupToError();
+			expect("(str-find: int, 'b')").markupToError();
+		});
+		it("produces an array of all occurrences of the pattern in that string", function() {
+			expect('(v6m-source:(str-find: (p:"Mr. ", ...alnum), "Mr. Smith, Mr. Schmitt, and Mr. Smithers"))').markupToPrint('(a:"Mr. Smith","Mr. Schmitt","Mr. Smithers")');
+			expect("(v6m-source:(str-find: (p:'G',alnum,'D'), 'GADGEDGUD'))").markupToPrint('(a:"GAD","GED","GUD")');
+			expect("(v6m-source:(str-find: (p: alnum,'D'), 'GADGEDGUD'))").markupToPrint('(a:"AD","ED","UD")');
+			expect("(v6m-source:(str-find: (p-either: 'G','D'), 'GADGEDGUD'))").markupToPrint('(a:"G","D","G","D","G","D")');
+			expect("(v6m-source:(str-find: (p: alnum,'D'), 'foo'))").markupToPrint('(a:)');
+		});
+		it("matches are non-overlapping", function() {
+			expect('(v6m-source:(str-find: (p:anycase,digit,anycase,digit), "A2A3A4"))').markupToPrint('(a:"A2A3")');
+		});
+		it("when typedvars are used, produces an array of datamaps whose values correspond to each typedvar, plus the full match", function() {
+			expect("(v6m-source:(str-find: (p: (p-many:digit)-type _a, '%'), '40% 2% 118%'))").markupToPrint('(a:(dm:"a","40","match","40%"),(dm:"a","2","match","2%"),(dm:"a","118","match","118%"))');
+			expect("(v6m-source:(str-find: (p: digit-type _a, anycase-type _b, digit-type _c), '5A2'))").markupToPrint('(a:(dm:"a","5","b","A","c","2","match","5A2"))');
+			expect("(v6m-source:(str-find: (p: digit-type _a, (p-opt:anycase)-type _b, digit-type _c), '52'))").markupToPrint('(a:(dm:"a","5","b","","c","2","match","52"))');
+		});
+		it("errors if given a pattern containing TypedVars that aren't plain temp variables with no property accesses", function() {
+			expect('(str-find: (p:digit-type $a, "B"), "foo")').markupToError();
+			expect('(str-find: (p:digit-type _a\'s 1st, "B"), "foo")').markupToError();
+			expect('(str-find: (p:digit-type $a\'s 1st, "B"), "foo")').markupToError();
+		});
+		it("errors if the pattern repeats TypedVar names", function() {
+			expect('(str-find: (p:digit-type _a, digit-type _a), "121")').markupToError();
+		});
+		it("errors if a _match TypedVar was given", function() {
+			expect('(str-find: (p:digit-type _a, digit-type _match), "121")').markupToError();
+		});
+		it("avoids infinite regress", function() {
+			expect("(str-find: (p-many:0,alnum), 'R&B')").not.markupToError();
+			expect("(str-find: (p-many:0,alnum), '&')").not.markupToError();
+		});
+	});
+
 	describe("the (str-replaced:) macro", function() {
 		it("accepts an optional non-negative integer, a string or string pattern, a string or lambda, and a string", function() {
 			expect("(str-replaced: )").markupToError();
@@ -571,6 +622,9 @@ describe("patterns", function() {
 				expect('(str-replaced: (p:digit-type $a\'s 1st, "B"), "AB", "foo")').markupToError();
 			});
 		});
+		it("errors if the pattern repeats TypedVar names", function() {
+			expect('(str-replaced: (p:digit-type _a, digit-type _a), "W", "121")').markupToError();
+		});
 		it("matches are non-overlapping", function() {
 			expect('(str-replaced: "ABAB", "W", "ABABAB")').markupToPrint("WAB");
 		});
@@ -585,6 +639,10 @@ describe("patterns", function() {
 		});
 		it("is also known as (replaced:)", function() {
 			expect('(replaced: "http://", "https://", "http://www.com")').markupToPrint("https://www.com");
+		});
+		it("avoids infinite regress", function() {
+			expect("(str-replaced: (p-many:0,alnum), 'X', 'R&B')").not.markupToError();
+			expect("(str-replaced: (p-many:0,alnum), 'X', '&')").not.markupToError();
 		});
 	});
 	describe("the (unpack:) macro", function() {

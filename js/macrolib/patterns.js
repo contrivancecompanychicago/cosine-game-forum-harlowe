@@ -659,7 +659,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/lambda',
 				}
 				/*
 					The following loop algorithm doesn't compile a global RegExp, instead electing to just slice the
-					string from the left manually.
+					string from the left manually. Note that because this slices down str, the 'g' flag isn't needed.
 				*/
 				const regExp = RegExp(pattern.regExp), ret = [];
 				let match;
@@ -694,7 +694,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/lambda',
 			* `(trimmed: digit, "john61112")` produces "john".
 
 			Rationale:
-			Removing certain leading or trailing characters in a string is a common operation, essentially equivalent to extracting a single substring from within a string.
+			Removing certain leading or trailing characters in a string is a common operation, and is essentially equivalent to extracting a single substring from within a string.
 			Removing the punctuation or whitespace surrounding a word, or just certain specific characters, is important when you need to use the middle portion of a string
 			for some other use, such as being displayed in a different context. It's especially useful when dealing with user-inputted strings, such as those produced by (input-box:).
 
@@ -742,9 +742,117 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/lambda',
 			[either(String, Datatype), optional(String)])
 
 		/*d:
+			(str-find: Datatype, String) -> Array
+
+			Also known as: (string-find:)
+			
+			When given a string pattern and a string, this produces an array of each substring within the string that the pattern matched. If
+			typed variables were in the pattern, this instead produces an array of datamaps, each of which has data names matching the variables,
+			and data values matching the portions of the string matched by those typed variables, as well as a "match" data name for the full substring.
+
+			Example usage:
+			* `(str-find: digit, "PARSEC47"))` produces `(a:"4","7")`.
+			* `(str-find: (p:"S", ...alnum), "Mr. Smith, Mr. Schmitt, and Mr. Smithers"))` produces `(a:"Smith","Schmitt","Smithers")`.
+			* `(str-find:(p:"$", ...digit, ".", ...digit), "Apple pie - $5.50; Pumpkin pie - $14.50"))` produces `(a:"$5.50","$14.50")`.
+			* `(str-find:(p:...alnum-type _flavor, " pie - $", (p:...digit, ".", ...digit)-type _cost), "Apple pie - $5.50; Pumpkin pie - $14.50"))` produces the following:<br>
+			`(a:
+				(dm:"cost","5.50","flavor","Apple","match","Apple pie - $5.50"),
+				(dm:"cost","14.50","flavor","Pumpkin","match","Pumpkin pie - $14.50")
+			)`
+
+			Rationale:
+			The `matches` operator allows you to check if a string contains a specific substring that matches a pattern. This macro goes further, leting you extract every instance
+			of those matching substrings, and use them as data. This is very useful if you have a structured string that you'd like to "break down" by removing unimportant
+			parts, but which isn't uniform enough to simply use (split:) for.
+
+			Using typed variables to extract multiple components of the substring at once, such as in the above example, can let you directly translate a string
+			into a sequence of data structures that provide easy access to that data. Rather than having to perform additional (str-find:) calls on the results of the first
+			(str-find:), you can tag parts of the initial pattern with `-type` and a temp variable name, thus causing a datamap of those parts to be created. This array of
+			datamaps can then be tweaked further with (altered:). If the last (str-find:) example above was stored in the variable `_pies`, then one could write
+			`(altered: via its cost + " for " + (lowercase:its flavor), ..._pies)` to create `(a: "5.50 for apple", "14.50 for pumpkin")`.
+
+			####Regarding (find:) and (str-find:):
+
+			You might wonder how this compares to (find:), and why the latter only takes a lambda instead of a pattern (such as that given to (unpack:)).
+			Here is how to think of the two macros. The (find:) macro operates on sequences of values, and treats all of them as discrete values whose order doesn't
+			impact their individual meaning. Hence, it takes a `where` lambda that checks each value individually. Strings, however, consist of sequences of characters that
+			*only* have meaning from their order, so (str-find:) takes a string pattern that can match a long substring, or various substring possibilities, by itself.
+
+			Details:
+			This macro only takes a string pattern as its first value. This is because, if a string was given, every result in the produced array would simply be a copy of that string,
+			which isn't particularly useful.
+
+			Here is a more detailed description of how (str-find:) works when the pattern contains typed variables. Whenever (str-find:) encounters a substring,
+			it takes the substring, and "unpacks" it into the typed variables in the pattern (in a manner similar to (unpack:)). Then, it immediately
+			converts these temp variables into datamap names and values, and produces a datamap corresponding to that particular substring. Finally, a "match" dataname is added
+			holding the full substring.
+
+			Thus, even though this macro can use typed temp variables in its pattern, this does *not* cause any temp variables to be created in the passage or containing hook. Other macro calls can't access
+			the temp variables used here, and they essentially do not exist. This is similar to (str-replaced:)'s use of temp variables in its patterns, which also does not affect the temp variables in
+			the passage or containing hook.
+
+			If no matches of the pattern exist within the string, an empty array is returned.
+
+			If two identical TypedVar names are used in the pattern (such as `(p: alnum-type _a, alnum-type _a)`) then an error will occur.
+
+			If a TypedVar named `_match` is used, then an error will occur (because this collides with the "match" dataname containing the full substring).
+
+			See also:
+			(substring:), (count:), (split:), (str-replaced:)
+
+			Added in: 3.3.0
+			#string
+		*/
+		(["str-find", "string-find"], "String",
+			(_, pattern, str) => {
+				/*
+					Create the pattern (and specifically its RegExp and TypedVars). Note that even plain strings should be given as fullArgs to createPattern().
+				*/
+				pattern = createPattern({ name: "str-find", fullArgs: [pattern], canContainTypedGlobals: false, });
+				if (TwineError.containsError(pattern)) {
+					return pattern;
+				}
+				const typedVars = pattern.typedVars();
+				const regExp = RegExp(pattern.regExp,'g');
+				let match, matches = [];
+				let {lastIndex: oldLastIndex} = regExp;
+				while ((match = regExp.exec(str))) {
+					/*
+						A basic infinite regress (caused by (p-opt:)) prevention check.
+					*/
+					if (oldLastIndex === regExp.lastIndex) {
+						break;
+					}
+					oldLastIndex = regExp.lastIndex;
+					/*
+						For each subgroup in the RegExp match, assign to the matching typedVar. Note that typedVars() returns them
+						in the same order as the RegExp has matches.
+					*/
+					if (typedVars.length) {
+						const matchObj = new Map();
+						for (let i = 0; i < typedVars.length; i += 1) {
+							const name = typedVars[i].varRef.getName();
+							if (name === "match") {
+								return TwineError.create("macrocall", "There was a TypedVar named _match in the pattern given to (str-find:)",
+									"The variable _match is reserved, and can't be used inside (str-find:)'s pattern.");
+							}
+							matchObj.set(typedVars[i].varRef.getName(), match[i+1]);
+							matchObj.set("match", match[0]);
+						}
+						matches.push(matchObj);
+					}
+					else {
+						matches.push(match[0]);
+					}
+				}
+				return matches;
+			},
+			[Datatype, String])
+
+		/*d:
 			(str-replaced: [Number], String or Datatype, String or Lambda, String) -> String
 
-			Also known as: (replaced:)
+			Also known as: (string-replaced:), (replaced:)
 			
 			This macro produces a copy of the content string (the last string given), with all instances of a certain search string (or pattern) replaced using a given string (or a "via" lambda that constructs a replacement string).
 			Giving an optional number N lets you only replace the first N instances. If a pattern is given, TypedVars may be used inside it, and they will be accessible in the "via" lambda.
@@ -757,7 +865,8 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/lambda',
 			* `(str-replaced: (p: (p-many:digit)-type _a, "%"), via _a + " percent", "5% 10%")` produces `"5 percent 10 percent"`.
 
 			Rationale:
-			Replacing the contents of strings is a very common computing operation, and can serve a variety of uses. Player-inputted text, such as by (input-box:), will often
+			This macro accompanies (str-find:) - in addition to finding matches of a given pattern, this also lets you replace them there and then, producing a new
+			version of the string. This can serve a variety of uses. Player-inputted text, such as by (input-box:), will often
 			need to have unwanted characters (such as newlines) removed. Strings used for procedurally describing certain objects or game states, like the player's
 			physical status, may need to be subtly modified to fit in specific sentences. Or, you may want to do something more esoteric, like "corrupting" or "censoring" a string
 			by replacing certain characters arbitrarily.
@@ -795,6 +904,8 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/lambda',
 			| |`"e"` | `3` | n/a | n/a  | `"e-"`
 			| |`"d"` | `4` | n/a | n/a  | `"d-"`
 
+			The TypedVars used in the pattern are *only* usable in the lambda. They essentially do not exist outside of the macro call, and will not be accessible to macros elsewhere in the passage.
+
 			The optional number decides how many replacements, starting from the left of the content string, should be made. If no string is given, all possible replacements are made.
 			If 0 is given, no replacements will be made, the content string will be returned as-is, and no error will occur. Giving negative numbers or non-whole numbers *will* produce an error, though.
 
@@ -806,7 +917,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/lambda',
 			Added in: 3.3.0
 			#string
 		*/
-		(["str-replaced", "replaced"], "String",
+		(["str-replaced", "string-replaced", "replaced"], "String",
 			(section, num, pattern, replacement, str) => {
 				/*
 					If there's not an optional first number, shift every argument left by a slot.
@@ -862,7 +973,15 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/lambda',
 				let pos = 1;
 				let oldIndex = 0;
 				let ret = '';
+				let {lastIndex: oldLastIndex} = regExp;
 				while (str && (match = regExp.exec(str)) && num > 0) {
+					/*
+						A basic infinite regress (caused by (p-many:0)) prevention check.
+					*/
+					if (oldLastIndex === regExp.lastIndex) {
+						break;
+					}
+					oldLastIndex = regExp.lastIndex;
 					/*
 						This should be the same as the default produced internally by Lambda.apply() (if tempVariables isn't given).
 					*/
@@ -897,6 +1016,9 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/lambda',
 						Now that the tempVariables are in place.
 					*/
 					const repl = Lambda.isPrototypeOf(replacement) ? replacement.apply(section, {loop: match[0], pos, tempVariables}) : replacement;
+					if (TwineError.containsError(repl)) {
+						return repl;
+					}
 					if (typeof repl !== "string") {
 						return TwineError.create("datatype", `(str-replaced:)'s lambda must produce a string, but it produced ${objectName(repl)} when given "${match[0]}".`);
 					}

@@ -297,6 +297,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			*/
 			string: typeof obj === "string" && obj,
 			TwineScript_ObjectName: name + objectName(obj),
+			TwineScript_ToSource() { return prop + " of " + toSource(obj); },
 			TwineScript_TypeName: name + "a data structure",
 			TwineScript_Unstorable: true,
 			TwineScript_Print() {
@@ -642,7 +643,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				return TwineError.create("property",
 					// Don't use propertyDebugName(), because it puts the string name in quotes.
 					"There isn't a temp variable named _" + originalProp + " in this place.",
-					"Temp variables only exist inside the same passage and hook in which they're (set:).");
+					"Temp variables only exist inside the same passage, hook, or lambda in which they're created.");
 			}
 			if (Array.isArray(obj) && typeof prop === "number") {
 				return TwineError.create("property", "This array of " + (obj.length) + " elements doesn't have a "
@@ -764,7 +765,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				let unstorable;
 				if ((unstorable = unstorableValue(value))) {
 					return TwineError.create("operation", objectName(value) + " can't be stored"
-						+ (collectionType(value) ? " because it holds " + objectName(unstorable) + "." : ''));
+						+ (value.TwineScript_Unstorable ? '' : collectionType(value) ? " because it holds " + objectName(unstorable) : '') + ".");
 				}
 
 				/*

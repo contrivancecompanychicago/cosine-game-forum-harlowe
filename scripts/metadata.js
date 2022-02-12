@@ -1,7 +1,7 @@
 'use strict';
 
 const fs = require('fs');
-const typeColours = require('../js/utils/typecolours');
+const {Colours:typeColours} = require('../js/utils/typecolours');
 const insensitiveName = (e) => (e + "").toLowerCase().replace(/-|_/g, "");
 /*
 	This extracts Harlowe macro and syntax metadata by reading

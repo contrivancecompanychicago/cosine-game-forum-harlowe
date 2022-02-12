@@ -7,10 +7,11 @@ define(['utils/operationutils','internaltypes/varref', 'internaltypes/twineerror
 		Typed variable names combine a datatype or a pattern of data, and the name of a variable, joined by adding the `-type` suffix to the datatype. `str-type _name` defines
 		a typed variable, _name, which can only be set to a string. `(a: num)-type $a` defines a typed variable, $a, which can only be set to an array with 1 number value inside.
 
-		Typed variable names are used in several places – (set:), (put:) and (move:) can be given typed variables in place of normal variables to restrict that variable
+		Typed variable names are used in several places – (set:), (put:), (move:) and (unpack:) can be given typed variables in place of normal variables to restrict that variable
 		to the given type, and ensure all future uses of that variable maintain that restriction. Typed variables are also used by the (macro:) macro to specify
-		the input data for your custom macros, and ensure users of that macro maintain those restrictions. Finally, typed temp variables can be used in lambdas, to
-		guarantee that the lambda is being used with the correct type of data.
+		the input data for your custom macros, and ensure users of that macro maintain those restrictions. The (str-find:) and (str-replaced:) macros allows typed variables to be used
+		inside string patterns, to give names to sub-matches in the string being searched. Finally, typed temp variables can be used in lambdas, to guarantee that the
+		lambda is being used with the correct type of data.
 
 		The ability to restrict the type of data that your variables and custom macros receive is a great assistance in debugging your stories,
 		as well as understanding what the variable or macro is and does - especially if they were written by someone else and imported into the project.

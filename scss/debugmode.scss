@@ -138,6 +138,10 @@ $zindex: 999999;
 			background-color:  inherit;
 			border: 1px solid rgba(255,255,255,0.5);
 		}
+		/* Show the help cursor if it has a title tip */
+		&[title]:not([title='']) {
+			cursor: help;
+		}
 	}
 
 	/* Colours for other things */
@@ -431,7 +435,7 @@ tw-debugger {
 			display:table-cell;
 			padding: 0.25em 0.5em;
 		}
-		.error-message {
+		.error-message[title]:not([title='']) {
 			cursor: help;
 		}
 		.error-passage {

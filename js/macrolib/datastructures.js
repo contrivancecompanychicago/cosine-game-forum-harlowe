@@ -1688,14 +1688,19 @@ define([
 			`(count: "Though", "ugh","u","h")` produces 4.
 
 			Rationale:
-			You can think of this macro as being like the `contains` operator, but more powerful.
-			While `contains` produces `true` or `false` if occurrences of the right side
-			appear in the left side, (count:) produces the actual number of occurrences.
-
-			Note that if you only want to check if an array or string contains any or all of the
-			values, it's easier to use `contains` with the `all` property like so: `$arr contains all of (a:1,2)`
-			and `$arr contains any of (a:1,2)`. But, if you need an exact figure for the number of occurrences,
+			This can be thought of as an accompaniment to the `contains` operator. Usually, you just want to check if one or more occurrences
+			of the substring or value are in the given container. To check if an array or string contains any or all of the values,
+			you can use `contains` with the `all` property like so: `$arr contains all of (a:1,2)`
+			and `$arr contains any of (a:1,2)`. But, if you need an *exact* figure for the number of occurrences,
 			this macro will be of use.
+
+			A note about newer macros:
+			(count:) is a fairly old Harlowe macro. Two other macros, (find:) and (str-find:),
+			exist for checking values and substrings using more powerful constructs, like string patterns (produced by (p:) and its relatives)
+			or "where" lanbdas. In many cases, you can replicate the functionality of (count:) by using these macros, and checking the `length` of the returned array.
+			For instance, `(count: "Abracadabra", "a","b")` is the same as `length of (str-find:(p-either:"a","b"),"Abracadabra")`.
+			But, you may notice that the (count:) call is somewhat shorter and more readable. Thus, if you only need
+			to perform a simple check of substrings or values, (count:) can be preferable to those other macros.
 
 			Details:
 			If you use this with a number, boolean, datamap, dataset (which can't have duplicates),
@@ -1708,7 +1713,7 @@ define([
 			you can try subtracting two (count:)s - `(count: "Though","ugh") - (count: "Though","h")` produces 1.
 
 			See also:
-			(datanames:), (datavalues:)
+			(find:), (str-find:), (datanames:), (datavalues:)
 
 			Added in: 1.0.0
 			#data structure

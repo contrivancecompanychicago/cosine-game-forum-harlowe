@@ -172,6 +172,9 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 						// ...and not a property access on one.
 						&& variable.propertyChain.length === 1));
 			}
+			if (TwineError.containsError(clause)) {
+				return clause;
+			}
 			if (clauseType === "making" && !validVariable(clause)) {
 				return TwineError.create('syntax','I need a ' + tempVariableMsg + ', to the right of \'' + clauseType + '\', not ' + objectName(clause) + '.');
 			}

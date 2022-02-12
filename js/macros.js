@@ -202,10 +202,15 @@ define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatyp
 		*/
 		let signatureInfo;
 		if (typeSignature.length > 0) {
-			signatureInfo = name + " must only be given "
-				// Join [A,B,C] into "A, B, and C".
-				+ andList(typeSignature.map(typeName))
-				+ (typeSignature.length > 1 ? ", in that order" : ".");
+			if (typeSignature.length === 1 && typeSignature[0].TwineScript_TypeName === "anything") {
+				signatureInfo = (args.length === 1 ? "That value can't be given to macros as-is." : "Give only a single value to this macro.");
+			}
+			else {
+				signatureInfo = name + " must only be given "
+					// Join [A,B,C] into "A, B, and C".
+					+ andList(typeSignature.map(typeName))
+					+ (typeSignature.length > 1 ? ", in that order" : ".");
+			}
 		} else {
 			signatureInfo = (
 				name + " must not be given any data." + (custom ? '' : " Just write " + invocation)

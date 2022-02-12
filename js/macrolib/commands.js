@@ -268,7 +268,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 					return TwineError.create("macrocall", name === "unpack"
 						? "Please use the (unpack:) macro with arrays, datamaps or (p:) patterns containing variables to the right of 'into'."
 						: "Please use the (" + name + ":) macro with just single variables and typed variables to the "
-							+ (name === "set" ? "left of 'to'." : "right of 'into'."));
+							+ (name === "set" ? "left of 'to'." : "right of 'into'.",
+						`You may wish to change this to the (${name !== "unpack" ? "unpack" : ar.operator === "to" ? "set" : "put"}:) macro.`));
 				}
 
 				const debugMessage = ar.set();
@@ -3288,7 +3289,6 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 				/*
 					In case setItem() fails, let's run this in a try block.
 				*/
-				console.log(storagePrefix("Saved Game") + slotName);
 				try {
 					localStorage.setItem(
 						/*
