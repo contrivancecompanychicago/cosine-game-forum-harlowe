@@ -562,6 +562,8 @@
 			The main function.
 			This returns the entire set of tokens, rooted in a "root"
 			token that has all of tokenMethods's methods.
+			Place holds the original passage name of the code, and is used for
+			pure value computation in Runner.
 			Flat refers to whether the tokens are folded (front and back
 			tokens converted into a single subtree node).
 		*/

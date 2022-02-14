@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changercommand', 'datatypes/custommacro', 'datatypes/lambda', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/typedvar', 'datatypes/datatype', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
-($, NaturalSort, {insensitiveName, nth, andList}, {clone, objectName, typeName, toSource}, ChangerCommand, CustomMacro, Lambda, HookSet, CodeHook, TypedVar, Datatype, ChangeDescriptor, TwineError) => {
+define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changercommand', 'datatypes/custommacro', 'datatypes/lambda', 'datatypes/codehook', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
+(NaturalSort, {insensitiveName, nth, andList}, {objectName, typeName, toSource}, ChangerCommand, CustomMacro, Lambda, CodeHook, ChangeDescriptor, TwineError) => {
 	/*
 		This contains a registry of macro definitions, and methods to add to that registry.
 	*/

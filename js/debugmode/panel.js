@@ -12,9 +12,9 @@ define(['jquery'], ($) => {
 			former represents the latter.
 			tabUpdate is an overridable function for updating the tab's name.
 		*/
-		create({className, rowWrite, rowCheck, columnHead, tabName, tabUpdate}) {
+		create({className, rowWrite, rowCheck, columnHead, tabName, tabNameCounter = true, tabUpdate}) {
 			const panel = $(`<div class='panel panel-${className}' hidden><table class='panel-rows'></table></div>`);
-			const tab = $(`<button class='tab tab-${className}'>0 ${tabName}s</button>`);
+			const tab = $(`<button class='tab tab-${className}'>${tabNameCounter ? `0 ${tabName}s` : tabName}</button>`);
 			tab.click(() => {
 				tab.toggleClass('enabled');
 				tab.parent().siblings('.panel').attr('hidden','');
@@ -27,7 +27,7 @@ define(['jquery'], ($) => {
 				The default tab update function is to label it "2 Errors", etc.
 			*/
 			if (!tabUpdate) {
-				tabUpdate = count => tab.text(`${count} ${tabName}${count !== 1 ? 's' : ''}`);
+				tabUpdate = count => tab.text(tabNameCounter ? `${count} ${tabName}${count !== 1 ? 's' : ''}` : tabName);
 			}
 			return Object.assign(Object.create(this), {
 				tabName,

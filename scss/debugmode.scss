@@ -246,6 +246,8 @@ $zindex: 999999;
 
 $borderwidth: 2px;
 $borderradius: 0.5em;
+
+// Light Mode
 $colorLit: hsl(0, 0%, 90%);
 $color: hsl(0, 0%, 85%);
 $colorDimmer: hsl(0, 0%, 66%);
@@ -253,6 +255,17 @@ $bg: black;
 $bgDim: hsl(0, 0%, 13%);
 $bgDimmer: hsl(0, 0%, 26%);
 $bgDimmest: hsl(0, 0%, 40%);
+
+// Light Mode
+$colorLit2: hsl(0, 0%, 26%);
+$color2: hsl(0, 0%, 13%);
+$colorDimmer2: black;
+$bg2: white;
+$bgDim2: hsl(0, 0%, 90%);
+$bgDimmer2: hsl(0, 0%, 85%);
+$bgDimmest2: hsl(0, 0%, 60%);
+
+
 $size: 1.25em;
 
 tw-debugger {
@@ -269,15 +282,18 @@ tw-debugger {
 	// Font
 	font-size: $size;
 	font-family: sans-serif;
-	color: $color;
+	color: $color2; background-color: $bg2;
+	&.theme-dark { color: $color; background-color: $bg; }
 
 	// Design
 	border: {
-		left: solid $color $borderwidth;
-		top: solid $color $borderwidth;
+		left: solid $color2 $borderwidth;
+		top: solid $color2 $borderwidth;
 		top-left-radius: $borderradius;
 	}
-	background: $bg;
+	&.theme-dark {
+		border-color: $color transparent transparent $color;
+	}
 	opacity: 1;
 
 	// Components
@@ -287,15 +303,22 @@ tw-debugger {
 	}
 	button, tw-link {
 		border-radius: 3px;
-		border: solid $bgDimmest 1px;
+		border: solid $bgDimmest2 1px;
 		margin: auto 4px;
-		background-color: $bg;
-		color: $color;
+		color: $color2; background-color: $bg2;
+
 		cursor: pointer;
 		&.enabled {
-			color:$colorLit;
-			background-color: $bgDimmer;
-			box-shadow: inset $bgDimmest 3px 5px 0.5em;
+			color:$colorLit2; background-color: $bgDimmer2;
+			box-shadow: inset $bgDimmest2 3px 5px 0.5em;
+		}
+	}
+	&.theme-dark {
+		button, tw-link {
+			color: $color; background-color: $bg; border-color: $bgDimmest;
+			&.enabled {
+				color: $colorLit; background-color: $bgDimmer; box-shadow: inset $bgDimmest 3px 5px 0.5em;
+			}
 		}
 	}
 	button {
@@ -310,15 +333,15 @@ tw-debugger {
 		padding:0px 8px;
 		display:block;
 		&:hover {
-			border-color: $color;
-			color: $color;
+			border-color: $color2; color: $color2;
 		}
 	}
+	&.theme-dark tw-link:hover { border-color: $color; color: $color; }
 	tw-dialog {
-		background-color: $bg;
+		background-color: $bg2; color: $colorLit2;
 		font-size: $size;
-		color: $colorLit;
 	}
+	&.theme-dark tw-dialog { background-color: $bg; color: $colorLit; }
 	.panel {
 		@include flexbox;
 		@include flex-direction(column);
@@ -334,9 +357,9 @@ tw-debugger {
 		overflow-x: hidden;
 
 		// Design
-		background:$bg;
 		border:inherit;
-		border-bottom: solid $bgDimmest $borderwidth;
+		background-color:$bg2;
+		border-bottom: solid $bgDimmest2 $borderwidth;
 		border-top-left-radius: $borderradius;
 		border-bottom-left-radius: $borderradius;
 
@@ -348,18 +371,21 @@ tw-debugger {
 			display:none;
 		}
 	}
-	.panel-source, .panel-row-source {
+	&.theme-dark .panel { background-color: $bg; border-bottom-color: $bgDimmest; }
+	.panel-source {
 		font-family:monospace;
+		font-size:1em;
 		overflow-x:scroll;
 		white-space:pre;
-		@include flex-basis(100%);
+		display:block;
 	}
 	.panel-row-source {
 		margin: 5px 0;
 	}
 	@mixin emptyMsg {
 		font-style:italic;
-		color:$colorDimmer;
+		color:$colorDimmer2;
+		.theme-dark & { color:$colorDimmer; }
 		text-align:center;
 	}
 	.panel-rows {
@@ -371,9 +397,10 @@ tw-debugger {
 		// nth-of=type() is necessary, as there are interstitial rows (<tr> instead of <div>) that represent
 		// the (source:) of the previous row, which should be ignored with respect to row colouring.
 		> div:nth-of-type(2n) {
-			background:$bgDim;
+			background-color:$bgDim2;
 		}
 	}
+	&.theme-dark .panel-rows > div:nth-of-type(2n) { background-color:$bgDim; }
 	.panel-row-buttons {
 		text-align: right;
 	}
@@ -419,12 +446,13 @@ tw-debugger {
 		font-weight:bold;
 	}
 	.variable-type {
-		color:$colorDimmer;
+		color:$colorDimmer2;
 		font-weight:normal;
 		text-overflow: ellipsis;
 		overflow: hidden;
 		max-width: 10em;
 	}
+	&.theme-dark .variable-type { color:$colorDimmer; }
 	.error-row {
 		display:table-row;
 		background-color: hsla(312, 72%, 65%, 0.3);
@@ -439,9 +467,10 @@ tw-debugger {
 			cursor: help;
 		}
 		.error-passage {
-			color:$colorDimmer;
+			color:$colorDimmer2;
 		}
 	}
+	&.theme-dark .error-row .error-passage { color:$colorDimmer; }
 	.storylet-row {
 		background-color: hsla(160, 42%, 85%, 0.3);
 		&:nth-child(2n) {
@@ -476,12 +505,18 @@ tw-debugger {
 	.resizer {
 		position: absolute;
 		height: 3em;
-		border-left: 2px solid $bgDimmest;
-		border-right: 2px solid $bgDimmest;
+		border-left: 2px solid $bgDimmest2;
+		border-right: 2px solid $bgDimmest2;
 		top: 10px;
 		left: 4px;
 		width: 8px;
 		cursor: ew-resize;
+	}
+	&.theme-dark .resizer { border-color:transparent $bgDimmest; }
+
+	// Used for marking highlighed syntax
+	mark {
+		background-color: hsla(180, 72%, 65%, 0.3);
 	}
 }
 

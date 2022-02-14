@@ -231,12 +231,12 @@
 				return a;
 			}, '');
 		},
-	};
+	} + '';
 
 	if(typeof module === 'object') {
-		module.exports = { Colours, CSS };
+		module.exports = { Colours, CSS, versionClass };
 	}
 	else if(typeof define === 'function' && define.amd) {
-		define([], () => ({ Colours, CSS }));
+		define([], () => ({ Colours, CSS, versionClass }));
 	}
 }.call(this));

@@ -99,6 +99,12 @@ require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', '
 			return;
 		}
 
+		/*
+			The IFID is currently only used as a localStorage name tag.
+			Since this is used by Debug Mode, it should be loaded before calling DebugMode().
+		*/
+		Utils.options.ifid = header.attr('ifid');
+
 		// Load options from attribute into story object
 		(header.attr('options') || '').split(/\s/).forEach((b) => {
 			b && (Utils.options[b] = true);
@@ -110,11 +116,6 @@ require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', '
 			}
 		});
 		let startPassage = header.attr('startnode');
-
-		/*
-			The IFID is currently only used with the saving macros.
-		*/
-		Utils.options.ifid = header.attr('ifid');
 		
 		// If there's no set start passage, find the passage with the
 		// lowest passage ID, and use that.

@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'utils/renderutils', 'passages', 'section', 'debugmode/panel', 'utils/typecolours'],
-($, Utils, State, Engine, VarRef, TwineError, {objectName, isObject, toSource}, {dialog}, Passages, Section, Panel, {CSS:syntaxCSS}) => { let DebugMode = (initialError, code) => {
+define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'utils/renderutils', 'passages', 'section', 'debugmode/panel', 'debugmode/highlight',  'utils/typecolours'],
+($, Utils, State, Engine, VarRef, TwineError, {objectName, isObject, toSource}, {dialog}, Passages, Section, Panel, Highlight, {CSS:syntaxCSS}) => { let DebugMode = (initialError, code) => {
 	/*
 		Debug Mode
 
@@ -14,7 +14,39 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 	const {escape,nth,debounce} = Utils;
 	const root = $(document.documentElement);
 
-	let debugElement = $(`<tw-debugger>
+	/*
+		Collect the Debug Mode options for this story.
+	*/
+	let debugOptions = {
+		darkMode: true,
+		// Width isn't specified until the resizer is first used.
+		width: null,
+	};
+	if (State.hasStorage) {
+		try {
+			const optionsJSON = localStorage.getItem("(Debug Options " + Utils.options.ifid + ")");
+			optionsJSON && (debugOptions = JSON.parse(optionsJSON));
+		}
+		catch (e) {
+			// Fail silently
+		}
+	}
+	function saveDebugModeOptions() {
+		if (State.hasStorage) {
+			try {
+				localStorage.setItem("(Debug Options " + Utils.options.ifid + ")", JSON.stringify(debugOptions));
+			}
+			catch (e) {
+				// Fail silently
+			}
+		}
+	}
+
+	let debugElement = $(`<tw-debugger class="${
+		debugOptions.darkMode ? 'theme-dark' : ''
+	}" style="${
+		debugOptions.width ? "width:" + debugOptions.width + "px" : ''
+	}">
 <div class='panel panel-errors' hidden><table></table></div>
 <div class='tabs'></div>
 <label style='user-select:none'>Turns: </label><select class='turns' disabled></select>
@@ -67,7 +99,8 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 				.html(f.desc)
 				.append(f.error)
 				.prev()
-				.html(ind === 0 ? f.code : `${escape(f.code.slice(0,f.start))}<mark>${escape(f.code.slice(f.start,f.end + f.diff))}</mark>${escape(f.code.slice(f.end + f.diff))}`);
+				.empty()
+				.append(Highlight(f.code, ind > 0 && f.start, ind > 0 && f.end));
 			left.css('visibility', ind <= 0 ? 'hidden' : 'visible');
 			right.css('visibility', ind >= replay.length-1 ? 'hidden' : 'visible');
 			center.html(`( ${ind+1}/${replay.length} )`);
@@ -105,6 +138,8 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 		})
 		.on('mouseup.debugger-resizer', () => {
 			root.off('.debugger-resizer');
+			debugOptions.width = debugElement.width();
+			saveDebugModeOptions();
 		});
 	});
 	/*
@@ -608,16 +643,12 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 		update -> rowCheck -> rowWrite lifecycle as the other panels.
 	*/
 	const Source = Panel.create({
-		className: "source", tabName: "Source",
+		className: "source", tabName: "Source", tabNameCounter: false,
 		rowWrite: $.noop,
 		rowCheck: $.noop,
 		tabUpdate: $.noop,
 		columnHead: $.noop,
 	});
-	/*
-		The Source tab shouldn't read "1 Source", unlike the others.
-	*/
-	Source.tab.text('Source');
 
 	/*
 		Set up the
@@ -666,10 +697,44 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 	TwineError.on(onError);
 
 	/*
+		Set up the
+		------
+		Options
+		------
+		panel. This holds debug mode options.
+	*/
+	const Options = Panel.create({
+		className: "options", tabName: "⚙️", tabNameCounter: false,
+		rowWrite: ({name, label}, row) => {
+			const enabled = {
+				darkMode: debugOptions.darkMode,
+			}[name];
+			if (row) {
+				return row.find('input').prop('checked', enabled);
+			} else {
+				return $(`<span><input id="debug-${name}" type="checkbox" ${enabled ? 'checked' : ''}></input><label for="debug-${name}">${label}</label></span>`);
+			}
+		},
+		rowCheck: $.noop,
+		tabUpdate: $.noop,
+		columnHead: $.noop,
+	});
+	root.on('click', '.panel-options [type="checkbox"]', ({target}) => {
+		target = $(target);
+		const id = target.attr('id'), enabled = target.is(':checked');
+		if (id === "debug-darkMode") {
+			debugOptions.darkMode = enabled;
+			debugElement[(enabled ? 'add' : 'remove') + 'Class']('theme-dark');
+		}
+		saveDebugModeOptions();
+	});
+	Options.update([{name: "darkMode", label: "Debug panel is dark"}]);
+
+	/*
 		Place all the panel elements inside, in order.
 	*/
-	debugElement.prepend(Variables.panel, Enchantments.panel, Errors.panel, Storylets.panel, Source.panel);
-	debugTabs.prepend(Variables.tab, Enchantments.tab, Errors.tab, Storylets.tab, Source.tab);
+	debugElement.prepend(Variables.panel, Enchantments.panel, Errors.panel, Storylets.panel, Source.panel, Options.panel);
+	debugTabs.prepend(Variables.tab, Enchantments.tab, Errors.tab, Storylets.tab, Source.tab, Options.tab);
 
 	const refresh = updater(function() {
 		localTempVariables = new Set();
@@ -679,7 +744,7 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 		Enchantments.tabUpdate(0);
 		if (State.passage) {
 			const p = Passages.get(State.passage);
-			p && Source.panelRows.text(p.get('source'));
+			p && Source.panel.empty().append(Highlight(p.get('source')));
 		}
 	});
 	/*
