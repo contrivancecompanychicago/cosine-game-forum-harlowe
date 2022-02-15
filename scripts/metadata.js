@@ -51,7 +51,7 @@ const
 						Otherwise, sort alphabetically, then by explicit order number.
 					*/
 					if (leftCategory !== rightCategory) {
-						return (leftCategory || "").localeCompare(rightCategory || "")
+						return (leftCategory || "").localeCompare(rightCategory || "");
 					}
 					if (leftCategoryOrder !== rightCategoryOrder) {
 						if (isNaN(+leftCategoryOrder)) {
@@ -439,7 +439,7 @@ function processTextTerms(text, name, allow) {
 		/*
 			Reinsert the heading
 		*/
-		.replace('\ufeff', headingMatch[0])
+		.replace('\ufeff', headingMatch[0]);
 	return text;
 }
 
@@ -472,7 +472,7 @@ paths.forEach(function(path) {
 			const tabs = /\t+/.exec(e)[0].length;
 			return e.replace(RegExp('\\n\\t{' + tabs + '}','g'),'\n').trim();
 
-		})
+		});
 	}
 	defs.forEach((defText) => {
 		let match;
@@ -480,7 +480,7 @@ paths.forEach(function(path) {
 			if ((match = defText.match(e.regExp))) {
 				e.definition(match);
 			}
-		})
+		});
 	});
 });
 // Order of this object determines the overall document order.

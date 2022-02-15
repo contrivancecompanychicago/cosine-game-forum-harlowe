@@ -1,5 +1,5 @@
 /*
-	This is used by  any Harlowe build product that has a CodeMirror syntax highlighter in it.
+	This is used by any Harlowe build product that has a CodeMirror syntax highlighter in it.
 */
 const versionClass = 'cm-harlowe-3-';
 const {execSync} = require('child_process'),

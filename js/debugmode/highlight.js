@@ -73,11 +73,11 @@ define(['jquery','utils','utils/typecolours','macros','lexer'], ($,{insensitiveN
 		This returns a plain array of <span> (or <mark>) elements containing the syntax-highlighted code.
 		Note that this assumes the markStart and markEnd positions are exactly at token boundaries.
 	*/
-	return function Highlight(code, markStart, markEnd) {
+	return function Highlight(code, mode, markStart, markEnd) {
 		/*
 			First, lex the full code to get a tree.
 		*/
-		const root = lex(code,'','macro');
+		const root = lex(code, '', mode || 'macro');
 		const spans = [];
 		let currentSpanText = '';
 		let currentBranch = root;
@@ -97,7 +97,7 @@ define(['jquery','utils','utils/typecolours','macros','lexer'], ($,{insensitiveN
 				/*
 					Marked <span>s simply become <mark> elements.
 				*/
-				spans.push($(`<${markEnd && pos >= markStart && pos <= markEnd ? 'mark' : 'span'} class="${highlightClasses(currentBranch)}">`)[0]);
+				spans.push($(`<${markEnd && pos >= markStart && pos < markEnd ? 'mark' : 'span'} class="${highlightClasses(currentBranch)}">`)[0]);
 			}
 			/*
 				Otherwise, simply progressively add to the text of this <span>.

@@ -13,6 +13,17 @@ define(['jquery', 'utils'], ($, Utils) => {
 	$(document.documentElement).on('click', 'tw-folddown', ({target}) => {
 		target = $(target);
 		target.toggleClass('open');
+		/*
+			Special Debug only functionality:
+			a folddown's effects can be lazy-loaded if it has a 'folddown' data property.
+		*/
+		const folddownEvent = target.popData('folddown');
+		if (typeof folddownEvent === "function") {
+			folddownEvent();
+		}
+		/*
+			Find the "next" element and pop it open or shut.
+		*/
 		while(target && !target.next().length) {
 			target = target.parent();
 		}

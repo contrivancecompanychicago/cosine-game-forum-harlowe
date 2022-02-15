@@ -100,7 +100,7 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 				.append(f.error)
 				.prev()
 				.empty()
-				.append(Highlight(f.code, ind > 0 && f.start, ind > 0 && f.end));
+				.append(Highlight(f.code, 'macro', ind > 0 && f.start, ind > 0 && (f.end + f.diff)));
 			left.css('visibility', ind <= 0 ? 'hidden' : 'visible');
 			right.css('visibility', ind >= replay.length-1 ? 'hidden' : 'visible');
 			center.html(`( ${ind+1}/${replay.length} )`);
@@ -311,17 +311,23 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 				row.find('.variable-name').html((!trail ? (tempScope ? "_" : "$") : '') + escape(name + ''));
 				row.find('.temporary-variable-scope').html(tempScope || '');
 				row.find('.variable-value').html(val);
-				row.find('tw-folddown')[folddown ? 'show' : 'hide']();
-				row.next('.panel-row-source td').html(folddown ? escape(toSource(value)) : '');
+				const folddownButton = row.find('tw-folddown');
+				folddownButton[folddown ? 'show' : 'hide']();
+				const source = row.next('.panel-row-source');
+				if (source.is(':visible')) {
+					source.find('td').empty().append(Highlight(toSource(value)));
+				} else {
+					folddownButton.data('folddown', () => source.find('td').empty().append(Highlight(toSource(value))));
+				}
 				/*
 					So thart the .panel-row-source isn't considered unused and deleted, return it as well in the jQuery.
 				*/
-				return row.add(row.next('.panel-row-source'));
+				return row.add(source);
 			}
 			/*
 				Create the <span>s for the variable's name and value.
 			*/
-			return $('<div class="variable-row">')
+			row = $('<div class="variable-row">')
 				.attr('data-name', name).attr('data-path', path+'').attr('data-scope', tempScope || '')
 				/*
 					Data structure entries are indented by their depth in the structure, to a maximum of 5 levels deep.
@@ -348,8 +354,10 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 						A. it doesn't disrupt the :nth-of-type() styling used for variable rows.
 						B. it needs to hold a <td> with colspan, whose effect isn't available to CSS.
 					*/
-					"<tr class='variable-row panel-row-source' style='display:none'><td colspan='5'>" + (folddown ? escape(toSource(value)) : '') + "</td></tr>"
+					"<tr class='variable-row panel-row-source' style='display:none'><td colspan='5'></td></tr>"
 				);
+			row.find('tw-folddown').data('folddown', () =>  row.next('.panel-row-source td').empty().append(Highlight(toSource(value))));
+			return row;
 		},
 		rowCheck({name, path, tempScope}, row) {
 			return row.attr('data-name') === name && row.attr('data-path') === (path+'') && row.attr('data-scope') === tempScope;
@@ -567,7 +575,6 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 	const Storylets = Panel.create({
 		className: "storylets", tabName: "Storylet",
 		rowWrite({name, active, storyletSource, exclusive, urgent}, row) {
-
 			if (row) {
 				/*
 					Only the active/inactive state needs to be updated.
@@ -575,17 +582,19 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 				row[(!active ? 'add' : 'remove') + 'Class']('storylet-closed');
 				return row;
 			}
-			return $(`<tr class="storylet-row ${!active ? 'storylet-closed' : ''}">`)
+			const ret = $(`<tr class="storylet-row ${!active ? 'storylet-closed' : ''}">`)
 				.attr('data-name', name)
 				/*
 					Create the <span>s for the storylet's name and lambda.
 				*/
 				.append(
 					"<td class='storylet-name'>" + name
-					+ "</td><td class='storylet-lambda'>" + storyletSource
+					+ "</td><td class='storylet-lambda'>"
 					+ "</td><td class='storylet-exclusive'>" + exclusive
 					+ "</td><td class='storylet-urgent'>" + urgent + "</td>"
 				);
+			ret.find('.storylet-lambda').append(Highlight(storyletSource.replace(/^when\s+/i,'')));
+			return ret;
 		},
 		rowCheck({name}, row) {
 			return row.attr('data-name') === escape(name + '');
@@ -678,9 +687,10 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 			if (error.type === "propagated") {
 				return a;
 			}
+			console.log(code);
 			return a + '<tr class="error-row">'
 				+ '<td class="error-passage">' + State.passage + '</td>'
-				+ '<td class="error-message" title=' + escape(code) + '>' + error.message + '</td>'
+				+ '<td class="error-message" title="' + escape(code) + '">' + error.message + '</td>'
 				+ '</tr>';
 		}, ''));
 		/*
@@ -728,7 +738,10 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 		}
 		saveDebugModeOptions();
 	});
-	Options.update([{name: "darkMode", label: "Debug panel is dark"}]);
+	Options.update([
+		{name: "darkMode", label: "Debug panel is dark"},
+		{name: "fadePanels", label: "Panels are transparent unless the cursor is over them"}
+	]);
 
 	/*
 		Place all the panel elements inside, in order.
@@ -744,7 +757,7 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 		Enchantments.tabUpdate(0);
 		if (State.passage) {
 			const p = Passages.get(State.passage);
-			p && Source.panel.empty().append(Highlight(p.get('source')));
+			p && Source.panel.empty().append(Highlight(p.get('source'), 'markup'));
 		}
 	});
 	/*

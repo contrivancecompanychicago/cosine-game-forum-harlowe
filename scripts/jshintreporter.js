@@ -12,7 +12,7 @@ module.exports.reporter = function(results, data) {
     }
     var options = data[0].options;
     // Play bell noise
-    console.error('\7\n')
+    console.error('\7\n');
 
     var lastfile = null;
     // Iterate over all errors.

@@ -247,7 +247,7 @@ $zindex: 999999;
 $borderwidth: 2px;
 $borderradius: 0.5em;
 
-// Light Mode
+// Dark Mode
 $colorLit: hsl(0, 0%, 90%);
 $color: hsl(0, 0%, 85%);
 $colorDimmer: hsl(0, 0%, 66%);
@@ -257,14 +257,13 @@ $bgDimmer: hsl(0, 0%, 26%);
 $bgDimmest: hsl(0, 0%, 40%);
 
 // Light Mode
-$colorLit2: hsl(0, 0%, 26%);
-$color2: hsl(0, 0%, 13%);
-$colorDimmer2: black;
+$colorLit2: black;
+$color2: hsl(0, 0%, 15%);
+$colorDimmer2: hsl(0, 0%, 34%);
 $bg2: white;
 $bgDim2: hsl(0, 0%, 90%);
 $bgDimmer2: hsl(0, 0%, 85%);
 $bgDimmest2: hsl(0, 0%, 60%);
-
 
 $size: 1.25em;
 
@@ -372,20 +371,23 @@ tw-debugger {
 		}
 	}
 	&.theme-dark .panel { background-color: $bg; border-bottom-color: $bgDimmest; }
-	.panel-source {
+	@mixin sourceCode {
 		font-family:monospace;
-		font-size:1em;
-		overflow-x:scroll;
-		white-space:pre;
+		font-size:1rem;
+		white-space:pre-wrap;
+	}
+	.panel-source {
 		display:block;
+		@include sourceCode();
 	}
 	.panel-row-source {
 		margin: 5px 0;
+		@include sourceCode();
+		max-height: 8rem;
 	}
 	@mixin emptyMsg {
 		font-style:italic;
 		color:$colorDimmer2;
-		.theme-dark & { color:$colorDimmer; }
 		text-align:center;
 	}
 	.panel-rows {
@@ -415,6 +417,13 @@ tw-debugger {
 	.panel-errors .panel-rows:empty::before {
 		content:"~ No errors... for now. ~";
 		@include emptyMsg();
+	}
+	&.theme-dark {
+		.panel-variables .panel-rows:empty::before,
+		.panel-enchantments .panel-rows:empty::before,
+		.panel-errors .panel-rows:empty::before {
+			color:$colorDimmer;
+		}
 	}
 	.panel-rows:empty + .panel-variables-bottom {
 		display:none;
@@ -478,10 +487,15 @@ tw-debugger {
 		}
 		&.storylet-closed {
 			font-style: italic;
-			opacity: 0.4;
 			background-color: hsla(160, 0%, 85%, 0.3);
 			&:nth-child(2n) {
 				background-color: hsla(160, 0%, 65%, 0.3);
+			}
+			> :not(.storylet-lambda) {
+				opacity: 0.6;
+			}
+			.storylet-lambda {
+				opacity: 0.8;
 			}
 		}
 		.storylet-error & {
@@ -493,6 +507,11 @@ tw-debugger {
 		.storylet-name, .storylet-value {
 			display:inline-block;
 			width:50%;
+		}
+		.storylet-lambda {
+			@include sourceCode();
+			// This extra colour emphasis is needed for contrast
+			font-weight:bold;
 		}
 	}
 	.tabs {
@@ -516,7 +535,7 @@ tw-debugger {
 
 	// Used for marking highlighed syntax
 	mark {
+		color: inherit;
 		background-color: hsla(180, 72%, 65%, 0.3);
 	}
 }
-

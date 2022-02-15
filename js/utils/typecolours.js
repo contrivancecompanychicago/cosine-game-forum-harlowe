@@ -160,7 +160,7 @@
 			"background: hsla(159,50%,75%,1.0) !important;",
 
 		"^=where, ^=via, ^=with, ^=making, ^=each, ^=when":
-			"color: #007f00; font-style:italic;",
+			Colours.lambda + "; font-style:italic;",
 		
 		heading:
 			"font-weight:bold;",
@@ -182,9 +182,6 @@
 				if (e === 'toString') {
 					return a;
 				}
-				if (e.slice(0,10) === "CodeMirror") {
-					return a + "." + e + "{" + this[e] + "}";
-				}
 				/*
 					Comma-containing names are handled by splitting them here,
 					and then re-joining them. If the property lacks a comma,
@@ -194,7 +191,6 @@
 				const selector = e.split(", ")
 					/*
 						This does a few things:
-						- It leaves the dark theme prefix alone.
 						- It converts sequential selectors (separated by a dot).
 						- It adds the cm- CodeMirror prefix to the CSS classes.
 						- It adds the harlowe- storyformat prefix as well.
@@ -202,12 +198,6 @@
 						and the values to a CSS body.
 					*/
 					.map(function map(e) {
-						if (e.indexOf('.theme-dark') === 0) {
-							return e.slice(0,11) + " " + map(e.slice(11).trim());
-						}
-						if (e.indexOf('[data-app-theme=dark]') === 0) {
-							return e.slice(0,21) + " " + map(e.slice(21).trim());
-						}
 						if (e.indexOf('.') > -1) {
 							return e.split(/\./g).map(map).join('');
 						}

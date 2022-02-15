@@ -357,7 +357,7 @@ define([
 		/*
 			Apply the return type attribute, used by debug mode, to the expression.
 			Note that this won't matter if the expr is replaced with an error later.
-			Also, since debug mode can be enabled at any time due to errors occurring,
+			Also, since debug mode can be enabled at any time via (debug:),
 			we're doing this regardless of its current state.
 		*/
 		expr.attr('return', typeID(result));
@@ -765,11 +765,12 @@ define([
 
 					/*d:
 						turns -> Number
+
 						Also known as: turn
 
 						This keyword evaluates to the number of turns that have occurred in this game. A "turn" is any movement to a
 						passage, including movements back to the same passage, by passage links or by various (go-to:)-related macros.
-						(redirect:) does not cause a new turn to occur, so
+						(redirect:) does not cause a new turn to occur, so using it will not increase this value.
 
 						Much like the "visits" keyword, its main purpose is to be used with simple macros like (nth:) or (if:) to change what
 						text is displayed, such as by `(if: turns > 7)`. It is also useful in (storylet:) lambdas, such as `(storylet: when turns > 7)`,
@@ -778,7 +779,7 @@ define([
 						For testing purposes, it can be convenient to temporarily alter `visits`'s value, so as to recreate a
 						certain game state. The (mock-turns:) macro, usable only in debug mode, lets you artificially increase the number
 						that this evaluates to.
-	
+
 						Added in: 3.3.0
 					*/
 					get turns() {
@@ -1087,6 +1088,13 @@ define([
 				*/
 				speculativePassage,
 			});
+			
+			/*
+				Cache the evalReplay of section, so that the speculative execution doesn't clobber it.
+			*/
+			const {evalReplay} = this;
+			this.evalReplay = null;
+
 			/*
 				Passages can speculatively execute either code (that is, (metadata:) calls) or compiled lambdas
 				(that is, when storylet lambdas are run.)
@@ -1098,7 +1106,11 @@ define([
 			else if (code) {
 				ret = run(this, code);
 			}
+			/*
+				Restore the state of this section before the execution.
+			*/
 			this.stack.shift();
+			this.evalReplay = evalReplay;
 			return ret;
 		},
 		

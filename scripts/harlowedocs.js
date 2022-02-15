@@ -36,7 +36,7 @@ Object.keys(metadata).map(e => metadata[e]).forEach(e=>{
 
 	const [out, nav] = e.output();
 	outputFile += out;
-	navElement += nav + "</ul>"
+	navElement += nav + "</ul>";
 });
 
 /*
@@ -171,13 +171,15 @@ table:not(.datamap) :not(pre) > code { white-space: pre-wrap; }
 :hover > .heading_link::before { visibility:visible; }
 
 /* Preview */
-#preview { display:none; z-index:21; position: fixed; width: 25vw; height:45vh; right:2vw; top: 10vh; overflow-y:scroll; border: 1px double #888; font-size:16px; transition: width 0.8s; }
+#preview { display:none; z-index:21; position: fixed; width: 25vw; height:60vh; right:2vw; top: 10vh; overflow-y:scroll; border: 1px double #888; font-size:16px; transition: width 0.8s; }
 @media screen and (max-width: 1200px) { #preview, .previewButton, #previewCode, #fullPreviewBar { display:none !important; } }
 html:not(.night) #preview tw-story { background-color:white; color:black }
-#previewCode { display:none; z-index:20; position:fixed; width:25vw; height:30vh; right: 2vw; bottom: 10vh; overflow:scroll; border: 1px double #888; transition: width 0.8s; }
+#previewCode { display:none; z-index:20; position:fixed; width:25vw; height:15vh; right: 2vw; bottom: 10vh; border: 1px double #888; transition: width 0.8s; }
 .CodeMirror { height: 100% !important; width:100% !important; background-color:white; }
 .previewCodeButton { font-size:200%; padding: 0.2rem 0.9rem; }
 html.night .previewCodeButton { color:white; }
+
+/* Preview variables */
 #preview tw-debugger { position: absolute; padding: 0; min-height: 0; box-sizing:border-box; border-top:none; min-width: 80%; }
 #preview .panel-variables-empty { display:none; }
 #preview .panel-variables { border-top: solid black 2px; border-bottom: none; }
@@ -224,7 +226,7 @@ This panel ↓ will show any variables that are set by the code.
 </textarea><div class="previewButton previewCodeButton" title="Run this Harlowe code."></div></div>
 <div id=fullPreviewBar></div>
 <main>${outputFile}
-<p><small>This manual was generated at: ${new Date}</small></p>
+<p><small>This manual was generated at: ${new Date()}</small></p>
 </main>
 <!-- Preview -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.50.2/codemirror.min.js"></script>
