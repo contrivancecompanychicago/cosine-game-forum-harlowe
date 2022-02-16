@@ -308,7 +308,12 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 					"pos" is not used for "when" lambdas.
 				*/
 				lambdaPos: !this.when ? lambdaPos : undefined,
-			}));
+			}));			
+			/*
+				Cache the evalReplay of section, so that the eval() doesn't clobber it.
+			*/
+			const {evalReplay} = section;
+			section.evalReplay = null;
 
 			/*
 				If this lambda has no "making" clauses (and isn't a "when" lambda), then the "it"
@@ -350,6 +355,7 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 				ret = via ? section.eval(via) : true;
 			}
 			section.stack.shift();
+			section.evalReplay = evalReplay;
 			return ret;
 		},
 

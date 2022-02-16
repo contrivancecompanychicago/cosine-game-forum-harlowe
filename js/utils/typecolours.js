@@ -4,6 +4,7 @@
 		These CSS colours and syntax highlighting CSS is used both by Debug Mode, the CodeMirror syntax highlighter, and the documentation
 		compiler.
 	*/
+	// TODO: Compute and add the dark mode colours to this thing directly
 	const Colours = {
 		boolean:     "color:hsla(0,0%,30%,1.0)",
 		array:       "color:hsla(0,100%,30%,1.0)",
@@ -85,7 +86,7 @@
 			Colours.colour,
 		"macroName-command, macroName-instant, macroName-metadata":
 			Colours.command,
-		"macroName-custommacro, macroName-any":
+		"macroName-custommacro, macroName-macro, macroName-any":
 			Colours.macro,
 
 		// The bottommost element is a macro open/close bracket

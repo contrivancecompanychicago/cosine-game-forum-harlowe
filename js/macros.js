@@ -175,7 +175,14 @@ define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changer
 		}
 		return newArgs;
 	}
-	
+
+	/*
+		A convenience check to see whether a type signature *contains* TypeSignature.Any anywhere in it.
+	*/
+	function typeTakesAny(e) {
+		return e === Macros.TypeSignature.Any || (Array.isArray(e.innerType) ? e.innerType.some(typeTakesAny) : e.innerType ? typeTakesAny(e.innerType) : false);
+	}
+
 	/*
 		This takes a macro entry (which is passed in along with its name),
 		and type-checks the args passed to it before running it (or, alternatively, returning
@@ -195,14 +202,13 @@ define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changer
 		*/
 		const invocation = (custom ? '' : "(" + (Array.isArray(name) && name.length > 1 ? name[0] : name) + ":)");
 		name = custom ? "this custom macro" : "the " + invocation + " macro" ;
-
 		/*
 			This is also used for error message generation: it provides the author with
 			a readable sentence about the type signature of the macro.
 		*/
 		let signatureInfo;
 		if (typeSignature.length > 0) {
-			if (typeSignature.length === 1 && typeSignature[0].TwineScript_TypeName === "anything") {
+			if (typeSignature.length === 1 && typeTakesAny(typeSignature[0])) {
 				signatureInfo = (args.length === 1 ? "That value can't be given to macros as-is." : "Give only a single value to this macro.");
 			}
 			else {
@@ -300,9 +306,7 @@ define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changer
 					Unstorable data types are the only kinds which Any signatures will not
 					match. Produce a special error message in this case.
 				*/
-				if (arg && arg.TwineScript_Unstorable &&
-						(type === Macros.TypeSignature.Any ||
-							(type.innerType && type.innerType === Macros.TypeSignature.Any))) {
+				if (arg && arg.TwineScript_Unstorable && typeTakesAny(type)) {
 					return TwineError.create(
 						"datatype",
 						name + "'s " + nth(ind + 1) + " value, " + objectName(arg) + ", is not valid data for this macro.",
@@ -340,10 +344,7 @@ define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changer
 				*/
 				return TwineError.create(
 					"datatype",
-					name + "'s " +
-						nth(ind + 1) + " value is " + objectName(arg) +
-						", but should be " +
-						typeName(type) + ".",
+					`${name}'s ${nth(ind + 1)} value is ${objectName(arg)}, but should be ${typeName(type)}.`,
 					/*
 						If this type signature has a custom error message, use that here.
 					*/

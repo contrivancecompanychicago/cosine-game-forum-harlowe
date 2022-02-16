@@ -30,7 +30,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Improved performance of game saving after a very large number of turns have elapsed. This affects both `(save-game:)` and the automatic game state SessionStorage saving feature (introduced in 3.0.0).
  * Formerly, all global variables' contents were saved in game save files as pure Harlowe source code representation. Now, if a value in a variable is considered "pure", it will be saved as an index to the passage prose in which it was originally `(set:)` or `(put:)`, and will be reconstructed from that index when the game is loaded. This should save major localStorage space when a story has loads of stored strings and custom macros.
    * A variable is considered "pure" if its value was changed using a `(set:)` or `(put:)` that did not call any of the following macros or features: `(prompt:)`, `(confirm:)`, `(current-time:)`, `(current-date:)`, `(monthday:)`, `(weekday:)`, `(history:)`, `(passage:)`, `it`, `time`, `visits`, `exits`, or any other variable (*except* typed variable definitions, such as those given to `(macro:)`).
-   * Note that code hooks *can* use these inside them and still be considered "pure", as a code hook is essentially a special kind of string, and nothing inside it is called until it is used.
+   * Note that code hooks *can* use these inside them and still have the entire hook be considered "pure", as a code hook is essentially a special kind of string, and nothing inside it is called until it is used.
    * Also, number and boolean variables are short enough that saving them as a reference isn't necessary, so they won't be saved as indexes even if they are "pure".
    * Variables changed using `(unpack:)` or `2bind` currently aren't considered "pure".
    * As a consequence of this change, save files from older versions of your story are much more likely to become invalidated whenever you make minor changes to passage prose, so do take note of that.
@@ -65,6 +65,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Debug Mode's colour scheme is now white-on-black, to match Harlowe's default colour scheme. You may use the aforementioned options panel to change it back to white.
  * The width of the Debug Mode panel (which you can adjust using the resizer added in 3.2.0) is now saved in localStorage alongside these options, and should also persist across debugging sessions.
  * The source code in the Source, Variables and Storylet tabs is now syntax-highlighted, in a manner roughly matching its highlighting in the Twine editor.
+ * Very long lines in "(source:)" listings in the Variables panel should no longer push the other columns far offscreen.
  * Debug Mode no longer automatically, immediately enables itself whenever the first error of your story appears. Instead, this functionality can be added using the new `(after-error:)` and `(debug:)` macros (see below).
 
 #### Additions
@@ -86,6 +87,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 ##### Debug Mode
 
+ * The new Debug Mode options panel also lets you toggle a new feature that turns the entire panel transparent when the mouse cursor isn't hovering on it, letting you see the whole page better.
  * Added an "expression replay" feature to Debug Mode. When you use Debug View, special 🔍 icons will appear on variables and macro calls in the passage. Clicking those will produce a dialog showing a step-by-step view of how the macro call's code was interpreted by Harlowe.
  * Added a close button to the panel, which exits Debug Mode when clicked.
 

@@ -167,6 +167,11 @@ define(['jquery','renderer','utils/operationutils','internaltypes/changedescript
 				output = data;
 			},
 		});
+		/*
+			Cache the evalReplay of section, so that it isn't clobbered.
+		*/
+		const {evalReplay} = section;
+		section.evalReplay = null;
 		section.execute();
 		/*
 			(output:) and (output-data:) block their stack frame, and Section.execute() doesn't pop the stack frame if it's blocked.
@@ -176,6 +181,7 @@ define(['jquery','renderer','utils/operationutils','internaltypes/changedescript
 		while (section.stack.length > stackSize) {
 			section.stack.shift();
 		}
+		section.evalReplay = evalReplay;
 		/*
 			If errors resulted from this execution, extract and return those instead of the output.
 		*/

@@ -1,6 +1,6 @@
 "use strict";
 define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'utils/renderutils', 'passages', 'section', 'debugmode/panel', 'debugmode/highlight',  'utils/typecolours'],
-($, Utils, State, Engine, VarRef, TwineError, {objectName, isObject, toSource}, {dialog}, Passages, Section, Panel, Highlight, {CSS:syntaxCSS}) => { let DebugMode = (initialError, code) => {
+($, Utils, State, Engine, VarRef, TwineError, {objectName, isObject, toSource, typeID}, {dialog}, Passages, Section, Panel, Highlight, {Colours:typeColours, CSS:syntaxCSS}) => { let DebugMode = (initialError, code) => {
 	/*
 		Debug Mode
 
@@ -19,6 +19,7 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 	*/
 	let debugOptions = {
 		darkMode: true,
+		fadePanel: true,
 		// Width isn't specified until the resizer is first used.
 		width: null,
 	};
@@ -43,7 +44,10 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 	}
 
 	let debugElement = $(`<tw-debugger class="${
-		debugOptions.darkMode ? 'theme-dark' : ''
+		[
+			debugOptions.darkMode ? 'theme-dark' : '',
+			debugOptions.fadePanel ? 'fade-panel' : '',
+		].join(' ')
 	}" style="${
 		debugOptions.width ? "width:" + debugOptions.width + "px" : ''
 	}">
@@ -101,6 +105,7 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 				.prev()
 				.empty()
 				.append(Highlight(f.code, 'macro', ind > 0 && f.start, ind > 0 && (f.end + f.diff)));
+			replayEl.find('mark').each((_,e) => { e.scrollIntoView(); });
 			left.css('visibility', ind <= 0 ? 'hidden' : 'visible');
 			right.css('visibility', ind >= replay.length-1 ? 'hidden' : 'visible');
 			center.html(`( ${ind+1}/${replay.length} )`);
@@ -337,7 +342,7 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 					// Variable type
 					"<td class='variable-type'>" + (typeName ? typeName + '-type ' : '') + '</td>',
 					// Variable name
-					"<td class='variable-name'>"
+					"<td class='variable-name cm-harlowe-3-" + (tempScope ? "tempV" : "v") + "ariable'>"
 						+ (trail ? "<span class='variable-path'>"
 							+ (tempScope ? "_" : "$")
 							+ escape(trail) + "</span> " : '')
@@ -345,7 +350,8 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 					// Variable Scope
 					"<td class='temporary-variable-scope'>" + (tempScope || '') + "</td>",
 					// Value
-					"<td class='variable-value'>" + val + "</td><td class='panel-row-buttons'>"
+					// This re-uses the macroname type colouring CSS classes.
+					"<td class='variable-value cm-harlowe-3-macroName-" + typeID(value) + "'>" + val + "</td><td class='panel-row-buttons'>"
 						+ "<tw-folddown tabindex=0 style='display:" + (folddown ? "visible" : 'none') + "'>(source:) </tw-folddown>"
 					+ "</td>"
 				).add(
@@ -547,7 +553,7 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 						+ "</td>"
 					: "")
 				).add(
-					changer ? "<tr class='panel-row-source' style='display:none'><td colspan='3'>" + escape(toSource(changer)) + "</td></tr>" : ''
+					changer ? $("<tr class='panel-row-source' style='display:none'><td colspan='3'></td></tr>").find('td').append(Highlight(toSource(changer))).end() : ''
 				);
 		},
 		rowCheck(enchantment, row) {
@@ -687,7 +693,6 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 			if (error.type === "propagated") {
 				return a;
 			}
-			console.log(code);
 			return a + '<tr class="error-row">'
 				+ '<td class="error-passage">' + State.passage + '</td>'
 				+ '<td class="error-message" title="' + escape(code) + '">' + error.message + '</td>'
@@ -717,7 +722,8 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 		className: "options", tabName: "⚙️", tabNameCounter: false,
 		rowWrite: ({name, label}, row) => {
 			const enabled = {
-				darkMode: debugOptions.darkMode,
+				darkMode:   debugOptions.darkMode,
+				fadePanel: debugOptions.fadePanel,
 			}[name];
 			if (row) {
 				return row.find('input').prop('checked', enabled);
@@ -736,11 +742,15 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 			debugOptions.darkMode = enabled;
 			debugElement[(enabled ? 'add' : 'remove') + 'Class']('theme-dark');
 		}
+		if (id === "debug-fadePanel") {
+			debugOptions.fadePanel = enabled;
+			debugElement[(enabled ? 'add' : 'remove') + 'Class']('fade-panel');
+		}
 		saveDebugModeOptions();
 	});
 	Options.update([
 		{name: "darkMode", label: "Debug panel is dark"},
-		{name: "fadePanels", label: "Panels are transparent unless the cursor is over them"}
+		{name: "fadePanel", label: "Debug panel is transparent unless the cursor is over it"}
 	]);
 
 	/*
