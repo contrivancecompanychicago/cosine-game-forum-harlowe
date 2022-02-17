@@ -141,4 +141,51 @@ describe("custom macros", function() {
 			expect(runPassage("(error:'foobarbazqux')").text()).not.toMatch(/foobarbazqux/);
 		});
 	});
+	describe("(partial:)", function() {
+		it("consist of a string or custom macro, followed by anything", function() {
+			expect("(set: $e to (partial:))").markupToError();
+			expect("(set: $e to (partial:2))").markupToError();
+			expect("(set: $e to (partial:'a',1))").not.markupToError();
+			expect("(set: $e to (partial:'dm'))").not.markupToError();
+			expect("(set: $e to (partial:'dm',1,int,where it is 2))").not.markupToError();
+			expect("(set: $e to (partial:(macro:str-type _a, [(out:)[_a]]),1,int,where it is 2))").not.markupToError();
+		});
+		it("errors if the string isn't a valid built-in macro's insensitive name", function() {
+			expect("(set: $e to (partial:'foobar'))").markupToError();
+			expect("(set: $e to (partial:''))").markupToError();
+			expect("(set: $e to (partial:'da-ta-map'))").not.markupToError();
+			expect("(set: $e to (partial:'MOCKVISITS'))").not.markupToError();
+		});
+		it("errors if the string is a metadata macro name", function() {
+			['metadata','storylet','urgency','exclusivity'].forEach(function(e) {
+				expect("(set: $e to (partial:'" + e + "'))").markupToError();
+				expect("(set: $e to (partial:'" + e + "'))").markupToError();
+			});
+		});
+		it("produces a custom macro", function() {
+			expect("(print:(partial:'display','Red') is a macro)").markupToPrint('true');
+		});
+		it("the custom macro, when called, calls the referred macro with the given arguments, plus additional free arguments", function() {
+			expect("(set:_a to (partial:'a','foo'))(joined:'',...(_a:'bar'))").markupToPrint('foobar');
+			expect("(set:_a to (partial:'str-nth'))(_a:3)").markupToPrint('3rd');
+			expect("(set:_a to (partial:'a','foo','bar','baz','qux'))(joined:'',...(_a:'garply','grault'))").markupToPrint('foobarbazquxgarplygrault');
+			expect("(set:_a to (partial:'max',2,5,7))(_a:3)(_a:9)(_a:6)(_a:8)").markupToPrint('7978');
+			expect("(set: $zeroTo to (partial:'range', 3))(v6m-source:($zeroTo:10))").markupToPrint('(a:3,4,5,6,7,8,9,10)');
+			expect(runPassage("(set:_a to (partial:'link','foo'))(_a:)[bar]").find('tw-link').text()).toBe('foo');
+
+			runPassage("(set: $m to (macro:num-type _e, num-type _f, [(output-data:_e*_f)]))");
+			expect("(set:_a to (partial:$m,5))(set:_b to (partial:_a,6))(_a:8) (_a:1) (_b:)").markupToPrint('40 5 30');
+		});
+		it("errors are propagated outward", function() {
+			expect("(set:_a to (partial:'max','Red'))(_a:)").markupToError();
+			expect("(set:_a to (partial:'max'))(_a:'Red')").markupToError();
+			expect("(set:_a to (partial:'link','A')))(_a:'B')").markupToError();
+			expect("(set:_a to (partial:'link','A',(font:'Roboto'))))(_a:'B')").markupToError();
+
+			runPassage("(set: $m to (macro:num-type _e, num-type _f, [(output-data:_e*_f)]))");
+			expect("($m: 'w')").markupToError();
+			expect("(set:_a to (partial:$m,5))(_a:'foo')").markupToError();
+			expect("(set:_a to (partial:$m,5))(set:_b to (partial:_a,6))(_b:7)").markupToError();
+		});
+	});
 });

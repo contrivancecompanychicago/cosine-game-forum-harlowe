@@ -614,8 +614,11 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 
 			Example usage:
 			```
-			(after-error:)[(dialog:"Sorry, folks, seems like I messed up. DM me on GregsGameMakingBungalow with a screenshot!")]
-			(link:"Click here for an error")[Can't use (metadata:) here!]
+			(after-error:)[
+				(dialog:"Sorry, folks, seems like I messed up.
+			DM me on GregsGameMakingBungalow with a screenshot!")
+			]\
+			(link:"Click here for an error")[Can't use (metadata: ) here!]
 			```
 
 			Rationale:
@@ -2248,7 +2251,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			[String]
 		)
 		/*d:
-			(test-true: ...[Any]) -> Changer
+			(test-true: [...Any]) -> Changer
 
 			If you want to test your passage, while ignoring a specific changer macro in it, temporarily change that
 			changer macro's name to (test-true:), and it will ignore all of the data given to it, while enabling the hook.
@@ -2281,7 +2284,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			zeroOrMore(Everything)
 		)
 		/*d:
-			(test-false: ...[Any]) -> Changer
+			(test-false: [...Any]) -> Changer
 
 			If you want to test your passage in order to see what would happen if an (if:), (unless:) or (else-if:) macro would hide the hook it's attached to,
 			you can temporarily change the name of the macro to (test-false:), which causes it to ignore the data given to it and act as if it was given `false`.

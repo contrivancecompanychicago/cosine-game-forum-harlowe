@@ -3051,7 +3051,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			[String], false)
 
 		/*d:
-			(ignore: ...[Any]) -> Command
+			(ignore: [...Any]) -> Command
 
 			If you want to test your passage while ignoring a specific command macro in it, temporarily change that
 			command macro's name to (ignore:), and it will ignore all of the data given to it.

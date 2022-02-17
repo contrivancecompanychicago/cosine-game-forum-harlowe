@@ -309,7 +309,7 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 				Freshen up the passed-in row if given.
 			*/
 			if (row) {
-				row.find('.variable-type').html((typeName ? typeName + '-type ' : ''));
+				row.find('.variable-type').html((typeName || ''));
 				if (trail) {
 					row.find('.variable-path').html((tempScope ? "_" : "$") + escape(trail));
 				}
@@ -340,7 +340,7 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 				.css('padding-left', Math.min(5,path.length)+'em')
 				.append(
 					// Variable type
-					"<td class='variable-type'>" + (typeName ? typeName + '-type ' : '') + '</td>',
+					"<td class='variable-type'>" + (typeName || '') + '</td>',
 					// Variable name
 					"<td class='variable-name cm-harlowe-3-" + (tempScope ? "tempV" : "v") + "ariable'>"
 						+ (trail ? "<span class='variable-path'>"
@@ -539,14 +539,14 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 				.data('enchantment', enchantment)
 				.append(
 					"<td><span class='enchantment-name'>" + toSource(scope)
-					+ (localHook ? "</span><span class=enchantment-local>"
+					+ (localHook ? "</span><span class='enchantment-local cm-harlowe-3-hookName'>"
 						/*
 							localHooks can be jQuerys (for plain attachment) or HookSets (for use in (enchant:)).
 						*/
 						+ (typeof localHook.TwineScript_ToSource === "function" ? localHook.TwineScript_ToSource() :
 							localHook.attr('name') ? "?" + localHook.attr('name') : "an unnamed hook") : "")
 						+ "</span>"
-					+ "</td><td class='enchantment-value'>"
+					+ "</td><td class='enchantment-value cm-harlowe-3-" + (changer ? "changer" : "command") + " '>"
 					+ val + "</td>"
 					+ (changer ? "<td class='panel-row-buttons'>"
 						+ "<tw-folddown tabindex=0>(source:)</tw-folddown>"

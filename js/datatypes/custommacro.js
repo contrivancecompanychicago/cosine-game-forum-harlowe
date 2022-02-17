@@ -4,12 +4,12 @@ define(['jquery','renderer','utils/operationutils','internaltypes/changedescript
 	/*d:
 		CustomMacro data
 
-		These are custom macros produced by the (macro:) macro. You can (and should) store them in variables using (set:),
+		These are custom macros produced by the (macro:) and (partial:) macros. You can (and should) store them in variables using (set:),
 		and call them like any other macro, by using the variable instead of a name: `($someCustomMacro:)` is how you would
 		call a custom macro stored in the variable $someCustomMacro, and `(_anotherCustomMacro:)` is how you would
 		call a custom macro stored in the temp variable _anotherCustomMacro.
 
-		Custom macros have a single data name that you can examine.
+		Custom macros created with (macro:) have a single data name that you can examine.
 
 		| Data name | Example | Meaning
 		|---
@@ -220,7 +220,7 @@ define(['jquery','renderer','utils/operationutils','internaltypes/changedescript
 		return output;
 	};
 
-	const CustomMacro = Object.freeze({
+	const CustomMacro = Object.seal({
 		TwineScript_TypeID:   "macro",
 		TwineScript_TypeName: "a custom macro",
 		get TwineScript_ObjectName() {
@@ -245,10 +245,29 @@ define(['jquery','renderer','utils/operationutils','internaltypes/changedescript
 			return assign(create(CustomMacro), this);
 		},
 
+		/*
+			Macros that created modified macros (such as (partial:)) are expected to override this.
+		*/
 		TwineScript_ToSource() {
 			return "(macro:" + this.params.map(p => p.TwineScript_ToSource())
 				// This .concat() only adds a comma to the resulting string if params contained any other values.
 				.concat('') + this.body.TwineScript_ToSource() + ")";
+		},
+
+		/*
+			Used exclusively by (partial:).
+		*/
+		createFromFn(fn, toSource, typeSignature) {
+			return assign(create(this), {
+				/*
+					TBW
+				*/
+				params: [],
+				fn,
+				typeSignature,
+				TwineScript_ToSource: toSource,
+				TwineScript_KnownName: "",
+			});
 		},
 
 		/*

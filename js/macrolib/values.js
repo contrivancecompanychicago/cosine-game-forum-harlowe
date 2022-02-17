@@ -1637,7 +1637,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 		*/
 		""() {
 			for (let key in this) {
-				Object.hasOwnProperty.call(this,key) && Macros.add(key, "Number", ignoreArgumentOne(this[key][0]), this[key][1]);
+				key && Object.hasOwnProperty.call(this,key) && Macros.add(key, "Number", ignoreArgumentOne(this[key][0]), this[key][1]);
 			}
 		}
 	}[""]());

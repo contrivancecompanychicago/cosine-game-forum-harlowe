@@ -213,7 +213,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 			A quick method for joining a string array with commas and "and".
 		*/
 		andList(array) {
-			return array.length === 1 ? array[0]
+			return array.length <= 1 ? array[0]
 				: (array.slice(0,-1).join(', ') + " and " + array[array.length-1]);
 		},
 

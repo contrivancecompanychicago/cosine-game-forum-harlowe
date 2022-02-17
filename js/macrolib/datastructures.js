@@ -167,8 +167,8 @@ define([
 			in ascending order.
 			
 			Example usage:
-			`(range:1,14)` is equivalent to `(a:1,2,3,4,5,6,7,8,9,10,11,12,13,14)`
-			`(range:2,-2)` is equivalent to `(a:-2,-1,0,1,2)`
+			* `(range:1,14)` is equivalent to `(a:1,2,3,4,5,6,7,8,9,10,11,12,13,14)`
+			* `(range:2,-2)` is equivalent to `(a:-2,-1,0,1,2)`
 			
 			Rationale:
 			This macro is a shorthand for defining an array that contains a sequence of
@@ -176,6 +176,9 @@ define([
 			the first and last numbers.
 			
 			Details:
+			If the second number given is smaller than the first number, then (range:) will act as if their positions
+			were reversed - that is, `(range:50,0)` is the same as `(range:0,50)`.
+
 			Certain kinds of macros, like (either:) or (dataset:), accept sequences of values. You can
 			use (range:) with these in conjunction with the `...` spreading operator:
 			`(dataset: ...(range:2,6))` is equivalent to `(dataset: 2,3,4,5,6,7)`, and
@@ -310,7 +313,7 @@ define([
 			it should be sorted by.
 			
 			Example usage:
-			* `(set: $a to (a: 'A','C','E','G', 2, 1))(sorted: ...$a)` prints `1,2,A,C,E,G`.
+			* `(set: $a to (a: 'A','C','E','G', 2, 1))(sorted: ...$a)` produces `(a:1,2,"A","C","E","G")`.
 			* `(sorted: via its name, ...$creatures)` sorts the datamaps in the array stored in $creatures by their "name" values. Datamaps with an alphanumerically earlier "name" appear first.
 			* `(sorted: via its length * -1, "Gus", "Arthur", "William")` produces `(a: "William", "Arthur", "Gus"))`. This lambda produces negative numbers for each string.
 			* `(sorted: via its tags's length, ...(passages:))` produces a version of the (passages:) array, sorted by ascending number of tags each passage datamap has.

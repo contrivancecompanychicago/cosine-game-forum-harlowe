@@ -297,8 +297,8 @@ define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changer
 					mandatory = typeSignature.filter(e => !(e.pattern === "optional" || e.pattern === "zero or more")).length;
 					return TwineError.create(
 						"datatype",
-						name + " needs "
-							+ ((mandatory - ind) + " more value" + ((mandatory - ind) > 1 ? "s" : "")) + ".",
+						`${name} was given ${!args.length ? "nothing" : andList(args.map(objectName))}, but needs ${
+							mandatory - ind } more value${ (mandatory - ind) > 1 ? "s" : "" }.`,
 						signatureInfo
 					);
 				}

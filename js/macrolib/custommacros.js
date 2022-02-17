@@ -1,7 +1,7 @@
 "use strict";
 define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changercommand', 'datatypes/custommacro', 'datatypes/codehook', 'datatypes/typedvar', 'internaltypes/twineerror'],
-(Utils, {add, addChanger, addCommand, TypeSignature: {rest, either, Any}}, State, {objectName}, ChangerCommand, CustomMacro, CodeHook, TypedVar, TwineError) => {
-
+(Utils, Macros, State, {objectName, toSource}, ChangerCommand, CustomMacro, CodeHook, TypedVar, TwineError) => {
+	const {add, addChanger, addCommand, TypeSignature: {rest, either, Any, zeroOrMore}} = Macros;
 	/*d:
 		(macro: [...TypedVar], CodeHook) -> CustomMacro
 
@@ -118,8 +118,11 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 
 		All custom macros must return some value. If no (output:) or (output-data:) macros were run inside the code hook, an error will result.
 
+		If you find yourself writing custom macros that do nothing except call another macro, such as `(macro: num-type _a, [(out-data:(range:0,_a))])`,
+		then you may prefer to use the (partial:) macro instead of (macro:).
+
 		See also:
-		(output:), (output-data:)
+		(output:), (output-data:), (partial:)
 
 		Added in: 3.2.0
 		#custom macros 1
@@ -382,4 +385,68 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		},
 	[String],
 	/*attachable:false*/false);
+
+	/*d:
+		(partial: String or CustomMacro, [...Any]) -> CustomMacro
+
+		When given either the string name of a built-in macro, or a custom macro, followed by various values, this creates a custom
+		macro that serves as a shorthand for calling the given macro with those values, plus any additional values.
+
+		Example usage:
+		* `(set: $zeroTo to (partial:"range", 0))` sets $zeroTo to a custom macro which is a shortcut for calling (range:) with 0 as the first value.
+		`($zeroTo: 10)` is the same as `(range:0,10)`. `($zeroTo: 5)` is the same as `(range:0,5)`.
+		* `(set: $askDLG to (partial:"dialog", bind _result))` sets $askDLG to a custom macro that calls (dialog:) bound to the _result temp variable. This
+		can be used repeatedly to show dialogs that ask input from the player, without having to include the bound variable each time.
+		* `(set: $next to (partial:"link-goto", "==>"))` creates a custom macro that produces passage links, where the link text is always "==>".
+		* `(set: $envNoise to (either:"","",""))` creates a custom macro that randomly chooses between three empty strings and any other values you might
+		give. This could be used for random flavour text in environments: `($envNoise:"You hear a jingling windchime")` would only display the text
+		"You hear a jingling windchime" 25% of the time the macro is run.
+
+		Rationale:
+
+		This is designed as a shorthand for writing certain common macro calls with the same first values over and over. Think of (partial:) as creating
+		a *partial macro call* - one that isn't finished, but which can be used to make finished calls to that macro, by providing the remaining values.
+
+		You may notice that a number of macros in Harlowe have a "configuration-first" ordering of their values - (rotated:) takes the number of rotations first,
+		(sorted:) takes the optional sorting lambda first, (cycling-link:) takes the optional bound variable first, and so forth.
+
+		Details:
+
+		Don't fall into the trap of thinking the values given to (partial:) will be re-evaluated on each call of the custom macro! For instance,
+		`(partial: "count", (history:))` will *not* produce a custom macro that is always equivalent to `(count:(history:),` and some other numbers.
+		Remember that (history:) produces an array of passage names each time it's called. It is that array that is given to (partial:), so every
+		call to the produced custom macro will use *that* array, and not whatever the current (history:) array would be.
+
+		Unlike macros created with (macro:), the "params" data name of macros created with (partial:) is always an empty array.
+
+		As of 3.3.0, this can NOT be used with metadata macros such as (metadata:) or (storylet:). Giving "metadata", "storylet" or other such
+		macros' names will produce an error.
+
+		See also:
+		(macro:)
+
+		Added in: 3.3.0
+		#custom macros
+	*/
+	add("partial", "CustomMacro", (_, nameOrCustomMacro, ...args) => {
+		if (typeof nameOrCustomMacro === "string") {
+			if (!Macros.has(nameOrCustomMacro)) {
+				return TwineError.create('macrocall', `The macro name given to (partial:), "${nameOrCustomMacro}", isn't the name of a built-in macro.`);
+			}
+			if (Macros.get(nameOrCustomMacro).returnType === "Metadata") {
+				return TwineError.create('macrocall', `(partial:) can't be used with metadata macros such as (${nameOrCustomMacro}:)`);
+			}
+		}
+		return CustomMacro.createFromFn((section, ...moreArgs) => {
+			// TODO: edit error messages produced by this call to include the partial macro above.
+			return Macros[typeof nameOrCustomMacro === "string" ? 'run' : 'runCustom'](nameOrCustomMacro, section, args.concat(moreArgs));
+		}, () => `(partial:${args.map(a => toSource(a))})`,
+			(typeof nameOrCustomMacro === "string" ? Macros.get(nameOrCustomMacro).typeSignature : nameOrCustomMacro.typeSignature)
+				/*
+					Chop off all the pre-filled args, unless they are "rest" or "zeroOrMore".
+				*/
+				.filter((e,i) => i >= args.length || (e.pattern === "rest" || e.pattern === "zero or more"))
+		);
+	},
+	[either(String, CustomMacro), zeroOrMore(Any)]);
 });
