@@ -437,9 +437,12 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 				return TwineError.create('macrocall', `(partial:) can't be used with metadata macros such as (${nameOrCustomMacro}:)`);
 			}
 		}
-		return CustomMacro.createFromFn((section, ...moreArgs) => {
-			// TODO: edit error messages produced by this call to include the partial macro above.
-			return Macros[typeof nameOrCustomMacro === "string" ? 'run' : 'runCustom'](nameOrCustomMacro, section, args.concat(moreArgs));
+		const macro = CustomMacro.createFromFn((section, ...moreArgs) => {
+			const ret = Macros[typeof nameOrCustomMacro === "string" ? 'run' : 'runCustom'](nameOrCustomMacro, section, args.concat(moreArgs));
+			if (TwineError.containsError(ret)) {
+				ret.message = `An error occurred while running the (partial:)-created macro, ${macro.TwineScript_ObjectName}:\n` + ret.message;
+			}
+			return ret;
 		}, () => `(partial:${args.map(a => toSource(a))})`,
 			(typeof nameOrCustomMacro === "string" ? Macros.get(nameOrCustomMacro).typeSignature : nameOrCustomMacro.typeSignature)
 				/*
@@ -447,6 +450,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 				*/
 				.filter((e,i) => i >= args.length || (e.pattern === "rest" || e.pattern === "zero or more"))
 		);
+		return macro;
 	},
 	[either(String, CustomMacro), zeroOrMore(Any)]);
 });

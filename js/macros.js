@@ -191,9 +191,13 @@ define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changer
 	function typeCheckAndRun(name, {fn, typeSignature, returnType}, section, args) {
 		args = spreadArguments(args);
 		/*
-			Custom macros have no name.
+			Custom macros are passed in as-is, not referred to by name.
 		*/
-		const custom = !name;
+		let custom;
+		if (typeof name !== "string") {
+			custom = name;
+			name = '';
+		}
 		/*
 			The invocation (its name in "(name:)" format) is used solely for error message generation.
 			If the macro has more than one name, we'll (often incorrectly, but still informatively)
@@ -201,7 +205,7 @@ define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changer
 			It's an uncomfortable state of affairs, I know.
 		*/
 		const invocation = (custom ? '' : "(" + (Array.isArray(name) && name.length > 1 ? name[0] : name) + ":)");
-		name = custom ? "this custom macro" : "the " + invocation + " macro" ;
+		name = custom ? `the custom macro, ${custom.TwineScript_KnownName}` : `the ${invocation} macro` ;
 		/*
 			This is also used for error message generation: it provides the author with
 			a readable sentence about the type signature of the macro.
@@ -588,7 +592,7 @@ define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changer
 			if (!CustomMacro.isPrototypeOf(obj)) {
 				return TwineError.containsError(obj) ? obj : TwineError.create("macrocall", `I can't call ${objectName(obj)} because it isn't a custom macro.`);
 			}
-			return typeCheckAndRun('', obj, section, args);
+			return typeCheckAndRun(obj, obj, section, args);
 		},
 	};
 

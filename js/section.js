@@ -708,8 +708,7 @@ define([
 						In some situations, the `it` keyword will be *inserted automatically* by Harlowe when the story runs. If you write an
 						incomplete comparison expression where the left-hand side is missing, like `(print: $red > 2 and < 4)`,
 						then, when running, the `it` keyword will automatically be inserted into the absent spot - producing, in this case,
-						`(print: $red > 2 and it < 4)`. Note that in situations where the `it` keyword would not have an obvious value, such as
-						`(print: < 4)`, an error will result nonetheless.
+						`(print: $red > 2 and it < 4)`.
 
 						If the `it` keyword equals a datamap, string, array, or other "collection" data type, then you can access data values
 						using the `its` variant - `(print: $red is 'egg' and its length is 3)` or `(set:$red to its 1st)`. Much like the `'s`

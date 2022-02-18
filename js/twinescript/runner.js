@@ -318,6 +318,101 @@ define([
 	}
 
 	/*
+		Having evaluated a token, if debug mode is on, a replay frame of this
+		evaluation should be added to the evalReplay array.
+	*/
+	function makeEvalReplayFrame(evalReplay, val, transformation, tokens, i) {
+		const token = tokens[i];
+			/*
+				This replay system does not remove the whitespace tokens from before and after,
+				because it needs the full text length of these.
+			*/
+		let before = tokens.slice(0, i),
+			after = tokens.slice(i + 1);
+		/*
+			Replays should stop at the first error, because seeing the same error propagate
+			upward isn't particularly enlightening.
+		*/
+		if (evalReplay[evalReplay.length-1].error) {
+			return;
+		}
+		const error = TwineError.containsError(val);
+		const fullCode = evalReplay[evalReplay.length-1].code;
+		/*
+			The basis is used to convert string indexes from passage-wise to expression-wise.
+			It equals the passage-wise index of the expression's first element.
+		*/
+		const basis = evalReplay[0].basis;
+
+		/*
+			If a string for the transformed source wasn't provided,
+			compute it here from the val.
+		*/
+		let resultSource;
+		if (!transformation) {
+			resultSource = ` ${error ? "🐞" :
+				val && !val.TwineScript_ToSource && val.TwineScript_Unstorable ? objectName(val) :
+				toSource(val)} `;
+
+			/*
+				Don't create a replay frame for tokens whose source representation doesn't change at all.
+			*/
+			if ((!before || (before.length === 1 && before[0].type === 'whitespace')) && 
+					(!after || (after.length === 1 && after[0].type === 'whitespace')) &&
+					resultSource.trim() === token.text.trim()) {
+				return val;
+			}
+		}
+		else {
+			resultSource = transformation;
+		}
+		/*
+			Before and after can be swapped in one special case: right-side elided comparisons.
+		*/
+		if (before.length && after.length && before[0].start > after[0].start) {
+			[before, after] = [after, before];
+		}
+		/*
+			Splicing a string in-place multiple times is a little tricky. We need the changes in
+			length produced by each splice before this.
+			Calculate the start and end of this token + its inferiors, relative to the original
+			source, and then re-compute it for each replay frame before this.
+		*/
+		let start = (before.length ? before[0] : token).start - basis;
+		let end = (after.length ? after[after.length-1] : token).end - basis;
+		for (let i of evalReplay) {
+			/*
+				Previous substitutions that start before this push both the start and end forward.
+			*/
+			if (i.start < start) {
+				start += i.diff;
+				end += i.diff;
+			}
+			/*
+				Substitutions that start inside this (i.e. child tokens) only push the end forward.
+			*/
+			else if (i.start < end) {
+				end += i.diff;
+			}
+		}
+		/*
+			This difference is that of the result source length vs. the original (token + inferiors) text length.
+		*/
+		const diff = resultSource.length - (end - start);
+		evalReplay.push({
+			code: fullCode.slice(0, start) + resultSource + fullCode.slice(end),
+			/*
+				Each step depicts either the permution of a code structure into a Harlowe value, or an error being produced.
+			*/
+			desc: `<code>${escape(fullCode.slice(start, end))}</code> ` + (error ? `produced an error: ` : ` became <code>${escape(resultSource)}</code>${transformation ? '' : ` (${typeName(val)})`}.`),
+			start,
+			end,
+			diff,
+			error: error && error.render(fullCode.slice(start, end), /*NoEvents*/ true),
+		});
+	}
+
+	/*
 		This takes an array of tokens, and executes it as JS code.
 		
 		@param {Array} The tokens array.
@@ -328,6 +423,8 @@ define([
 		@return {Any} The result.
 	*/
 	return function run(section, tokens, isVarRef = false, isTypedVar = false) {
+		const {evalReplay} = section;
+		const hasEvalReplay = (evalReplay && evalReplay.length);
 		const ops = Operations;
 		let token, ret;
 		/*
@@ -657,6 +754,14 @@ define([
 				}
 			};
 
+			const
+				leftIsComparison        = isComparisonOp(before),
+				rightIsComparison       = isComparisonOp(after),
+				// This error message is used for elided "is not" comparisons.
+				ambiguityError = TwineError.create('operation', "This use of \"is not\" and \"" + type + "\" is grammatically ambiguous.",
+					"Maybe try rewriting this as \"__ is not __ " + type + " __ is not __\"");
+
+			let operator;
 			/*
 				This function gathers all the operands that have elided comparison operators and are joined
 				by identical and/or operators.
@@ -672,15 +777,15 @@ define([
 				if (token.type === type) {
 					return [...getElisionOperands(tokens.slice(0, i)), ...getElisionOperands(tokens.slice(i + 1))];
 				}
-				return [run(section, tokens)];
+				/*
+					For each elided comparison, make an evalReplay frame explaining the inferred "it" rule.
+				*/
+				const ret = run(section, tokens);
+				if (hasEvalReplay) {
+					makeEvalReplayFrame(evalReplay, null, ` it ${operator} ${toSource(ret)} `, tokens, i);
+				}
+				return [ret];
 			};
-
-			const
-				leftIsComparison        = isComparisonOp(before),
-				rightIsComparison       = isComparisonOp(after),
-				// This error message is used for elided "is not" comparisons.
-				ambiguityError = TwineError.create('operation', "This use of \"is not\" and \"" + type + "\" is grammatically ambiguous.",
-					"Maybe try rewriting this as \"__ is not __ " + type + " __ is not __\"");
 
 			/*
 				If the left side is a comparison operator, and the right side is not,
@@ -688,9 +793,8 @@ define([
 				This transforms statements like (if: $a > 2 and 3) into (if: $a > 2 and it > 3).
 			*/
 			if (leftIsComparison && !rightIsComparison) {
-				const
-					leftSide = leftIsComparison,
-					operator = compileComparisonOperator(leftSide);
+				const leftSide = leftIsComparison;
+				operator = compileComparisonOperator(leftSide);
 
 				/*
 					The one operation for which this transformation cannot be allowed is "is not",
@@ -700,11 +804,15 @@ define([
 					ret = ambiguityError;
 				}
 				else {
+					/*
+						Because getElisionOperands() calls run(), and run() affects the evalReplay, the order of these
+						calls is important.
+					*/
+					const evalBefore =  run(section, before);
+					const elisionOperands = getElisionOperands(after); /*all elided comparisons in after*/
 					ret = ops[type](
-						run(section, before),
-						ops.elidedComparisonOperator(token.type, operator, section.Identifiers.it,
-							...getElisionOperands(after)/*all elided comparisons in after*/
-						)
+						evalBefore,
+						ops.elidedComparisonOperator(token.type, operator, section.Identifiers.it, ...elisionOperands)
 					);
 				}
 			}
@@ -719,8 +827,8 @@ define([
 					We can reuse that token in this computation.
 				*/
 				const rightSide = rightIsComparison,
-					rightIndex = tokens.indexOf(rightSide),
-					operator = reverseComparisonOperator(rightSide);
+					rightIndex = tokens.indexOf(rightSide);
+				operator = reverseComparisonOperator(rightSide);
 
 				/*
 					Again, "is not" should not be transformed.
@@ -729,29 +837,35 @@ define([
 					ret = ambiguityError;
 				}
 				else {
+					/*
+						Because getElisionOperands() calls run(), and run() affects the evalReplay, the order of these
+						calls is important.
+					*/
+					/*
+						The following additional action swaps the tokens to the right and left of rightSide,
+						and changes rightSide's type into its inverse. This changes ($b < 3) into (3 > $b),
+						and thus alters the It value of the expression from $b to 3.
+
+						For multi-part comparisons, (3 and 4 and 5 < 6) becomes (6 > 5 and it > 3 and it > 4).
+
+						This could cause issues when "it" is used explicitly in the expression, but frankly such
+						uses are already kinda nonsensical ("(if: $a is in it and $b)"?).
+					*/
+					const swappedSides = [
+						...tokens.slice(rightIndex + 1),
+						// Create a copy of rightSide with the type changed, rather than mutate it in-place.
+						Object.assign(Object.create(rightSide), {
+							[rightSide.type === "inequality" ? "operator" : "type"]:
+								reverseComparisonOperator(rightSide),
+						}),
+						...tokens.slice(i + 1, rightIndex),
+					];
+					const evalAfter = run(section, swappedSides);
+					const elisionOperands = getElisionOperands(before);/*all elided comparisons in before*/
+
 					ret = ops[type](
-						/*
-							The following additional action swaps the tokens to the right and left of rightSide,
-							and changes rightSide's type into its inverse. This changes ($b < 3) into (3 > $b),
-							and thus alters the It value of the expression from $b to 3.
-
-							For multi-part comparisons, (3 and 4 and 5 < 6) becomes (6 > 5 and it > 3 and it > 4).
-
-							This could cause issues when "it" is used explicitly in the expression, but frankly such
-							uses are already kinda nonsensical ("(if: $a is in it and $b)"?).
-						*/
-						run(section, [
-							...tokens.slice(rightIndex + 1),
-							// Create a copy of rightSide with the type changed, rather than mutate it in-place.
-							Object.assign(Object.create(rightSide), {
-								[rightSide.type === "inequality" ? "operator" : "type"]:
-									reverseComparisonOperator(rightSide),
-							}),
-							...tokens.slice(i + 1, rightIndex),
-						]),
-						ops.elidedComparisonOperator(token.type, operator, section.Identifiers.it,
-							...getElisionOperands(before)/*all elided comparisons in before*/
-						)
+						evalAfter,
+						ops.elidedComparisonOperator(token.type, operator, section.Identifiers.it, ...elisionOperands)
 					);
 				}
 			}
@@ -1006,78 +1120,8 @@ define([
 			impossible("Section.run", `token ${type}${token.name ? ` (${token.name}:)` : ''} produced the section`);
 			return 0;
 		}
-		/*
-			Having got the return value of this token, if debug mode is on, a replay frame of this
-			evaluation is added to the evalReplay array.
-		*/
-		const {evalReplay} = section;
-		if (evalReplay && evalReplay.length
-				/*
-					Replays should stop at the first error, because seeing the same error propagate
-					upward isn't particularly enlightening.
-				*/
-				&& !evalReplay[evalReplay.length-1].error) {
-			const error = TwineError.containsError(ret);
-			const fullCode = evalReplay[evalReplay.length-1].code;
-			/*
-				The basis is used to convert string indexes from passage-wise to expression-wise.
-				It equals the passage-wise index of the expression's first element.
-			*/
-			const basis = evalReplay[0].basis;
-			const resultSource = ` ${error ? "🐞" :
-				ret && !ret.TwineScript_ToSource && ret.TwineScript_Unstorable ? objectName(ret) :
-				toSource(ret)} `;
-
-			/*
-				Don't create a replay frame for tokens whose source representation doesn't change at all.
-			*/
-			if (!before && !after && resultSource.trim() === token.text.trim()) {
-				return ret;
-			}
-			/*
-				For the purposes of simplifying token tree descent, whitespace tokens were removed from before and after.
-				However, this replay system needs their text lengths, so they're restored here.
-			*/
-			before = tokens.slice(0, i);
-			after = tokens.slice(i + 1);
-			/*
-				Splicing a string in-place multiple times is a little tricky. We need the changes in
-				length produced by each splice before this.
-				Calculate the start and end of this token + its inferiors, relative to the original
-				source, and then re-compute it for each replay frame before this.
-			*/
-			let start = (before.length ? before[0] : token).start - basis;
-			let end = (after.length ? after[after.length-1] : token).end - basis;
-			for (let i of evalReplay) {
-				/*
-					Previous substitutions that start before this push both the start and end forward.
-				*/
-				if (i.start < start) {
-					start += i.diff;
-					end += i.diff;
-				}
-				/*
-					Substitutions that start inside this (i.e. child tokens) only push the end forward.
-				*/
-				else if (i.start < end) {
-					end += i.diff;
-				}
-			}
-			/*
-				This difference is that of the result source length vs. the original (token + inferiors) text length.
-			*/
-			const diff = resultSource.length - (end - start);
-			evalReplay.push({
-				code: fullCode.slice(0, start) + resultSource + fullCode.slice(end),
-				/*
-					Each step depicts either the permution of a code structure into a Harlowe value, or an error being produced.
-				*/
-				desc: `<code>${escape(fullCode.slice(start, end))}</code> ` + (error ? `produced an error: ` : `became <code>${escape(resultSource)}</code> (${typeName(ret)}).`),
-				start,
-				end,
-				diff,
-				error: error && error.render(fullCode.slice(start, end), /*NoEvents*/ true),
-			});
+		if (hasEvalReplay) {
+			makeEvalReplayFrame(evalReplay, ret, '', tokens, i);
 		}
 		return ret;
 	};

@@ -176,7 +176,7 @@ describe("custom macros", function() {
 			runPassage("(set: $m to (macro:num-type _e, num-type _f, [(output-data:_e*_f)]))");
 			expect("(set:_a to (partial:$m,5))(set:_b to (partial:_a,6))(_a:8) (_a:1) (_b:)").markupToPrint('40 5 30');
 		});
-		it("errors are propagated outward", function() {
+		it("type signature errors are checked", function() {
 			expect("(set:_a to (partial:'max','Red'))(_a:)").markupToError();
 			expect("(set:_a to (partial:'max'))(_a:'Red')").markupToError();
 			expect("(set:_a to (partial:'link','A')))(_a:'B')").markupToError();
@@ -186,6 +186,10 @@ describe("custom macros", function() {
 			expect("($m: 'w')").markupToError();
 			expect("(set:_a to (partial:$m,5))(_a:'foo')").markupToError();
 			expect("(set:_a to (partial:$m,5))(set:_b to (partial:_a,6))(_b:7)").markupToError();
+		});
+		it("errors are propagated outward", function() {
+			expect("(set:_a to (partial:'dialog','foo'))(_a:'','')").markupToError();
+			expect("(set: $m to (macro:num-type _e, [(output-data: < 4)]))(set:_a to (partial:$m,5))(_a:)($m:5)").markupToError();
 		});
 	});
 });
