@@ -112,8 +112,8 @@ define(['utils/operationutils','datatypes/typedvar','datatypes/datatype','intern
 				patInd += 1;
 			}
 			if (patInd < pattern.length) {
-				return required && TwineError.create("operation", "I can't unpack this array because it needs " + (pattern.length - patInd) +
-					" more value" + ((pattern.length - patInd) > 0 ? "s" : "") + ".");
+				return required && TwineError.create("operation", `I can't unpack this array because it needs ${pattern.length - patInd
+					} more value${((pattern.length - patInd) > 0 ? "s" : "")}.`);
 			}
 			return ret;
 		}
@@ -146,8 +146,8 @@ define(['utils/operationutils','datatypes/typedvar','datatypes/datatype','intern
 				probably be changed to checking the const restriction here and now, as it is in varref.js.
 			*/
 			if (!matches(value, pattern.datatype)) {
-				return required && TwineError.create("operation", "I can't unpack " + objectName(value) + " into "
-					+ pattern.varRef.TwineScript_ToSource() + " because it doesn't match " + objectName(pattern.datatype) + ".");
+				return required && TwineError.create("operation", `I can't put ${ objectName(value) } into ${
+					pattern.varRef.TwineScript_ToSource() } because it doesn't match ${ pattern.varRef.TwineScript_ToSource() }'s datatype, ${ objectName(pattern.datatype) }.`);
 			}
 			/*
 				The datatype of this TypedVar may contain sub-TypedVars to examine. So, recursively call destructure() on it.

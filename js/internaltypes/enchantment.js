@@ -1,6 +1,6 @@
 "use strict";
 define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changercommand', 'utils/operationutils', 'internaltypes/twineerror', 'utils/renderutils'],
-($, Utils, ChangeDescriptor, ChangerCommand, {objectName}, TwineError, {collapse}) => {
+($, Utils, ChangeDescriptor, ChangerCommand, {objectName,toSource}, TwineError, {collapse}) => {
 	/*
 		Enchantments are special styling that is applied to selected elements of a
 		passage by a macro. Enchantments are registered with a Section by pushing
@@ -75,7 +75,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 					}
 					else if (!ChangerCommand.isPrototypeOf(changer)) {
 						e.replaceWith(TwineError.create("macrocall",
-							"The 'via' lambda given to enchantment macros must return a changer, not " + objectName(changer) + "."
+							`The lambda "${toSource(lambda)}" must return a changer, not ${objectName(changer)}.`
 						).render());
 						lambda = changer = null;
 					}
@@ -88,7 +88,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 								So, instead, the first item in the scope to produce an error gets replaced by it, and the rest of the scope is ignored.
 							*/
 							e.replaceWith(TwineError.create("macrocall",
-								"The changer produced by the 'via' lambda given to enchantment macros can't include a revision or enchantment changer like (replace:) or (click:)."
+								`The lambda "${toSource(lambda)}" can't include a revision or enchantment changer like (replace:) or (click:).`
 							).render());
 							lambda = changer = null;
 						}

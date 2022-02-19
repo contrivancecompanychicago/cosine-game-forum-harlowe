@@ -110,14 +110,19 @@ html { font-size:110%; font-weight:lighter; background:white; font-family:Georgi
 @media screen and (max-width: 800px) { html { margin:0 6vw 4em 6vw !important; } }
 p { margin-top:1em; }
 strong,b { font-weight: bold; }
-a { color:HSL(202, 70%, 35%); }
-a:hover, a:focus, a:active { color:#22516d; }
-table:not(.datamap):not(.panel-rows) { background:#fafafa; border-bottom:1px solid #ccc; border-collapse:collapse; border-right:1px solid #ccc; border-spacing:0; font-size:1em; width:100%; }
-table:not(.datamap):not(.panel-rows) tr { border-top:1px solid #ccc; }
-table:not(.datamap):not(.panel-rows) tr:nth-child(2n),thead { background:#eee; }
-table:not(.datamap):not(.panel-rows) th,table:not(.datamap):not(.panel-rows) td { border-left:1px solid #ccc; padding:4px; text-align:left; }
-tfoot { background:#e3e3e3; }
-body>:not(#preview) h1,body>:not(#preview) h2,body>:not(#preview) h3,body>:not(#preview) h4,body>:not(#preview) h5,body>:not(#preview) h6 { border-bottom:solid 1px #ddd; font-weight:400; line-height:1em; margin:0; padding-top:1rem; }
+
+a { color:hsl(203, 99%, 31%); }
+a:hover, a:focus, a:active { color: hsl(203, 99%, 21%); }
+.theme-dark a { color: hsl(203, 99%, 69%); }
+.theme dark a:hover, a:focus, a:active { color: hsl(203, 99%, 79%); }
+
+table:not(.datamap):not(.panel-rows) { background:hsla(0,0%,50%,0.05); border-bottom:1px solid hsla(0,0%,50%,0.4) border-collapse:collapse; border-right:1px solid hsla(0,0%,50%,0.4); border-spacing:0; font-size:1em; width:100%; }
+table:not(.datamap):not(.panel-rows) tr { border-top:1px solid hsla(0,0%,50%,0.4); }
+table:not(.datamap):not(.panel-rows) tr:nth-child(2n),thead { background:hsla(0,0%,50%,0.15); }
+table:not(.datamap):not(.panel-rows) th,table:not(.datamap):not(.panel-rows) td { border-left:1px solid hsla(0,0%,50%,0.4); padding:4px; text-align:left; }
+tfoot { background:hsla(0,0%,50%,0.21); }
+
+body>:not(#preview) h1,body>:not(#preview) h2,body>:not(#preview) h3,body>:not(#preview) h4,body>:not(#preview) h5,body>:not(#preview) h6 { border-bottom:solid 1px #888; font-weight:400; line-height:1em; margin:0; padding-top:1rem; }
 body>:not(#preview) h4,body>:not(#preview) h5,body>:not(#preview) h6 { font-weight:700; }
 body>:not(#preview) h1 { font-size:2.5em; }
 body>:not(#preview) h2 { font-size:2em; }
@@ -128,7 +133,7 @@ body>:not(#preview) h6 { font-size:.9em; }
 body>:not(#preview) h1,body>:not(#preview) h2 { padding-top:2rem; padding-bottom:5px; }
 
 /* Nav bar */
-nav { position:fixed; width:15vw; max-width: 20vw; top:2.5vh;left:2.5vw; bottom:5vh; overflow-y:scroll; border:1px solid #888; padding:1rem; margin-bottom:2em; font-size:90% }
+nav { position:fixed; width:15vw; max-width: 20vw; top:2.5vh; left:2.5vw; bottom:5vh; overflow-y:scroll; border:1px solid #888; padding:1rem; margin-bottom:2em; font-size:90% }
 nav ul { list-style-type: none; margin: 0em; padding: 0em; }
 nav img { display:block; margin: 0 auto;}
 .nav_version { text-align:center }
@@ -138,60 +143,63 @@ nav img { display:block; margin: 0 auto;}
 /* Night mode */
 #nightBar { position: fixed; top:0%;right:12vw; border:1px solid #888; border-radius:0.2rem}
 #night, #day { padding: 0.5rem 1rem; display:inline-block; cursor:pointer }
-html.night #night { background: #444 }
-html:not(.night) #day { background: #ccc }
-/* This flips the colours for most article elements, but flips them back if they have an explicit background. */
-html.night main, html.night nav, html.night main [style*=background] { filter: invert() hue-rotate(180deg); }
-html.night { background-color:black; }
+html.theme-dark #night { background: #444 }
+html:not(.theme-dark) #day { background: #ccc }
+html.theme-dark { background-color:black; color:white; }
 
 /* Main styles */
-.def_title { background:linear-gradient(180deg,white,white 70%,silver); border-bottom:1px solid silver; padding-bottom:5px; }
+main, nav { transition: opacity 1s; }
+.def_title { background:linear-gradient(180deg,transparent,transparent 70%,silver); border-bottom:1px solid silver; padding-bottom:5px; }
 .macro_signature { opacity:0.75 }
-.nav_macro_return_type { opacity:0.5; float:right; }
-.nav_macro_sig { display: none; font-style:italic; opacity:0.5; }
+.nav_macro_return_type { opacity:0.75; float:right; }
+.nav_macro_sig { display: none; font-style:italic; opacity:0.75; }
 a:hover > .nav_macro_sig { display: inline; }
 @media screen and (max-width: 1400px) { .nav_macro_return_type { display:none; } }
 @media screen and (max-width: 1600px) { .nav_macro_return_type { font-size:80% } }
-.nav_macro_aka { opacity: 0.75; font-size:90%; color:#3B8BBA; margin-left: 0.5em; font-style: italic; }
-.nav_macro_aka::before { content: "also known as "; opacity: 0.75; }
+.nav_macro_aka { font-size:90%; margin-left: 0.5em; font-style: italic; color: #085f91; }
+.theme-dark .nav_macro_aka { color: #6ec5f7; }
+.nav_macro_aka::before { content: "also known as "; opacity:0.8; }
 aside { font-style:italic; font-size:80%; }
 
 /* Code blocks */
-code { background:#FFF; border:1px solid #888; color:#000; display:block; padding:12px; overflow-x: auto; }
+code { color:inherit; background:transparent; border:1px solid hsla(0,0%,50%,0.5); display:block; padding:12px; overflow-x: auto; }
 
 /* Inline code */
 pre { display:inline; }
-.previewButton { background:inherit; color:inherit; cursor:pointer; position:absolute; right: 0px; bottom: 0px; padding:0.1rem 0.3rem; border-top:1px solid #888; border-left:1px solid #888; }
+.previewButton { z-index:22; background:inherit; color:inherit; cursor:pointer; position:absolute; right: 0px; bottom: 0px; padding:0.1rem 0.3rem; border-top:1px solid #888; border-left:1px solid #888; }
 .previewButton::after { content:"▶"; }
 .previewButton:hover { background: #ccc }
-:not(pre) > code { background:hsla(0,0%,100%,0.75); border:1px dotted #888; display:inline; padding:1px; white-space:pre-wrap; font-size:1rem; }
+:not(pre) > code { border:1px dotted hsla(0,0%,50%,0.5); display:inline; padding:1px; white-space:pre-wrap; font-size:1rem; }
+
 table:not(.datamap) :not(pre) > code { white-space: pre-wrap; }
 /* Heading links */
 .heading_link::before { content: "§"; display:inline-block; margin-left:-25px; padding-right:10px; color:black; font-weight:100; visibility:hidden; text-decoration:none; }
 :hover > .heading_link::before { visibility:visible; }
 
 /* Preview */
-#preview { display:none; z-index:21; position: fixed; width: 25vw; height:60vh; right:2vw; top: 10vh; overflow-y:scroll; border: 1px double #888; font-size:16px; transition: width 0.8s; }
+#preview { display:none; z-index:21; position: fixed; width: 25vw; height:56vh; right:2vw; top: 6vh; overflow-y:scroll; border: 1px double #888; font-size:16px; transition: width 0.8s; }
 @media screen and (max-width: 1200px) { #preview, .previewButton, #previewCode, #fullPreviewBar { display:none !important; } }
-html:not(.night) #preview tw-story { background-color:white; color:black }
-#previewCode { display:none; z-index:20; position:fixed; width:25vw; height:15vh; right: 2vw; bottom: 10vh; border: 1px double #888; transition: width 0.8s; }
+html:not(.theme-dark) #preview tw-story { background-color:white; color:black }
+#previewCode { display:none; z-index:20; position:fixed; width:25vw; height:22vh; right: 2vw; bottom: 6vh; border: 1px double #888; transition: width 0.8s; }
 .CodeMirror { height: 100% !important; width:100% !important; background-color:white; }
-.previewCodeButton { font-size:200%; padding: 0.2rem 0.9rem; }
-html.night .previewCodeButton { color:white; }
+.previewCodeButton { font-size:200%; padding: 0.2rem 0.9rem; background-color:white; }
+html.theme-dark .previewCodeButton { color:white; background-color:black; }
 
 /* Preview variables */
-#preview tw-debugger { position: absolute; padding: 0; min-height: 0; box-sizing:border-box; border-top:none; min-width: 80%; }
-#preview .panel-variables-empty { display:none; }
-#preview .panel-variables { border-top: solid black 2px; border-bottom: none; }
+#preview + tw-debugger { right:2vw; width: 25vw; min-width: 25vw; top: 62vh; height:9vh; min-height: 96px; padding: 0; background: transparent; border-color: transparent; opacity: 1 !important; transition: width 0.8s; }
+tw-debugger .tabs ~ :not(.show-invisibles, tw-backdrop), tw-debugger .tab-source, tw-debugger .tab-options, tw-debugger .panel-variables-copy, tw-debugger .panel-variables-empty { display: none !important; }
+tw-debugger .tabs { display: flex; justify-content: center; }
+tw-debugger .show-invisibles { display: block; margin: 0 auto; }
+tw-debugger .panel { border-color: #888 !important; }
 
 /* Kludge for the (text-style:) macro */
 t-s::before { content: 'Example text'; }
 
 /* Fullscreen preview */
-#fullPreviewBar { position:fixed; right: 27vw; top: 10vh; height: 80vh; width: 16px; cursor:pointer; background: hsla(0,0%,50%,0.25); border-left: solid 1px hsla(0,0%,0%,0.25); transition: right 0.8s; }
+#fullPreviewBar { position:fixed; right: 27vw; top: 6vh; height: 88vh; width: 16px; cursor:pointer; background: hsla(0,0%,50%,0.25); border-left: solid 1px hsla(0,0%,0%,0.25); transition: right 0.8s; }
 #fullPreviewBar:hover { background: hsla(0,0%,50%,0.5); border-left: solid 1px hsla(0,0%,0%,0.5); }
 html.fullPreview main, html.fullPreview nav { opacity: 0.05; }
-html.fullPreview #preview, html.fullPreview #previewCode { width:95vw; }
+html.fullPreview #preview, html.fullPreview #previewCode, html.fullPreview tw-debugger { width:95vw !important; }
 html.fullPreview #fullPreviewBar { right: 97vw; }
 
 /* Animations */
@@ -200,7 +208,7 @@ ${animations}
 ${navElement}</ul></nav>
 <div id="nightBar"><span id="day">☀️</span><span id="night"/>🌙</span></div>
 <div id="preview"><tw-story><noscript><tw-noscript>JavaScript needs to be enabled to use this code sample preview pane.</tw-noscript></noscript></tw-story>
-<tw-storydata startnode=1 options="debug"><tw-passagedata pid=1 name=Test>&lt;==>\nClick on ▶ on code samples in this documentation to preview the resulting Twine passage here!
+<tw-storydata startnode=1 options="debug"><tw-passagedata pid=1 name=Test>&lt;==>\nClick on ▶ on code samples in this documentation to preview the resulting Twine passage here!\nAlso, click on the left border ← to view this preview with full window width.
 </tw-passagedata></tw-storydata>
 <script role="script" type="twine/javascript">
 window.previewPassage = function(text, el) {
@@ -213,8 +221,7 @@ window.previewPassage = function(text, el) {
 	scroll(0, Y);
 };
 /* Debug Mode variables panel transplant */
-let vars = $('tw-debugger .panel-variables');
-$('tw-debugger').appendTo('#preview').empty().append(vars);
+$('tw-debugger').insertAfter('#preview')[$('html').is('.theme-dark') ? "addClass" : "removeClass"]('theme-dark');
 </script>
 </div>
 <div id=previewCode><textarea>
@@ -222,9 +229,14 @@ Or, type some Harlowe code in this text area, and click ▶ to see it render.
 
 \\(set: _style to (text-style:"buoy"), $word to "this")(enchant:$word, _style)\\
 
-This panel ↓ will show any variables that are set by the code.
+This panel ↓ will show any variables that are set by the code, as well as any enchantments applied to the prose using enchantment macros like \`(enchant:)\`.
+
+Press "Debug View" and then click the 🔍 icons to see a step-by-step guide of how Harlowe processed a macro.
 </textarea><div class="previewButton previewCodeButton" title="Run this Harlowe code."></div></div>
 <div id=fullPreviewBar></div>
+<script>
+try { if (localStorage.getItem('darkMode').toLowerCase() === "true") { document.documentElement.classList += "theme-dark"; } } catch(e) {}
+</script>
 <main>${outputFile}
 <p><small>This manual was generated at: ${new Date()}</small></p>
 </main>
@@ -250,12 +262,12 @@ html.on('click', '.previewCodeButton', function(e) { previewPassage(cm.doc.getVa
 try { cm.setOption('mode','harlowe-3'); } catch(e) {}
 
 /* Night Mode and Preview Buttons */
-html.on('click', '#night', function() { html.addClass('night'); $('#previewCode').addClass('theme-dark'); })
-    .on('click', '#day',   function() { html.removeClass('night'); $('#previewCode').removeClass('theme-dark'); })
+html.on('click', '#night', function() { $('html, tw-debugger').addClass('theme-dark'); try { localStorage.setItem('darkMode', true); } catch(e){} })
+    .on('click', '#day',   function() { $('html, tw-debugger').removeClass('theme-dark'); try { localStorage.setItem('darkMode', false); } catch(e){} })
     .on('click', '#fullPreviewBar', function() {
         html.addClass('fullPreview')
             .on('click.previewOff', function(e) {
-                if (!(e.target.compareDocumentPosition(document) & 1) && !$(e.target).parents('#previewCode, #preview').length) { html.removeClass('fullPreview').off('.previewOff') }
+                if (!(e.target.compareDocumentPosition(document) & 1) && !$(e.target).parents('#previewCode, #preview, tw-debugger').length) { html.removeClass('fullPreview').off('.previewOff') }
             });
     })
     .on('click', '.previewButton:not(.previewCodeButton)', function(e) { previewPassage(e.target.parentNode.textContent.replace(/\\u200B/g,''), e.target); });

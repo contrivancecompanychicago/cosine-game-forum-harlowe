@@ -259,7 +259,7 @@ const
 
 		navLink(def) {
 			return `<li><a href="#${def.anchor}" ${def.addedIn === "3.3.0" ? "class='nav_new'": ""}>(${def.name}:<span class='nav_macro_sig'>${def.sig}</span>)</a>
-				<span class='nav_macro_return_type' style='${typeColours[def.returnType.toLowerCase()] || ''}'>${def.returnType}</span>${
+				<span class='nav_macro_return_type cm-harlowe-3-macroName-${def.returnType.toLowerCase()}'>${def.returnType}</span>${
 					def.aka.length ? `<div class='nav_macro_aka'>${def.aka.map(e => `(${e}:)`).join(', ')}</div>`
 					: ''
 				}</li>`;

@@ -2792,7 +2792,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 
 			Details:
 			The oft-mentioned "random features" are the (random:), (either:) and (shuffled:) macros, as well as the `random`
-			data names (invoked using 's random` or `random of`).
+			data names (invoked using `'s random` or `random of`).
 
 			Even though I've called the seed a "special modifier value", this macro actually takes a string. This is so
 			that the aforementioned uses (such as using (current-date:)) are simple, and also so that you may

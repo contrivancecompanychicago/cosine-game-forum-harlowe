@@ -1,5 +1,5 @@
 "use strict";
-define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref', 'internaltypes/twineerror'], ({objectName}, VarScope, VarRef, TwineError) => {
+define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref', 'internaltypes/twineerror'], ({nth}, {objectName}, VarScope, VarRef, TwineError) => {
 	/*d:
 		Lambda data
 
@@ -294,6 +294,7 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 			}
 			const error = setArgument(this.loop, loopArg) || setArgument(this.making, makingArg);
 			if (TwineError.containsError(error)) {
+				error.message = `While running the ${nth(lambdaPos)} loop of this lambda, an error occurred:\n` + error.message;
 				return error;
 			}
 
@@ -356,6 +357,12 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 			}
 			section.stack.shift();
 			section.evalReplay = evalReplay;
+			/*
+				Prepend a little extra context to the message if it's an error.
+			*/
+			if (TwineError.containsError(ret)) {
+				ret.message = `While running the ${nth(lambdaPos)} loop of this lambda, an error occurred:\n` + ret.message;
+			}
 			return ret;
 		},
 
@@ -380,6 +387,7 @@ define(['utils/operationutils', 'internaltypes/varscope', 'internaltypes/varref'
 				*/
 				const passedFilter = this.apply(section, {loop:arg, pos:pos+1, ignoreVia:true, tempVariables});
 				if ((error = TwineError.containsError(passedFilter))) {
+					error.message = `While running the ${nth(pos+1)} loop of this lambda, an error occurred:\n` + error.message;
 					return error;
 				}
 				return result.concat(passedFilter ? [arg] : []);

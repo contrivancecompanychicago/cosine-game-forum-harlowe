@@ -356,8 +356,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			is instead presented as plain text, as if the verbatim markup was used on it.
 
 			Example usage:
-			* ``(v6m: )[ \(`A`)/ ]`` prints a kaomoji without fear of its source being interpreted as markup.
-			* `(v6m: )(print:(source:$playerInfo))` prints the source of the datamap in $playerInfo, without re-rendering it.
+			``(v6m: )[ \(`A`)/ ]`` prints a kaomoji without fear of its source being interpreted as markup.
 
 			Rationale:
 			Harlowe conveniently allows you to print strings containing markup and variables, such as `"Your rank is ''$rank''"`, rendering
@@ -375,8 +374,10 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			Details:
 			This macro takes no values - each changer value it produces is the same.
 
+			If you would like to use this macro to simply print a variable's contents, the (verbatim-print:) macro may be more to your liking.
+
 			See also:
-			(collapse:), (verbatim-print:)
+			(collapse:), (verbatim-print:) (verbatim-source:)
 
 			Added in: 3.2.0
 			#basics 15

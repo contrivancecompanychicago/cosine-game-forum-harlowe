@@ -398,7 +398,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		* `(set: $askDLG to (partial:"dialog", bind _result))` sets $askDLG to a custom macro that calls (dialog:) bound to the _result temp variable. This
 		can be used repeatedly to show dialogs that ask input from the player, without having to include the bound variable each time.
 		* `(set: $next to (partial:"link-goto", "==>"))` creates a custom macro that produces passage links, where the link text is always "==>".
-		* `(set: $envNoise to (either:"","",""))` creates a custom macro that randomly chooses between three empty strings and any other values you might
+		* `(set: $envNoise to (partial:'either',"","",""))` creates a custom macro that randomly chooses between three empty strings and any other values you might
 		give. This could be used for random flavour text in environments: `($envNoise:"You hear a jingling windchime")` would only display the text
 		"You hear a jingling windchime" 25% of the time the macro is run.
 
@@ -413,7 +413,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		Details:
 
 		Don't fall into the trap of thinking the values given to (partial:) will be re-evaluated on each call of the custom macro! For instance,
-		`(partial: "count", (history:))` will *not* produce a custom macro that is always equivalent to `(count:(history:),` and some other numbers.
+		`(partial: "count", (history: ))` will *not* produce a custom macro that is always equivalent to `(count:(history: ),` and some other numbers.
 		Remember that (history:) produces an array of passage names each time it's called. It is that array that is given to (partial:), so every
 		call to the produced custom macro will use *that* array, and not whatever the current (history:) array would be.
 

@@ -260,7 +260,9 @@ define(['jquery','renderer','utils/operationutils','internaltypes/changedescript
 		createFromFn(fn, toSource, typeSignature) {
 			return assign(create(this), {
 				/*
-					TBW
+					Currently, custom macros created by (partial:) don't have any params visible to the author.
+					This could be modified to support, for partials of built-ins, a conversion of Harlowe built-ins' type signatures…
+					if the Harlowe type system was versatile enough.
 				*/
 				params: [],
 				fn,
