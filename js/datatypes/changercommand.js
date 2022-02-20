@@ -1,5 +1,5 @@
 "use strict";
-define(['utils', 'utils/operationutils', 'internaltypes/changedescriptor', 'internaltypes/twineerror'], ({impossible}, {is,toSource}, ChangeDescriptor, TwineError) => {
+define(['utils', 'utils/operationutils', 'internaltypes/changedescriptor', 'internaltypes/twineerror'], ({plural, impossible}, {is,toSource}, ChangeDescriptor, TwineError) => {
 	/*
 		A ChangerCommand is a command that is used to alter the way a particular
 		Section renders the value. It does this by mutating a passed-in ChangeDescriptor
@@ -32,6 +32,48 @@ define(['utils', 'utils/operationutils', 'internaltypes/changedescriptor', 'inte
 				*/
 				+ (this.name === "else" ? "": this.params.map(toSource))
 				+ ")" + (this.next ? "+" + this.next.TwineScript_ToSource() : "");
+		},
+
+		get TwineScript_ObjectName() {
+			/*
+				Since most changer macros are 1-arity, it can pay to add the first param
+				to the listing - there's a world of difference between a (text-style:'bold') macro and a (text-style:'upsidedown').
+				Though, to avoid being misleading, this doesn't show the 1st of multiple params.
+			*/
+			let firstParam;
+			if (this.params.length === 1) {
+				firstParam = toSource(this.params[0]);
+				if (firstParam.length > 36) {
+					firstParam = undefined;
+				}
+			}
+			let ret = `a (${this.macroName}:${firstParam || ''}) changer`;
+			let {next} = this;
+			if (next) {
+				ret += " combined with ";
+			}
+			/*
+				For each subsequent changer, display only its name.
+			*/
+			let count = 0;
+			while (next && ret.length < 48) {
+				const nextChanger = `(${next.macroName}:)`;
+				ret += (count > 0 && !next.next ? ' and ' : '') + nextChanger + (next.next ? ", " : '');
+				next = next.next;
+				count += 1;
+			}
+			/*
+				Add the "and X other changers" string based on the remaining changers in the linked list.
+			*/
+			let remainder = 0;
+			while (next && remainder < 99) {
+				next = next.next;
+				remainder += 1;
+			}
+			if (remainder > 0) {
+				ret += `${count > 0 ? ' and ' : ''}${plural(remainder, 'other changer')}`;
+			}
+			return ret;
 		},
 		
 		/*
@@ -69,7 +111,6 @@ define(['utils', 'utils/operationutils', 'internaltypes/changedescriptor', 'inte
 					with. In this way, composed ChangerCommands are linked lists.
 				*/
 				next,
-				TwineScript_ObjectName:   "a ("  + macroName + ":) changer",
 			});
 		},
 		

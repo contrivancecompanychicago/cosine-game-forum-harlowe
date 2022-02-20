@@ -393,7 +393,6 @@ tw-debugger {
 		@include sourceCode();
 	}
 	.panel-row-source {
-		margin: 5px 0;
 		@include sourceCode();
 		max-height: 8rem;
 	}

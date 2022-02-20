@@ -199,5 +199,13 @@ describe("hooks", function () {
 			runPassage("[==foo");
 			expect($('tw-passage').find('tw-hook').is('[name]')).toBe(false);
 		});
+		it("affects headers and footers", function (){
+			createPassage('A[==','H1',['header']);
+			createPassage('B[==','H2',['header'], true);
+			createPassage('E[==','F2',['footer'], true);
+			createPassage('D[==','F1',['footer'], true);
+			var p = runPassage('C[==','',[], true);
+			expect(p.find('tw-include[name="H1"] > tw-hook > tw-include[name="H2"] > tw-hook > tw-hook > tw-include[name="F1"] > tw-hook > tw-include[name="F2"] > tw-hook').length).toBe(1);
+		});
 	});
 });

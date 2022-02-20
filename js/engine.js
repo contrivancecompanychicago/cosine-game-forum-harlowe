@@ -41,24 +41,38 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 	}
 	
 	/*
-		A small helper that grabs the tree Used in showPassage=, then returns a new 'include' token wrapping it. Used by showPassage.
+		A small helper that adds a passage header or footer (or the main passage tree itself) to a given array.
+		Because the array itself needs to be analysed (see below), this mutates the array in-place.
+		setupPassage is a Passage map, or undefined if the main passage's name was given.
 	*/
-	function setupPassageElement(tagType, setupPassage) {
-		const name = setupPassage.get('name');
-		const tree = Passages.getTree(name);
-		if (tree && tree.children.length) {
-			return {
-				type: 'include',
-				tag: tagType,
-				name,
-				children: tree.children,
-				text: tree.text,
-			};
+	function setupPassageElement(source, tagTypeOrPassageName, setupPassage) {
+		let newToken;
+		if (!setupPassage) {
+			newToken = Passages.getTree(tagTypeOrPassageName);
+		}
+		else {
+			const name = setupPassage.get('name');
+			const tree = Passages.getTree(name);
+			if (tree && tree.children.length) {
+				newToken = {
+					type: 'include',
+					tag: tagTypeOrPassageName,
+					name,
+					children: tree.children,
+					text: tree.text,
+				};
+			}
 		}
 		/*
-			If the setup passage was completely empty, just return this void token that does nothing.
+			Normally, most markup can't punch out of headers or footers and infect all further transclusions. However, in Harlowe 3, due to undefined behaviour,
+			the unclosed hook and unclosed collapsed syntax can. So, to implement this, the following line of code is used.
+			if the last token's type is 'include' or 'root', insert the transcluded element inside it.
 		*/
-		return { type: 'comment', text: '', children: [], };
+		let lastToken;
+		while((lastToken = source[source.length-1]) && (lastToken.type === 'root' || lastToken.type === "include")) {
+			source = lastToken.children;
+		}
+		source.push(newToken);
 	}
 	
 	/*
@@ -288,28 +302,28 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 			// Note that this places debug-startup passages after startup passages.
 			if (options.debug) {
 				for(let p of Passages.getTagged('debug-startup')) {
-					source.push(setupPassageElement('debug-startup', p));
+					setupPassageElement(source, 'debug-startup', p);
 				}
 			}
 			for(let p of Passages.getTagged('startup')) {
-				source.push(setupPassageElement('startup', p));
+				setupPassageElement(source, 'startup', p);
 			}
 		}
 		for(let p of Passages.getTagged('header')) {
-			source.push(setupPassageElement('header', p));
+			setupPassageElement(source, 'header', p);
 		}
 		if (options.debug) {
 			for(let p of Passages.getTagged('debug-header')) {
-				source.push(setupPassageElement('debug-header', p));
+				setupPassageElement(source, 'debug-header', p);
 			}
 		}
-		source.push(Passages.getTree(name));
+		setupPassageElement(source, name);
 		for(let p of Passages.getTagged('footer')) {
-			source.push(setupPassageElement('footer', p));
+			setupPassageElement(source, 'footer', p);
 		}
 		if (options.debug) {
 			for(let p of Passages.getTagged('debug-footer')) {
-				source.push(setupPassageElement('debug-footer', p));
+				setupPassageElement(source, 'debug-footer', p);
 			}
 		}
 		

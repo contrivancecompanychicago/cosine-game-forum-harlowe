@@ -134,6 +134,7 @@ body>:not(#preview) h1,body>:not(#preview) h2 { padding-top:2rem; padding-bottom
 /* Nav bar */
 nav { position:fixed; width:15vw; max-width: 20vw; top:2.5vh; left:2.5vw; bottom:5vh; overflow-y:scroll; border:1px solid #888; padding:1rem; margin-bottom:2em; font-size:90% }
 nav ul { list-style-type: none; margin: 0em; padding: 0em; }
+nav li { overflow: hidden; }
 nav img { display:block; margin: 0 auto;}
 .nav_version { text-align:center }
 .nav_new::after { content:"New"; font-size:90%; font-family:sans-serif; border-radius:2px; background-color:hsla(280,100%,50%,0.5); margin-left:4px; padding:2px; color:white; display:inline-block; }
