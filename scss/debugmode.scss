@@ -327,6 +327,12 @@ tw-debugger {
 	}
 	button {
 		font-size: $size - 0.25em;
+		/*
+			These are necessary for the documentation's editor.
+		*/
+		overflow-x: hidden;
+		text-overflow: ellipsis;
+		white-space: pre;
 	}
 	tw-link {
 		font-size: $size;

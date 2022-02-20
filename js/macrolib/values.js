@@ -1,6 +1,6 @@
 "use strict";
 define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatypes/gradient', 'datatypes/datatype', 'datatypes/hookset', 'datatypes/codehook', 'internaltypes/twineerror'],
-(Macros, State, {realWhitespace, nth, anyRealLetter}, {subset, objectName, clone, toSource}, Colour, Gradient, Datatype, HookSet, CodeHook, TwineError) => {
+(Macros, State, {realWhitespace, nth, anyRealLetter, plural}, {subset, objectName, clone, toSource}, Colour, Gradient, Datatype, HookSet, CodeHook, TwineError) => {
 	/*
 		Built-in value macros.
 		These macros manipulate the primitive values - boolean, string, number.
@@ -459,11 +459,11 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Added in: 3.2.0
 			#string
 		*/
-		("plural", "String", (_, num, noun, plural) => {
-			if (!noun || plural === "") {
+		("plural", "String", (_, num, noun, pluralWord) => {
+			if (!noun || pluralWord === "") {
 				return TwineError.create("macrocall", "The (plural:) macro can't be given empty strings.");
 			}
-			return num + " " + (Math.abs(num) !== 1 ? (plural ? plural : noun + "s") : noun);
+			return plural(num, noun, pluralWord);
 		},
 		[parseInt, String, optional(String)])
 		/*d:

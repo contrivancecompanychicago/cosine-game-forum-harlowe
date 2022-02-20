@@ -275,12 +275,7 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 				(such as a <tw-colour> for colours) but the objectName could contain user-inputted data, so only the latter is escaped.
 			*/
 			const tooLong = value && value.length > 48 && !value.TwineScript_DebugName;
-			const val = isObject(value) && value.TwineScript_DebugName ? value.TwineScript_DebugName() : escape(
-				/*
-					If the value is greater than 48 characters, truncate it.
-				*/
-				objectName(value).slice(0, 48) + (tooLong ? "…" : "")
-			);
+			const val = isObject(value) && value.TwineScript_DebugName ? value.TwineScript_DebugName() : escape(objectName(value));
 			/*
 				Single variables, like $peas, should be displayed with no trail, as "peas".
 				Deep object properties, like $arr's 1st's 1st, should be displayed with a trail

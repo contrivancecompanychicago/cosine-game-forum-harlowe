@@ -90,6 +90,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
  * The new Debug Mode options panel also lets you toggle a new feature that turns the entire panel transparent when the mouse cursor isn't hovering on it, letting you see the whole page better.
  * Added an "expression replay" feature to Debug Mode. When you use Debug View, special 🔍 icons will appear on variables and macro calls in the passage. Clicking those will produce a dialog showing a step-by-step view of how the macro call's code was interpreted by Harlowe.
+ * Variable panel values have more detailed descriptions - for instance, `(a:)` is called "an empty array", and `(a: "Weather the storm", "Search for shelter")` is called "an array (with the string "Weather the storm", and 1 other item)" instead of both being just "an array".
  * Added a close button to the panel, which exits Debug Mode when clicked.
 
 ### 3.2.3 changes (October 22, 2021):

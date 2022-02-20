@@ -268,8 +268,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 					return TwineError.create("macrocall", name === "unpack"
 						? "Please use the (unpack:) macro with arrays, datamaps or (p:) patterns containing variables to the right of 'into'."
 						: "Please use the (" + name + ":) macro with just single variables and typed variables to the "
-							+ (name === "set" ? "left of 'to'." : "right of 'into'.",
-						`You may wish to change this to the (${name !== "unpack" ? "unpack" : ar.operator === "to" ? "set" : "put"}:) macro.`));
+							+ (name === "set" ? "left of 'to'." : "right of 'into'."),
+						`You may wish to change this to the (${name !== "unpack" ? "unpack" : ar.operator === "to" ? "set" : "put"}:) macro.`);
 				}
 
 				const debugMessage = ar.set();
@@ -2064,7 +2064,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 						could be confused for it, unless all 100%-width strings are prohibited to just single characters.
 					*/
 					|| (!widthStr.includes("=") && widthStr.length > 1)) {
-				return TwineError.create("datatype", 'The (' + name + ':) macro requires a sizing line'
+				return TwineError.create("datatype", 'The (' + name + ':) macro requires a sizing line '
 						+ '("==X==", "==X", "=XXXX=" etc.) be provided, not ' + JSON.stringify(widthStr) + '.');
 			}
 			/*

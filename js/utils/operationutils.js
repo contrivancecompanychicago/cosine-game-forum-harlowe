@@ -1,6 +1,6 @@
 "use strict";
 define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
-	(NaturalSort, {impossible, nth, permutations}, TwineError, {validPropertyName}) => {
+	(NaturalSort, {impossible, nth, permutations, plural}, TwineError, {validPropertyName}) => {
 	
 	/*
 		Some cached strings to save a few characters when this is compiled. Yes, these are Hungarian Notated... well spotted.
@@ -174,15 +174,71 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		Most Harlowe objects have an ObjectName method which supplies a name
 		string to the error message facilities.
 	*/
+	/*
+		This helper function 
+	*/
+	function truncatedList(list, maxLength, itemNoun, itemNameFn) {
+		let ret = '', i = 0;
+		while (ret.length < maxLength && i < list.length) {
+			/*
+				Array listings should list the full objectName of each value,
+				but datamaps should only list their string keys, without "a string named".
+				As such, this function takes a custom item-name conversion function.
+			*/
+			const item = itemNameFn(list[i]);
+			if (item.length + ret.length <= maxLength) {
+				ret += (i > 0 && i === list.length-1 ? " and " : '') + item + (i < list.length-1 ? ", " : '');
+			} else {
+				ret += (i > 0 ? " and " : '') + plural(list.length - i, (i > 0 ? 'other ' : ' ') + itemNoun);
+				break;
+			}
+			i+=1;
+		}
+		return ret;
+	}
 	function objectName(obj) {
-		return (isObject(obj) && "TwineScript_ObjectName" in obj)
-			? obj.TwineScript_ObjectName
-			: Array.isArray(obj) ? "an array"
-			: obj instanceof Map ? "a datamap"
-			: obj instanceof Set ? "a dataset"
-			: typeof obj === sBoolean ? "the boolean value '" + obj + "'"
-			: (typeof obj === sString || typeof obj === sNumber)
-				? 'the ' + typeof obj + " " + JSON.stringify(obj)
+		if (isObject(obj) && "TwineScript_ObjectName" in obj) {
+			return obj.TwineScript_ObjectName;
+		}
+		if (Array.isArray(obj)) {
+			if (obj.length === 0) {
+				return "an empty array";
+			}
+			return `an array (with ` + truncatedList(obj, 48, "item", objectName) + ")";
+		}
+		if (obj instanceof Map) {
+			if (obj.size === 0) {
+				return "an empty datamap";
+			}
+			return `a datamap (with ` + truncatedList([...obj.keys()], 48, "dataname",
+				/*
+					Someday, non-string datanames may be possible. As such, toSource is used instead of
+					JSON.stringify.
+				*/
+				toSource) + ")";
+		}
+		if (obj instanceof Set) {
+			if (obj.size === 0) {
+				return "an empty dataset";
+			}
+			return `a dataset (with ` + truncatedList([...obj.values()], 48, "item", objectName) + ")";
+		}
+		if (typeof obj === sString) {
+			if (obj.length === 0) {
+				return "an empty string";
+			}
+			/*
+				This uses the actual code point length of the string, even though similar checks above do not (to
+				save time).
+			*/
+			let codePoints = [...obj];
+			if (codePoints.length > 48) {
+				return `a ${codePoints.length}-character string starting with ${JSON.stringify(codePoints.slice(0,48).join(''))}`;
+			}
+			return `the string ${JSON.stringify(obj)}`;
+		}
+		return typeof obj === sBoolean ? "the boolean value '" + obj + "'"
+			: typeof obj === sNumber ? 'the number ' + JSON.stringify(obj)
 			: obj === undefined ? "an empty variable"
 			: "...whatever this is";
 	}

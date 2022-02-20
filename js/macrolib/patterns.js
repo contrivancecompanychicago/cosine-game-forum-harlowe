@@ -833,7 +833,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/lambda',
 						for (let i = 0; i < typedVars.length; i += 1) {
 							const name = typedVars[i].varRef.getName();
 							if (name === "match") {
-								return TwineError.create("macrocall", "There was a TypedVar named _match in the pattern given to (str-find:)",
+								return TwineError.create("macrocall", "There was a typed temp variable named _match in the pattern given to (str-find:)",
 									"The variable _match is reserved, and can't be used inside (str-find:)'s pattern.");
 							}
 							matchObj.set(typedVars[i].varRef.getName(), match[i+1]);

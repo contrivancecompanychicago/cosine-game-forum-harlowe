@@ -205,8 +205,8 @@ define(['jquery', 'markup', 'utils/polyfills'],
 			that comes in the form "[num] [noun]". Used exclusively for
 			error messages.
 		*/
-		plural(num, noun) {
-			return num + " " + noun + (num > 1 ? "s" : "");
+		plural(num, noun, plural) {
+			return num + " " + (Math.abs(num) !== 1 ? (plural ? plural : noun + "s") : noun);
 		},
 
 		/*

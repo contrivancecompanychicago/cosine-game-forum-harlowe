@@ -106,8 +106,7 @@ outputFile = outputFile.replace(/<code>([^<]+)<\/code>(~?)/g, ({length}, code, n
 outputFile = `<!doctype html><title>Harlowe ${version} manual</title><meta charset=utf8><style>
 /* Normalisation CSS */
 html { font-size:110%; font-weight:lighter; background:white; font-family:Georgia, "Times New Roman", Times, serif; line-height:1.5; margin:0 30vw 4em 22vw !important; color:black; }
-@media screen and (max-width: 1200px) { html { margin:0 12vw 4em 12vw  !important; } }
-@media screen and (max-width: 800px) { html { margin:0 6vw 4em 6vw !important; } }
+@media screen and (max-width: 1200px) { html { margin:0 6vw 4em 6vw  !important; } }
 p { margin-top:1em; }
 strong,b { font-weight: bold; }
 
@@ -138,14 +137,15 @@ nav ul { list-style-type: none; margin: 0em; padding: 0em; }
 nav img { display:block; margin: 0 auto;}
 .nav_version { text-align:center }
 .nav_new::after { content:"New"; font-size:90%; font-family:sans-serif; border-radius:2px; background-color:hsla(280,100%,50%,0.5); margin-left:4px; padding:2px; color:white; display:inline-block; }
-@media screen and (max-width: 1200px) { nav { display:none; } }
+@media screen and (max-width: 1200px) { nav { position: static; margin-top: 1rem; height:50vh; width: auto; max-width: 80vw; font-size: 120% } }
 
 /* Night mode */
-#nightBar { position: fixed; top:0%;right:12vw; border:1px solid #888; border-radius:0.2rem}
-#night, #day { padding: 0.5rem 1rem; display:inline-block; cursor:pointer }
+#nightBar { position: fixed; top:0%;right:12vw; border:1px solid #888; border-radius:0.2rem; z-index: 23; background: white; }
+#night, #day { padding: 0.5rem 1rem; display:inline-block; cursor:pointer; }
 html.theme-dark #night { background: #444 }
 html:not(.theme-dark) #day { background: #ccc }
-html.theme-dark { background-color:black; color:white; }
+html.theme-dark, html.theme-dark #nightBar { background-color:black; color:white; }
+@media screen and (max-width: 1200px) { #nightBar { right: 0vw; } }
 
 /* Main styles */
 main, nav { transition: opacity 1s; }
@@ -154,7 +154,6 @@ main, nav { transition: opacity 1s; }
 .nav_macro_return_type { opacity:0.75; float:right; }
 .nav_macro_sig { display: none; font-style:italic; opacity:0.75; }
 a:hover > .nav_macro_sig { display: inline; }
-@media screen and (max-width: 1400px) { .nav_macro_return_type { display:none; } }
 @media screen and (max-width: 1600px) { .nav_macro_return_type { font-size:80% } }
 .nav_macro_aka { font-size:90%; margin-left: 0.5em; font-style: italic; color: #085f91; }
 .theme-dark .nav_macro_aka { color: #6ec5f7; }
@@ -178,7 +177,7 @@ table:not(.datamap) :not(pre) > code { white-space: pre-wrap; }
 
 /* Preview */
 #preview { display:none; z-index:21; position: fixed; width: 25vw; height:56vh; right:2vw; top: 6vh; overflow-y:scroll; border: 1px double #888; font-size:16px; transition: width 0.8s; }
-@media screen and (max-width: 1200px) { #preview, .previewButton, #previewCode, #fullPreviewBar { display:none !important; } }
+@media screen and (max-width: 1200px) { #preview, .previewButton, #previewCode, #fullPreviewBar, tw-debugger { display:none !important; } }
 html:not(.theme-dark) #preview tw-story { background-color:white; color:black }
 #previewCode { display:none; z-index:20; position:fixed; width:25vw; height:22vh; right: 2vw; bottom: 6vh; border: 1px double #888; transition: width 0.8s; }
 .CodeMirror { height: 100% !important; width:100% !important; background-color:white; }

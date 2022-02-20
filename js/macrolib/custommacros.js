@@ -398,6 +398,8 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		* `(set: $askDLG to (partial:"dialog", bind _result))` sets $askDLG to a custom macro that calls (dialog:) bound to the _result temp variable. This
 		can be used repeatedly to show dialogs that ask input from the player, without having to include the bound variable each time.
 		* `(set: $next to (partial:"link-goto", "==>"))` creates a custom macro that produces passage links, where the link text is always "==>".
+		* `(set: $next2 to (partial: $next, "Continue"))` takes the previous example's custom macro, stored in $next, and makes a version where the passage name is always "Continue".
+		Calling `($next2:)` would thus be equivalent to `(link-goto: "==>", "Continue")`.
 		* `(set: $envNoise to (partial:'either',"","",""))` creates a custom macro that randomly chooses between three empty strings and any other values you might
 		give. This could be used for random flavour text in environments: `($envNoise:"You hear a jingling windchime")` would only display the text
 		"You hear a jingling windchime" 25% of the time the macro is run.

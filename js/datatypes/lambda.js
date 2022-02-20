@@ -294,7 +294,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 			}
 			const error = setArgument(this.loop, loopArg) || setArgument(this.making, makingArg);
 			if (TwineError.containsError(error)) {
-				error.message = `While running the ${nth(lambdaPos)} loop of this lambda, an error occurred:\n` + error.message;
+				error.message = `While running ${lambdaPos ? `the ${nth(lambdaPos)} loop of ` : ''}this lambda, an error occurred:\n` + error.message;
 				return error;
 			}
 
