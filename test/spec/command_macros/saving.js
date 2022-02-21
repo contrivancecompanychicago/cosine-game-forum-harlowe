@@ -207,6 +207,21 @@ describe("save macros", function() {
 				done();
 			}, 90);
 		});
+		it("can restore (partial:) custom macros", function(done) {
+			runPassage(
+				"(set:$c1 to (macro:num-type _a,num-type _b,[(output-data:(max:_a,_b,200))]))(set:$c2 to (partial:'range',3), $c3 to (partial:$c1,201))", 'corge'
+			);
+			runPassage("(savegame:'1')",'baz');
+			runPassage("(set:$c1 to 4, $c2 to 5, $c3 to 6)",'qux');
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("($c1:198,197)").markupToPrint('200');
+				expect("(v6m-source:($c2:5))").markupToPrint('(a:3,4,5)');
+				expect("($c3:312)").markupToPrint('312');
+				expect("($c3:155)").markupToPrint('201');
+				done();
+			}, 90);
+		});
 		it("can restore variables set in (display:)", function(done) {
 			createPassage("(set:$arr to (a:'" + "E".repeat(30) + "'))", 'baz');
 			runPassage("(display:'baz')(set:$gee to 2)", "corge");

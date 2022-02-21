@@ -548,6 +548,6 @@ tw-debugger {
 	// Used for marking highlighed syntax
 	mark {
 		color: inherit;
-		background-color: hsla(180, 72%, 65%, 0.3);
+		background-color: hsla(180, 72%, 65%, 0.3) !important;
 	}
 }

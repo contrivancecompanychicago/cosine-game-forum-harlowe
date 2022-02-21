@@ -497,6 +497,12 @@ describe("data structure macros", function () {
 				sourceTest('(macro:boolean-type _ok,num-type _ng,[(output:(cond:_ok,_ng,1)])','(macro:bool-type _ok,num-type _ng,[(output:(cond:_ok,_ng,1)])');
 				sourceTest('(macro:[])','(macro:[])');
 			});
+			it("serialises (partial:) macros", function() {
+				sourceTest('(partial:"range",3)','(partial:"range",3)');
+				sourceTest('(partial:"enchant",?hook,(text-colour:black))','(partial:"enchant",?hook,(text-colour:black))');
+				runPassage('(set: $a to (macro:alnum-type _a,[(out-data:_a)]))');
+				sourceTest('(partial:$a,"A")','(partial:(macro:alnum-type _a,[(out-data:_a)]),"A")');
+			});
 			it("serialises lambdas", function() {
 				[
 					'_item making _total via _total + (max: _item, 0)', '_item where _item\'s 1st is "A"', 'when $fuel > 8', '_item via _item + "s"', 'each _item'

@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery','renderer','utils/operationutils','internaltypes/changedescriptor', 'internaltypes/varref', 'internaltypes/varscope', 'internaltypes/twineerror', 'internaltypes/twinenotifier'], ($, Renderer, {objectName, typeName, matches}, ChangeDescriptor, VarRef, VarScope, TwineError, TwineNotifier) => {
+define(['jquery','utils','renderer','utils/operationutils','internaltypes/changedescriptor', 'internaltypes/varref', 'internaltypes/varscope', 'internaltypes/twineerror', 'internaltypes/twinenotifier'], ($, {andList}, Renderer, {objectName, typeName, matches, toSource}, ChangeDescriptor, VarRef, VarScope, TwineError, TwineNotifier) => {
 	const {assign,create} = Object;
 	/*d:
 		CustomMacro data
@@ -223,9 +223,6 @@ define(['jquery','renderer','utils/operationutils','internaltypes/changedescript
 	const CustomMacro = Object.seal({
 		TwineScript_TypeID:   "macro",
 		TwineScript_TypeName: "a custom macro",
-		get TwineScript_ObjectName() {
-			return this.TwineScript_KnownName ? "the " + this.TwineScript_KnownName + " macro" : "a custom macro";
-		},
 		TwineScript_GetProperty(prop) {
 			if (prop === "params") {
 				return [...this.params];
@@ -257,7 +254,7 @@ define(['jquery','renderer','utils/operationutils','internaltypes/changedescript
 		/*
 			Used exclusively by (partial:).
 		*/
-		createFromFn(fn, toSource, typeSignature) {
+		createFromFn(fn, objectName, toSource, typeSignature) {
 			return assign(create(this), {
 				/*
 					Currently, custom macros created by (partial:) don't have any params visible to the author.
@@ -267,6 +264,7 @@ define(['jquery','renderer','utils/operationutils','internaltypes/changedescript
 				params: [],
 				fn,
 				typeSignature,
+				TwineScript_ObjectName: objectName,
 				TwineScript_ToSource: toSource,
 				TwineScript_KnownName: "",
 			});
@@ -310,7 +308,8 @@ define(['jquery','renderer','utils/operationutils','internaltypes/changedescript
 				/*
 					knownName is assigned to whatever variable this data structure was last assigned to, by VarRef.set().
 				*/
-				TwineScript_KnownName: "",
+				TwineScript_KnownName: "an unnamed custom macro",
+				TwineScript_ObjectName: `a custom macro (with ${params.length ? andList(params.map(toSource)) : 'no params'})`,
 			});
 			ret.fn = macroEntryFn(ret);
 			return ret;

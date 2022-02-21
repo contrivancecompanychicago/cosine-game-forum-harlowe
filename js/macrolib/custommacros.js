@@ -1,7 +1,7 @@
 "use strict";
 define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changercommand', 'datatypes/custommacro', 'datatypes/codehook', 'datatypes/typedvar', 'internaltypes/twineerror'],
 (Utils, Macros, State, {objectName, toSource}, ChangerCommand, CustomMacro, CodeHook, TypedVar, TwineError) => {
-	const {add, addChanger, addCommand, TypeSignature: {rest, either, Any, zeroOrMore}} = Macros;
+	const {add, addChanger, addCommand, TypeSignature: {rest, either, Any, Everything, zeroOrMore}} = Macros;
 	/*d:
 		(macro: [...TypedVar], CodeHook) -> CustomMacro
 
@@ -431,22 +431,45 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		#custom macros
 	*/
 	add("partial", "CustomMacro", (_, nameOrCustomMacro, ...args) => {
-		if (typeof nameOrCustomMacro === "string") {
-			if (!Macros.has(nameOrCustomMacro)) {
+		const customMacro = typeof nameOrCustomMacro !== "string" && nameOrCustomMacro;
+		const name = !customMacro && nameOrCustomMacro;
+		if (!customMacro) {
+			if (!Macros.has(name)) {
 				return TwineError.create('macrocall', `The macro name given to (partial:), "${nameOrCustomMacro}", isn't the name of a built-in macro.`);
 			}
-			if (Macros.get(nameOrCustomMacro).returnType === "Metadata") {
+			if (Macros.get(name).returnType === "Metadata") {
 				return TwineError.create('macrocall', `(partial:) can't be used with metadata macros such as (${nameOrCustomMacro}:)`);
 			}
 		}
+		/*
+			This has an obvious problem when nameOrCustomMacro is a custom macro: the entire source of the original custom macro must be
+			included in the (source:) representation of this partial. However, there's no way around it.
+		*/
+		const source = `(partial:${toSource(nameOrCustomMacro)},${args.map(a => toSource(a))})`;
+		/*
+			createFromFn() allows a special kind of custom macro to be created using a JS function instead of a codehook body.
+		*/
 		const macro = CustomMacro.createFromFn((section, ...moreArgs) => {
-			const ret = Macros[typeof nameOrCustomMacro === "string" ? 'run' : 'runCustom'](nameOrCustomMacro, section, args.concat(moreArgs));
-			if (TwineError.containsError(ret)) {
-				ret.message = `An error occurred while running the (partial:)-created macro, ${macro.TwineScript_ObjectName}:\n` + ret.message;
-			}
-			return ret;
-		}, () => `(partial:${args.map(a => toSource(a))})`,
-			(typeof nameOrCustomMacro === "string" ? Macros.get(nameOrCustomMacro).typeSignature : nameOrCustomMacro.typeSignature)
+				const ret = Macros[typeof nameOrCustomMacro === "string" ? 'run' : 'runCustom'](nameOrCustomMacro, section, args.concat(moreArgs));
+				if (TwineError.containsError(ret)) {
+					ret.message = `An error occurred while running the (partial:)-created macro, ${macro.TwineScript_ObjectName}:\n` + ret.message;
+				}
+				return ret;
+			},
+			/*
+				The TwineScript_ObjectName of this macro usually specifically references the macro call it's equivalent to, but in the case of it being a partial
+				of an unnamed custom macro (in the case of a (macro:) call being given to (partial:) directly) there isn't an easy way of representing this in a way
+				that accurately portrays the original call. Thus, 
+			*/
+			`a (partial:) custom macro of ${!name && !customMacro.TwineScript_KnownName ? `another unnamed custom macro` : `(${name || customMacro.TwineScript_KnownName}:${args.map(a => toSource(a))})`}`,
+			/*
+				This is the TwineScript_ToSource of this custom macro. The source representation is cached above to save a little time.
+			*/
+			() => source,
+			/*
+				The type signature, used for basic Harlowe type-checking, is simply constructed by reducing the prior macro's type signature.
+			*/
+			(name ? Macros.get(name).typeSignature : customMacro.typeSignature)
 				/*
 					Chop off all the pre-filled args, unless they are "rest" or "zeroOrMore".
 				*/
@@ -454,5 +477,5 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		);
 		return macro;
 	},
-	[either(String, CustomMacro), zeroOrMore(Any)]);
+	[either(String, CustomMacro), zeroOrMore(Everything)]);
 });

@@ -149,6 +149,7 @@ describe("custom macros", function() {
 			expect("(set: $e to (partial:'dm'))").not.markupToError();
 			expect("(set: $e to (partial:'dm',1,int,where it is 2))").not.markupToError();
 			expect("(set: $e to (partial:(macro:str-type _a, [(out:)[_a]]),1,int,where it is 2))").not.markupToError();
+			expect('(set: $e to (partial:"enchant",?hook,(text-colour:black)))').not.markupToError();
 		});
 		it("errors if the string isn't a valid built-in macro's insensitive name", function() {
 			expect("(set: $e to (partial:'foobar'))").markupToError();

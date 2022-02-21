@@ -205,7 +205,7 @@ define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changer
 			It's an uncomfortable state of affairs, I know.
 		*/
 		const invocation = (custom ? '' : "(" + (Array.isArray(name) && name.length > 1 ? name[0] : name) + ":)");
-		name = custom ? `the custom macro, ${custom.TwineScript_KnownName}` : `the ${invocation} macro` ;
+		name = custom ? (custom.TwineScript_KnownName ? `the custom macro, ${custom.TwineScript_KnownName}` : `an unnamed custom macro`) : `the ${invocation} macro` ;
 		/*
 			This is also used for error message generation: it provides the author with
 			a readable sentence about the type signature of the macro.

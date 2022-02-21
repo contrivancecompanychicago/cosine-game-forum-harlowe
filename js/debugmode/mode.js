@@ -357,7 +357,7 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 					*/
 					"<tr class='variable-row panel-row-source' style='display:none'><td colspan='5'></td></tr>"
 				);
-			row.find('tw-folddown').data('folddown', () =>  row.next('.panel-row-source td').empty().append(Highlight(toSource(value))));
+			row.find('tw-folddown').data('folddown', () => row.next('.panel-row-source').find('td').empty().append(Highlight(toSource(value))));
 			return row;
 		},
 		rowCheck({name, path, tempScope}, row) {

@@ -70,7 +70,13 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 		*/
 		let lastToken;
 		while((lastToken = source[source.length-1]) && (lastToken.type === 'root' || lastToken.type === "include")) {
-			source = lastToken.children;
+			/*
+				So, the problem here is, we want to insert this transcluded element into the children of
+				the previous transcluded element, but to do so would mutate the tree, which is definitely cached
+				in Passages due to being a header/footer. So, we just "clone" both this token and its children array.
+			*/
+			source[source.length-1] = Object.create(lastToken);
+			source = lastToken.children = lastToken.children.slice();
 		}
 		source.push(newToken);
 	}
