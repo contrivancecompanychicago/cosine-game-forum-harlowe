@@ -65,11 +65,14 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 		}
 		/*
 			Normally, most markup can't punch out of headers or footers and infect all further transclusions. However, in Harlowe 3, due to undefined behaviour,
-			the unclosed hook and unclosed collapsed syntax can. So, to implement this, the following line of code is used.
+			unclosed markup can. So, to continue to support this in 3.3.0, the following code is used.
 			if the last token's type is 'include' or 'root', insert the transcluded element inside it.
 		*/
 		let lastToken;
 		while((lastToken = source[source.length-1]) && (lastToken.type === 'root' || lastToken.type === "include")) {
+			if (!lastToken.children.some(child => child.type.startsWith('unclosed'))) {
+				break;
+			}
 			/*
 				So, the problem here is, we want to insert this transcluded element into the children of
 				the previous transcluded element, but to do so would mutate the tree, which is definitely cached

@@ -42,6 +42,7 @@ window.createPassage = function(text, name, tags, keepCache) {
 	if (!keepCache) {
 		Passages.clearTreeCache();
 		Passages.clearStoryletCache();
+		Passages.clearTagCache();
 	}
 	Passages.set(name, Passages.create($('<div name="' + name + '" tags="' + (Array.isArray(tags) ? tags : tags ? [tags] : []).join(' ') + '">').text(text)));
 	return Passages.loadMetadata(Section.create($('<p>')));

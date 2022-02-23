@@ -7,6 +7,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 #### Bugfixes
 
  * Fixed a long-standing bug where header passages caused aligner, column, heading, and horizontal rule markup to not work in the first line of any passage of the story.
+ * Fixed a long-standing bug where "incomplete" markup in headers, the main passage, or footers could "punch through" and affect anything that came after. For instance, ending a header passage with `[` and placing an unmatched `]` in the main passage would erase the invisible boundary between the header and the main passage, causing things like section-based markup in the header (like aligners or columns) to affect the main passage, even though it shouldn't.
+   * Note: for compatibility reasons, I have decided not to fix this same bug when unclosed hooks `[=` are used. So, unclosed hooks in headers, the main passage, or footers will still "punch through" to affect things that appear after. You may use this to re-create this bug's effects in 3.3.0. However, this will be fixed in 4.0.0.
  * Fixed a long-standing bug where it was possible to put Harlowe in an infinite loop using `(save-game:)` and `(load-game:)` unconditionally in the same passage.
  * Fixed a long-standing bug where temp variables created outside a live hook (a hook with `(live:)`, `(event:)`, `(more:)`, or `(after:)` attached) couldn't then be used inside it.
  * Most of the other changers, including `(t8n:)`, should now work correctly when combined with `(live:)`, `(event:)`, `(more:)`, or `(after:)`.
@@ -53,6 +55,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * You may now give one or zero values after the rotation number to `(rotated:)` - for instance, `(rotated: 2, ...$arr)` will no longer make an error if $arr is empty.
    * Similarly, you may now give one value to `(rotated-to:)` after the lambda, instead of a minimum of two - however, if the given lambda doesn't match it, then an error will still result.
  * Instead of producing an error, `(undo:)` and `(link-undo:)` now take an optional second string, similar to `(link-storylet:)`, which is shown instead of the link if undos aren't available.
+ * `(source:)`, `(v6m-source:)` and Debug Mode now represent built-in Harlowe colours (`yellow`, `blue` etc.) as their keywords, rather than a `(hsl:)` macro call.
 
 ##### Compatibility
 

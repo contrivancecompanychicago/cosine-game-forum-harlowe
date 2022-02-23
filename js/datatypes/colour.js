@@ -429,18 +429,43 @@ define(['jquery'], ($) => {
 		TwineScript_Properties: ['h','s','l','r','g','b','a','lch'],
 
 		TwineScript_ToSource() {
+			if (this.a === 0) {
+				return "transparent";
+			}
 			const hsl = !this.lch && RGBToHSL(this);
-			if (hsl && !hsl.h && !hsl.s) {
-				if (hsl.l === 1) {
-					return "white";
-				}
-				if (hsl.l === 0) {
-					return "black";
+			if (hsl.l === 1 && !hsl.h && !hsl.s) {
+				return "white";
+			}
+			if (hsl.l === 0 && !hsl.h && !hsl.s) {
+				return "black";
+			}
+			if (hsl.l >= 0.5 && hsl.l < 0.5334 && hsl.s === 0) {
+				return "gray";
+			}
+			if (hsl.l === 0.5 && (hsl.s >= 0.8 && hsl.s < 0.8040)) {
+				/*
+					This mapping MUST line up with that in Markup.js.
+				*/
+				const mapping = ({
+					"0"   : "red",
+					"30"  : "orange",
+					"60"  : "yellow",
+					"90"  : "lime",
+					"120" : "green",
+					"180" : "cyan",
+					"210" : "blue",
+					"240" : "navy",
+					"270" : "purple",
+					"300" : "magenta",
+				})[hsl.h];
+				if (mapping) {
+					return mapping;
 				}
 			}
-			return "(" + (this.lch ? "lch" : "hsl") + ":"
-				+ (this.lch ? [this.lch.l, this.lch.c, this.lch.h] : [hsl.h, hsl.s, hsl.l])
-				+ (this.a !== 1 ? "," + this.a : "") + ")";
+			/*
+				Use (lch:) if it's available, otherwise (hsl:).
+			*/
+			return `(${(this.lch ? "lch" : "hsl") }:${this.lch ? [this.lch.l, this.lch.c, this.lch.h] : [hsl.h, hsl.s, hsl.l]}${this.a !== 1 ? "," + this.a : ""})`;
 		},
 
 		/*

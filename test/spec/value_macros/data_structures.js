@@ -475,8 +475,27 @@ describe("data structure macros", function () {
 				sourceTest("#ff0009",'(hsl:358,1,0.5)');
 				sourceTest("(hsl:56,1,0.5,0.3)",'(hsl:56,1,0.5,0.3)');
 				sourceTest("(lch:0.6,80,122)",'(lch:0.6,80,122)');
-				sourceTest("black","black");
-				sourceTest("white","white");
+				[
+					"red",
+					"orange",
+					"yellow",
+					"lime",
+					"green",
+					"cyan",
+					"blue",
+					"navy",
+					"purple",
+					"magenta",
+					"white",
+					"black",
+					"gray",
+					"transparent",
+				].forEach(function(name) {
+					sourceTest(name,name);
+				});
+				sourceTest("aqua","cyan");
+				sourceTest("fuchsia","magenta");
+				sourceTest("grey","gray");
 			});
 			it("serialises gradients", function() {
 				sourceTest("(gradient: 0, 0, black, 0.49, #ff0009, 0.5, white, 1, white)",'(gradient:0,0,black,0.49,(hsl:358,1,0.5),0.5,white,1,white)');

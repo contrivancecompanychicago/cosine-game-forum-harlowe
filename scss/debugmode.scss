@@ -392,9 +392,10 @@ tw-debugger {
 		display:block;
 		@include sourceCode();
 	}
-	.panel-row-source {
+	.panel-row-source td {
 		@include sourceCode();
 		max-height: 8rem;
+		padding: 1rem;
 	}
 	@mixin emptyMsg {
 		font-style:italic;

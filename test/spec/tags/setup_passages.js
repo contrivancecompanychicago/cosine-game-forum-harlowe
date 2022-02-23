@@ -30,10 +30,18 @@ describe("setup passages", function() {
 			});
 			it("tagged passages run in alphabetical order", function() {
 				createPassage("(set: $red to it + 'D')","header4",[header]);
-				createPassage("(set: $red to $red + 'B')","header2",[header]);
+				createPassage("(set: $red to it + 'B')","header2",[header]);
 				createPassage("(set: $red to it + 'C')","header3",[header]);
 				createPassage("(set: $red to 'A')","header1",[header]);
 				expect("$red").markupToPrint("ABCD");
+			});
+			it("can be 'punched through' with unclosed markup", function() {
+				createPassage("Gee[==gosh","header",[header]);
+				var p = runPassage("wow",'bar');
+				expect(p.find('tw-include').first().text()).toBe("Geegoshwow");
+				createPassage("golly[==","header2",[header]);
+				p = runPassage("whoa",'foo');
+				expect(p.find('tw-include').first().text()).toBe("Geegoshgollywhoa");
 			});
 			it("affects hooks inside the passage", function() {
 				createPassage("(click: ?red)[]","header",[header]);
@@ -75,6 +83,14 @@ describe("setup passages", function() {
 				createPassage("(set: $red to 'A')","footer1",[footer]);
 				runPassage('');
 				expect("$red").markupToPrint("ABCD");
+			});
+			it("can be 'punched through' with unclosed markup", function() {
+				createPassage("wow","footer2",[footer]);
+				var p = runPassage("Gosh[=",'bar');
+				expect(p.find('tw-hook tw-include').text()).toBe("wow");
+				createPassage("gee[=","footer",[footer]);
+				p = runPassage("Gosh[=",'bar');
+				expect(p.find('tw-hook tw-include tw-include').text()).toBe("wow");
 			});
 			it("affects hooks inside the passage", function() {
 				createPassage("(click: ?red)[]","footer",[footer]);

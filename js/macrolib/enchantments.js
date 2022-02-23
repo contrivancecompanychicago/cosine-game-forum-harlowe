@@ -290,7 +290,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 
 		This will also apply the style changer to (click:) links inside the hook.
 
-		Due to Harlowe engine limitations, this currently does NOT work when created by a lambda given to `(enchant:)` or `(change:)`, such as in `(enchant: ?passage, via (line-style,(bg:(hsl:pos*30,0.5,1))))`.
+		Due to Harlowe engine limitations, this currently does NOT work when created by a lambda given to `(enchant:)` or `(change:)`, such as in `(enchant: ?passage, via (link-style,(bg:(hsl:pos*30,0.5,1))))`.
 
 		See also:
 		(enchant-in:), (hover-style:), (line-style:), (char-style:)
