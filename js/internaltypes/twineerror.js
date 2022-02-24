@@ -19,7 +19,7 @@ define(['jquery', 'utils'], ($, Utils) => {
 		*/
 		const folddownEvent = target.popData('folddown');
 		if (typeof folddownEvent === "function") {
-			folddownEvent();
+			folddownEvent(target);
 		}
 		/*
 			Find the "next" element and pop it open or shut.

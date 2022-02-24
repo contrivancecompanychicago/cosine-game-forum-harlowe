@@ -12,7 +12,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a long-standing bug where it was possible to put Harlowe in an infinite loop using `(save-game:)` and `(load-game:)` unconditionally in the same passage.
  * Fixed a long-standing bug where temp variables created outside a live hook (a hook with `(live:)`, `(event:)`, `(more:)`, or `(after:)` attached) couldn't then be used inside it.
  * Most of the other changers, including `(t8n:)`, should now work correctly when combined with `(live:)`, `(event:)`, `(more:)`, or `(after:)`.
- * Fixed a custom macro bug where any commands inside an (output:)-attached hook (such as `(output:)[(set:$a to it + 1)]`) would be run twice while being outputted. (Generally, you'd want to place those commands before the (output:) hook, though.)
+ * Fixed a custom macro bug where any commands inside an `(output:)`-attached hook (such as `(output:)[(set:$a to it + 1)]`) would be run twice while being outputted. (Generally, you'd want to place those commands before the `(output:)` hook, though.)
  * Fixed a bug where using spread `...` to spread the individual characters of a string that contains astral plane Unicode characters (such as 𝐇) wouldn't work at all.
  * Fixed a bug where the `command` datatype didn't work at all.
  * Fixed a bug where the `(unpack:)` macro wouldn't work at all unless the destination variables were expressed as typed variables (such as `num-type $a`).
@@ -43,6 +43,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 ##### Errors
 
  * As an added bonus from rewriting the macro-running code (see above), the "Javascript error message" has been completely removed, and a proper Harlowe error message will appear in all cases from now on. This eliminates various highly misleading error messages, such as `missing ] after element list`, and replaces them with something more understandable.
+ * Various other error messages have had their wording altered to be a bit more specific.
 
 ##### Coding
 
@@ -64,9 +65,9 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 ##### Debug Mode
 
- * A new Debug Mode options panel has been added, letting you set a few options for Debug Mode's display and behaviour. These options are saved in browser localStorage in a story-specific slot, so they should persist across debugging sessions for your story.
- * Debug Mode's colour scheme is now white-on-black, to match Harlowe's default colour scheme. You may use the aforementioned options panel to change it back to white.
+ * Debug Mode's colour scheme is now white-on-black, to match Harlowe's default colour scheme. You may use the new options panel (see below) to change it back to white.
  * The width of the Debug Mode panel (which you can adjust using the resizer added in 3.2.0) is now saved in localStorage alongside these options, and should also persist across debugging sessions.
+ * Columns in Debug Mode panels can now be sorted by clicking the column headers, as is typical of many apps with columnar data. The columns will remain sorted as the data changes.
  * The source code in the Source, Variables and Storylet tabs is now syntax-highlighted, in a manner roughly matching its highlighting in the Twine editor.
  * Very long lines in "(source:)" listings in the Variables panel should no longer push the other columns far offscreen.
  * Debug Mode no longer automatically, immediately enables itself whenever the first error of your story appears. Instead, this functionality can be added using the new `(after-error:)` and `(debug:)` macros (see below).
@@ -91,6 +92,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 ##### Debug Mode
 
+ * A new Debug Mode options panel has been added, letting you set a few options for Debug Mode's display and behaviour. These options are saved in browser localStorage in a story-specific slot, so they should persist across debugging sessions for your story.
  * The new Debug Mode options panel also lets you toggle a new feature that turns the entire panel transparent when the mouse cursor isn't hovering on it, letting you see the whole page better.
  * Added an "expression replay" feature to Debug Mode. When you use Debug View, special 🔍 icons will appear on variables and macro calls in the passage. Clicking those will produce a dialog showing a step-by-step view of how the macro call's code was interpreted by Harlowe.
  * Variable panel values have more detailed descriptions - for instance, `(a:)` is called "an empty array", and `(a: "Weather the storm", "Search for shelter")` is called "an array (with the string "Weather the storm", and 1 other item)" instead of both being just "an array".

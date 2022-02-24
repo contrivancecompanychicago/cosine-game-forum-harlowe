@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'utils/renderutils', 'passages', 'section', 'debugmode/panel', 'debugmode/highlight',  'utils/typecolours'],
-($, Utils, State, Engine, VarRef, TwineError, {objectName, isObject, toSource, typeID}, {dialog}, Passages, Section, Panel, Highlight, {Colours:typeColours, CSS:syntaxCSS}) => { let DebugMode = (initialError, code) => {
+define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'utils/renderutils', 'passages', 'section', 'debugmode/panel', 'debugmode/highlight',  'utils/typecolours'],
+($, Utils, NaturalSort, State, Engine, VarRef, TwineError, {objectName, isObject, toSource, typeID}, {dialog}, Passages, Section, Panel, Highlight, {Colours:typeColours, CSS:syntaxCSS}) => { let DebugMode = (initialError, code) => {
 	/*
 		Debug Mode
 
@@ -13,6 +13,7 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 	*/
 	const {escape,nth,debounce} = Utils;
 	const root = $(document.documentElement);
+	const Sort = NaturalSort();
 
 	/*
 		Collect the Debug Mode options for this story.
@@ -257,6 +258,19 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 		});
 
 	/*
+		This event is used for the (source:) fold-downs in the Variables and Enchantments panels.
+	*/
+	const folddownEvent = target => {
+		const row = target.parents('.variable-row, .enchantment-row');
+		row.next('.panel-row-source').find('td').empty().append(Highlight(
+			row.data('value')
+			/*
+				The Enchantments panel stashes its data a little differently to the Variables panel.
+			*/
+			|| toSource(row.data('enchantment').changer)
+		));
+	};
+	/*
 		Set up the
 		----------
 		Variables
@@ -316,11 +330,10 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 				const source = row.next('.panel-row-source');
 				if (source.is(':visible')) {
 					source.find('td').empty().append(Highlight(toSource(value)));
-				} else {
-					folddownButton.data('folddown', () => source.find('td').empty().append(Highlight(toSource(value))));
 				}
+				row.data('value', toSource(value));
 				/*
-					So thart the .panel-row-source isn't considered unused and deleted, return it as well in the jQuery.
+					So that the .panel-row-source isn't considered unused and deleted, return it as well in the jQuery.
 				*/
 				return row.add(source);
 			}
@@ -349,7 +362,19 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 					"<td class='variable-value cm-harlowe-3-macroName-" + typeID(value) + "'>" + val + "</td><td class='panel-row-buttons'>"
 						+ "<tw-folddown tabindex=0 style='display:" + (folddown ? "visible" : 'none') + "'>(source:) </tw-folddown>"
 					+ "</td>"
-				).add(
+				)
+				/*
+					The value's source is stashed as data, so that the folddownEvent can access it.
+				*/
+				.data('value', toSource(value))
+				/*
+					And here, the folddown event is installed.
+				*/
+				.find('tw-folddown').data('folddown', folddownEvent).end()
+				/*
+					And the source panel that gets folded down is installed here.
+				*/
+				.add(
 					/*
 						Only uses <tr> because:
 						A. it doesn't disrupt the :nth-of-type() styling used for variable rows.
@@ -357,16 +382,25 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 					*/
 					"<tr class='variable-row panel-row-source' style='display:none'><td colspan='5'></td></tr>"
 				);
-			row.find('tw-folddown').data('folddown', () => row.next('.panel-row-source').find('td').empty().append(Highlight(toSource(value))));
 			return row;
 		},
 		rowCheck({name, path, tempScope}, row) {
 			return row.attr('data-name') === name && row.attr('data-path') === (path+'') && row.attr('data-scope') === tempScope;
 		},
 		columnHead() {
-			return `<tr class="panel-head"><th>Type</th><th>Name</th><th>Scope</th><th>Value</th></tr>`;
+			return `<tr class="panel-head"><th data-col="variable-type">Type</th><th data-col="variable-name">Name</th><th data-col="temporary-variable-scope">Scope</th><th data-col="variable-value">Value</th></tr>`;
+		},
+		rowSort(column, a,b) {
+			if (column === "variable-value") {
+				/*
+					Values are sorted first by their type (determined in a somewhat crude fashion from their syntax highlighting CSS class)
+					followed by their Harlowe source.
+				*/
+				return Sort(a.attr('class'), b.attr('class')) || Sort(a.parent().data('value'), b.parent().data('value'));
+			}
 		},
 	});
+
 	/*
 		This event handler updates variables whenever the state is changed. Each row of data is either a global
 		variable, or a temp variable stored in the localTempVariables set, above.
@@ -541,21 +575,23 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 						+ (typeof localHook.TwineScript_ToSource === "function" ? localHook.TwineScript_ToSource() :
 							localHook.attr('name') ? "?" + localHook.attr('name') : "an unnamed hook") : "")
 						+ "</span>"
-					+ "</td><td class='enchantment-value cm-harlowe-3-" + (changer ? "changer" : "command") + " '>"
+					+ "</td><td class='enchantment-value cm-harlowe-3-macroName-" + (changer ? "changer" : "command") + " '>"
 					+ val + "</td>"
 					+ (changer ? "<td class='panel-row-buttons'>"
 						+ "<tw-folddown tabindex=0>(source:)</tw-folddown>"
 						+ "</td>"
 					: "")
-				).add(
-					changer ? $("<tr class='panel-row-source' style='display:none'><td colspan='3'></td></tr>").find('td').append(Highlight(toSource(changer))).end() : ''
+				)
+				.find('tw-folddown').data('folddown', folddownEvent).end()
+				.add(
+					changer ? $("<tr class='panel-row-source' style='display:none'><td colspan='3'></td></tr>") : ''
 				);
 		},
 		rowCheck(enchantment, row) {
 			return row.data('enchantment') === enchantment;
 		},
 		columnHead() {
-			return `<tr class="panel-head"><th>Scope</th><th>Value</th></div>`;
+			return `<tr class="panel-head"><th data-col="enchantment-name">Scope</th><th data-col="enchantment-value">Value</th></div>`;
 		},
 	});
 	const updateEnchantments = updater((section) => {
@@ -581,6 +617,7 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 					Only the active/inactive state needs to be updated.
 				*/
 				row[(!active ? 'add' : 'remove') + 'Class']('storylet-closed');
+				row.find('.storylet-open').text(active ? '✓' : '');
 				return row;
 			}
 			const ret = $(`<tr class="storylet-row ${!active ? 'storylet-closed' : ''}">`)
@@ -589,7 +626,8 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 					Create the <span>s for the storylet's name and lambda.
 				*/
 				.append(
-					"<td class='storylet-name'>" + name
+					"<td class='storylet-open'>" + (active ? '✓' : '')
+					+ "</td><td class='storylet-name'>" + name
 					+ "</td><td class='storylet-lambda'>"
 					+ "</td><td class='storylet-exclusive'>" + exclusive
 					+ "</td><td class='storylet-urgent'>" + urgent + "</td>"
@@ -601,7 +639,7 @@ define(['jquery', 'utils', 'state', 'engine', 'internaltypes/varref', 'internalt
 			return row.attr('data-name') === escape(name + '');
 		},
 		columnHead() {
-			return `<tr class="panel-head"><th>Name</th><th>Condition</th><th class='storylet-exclusive'>Exclusivity</th><th class='storylet-urgent'>Urgency</th></tr>`;
+			return `<tr class="panel-head"><th data-col="storylet-open">Open</th><th data-col="storylet-name">Name</th><th data-col="storylet-lambda">Condition</th><th data-col="storylet-exclusive" class='storylet-exclusive'>Exclusivity</th><th data-col="storylet-urgent" class='storylet-urgent'>Urgency</th></tr>`;
 		},
 	});
 	/*

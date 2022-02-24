@@ -440,6 +440,19 @@ tw-debugger {
 	.panel-rows:empty + .panel-variables-bottom {
 		display:none;
 	}
+	th[data-col] {
+		/*
+			The arrow points from big to small.
+		*/
+		&[data-order=asc]::after {
+			content:"↓";
+		}
+		&[data-order=desc]::after {
+			content:"↑";
+		}
+		text-decoration:underline;
+		cursor:pointer;
+	}
 	.panel-storylets:not(.panel-exclusive) .storylet-exclusive,
 	.panel-storylets:not(.panel-urgent) .storylet-urgent {
 		display:none;

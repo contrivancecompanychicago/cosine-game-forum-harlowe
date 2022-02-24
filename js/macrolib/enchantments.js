@@ -422,6 +422,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 				destinations with the hook's contents. The targets are either text strings within
 				the current passage, or hook references.
 
+				Not to be confused with (str-replaced:).
+
 				Example usage:
 
 				This example changes the words "categorical catastrophe" to "**dog**egorical **dog**astrophe"
