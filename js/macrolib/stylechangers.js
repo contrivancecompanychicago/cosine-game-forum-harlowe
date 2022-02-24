@@ -689,6 +689,9 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			Details:
 			If an empty string is given to this macro, an error will be produced.
 
+			Hook names are case-insensitive and dash-insensitive. This means that `(hook:"BAG")`, `(hook:"bag ")` and `(hook:"bag")`
+			are all equivalent.
+
 			See also:
 			(hidden:), (hooks-named:)
 
@@ -698,11 +701,15 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		("hook",
 			(_, name) => {
 				if (!name) {
-					return TwineError.create("datatype", "(hook:) names can't be empty strings.");
+					return TwineError.create("datatype", `The string given to (hook:) was empty.`);
+				}
+				name = Utils.insensitiveName(name);
+				if (!name) {
+					return TwineError.create("datatype", `The string given to (hook:), "${name}", contained only spaces, dashes and underscores.`);
 				}
 				return ChangerCommand.create("hook", [name]);
 			},
-			(d, name) => d.attr.push({name: name}),
+			(d, name) => d.attr.push({name}),
 			[String]
 		)
 

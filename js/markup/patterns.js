@@ -356,6 +356,8 @@
 			such as `$ship` or `$crew`, you have to use another macro, such as (print:), to display the contents of arrays, datamaps, or other structures,
 			such as `(print: $ship's mast)` or `(print: $crew's 1st)`.
 
+			**Note 2:** Even though named hooks' names are case-insensitive, variable names are case-sensitive.
+
 			#coding 2
 		*/
 		variable          = "\\$(" + validPropertyName + ")",

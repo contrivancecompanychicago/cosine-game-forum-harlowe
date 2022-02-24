@@ -792,8 +792,16 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 	debugElement.prepend(Variables.panel, Enchantments.panel, Errors.panel, Storylets.panel, Source.panel, Options.panel);
 	debugTabs.prepend(Variables.tab, Enchantments.tab, Errors.tab, Storylets.tab, Source.tab, Options.tab);
 
+	/*
+		Clearing the localTempVariables set must occur before executing the code of the new passage traveled to.
+		Hence, this separate handler.
+	*/
+	const beforeChange = () => localTempVariables = new Set();
+	State.on('beforeForward', beforeChange).on('beforeBack', beforeChange).on('beforeLoad', beforeChange);
+	/*
+		All this other UI updating stuff must occur after.
+	*/
 	const refresh = updater(function() {
-		localTempVariables = new Set();
 		updateVariables();
 		updateStorylets();
 		Enchantments.panelRows.empty();

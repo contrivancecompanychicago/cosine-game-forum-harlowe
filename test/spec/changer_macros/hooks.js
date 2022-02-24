@@ -18,6 +18,11 @@ describe("miscellaneous hook changer macros", function() {
 			runPassage("(hook:'grault')[foo]");
 			expect($('tw-passage').find('tw-hook').attr('name')).toBe('grault');
 		});
+		it("is case-insensitive and dash-insensitive", function (){
+			runPassage("(hook:'GR--AUL-T')[foo]");
+			expect($('tw-passage').find('tw-hook').attr('name')).toBe('grault');
+			expect("(print:(hook:'Abc') is (hook:'A_BC'))").markupToPrint('true');
+		});
 		it("works with (enchant:)", function(done) {
 			expect('dolly(change:"dolly",(hook:"dolly"))(replace:?dolly)[horsie]').markupToPrint('horsie');
 			var p = runPassage('(enchant:"dolly",(hook:"dolly"))dolly(click-replace:?dolly)[horsie]');

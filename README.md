@@ -12,6 +12,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a long-standing bug where it was possible to put Harlowe in an infinite loop using `(save-game:)` and `(load-game:)` unconditionally in the same passage.
  * Fixed a long-standing bug where temp variables created outside a live hook (a hook with `(live:)`, `(event:)`, `(more:)`, or `(after:)` attached) couldn't then be used inside it.
  * Most of the other changers, including `(t8n:)`, should now work correctly when combined with `(live:)`, `(event:)`, `(more:)`, or `(after:)`.
+ * Fixed a long-standing bug where the string given to `(hook:)` was case-sensitive and dash-sensitive, even though hooks named by the tag markup (`<name|`) and referred to by the hook name syntax (`?name`) are case-insensitive and dash-insensitive.
  * Fixed a custom macro bug where any commands inside an `(output:)`-attached hook (such as `(output:)[(set:$a to it + 1)]`) would be run twice while being outputted. (Generally, you'd want to place those commands before the `(output:)` hook, though.)
  * Fixed a bug where using spread `...` to spread the individual characters of a string that contains astral plane Unicode characters (such as 𝐇) wouldn't work at all.
  * Fixed a bug where the `command` datatype didn't work at all.
@@ -23,6 +24,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * The `it` identifier is now cleared (to the default value of 0) whenever the player changes passages.
  * Fixed a bug where using a custom macro in a storylet lambda would cause Debug Mode to constantly reload the Storylets and Variables panels, hurting performance.
  * Fixed a bug where single errors would sometimes be listed multiple times in Debug Mode's error log.
+ * `(mouseover:)` and `(mouseout:)` enchanted elements (including those enchanted using variants of those macros) now have a tabindex attribute as well.
 
 #### Alterations
 

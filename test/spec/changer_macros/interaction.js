@@ -187,12 +187,10 @@ describe("interaction macros", function() {
 					expect(p.length).toBe(1);
 					expect(p.hasClass(e.cssClass)).toBe(true);
 				});
-				if (e.action === "click") {
-					it("gives affected hooks a tabindex", function() {
-						var p = runPassage("[cool]<foo|" + hooksetCall).find('tw-enchantment');
-						expect(p.attr('tabindex')).toBe('0');
-					});
-				}
+				it("gives affected hooks a tabindex", function() {
+					var p = runPassage("[cool]<foo|" + hooksetCall).find('tw-enchantment');
+					expect(p.attr('tabindex')).toBe('0');
+				});
 				[['?Page','tw-story'],['?Passage','tw-passage'],['?Sidebar','tw-sidebar']].forEach(function(f) {
 					var name = f[0], elem = f[1];
 					describe("with "+name, function() {

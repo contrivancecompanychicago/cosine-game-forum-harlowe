@@ -95,9 +95,16 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			
 			Details:
 			
+			Even though named hooks' names are case-insensitive, variable names are case-sensitive. So, `$Chips` and `$chips` are considered
+			different variables.
+
 			In its basic form, a variable is created or changed using `(set: ` variable `to` value `)`.
 			You can also set multiple variables in a single (set:) by separating each VariableToValue
-			with commas: `(set: $weapon to 'hands', $armour to 'naked')`, etc.
+			with commas: `(set: $weapon to 'hands', $armour to 'naked')`, etc. **Note**: currently,
+			each value in a VariableToValue is evaluated before any of them are stored in their variables.
+			This means that, for instance, `(set: $olives to 5)(set: $olives to 2, $grapes to $olives - 1)` will,
+			in the second (set:) call, cause `2` and `$olives - 1` to be evaluted to `2` and `5 - 1` (i.e. 4) before
+			being put in $olives and $grapes, respectively. This may change in a future version of Harlowe.
 			
 			You can also use `it` in expressions on the right-side of `to`. Much as in other
 			expressions, it's a shorthand for what's on the left side: `(set: $vases to it + 1)`
@@ -661,7 +668,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			Details:
 			When a (redirect:) macro is used, the departing passage (the one containing the (redirect:) call)
 			remains in the (history:) array, and is still considered visited by `visits`. However, no additional
-			turn will result.
+			turn will result, and `turns` will not be affected.
 
 			Also, temp variables that were (set:) in the departing passage will not be accessible in the new passage.
 

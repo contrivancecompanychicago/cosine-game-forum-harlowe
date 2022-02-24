@@ -205,8 +205,8 @@ const
 		regExp: /^\s*([\w]+) -> ([\w]+)\n/,
 
 		navLink(def) {
-			return `<li><a href="#${def.anchor}">${def.name}</a>
-				<span class='nav_macro_return_type' style='${typeColours[def.returnType.toLowerCase()] || ''}'>${def.returnType}</span>${
+			return `<li><a href="#${def.anchor}" ${def.addedIn === "3.3.0" ? "class='nav_new'": ""}>${def.name}</a>
+				<span class='nav_macro_return_type cm-harlowe-3-macroName-${def.returnType.toLowerCase()}'>${def.returnType}</span>${
 					def.aka.length ? `<div class='nav_macro_aka'>${def.aka.join(', ')}</div>`
 					: ''
 				}</li>`;

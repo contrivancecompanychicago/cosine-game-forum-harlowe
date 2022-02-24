@@ -878,17 +878,12 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 								? enchantDesc.blockClassList
 								: enchantDesc.classList
 							);
+							/*
+								Include the tabIndex so that they can also be clicked using the keyboard.
+							*/
+							target.attr({ tabIndex: '0' });
 						}
 					],
-					attr:
-						/*
-							Include the tabIndex for link-type enchantments, so that they
-							can also be clicked using the keyboard. This includes the clickblock
-							enchantment.
-						*/
-						(enchantDesc.classList + '').match(/\b(?:link|enchantment-clickblock)\b/)
-							? { tabIndex: '0' }
-							: {},
 					data: {
 						enchantmentEvent() {
 							/*

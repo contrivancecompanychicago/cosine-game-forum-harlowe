@@ -141,6 +141,11 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 		forward: [],
 		back: [],
 		load: [],
+
+		beforeForward: [],
+		beforeBack: [],
+		beforeLoad: [],
+
 		erasePast: [],
 	};
 
@@ -584,6 +589,10 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			if (!present) {
 				Utils.impossible("State.play","present is undefined!");
 			}
+			// Call the 'beforeForward' event handler. This doesn't take the passage name,
+			// as it's intended for direction-agnostic events.
+			eventHandlers.beforeForward.forEach(fn => fn());
+
 			// Push the soon-to-be past passage name into the cache.
 			present.passage && CurrentVariables.visits.push(present.passage);
 			// Assign the passage name.
@@ -639,6 +648,9 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 				recent -= 1;
 			}
 			if (moved) {
+				// Call the 'beforeBack' event handler.
+				eventHandlers.beforeBack.forEach(fn => fn());
+
 				serialisedPast = '';
 
 				newPresent(timeline[recent].passage);
@@ -671,6 +683,8 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 				recent += 1;
 			}
 			if (moved) {
+				eventHandlers.beforeForward.forEach(fn => fn());
+
 				newPresent(timeline[recent].passage);
 				/*
 					Recompute the present variables based on the timeline.
@@ -706,6 +720,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			and the documentation's live preview feature.
 		*/
 		reset() {
+			eventHandlers.beforeLoad.forEach(fn => fn());
 			timeline = [];
 			recent = -1;
 			reconstructCurrentVariables();
