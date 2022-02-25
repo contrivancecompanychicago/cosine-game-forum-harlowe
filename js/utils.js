@@ -549,7 +549,27 @@ define(['jquery', 'markup', 'utils/polyfills'],
 						child = $(child);
 						child.css('animation-delay', (cssTimeUnit(child.css('animation-delay') || 0) - elapsedRealTime) + "ms");
 					});
+					/*
+						Because detaching elements (using unwrap()) resets the scroll positions of an element,
+						which the (scroll:) macro could have changed, there's nothing for it but to save and restore
+						these scroll positions ourselves.
+					*/
+					const scrolledElems = [];
+					const allElems = el.find('*');
+					for(let i = 0; i < allElems.length; i += 1) {
+						const child = allElems[i];
+						if (child.scrollTop !== 0 || child.scrollLeft !== 0) {
+							scrolledElems.push([child, child.scrollLeft, child.scrollTop]);
+						}
+					}
+					/*
+						Now, unwrap, and restore the scroll positions.
+					*/
 					el.contents().unwrap();
+					for (let [elem, scrollLeft, scrollTop] of scrolledElems) {
+						elem.scrollLeft = scrollLeft;
+						elem.scrollTop = scrollTop;
+					}
 				}
 				/*
 					Otherwise, remove the transition attributes.

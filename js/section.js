@@ -11,13 +11,14 @@ define([
 	'datatypes/colour',
 	'datatypes/lambda',
 	'datatypes/typedvar',
+	'datatypes/codehook',
 	'internaltypes/changedescriptor',
 	'internaltypes/varref',
 	'internaltypes/varscope',
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier',
 ],
-($, Utils, run, Operations, State, {printBuiltinValue,objectName,typeID,isObject}, {collapse}, ChangerCommand, Colour, Lambda, TypedVar, ChangeDescriptor, VarRef, VarScope, TwineError, TwineNotifier) => {
+($, Utils, run, Operations, State, {printBuiltinValue,objectName,typeID,isObject}, {collapse}, ChangerCommand, Colour, Lambda, TypedVar, CodeHook, ChangeDescriptor, VarRef, VarScope, TwineError, TwineNotifier) => {
 
 	const {assign} = Object;
 	let Section;
@@ -111,7 +112,7 @@ define([
 				if (nextHook.data('live')) {
 					runLiveHook.call(this, expr, desc, nextHook);
 				}
-				return;
+				return true;
 			}
 			/*
 				Do note: renderInto(), via ChangeDescriptor.render(), installs the 'hidden' and 'originalSource'
@@ -135,17 +136,13 @@ define([
 			expr.addClass("false");
 			
 			this.stackTop.lastHookShown = false;
-			return;
+			return true;
 		}
 		/*
-			Any other values that aren't primitive true should result in runtime errors
-			when attached to hooks.
+			If the result isn't a boolean, simply decline to attach it, and allow Section to print it where it is.
 		*/
 		else if (result !== true) {
-			expr.replaceWith(TwineError.create("datatype",
-					objectName(result) + " cannot be attached to this hook.",
-					"Only Booleans and changers can be attached to hooks."
-				).render(expr.attr('title')));
+			return false;
 		}
 		/*
 			The (else:) and (elseif:) macros require a little bit of state to be
@@ -154,6 +151,7 @@ define([
 			Sadly, we must oblige with this overweening demand.
 		*/
 		this.stackTop.lastHookShown = true;
+		return true;
 	}
 	
 	/*
@@ -450,7 +448,13 @@ define([
 			}
 		}
 		/*
-			Print the expression if it's a string, number, data structure,
+			Attempt to attach the expression to the next hook. If it succeeds, we're done.
+		*/
+		else if (nextHook.length && applyExpressionToHook.call(this, expr, result, nextHook)) {
+			return;
+		}
+		/*
+			Print the expression if it's a string, codehook, number, data structure,
 			or is some other data type without a TwineScript_Run().
 		*/
 		else if (
@@ -459,15 +463,13 @@ define([
 					If it was attached, an error should be produced
 					(by applyExpressionToHook) to clue the author into the correct attachable types.
 				*/
-				(!nextHook.length &&
 				(typeof result === "string"
 				|| typeof result === "number"
 				|| result instanceof Map
 				|| result instanceof Set
 				|| Array.isArray(result)
-				|| Colour.isPrototypeOf(result)))
-				//  However, commands will cleanly "detach" without any error resulting.
-				|| (result && typeof result.TwineScript_Print === "function" && !ChangerCommand.isPrototypeOf(result))) {
+				|| Colour.isPrototypeOf(result))
+				|| CodeHook.isPrototypeOf(result)) {
 			/*
 				TwineScript_Print(), when called by printBuiltinValue(), typically emits
 				side-effects. These will occur... now.
@@ -488,9 +490,6 @@ define([
 				*/
 				this.renderInto(result, expr);
 			}
-		}
-		else if (nextHook.length) {
-			applyExpressionToHook.call(this, expr, result, nextHook);
 		}
 		/*
 			The only remaining values should be unattached changers, or booleans.

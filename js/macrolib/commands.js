@@ -20,7 +20,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 		by applying (t8n-depart:) and (t8n-arrive:). (Note that since normal passage links are identical to the
 		(link-goto:) macro, you can also attach changers to passage links.)
 	*/
-	const {Any, Everything, rest, either, optional, zeroOrMore, nonNegativeInteger, positiveInteger, positiveNumber} = Macros.TypeSignature;
+	const {Any, Everything, rest, either, optional, zeroOrMore, percent, nonNegativeInteger, positiveInteger, positiveNumber} = Macros.TypeSignature;
 	const {assign} = Object;
 	const {floor,ceil,abs,max,min} = Math;
 	const {noop} = $;
@@ -610,7 +610,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			(link-goto:), (undo:), (redirect:)
 
 			Added in: 1.0.0
-			#navigation
+			#navigation 1
 		*/
 		("go-to",
 			(name) => {
@@ -688,7 +688,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			(go-to:), (undo:)
 
 			Added in: 3.3.0
-			#navigation
+			#navigation 2
 		*/
 		("redirect",
 			(name) => {
@@ -748,7 +748,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			(go-to:), (link-undo:), (icon-undo:)
 
 			Added in: 2.0.0
-			#navigation
+			#navigation 3
 		*/
 		("undo",
 			noop,
@@ -2466,6 +2466,88 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			[rest(HookSet)], false /* Can't have attachments.*/)
 
 		/*d:
+			(scroll: HookName, Number or HookName) -> Command
+
+			This command, when given a HookName, followed by a fraction (a number between 0 and 1), will change the scroll position of every hook with that name
+			to the percentage of their height signified by the fraction. You may alternatively give another HookName instead,
+			which, if a hook of that name is inside the first hook, will scroll the first hook and each containing hook such that the second
+			hook is visible.
+
+			Example usage:
+			* `(scroll:?page, 1)` will scroll the entire page to the bottom.
+			* `(scroll:?page, 0.5)` will scroll the entire page to the middle.
+			* `(scroll:?page, ?danger)` will scroll the entire page such that the first hook named ?danger is visible.
+			* `(scroll:?A, ?C)` will change the scroll position of hooks named ?A such that hooks named ?C are visible. Note that if
+			the hook named ?A is itself not visible (because it's offscreen) then the page's scroll position will not change to make it
+			visible.
+
+			Rationale:
+			When you're using a large number of prose-altering macros in your story, such as (replace:) or (show:), you'll often want to make
+			sure the player can see the changed text immediately. This may be complicated by the fact that they could be playing the story on a small
+			screen. The (scroll:) command lets you force the page to be in a particular scroll position whenever you want, ensuring that the affected
+			prose is visible.
+
+			Alternatively, when using scrollable boxes like (box:), you may want to change their initial scroll position from the default (the top),
+			for any number of reasons.
+
+			Details:
+			This command only changes the Y (vertical) scroll position of the given hooks.
+
+			This command does nothing if no hooks of the given name exist in the passage, or if none of them have vertical scroll bars. Also,
+			it does nothing if the second HookName doesn't correspond to any hooks inside the first hook.
+
+			Obviously, giving a non-fractional number will cause an error.
+
+			Due to browser limitations, giving a fractional number will *not* work in Internet Explorer 10. If you wish for your story to support that browser,
+			please give a second HookName instead of a percentage.
+
+			Added in: 3.3.0
+			#window
+		*/
+		("scroll",
+			noop,
+			(section, hook, percentOrHook) => {
+				const percent = typeof percentOrHook === "number" && percentOrHook;
+				/*
+					This needs RAF because these elements don't have a scrollHeight until they're in the DOM.
+				*/
+				requestAnimationFrame(() => {
+					hook.forEach(section, elem => {
+						if (percent !== false) {
+							elem[0].scrollTo && elem[0].scrollTo(0, (elem[0].scrollHeight - elem[0].clientHeight) * percent);
+						}
+						else for (let elem2 of percentOrHook.hooks(section).get()) {
+							/*
+								Remember that elem is a jQuery (providing slightly higher-level methods), but elem2 is an Element.
+							*/
+							if (elem.find(elem2)) {
+								/*
+									Because scrollIntoView() changes the scroll position of ALL parent elements,
+									regardless of desirability, it is necessary to save and restore the scroll position
+									of all elements (elem3) above the first hook (elem).
+								*/
+								const scrolledElems = [];
+								let elem3 = elem[0];
+								while((elem3 = elem3.parentNode)) {
+									scrolledElems.push([elem3, elem3.scrollLeft, elem3.scrollTop]);
+								}
+								elem2.scrollIntoView();
+								/*
+									Now, restore the saved scroll positions.
+								*/
+								for (let [elem3, scrollLeft, scrollTop] of scrolledElems) {
+									elem3.scrollLeft = scrollLeft;
+									elem3.scrollTop = scrollTop;
+								}
+								break;
+							}
+						}
+					});
+				});
+			},
+			[HookSet, either(percent, HookSet)], false /* Can't have attachments.*/)
+
+		/*d:
 			(stop:) -> Command
 			This macro, which accepts no arguments, creates a (stop:) command, which is not configurable.
 			
@@ -2649,7 +2731,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			(restart:)
 
 			Added in: 3.3.0
-			#saving
+			#navigation 5
 		*/
 		("erase-past",
 			noop,

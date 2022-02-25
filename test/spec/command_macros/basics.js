@@ -752,4 +752,50 @@ describe("basic command macros", function() {
 			expect($('tw-passage tw-hook').text()).toBe('4 2');
 		});
 	});
+	describe("the (scroll:) macro", function() {
+		it("takes a hook name, and either a fraction or another hook name", function() {
+			expect("(scroll:)").markupToError();
+			expect("(scroll:1)").markupToError();
+			expect("(scroll:?A)").markupToError();
+			expect("(scroll:?A,2)").markupToError();
+			expect("(scroll:?A,0.1)").not.markupToError();
+			expect("(scroll:?A,?B)").not.markupToError();
+		});
+		it("when given a number, scrolls the given hook(s) by the given percentage", function(done) {
+			var hook = runPassage("(box:'=XXXXX=',2)|a>[(str-repeated:10,'<br>')][(scroll:?a,0.2)]").find('[name="a"]')[0];
+			setTimeout(function() {
+				expect(hook.scrollTop).toBe((hook.scrollHeight-hook.clientHeight) * 0.2 | 0);
+				hook = runPassage("(box:'=XXXXX=',2)|a>[(str-repeated:10,'<br>')][(scroll:?a,0.9)]").find('[name="a"]')[0];
+				setTimeout(function() {
+					expect(hook.scrollTop).toBe((hook.scrollHeight-hook.clientHeight) * 0.9 | 0);
+					done();
+				},10);
+			},10);
+		});
+		it("when given a second hook name, scrolls that second hook into view", function(done) {
+			var p = runPassage("(box:'=XXXXX=',2)|a>[(str-repeated:10,'<br>')|G>[foo](str-repeated:10,'<br>')][(scroll:?a,?g)]");
+			var hook = p.find('[name="a"]')[0];
+			setTimeout(function() {
+				expect(hook.scrollTop).toBeCloseTo(p.find('[name="g"]')[0].offsetTop,-1);
+				done();
+			},10);
+		});
+		it("does nothing if the second hook isn't in the first hook", function(done) {
+			var p = runPassage("(box:'=XXXXX=',2)|a>[(str-repeated:10,'<br>')|B>[foo](str-repeated:10,'<br>')][(scroll:?a,?g)]");
+			var hook = p.find('[name="a"]')[0];
+			setTimeout(function() {
+				expect(hook.scrollTop).toBe(0);
+				done();
+			},10);
+		});
+		it("doesn't change the scroll position of elements above the first hook", function(done) {
+			var p = runPassage("(box:'=XXXXX=',2)|a>[(str-repeated:10,'<br>')|B>[(str-repeated:10,'<br>')|C>[foo](str-repeated:10,'<br>')](str-repeated:10,'<br>')][(scroll:?b,?c)]");
+			var hook = p.find('[name="a"]')[0];
+			setTimeout(function() {
+				expect(hook.scrollTop).toBe(0);
+				done();
+			},10);
+		});
+		// TODO: ?page checks
+	});
 });

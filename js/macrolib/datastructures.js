@@ -657,8 +657,8 @@ define([
 
 			Example usage:
 			* `(unique: 1,2,1,2,3,5,5,6,3)` produces `(a: 1,2,3,5,6)`
-			* `(unique: ...(history:))` produces an array listing the name of every passage currently visited, in the order they were first visited.
-			* `(reversed: ...(unique: ...(reversed: ...(history:))))` produces an array listing the name of every passage currently visited,
+			* `(unique: ...(history: ))` produces an array listing the name of every passage currently visited, in the order they were first visited.
+			* `(reversed: ...(unique: ...(reversed: ...(history: ))))` produces an array listing the name of every passage currently visited,
 			in the order they were **last** visited. This does so by reversing the array before spreading it into (unique:), then un-reversing it.
 			* `(unique: ...(altered: via its address, ...$emails))` produces an array of every unique address from among the datamaps in $emails,
 			in the same order.

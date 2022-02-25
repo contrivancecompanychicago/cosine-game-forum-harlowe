@@ -60,12 +60,12 @@ describe("hooks", function () {
 		it("consist of a macro, then a hook", function (){
 			expect("(if:true)[foo]").markupToPrint("foo");
 		});
-		it("will error if the macro doesn't produce a changer or boolean", function (){
-			expect("(either:'A')[Hey]").markupToError();
-			expect("(either:1)[Hey]").markupToError();
-			expect("(a:)[Hey]").markupToError();
-			expect("(datamap:)[Hey]").markupToError();
-			expect("(dataset:)[Hey]").markupToError();
+		it("will simply print the value if the macro isn't a changer or boolean", function (){
+			expect("(either:'A')[Hey]").markupToPrint('AHey');
+			expect("(either:1)[Hey]").markupToPrint('1Hey');
+			expect("(a:)[Hey]").markupToPrint('Hey');
+			expect("(datamap:)[Hey]").markupToPrint('Hey');
+			expect("(dataset:)[Hey]").markupToPrint('Hey');
 			expect("(set:$x to 1)[Hey]").not.markupToError(); // The (set:) command doesn't attach
 			expect("(either:(if:true))[Hey]").not.markupToError();
 		});
@@ -79,7 +79,6 @@ describe("hooks", function () {
 		});
 		it("may have a mirrored nametag on the right side", function (){
 			expect("(if:true)[foo]<hook|").not.markupToError();
-			expect("(a:1)[foo]<hook|").markupToError();
 		});
 		it("will error if the hook has no closing bracket", function (){
 			expect("(if:true)[(if:true)[Good golly]", 2).markupToError();
@@ -105,17 +104,17 @@ describe("hooks", function () {
 		it("consist of a variable, then a hook", function (){
 			expect("$foo[foo]").markupToPrint("foo");
 		});
-		it("will error if the variable doesn't contain a changer or boolean", function (){
+		it("will simply print the variable if it doesn't contain a changer or boolean", function (){
 			runPassage('(set: $str to "A")'
 				+ '(set: $num to 2)'
 				+ '(set: $arr to (a:))'
 				+ '(set: $dm to (datamap:))'
 				+ '(set: $ds to (dataset:))');
-			expect("$str[Hey]").markupToError();
-			expect("$num[Hey]").markupToError();
-			expect("$arr[Hey]").markupToError();
-			expect("$dm[Hey]").markupToError();
-			expect("$ds[Hey]").markupToError();
+			expect("$str[Hey]").markupToPrint('AHey');
+			expect("$num[Hey]").markupToPrint('2Hey');
+			expect("$arr[Hey]").markupToPrint('Hey');
+			expect("$dm[Hey]").markupToPrint('Hey');
+			expect("$ds[Hey]").markupToPrint('Hey');
 		});
 		it("may have any amount of whitespace between the variable and the hook", function (){
 			expect("$foo [foo]").markupToPrint("foo");
@@ -124,11 +123,9 @@ describe("hooks", function () {
 		});
 		it("may have a nametag on the left side", function (){
 			expect("$foo|hook>[foo]").not.markupToError();
-			expect("$bar|hook>[foo]").markupToError();
 		});
 		it("may have a mirrored nametag on the right side", function (){
 			expect("$foo[foo]<hook|").not.markupToError();
-			expect("$bar[foo]<hook|").markupToError();
 		});
 		it("will error if the hook has no closing bracket", function (){
 			expect("$foo[$foo[Good golly]", 2).markupToError();

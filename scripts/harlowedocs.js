@@ -191,6 +191,8 @@ tw-debugger .tabs ~ :not(.show-invisibles, tw-backdrop), tw-debugger .tab-source
 tw-debugger .tabs { display: flex; justify-content: center; }
 tw-debugger .show-invisibles { display: block; margin: 0 auto; }
 tw-debugger .panel { border-color: #888 !important; }
+/* The debugger shouldn't steal clicks from the editor panel */
+tw-debugger { z-index: 0; }
 
 /* Kludge for the (text-style:) macro */
 t-s::before { content: 'Example text'; }

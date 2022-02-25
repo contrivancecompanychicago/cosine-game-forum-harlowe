@@ -680,14 +680,17 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			throughout your story. You may, after doing so, want to give a common name to each of those hooks that
 			have that variable attached, so that, for instance, the (append:) macro can act on them as one.
 			This changer can be added to those changers to allow the hooks to be named, like so.
-			`(font:"Museo Slab")+(hook: "title")`.
+			`(font:"Museo Slab")+(hook:"title")`.
 			
 			Also, unlike the nametag syntax for hook names, (hook:) can be given any string expression:
-			`(hook: "eyes" + (string:$eyeCount))` is valid, and will, as you'd expect, give the hook
+			`(hook: "eyes" + (str:$eyeCount))` is valid, and will, as you'd expect, give the hook
 			the name of `eyes1` if `$eyeCount` is 1.
 
 			Details:
 			If an empty string is given to this macro, an error will be produced.
+
+			Currently, you may give strings with non-alphanumeric characters in them, such as "!@#". However, since those characters
+			are not valid for use in HookName syntax, you can't use a HookName to refer to that hook, so it's not that useful.
 
 			Hook names are case-insensitive and dash-insensitive. This means that `(hook:"BAG")`, `(hook:"bag ")` and `(hook:"bag")`
 			are all equivalent.
@@ -703,11 +706,11 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 				if (!name) {
 					return TwineError.create("datatype", `The string given to (hook:) was empty.`);
 				}
-				name = Utils.insensitiveName(name);
-				if (!name) {
-					return TwineError.create("datatype", `The string given to (hook:), "${name}", contained only spaces, dashes and underscores.`);
+				const newName = Utils.insensitiveName(name);
+				if (!newName) {
+					return TwineError.create("datatype", `The string given to (hook:), "${name}", contained only dashes and underscores.`);
 				}
-				return ChangerCommand.create("hook", [name]);
+				return ChangerCommand.create("hook", [newName]);
 			},
 			(d, name) => d.attr.push({name}),
 			[String]

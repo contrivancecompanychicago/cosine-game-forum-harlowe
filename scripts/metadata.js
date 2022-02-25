@@ -224,10 +224,10 @@ const
 				name,
 				{typeNames: true, macroNames:true}
 			);
-
+			const addedIn = ((macroAddedIn.exec(input) || [])[1] || '');
 			const aka = ((macroAliases.exec(text) || [''])[0].match(/\w+$/) || []) || [];
 
-			this.defs[title] = { text, anchor: "keyword_" + slugName, name, returnType, aka };
+			this.defs[title] = { text, anchor: "keyword_" + slugName, name, returnType, addedIn, aka };
 		},
 	}),
 
