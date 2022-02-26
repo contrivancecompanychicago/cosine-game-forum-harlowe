@@ -404,7 +404,13 @@ define([
 			/*
 				Each step depicts either the permution of a code structure into a Harlowe value, or an error being produced.
 			*/
-			desc: `<code>${escape(fullCode.slice(start, end))}</code> ` + (error ? `produced an error: ` : ` became <code>${escape(resultSource)}</code>${transformation ? '' : ` (${typeName(val)})`}.`),
+			fromCode: fullCode.slice(start, end),
+			/*
+				Code transformations (such as by inferred 'it') are described using the resultant transformed code.
+				Plain evaluations are described using only the object name of the result value.
+			*/
+			toCode: !error && transformation,
+			toDesc: !error && !transformation && objectName(val),
 			start,
 			end,
 			diff,
@@ -1104,7 +1110,7 @@ define([
 			ret = TwineError.create('syntax', token.message, token.explanation || '');
 		}
 		else if (type === "text") {
-			ret = TwineError.create('syntax', `"${token.text}" isn't valid Harlowe syntax for the inside of a macro call`,
+			ret = TwineError.create('syntax', `"${token.text}" isn't valid Harlowe syntax for the inside of a macro call.`,
 				"Maybe you misspelled something? Also, as of 3.3.0, Javascript syntax is not allowed inside macro calls.");
 		}
 		else {

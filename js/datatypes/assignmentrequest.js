@@ -193,8 +193,8 @@ define(['utils/operationutils','datatypes/typedvar','datatypes/datatype','intern
 		/*
 			These should normally only appear during type signature error messages.
 		*/
-		TwineScript_TypeName: "a 'to' or 'into' expression",
-		TwineScript_ObjectName: "a 'to' or 'into' expression",
+		TwineScript_TypeName: "a VariableToValue (a 'to' or 'into' expression)",
+		TwineScript_ObjectName: "a VariableToValue (a 'to' or 'into' expression)",
 
 		/*
 			This is only used by the Debug Eval Replay system.

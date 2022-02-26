@@ -948,7 +948,7 @@ define([
 				const code = Array.isArray(args) ? args.reduce((a,e) => a + e.text, '') : args.text || '';
 				this.evalReplay = [{
 					code,
-					desc: `Once upon a time, there was <code>${Utils.escape(code)}</code>.`,
+					fromCode: code,
 					/*
 						Because tokens' starts and ends are in passage-wise coordinates,
 						recording the passage-wise start of the first token allows Runner to

@@ -100,12 +100,22 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 			/*
 				Do some simple jQuery permutation to display the current frame.
 			*/
-			replayEl.find('tw-eval-explanation')
-				.html(f.desc)
-				.append(f.error)
-				.prev()
-				.empty()
-				.append(Highlight(f.code, 'macro', ind > 0 && f.start, ind > 0 && (f.end + f.diff)));
+			const explanation = replayEl.find('tw-eval-explanation').empty();
+			const code = replayEl.find('tw-eval-code');
+
+			if (!f.toCode && !f.toDesc) {
+				code.html(Highlight(f.code, 'macro'));
+				explanation.html(`<center>Once upon a time, there was <code></code>.</center>`);
+			} else {
+				replayEl.find('tw-eval-code').empty().append(Highlight(f.code, 'macro', ind > 0 && f.start, ind > 0 && (f.end + f.diff)));
+				explanation.append(`<code class='${f.fromCode.length > 56 ? 'from-block' : 'from-inline'}'></code>`,
+					f.error ? `<span>caused an error:</span>${f.error}`
+						: `<span> became </span>${!f.toDesc ? `<code class='to-code'></code>` : `<span class='to-desc'>${escape(f.toDesc)}.</span>`}`
+				);
+				!f.toDesc && explanation.find('.to-code').append(Highlight(f.toCode, 'macro'));
+			}
+			explanation.find('code').first().append(Highlight(f.fromCode, 'macro'));
+
 			replayEl.find('mark').each((_,e) => { e.scrollIntoView(); });
 			left.css('visibility', ind <= 0 ? 'hidden' : 'visible');
 			right.css('visibility', ind >= replay.length-1 ? 'hidden' : 'visible');

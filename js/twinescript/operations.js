@@ -1,11 +1,12 @@
 "use strict";
 define([
+	'utils',
 	'utils/operationutils',
 	'datatypes/typedvar',
 	'datatypes/datatype',
 	'internaltypes/twineerror',
 ],
-({isObject, collectionType, is, isA, clone, unique, contains, matches, objectName, toSource}, TypedVar, Datatype, TwineError) => {
+({plural}, {isObject, collectionType, is, isA, clone, unique, contains, matches, objectName, toSource}, TypedVar, Datatype, TwineError) => {
 	/*
 		Operation objects are a table of operations which TwineScript proxies
 		for/sugars over JavaScript. These include basic fixes like the elimination
@@ -390,7 +391,7 @@ define([
 					it becomes isolated as an object, and thus observable.
 				*/
 				TwineScript_TypeName: "a spreaded '...' value",
-				TwineScript_ObjectName: "a spreaded '...' value",
+				TwineScript_ObjectName: plural([...val].length, "spreaded '...' value"),
 				TwineScript_Unstorable: true,
 				TwineScript_ToSource() {
 					return ''+[...val].map(toSource);

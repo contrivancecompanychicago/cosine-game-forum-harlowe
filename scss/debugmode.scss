@@ -1,6 +1,13 @@
 /*** Debug mode ***/
 $zindex: 999999;
 
+@mixin sourceCode {
+	font-family:monospace;
+	font-size:1rem;
+	white-space:pre-wrap;
+	overflow-wrap:anywhere;
+}
+
 .dom-debug-mode {
 	/*
 		CSS preview
@@ -223,13 +230,43 @@ $zindex: 999999;
 	}
 	tw-eval-replay {
 		tw-eval-code, tw-eval-explanation {
-			display: block;
 			max-height: 20vh;
 			overflow: auto;
 			margin:10px auto;
 		}
 		tw-eval-code {
+			display:block;
 			font-family: monospace;
+			padding-bottom: 1ex;
+			border-bottom: 2px solid gray;
+		}
+		tw-eval-explanation {
+			display:block;
+			text-align:center;
+			& > code {
+				white-space: pre-wrap;
+				&.from-block {
+					width: 40%;
+					display: inline-block;
+					text-align:left;
+					max-height: 4em;
+					overflow-wrap: anywhere;
+					overflow-y: scroll;
+					& ~ .to-desc {
+						width: 40%;
+						display: inline-block;
+					}
+				}
+				&.from-inline {
+					text-align: right;
+				}
+			}
+			& > :nth-child(2) {
+				white-space:pre;
+			}
+			& > .to-desc {
+				text-align:left;
+			}
 		}
 		tw-dialog-links {
 			@include flexbox;
@@ -381,12 +418,6 @@ tw-debugger {
 		}
 	}
 	&.theme-dark .panel { background-color: $bg; border-bottom-color: $bgDimmest; }
-	@mixin sourceCode {
-		font-family:monospace;
-		font-size:1rem;
-		white-space:pre-wrap;
-		overflow-wrap:anywhere;
-	}
 	.panel-source {
 		.panel-row-buttons {
 			width:2rem;
