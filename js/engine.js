@@ -246,7 +246,7 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 			to change the game state as you see fit, and have that code
 			be present in every passage in the story, but only during testing.
 
-			All passages tagged with `debug-header` will run before the passages tagged `header` will run,
+			All passages tagged with `debug-header` will run after the passages tagged `header` will run,
 			ordered by their passage name, sorted alphabetically, and by case (capitalised names appearing
 			before lowercase names).
 
@@ -307,15 +307,16 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 
 			#transclusion 6
 		*/
+		// Since (erase-past:) can't ever bring the pastLength to 0 BEFORE another passage is rendered,
+		// this check should be safe.
 		if (State.pastLength <= 0) {
-			// Note that this places debug-startup passages after startup passages.
+			for(let p of Passages.getTagged('startup')) {
+				setupPassageElement(source, 'startup', p);
+			}
 			if (options.debug) {
 				for(let p of Passages.getTagged('debug-startup')) {
 					setupPassageElement(source, 'debug-startup', p);
 				}
-			}
-			for(let p of Passages.getTagged('startup')) {
-				setupPassageElement(source, 'startup', p);
 			}
 		}
 		for(let p of Passages.getTagged('header')) {

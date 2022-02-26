@@ -148,6 +148,13 @@ describe("game state macros", function() {
 			runPassage("(erase-past:2)","qux");
 			expect("(print:turns)").markupToPrint("4");
 		});
+		it("doesn't cause startup passages to re-run", function() {
+			runPassage("(Set:$foo to 76)", "foo1");
+			runPassage("", "foo2");
+			createPassage("(Set:$foo to 51)", "foo3", ["startup"]);
+			runPassage("(erase-past:-1)","qux");
+			expect("$foo").not.markupToPrint("51");
+		});
 	});
 
 	describe("the (passages:) macro", function() {

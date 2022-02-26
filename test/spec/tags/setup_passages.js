@@ -137,4 +137,13 @@ describe("setup passages", function() {
 			});
 		});
 	});
+	it("run in the intended order", function() {
+		createPassage("foo","A",['startup']);
+		createPassage("bar","B",['debug-startup']);
+		createPassage("baz","D",['debug-header']);
+		createPassage("qux","C",['header']);
+		createPassage("corge","E",['debug-footer']);
+		createPassage("garply","F",['footer']);
+		expect("grault").markupToPrint('foobarquxbazgraultgarplycorge');
+	});
 });

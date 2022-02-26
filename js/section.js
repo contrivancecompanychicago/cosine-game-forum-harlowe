@@ -469,7 +469,8 @@ define([
 				|| result instanceof Set
 				|| Array.isArray(result)
 				|| Colour.isPrototypeOf(result))
-				|| CodeHook.isPrototypeOf(result)) {
+				|| CodeHook.isPrototypeOf(result)
+				|| (result && typeof result.TwineScript_Print === "function" && !ChangerCommand.isPrototypeOf(result))) {
 			/*
 				TwineScript_Print(), when called by printBuiltinValue(), typically emits
 				side-effects. These will occur... now.

@@ -72,7 +72,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Debug Mode's colour scheme is now white-on-black, to match Harlowe's default colour scheme. You may use the new options panel (see below) to change it back to white.
  * The width of the Debug Mode panel (which you can adjust using the resizer added in 3.2.0) is now saved in localStorage alongside these options, and should also persist across debugging sessions.
  * Columns in Debug Mode panels can now be sorted by clicking the column headers, as is typical of many apps with columnar data. The columns will remain sorted as the data changes.
- * The source code in the Source, Variables and Storylet tabs is now syntax-highlighted, in a manner roughly matching its highlighting in the Twine editor.
+ * The source code in the Source, Variables and Storylet panels is now syntax-highlighted, in a manner roughly matching its highlighting in the Twine editor.
+ * The Source panel now shows the header and footer passages' source code as well, in separate fold-down sections.
  * Very long lines in "(source:)" listings in the Variables panel should no longer push the other columns far offscreen.
  * Debug Mode no longer automatically, immediately enables itself whenever the first error of your story appears. Instead, this functionality can be added using the new `(after-error:)` and `(debug:)` macros (see below).
 

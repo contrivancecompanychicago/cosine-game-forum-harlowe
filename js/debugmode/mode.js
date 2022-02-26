@@ -261,13 +261,17 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 		This event is used for the (source:) fold-downs in the Variables and Enchantments panels.
 	*/
 	const folddownEvent = target => {
-		const row = target.parents('.variable-row, .enchantment-row');
+		const row = target.parents('.variable-row, .enchantment-row, .source-row');
 		row.next('.panel-row-source').find('td').empty().append(Highlight(
 			row.data('value')
+				/*
+					The Enchantments panel stashes its data a little differently to the Variables panel.
+				*/
+				|| toSource(row.data('enchantment').changer),
 			/*
-				The Enchantments panel stashes its data a little differently to the Variables panel.
+				The Source panel displays markup source, not individual values.
 			*/
-			|| toSource(row.data('enchantment').changer)
+			row.is('source-row') ? 'markup' : 'macro'
 		));
 	};
 	/*
@@ -692,11 +696,36 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 	*/
 	const Source = Panel.create({
 		className: "source", tabName: "Source", tabNameCounter: false,
-		rowWrite: $.noop,
-		rowCheck: $.noop,
+		rowWrite({name, tag}, row) {
+			if (row) {
+				return row.add(row.next('.panel-row-source'));
+			}
+			const source = Passages.get(name).get('source');
+			return $(`<div class="source-row" data-tag="${tag}">`)
+				/*
+					Don't make the mistake of wrapping toSource() around what is already source.
+				*/
+				.data('value', source)
+				.append(`<td class="source-name">${name}</td><td class="source-tags">${tag}</td><td class='panel-row-buttons'><tw-folddown class='${!tag ? 'open' : ''}' tabindex=0></tw-folddown></td>`)
+				.find('tw-folddown').data('folddown', folddownEvent).end()
+				.add(
+					$(`<tr class='panel-row-source' style='${!tag ? '' : 'display:none'}'><td colspan='3'></td></tr>`)
+						.find('td').append(!tag && Highlight(source, 'markup')).end()
+				);
+		},
+		rowCheck({name}, row) {
+			return row.find('.source-name').text() === escape(name + '');
+		},
 		tabUpdate: $.noop,
 		columnHead: $.noop,
 	});
+	/*
+		Because setup passages are fixed for the duration of a session, these rows only need to be computed once.
+	*/
+	const sourceData = (['debug-startup','startup','header','debug-header','footer','debug-footer'].reduce(
+		(a,tag) => a.concat(Passages.getTagged(tag).map(p => ({ name: p.get('name'), tag }))),
+		[]
+	));
 
 	/*
 		Set up the
@@ -806,9 +835,12 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 		updateStorylets();
 		Enchantments.panelRows.empty();
 		Enchantments.tabUpdate(0);
-		if (State.passage) {
-			const p = Passages.get(State.passage);
-			p && Source.panel.empty().append(Highlight(p.get('source'), 'markup'));
+		if (State.passage && Passages.get(State.passage)) {
+			Source.update(sourceData.concat({name: State.passage, tag: ''}));
+			/*
+				Do a quick manual reordering. Only the single passage row needs to be moved.
+			*/
+			Source.panel.find('[data-tag=""], [data-tag=""] + .panel-row-source').insertBefore(Source.panel.find('[data-tag="footer"]').first());
 		}
 	});
 	/*
