@@ -237,7 +237,10 @@ Press "Debug View" and then click the 🔍 icons to see a step-by-step guide of 
 </textarea><div class="previewButton previewCodeButton" title="Run this Harlowe code."></div></div>
 <div id=fullPreviewBar></div>
 <script>
-try { if (localStorage.getItem('darkMode').toLowerCase() === "true") { document.documentElement.classList += "theme-dark"; } } catch(e) {}
+try {
+	const setting = (localStorage.getItem('darkMode') || '').toLowerCase();
+	if (setting === "true" || (setting === '' && window.matchMedia('(prefers-color-scheme: dark)').matches)) { document.documentElement.classList += "theme-dark"; }
+} catch(e) {}
 </script>
 <main>${outputFile}
 <p><small>This manual was generated at: ${new Date()}</small></p>

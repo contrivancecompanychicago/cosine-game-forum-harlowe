@@ -297,4 +297,7 @@
 	TwineJS 2.4+
 */
 .story-format-toolbar .icon > img:only-child { margin-right: 0px; }
-.button-bar { flex-flow: wrap; }
+.harlowe-3-toolbarPanel .harlowe-3-confirmButtons { display:flex; justify-content: end; }
+.passage-edit-dialog.collapsed .harlowe-3-toolbarPanel {
+	display:none;
+}

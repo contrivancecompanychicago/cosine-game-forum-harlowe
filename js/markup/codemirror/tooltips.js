@@ -3,6 +3,7 @@
 	'use strict';
 	let ShortDefs;
 	const insensitiveName = e => (e + "").toLowerCase().replace(/-|_/g, "");
+	const twine23 = !!document.querySelector('html[data-version^="2.3."]');
 	const docsURL = (anchor, contents) => `<a href="https://twine2.neocities.org/#${anchor}" target="_blank" rel="noopener noreferrer">${contents}</a>`;
 
 	const enclosedText = "This markup gives the enclosed text ";
@@ -115,10 +116,10 @@
 		to:                  `Use the <b>"to" operator</b> only inside a \`(set:)\` macro call. Place it to the left of the data, and right of the variable to set the data to.`,
 		into:                `Use the <b>"into" operator</b> only inside a \`(put:)\`, \`(move:)\` or \`(unpack:)\` macro call. Place it to the right of the data, and left of the destination to put the data.`,
 		where:               lambdaClause('where') + `This lambda will search for input values <i>where</i> the right side, once computed, produces \`true\`.`,
-		when:                lambdaClause('when') + `This lambda will cause the macro to only do something <i>when</i> the right side, once computed, produces \`true\`.`,
-		via:                 lambdaClause('via') + `This lambda will convert input values into new values <i>via</i> computing the expression to the right.`,
+		when:                lambdaClause('when') + `This lambda will cause the macro (if it accepts "when" lambdas) to only do something <i>when</i> the right side, once computed, produces \`true\`.`,
+		via:                 lambdaClause('via') + `This lambda is used to convert input values into new values <i>via</i> computing the expression to the right.`,
 		making:              lambdaClause('making') + `This is used only by the \`(folded:)\` macro. The lambda <i>makes</i> the temp variable on the right, which becomes the final value of the \`(folded:)\` call.`,
-		each:                lambdaClause('each') + `This causes the macro to, for <i>each</i> input value, place that value in the temp variable on the right, before running the other lambda clauses adjacent to this one (if any).`,
+		each:                lambdaClause('each') + `This causes the macro (if it accepts lambdas) to, for <i>each</i> input value, place that value in the temp variable on the right, before running the other lambda clauses adjacent to this one (if any).`,
 		and:                 producesBooleanTrueIf('and') + `the values on each side of it are both \`true\`.` + otherwiseFalse,
 		or:                  producesBooleanTrueIf('or') + `the values on each side of it are both \`false\`.` + otherwiseFalse,
 		not:                 `The <b>"not" operator</b> inverts the boolean value to its right, turning \`true\` to \`false\` and vice-versa.`,
@@ -234,11 +235,11 @@
 			const {width} = tooltipElem.getBoundingClientRect();
 			const {width:maxWidth} = cmElem.getBoundingClientRect();
 			const coords = cm.charCoords(cursor, 'local');
-			const gutterWidth = 30;
+			const gutterWidth = twine23 ? 30 : 0;
 			const tipLeft = Math.min(maxWidth-width, Math.max(((coords.left|0) + gutterWidth) - width/2, gutterWidth));
 			tooltipElem.setAttribute('style', `left:${tipLeft}px; top:${(coords.top|0) + 30 - cmElem.querySelector('.CodeMirror-scroll').scrollTop}px;`);
 			// Place the tail at the correct location;
-			tooltipElem.lastChild.setAttribute('style', `left:${coords.right - tipLeft + (coords.right - coords.left)/2 + 6}px; top:-24px`);
+			tooltipElem.lastChild.setAttribute('style', `left:${coords.right - tipLeft + (twine23 ? (coords.right - coords.left)/2 + 6 : -12)}px; top:-24px`);
 
 			tooltipElem.style.display = "none";
 

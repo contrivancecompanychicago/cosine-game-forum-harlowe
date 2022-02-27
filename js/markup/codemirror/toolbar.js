@@ -14,6 +14,7 @@
 	const OFF = "removeEventListener";
 	const P = document.createElement('p');
 	const twine23 = !!document[$]('html[data-version^="2.3."]');
+	const buttonClass = primary => !twine23 ? `icon-button variant-${primary ? 'primary' : 'secondary'} ` : ' ';
 	function el(html) {
 		P.innerHTML = html;
 		return P.firstChild;
@@ -127,8 +128,8 @@
 		*/
 		toolbarElem[$$]('[data-use-selection]').forEach(node => node.value = cm.doc.getSelection());
 		// Sadly, I think using this setTimeout is necessary to get it to work.
-		// "70vh" is the absolute maximum height for these panels.
-		setTimeout(() => panels[name].style.maxHeight="70vh", 100);
+		// "70vh" (or "50vh") is the absolute maximum height for these panels.
+		setTimeout(() => panels[name].style.maxHeight=(twine23 ? "70vh" : "50vh"), 100);
 	}
 
 	/*
@@ -685,7 +686,7 @@
 				ret[$$]('input').forEach(input => input[ON]('change', update));
 			}
 			if (type.endsWith("gradient")) {
-				ret = el(`<div style='position:relative'><span class=harlowe-3-gradientBar></span><button>${fontIcon('plus')} Colour</button></div>`);
+				ret = el(`<div style='position:relative'><span class=harlowe-3-gradientBar></span><button class="${buttonClass()}">${fontIcon('plus')} Colour</button></div>`);
 				const gradientBar = ret[$]('.harlowe-3-gradientBar');
 				const createColourStop = (percent, colour, selected) =>  {
 					const ret = el(
@@ -706,7 +707,7 @@
 						}
 						update();
 					}));
-					const deleteButton = el(`<button style='float:right'>${fontIcon('times')} Delete</button>`);
+					const deleteButton = el(`<button class="${buttonClass()}" style='float:right'>${fontIcon('times')} Delete</button>`);
 					deleteButton[ON]('click', () => { ret.remove(); update(); });
 					picker.append(deleteButton);
 					ret.firstChild.prepend(picker);
@@ -915,9 +916,9 @@
 					if (ret.childNodes.length > 100) {
 						return;
 					}
-					const line = el(`<div class="harlowe-3-dataRow"><input type=text style="width:85%;" placeholder="${row.placeholder}"></input><button class="harlowe-3-rowMinus">${
+					const line = el(`<div class="harlowe-3-dataRow"><input type=text style="width:85%;" placeholder="${row.placeholder}"></input><button class="${buttonClass()} harlowe-3-rowMinus">${
 							fontIcon('minus')
-						}</button><button class="harlowe-3-rowPlus">${
+						}</button><button class="${buttonClass()} harlowe-3-rowPlus">${
 							fontIcon('plus')
 						}</button></div>`);
 					line[$]('input')[ON]('input', update);
@@ -954,7 +955,7 @@
 				each line has two inputs each.
 			*/
 			if (type === "datavalue-rows" || type === "datavalue-map") {
-				ret = el(`<div class="harlowe-3-datavalueRows">${row.text || ''}<div class="harlowe-3-dataEmptyRow"><i>No data</i></div><button class="harlowe-3-rowPlus">${
+				ret = el(`<div class="harlowe-3-datavalueRows">${row.text || ''}<div class="harlowe-3-dataEmptyRow"><i>No data</i></div><button class="${buttonClass()} harlowe-3-rowPlus">${
 						fontIcon('plus')
 					} Value</button></div>`);
 				const plusButton = ret[$]('.harlowe-3-rowPlus');
@@ -1001,7 +1002,7 @@
 
 					modelRegistry.forEach(m => childModelMethods.add(m));
 
-					line.append(el(`<button class="harlowe-3-rowMinus">${
+					line.append(el(`<button class="${buttonClass()} harlowe-3-rowMinus">${
 							fontIcon('minus')
 						}</button>`));
 					line[$](':scope > .harlowe-3-rowMinus')[ON]('click', () => {
@@ -1034,10 +1035,10 @@
 				The "Create" and "Cancel" buttons.
 			*/
 			if (type === "confirm") {
-				const buttons = el('<p class="buttons" style="padding-bottom:8px;"></p>');
+				const buttons = el('<div class="harlowe-3-confirmButtons" style="padding-bottom:8px;"></div>');
 				const resultingCode = el(`<span>Resulting code: <span class="harlowe-3-resultCode"><code></code> <code></code></span></span>`);
-				const cancel = el(`<button>${fontIcon('times')} Cancel</button>`);
-				const confirm = el(`<button class="create">${fontIcon('check')} Add</button>`);
+				const cancel = el(`<button class="${buttonClass()}">${fontIcon('times')} Cancel</button>`);
+				const confirm = el(`<button class="${buttonClass(true)} create">${fontIcon('check')} Add</button>`);
 				confirm.setAttribute('style', disabledButtonCSS);
 				updaterFns.push(m => {
 					const setAttr = !m.valid ? 'setAttribute' : 'removeAttribute';
@@ -1442,7 +1443,7 @@
 								}
 							},
 						},
-						el('<br>'),
+						el(`<div style="height:${twine23 ? 1 : 3}rem">`),
 						{
 							type: "inline-range",
 							text: "Angle (deg):",
@@ -2732,28 +2733,28 @@
 	const t24commands = {};
 	let hideCodeButton, hideTooltipButton;
 	const t24toolbar = twine23 ? [] : [
-		{ type: 'button', command() { wrapSelection("''","''"); },   label:'', icon: t24Icon(2, 14, 'font-weight:bold','B'), },
-		{ type: 'button', command() { wrapSelection("//","//"); },   label:'', icon: t24Icon(4, 14, 'font-style:italic','I'), },
-		{ type: 'button', command() { wrapSelection("~~","~~"); },   label:'', icon: t24Icon(2, 14, 'text-decoration:line-through','S'), },
-		{ type: 'button', command() { wrapSelection("^^","^^"); },   label:'', icon: t24Icon(1, 14, '', "x</text><text y='7' x='10' fill='currentColor' style='font-size:9px'>2"), },
-		{ type: 'button', command() { switchPanel('textcolor'); },   label:'', icon: svgURI(`<defs><linearGradient id="X"><stop offset="0%" stop-color="hsla(0,100%,50%,0.5)"/><stop offset="16%" stop-color="hsla(30,100%,50%,0.5)"/><stop offset="33%" stop-color="hsla(60,100%,50%,0.5)"/><stop offset="50%" stop-color="hsla(120,100%,50%,0.5)"/><stop offset="66%" stop-color="hsla(180,100%,50%,0.5)"/><stop offset="83%" stop-color="hsla(240,100%,50%,0.5)"/><stop offset="100%" stop-color="hsla(320,100%,50%,0.5)"/></linearGradient></defs><circle cx="8" cy="8" r="6" fill="url('#X')"/>`), },
-		{ type: 'button', command() { switchPanel('borders'); },     label:'', icon: fontIconURI('border-style'), },
-		{ type: 'button', command() { switchPanel('rotate'); },      label:'', icon: t24Icon(-3, 14, 'transform:rotate(-30deg);font-family:serif;', 'R'), },
-		{ type: 'button', command() { switchPanel('textstyle'); },   label:'Styles…', icon:'', },
-		{ type: 'button', command() { wrapSelection("\n#",""); },    label:'', icon: t24Icon(0, 14, 'font-weight:bold;font-size:18px;','H'), },
-		{ type: 'button', command() { wrapSelection("\n* ",""); },   label:'', icon: fontIconURI('list-ul'), },
-		{ type: 'button', command() { wrapSelection("\n0. ",""); },  label:'', icon: fontIconURI('list-ol'), },
-		{ type: 'button', command() { wrapSelection("\n---\n",""); },label:'', icon: fontIconURI('minus'), },
-		{ type: 'button', command() { switchPanel('align'); },       label:'', icon: fontIconURI('align-right'), },
-		{ type: 'button', command() { switchPanel('columns'); },     label:'', icon: fontIconURI('columns'), },
-		{ type: 'button', command() { switchPanel('collapse'); },    label:'', icon: t24Icon(0,10,'font-weight:bold;font-size:12px','{ }'), },
+		{ type: 'button', command() { wrapSelection("''","''"); },   label:'Bold',        iconOnly: true, icon: t24Icon(2, 14, 'font-weight:bold','B'), },
+		{ type: 'button', command() { wrapSelection("//","//"); },   label:'Italic',      iconOnly: true, icon: t24Icon(4, 14, 'font-style:italic','I'), },
+		{ type: 'button', command() { wrapSelection("~~","~~"); },   label:'Underline',   iconOnly: true, icon: t24Icon(2, 14, 'text-decoration:line-through','S'), },
+		{ type: 'button', command() { wrapSelection("^^","^^"); },   label:'Superscript', iconOnly: true, icon: t24Icon(1, 14, '', "x</text><text y='7' x='10' fill='currentColor' style='font-size:9px'>2"), },
+		{ type: 'button', command() { switchPanel('textcolor'); },   label:'Colours',     iconOnly: true, icon: svgURI(`<defs><linearGradient id="X"><stop offset="0%" stop-color="hsla(0,100%,50%,0.5)"/><stop offset="16%" stop-color="hsla(30,100%,50%,0.5)"/><stop offset="33%" stop-color="hsla(60,100%,50%,0.5)"/><stop offset="50%" stop-color="hsla(120,100%,50%,0.5)"/><stop offset="66%" stop-color="hsla(180,100%,50%,0.5)"/><stop offset="83%" stop-color="hsla(240,100%,50%,0.5)"/><stop offset="100%" stop-color="hsla(320,100%,50%,0.5)"/></linearGradient></defs><circle cx="8" cy="8" r="6" fill="url('#X')"/>`), },
+		{ type: 'button', command() { switchPanel('borders'); },     label:'Borders',     iconOnly: true, icon: fontIconURI('border-style'), },
+		{ type: 'button', command() { switchPanel('rotate'); },      label:'Rotate',      iconOnly: true, icon: t24Icon(-3, 14, 'transform:rotate(-30deg);font-family:serif;', 'R'), },
+		{ type: 'button', command() { switchPanel('textstyle'); },   label:'Styles…',     icon:'', },
+		{ type: 'button', command() { wrapSelection("\n#",""); },    label:'Header',      iconOnly: true, icon: t24Icon(0, 14, 'font-weight:bold;font-size:18px;','H'), },
+		{ type: 'button', command() { wrapSelection("\n* ",""); },   label:'Bullet List', iconOnly: true, icon: fontIconURI('list-ul'), },
+		{ type: 'button', command() { wrapSelection("\n0. ",""); },  label:'Number List', iconOnly: true, icon: fontIconURI('list-ol'), },
+		{ type: 'button', command() { wrapSelection("\n---\n",""); },label:'Horiz. Rule', iconOnly: true, icon: fontIconURI('minus'), },
+		{ type: 'button', command() { switchPanel('align'); },       label:'Alignment',   iconOnly: true, icon: fontIconURI('align-right'), },
+		{ type: 'button', command() { switchPanel('columns'); },     label:'Columns',     iconOnly: true, icon: fontIconURI('columns'), },
+		{ type: 'button', command() { switchPanel('collapse'); },    label:'Collapse',    iconOnly: true, icon: t24Icon(0,10,'font-weight:bold;font-size:12px','{ }'), },
 		{ type: 'button',
 			command() {
 				const selection = cm.doc.getSelection();
 				const consecutiveGraves = (selection.match(/`+/g) || []).reduce((a,e) => Math.max(e.length, a), 0);
 				wrapSelection("`".repeat(consecutiveGraves+1), "`".repeat(consecutiveGraves+1));
 			},
-			label:'', icon: t24Icon(1,12,'font-size:11px','Vb'),
+			label:'Verbatim', iconOnly: true, icon: t24Icon(1,12,'font-size:11px','Vb'),
 		},
 		{ type: 'button', command() { switchPanel('passagelink'); }, label:'Link…',   icon:'', },
 		{ type: 'button', command() { switchPanel('if'); },          label:'If…',     icon:'', },
@@ -2761,8 +2762,9 @@
 		{ type: 'button', command() { switchPanel('hook'); },        label:'Hook…',   icon:'', },
 		{ type: 'button', command() { switchPanel('basicValue'); },  label:'Value…',  icon:'', },
 		{ type: 'button', command() { switchPanel('macro'); },       label:'Macro…',  icon:'', },
-		hideCodeButton    = { type: 'button', command() { toolbarElem.classList.toggle('harlowe-3-hideCode'); },    label:'',  icon:fontIconURI('eye'), },
-		hideTooltipButton = { type: 'button', command() { toolbarElem.classList.toggle('harlowe-3-hideTooltip'); }, label:'',  icon:fontIconURI('comment'), },
+		hideCodeButton    = { type: 'button', command() { toolbarElem.classList.toggle('harlowe-3-hideCode'); cm.constructor.signal(cm,'cursorActivity'); },    label:'Proofread View',   iconOnly: true, icon:fontIconURI('eye'), },
+		hideTooltipButton = { type: 'button', command() { toolbarElem.classList.toggle('harlowe-3-hideTooltip'); cm.constructor.signal(cm,'cursorActivity'); }, label:'Coding Tooltips',  iconOnly: true, icon:fontIconURI('comment'), },
+		{ type: 'button', command() { window.open(`https://twine2.neocities.org/`, "Harlowe Documentation", 'noopener,noreferrer'); }, label:'Show Manual', iconOnly: true, icon:t24Icon(5, 14, 'font-weight:bold;font-size:18px;','?'), },
 	].map(function recur(b,i) {
 		/*
 			The above definition is split into separate command and toolbar objects, as per the TwineJS 2.4 spec.
