@@ -1,6 +1,7 @@
 "use strict";
 define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'datatypes/hookset'],
 (State, TwineError, {impossible, andList, nth}, {is, isObject, toSource, isSequential, objectName, typeName, clone, isValidDatamapName, subset, collectionType, unstorableValue, matches}, HookSet) => {
+	const {isArray} = Array;
 	/*
 		VarRefs are essentially objects pairing a chain of properties
 		with an initial variable reference - "$red's blue's gold" would be
@@ -185,7 +186,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		/*
 			This should catch Colours and Gradients.
 		*/
-		else if (Array.isArray(obj.TwineScript_Properties) && !obj.TwineScript_Properties.includes(prop)) {
+		else if (isArray(obj.TwineScript_Properties) && !obj.TwineScript_Properties.includes(prop)) {
 			return TwineError.create("property",
 				"You can only get the " + andList(obj.TwineScript_Properties.map(p => "'" + p + "'"))
 				+ " of " + objectName(obj) + ", not " + objectName(prop) + ".");
@@ -194,8 +195,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			Numbers and booleans cannot have properties accessed.
 		*/
 		else if (typeof obj === "number" || typeof obj === "boolean") {
-			return TwineError.create("property", "You can't get data values from "
-				+ objectName(obj) + ".");
+			return TwineError.create("property", `You can't get any data values, let alone "${prop}", from ${ objectName(obj) }`);
 		}
 		return prop;
 	}
@@ -223,7 +223,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			/*
 				Properties can be single values, or arrays.
 			*/
-			if (Array.isArray(prop)) {
+			if (isArray(prop)) {
 				let prop2 = [];
 				for(let j = 0; j < prop.length; j += 1) {
 					prop2[j] = compilePropertyIndex(object, prop[j]);
@@ -444,7 +444,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		/*
 			As with get() below, array properties allow multiple property keys to be set at once.
 		*/
-		if (Array.isArray(prop)) {
+		if (isArray(prop)) {
 			return prop.map(prop => canSet(obj, prop));
 		}
 
@@ -541,7 +541,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			If it's an array, and the prop is an index,
 			we should remove the item in-place without creating a hole.
 		*/
-		if (Array.isArray(obj) && /^(?:[1-9]\d*|0)$/.exec(prop)) {
+		if (isArray(obj) && /^(?:[1-9]\d*|0)$/.exec(prop)) {
 			obj.splice(prop, 1);
 		}
 		/*
@@ -598,7 +598,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			If prop is an array (that is, a discrete subset), retrieve every value for each
 			property key. This allows, for instance, getting a subarray by passing a range.
 		*/
-		if (Array.isArray(prop)) {
+		if (isArray(prop)) {
 			/*
 				HookSets, when subsetted, produce another HookSet rather than an array.
 			*/
@@ -645,7 +645,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 					"There isn't a temp variable named _" + originalProp + " in this place.",
 					"Temp variables only exist inside the same passage, hook, or lambda in which they're created.");
 			}
-			if (Array.isArray(obj) && typeof prop === "number") {
+			if (isArray(obj) && typeof prop === "number") {
 				return TwineError.create("property", "This array of " + (obj.length) + " elements doesn't have a "
 					+ propertyDebugName(originalProp)
 					+ " element.",
@@ -798,7 +798,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 					if (typeof value !== "string") {
 						return TwineError.create("datatype", "I can't put this non-string value, " + objectName(value) + ", in a string.");
 					}
-					else if (value.length !== (Array.isArray(property) ? property.length : 1)) {
+					else if (value.length !== (isArray(property) ? property.length : 1)) {
 						return TwineError.create("datatype", objectName(value) + "is not the right length to fit into this string location.");
 					}
 					/*
@@ -849,7 +849,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 						set each value to its matching property.
 						e.g. (set: $a's (a:2,1) to (a:2,3)) will set position 1 to 3, and position 2 to 1.
 					*/
-					if (Array.isArray(property) && isSequential(value)) {
+					if (isArray(property) && isSequential(value)) {
 						/*
 							Due to Javascript's regrettable use of UCS-2 for string access,
 							astral plane glyphs won't be correctly regarded as single characters,
@@ -921,7 +921,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 					/*
 						If the property is an array of properties, delete each property.
 					*/
-					if (Array.isArray(property)) {
+					if (isArray(property)) {
 						/*
 							Iterate over each property position, and delete them.
 							If the object is sequential, we must first remove duplicate

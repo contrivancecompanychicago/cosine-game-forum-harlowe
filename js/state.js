@@ -1,7 +1,8 @@
 "use strict";
 define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils', 'markup'],
-($, Utils, Passages, TwineError, {objectName,toSource}, {lex}) => {
+($, Utils, Passages, TwineError, {objectName,toSource,is}, {lex}) => {
 	const {assign, create, defineProperty} = Object;
+	const {isArray} = Array;
 	const {imul} = Math;
 	/*
 		This ensures that serialisation of Maps and Sets works as expected.
@@ -75,6 +76,103 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 		};
 	}
 	let PRNG;
+
+	/*
+		When given two arrays or maps, this attempts to construct a {via} valueRef
+		for the new value - a string of Harlowe source with "it" keywords referring to the old value
+		used judiciously to save space.
+	*/
+	function modifierValueRef(oldVal, newVal, path) {
+		const pathPossessive = (path === "it") ? "its" : path + "'s";
+		let ret = '';
+		if (isArray(newVal) && isArray(oldVal) && newVal.length) {
+			/*
+				This boolean checks, while the array is being serialised, whether the
+				two arrays are equal. If so, then just the path to this array is returned (below).
+			*/
+			let equal = newVal.length === oldVal.length;
+			ret = `(a:`;
+			for(let i = 0; i < newVal.length; i += 1) {
+				const v = newVal[i];
+				/*
+					Identical values are serialiased as either their source, or an "its" index,
+					whichever is shorter.
+				*/
+				if (is(v, oldVal[i])) {
+					const source = toSource(v);
+					const pathIndex = `${pathPossessive} ${i+1}th`;
+					ret += (source.length < pathIndex.length ? source : pathIndex) + ',';
+					continue;
+				}
+				equal = false;
+				const ind = oldVal.indexOf(v);
+				/*
+					If this value can be found elsewhere in oldVal (suggesting a deletion
+					earlier in this array) then try to serialise as an index to that.
+				*/
+				if (ind > -1) {
+					const source = toSource(v);
+					const pathIndex = `${pathPossessive} ${ind+1}th`;
+					ret += (source.length < pathIndex.length ? source : pathIndex) + ',';
+					continue;
+				}
+				ret += modifierValueRef(oldVal[i], v, `${pathPossessive} ${i+1}th`) + ',';
+			}
+			
+			if (equal) {
+				return (path === "it") ? {via:path} : path;
+			}
+			/*
+				This completes the call while also trimming the final ','.
+			*/
+			ret = ret.slice(0,-1) + ")";
+		}
+		else if (newVal instanceof Map && oldVal instanceof Map && newVal.size) {
+			let equal = newVal.size === oldVal.size;
+			ret = `(dm:`;
+			for(let [k,v] of newVal.entries()) {
+				ret += `${toSource(k)},`;
+				/*
+					Identical values are serialiased as either their source, or an "its" index,
+					whichever is shorter.
+				*/
+				if (is(v, oldVal.get(k))) {
+					const source = toSource(v);
+					const pathIndex = `${pathPossessive} (${toSource(k)})`;
+					ret += (source.length < pathIndex.length ? source : pathIndex) + ',';
+					continue;
+				}
+				equal = false;
+				ret += modifierValueRef(oldVal.get(k),v, `${pathPossessive} (${toSource(k)})`) + ',';
+			}
+			if (equal) {
+				return (path === "it") ? {via:path} : path;
+			}
+			/*
+				This completes the call while also trimming the final ','.
+			*/
+			ret = ret.slice(0,-1) + ")";
+		}
+		if (!ret) {
+			/*
+				If there was no serialiased string constructed above, and the path is "it", then this
+				failed to create a meaningful valueRef. Simply return undefined.
+			*/
+			return (path === "it") ? undefined :
+				/*
+					Alternatively, recursive calls on array values will result in non-Map non-Array values being passed in.
+					These should just be serialised to their source.
+				*/
+				toSource(newVal);
+		}
+		/*
+			Because this is both plainly called by TwineScript_Set() as well as recursively called,
+			the bottommost call should return something different (a {via} object usable by serialiseFn())
+			rather than a string of source.
+		*/
+		return (path === "it") ? {via:ret} : ret;
+	}
+
 	/*
 		Prototype object for states remembered by the game.
 	*/
@@ -245,7 +343,23 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 				/*
 					The value reference (used for save file reconstruction) is also recorded.
 				*/
-				present.valueRefs[prop] = valueRef;
+				if (valueRef) {
+					present.valueRefs[prop] = valueRef;
+				}
+				/*
+					Second attempt at producing a valueRef:
+					When a map or array has been permuted, attempt to construct a smaller serialisation of that
+					change, based on the previous known value for the variable.
+				*/
+				else if (isArray(value) || value instanceof Map) {
+					for(let i = recent; i >= 0; i -= 1) {
+						const v = timeline[i].variables[prop];
+						if ((isArray(v) && isArray(value)) || (v instanceof Map) && (value instanceof Map)) {
+							present.valueRefs[prop] = modifierValueRef(v, value, 'it');
+							return;
+						}
+					}
+				}
 			},
 	
 			TwineScript_GetProperty(prop) {
@@ -799,7 +913,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 	function isSerialisable(obj) {
 		const jsType = typeof obj;
 		return !TwineError.containsError(obj) && (
-			typeof obj.TwineScript_ToSource === "function" || Array.isArray(obj) || obj instanceof Map
+			typeof obj.TwineScript_ToSource === "function" || isArray(obj) || obj instanceof Map
 				|| obj instanceof Set || jsType === "string" || jsType === "number" || jsType === "boolean"
 		);
 	}
@@ -963,7 +1077,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 		Since this should only receive formerly-serialised data, we don't really need to care about the
 		scope of the eval().
 	*/
-	function recompileValues(section, moment, obj) {
+	function recompileValues(section, pastTimeline, moment, obj) {
 		for (let key in obj) {
 			if (hasOwnProperty.call(obj, key) && !key.startsWith("TwineScript_")) {
 				/*
@@ -978,6 +1092,23 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 						Save and re-use this ValueRef for the next time the game is saved.
 					*/
 					moment.valueRefs[key] = obj[key];
+
+					if (hasOwnProperty.call(obj[key],'via')) {
+						/*
+							If this is a 'via' valueRef, then there SHOULD be a previous value for this
+							variable in a preceding turn. Retrieve that, and set it to the 'it' value
+							for the section.
+						*/
+						for (let i = pastTimeline.length-1; i >= 0; i -= 1) {
+							if (hasOwnProperty.call(pastTimeline[i].variables, key)) {
+								section.Identifiers.it = pastTimeline[i].variables[key];
+								break;
+							}
+						}
+						obj[key] = section.eval(lex(obj[key].via, '', 'macro'));
+						section.Identifiers.it = 0;
+						continue;
+					}
 
 					const {at,from,to,seed,seedIter,blockedValues} = obj[key];
 					/*
@@ -1052,7 +1183,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 		/*
 			Verify that the timeline is an array.
 		*/
-		if (!Array.isArray(newTimeline)) {
+		if (!isArray(newTimeline)) {
 			return Error(genericError);
 		}
 		
@@ -1100,7 +1231,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 					literals like "number" or "datamap".
 				*/
 				try {
-					recompileValues(section, moment, moment.variables.TwineScript_TypeDefs);
+					recompileValues(section, newTimeline.slice(0,i), moment, moment.variables.TwineScript_TypeDefs);
 				} catch(e) {
 					return Error(`The variable types on turn ${i+1} couldn't be reconstructed.`);
 				}
@@ -1109,7 +1240,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 				Compile all of the variables (which are currently Harlowe code strings) back into Harlowe values.
 			*/
 			try {
-				recompileValues(section, moment, moment.variables);
+				recompileValues(section, newTimeline.slice(0,i), moment, moment.variables);
 			} catch(e) {
 				return Error(`The variables on turn ${i+1} couldn't be reconstructed.`);
 			}

@@ -103,15 +103,16 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 			const explanation = replayEl.find('tw-eval-explanation').empty();
 			const code = replayEl.find('tw-eval-code');
 
-			if (!f.toCode && !f.toDesc) {
+			if (!f.toCode && !f.toDesc && !f.error) {
 				code.html(Highlight(f.code, 'macro'));
 				explanation.html(`<center>Once upon a time, there was <code></code>.</center>`);
 			} else {
 				replayEl.find('tw-eval-code').empty().append(Highlight(f.code, 'macro', ind > 0 && f.start, ind > 0 && (f.end + f.diff)));
 				explanation.append(`<code class='${f.fromCode.length > 56 ? 'from-block' : 'from-inline'}'></code>`,
-					f.error ? `<span>caused an error:</span>${f.error}`
+					f.error ? `<span> caused an error:</span>`
 						: `<span> became </span>${!f.toDesc ? `<code class='to-code'></code>` : `<span class='to-desc'>${escape(f.toDesc)}.</span>`}`
 				);
+				f.error && explanation.append(f.error);
 				!f.toDesc && explanation.find('.to-code').append(Highlight(f.toCode, 'macro'));
 			}
 			explanation.find('code').first().append(Highlight(f.fromCode, 'macro'));

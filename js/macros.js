@@ -4,7 +4,7 @@ define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changer
 	/*
 		This contains a registry of macro definitions, and methods to add to that registry.
 	*/
-	
+	const {isArray} = Array;
 	let Macros;
 	const
 		// Private collection of registered macros.
@@ -117,7 +117,7 @@ define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changer
 			return jsType === 'number' && !Number.isNaN(arg);
 		}
 		if (type === Array) {
-			return Array.isArray(arg);
+			return isArray(arg);
 		}
 		if (type === Map || type === Set) {
 			return arg instanceof type;
@@ -152,7 +152,7 @@ define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changer
 					Currently, the full gamut of spreadable
 					JS objects isn't available - only arrays, sets, and strings.
 				*/
-				else if (Array.isArray(value)
+				else if (isArray(value)
 						|| typeof value === "string") {
 					newArgs.push(...value);
 				}
@@ -180,7 +180,7 @@ define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changer
 		A convenience check to see whether a type signature *contains* TypeSignature.Any anywhere in it.
 	*/
 	function typeTakesAny(e) {
-		return e === Macros.TypeSignature.Any || (Array.isArray(e.innerType) ? e.innerType.some(typeTakesAny) : e.innerType ? typeTakesAny(e.innerType) : false);
+		return e === Macros.TypeSignature.Any || (isArray(e.innerType) ? e.innerType.some(typeTakesAny) : e.innerType ? typeTakesAny(e.innerType) : false);
 	}
 
 	/*
@@ -204,7 +204,7 @@ define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changer
 			use the first name, as we have no other information about which macro name was used.
 			It's an uncomfortable state of affairs, I know.
 		*/
-		const invocation = (custom ? '' : "(" + (Array.isArray(name) && name.length > 1 ? name[0] : name) + ":)");
+		const invocation = (custom ? '' : "(" + (isArray(name) && name.length > 1 ? name[0] : name) + ":)");
 		name = custom ? (custom.TwineScript_KnownName ? `the custom macro, ${custom.TwineScript_KnownName}` : `an unnamed custom macro`) : `the ${invocation} macro` ;
 		/*
 			This is also used for error message generation: it provides the author with
@@ -480,7 +480,7 @@ define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changer
 		addChanger: function addChanger(name, fn, changerCommandFn, typeSignature) {
 			
 			privateAdd(name, "Changer", fn, typeSignature, true);
-			ChangerCommand.register(Array.isArray(name) ? name[0] : name, changerCommandFn);
+			ChangerCommand.register(isArray(name) ? name[0] : name, changerCommandFn);
 			
 			// Return the function to enable "bubble chaining".
 			return addChanger;

@@ -39,6 +39,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
    * Also, number and boolean variables are short enough that saving them as a reference isn't necessary, so they won't be saved as indexes even if they are "pure".
    * Variables changed using `(unpack:)` or `2bind` currently aren't considered "pure".
    * As a consequence of this change, save files from older versions of your story are much more likely to become invalidated whenever you make minor changes to passage prose, so do take note of that.
+ * Additionally, global variables holding arrays and datamaps, whose inner data values have only changed slightly compared to previous turns, will now be saved in a shorter form using the `it` identifier to refer to values which were unchanged. For instance, if a gloval variable contains `(a:(passage:'A1'),(passage:'A2'),(passage:'A3'))` (an array containing 3 large datamaps), and on a subsequent turn it is changed to `(a:(passage:'A2'),(passage:'A3'),"A string")`, then on that turn, it will be serialised as `(a:its 2nd,its 3rd,"A string")`.
  * Slightly improved performance of changing passages in stories that contain a very large number of passages.
  * Slightly improved performance of rendering and re-rendering hooks.
  * Now, the most recent 16 visited passages (as well as all "header", "footer", "debug-header" and "debug-footer" tagged passages), have their source code's syntax trees cached, to save on rendering time if they're visited or shown by `(display:)` again within 16 turns.

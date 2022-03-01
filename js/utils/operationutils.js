@@ -18,6 +18,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 	function isObject(value) {
 		return !!value && (typeof value === sObject || typeof value === sFunction);
 	}
+	const {isArray} = Array;
 
 	/*
 		Unlike $.isPlainObject, this checks if the object is directly descended from Object.prototype.
@@ -34,7 +35,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		Currently (Jan 2021) only used by Operations, VarRef and data structure macros.
 	*/
 	function collectionType(value) {
-		return Array.isArray(value) ? "array" :
+		return isArray(value) ? "array" :
 			value instanceof Map ? "datamap" :
 			value instanceof Set ? "dataset" :
 			typeof value === sString ? sString :
@@ -53,7 +54,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 	*/
 	function unstorableValue(value) {
 		return (value && value.TwineScript_Unstorable && value)
-			|| (Array.isArray(value) && value.find(unstorableValue))
+			|| (isArray(value) && value.find(unstorableValue))
 			|| (value instanceof Map && [...value.values()].find(unstorableValue))
 			|| (value instanceof Set && [...value].find(unstorableValue));
 	}
@@ -115,7 +116,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		Currently (Jan 2022) only used by VarRef.
 	*/
 	function isSequential(value) {
-		return typeof value === sString || Array.isArray(value) || typeof value.hooks === sFunction;
+		return typeof value === sString || isArray(value) || typeof value.hooks === sFunction;
 	}
 	/*
 		Now, a function to clone arbitrary values.
@@ -136,7 +137,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		/*
 			If it's an array, the old standby is on call.
 		*/
-		if (Array.isArray(value)) {
+		if (isArray(value)) {
 			return [...value];
 		}
 		/*
@@ -200,7 +201,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		if (isObject(obj) && "TwineScript_ObjectName" in obj) {
 			return obj.TwineScript_ObjectName;
 		}
-		if (Array.isArray(obj)) {
+		if (isArray(obj)) {
 			if (obj.length === 0) {
 				return "an empty array";
 			}
@@ -272,7 +273,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 				return "a case-insensitive string name";
 			}
 			if (obj.pattern === "either") {
-				if(!Array.isArray(obj.innerType)) {
+				if(!isArray(obj.innerType)) {
 					impossible("typeName",'"either" pattern had non-array inner type');
 				}
 				
@@ -334,7 +335,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		if ([sBoolean,sString,sNumber].includes(jsType)) {
 			return jsType;
 		}
-		if (Array.isArray(obj)) {
+		if (isArray(obj)) {
 			return "array";
 		}
 		if (obj instanceof Map) {
@@ -372,7 +373,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 			The following three heavily leverage the way JS arrays serialise themselves
 			automatically.
 		*/
-		if (Array.isArray(obj)) {
+		if (isArray(obj)) {
 			/*
 				The conversion from 1-based to 0-based properties is not far under Harlowe's surface,
 				so it must be reversed here.
@@ -425,7 +426,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 			For Arrays, compare every element and position of one
 			with the other.
 		*/
-		if (Array.isArray(l) && Array.isArray(r)) {
+		if (isArray(l) && isArray(r)) {
 			/*
 				A quick check: if they vary in length, they already fail.
 			*/
@@ -488,7 +489,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 				}
 				return container.includes(obj);
 			}
-			if(Array.isArray(container)) {
+			if(isArray(container)) {
 				return container.some((e) => is(e, obj));
 			}
 			/*
@@ -555,7 +556,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 			All subsequent code resembles is(), because matching is close
 			to equality except where datatype values are concerned.
 		*/
-		if (Array.isArray(l) && Array.isArray(r)) {
+		if (isArray(l) && isArray(r)) {
 			/*
 				In order to properly compare spread datatypes, each value of each side must
 				be compared in non-uniform fashion to values on the other side.
@@ -724,7 +725,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 			*/
 			return Array.from(value.values()).map(printBuiltinValue) + "";
 		}
-		else if (Array.isArray(value)) {
+		else if (isArray(value)) {
 			return value.map(printBuiltinValue) + "";
 		}
 		else if (value && typeof value.jquery === sString) {

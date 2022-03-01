@@ -603,9 +603,12 @@ define([
 				*/
 				/*
 					Currently, (unpack:) is too complicated to generate prose references for, even if
-					it is pure. This check confirms that this is only a (set:) or (put:) command.
+					it is pure.
+					
+					This check confirms that this is only a (set:) or (put:) command
+					that isn't a property modification (like $a's 1st).
 				*/
-				if (VarRef.isPrototypeOf(dest) || TypedVar.isPrototypeOf(dest)) {
+				if ((VarRef.isPrototypeOf(dest) && dest.propertyChain.length <= 1) || (TypedVar.isPrototypeOf(dest) && dest.varRef.propertyChain.length <= 1)) {
 					section.freeVariables = Object.create(null);
 				}
 				/*

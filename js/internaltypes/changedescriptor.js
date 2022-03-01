@@ -1,6 +1,7 @@
 "use strict";
 define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, transitionIn}, {exec}, HookSet) => {
 	const {assign,keys,create,seal} = Object;
+	const {isArray} = Array;
 	/*
 		When a new Section (generally a hook or expression) is about to be rendered,
 		a ChangeDescriptor is created and fed into all of the ChangerCommands which are
@@ -166,7 +167,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 				/*
 					Apply the style attributes to the element.
 				*/
-				if (Array.isArray(this.styles) && this.styles.length > 0) {
+				if (isArray(this.styles) && this.styles.length > 0) {
 					/*
 						Some styles can be applied right away - these are string properties
 						of the styles objects (for instance, "condense" is {"letter-spacing": "-0.08em"}).
@@ -218,11 +219,11 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 				forEachTarget should be run on every target element, be there a set or a single one.
 				As in render(), the newTargets should be used instead of the original if present.
 			*/
-			if (Array.isArray(newTargets) && newTargets.length) {
+			if (isArray(newTargets) && newTargets.length) {
 				target = newTargets.map(t => t.target);
 			}
 
-			if (Array.isArray(target)) {
+			if (isArray(target)) {
 				for (let i = 0; i < target.length; i += 1) {
 					HookSet.isPrototypeOf(target[i]) ? target[i].forEach(section, forEachTarget) :
 						/*
@@ -344,7 +345,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 				newTargets are targets specified by revision macros (such as ?foo in (replace:?foo))
 				which should be used instead of the original.
 			*/
-			if (Array.isArray(newTargets) && newTargets.length) {
+			if (isArray(newTargets) && newTargets.length) {
 				target = newTargets;
 			}
 			/*
@@ -423,7 +424,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 				Return the compiled DOM, or return an empty set if the target is a collection
 				and the above loop didn't produce anything.
 			*/
-			if (dom.length || Array.isArray(target) || HookSet.isPrototypeOf(target)) {
+			if (dom.length || isArray(target) || HookSet.isPrototypeOf(target)) {
 				return dom;
 			}
 			/*
@@ -504,7 +505,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 				If the source has any addenda, compile that separately and insert it into the DOM structure.
 				Note that by compiling it separately, partial structures in one addenda can't contaminate the original source.
 			*/
-			if (Array.isArray(appendSource)) {
+			if (isArray(appendSource)) {
 				appendSource.forEach(({source, append}) => {
 					const addenda = $(this.verbatim ? verbatim(source) : exec(source));
 					if (append === "append") {
