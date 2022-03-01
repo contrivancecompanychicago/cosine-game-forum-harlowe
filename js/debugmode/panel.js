@@ -93,14 +93,7 @@ define(['jquery', 'utils/naturalsort'], ($, NaturalSort) => {
 			*/
 			children.filter((_,e) => !newRows.includes(e) && !e.className.includes('panel-head')).remove();
 			/*
-				Optionally sort if sorting is enabled.
-			*/
-			const sort = panel.find('th[data-order]');
-			if (sort.length) {
-				this.sort(sort.attr('data-col'), sort.attr('data-order'));
-			}
-			/*
-				And finally, update the tab.
+				Update the tab.
 			*/
 			this.tabUpdate(count);
 			/*
@@ -110,6 +103,14 @@ define(['jquery', 'utils/naturalsort'], ($, NaturalSort) => {
 				panelRows.prepend(columnHead());
 			} else if (count === 0) {
 				panelRows.find('.panel-head').remove();
+			}
+			/*
+				Optionally sort if sorting is enabled.
+				If a header is set to sort by default, then that sort will occur now.
+			*/
+			const sort = panel.find('th[data-order]');
+			if (sort.length) {
+				this.sort(sort.attr('data-col'), sort.attr('data-order'));
 			}
 		},
 	});

@@ -636,7 +636,7 @@ define([
 					/*
 						Don't bother if the stringified Harlowe source of the value is longer than its reference.
 					*/
-					if (JSON.stringify(srcRef) < toSource(src)) {
+					if (JSON.stringify(srcRef).length >= toSource(src).length) {
 						srcRef = undefined;
 					}
 				}

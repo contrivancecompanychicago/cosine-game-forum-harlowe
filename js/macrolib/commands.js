@@ -2696,7 +2696,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			the starts of chapters or viewpoint switches) or constantly, by placing it in a "header" or "footer" tagged passage.
 
 			Note that while it's possible to limit the player's ability to undo by simply removing or replacing the default (icon-undo:)
-			instance from the sidebar (such as, for example, `(replace:?sidebar)[(if:$canUndo)(icon-undo:)]`, and then conditionally changing the $canUndo variable
+			instance from the sidebar (such as, for example, `(replace:?sidebar)[(if:$canUndo)(icon-undo: )]`, and then conditionally changing the $canUndo variable
 			throughout the story), this macro provides a more direct way of limiting undos. In particular, it makes it
 			easy to limit the *distance* that a player can undo from the current turn.
 

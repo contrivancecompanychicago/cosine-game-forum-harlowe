@@ -17,10 +17,12 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 
 	/*
 		Collect the Debug Mode options for this story.
+		The following are the defaults if no data is present.
 	*/
 	let debugOptions = {
 		darkMode: true,
 		fadePanel: true,
+		evalReplay: true,
 		// Width isn't specified until the resizer is first used.
 		width: null,
 	};
@@ -654,7 +656,7 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 			return row.attr('data-name') === escape(name + '');
 		},
 		columnHead() {
-			return `<tr class="panel-head"><th data-col="storylet-open">Open</th><th data-col="storylet-name">Name</th><th data-col="storylet-lambda">Condition</th><th data-col="storylet-exclusive" class='storylet-exclusive'>Exclusivity</th><th data-col="storylet-urgent" class='storylet-urgent'>Urgency</th></tr>`;
+			return `<tr class="panel-head"><th data-col="storylet-open" data-order="desc">Open</th><th data-col="storylet-name">Name</th><th data-col="storylet-lambda">Condition</th><th data-col="storylet-exclusive" class='storylet-exclusive'>Exclusivity</th><th data-col="storylet-urgent" class='storylet-urgent'>Urgency</th></tr>`;
 		},
 	});
 	/*
@@ -797,6 +799,7 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 			const enabled = {
 				darkMode:   debugOptions.darkMode,
 				fadePanel: debugOptions.fadePanel,
+				evalReplay: debugOptions.evalReplay,
 			}[name];
 			if (row) {
 				return row.find('input').prop('checked', enabled);
@@ -819,11 +822,15 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 			debugOptions.fadePanel = enabled;
 			debugElement[(enabled ? 'add' : 'remove') + 'Class']('fade-panel');
 		}
+		if (id === "debug-evalReplay") {
+			Utils.options.evalReplay = debugOptions.evalReplay = enabled;
+		}
 		saveDebugModeOptions();
 	});
 	Options.update([
 		{name: "darkMode", label: "Debug panel is dark"},
-		{name: "fadePanel", label: "Debug panel is transparent unless the cursor is over it"}
+		{name: "fadePanel", label: "Debug panel is transparent unless the cursor is over it"},
+		{name: "evalReplay", label: "Record expression replays (viewable via 🔍 buttons in Debug View; slower)"}
 	]);
 
 	/*
@@ -862,6 +869,7 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 	const enableMode = () => {
 		$(document.body).append(debugElement);
 		Utils.options.debug = true;
+		Utils.options.evalReplay = debugOptions.evalReplay;
 		refresh();
 	};
 	/*

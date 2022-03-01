@@ -39,7 +39,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
    * Also, number and boolean variables are short enough that saving them as a reference isn't necessary, so they won't be saved as indexes even if they are "pure".
    * Variables changed using `(unpack:)` or `2bind` currently aren't considered "pure".
    * As a consequence of this change, save files from older versions of your story are much more likely to become invalidated whenever you make minor changes to passage prose, so do take note of that.
- * Additionally, global variables holding arrays and datamaps, whose inner data values have only changed slightly compared to previous turns, will now be saved in a shorter form using the `it` identifier to refer to values which were unchanged. For instance, if a gloval variable contains `(a:(passage:'A1'),(passage:'A2'),(passage:'A3'))` (an array containing 3 large datamaps), and on a subsequent turn it is changed to `(a:(passage:'A2'),(passage:'A3'),"A string")`, then on that turn, it will be serialised as `(a:its 2nd,its 3rd,"A string")`.
+ * As an additional save file optimisation, global variables holding arrays, datasets or datamaps, whose inner data values have only changed slightly compared to previous turns, will now be saved in a shorter form using the `it` identifier to refer to values which were unchanged. As an example, if a gloval variable contains `(a:(passage:'A1'),(passage:'A2'),(passage:'A3'))` (an array containing 3 large datamaps), and on a subsequent turn it is changed to `(a:(passage:'A2'),(passage:'A3'),"A string")`, then on that turn, it will be serialised as `(a:its 2nd,its 3rd,"A string")`.
  * Slightly improved performance of changing passages in stories that contain a very large number of passages.
  * Slightly improved performance of rendering and re-rendering hooks.
  * Now, the most recent 16 visited passages (as well as all "header", "footer", "debug-header" and "debug-footer" tagged passages), have their source code's syntax trees cached, to save on rendering time if they're visited or shown by `(display:)` again within 16 turns.
@@ -72,7 +72,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
  * Debug Mode's colour scheme is now white-on-black, to match Harlowe's default colour scheme. You may use the new options panel (see below) to change it back to white.
  * The width of the Debug Mode panel (which you can adjust using the resizer added in 3.2.0) is now saved in localStorage alongside these options, and should also persist across debugging sessions.
- * Columns in Debug Mode panels can now be sorted by clicking the column headers, as is typical of many apps with columnar data. The columns will remain sorted as the data changes.
+ * Columns in Debug Mode panels can now be sorted by clicking the column headers, as is typical of many apps with columnar data. The columns will remain sorted as the data changes. The Storylet panel is also sorted (placing open storylets first) by default.
  * The source code in the Source, Variables and Storylet panels is now syntax-highlighted, in a manner roughly matching its highlighting in the Twine editor.
  * The Source panel now shows the header and footer passages' source code as well, in separate fold-down sections.
  * Very long lines in "(source:)" listings in the Variables panel should no longer push the other columns far offscreen.

@@ -183,7 +183,15 @@ describe("save macros", function() {
 				runPassage("(loadgame:'2')",'grault2');
 				setTimeout(function() {
 					expect("(print: $map's A's B's C) (print: $map's D's E) (print: $map's A's B's H) (print: $map's D's G)").markupToPrint('1'.repeat(40) + " " + '1'.repeat(40) + " " + '4'.repeat(40) + " " + '3'.repeat(40));
-					done();
+					runPassage("(set:$ds to (ds:(str-repeated:40,'1'),(str-repeated:40,'2')))(set:$ds2 to $ds, $ds3 to $ds, $ds4 to $ds)",'foo3');
+					runPassage("(set: $ds to it + (ds:(str-repeated:40,'3')), $ds2 to it - (ds:(str-repeated:40,'1')), $ds3 to it - (ds:(str-repeated:40,'2')) + (ds:(str-repeated:40,'4')))",'quux3');
+					runPassage("(savegame:'3')",'baz3');
+					runPassage("(set:$ds to (ds:))",'qux3');
+					runPassage("(loadgame:'3')",'grault3');
+					setTimeout(function() {
+						expect("(print: $ds) (print: $ds2) (print: $ds3)").markupToPrint('1'.repeat(40) + "," + '2'.repeat(40) + "," + '3'.repeat(40) + " " + '2'.repeat(40) + " " + '1'.repeat(40) + "," + '4'.repeat(40));
+						done();
+					}, 20);
 				}, 20);
 			}, 20);
 		});
@@ -371,7 +379,7 @@ describe("save macros", function() {
 				},90);
 			},90);
 		});
-		it("can restore variables across multiple turns", function(done) {
+		it("can restore variables and their state in previous turns", function(done) {
 			runPassage("(set:$arr to (a:'" + "E".repeat(30) + "'))", 'baz');
 			runPassage("(set:$arr to (a:'" + "J".repeat(30) + "'))", 'qux');
 			expect("$arr").markupToPrint("J".repeat(30));

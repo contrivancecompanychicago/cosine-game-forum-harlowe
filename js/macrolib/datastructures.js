@@ -316,17 +316,17 @@ define([
 			* `(set: $a to (a: 'A','C','E','G', 2, 1))(sorted: ...$a)` produces `(a:1,2,"A","C","E","G")`.
 			* `(sorted: via its name, ...$creatures)` sorts the datamaps in the array stored in $creatures by their "name" values. Datamaps with an alphanumerically earlier "name" appear first.
 			* `(sorted: via its length * -1, "Gus", "Arthur", "William")` produces `(a: "William", "Arthur", "Gus"))`. This lambda produces negative numbers for each string.
-			* `(sorted: via its tags's length, ...(passages:))` produces a version of the (passages:) array, sorted by ascending number of tags each passage datamap has.
-			* `(sorted: via (passage:it)'s exclusivity, ...(history:))` produces a version of the (history:) array (which is an array of passage name strings), sorted
+			* `(sorted: via its tags's length, ...(passages: ))` produces a version of the (passages:) array, sorted by ascending number of tags each passage datamap has.
+			* `(sorted: via (passage:it)'s exclusivity, ...(history: ))` produces a version of the (history:) array (which is an array of passage name strings), sorted
 			by the (exclusivity:) metadata the passage with that name has.
 			* `(sorted: via its h, orange, red, blue, yellow)` produces `(a: red, orange, yellow, blue)`.
 			* `(sorted: via (random:1,100), ...$arr)` is mostly the same as `(shuffled:...$arr)`.
-			* `(sorted: via its urgency, ...(sorted: via its exclusivity, ...(passages:)))` sorts the (passages:) array by urgency, and sorts ties by exclusivity.
+			* `(sorted: via its urgency, ...(sorted: via its exclusivity, ...(passages: )))` sorts the (passages:) array by urgency, and sorts ties by exclusivity.
 			
 			Rationale:
 			The main purpose of arrays is to store data values in a specific order - feats the player has performed,
 			names of open storylets from (open-storylets:), visited passage names from (history:), names of file slots as produced
-			by `(dataentries:(saved-games:))`, to name just a few examples. However, there are times when you want to work with
+			by `(dataentries:(saved-games: ))`, to name just a few examples. However, there are times when you want to work with
 			the same array in a different order, either because the default ordering isn't to your needs - for instance, you wish to list open
 			storylets by one of their metadata values - or you need to include special exceptions to the normal ordering - for instance, you want to sort
 			(history:) passages with a certain tag higher than others. This macro can be used to create a sorted array,
@@ -667,7 +667,7 @@ define([
 			Arrays are used to hold values whose ordering matters, such as the sequentially visited passages in the array that (history:) produces.
 			Sometimes, though, you want to eliminate duplicate data from the array in order to use it for some purpose. For instance, you may
 			want to show a list (using (for:)) of every passage the player has visited, in the order they've visited, but without duplicate entries in the
-			list. While (dataset:) and the spread `...` syntax can be used to eliminate duplicate entries from an array, such as by `(a:...(ds: ...(history:)))`,
+			list. While (dataset:) and the spread `...` syntax can be used to eliminate duplicate entries from an array, such as by `(a:...(ds: ...(history: )))`,
 			this has a small problem: datasets only hold unordered data, and when the dataset is spread using `...`, the values are sorted instead of
 			in their original order. (unique:) provides an easier method of removing duplicates from an a sequence of values.
 
@@ -1166,7 +1166,7 @@ define([
 			| urgency | The storylet urgency number. Usually only present if an (urgency:) call is in the passage.
 
 			So, you can think of `(visited: where its tags contains "Forest")` as a shorthand for
-			`(some-pass:where (passage: it)'s tags contains "Forest", ...(history:))`.
+			`(some-pass:where (passage: it)'s tags contains "Forest", ...(history: ))`.
 
 			If you're testing your story in debug mode using (mock-visits:), then any "mock" visit you simulate
 			will be counted as a visit.

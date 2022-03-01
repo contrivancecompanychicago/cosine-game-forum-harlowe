@@ -63,7 +63,9 @@ define(['jquery', 'markup', 'utils/polyfills'],
 	let
 		//A binding for the cached <tw-story> reference (see below).
 		storyElement,
-		//A binding for story options (which are already visible in the DOM).
+		//A binding for story options.
+		// - debug: set by its presence on <tw-storydata>
+		// - evalReplay: set to true or false by Debug Mode.
 		options = {},
 		/*
 			An array of functions to run only after page load. This is set to null

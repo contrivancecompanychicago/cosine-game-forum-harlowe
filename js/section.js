@@ -941,7 +941,7 @@ define([
 				the replay data can't be succinctly included as a return value of this, but is instead
 				left as a mutated property on this section.
 			*/
-			if (Utils.options.debug) {
+			if (Utils.options.debug && Utils.options.evalReplay) {
 				/*
 					The initial code listing is the full text of all tokens.
 				*/

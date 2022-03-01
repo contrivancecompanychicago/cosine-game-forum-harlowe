@@ -120,12 +120,14 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			}
 			
 			if (equal) {
-				return (path === "it") ? {via:path} : path;
+				ret = path;
 			}
 			/*
 				This completes the call while also trimming the final ','.
 			*/
-			ret = ret.slice(0,-1) + ")";
+			else {
+				ret = ret.slice(0,-1) + ")";
+			}
 		}
 		else if (newVal instanceof Map && oldVal instanceof Map && newVal.size) {
 			let equal = newVal.size === oldVal.size;
@@ -146,12 +148,40 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 				ret += modifierValueRef(oldVal.get(k),v, `${pathPossessive} (${toSource(k)})`) + ',';
 			}
 			if (equal) {
-				return (path === "it") ? {via:path} : path;
+				ret = path;
 			}
 			/*
 				This completes the call while also trimming the final ','.
 			*/
-			ret = ret.slice(0,-1) + ")";
+			else {
+				ret = ret.slice(0,-1) + ")";
+			}
+		}
+		else if (newVal instanceof Set && oldVal instanceof Set && newVal.size) {
+			/*
+				We should do something a little different here… obtain the
+				differences between each dataset, and then add or subtract them.
+			*/
+			const onlyInOld = new Set(), onlyInNew = new Set();
+			for (let v of oldVal) {
+				if (!newVal.has(v)) {
+					onlyInOld.add(v);
+				}
+			}
+			for (let v of newVal) {
+				if (!oldVal.has(v)) {
+					onlyInNew.add(v);
+				}
+			}
+			if (!onlyInOld.size && !onlyInNew.size) {
+				ret = path;
+			}
+			if (onlyInOld.size + onlyInNew.size > newVal.size) {
+				ret = toSource(newVal);
+			}
+			else {
+				ret = "it" + (onlyInNew.size ? "+" + toSource(onlyInNew) : '') + (onlyInOld.size ? "-" + toSource(onlyInOld) : '');
+			}
 		}
 		if (!ret) {
 			/*
@@ -351,12 +381,25 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 					When a map or array has been permuted, attempt to construct a smaller serialisation of that
 					change, based on the previous known value for the variable.
 				*/
-				else if (isArray(value) || value instanceof Map) {
+				else if (isArray(value) || value instanceof Map || value instanceof Set) {
 					for(let i = recent; i >= 0; i -= 1) {
 						const v = timeline[i].variables[prop];
-						if ((isArray(v) && isArray(value)) || (v instanceof Map) && (value instanceof Map)) {
-							present.valueRefs[prop] = modifierValueRef(v, value, 'it');
-							return;
+						if (v !== undefined) {
+							const viaValueRef = modifierValueRef(v, value, 'it');
+							/*
+								If it was serialised as just {via:"it"}, then we've discovered that
+								the new value is identical to the previous value. If that's the case, simply
+								delete this variable from the present moment instead of creating a valueRef
+								for it.
+							*/
+							if (viaValueRef) {
+								if (viaValueRef.via === "it") {
+									delete present.variables[prop];
+								} else {
+									present.valueRefs[prop] = viaValueRef;
+								}
+							}
+							break;
 						}
 					}
 				}
