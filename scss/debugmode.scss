@@ -461,9 +461,14 @@ tw-debugger {
 		content:"~ No enchantments ~";
 		@include emptyMsg();
 	}
-	.panel-errors .panel-rows:empty::before {
-		content:"~ No errors... for now. ~";
-		@include emptyMsg();
+	.panel-errors .panel-rows:empty {
+		&::before {
+			content:"~ No errors... for now. ~";
+			@include emptyMsg();
+		}
+		& + .panel-errors-bottom {
+			display:none;
+		}
 	}
 	&.theme-dark {
 		.panel-variables .panel-rows:empty::before,

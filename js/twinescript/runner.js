@@ -350,9 +350,13 @@ define([
 		*/
 		let resultSource;
 		if (!transformation) {
-			resultSource = ` ${error ? "🐞" :
+			resultSource = `${
+					before && before.length && before[before.length-1].type === "whitespace" ? ' ' : ''
+				}${error ? "🐞" :
 				val && !val.TwineScript_ToSource && val.TwineScript_Unstorable ? objectName(val) :
-				toSource(val)} `;
+				toSource(val)}${
+					after && after.length && after[0].type === "whitespace" ? ' ' : ''
+				}`;
 
 			/*
 				Don't create a replay frame for tokens whose source representation doesn't change at all.
@@ -360,7 +364,7 @@ define([
 			if ((!before || (before.length === 1 && before[0].type === 'whitespace')) && 
 					(!after || (after.length === 1 && after[0].type === 'whitespace')) &&
 					resultSource.trim() === token.text.trim()) {
-				return val;
+				return;
 			}
 		}
 		else {

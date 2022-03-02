@@ -787,6 +787,19 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 	TwineError.on(onError);
 
 	/*
+		Set up the "Clear this panel" button.
+	*/
+	Errors.panel.append(
+		`<div class='panel-errors-bottom'>
+			<button class='panel-errors-clean'>🧹 Clear this panel</button>
+		</div>`
+	);
+	root.on('click', '.panel-errors-clean', () => {
+		Errors.panelRows.empty();
+		Errors.tabUpdate(0);
+	});
+
+	/*
 		Set up the
 		------
 		Options

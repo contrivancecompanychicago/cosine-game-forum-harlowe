@@ -68,16 +68,12 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 ##### Compatibility
 
- * A minor (3.x) version increase usually shouldn't have incompatibilities with existing code, but there is something I must mention: arbitrary Javascript syntax embedded in Harlowe macro calls is no longer permitted, and will produce an error. This includes stuff like `(if: (document.title = "Wowie") is 1)[]` (which does nothing except change the window title to "Wowie") or writing `(set: $a = 1)` instead of `(set: $a to 1)`. This was a necessary sacrifice as a result of the aforementioned macro code rewrite. Since these were never part of the Harlowe language description, and were essentially undefined behaviour, I feel that it's fine to remove it in a "minor" version - however, this could inconvenience numerous people, which is why I'd avoided implementing this for so long. If you personally had been using this "feature" for purposes that Harlowe's macros can't fulfill, please post a [bug report](https://foss.heptapod.net/games/harlowe/-/issues) describing it, and I'll see what I can do about adding a macro or some other feature to support it.
+ * A minor (3.x) version increase usually shouldn't have significant incompatibilities with existing code, but there is something I must mention: arbitrary Javascript syntax embedded in Harlowe macro calls is no longer permitted, and will produce an error. This includes stuff like `(if: (document.title = "Wowie") is 1)[]` (which does nothing except change the window title to "Wowie") or writing `(set: $a = 1)` instead of `(set: $a to 1)`. This was a necessary sacrifice as a result of the aforementioned macro code rewrite. Since these were never part of the Harlowe language description, and were essentially undefined behaviour, I feel that it's fine to remove it in a "minor" version - however, this could inconvenience numerous people, which is why I'd avoided implementing this for so long. If you personally had been using this "feature" for purposes that Harlowe's macros can't fulfill, please post a [bug report](https://foss.heptapod.net/games/harlowe/-/issues) describing it, and I'll see what I can do about adding a macro or some other feature to support it.
    * Furthermore, as a result of the implementation of both this and `(seed:)` (see below), random macros will no longer produce different "rolls" when the player uses Undo to return to a previous turn - instead, the exact same roll that occurred on that turn will happen again. While this may be welcomed as a desired feature (in that it makes the Undo feature more intuitive in its behaviour), it may impact certain niche uses of these macros, so do take care.
 
 ##### Debug Mode
 
  * Debug Mode's colour scheme is now white-on-black, to match Harlowe's default colour scheme. You may use the new options panel (see below) to change it back to white.
- * The width of the Debug Mode panel (which you can adjust using the resizer added in 3.2.0) is now saved in localStorage alongside these options, and should also persist across debugging sessions.
- * Columns in Debug Mode panels can now be sorted by clicking the column headers, as is typical of many apps with columnar data. The columns will remain sorted as the data changes. The Storylet panel is also sorted (placing open storylets first) by default.
- * The source code in the Source, Variables and Storylet panels is now syntax-highlighted, in a manner roughly matching its highlighting in the Twine editor.
- * The Source panel now shows the header and footer passages' source code as well, in separate fold-down sections.
  * Very long lines in "(source:)" listings in the Variables panel should no longer push the other columns far offscreen.
  * Debug Mode no longer automatically, immediately enables itself whenever the first error of your story appears. Instead, this functionality can be added using the new `(after-error:)` and `(debug:)` macros (see below).
 
@@ -106,6 +102,11 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * The new Debug Mode options panel also lets you toggle a new feature that turns the entire panel transparent when the mouse cursor isn't hovering on it, letting you see the whole page better.
  * Added an "expression replay" feature to Debug Mode. When you use Debug View, special 🔍 icons will appear on variables and macro calls in the passage. Clicking those will produce a dialog showing a step-by-step view of how the macro call's code was interpreted by Harlowe.
  * Variable panel values have more detailed descriptions - for instance, `(a:)` is called "an empty array", and `(a: "Weather the storm", "Search for shelter")` is called "an array (with the string "Weather the storm", and 1 other item)" instead of both being just "an array".
+ * The width of the Debug Mode element (which you can adjust using the resizer added in 3.2.0) is now saved in localStorage alongside these options, and should also persist across debugging sessions.
+ * Columns in Debug Mode panels can now be sorted by clicking the column headers, as is typical of many apps with columnar data. The columns will remain sorted as the data changes. The Storylet panel is also sorted (placing open storylets first) by default.
+ * The source code in the Source, Variables and Storylet panels is now syntax-highlighted, in a manner roughly matching its highlighting in the Twine editor.
+ * The Source panel now shows the header and footer passages' source code as well, in separate fold-down sections.
+ * Added a "Clear this panel" button to the Errors panel, which, when clicked, removes all of the recorded errors.
  * Added a close button to the panel, which exits Debug Mode when clicked.
 
 ### 3.2.3 changes (October 22, 2021):

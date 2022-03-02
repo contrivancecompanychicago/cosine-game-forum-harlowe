@@ -353,6 +353,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		This should never receive a TwineError.
 		Used everywhere.
 	*/
+	const mapEntriesSorter = (a,b) => ([a[0],b[0]].sort(NaturalSort("en"))[0] === a[0] ? -1 : 1);
 	function toSource(obj, isProperty) {
 		let e = TwineError.containsError(obj);
 		if (e) {
@@ -374,16 +375,28 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 			automatically.
 		*/
 		if (isArray(obj)) {
-			/*
-				The conversion from 1-based to 0-based properties is not far under Harlowe's surface,
-				so it must be reversed here.
-			*/
-			return "(a:" + (isProperty === 'property' ? obj.map(e => e+(e>0)) : obj).map(toSource) + ")";
+			let ret = '';
+			for (let elem of obj) {
+				ret += (!ret ? "(a:" : ',');
+				/*
+					The conversion from 1-based to 0-based properties is not far under Harlowe's surface,
+					so it must be reversed here.
+				*/
+				if (isProperty === 'property') {
+					ret += elem+(elem>0);
+				} else {
+					ret += toSource(elem);
+				}
+			}
+			return ret + (!ret ? "(a:)" : ')');
 		}
 		if (obj instanceof Map) {
-			return "(dm:" + Array.from(obj.entries()).sort(
-					(a,b) => ([a[0],b[0]].sort(NaturalSort("en"))[0] === a[0] ? -1 : 1)
-				).map((e) => e.map(toSource)) + ")";
+			const entries = Array.from(obj.entries()).sort(mapEntriesSorter);
+			let ret = '';
+			for (let [k,v] of entries) {
+				ret += (!ret ? "(dm:" : ',') + toSource(k) + "," + toSource(v);
+			}
+			return ret + (!ret ? "(dm:)" : ')');
 		}
 		if (obj instanceof Set) {
 			return "(ds:" + Array.from(obj).sort(NaturalSort("en")).map(toSource) + ")";

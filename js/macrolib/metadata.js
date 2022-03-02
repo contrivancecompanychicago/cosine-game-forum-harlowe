@@ -239,7 +239,7 @@ define(['macros','utils/operationutils', 'datatypes/lambda', 'internaltypes/twin
 					just for error-checking. Exit out here.
 				*/
 				if (!section.stackTop.speculativePassage) {
-					return unstorableObject('storylet');
+					return unstorableObject('metadata');
 				}
 				return map;
 			},
