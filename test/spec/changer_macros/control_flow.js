@@ -170,6 +170,12 @@ describe("control flow macros", function() {
 			expect('|3>[Red](show:?3)').markupToPrint("Red");
 			expect('|3>[Red]|3)[Blue](show:?3)').markupToPrint("RedBlue");
 		});
+		it("errors if given ?page", function() {
+			expect("(show:?page)").markupToError();
+			expect("(show:?page's 1st)").markupToError();
+			expect("(show:?foo + ?page's 1st)").markupToError();
+			expect("(show:(?foo + ?page)'s 1st)").markupToError();
+		});
 		it("can't reveal a hook twice", function() {
 			expect('|3)[Red](show:?3)(show:?3)').markupToPrint("Red");
 			expect('(set:$r to 10)|3)[(set:$r to it+10)$r](show:?3)(show:?3)(show:?3)').markupToPrint("20");
@@ -204,6 +210,12 @@ describe("control flow macros", function() {
 			p.find('tw-link').click();
 			expect(p.text()).toBe('A');
 		});
+		it("errors if given ?page", function() {
+			expect("(hide:?page)").markupToError();
+			expect("(hide:?page's 1st)").markupToError();
+			expect("(hide:?foo + ?page's 1st)").markupToError();
+			expect("(hide:(?foo + ?page)'s 1st)").markupToError();
+		});
 		it("hides specific same-named hooks", function() {
 			expect('|3>[Red]|3>[Blue]|3>[Green](hide:?3\'s 1st)').markupToPrint('BlueGreen');
 			expect('|3>[Red]|3>[Blue]|3>[Green](hide:?3\'s 2nd)').markupToPrint('RedGreen');
@@ -237,6 +249,18 @@ describe("control flow macros", function() {
 		});
 		it("errors if it would cause an infinite loop", function() {
 			expect("|1>[(rerun:?2)]|2>[(rerun:?1)]").markupToError();
+		});
+		it("errors if given ?page", function() {
+			expect("(rerun:?page)").markupToError();
+			expect("(rerun:?page's 1st)").markupToError();
+			expect("(rerun:?foo + ?page's 1st)").markupToError();
+			expect("(rerun:(?foo + ?page)'s 1st)").markupToError();
+		});
+		it("works with ?passage without erasing the ?sidebar", function() {
+			runPassage("(set:$b to 0)");
+			runPassage("(set:$a to 10)(set:$b to it + $a)(if:$b < 20)[(rerun:?passage)]<b>$b</b>");
+			expect($('tw-passage b').text()).toBe("20");
+			expect($('tw-passage tw-sidebar').length).toBe(1);
 		});
 		it("doesn't work on hidden hooks", function() {
 			expect('(set:$foo to 1)|3)[(set:$foo to it+1)](rerun:?3)$foo').markupToPrint('1');

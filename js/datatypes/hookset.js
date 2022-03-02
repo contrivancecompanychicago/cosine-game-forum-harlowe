@@ -472,9 +472,12 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 			Creates a new HookSet, which contains the following:
 
 			{Object} selector: the hook selector. It has:
-				{String} type: "name", "string", or "base"
-				{String|HookSet} data: a hook name, such as "flank" for ?flank, a bare search string,
-					or a HookSet from which the properties are being extracted.
+				{String} type: "name", "string", or "base".
+				"base" is for property-limited hookSets like ?red's 1st.
+				{String|HookSet} data: depends on type.
+					"name": a hook name, such as "flank" for ?flank.
+					"string": a bare search string.
+					"base": a HookSet from which the properties are being extracted.
 			{Array} property: a property to restrict the current set of hooks.
 			{HookSet} next: a hook which has been +'d with this one.
 

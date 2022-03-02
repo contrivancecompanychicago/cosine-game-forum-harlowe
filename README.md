@@ -19,7 +19,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where the `command` datatype didn't work at all.
  * Fixed a bug where the `(unpack:)` macro wouldn't work at all unless the destination variables were expressed as typed variables (such as `num-type $a`).
  * Fixed a bug where `(folded:)` couldn't be provided with a lambda which had `where`, `via` and `making` clauses, where the `making` clause was between the `where` and `via` clauses.
- * It is now an error to give two or more typed variables with the same name inside a `(p:)` string pattern (used as an `(unpack:)` destination or in another such macro).
+ * Now, `(rerun:?passage)` will, as expected, re-run the entire passage's code instead of simply erasing it.
  * `each` lambdas are now called "each…" lambdas (instead of just "where…" lambdas) in the Debug Mode panel.
  * Fixed a bug where `'s` and `of` sometimes wouldn't be syntax-highlighted correctly.
  * The `it` identifier is now cleared (to the default value of 0) whenever the player changes passages.
@@ -45,7 +45,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Slightly improved performance of rendering and re-rendering hooks.
  * Now, the most recent 16 visited passages (as well as all "header", "footer", "debug-header" and "debug-footer" tagged passages), have their source code's syntax trees cached, to save on rendering time if they're visited or shown by `(display:)` again within 16 turns.
 
-##### Errors
+##### Error Messages
 
  * As an added bonus from rewriting the macro-running code (see above), the "Javascript error message" has been completely removed, and a proper Harlowe error message will appear in all cases from now on. This eliminates various highly misleading error messages, such as `missing ] after element list`, and replaces them with something more understandable.
  * Various other error messages have had their wording altered to be a bit more specific.
@@ -63,6 +63,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
    * Similarly, you may now give one value to `(rotated-to:)` after the lambda, instead of a minimum of two - however, if the given lambda doesn't match it, then an error will still result.
  * Instead of producing an error, `(undo:)` and `(link-undo:)` now take an optional second string, similar to `(link-storylet:)`, which is shown instead of the link if undos aren't available.
  * `(source:)`, `(v6m-source:)` and Debug Mode now represent built-in Harlowe colours (`yellow`, `blue` etc.) as their keywords, rather than a `(hsl:)` macro call.
+ * It is now an error to give two or more typed variables with the same name inside a `(p:)` string pattern (used as an `(unpack:)` destination or in another such macro).
+ * It is now an error to give `?page` to `(show:)`, `(hide:)`, or `(rerun:)`.
 
 ##### Compatibility
 

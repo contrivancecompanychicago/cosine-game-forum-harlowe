@@ -2295,6 +2295,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 		If you wish to re-run an already visible hook, use (rerun:). Note that hooks whose visible contents have been replaced with
 		nothing, such as via `(replace: ?1)[]`, are still considered "visible".
 
+		If you give ?page to (show:), an error will result - the entire page can't ever be "hidden".
+
 		If you wish to reveal a hook after a number of other links have been clicked and removed, such as those created
 		by (link-reveal:) or (click:), you may find the (more:) macro to be convenient.
 
@@ -2345,6 +2347,11 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 
 		(rerun:), unlike (show:), will not work on hidden hooks until they become visible using (show:) or (link-show:).
 
+		If you give ?page to (rerun:), an error will result. If you wish to "rerun" the entire page, consider using (restart:).
+
+		If you give ?passage to (rerun:), the entire passage's code will be re-rendered. This will *not* change the value of the `visits`
+		keyword, or count as an additional turn in any way.
+
 		If you want to rerun a hook multiple times based on elapsed real time, use the (live:) macro.
 
 		See also:
@@ -2358,7 +2365,23 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			The fact that these are variadic macros is unnecessary (due to the existence of the + operator
 			on HookSets) and inconsistent with other macros like (click:), but, nevertheless...
 		*/
-		noop,
+		(...hooks) => {
+			/*
+				This slightly tall check determines if at any point a ?page hook was involved in
+				any of these HookSets' creations.
+			*/
+			let error;
+			hooks.some(function recur({selector, next}) {
+				if (selector.type === "name" && selector.data === "page") {
+					error = TwineError.create('macrocall', `You can't (hide:) the ?page. Sorry.`);
+					return true;
+				}
+				if ((selector.type === "base" && recur(selector.data)) || (next && recur(next))) {
+					return true;
+				}
+			});
+			return error;
+		},
 		(cd, section, ...hooks) => {
 			hooks.forEach(hook => hook.forEach(section, elem => {
 				const data = elem.data('hidden');
@@ -2385,8 +2408,19 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 				}
 				else {
 					const tempVariables = elem.data('tempVariables');
+					const isPassage = elem.tag() === "tw-passage";
+					const source = (isPassage ? Passages.getTree(State.passage) : elem.data('originalSource') || '');
+
+					/*
+						If this is rerunning the <tw-passage>, we must detach the sidebar, which (as of Harlowe 3.3) is a child of the <tw-passage>
+						and is created by Engine, not Passages.
+					*/
+					let sidebar;
+					if (isPassage) {
+						sidebar = elem.find('tw-sidebar').detach();
+					}
 					section.renderInto("", null,
-						assign({}, cd, { append: "replace", source: elem.data('originalSource') || '', target: elem }),
+						assign({}, cd, { append: "replace", source, target: elem }),
 						/*
 							Since the shown hook needs access to the tempVariables that are available at its location, retrieve
 							the tempVariables data placed on it by Section.execute(), creating a new child scope using Object.create()
@@ -2394,6 +2428,12 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 						*/
 						tempVariables && Object.create(tempVariables)
 					);
+					/*
+						Reattach the preserved <tw-sidebar>.
+					*/
+					if (sidebar) {
+						elem.prepend(sidebar);
+					}
 				}
 			}));
 			return cd;
@@ -2434,6 +2474,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			If you want to remove the hook's contents all together, and re-create it anew later, consider using (replace:) and (rerun:)
 			rather than (show:) and (hide:).
 
+			If you give ?page to (hide:), an error will result - the entire page can't ever be "hidden".
+
 			This command can't have changers attached - attempting to do so will produce an error.
 
 			See also:
@@ -2443,25 +2485,43 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			#showing and hiding
 		*/
 		("hide",
-			noop,
-			(section, ...hooks) => {
-				hooks.forEach(hook => hook.forEach(section, elem => {
-					/*
-						The test for whether a hook has been shown is, simply, whether it has "hidden" data.
-						The (show:) macro only works on hidden hooks, and the (rerun:) macro only works on non-hidden hooks.
-					*/
-					if (Boolean(elem.data('hidden'))) {
-						/*
-							Just as with (show:), this doesn't produce an error when run on already-hidden hooks.
-						*/
-						return;
+			(...hooks) => {
+				/*
+					This slightly tall check determines if at any point a ?page hook was involved in
+					any of these HookSets' creations.
+				*/
+				let error;
+				hooks.some(function recur({selector, next}) {
+					if (selector.type === "name" && selector.data === "page") {
+						error = TwineError.create('macrocall', `You can't (hide:) the ?page. Sorry.`);
+						return true;
 					}
-					/*
-						To hide a hook, such that its contents aren't affected by or visible to any other elements:
-						Take its .contents(), detach it, and make it the 'hidden' data.
-					*/
-					elem.data('hidden', elem.contents().detach());
-				}));
+					if ((selector.type === "base" && recur(selector.data)) || (next && recur(next))) {
+						return true;
+					}
+				});
+				return error;
+			},
+			(section, ...hooks) => {
+				for (let hook of hooks) {
+					hook.forEach(section, elem => {
+						/*
+							The test for whether a hook has been shown is, simply, whether it has "hidden" data.
+							The (show:) macro only works on hidden hooks, and the (rerun:) macro only works on non-hidden hooks.
+						*/
+						if (Boolean(elem.data('hidden'))) {
+							/*
+								Just as with (show:), this doesn't produce an error when run on already-hidden hooks.
+							*/
+							return;
+						}
+						/*
+							To hide a hook, such that its contents aren't affected by or visible to any other elements:
+							Take its .contents(), detach it, and make it the 'hidden' data.
+						*/
+						elem.data('hidden', elem.contents().detach());
+					});
+				}
 			},
 			[rest(HookSet)], false /* Can't have attachments.*/)
 
