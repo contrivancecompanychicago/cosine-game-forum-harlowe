@@ -410,11 +410,11 @@ define(['jquery', 'markup', 'utils/polyfills'],
 			transitionTime = transitionTime || defaultTransitionTime(transIndex);
 
 			/*
-				If the element is not a tw-hook, tw-passage or tw-expression, we must
+				If the element is not a tw-hook, tw-passage, tw-sidebar or tw-expression, we must
 				wrap it in a temporary element first, which can thus be
 				animated using CSS.
 			*/
-			const mustWrap = el.length > 1 || !Utils.childrenProbablyInline(el) || !['tw-hook','tw-passage','tw-expression'].includes(el.tag());
+			const mustWrap = el.length > 1 || !Utils.childrenProbablyInline(el) || !['tw-hook','tw-passage','tw-sidebar','tw-expression'].includes(el.tag());
 			/*
 				As mentioned above, we must, in some cases, wrap the nodes in containers.
 			*/
@@ -482,11 +482,11 @@ define(['jquery', 'markup', 'utils/polyfills'],
 			}
 			transitionTime = transitionTime || defaultTransitionTime(transIndex);
 			/*
-				If the element is not a tw-hook, tw-passage or tw-expression, we must
+				If the element is not a tw-hook, tw-passage, tw-sidebar or tw-expression, we must
 				wrap it in a temporary element first, which can thus be
 				animated using CSS.
 			*/
-			const mustWrap = el.length > 1 || !Utils.childrenProbablyInline(el) || !['tw-hook','tw-passage','tw-expression'].includes(el.tag());
+			const mustWrap = el.length > 1 || !Utils.childrenProbablyInline(el) || !['tw-hook','tw-passage','tw-sidebar','tw-expression'].includes(el.tag());
 			/*
 				As mentioned above, we must, in some cases, wrap the nodes in containers.
 			*/
@@ -547,7 +547,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 						take their existing animation delay and decrease it by the delay.
 						(Negative delays expedite the animation conveniently.)
 					*/
-					el.find('tw-transition-container').each((_,child) => {
+					el.find('tw-transition-container, .transition-in, .transition-out').each((_,child) => {
 						child = $(child);
 						child.css('animation-delay', (cssTimeUnit(child.css('animation-delay') || 0) - elapsedRealTime) + "ms");
 					});

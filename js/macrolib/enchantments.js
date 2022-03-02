@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages', 'macros', 'datatypes/hookset', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/changedescriptor', 'internaltypes/enchantment', 'internaltypes/twineerror'],
-($, Utils, {is}, Engine, State, Passages, Macros, HookSet, ChangerCommand, Lambda, ChangeDescriptor, Enchantment, TwineError) => {
+define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages', 'macros', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/changedescriptor', 'internaltypes/enchantment', 'internaltypes/twineerror'],
+($, Utils, {is}, Engine, State, Passages, Macros, HookSet, CodeHook, ChangerCommand, Lambda, ChangeDescriptor, Enchantment, TwineError) => {
 
 	const {either,rest,optional} = Macros.TypeSignature;
 	/*
@@ -478,16 +478,19 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 				(append:), (prepend:), (show:), (rerun:), (more:), (replace-with:)
 
 				Added in: 1.0.0
-				#revision
+				#revision 1
 			*/
 			/*d:
-				(replace-with: String) -> Changer
+				(replace-with: String or CodeHook) -> Changer
 
-				A counterpart to (append-with:) and (prepend-with:), this replaces the entirety of the attached hook with the given string of prose.
+				A counterpart to (append-with:) and (prepend-with:), this replaces the entirety of the attached hook with the contents of the given string (or code hook).
 
 				Example usage:
 				* `(set: $vitalInfoChanger to it + (replace-with:"**This sentence may contain mature content, so we've excised it from your mind.**"))` causes
 				the changer in $vitalInfoChanger, which may have been used previously in the story, to replace the hooks' text with a censorship notification.
+				* `(set: $locked to [(text-color:red)[Locked Content] - Beat the game to unlock])` creates a changer which replaces the attached hook with
+				`[(text-color:red)[Locked Content] - Beat the game to unlock]`. This is mostly similar to passing the string `"(text-color:red)[Locked Content] - Beat the game to unlock"`,
+				but the contents of the code hook are syntax-highlighted in the passage editor, making it easier to read. 
 
 				Rationale:
 				This changer macro may seem unintuitive and without obvious purpose - what is the point of a changer that changes a hook so drastically that
@@ -508,7 +511,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 				(append:), (prepend:), (append-with:), (prepend-with:), (show:)
 
 				Added in: 3.2.0
-				#revision
+				#revision 4
 			*/
 			"replace",
 			/*d:
@@ -530,15 +533,17 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 				(replace:), (prepend:), (show:), (rerun:), (more:), (append-with:)
 
 				Added in: 1.0.0
-				#revision
+				#revision 2
 			*/
 			/*d:
-				(append-with: String) -> Changer
+				(append-with: String or CodeHook) -> Changer
 
-				Creates a changer that, when attached to a hook, adds the given string of code to the end of the hook.
+				Creates a changer that, when attached to a hook, adds the contents of the given string (or code hook) to the end of the hook.
 
 				Example usage:
 				* `(set: $cutie to (append-with:"~♡")+(color:red+white))` creates a changer that causes any attached hook to become pink and have `~♡` at the end.
+				* `(set: $dateStamp to (append-with:[<br>Posted on: $date]))` creates a changer which appends `<br>Posted on: $date` to the end of the attached hook.
+				This is mostly identical to providing the string `"<br>Posted on: $date"`, but the contents of the code hook are syntax-highlighted in the passage editor, making it easier to read.
 				* `(set: $mattias to (prepend-with:'MATTIAS:"')+(append-with:'"'))` creates a changer that causes any attached hook to be surrounded with `MATTIAS:"`
 				and `"`, which would be useful for character dialogue.
 
@@ -552,7 +557,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 
 				Details:
 				The way this changer amends the text of the hook is similar to how (append:) amends hooks. To be precise, the full text of the hook is
-				rendered before it is amended to with these changers. This means that, among other things, code structures can't cross the boundary between
+				rendered before it is amended with these changers. This means that, among other things, code structures can't cross the boundary between
 				the appended text and the hook - `(append-with:"</b>")[<b>Bold]` will NOT work as it seems - the `<b>` tag will not be matched with the `</b>`
 				in the appended text.
 
@@ -567,7 +572,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 				(append:), (replace:), (prepend-with:), (replace-with:), (show:)
 
 				Added in: 3.2.0
-				#revision
+				#revision 5
 			*/
 			"append",
 			/*d:
@@ -590,15 +595,19 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 				(replace:), (append:), (show:), (rerun:), (more:), (prepend-with:)
 
 				Added in: 1.0.0
-				#revision
+				#revision 3
 			*/
 			/*d:
-				(prepend-with: String) -> Changer
+				(prepend-with: String or CodeHook) -> Changer
 
-				Creates a changer that, when attached to a hook, adds the given string of code to the start of the hook.
+				Creates a changer that, when attached to a hook, adds the contents of a given string (or code hook) to the start of the hook.
 
 				Example usage:
-				* `(set: $commandPrompt to (prepend-with:">")+(font:"Courier"))`
+				* `(set: $commandPrompt to (prepend-with:">")+(font:"Courier"))` creates a changer which makes the attached hook use a monospace font, with > placed at the start.
+				* `(set: $dateStamp to (prepend-with:[**$location, $date.**<br>]))` creates a changer which prepends `**$location, $date.**<br>` to the start of the attached hook.
+				This is mostly identical to providing the string `"**$location, $date.**<br>"`, but the contents of the code hook are syntax-highlighted in the passage editor, making it easier to read.
+				* `(set: $mattias to (prepend-with:'MATTIAS:"')+(append-with:'"'))` creates a changer that causes any attached hook to be surrounded with `MATTIAS:"`
+				and `"`, which would be useful for character dialogue.
 
 				Rationale:
 				Some lines of prose you write in your story will tend to have identical beginnings, be they punctuation, dialogue tags, or otherwise,
@@ -610,9 +619,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 
 				Details:
 				The way this changer amends the text of the hook is similar to how (prepend:) amends hooks. To be precise, the full text of the hook is
-				rendered before it is amended to with these changers. This means that, among other things, code structures can't cross the boundary between
-				the appended text and the hook - `(append-with:"</b>")[<b>Bold]` will NOT work as it seems - the `<b>` tag will not be matched with the `</b>`
-				in the appended text.
+				rendered before it is amended with these changers. This means that, among other things, code structures can't cross the boundary between
+				the prepended text and the hook - `(prepend-with:"<b>")[Bold</b>]` will NOT work as it seems - the `<b>` tag will not be matched with the `</b>`.
 
 				Multiple (append-with:) and (prepend-with:) changers can be added together. When this combined changer is attached to a hook,
 				each constituent changer is applied in left-to-right order. So, `(prepend-with:"RE:")+(prepend-with:"FWD:")[ARE YOUR EYES UPSIDE-DOWN?]`
@@ -625,7 +633,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 				(append:), (replace:), (prepend-with:), (replace-with:), (show:)
 
 				Added in: 3.2.0
-				#revision
+				#revision 6
 			*/
 			"prepend"
 		];
@@ -693,10 +701,16 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 					The "appendSource" property of ChangeDescriptors allows multiple (append-with:)s to be
 					joined together.
 				*/
+				/*
+					If the message is a CodeHook, use its lexed code tree.
+				*/
+				if (CodeHook.isPrototypeOf(addendum)) {
+					addendum = addendum.code;
+				}
 				desc.appendSource = (desc.appendSource || []).concat({source: addendum, append:e});
 				return desc;
 			},
-			String
+			either(CodeHook, String)
 		);
 	});
 	

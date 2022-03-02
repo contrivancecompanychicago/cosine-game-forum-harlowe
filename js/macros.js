@@ -245,16 +245,6 @@ define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changer
 			}
 
 			/*
-				Passing a hook as an argument to a changer gives a unique hint.
-			*/
-			if (CodeHook.isPrototypeOf(arg) && returnType === "Changer") {
-				return TwineError.create(
-					"syntax", "Please put this hook outside the parentheses of the changer macro, not inside it.",
-					"Hooks should appear after a macro" + (custom ? '.' : ": " + invocation + "[Some text]")
-				);
-			}
-
-			/*
 				A rare early error check can be made up here: if ind >= typeSignature.length,
 				and Rest is not in effect, then too many params were supplied.
 			*/
@@ -315,6 +305,16 @@ define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changer
 						"datatype",
 						name + "'s " + nth(ind + 1) + " value, " + objectName(arg) + ", is not valid data for this macro.",
 						signatureInfo
+					);
+				}
+
+				/*
+					Passing a hook as an argument to a changer gives a unique hint.
+				*/
+				if (CodeHook.isPrototypeOf(arg) && returnType === "Changer") {
+					return TwineError.create(
+						"syntax", "Please put this hook outside the parentheses of " + name + ", not inside it.",
+						"Hooks should appear after a macro" + (custom ? '.' : ": " + invocation + "[Some text]")
 					);
 				}
 

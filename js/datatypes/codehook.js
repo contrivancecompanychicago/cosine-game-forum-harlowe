@@ -54,8 +54,6 @@ define([], () => {
 		},
 
 		/*
-			Passages could do this, too, but there isn't currently much call for it, since they're usually
-			visited only a few times.
 			Note that revived values from (loadgame:) don't have HTML, so they need to be
 			compiled anyway...
 		*/

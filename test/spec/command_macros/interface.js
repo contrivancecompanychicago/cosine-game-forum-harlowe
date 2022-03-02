@@ -48,7 +48,7 @@ describe("interface macros", function(){
 				var p = runPassage("(t8n:'slideleft')("+name+":'bar','baz','qux')");
 				expect(p.find('tw-link').text()).toBe('bar');
 				p.find('tw-link').click();
-				expect(p.find('tw-transition-container[data-t8n="slideleft"]').length).toBe(1);
+				expect(p.find('.transition-in[data-t8n="slideleft"]').length).toBe(1);
 			});
 			it("works with string enchantment", function(done) {
 				var p = runPassage("("+name+":'foobar','bazfoo','fooqux')(enchant:'foo',(background:white))");

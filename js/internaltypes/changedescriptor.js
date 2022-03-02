@@ -435,24 +435,25 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 				Check to see that the given jQuery method in the descriptor
 				actually exists, and potentially tweak the name if it does not.
 			*/
-			if (!(append in target)) {
+			let appendMethod = append;
+			if (!(appendMethod in target)) {
 				/*
 					(replace:) should actually replace the interior of the hook with the
 					content, not replace the hook itself (which is what .replaceWith() does).
 					So, we need to do .empty() beforehand, then change the method to "append"
 					(though "prepend" will work too).
 				*/
-				if (append === "replace") {
+				if (appendMethod === "replace") {
 					/*
 						There's one exception to the above, however - if the target is a text node
 						(such as in (enchant:?hook's chars)) then replaceWith is fine.
 					*/
 					if (target[0] instanceof Text) {
-						append = "replaceWith";
+						appendMethod = "replaceWith";
 					}
 					else {
 						target.empty();
-						append = "append";
+						appendMethod = "append";
 					}
 				}
 				/*
@@ -460,7 +461,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 					hook, then I'd change append to "replaceWith".
 				*/
 				else {
-					impossible("ChangeDescriptor.render", "The target doesn't have a '" + append + "' method.");
+					impossible("ChangeDescriptor.render", "The target doesn't have a '" + appendMethod + "' method.");
 					return $();
 				}
 			}
@@ -469,11 +470,11 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 				in addition to the above.
 			*/
 			if (target[0] instanceof Text) {
-				if (append === "append") {
-					append = "after";
+				if (appendMethod === "append") {
+					appendMethod = "after";
 				}
-				if (append === "prepend") {
-					append = "before";
+				if (appendMethod === "prepend") {
+					appendMethod = "before";
 				}
 			}
 			/*
@@ -530,15 +531,15 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 				rendered elements, but assume that all the elements have a parent item, so that e.g.
 				.insertBefore() can be performed on them.
 				
-				* Also, and perhaps more saliently, the next block uses .find() to select
+				* Also, and perhaps more saliently, Section uses .find() to select
 				<tw-macro> elements etc., which assumes that the jQuery object has a single
 				container element at its "root level".
 				
-				* Finally, sensor macros' interval functions deactivate themselves if the
+				* Finally, live macros' interval functions deactivate themselves if the
 				section is disconnected from Utils.storyElement, and if they initially
 				run without being connected, they will immediately deactivate.
 			*/
-			target[append](
+			target[appendMethod](
 				// As mentioned above, dom may be empty if append is "remove".
 				dom.length ? dom : undefined
 			);

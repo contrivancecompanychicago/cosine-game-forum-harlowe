@@ -58,11 +58,11 @@ describe("live macros", function() {
 			},20);
 		});
 		it("works with (transition:)", function(done) {
-			var p = runPassage("(t8n:'pulse')+(t8n-time:2s)+(event: when $a is 2)[Wow](link:'foo')[(set:$a to 2)]");
+			var p = runPassage("(t8n:'pulse')+(t8n-time:12s)+(event: when $a is 2)[Wow](link:'foo')[(set:$a to 2)]");
 			expect(p.text()).toBe("foo");
 			p.find('tw-link').click();
 			setTimeout(function() {
-				expect($('tw-story tw-transition-container[data-t8n="pulse"]').length).toBe(1);
+				expect($('tw-story .transition-in[data-t8n="pulse"]').length).toBe(1);
 				done();
 			},20);
 		});

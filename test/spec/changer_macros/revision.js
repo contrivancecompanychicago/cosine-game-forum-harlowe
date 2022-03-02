@@ -345,13 +345,15 @@ describe("revision macros", function() {
 	});
 	['append','prepend'].forEach(function(name,index) {
 		describe("the (" + name + "-with:) macro", function() {
-			it("produces a changer that " + name + "s its string to the source of the hook", function() {
+			it("produces a changer that " + name + "s its string or code hook to the source of the hook", function() {
 				expect("(" + name + "-with:'hehe')[he]").markupToPrint('hehehe');
+				expect("(" + name + "-with:[hehe])[he]").markupToPrint('hehehe');
 				expect("(" + name + "-with:'foo')[bar]").markupToPrint(index ? 'foobar' : 'barfoo');
 				expect("(print:(" + name + "-with:'hehe') is a changer)").markupToPrint('true');
 			});
-			it("won't cause structures to cross boundaries between the string and the source", function() {
+			it("won't cause structures to cross boundaries between the string or code hook, and the source", function() {
 				expect(runPassage("(" + name + "-with:'a//b')[c//d]").find('i').length).toBe(0);
+				expect(runPassage("(" + name + "-with:[a//b])[c//d]").find('i').length).toBe(0);
 			});
 			xit("works with (link:)", function() {
 				var p = runPassage("(" + name + "-with:'foo')+(link:'baz')[bar]");
@@ -367,6 +369,7 @@ describe("revision macros", function() {
 	describe("the (replace-with:) macro", function() {
 		it("produces a changer that replaces its string with the source of the hook", function() {
 			expect("(replace-with:'hehe')[he]").markupToPrint('hehe');
+			expect("(replace-with:[hehe])[he]").markupToPrint('hehe');
 			expect("(replace-with:'foo')[bar]").markupToPrint('foo');
 			expect("(print:(replace-with:'hehe') is a changer)").markupToPrint('true');
 		});
