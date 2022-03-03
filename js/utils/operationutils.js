@@ -190,7 +190,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 			if (item.length + ret.length <= maxLength) {
 				ret += (i > 0 && i === list.length-1 ? " and " : '') + item + (i < list.length-1 ? ", " : '');
 			} else {
-				ret += (i > 0 ? " and " : '') + plural(list.length - i, (i > 0 ? 'other ' : ' ') + itemNoun);
+				ret += (i > 0 ? " and " : '') + plural(list.length - i, (i > 0 ? 'other ' : '') + itemNoun);
 				break;
 			}
 			i+=1;

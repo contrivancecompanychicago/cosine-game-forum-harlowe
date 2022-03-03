@@ -307,9 +307,10 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 
 			#transclusion 6
 		*/
-		// Since (erase-past:) can't ever bring the pastLength to 0 BEFORE another passage is rendered,
-		// this check should be safe.
-		if (State.pastLength <= 0) {
+		/*
+			Only run the startup passage if no past turns exist and if no turns were erased.
+		*/
+		if (State.pastLength <= 0 && State.turns === 1) {
 			for(let p of Passages.getTagged('startup')) {
 				setupPassageElement(source, 'startup', p);
 			}

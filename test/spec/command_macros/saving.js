@@ -412,12 +412,16 @@ describe("save macros", function() {
 			}, 90);
 		});
 		it("can restore variables even after using (erase-past:)", function(done) {
-			runPassage("(set:str-type $foo to 'A')", "uno");
+			runPassage("(set:str-type $foo to (str-repeated:40,'A'))(set:dm-type $baz to (dm:$foo,'1'))", "uno");
+			runPassage("(set:$foo to it + 'C', $baz's B to 2)","tres");
+			runPassage("(set:$foo to it + 'D', $baz's C to 2)","cuatro");
 			runPassage("(erase-past:-1)(set:$foo to it+'B')(savegame:'1','Filename')", "dos");
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
+				expect("$foo(print:$baz's C)").markupToPrint("A".repeat(40) + "CDB2");
 				expect("(set:num-type $bar to 2)").not.markupToError();
 				expect("(set:num-type $foo to 2)").markupToError();
+				expect("$foo").markupToPrint("A".repeat(40) + "CDB");
 				done();
 			}, 20);
 		});
@@ -464,6 +468,16 @@ describe("save macros", function() {
 					expect("(history:)").markupToPrint('baz,qux,corge,grault');
 					done();
 				}, 90);
+			}, 90);
+		});
+		it("doesn't cause startup passages to re-run even after using (erase-past:)", function(done) {
+			runPassage("(Set:$foo to 76)", "foo1");
+			createPassage("(Set:$foo to 51)", "foo2", ["startup"]);
+			runPassage("(erase-past:-1)(savegame:'1')",'grault');
+			expect("(loadgame:'1')").not.markupToError();
+			setTimeout(function() {
+				expect("$foo").not.markupToPrint("51");
+				done();
 			}, 90);
 		});
 		it("doesn't disrupt (history:)'s cache even after using (erase-past:)", function(done) {

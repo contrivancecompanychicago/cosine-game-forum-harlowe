@@ -427,49 +427,80 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 	/*
 		This is used to flatten a timeline into a single moment, which is either the present (for reconstructCurrentVariables),
 		or a past moment (for erasePast).
+
+		Assumption: this always flattens onto a single moment at the "end" of the array of moments.
 	*/
 	const flattenMomentVariables = (array, dest) => {
 		const varDest = dest.variables;
-		
-		for (let i = 0; i < array.length; i += 1) {
+		/*
+			Variable deletions (which are currently not possible as of Harlowe 3.3.0) are recorded here,
+			preventing earlier moments' variables from overwriting these names.
+		*/
+		const deletions = create(null);
+		/*
+			This iterates backwards through the timeline, adding missing variables to the flat dest moment.
+
+		*/
+		for (let i = array.length - 1; i >= 0; i -= 1) {
 			const moment = array[i];
 			/*
-				Each moment's mockVisits, mockTurns and seed replaces the previous.
+				mockVisits, mockTurns, seedIter and seed overshadow previous turns' values.
 			*/
 			for (let name of ["mockVisits","mockTurns","seed","seedIter"]) {
-				moment[name] !== undefined && (dest[name] = moment[name]);
+				hasOwnProperty.call(moment,name) && !hasOwnProperty.call(dest,name) && (dest[name] = moment[name]);
 			}
 			/*
-				These, however, are cumulative.
+				These, however, are cumulative across turns.
 			*/
 			moment.turns !== undefined      && (dest.turns = (dest.turns || 0) + moment.turns);
 			dest.visits || (dest.visits = []);
-			moment.visits !== undefined     && dest.visits.push(...moment.visits);
+			moment.visits !== undefined     && (dest.visits = moment.visits.concat(dest.visits));
 			/*
 				"visits" only refers to past visits, such as those given to (history:),
 				so the final moment's passage name shouldn't be included.
 			*/
 			if (i !== array.length-1) {
-				dest.visits.push(moment.passage);
+				dest.visits.unshift(moment.passage);
 			}
 			for (let prop in moment.variables) {
 				/*
 					The TwineScript_TypeDefs object (of inaccessible/non-writable data structures) doesn't need to have its contents cloned.
 				*/
 				if (prop === "TwineScript_TypeDefs") {
-					assign(varDest.TwineScript_TypeDefs, moment.variables[prop]);
+					varDest[prop] || (varDest[prop] = create(null));
+					for (let varName in moment.variables[prop]) {
+						varDest[prop][varName] || (varDest[prop][varName] = moment.variables[prop][varName]);
+					}
 				}
-				else if (!prop.startsWith("TwineScript_")) {
+				else if (!prop.startsWith("TwineScript_") && !(prop in varDest)) {
 					/*
 						The JSON value "null" represents variables deleted by (move:).
 					*/
 					if (moment.variables[prop] === null) {
-						delete varDest[prop];
+						deletions[prop] = true;
 					}
-					else {
+					if (!deletions[prop]) {
 						varDest[prop] = moment.variables[prop];
+						/*
+							If this variable had a valueRef at this turn, and the valueRef is NOT
+							a "via" valueRef (which uses 'it' to reference past turns), then save the valueRef as well.
+						*/
+						const ref = moment.valueRefs[prop];
+						if (ref && !('via' in ref)) {
+							dest.valueRefs[prop] || (dest.valueRefs[prop] = ref);
+						}
 					}
 				}
+			}
+		}
+		/*
+			Having flattened it down, the final moment shouldn't have any valueRefs remaining.
+			This code removes any that remain.
+		*/
+		for (let prop in dest.valueRefs) {
+			const ref = dest.valueRefs[prop];
+			if (ref && ('via' in ref)) {
+				delete dest.valueRefs[prop];
 			}
 		}
 	};
@@ -638,7 +669,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			*/
 			recent = timeline.length - 1;
 			/*
-				Flatten the excised moments onto the first moment.
+				Flatten the excised moments onto the new first moment.
 			*/
 			const first = timeline[0];
 			/*
@@ -1215,19 +1246,18 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 	*/
 	State.deserialise = (section, str) => {
 		let newTimeline;
-		const genericError = "The save data is unintelligible.";
 		
 		try {
 			newTimeline = JSON.parse(str);
 		}
 		catch(e) {
-			return Error(genericError);
+			return Error("The save data is unintelligible.");
 		}
 		/*
 			Verify that the timeline is an array.
 		*/
 		if (!isArray(newTimeline)) {
-			return Error(genericError);
+			return Error("The save data isn't a sequence of past turns.");
 		}
 		
 		for(let i = 0; i < newTimeline.length; i += 1) {

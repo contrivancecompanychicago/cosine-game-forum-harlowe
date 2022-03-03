@@ -2339,7 +2339,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		altered by providing a number.
 
 		Example usage:
-		`(when: time > 15s)[You'd better get going now, pardner. (animate:?passage's links, "rumble")]` causes all of the links in the passage to briefly
+		`(after: 15s)[You'd better get going now, pardner. (animate:?passage's links, "rumble")]` causes all of the links in the passage to briefly
 		shake using the "rumble" transition after 15 seconds have passed.
 
 		Rationale:
