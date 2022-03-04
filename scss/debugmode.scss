@@ -398,12 +398,13 @@ tw-debugger {
 		left:-$borderwidth;
 		right: 0;
 		padding:1em;
-		max-height:40vh;
 		overflow-y: scroll;
 		overflow-x: hidden;
 
 		// Design
 		border:inherit;
+		// This box-sizing is to ensure that jQuery .height() works correctly.
+		box-sizing:content-box;
 		background-color:$bg2;
 		border-bottom: solid $bgDimmest2 $borderwidth;
 		border-top-left-radius: $borderradius;
@@ -497,6 +498,9 @@ tw-debugger {
 	.panel-storylets:not(.panel-urgent) .storylet-urgent {
 		display:none;
 	}
+	.storylet-exclusive, .storylet-urgent, .storylet-open {
+		text-align:center;
+	}
 	.panel-variables-bottom {
 		padding-top:5px;
 	}
@@ -587,9 +591,9 @@ tw-debugger {
 		border-radius: 0px 0px 0.5em 0.5em;
 		border-top: none;
 	}
-	.resizer {
+	.resizer-h {
 		position: absolute;
-		height: 3em;
+		height: 14em;
 		border-left: 2px solid $bgDimmest2;
 		border-right: 2px solid $bgDimmest2;
 		top: 10px;
@@ -597,7 +601,20 @@ tw-debugger {
 		width: 8px;
 		cursor: ew-resize;
 	}
-	&.theme-dark .resizer { border-color:transparent $bgDimmest; }
+	&.theme-dark .resizer-h { border-color:transparent $bgDimmest; }
+	.resizer-v {
+		position: absolute;
+		height: 8px;
+		border-top: 2px solid $bgDimmest2;
+		border-bottom: 2px solid $bgDimmest2;
+		margin-bottom: 4px;
+		top: 4px;
+		left: 10px;
+		width: 95%;
+		cursor: ns-resize;
+		box-sizing:border-box;
+	}
+	&.theme-dark .resizer-v { border-color:$bgDimmest transparent; }
 
 	// Used for marking highlighed syntax
 	mark {

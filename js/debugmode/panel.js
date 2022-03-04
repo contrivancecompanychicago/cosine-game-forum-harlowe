@@ -5,7 +5,7 @@ define(['jquery', 'utils/naturalsort'], ($, NaturalSort) => {
 		whenever the game state changes.
 	*/
 	const Sort = NaturalSort();
-	const Panel = Object.freeze({
+	const Panel = Object.seal({
 		/*
 			rowWrite is a function which produces a new DOM structure representing the passed-in data, or freshens up
 				an existing row if passed in
@@ -14,7 +14,7 @@ define(['jquery', 'utils/naturalsort'], ($, NaturalSort) => {
 			tabUpdate is an overridable function for updating the tab's name.
 		*/
 		create({className, rowWrite, rowCheck, rowSort, columnHead, tabName, tabNameCounter = true, tabUpdate}) {
-			const panel = $(`<div class='panel panel-${className}' hidden><table class='panel-rows'></table></div>`);
+			const panel = $(`<div class='panel panel-${className}' style='${this.defaultMaxHeight ? 'max-height:' + this.defaultMaxHeight + 'px' : ''}' hidden><div class="resizer-v"></div><table class='panel-rows'></table></div>`);
 			const tab = $(`<button class='tab tab-${className}'>${tabNameCounter ? `0 ${tabName}s` : tabName}</button>`);
 			tab.click(() => {
 				tab.toggleClass('enabled');
@@ -113,6 +113,7 @@ define(['jquery', 'utils/naturalsort'], ($, NaturalSort) => {
 				this.sort(sort.attr('data-col'), sort.attr('data-order'));
 			}
 		},
+		defaultMaxHeight: 300,
 	});
 	return Panel;
 });

@@ -672,19 +672,9 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 				Flatten the excised moments onto the new first moment.
 			*/
 			const first = timeline[0];
-			/*
-				A small problem emerges: if the new first moment has its own "seed", "seedIter" and other
-				values, those shouldn't be overwritten by flattenMomentVariables(). Currently,
-				rather than rewriting flattenMomentVariables more carefully, this #awkward-ly
-				stores those values and copies them back over afterward.
-			*/
-			const copy = assign(create(null), first);
 			flattenMomentVariables(excised, first);
-			for (let name of ["mockVisits","mockTurns","seed","seedIter"]) {
-				copy[name] && (first[name] = copy[name]);
-			}
 			/*
-				Also, because flattenMomentVariables won't put the final moment's "passage" into the visits
+				Because flattenMomentVariables won't put the final moment's "passage" into the visits
 				array yet (because "visits" only applies to past passages, as per (history:)) we must do it
 				ourselves here.
 			*/

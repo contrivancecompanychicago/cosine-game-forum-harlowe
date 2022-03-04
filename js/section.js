@@ -202,10 +202,7 @@ define([
 		*/
 		if (this.stackTop.evaluateOnly && result && (ChangerCommand.isPrototypeOf(result) || typeof result.TwineScript_Run === "function")) {
 			result = TwineError.create("syntax",
-				"I can't work out what "
-				+ (this.stackTop.evaluateOnly)
-				+ " should evaluate to, because it contains a "
-				+ ((ChangerCommand.isPrototypeOf(result)) ? "changer." : "command."),
+				`I can't work out what ${this.stackTop.evaluateOnly} should evaluate to, because it contains a ${(ChangerCommand.isPrototypeOf(result)) ? "changer." : "command."}`,
 				"Please rewrite this without putting changers or commands here."
 			);
 		}
@@ -263,7 +260,7 @@ define([
 								this with combining changers inline, a special elaboration is given for changer + command.
 							*/
 							typeof nextValue.TwineScript_Run === "function"
-								? "If you want to attach this changer to " + objectName(nextValue) + ", remove the + between them."
+								? `If you want to attach this changer to ${objectName(nextValue)}, remove the + between them.`
 								: "Changers can only be added to other changers."
 						);
 					}
@@ -314,15 +311,14 @@ define([
 				*/
 				else if (ChangerCommand.isPrototypeOf(nextValue)) {
 					expr.replaceWith(TwineError.create("operation",
-						"Changers like (" + result.macroName + ":) need to be combined using + between them.",
-						"Place the + between the changer macros, or the variables holding them."
-						+ " The + is absent only between a changer and its attached hook or command."
+						`Changers like (${result.macroName}:) need to be combined using + between them.`,
+						`Place the + between the changer macros, or the variables holding them. The + is absent only between a changer and its attached hook or command.`
 					).render(expr.attr('title')));
 					return;
 				}
 				else {
 					expr.replaceWith(TwineError.create("operation",
-						objectName(nextValue) + " can't have changers like (" + result.macroName + ":) attached.",
+						`${objectName(nextValue)} can't have changers like (${result.macroName}:) attached.`,
 						"Changers placed just before hooks, links and commands will attempt to attach, but in this case it didn't work."
 					).render(expr.attr('title')));
 					return;
@@ -346,8 +342,8 @@ define([
 			}
 			const macroCall = (expr.attr('title') || ("(" + result.macroName + ": ...)"));
 			expr.replaceWith(TwineError.create("syntax",
-				"The (" + result.macroName + ":) changer should be stored in a variable or attached to a hook.",
-				"Macros like this should appear before a hook: " + macroCall + "[Some text]"
+				`The (${result.macroName}:) changer should be stored in a variable or attached to a hook.`,
+				`Macros like this should appear before a hook: ${macroCall}[Some text]`
 			).render(expr.attr('title')));
 			return;
 		}
@@ -444,7 +440,7 @@ define([
 			}
 			else if (result) {
 				Utils.impossible("Section.runExpression",
-					"TwineScript_Run() returned a non-ChangeDescriptor " + typeof result + ': "' + result + '"');
+					`TwineScript_Run() returned a non-ChangeDescriptor ${typeof result}: "${result}"`);
 			}
 		}
 		/*
@@ -483,7 +479,7 @@ define([
 				expr.replaceWith(result.render(expr.attr('title')));
 			}
 			else if (typeof result !== "string" && !Array.isArray(result)) {
-				Utils.impossible("printBuiltinValue() produced a non-string non-array " + typeof result);
+				Utils.impossible(`printBuiltinValue() produced a non-string non-array ${typeof result}`);
 			}
 			else {
 				/*
@@ -496,7 +492,7 @@ define([
 			The only remaining values should be unattached changers, or booleans.
 		*/
 		else if (!(ChangerCommand.isPrototypeOf(result) || typeof result === "boolean")) {
-			Utils.impossible('Section.runExpression', "The expression evaluated to an unknown value: " + result);
+			Utils.impossible('Section.runExpression', `The expression evaluated to an unknown value: ${result}`);
 		}
 	}
 
@@ -537,11 +533,25 @@ define([
 			Store the target's current parent, to check that it's still in the DOM.
 		*/
 		/*
-			This closure runs every frame (that the section is unblocked) from now on, until
-			the target hook is gone.
 			The use of .bind() here is to save reinitialising the inner function on every call.
 		*/
-		const recursive = this.whenUnblocked.bind(this, () => {
+		let previousTimestamp = null;
+		let duration = delay;
+		let recursive;
+		const animFrameCallback = timestamp => {
+			if (previousTimestamp) {
+				duration -= (timestamp - previousTimestamp);
+			}
+			previousTimestamp = timestamp;
+			
+			if (duration > 0) {
+				requestAnimationFrame(animFrameCallback);
+				return;
+			}
+			duration = delay;
+			recursive();
+		};
+		recursive = this.whenUnblocked.bind(this, () => {
 			/*
 				We must do an inDOM check here in case a different (live:) macro
 				(or a (goto:) macro) caused this to leave the DOM between
@@ -567,7 +577,7 @@ define([
 				(live:) macros always render; (event:), (more:) and (after:) macros only render once the event fired.
 			*/
 			if (event && !eventFired[0]) {
-				setTimeout(recursive, delay);
+				requestAnimationFrame(animFrameCallback);
 				return;
 			}
 			this.renderInto(source, target, cd, tempVariables);
@@ -586,20 +596,20 @@ define([
 				return;
 			}
 			/*
-				Re-rendering will also cease if this section is removed from the DOM.
+				Re-rendering will also cease if this section was removed from the DOM,
+				possibly by a (replace:) inside this hook.
 			*/
 			if (!this.inDOM()) {
 				return;
 			}
+			
 			/*
 				Otherwise, resume re-running.
 			*/
-			setTimeout(recursive, delay);
+			requestAnimationFrame(animFrameCallback);
 		});
-		
-		setTimeout(recursive, delay);
+		requestAnimationFrame(animFrameCallback);
 	}
-
 
 	/*
 		Debug Mode event handlers (for adding and removing enchantments) are stored here by onEnchant().
@@ -757,7 +767,7 @@ define([
 							This can't be used during storylet speculation, for obvious reasons.
 						*/
 						if (ret.stackTop && ret.stackTop.evaluateOnly) {
-							return TwineError.create("operation", "'time' can't be used in " + ret.stackTop.evaluateOnly + ".");
+							return TwineError.create("operation", `'time' can't be used in ${ret.stackTop.evaluateOnly}.`);
 						}
 						return (Date.now() - ret.timestamp);
 					},
@@ -872,7 +882,7 @@ define([
 							This can't be used during storylet speculation, for obvious reasons.
 						*/
 						if (ret.stackTop && ret.stackTop.evaluateOnly) {
-							return TwineError.create("operation", "'exit' and 'exits' can't be used in " + ret.stackTop.evaluateOnly + ".");
+							return TwineError.create("operation", `'exit' and 'exits' can't be used in ${ret.stackTop.evaluateOnly}.`);
 						}
 						return ret.dom.find('tw-enchantment, tw-link')
 							.filter((_,e) => {
@@ -1387,7 +1397,7 @@ define([
 							if (evaluateOnly) {
 								expr.removeData('blockers').removeData('code').replaceWith(
 									TwineError.create("syntax",
-										"I can't use a macro like (prompt:) or (confirm:) in " + evaluateOnly + ".",
+										`I can't use a macro like (prompt:) or (confirm:) in ${evaluateOnly}.`,
 										"Please rewrite this without putting such macros here."
 									).render(expr.attr('title'), expr)
 								);
@@ -1537,10 +1547,13 @@ define([
 		/*
 			Callbacks that need to be run ONLY when the section is unblocked (such as (live:) events, interaction
 			element events, and (goto:)) are registered here. Or, if it's already unblocked, they're run immediately.
+
+			immediateFn is a variation used when 
+			TBW
 		*/
-		whenUnblocked(fn) {
+		whenUnblocked(fn, immediateFn) {
 			if (!this.stack.length || !this.stackTop.blocked) {
-				fn();
+				(immediateFn || fn)();
 				return;
 			}
 			this.unblockCallbacks = this.unblockCallbacks.concat(fn);

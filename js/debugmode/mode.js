@@ -23,8 +23,9 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 		darkMode: true,
 		fadePanel: true,
 		evalReplay: true,
-		// Width isn't specified until the resizer is first used.
+		// Width and panel height aren't specified until the resizer is first used.
 		width: null,
+		maxHeight: 400,
 	};
 	if (State.hasStorage) {
 		try {
@@ -35,6 +36,7 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 			// Fail silently
 		}
 	}
+	Panel.defaultMaxHeight = debugOptions.maxHeight;
 	function saveDebugModeOptions() {
 		if (State.hasStorage) {
 			try {
@@ -60,7 +62,7 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 <button class='show-invisibles'>🔍 Debug View</button>
 <button class='show-dom'><sup>&lt;</sup><sub>&gt;</sub> DOM View</button>
 <button class='close'>✖</button>
-<div class='resizer'>
+<div class='resizer-h'>
 </tw-debugger>`);
 	const debugTabs = debugElement.find('.tabs');
 	const showDOM = debugElement.find('.show-dom');
@@ -142,9 +144,9 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 		e.stopPropagation();
 	}));
 	/*
-		Set up the resizer area.
+		Set up the resizer areas.
 	*/
-	debugElement.find('.resizer').mousedown(e => {
+	debugElement.find('.resizer-h').mousedown(e => {
 		// It must be the left mouse button.
 		if (e.which !== 1) {
 			return true;
@@ -152,12 +154,29 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 		e.stopPropagation();
 		const { pageX:oldPageX } = e;
 		const oldWidth = debugElement.width();
-		root.on('mousemove.debugger-resizer', ({pageX}) => {
+		root.on('mousemove.debugger-resizer-h', ({pageX}) => {
 			debugElement.width(`${oldWidth + oldPageX - pageX|0}px`);
 		})
-		.on('mouseup.debugger-resizer', () => {
-			root.off('.debugger-resizer');
+		.on('mouseup.debugger-resizer-h', () => {
+			root.off('.debugger-resizer-h');
 			debugOptions.width = debugElement.width();
+			saveDebugModeOptions();
+		});
+	});
+	debugElement.on('mousedown', '.resizer-v', e => {
+		// It must be the left mouse button.
+		if (e.which !== 1) {
+			return true;
+		}
+		e.stopPropagation();
+		const { pageY:oldPageY } = e;
+		const oldHeight = $(e.target.parentNode).height();
+		root.on('mousemove.debugger-resizer-v', ({pageY}) => {
+			debugElement.find('.panel').css('maxHeight',`${oldHeight + oldPageY - (pageY|0)}px`);
+		})
+		.on('mouseup.debugger-resizer-v', () => {
+			root.off('.debugger-resizer-v');
+			debugOptions.maxHeight = debugElement.find('.panel').css('maxHeight');
 			saveDebugModeOptions();
 		});
 	});

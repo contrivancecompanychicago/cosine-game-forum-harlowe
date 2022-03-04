@@ -418,6 +418,13 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			whenever you don't need to keep the hook "live", to save on processing and passage repainting (which can interfere
 			with clicking, selecting text, and other interactions).
 
+			A note about timing: due to browser security and resource limitations, modern browsers may arbitrarily increase the delay given to (live:)
+			by about 5-10ms, based on how long the (live:) macro has been running and how hard the CPU is working. More importantly,
+			if the browser tab becomes inactive (such as by the player switching to another tab), modern browsers will often increase the
+			delay by over 1 second, or, if the tab is inactive for a long time, any arbitrary length of time it wishes! In short, there is
+			**no guarantee** that the time interval given to (live:) will actually be the time that will elapse between renders! Please
+			use this macro with that limitation in mind.
+
 			If you want to just display a hook once a certain thing happens (that is, when the condition in an (if:) macro becomes
 			true) and then (stop:), then the (event:) macro may be shorter and easier to use for this. If you want to display a hook after
 			a certain amount of time has passed, then the (after:) macro is almost certainly what you'd prefer to use.
@@ -578,6 +585,13 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			The optional second number given is an amount of milliseconds (or, if suffixed with `s`, seconds) to advance the transition. For each
 			millisecond of the transition, Harlowe checks if a key or button is held, and if so, then it is advanced
 			by the given number (in addition to the elapsed millisecond).
+
+			A note about timing: due to browser security and resource limitations, modern browsers may arbitrarily increase the delay given to (after:)
+			by about 5-10ms, based on how long the (after:) macro has been in the passage, and how hard the CPU is working. More importantly,
+			if the browser tab becomes inactive (such as by the player switching to another tab), modern browsers will often increase the
+			delay by over 1 second, or, if the tab is inactive for a long time, any arbitrary length of time it wishes! In short, there is
+			**no guarantee** that the time interval given to (after:) will actually be the time that will elapse before the hook appears! Please
+			use this macro with that limitation in mind.
 
 			See also:
 			(live:), (event:), (more:), (transition-skip:)

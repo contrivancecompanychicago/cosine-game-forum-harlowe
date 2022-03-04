@@ -44,6 +44,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Slightly improved performance of changing passages in stories that contain a very large number of passages.
  * Slightly improved performance of rendering and re-rendering hooks.
  * Now, the most recent 16 visited passages (as well as all "header", "footer", "debug-header" and "debug-footer" tagged passages), have their source code's syntax trees cached, to save on rendering time if they're visited or shown by `(display:)` again within 16 turns.
+ * `(live:)`, `(event:)` and `(after:)` macros now internally use requestAnimationFrame() instead of setTimeout().
 
 ##### Error Messages
 
@@ -106,6 +107,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Columns in Debug Mode panels can now be sorted by clicking the column headers, as is typical of many apps with columnar data. The columns will remain sorted as the data changes. The Storylet panel is also sorted (placing open storylets first) by default.
  * The source code in the Source, Variables and Storylet panels is now syntax-highlighted, in a manner roughly matching its highlighting in the Twine editor.
  * The Source panel now shows the header and footer passages' source code as well, in separate fold-down sections.
+ * Added an additional draggable area to to the top of each panel which, when clicked and dragged, lets you resize each panel vertically. (Panels can't be resized larger than their content.)
  * Added a "Clear this panel" button to the Errors panel, which, when clicked, removes all of the recorded errors.
  * Added a close button to the panel, which exits Debug Mode when clicked.
 
