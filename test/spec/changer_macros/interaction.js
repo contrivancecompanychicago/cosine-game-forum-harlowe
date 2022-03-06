@@ -19,6 +19,12 @@ describe("interaction macros", function() {
 		cssClass: 'enchantment-mouseout',
 		eventMethod: 'mouseleave',
 	},{
+		name: 'click-rerun',
+		entity: 'link',
+		action: 'click',
+		cssClass: 'enchantment-link',
+		eventMethod: 'click',
+	},{
 		name: 'click-goto',
 		entity: 'link',
 		action: 'click',
@@ -57,6 +63,7 @@ describe("interaction macros", function() {
 	}].forEach(function(e) {
 		var goTo = e.name.includes('goto');
 		var undo = e.name.includes('undo');
+		var rerun = e.name.includes('rerun');
 		var hooksetCall = "(" + e.name + ":?foo" + (goTo ? ",'garply')" : ')[]');
 		var stringCall = "(" + e.name + ":'wow'" + (goTo ? ",'garply')" : ')[]');
 		describe("(" + e.name + ":)", function() {
@@ -133,32 +140,44 @@ describe("interaction macros", function() {
 						p.find('tw-enchantment')[e.eventMethod]();
 						expect(p.text()).toBe('2');
 					});
-					it("disenchants the selected hook when the enchantment is " + e.action + "ed", function() {
-						var p = runPassage("[cool]<foo|(" + e.name + ":?foo)[beans]");
-						expect(p.text()).toBe("cool");
-						p.find('tw-enchantment')[e.eventMethod]();
-						expect(p.find('tw-enchantment').length).toBe(0);
-					});
-					it("nested enchantments are triggered one by one", function() {
-						var p = runPassage("[[cool]<foo|]<bar|(" + e.name + ":?foo)[beans](" + e.name + ":?bar)[lake]");
-						expect(p.text()).toBe("cool");
-						p.find('tw-enchantment').first()[e.eventMethod]();
-						expect(p.text()).toBe("coollake");
-						p.find('tw-enchantment').first()[e.eventMethod]();
-						expect(p.text()).toBe("coolbeanslake");
-					});
-					it("multiple enchantments are triggered in order", function() {
-						var p = runPassage(
-							"[]<foo|(" + e.name + ":?foo)[1]"
-							+ "(" + e.name + ":?foo)[2]"
-							+ "(" + e.name + ":?foo)[3]");
-						$('tw-hook')[e.eventMethod]();
-						expect(p.text()).toBe("1");
-						$('tw-hook')[e.eventMethod]();
-						expect(p.text()).toBe("12");
-						$('tw-hook')[e.eventMethod]();
-						expect(p.text()).toBe("123");
-					});
+					if (!rerun) {
+						it("disenchants the selected hook when the enchantment is " + e.action + "ed", function() {
+							var p = runPassage("[cool]<foo|(" + e.name + ":?foo)[beans]");
+							expect(p.text()).toBe("cool");
+							p.find('tw-enchantment')[e.eventMethod]();
+							expect(p.find('tw-enchantment').length).toBe(0);
+						});
+						it("nested enchantments are triggered one by one", function() {
+							var p = runPassage("[[cool]<foo|]<bar|(" + e.name + ":?foo)[beans](" + e.name + ":?bar)[lake]");
+							expect(p.text()).toBe("cool");
+							p.find('tw-enchantment').first()[e.eventMethod]();
+							expect(p.text()).toBe("coollake");
+							p.find('tw-enchantment').first()[e.eventMethod]();
+							expect(p.text()).toBe("coolbeanslake");
+						});
+						it("multiple enchantments are triggered in order", function() {
+							var p = runPassage(
+								"[]<foo|(" + e.name + ":?foo)[1]"
+								+ "(" + e.name + ":?foo)[2]"
+								+ "(" + e.name + ":?foo)[3]");
+							$('tw-hook')[e.eventMethod]();
+							expect(p.text()).toBe("1");
+							$('tw-hook')[e.eventMethod]();
+							expect(p.text()).toBe("12");
+							$('tw-hook')[e.eventMethod]();
+							expect(p.text()).toBe("123");
+						});
+					} else {
+						it("doesn't disenchant the selected hook when the enchantment is " + e.action + "ed", function() {
+							var p = runPassage("(set:_b to 0)[cool]<foo|(" + e.name + ":?foo)[(set:_b to it+1)_b]");
+							expect(p.text()).toBe("cool");
+							p.find('tw-enchantment')[e.eventMethod]();
+							expect(p.text()).toBe("cool1");
+							expect(p.find('tw-enchantment').length).toBe(1);
+							p.find('tw-enchantment')[e.eventMethod]();
+							expect(p.text()).toBe("cool2");
+						});
+					}
 				}
 				else if (goTo) {
 					it("goes to the given passage when the enchantment is " + e.action + "ed", function(done) {
@@ -207,7 +226,7 @@ describe("interaction macros", function() {
 							expect(g.length).toBe(1);
 						});
 						// Since the box-shadow is on a pseudo-element, we can't test its CSS.
-						if (!goTo && !undo) {
+						if (!goTo && !undo && !rerun) {
 							it("multiple enchantments are triggered in order", function() {
 								var p = runPassage(
 									"(" + e.name + ":"+name+")[1]"
@@ -310,13 +329,26 @@ describe("interaction macros", function() {
 							expect(p.text()).toBe("verycoolbeans");
 						});
 					});
-					it("disenchants all selected hooks when the enchantment is " + e.action + "ed", function() {
-						['first','last'].forEach(function(f) {
-							var p = runPassage("[very]<foo|[cool]<foo|(" + e.name + ":?foo)[beans]");
-							p.find('tw-enchantment')[f]()[e.eventMethod]();
-							expect(p.find('tw-enchantment').length).toBe(0);
+					if (!rerun) {
+						it("disenchants all selected hooks when the enchantment is " + e.action + "ed", function() {
+							['first','last'].forEach(function(f) {
+								var p = runPassage("[very]<foo|[cool]<foo|(" + e.name + ":?foo)[beans]");
+								p.find('tw-enchantment')[f]()[e.eventMethod]();
+								expect(p.find('tw-enchantment').length).toBe(0);
+							});
 						});
-					});
+					} else {
+						it("doesn't disenchant all selected hooks when the enchantment is " + e.action + "ed", function() {
+							['first','last'].forEach(function(f) {
+								var p = runPassage("(set:_b to 0)[very]<foo|[cool]<foo|(" + e.name + ":?foo)[(set:_b to it+1)beans_b]");
+								p.find('tw-enchantment')[f]()[e.eventMethod]();
+								expect(p.find('tw-enchantment').length).toBe(2);
+								expect(p.text()).toBe("verycoolbeans1");
+								p.find('tw-enchantment')[f]()[e.eventMethod]();
+								expect(p.text()).toBe("verycoolbeans2");
+							});
+						});
+					}
 					it("if given a changer, styles every selected hook using it", function() {
 						var p = runPassage("[]<foo|[]<foo|("+e.name+":?foo, (size: 2))[]");
 						expect(p.find('tw-enchantment:first-of-type').attr('style')).toMatch(/size:\s*48px/);
@@ -380,28 +412,41 @@ describe("interaction macros", function() {
 							expect(p.text()).toBe("wow gosh wow");
 						});
 					});
-					it("disenchants all selected strings when the enchantment is " + e.action + "ed", function() {
-						['first','last'].forEach(function(f) {
-							var p = runPassage("wow(" + e.name + ":'wow')[ gosh ]wow");
-							p.find('tw-enchantment')[f]()[e.eventMethod]();
-							expect(p.find('tw-enchantment').length).toBe(0);
+					if (!rerun) {
+						it("disenchants all selected strings when the enchantment is " + e.action + "ed", function() {
+							['first','last'].forEach(function(f) {
+								var p = runPassage("wow(" + e.name + ":'wow')[ gosh ]wow");
+								p.find('tw-enchantment')[f]()[e.eventMethod]();
+								expect(p.find('tw-enchantment').length).toBe(0);
+							});
 						});
-					});
-					it("nested enchantments are triggered one by one", function() {
-						var p = runPassage("wow(" + e.name + ":'wow')[gosh](" + e.name + ":'w')[geez]");
-						expect(p.text()).toBe("wow");
-						p.find('tw-enchantment').first()[e.eventMethod]();
-						expect(p.text()).toBe("wowgosh");
-						p.find('tw-enchantment').first()[e.eventMethod]();
-						expect(p.text()).toBe("wowgoshgeez");
-					
-						p = runPassage("wow(" + e.name + ":'w')[gosh](" + e.name + ":'wow')[geez]");
-						expect(p.text()).toBe("wow");
-						p.find('tw-enchantment').first()[e.eventMethod]();
-						expect(p.text()).toBe("wowgosh");
-						p.find('tw-enchantment').first()[e.eventMethod]();
-						expect(p.text()).toBe("wowgoshgeez");
-					});
+						it("nested enchantments are triggered one by one", function() {
+							var p = runPassage("wow(" + e.name + ":'wow')[gosh](" + e.name + ":'w')[geez]");
+							expect(p.text()).toBe("wow");
+							p.find('tw-enchantment').first()[e.eventMethod]();
+							expect(p.text()).toBe("wowgosh");
+							p.find('tw-enchantment').first()[e.eventMethod]();
+							expect(p.text()).toBe("wowgoshgeez");
+						
+							p = runPassage("wow(" + e.name + ":'w')[gosh](" + e.name + ":'wow')[geez]");
+							expect(p.text()).toBe("wow");
+							p.find('tw-enchantment').first()[e.eventMethod]();
+							expect(p.text()).toBe("wowgosh");
+							p.find('tw-enchantment').first()[e.eventMethod]();
+							expect(p.text()).toBe("wowgoshgeez");
+						});
+					} else {
+						it("doesn't disenchant all selected strings when the enchantment is " + e.action + "ed", function() {
+							['first','last'].forEach(function(f) {
+								var p = runPassage("(set:_b to 0)wow(" + e.name + ":'wow')[(set:_b to it+1) gosh _b ]wow");
+								p.find('tw-enchantment')[f]()[e.eventMethod]();
+								expect(p.text()).toBe("wow gosh 1 wow");
+								expect(p.find('tw-enchantment').length).toBe(2);
+								p.find('tw-enchantment')[f]()[e.eventMethod]();
+								expect(p.text()).toBe("wow gosh 2 wow");
+							});
+						});
+					}
 					it("if given a changer, styles every selected hook using it", function() {
 						var p = runPassage("foo foo|("+e.name+":'foo', (size: 2))[]");
 						expect(p.find('tw-enchantment:first-of-type').attr('style')).toMatch(/size:\s*48px/);

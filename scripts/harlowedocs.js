@@ -162,7 +162,7 @@ a:hover > .nav_macro_sig { display: inline; }
 aside { font-style:italic; font-size:80%; }
 
 /* Code blocks */
-code { color:inherit; background:transparent; border:1px solid hsla(0,0%,50%,0.5); display:block; padding:12px; overflow-x: auto; }
+code { color:inherit; background:transparent; border:1px solid hsla(0,0%,50%,0.5); display:block; padding:12px; white-space:pre-wrap; }
 
 /* Inline code */
 pre { display:inline; }
@@ -173,7 +173,7 @@ pre { display:inline; }
 
 table:not(.datamap) :not(pre) > code { white-space: pre-wrap; }
 /* Heading links */
-.heading_link::before { content: "§"; display:inline-block; margin-left:-25px; padding-right:10px; color:black; font-weight:100; visibility:hidden; text-decoration:none; }
+.heading_link::before { content: "§"; display:inline-block; margin-left:-25px; padding-right:10px; font-weight:100; visibility:hidden; text-decoration:none; }
 :hover > .heading_link::before { visibility:visible; }
 
 /* Preview */
@@ -192,7 +192,7 @@ tw-debugger .tabs { display: flex; justify-content: center; }
 tw-debugger .show-invisibles { display: block; margin: 0 auto; }
 tw-debugger .panel { border-color: #888 !important; }
 /* The debugger shouldn't steal clicks from the editor panel */
-tw-debugger { z-index: 0; }
+tw-debugger { z-index: 0 !important; }
 
 /* Kludge for the (text-style:) macro */
 t-s::before { content: 'Example text'; }
@@ -213,6 +213,9 @@ ${navElement}</ul></nav>
 <tw-storydata startnode=1 options="debug"><tw-passagedata pid=1 name=Test>&lt;==>\nClick on ▶ on code samples in this documentation to preview the resulting Twine passage here!\nAlso, click on the left border ← to view this preview with full window width.
 </tw-passagedata></tw-storydata>
 <script role="script" type="twine/javascript">
+/* Fix URL anchor scrolling on page load by disabling window scroll until after */
+window._scroll = window.scroll;
+window.scroll = $.noop;
 window.previewPassage = function(text, el) {
 	State.reset();
 	Passages.clear();
@@ -224,6 +227,11 @@ window.previewPassage = function(text, el) {
 };
 /* Debug Mode variables panel transplant */
 $('tw-debugger').insertAfter('#preview')[$('html').is('.theme-dark') ? "addClass" : "removeClass"]('theme-dark');
+/* Restore the native scroll() after passage load */
+setTimeout(function() {
+	window.scroll = window._scroll;
+	delete window._scroll;
+});
 </script>
 </div>
 <div id=previewCode><textarea>

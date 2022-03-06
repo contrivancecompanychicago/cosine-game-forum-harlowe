@@ -3,6 +3,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 ($, Utils, {is}, Engine, State, Passages, Macros, HookSet, CodeHook, ChangerCommand, Lambda, ChangeDescriptor, Enchantment, TwineError) => {
 
 	const {either,rest,optional} = Macros.TypeSignature;
+	const {assign} = Object;
 	/*
 		Built-in Revision, Interaction and Enchantment macros.
 		This module modifies the Macros module only, and exports nothing.
@@ -290,7 +291,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 
 		This will also apply the style changer to (click:) links inside the hook.
 
-		Due to Harlowe engine limitations, this currently does NOT work when created by a lambda given to `(enchant:)` or `(change:)`, such as in `(enchant: ?passage, via (link-style,(bg:(hsl:pos*30,0.5,1))))`.
+		Due to Harlowe engine limitations, this currently does NOT work when created by a lambda given to `(enchant:)` or `(change:)`, such as in `(enchant: ?passage, via (link-style:(bg:(hsl:pos*30,0.5,1))))`.
 
 		See also:
 		(enchant-in:), (hover-style:), (line-style:), (char-style:)
@@ -338,7 +339,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 
 		This creates a hook-specific enchantment, similar to (enchant-in:), It will be listed under the "Enchantments" tab of the Debug Mode panel.
 
-		Due to Harlowe engine limitations, this currently does NOT work when created by a lambda given to `(enchant:)` or `(change:)`, such as in `(enchant: ?passage, via (line-style,(bg:(hsl:pos*30,0.5,1))))`.
+		Due to Harlowe engine limitations, this currently does NOT work when created by a lambda given to `(enchant:)` or `(change:)`, such as in `(enchant: ?passage, via (line-style:(bg:(hsl:pos*30,0.5,1))))`.
 
 		See also:
 		(enchant-in:), (hover-style:), (link-style:), (char-style:)
@@ -373,7 +374,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 
 		**Warning:** using (char-style:) to enchant very large amounts of text at once will likely cause excessive CPU load for the reader, making their browser unresponsive.
 
-		Due to Harlowe engine limitations, this currently does NOT work when created by a lambda given to `(enchant:)` or `(change:)`, such as in `(enchant: ?passage, via (char-style,(bg:(hsl:pos*30,0.5,1))))`.
+		Due to Harlowe engine limitations, this currently does NOT work when created by a lambda given to `(enchant:)` or `(change:)`, such as in `(enchant: ?passage, via (char-style:(bg:(hsl:pos*30,0.5,1))))`.
 
 		See also:
 		(enchant-in:), (hover-style:), (link-style:), (line-style:)
@@ -647,9 +648,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 				*/
 				if (!scopes.every(Boolean)) {
 					return TwineError.create("datatype",
-						"A string given to this ("
-						+ e
-						+ ":) macro was empty."
+						`A string given to this (${e}:) macro was empty.`
 					);
 				}
 				return ChangerCommand.create(e, scopes.map(HookSet.from));
@@ -947,7 +946,10 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 							desc.section.renderInto(
 								desc.source,
 								null,
-								Object.assign({}, desc, {
+								assign({}, desc, {
+									// (click-rerun:) replaces (re-runs) the attached hook on each iteration,
+									// instead of simply appending to it.
+									append: !enchantDesc.once ? 'replace' : 'append',
 									enabled: true,
 									/*
 										Turn transitions back on, so that the target
@@ -1045,10 +1047,37 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 			player to activate all of them. They activate in the order they appear on the page - top to bottom.
 
 			See also:
-			(link:), (link-reveal:), (link-repeat:), (mouseover:), (mouseout:), (replace:), (click-replace:)
+			(link:), (link-reveal:), (mouseover:), (mouseout:), (replace:), (click-replace:)
 
 			Added in: 1.0.0
 			#links 9
+		*/
+		/*d:
+			(click-rerun: HookName or String, [Changer or Lambda]) -> Changer
+
+			A special version of the (click:) macro which allows the enchanted hook or text (specified by the first value) to be activated multiple times to re-run the attached hook.
+
+			Example usage:
+			```
+			The only place you haven't searched yet is the washing basket, and you know there's nothing to find in there.
+
+			(set:_t to 0)\
+			(click-rerun:"washing basket")[(set:_t to it+1)You pull out (nth:_t, "two left socks","a tie-dyed tie","a thimble","a laced tablecloth"). Just in case it was under there.]
+			```
+
+			Rationale:
+			While the (click:) macro lets you add links to your text without placing lots of macro code in the middle of your prose, there isn't
+			an obvious way of creating a repeatable link, similar to (link-rerun:) or using (link:) with (rerun:), in the same way. This macro provides that functionality.
+
+			Details:
+			This changes the enchanted text into a link in the same way as (click:). As with most link macros, you may style the link by providing a changer (or a lambda
+			producing a changer) as the second value.
+
+			See also:
+			(link-rerun:), (click:), (rerun:)
+
+			Added in: 3.3.0
+			#links 10
 		*/
 		{
 			name: "click",
@@ -1181,7 +1210,15 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		}
 	];
 	
-	interactionTypes.forEach((e) => Macros.addChanger(e.name, ...newEnchantmentMacroFns(e.enchantDesc, e.name)));
+	interactionTypes.forEach((e) => {
+		Macros.addChanger(e.name, ...newEnchantmentMacroFns(e.enchantDesc, e.name));
+		/*
+			Only (click:) gets a (rerun:) variant.
+		*/
+		if (e.name === "click") {
+			Macros.addChanger(e.name + '-rerun', ...newEnchantmentMacroFns(assign({}, e.enchantDesc, { once: false }), e.name + '-rerun'));
+		}
+	});
 
 	/*
 		A separate click event needs to be defined for an .enchantment-clickblock wrapping <tw-story>, which is explained below.
@@ -1401,7 +1438,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 	*/
 	revisionTypes.forEach((revisionType) => {
 		interactionTypes.forEach((interactionType) => {
-			const enchantDesc = Object.assign({}, interactionType.enchantDesc, {
+			const enchantDesc = assign({}, interactionType.enchantDesc, {
 					rerender: revisionType
 				}),
 				name = interactionType.name + "-" + revisionType;
@@ -1556,12 +1593,12 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 						and then call it in TwineScript_Print() when the command is run, passing in a fake ChangeDescriptor
 						with only a "section" property.
 					*/
-					const [,makeEnchanter] = newEnchantmentMacroFns(Object.assign({}, interactionType.enchantDesc,
+					const [,makeEnchanter] = newEnchantmentMacroFns(assign({}, interactionType.enchantDesc,
 						{ transition: desc.data.passageT8n, },
 						type === "undo" ? { undo: true } : { goto: passage }
 					), name);
 					makeEnchanter({section}, HookSet.from(selector));
-					return Object.assign(desc, { source: '' });
+					return assign(desc, { source: '' });
 				},
 				[either(HookSet,String)].concat(type === "undo" ? [] : String)
 			);

@@ -1123,7 +1123,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			This changer can be provided to non-link hooks or commands, but since the result will have the same borders and spacing as a button while not
 			being clickable, it is not recommended to use it this way.
 
-			This changer adds the class "enchantment-button" to <tw-link> and <tw-enchantment> elements.
+			This changer adds the class "enchantment-button" to `<tw-link>` and `<tw-enchantment>` elements.
 
 			See also:
 			(align:), (border:), (box:), (corner-radius:)

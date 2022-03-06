@@ -247,6 +247,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 		["link", "link-replace"],
 		/*d:
 			(link-reveal: String, [Changer]) -> Changer
+			Also known as: (link-append:)
 			
 			When attached to a hook, this replaces the hook with a link that has the given text. The link, when clicked, reveals the hook and becomes plain, unstyled text.
 			An optional changer can be given to alter the style of the link (instead of altering the style of the attached hook).
@@ -283,7 +284,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			Added in: 1.2.0
 			#links 2
 		*/
-		["link-reveal"],
+		["link-reveal", "link-append"],
 		/*d:
 			(link-repeat: String, [Changer]) -> Changer
 			
@@ -349,8 +350,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 
 			The created link is displayed in place of the hook's contents, and is exempt from all changers that would normally apply
 			to the hook. This means that changers like (text-colour:), added to this changer, will ONLY apply
-			to the hook once it's revealed, and not the link itself. To apply changers to just the link, consider wrapping it in a
-			hook itself and using (enchant-in:) with `?Link`, or just using (enchant:) with `?Link` to enchant every link.
+			to the hook once it's revealed, and not the link itself. To apply changers to just the link, provide them (added together if there
+			are multiple) as the optional second value to this macro.
 
 			Details:
 			This creates a link which is visually indistinguishable from normal passage links. However, a changer can optionally be given, after the
@@ -1026,9 +1027,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 		
 		Details:
 
-		Note that there is already an idiom for checking if a passage was visited earlier in the game: `(history: ) contains "Passage name"`
-		checks if the passage named "Passage name" was visited. So, you don't necessarily need to use this macro to record that the player
-		has visited the destination passage.
+		Note that the (visited:) macro can be used for checking if a passage was visited earlier in the game. So, you don't necessarily need to
+		use this macro to record that the player has visited the destination passage. Generally, you should use this macro only if you
+		need to record that the player used *this specific link* to visit that passage.
 
 		Note also that there's no way to "cancel" traveling to the new passage once the link is clicked, unless you include (go-to:),
 		(undo:), or another such macro inside the hook.

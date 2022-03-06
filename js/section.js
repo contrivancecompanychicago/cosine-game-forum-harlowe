@@ -1548,8 +1548,8 @@ define([
 			Callbacks that need to be run ONLY when the section is unblocked (such as (live:) events, interaction
 			element events, and (goto:)) are registered here. Or, if it's already unblocked, they're run immediately.
 
-			immediateFn is a variation used when 
-			TBW
+			immediateFn is a variation of fn used when the section is already unblocked. Currently (March 2022), only runLiveHook()
+			uses it.
 		*/
 		whenUnblocked(fn, immediateFn) {
 			if (!this.stack.length || !this.stackTop.blocked) {
