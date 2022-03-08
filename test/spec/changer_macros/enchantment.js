@@ -15,37 +15,41 @@ describe("enchantment macros", function () {
 				expect("(print:("+name+":(font:'Skia'), where (font:'Skia')))").markupToError();
 			});
 			it("errors when the changer contains a revision command", function() {
-				expect("[]<foo|("+name+":?foo,(append:?baz))").markupToError();
+				expect("[A]<foo|("+name+":?foo,(append:?baz))").markupToError();
 			});
 			it("errors when the 'via' lambda returns a non-changer or a revision command", function() {
-				expect("[]<foo|("+name+":?foo, via 2)").markupToError();
-				expect("[]<foo|("+name+":?foo, via (append:?baz))").markupToError();
+				expect("[A]<foo|("+name+":?foo, via 2)").markupToError();
+				expect("[A]<foo|("+name+":?foo, via (append:?baz))").markupToError();
 			});
 			it("doesn't error when given (link:) changers", function() {
-				expect("[]<foo|("+name+":?foo, (link:'bar'))").not.markupToError();
+				expect("[A]<foo|("+name+":?foo, (link:'bar'))").not.markupToError();
 			});
 			it("doesn't error when given (click:) changers", function() {
-				expect("[]<foo|("+name+":?foo, (click:'bar'))").not.markupToError();
+				expect("[A]<foo|("+name+":?foo, (click:'bar'))").not.markupToError();
+			});
+			it("doesn't affect empty hooks", function() {
+				var p = runPassage("("+name+":?foo, (link:'bar'))[]<foo|",'garply');
+				expect(p.find('tw-enchantment').length).toBe(0);
 			});
 			if (name === "change") {
 				it("doesn't affect transitioning-out passages", function() {
 					createPassage("("+name+":?foo, (click:'bar'))",'garply');
-					var p = runPassage('[]<foo| (t8n-depart:"dissolve")[[garply]]');
+					var p = runPassage('[A]<foo| (t8n-depart:"dissolve")[[garply]]');
 					p.find('tw-link').click();
 					expect($('tw-enchantment').length).toBe(0);
 				});
 				it("only changes hooks earlier than it", function() {
-					var p = runPassage("[]<foo|(change:?foo,(color:'#800000'))[]<foo|");
+					var p = runPassage("[A]<foo|(change:?foo,(color:'#800000'))[A]<foo|");
 					expect(p.find('tw-hook:first-child').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
 				});
 			} else {
 				it("enchants hooks everywhere", function() {
-					var p = runPassage("[]<foo|(enchant:?foo,(color:'#800000'))[]<foo|");
+					var p = runPassage("[A]<foo|(enchant:?foo,(color:'#800000'))[A]<foo|");
 					expect(p.find('tw-hook:first-child').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
 					expect(p.find('tw-hook:last-child').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
 				});
 				it("changes hooks when they're added to the passage", function() {
-					var p = runPassage("[]<foo|(enchant:?foo,(color:'#800000'))(link:'X')[ []<foo|]");
+					var p = runPassage("[A]<foo|(enchant:?foo,(color:'#800000'))(link:'X')[ [A]<foo|]");
 					expect(p.find('tw-hook:first-child').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
 					p.find('tw-link').click();
 					expect(p.find(':last-child > tw-hook').css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
@@ -92,7 +96,7 @@ describe("enchantment macros", function () {
 			expect(runPassage("(enchant-in:?page's chars, (text-style:'bold'))[BE]").find('tw-enchantment').length).toBe(2);
 		});
 		it("changes hooks when they're added to the attached hook", function() {
-			var p = runPassage("(enchant-in:?foo,(color:'#800000'))[|foo>[](link:'X')[ []<foo|]]");
+			var p = runPassage("(enchant-in:?foo,(color:'#800000'))[|foo>[A](link:'X')[ [A]<foo|]]");
 			expect($(p.find('tw-hook[name="foo"]').get(0)).css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);
 			p.find('tw-link').click();
 			expect($(p.find('tw-hook[name="foo"]').get(1)).css('color')).toMatch(/(?:#800000|rgb\(\s*128,\s*0,\s*0\s*\))/);

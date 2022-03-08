@@ -21,6 +21,9 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where `(folded:)` couldn't be provided with a lambda which had `where`, `via` and `making` clauses, where the `making` clause was between the `where` and `via` clauses.
  * Now, `(rerun:?passage)` will, as expected, re-run the entire passage's code instead of simply erasing it.
  * `each` lambdas are now called "each…" lambdas (instead of just "where…" lambdas) in the Debug Mode panel.
+ * Fixed a bug where using `(append:?Link)` (or one of its relatives) to append text to a hook enchanted with `(click:)` wouldn't work correctly (the text would be placed next to the link instead of inside).
+ * Fixed a bug where `(enchant:)`, `(click:)`, and other enchantment macros could enchant empty hooks such as `|A>[]` (wrapping them with `<tw-enchantment>` elements), even though Harlowe usually considers empty hooks to be nonexistent, and hides them with its default CSS.
+   * Note: this means that, given constructions like `[]<A|` and `(click:?A)[]`, revision macros like `(append:?Link)` will no longer consider ?A (as long as it is empty) to be a link via the `(click:)`, and cannot append to it - you'll have to explicitly refer to it via `(append:?A)` instead.
  * Fixed a bug where `'s` and `of` sometimes wouldn't be syntax-highlighted correctly.
  * The `it` identifier is now cleared (to the default value of 0) whenever the player changes passages.
  * Fixed a bug where using a custom macro in a `(storylet:)` lambda would cause Debug Mode to constantly reload the Storylets and Variables panels, hurting performance.

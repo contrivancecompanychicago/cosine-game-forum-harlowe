@@ -62,6 +62,15 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 					}
 				}
 				/*
+					Empty hooks should not be enchanted, as they are invisible (by CSS) in Harlowe.
+					The 'source' check ('source' being an array or string) is for hooks later in the passage which haven't finished being rendered.
+					(NOTE: Obviously, the hook ought to still be considered "empty" if its 'source' has only comments, etc.,
+					but for now (March 2022) this bug is left to roam free.)
+				*/
+				if (e.is(':empty') && (!e.data('source') || !e.data('source').length)) {
+					return;
+				}
+				/*
 					Lambdas are given to enchantments exclusively through (enchant:). They override any
 					other changers (which shouldn't be on here anyway) and instead call the author-supplied
 					lambda with each part of the scope as a separate hook to sculpt a specific changer for that hook.

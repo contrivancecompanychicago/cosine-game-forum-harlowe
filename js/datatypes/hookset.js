@@ -302,6 +302,14 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 				ret = ret.add(ownElements);
 			}
 		}
+		/*
+			If a <tw-enchantment> is among the selected, and it has exactly 1 node child, then it should be replaced with
+			its node children, so that (append:)ing to it works correctly.
+		*/
+		ret = ret.get().reduce((a,e) => {
+			e = $(e);
+			return a.add(e.is('tw-enchantment') && e.contents().length <= 1 ? e.contents() : e);
+		}, $());
 		return ret;
 	}
 

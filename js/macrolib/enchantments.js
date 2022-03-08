@@ -76,6 +76,9 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		to re-style the entire story without having to lose the distinct colour of links compared to passage text. You can change the colour of all links using
 		an explicit `(change: ?link, (text-colour: $color))` or by using `(link-style: (text-colour: $color))[=` (that is, with unclosed hook markup).
 
+		You can't use this macro to change the appearance or behaviour of a completely empty hook, such as `|A>[]`. Completely empty hooks (that haven't had text inserted
+		by (replace-with:) and the like) are always hidden by Harlowe.
+
 		You can use (change:) with (transition:) to add transitions to hooks or text elsewhere in the same passage – however, if the (change:) macro is
 		run after the passage was initially rendered, the transitions will begin animating in the middle of their usual animations, or, if enough time
 		has passed, won't run at all. For example, `(event: when time > 2s)[(change:"Riddles", (t8n:"Shudder")+(t8n-time:3s))]` will
@@ -128,6 +131,10 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		aren't any other hooks with those names in the passage.
 
 		Like (change:), you cannot use (enchant:) with (link:), (replace:), or any of its relatives.
+
+		The enchantment created by this macro cannot change the appearance or behaviour of a completely empty hook, such as `|A>[]`.
+		However, once a hook stops being empty (such as when the (append:) macro appends to it), the
+		enchantment created by this macro will automatically start applying to it.
 
 		See also:
 		(click:), (change:), (enchant-in:)

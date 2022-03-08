@@ -157,15 +157,15 @@ describe("interaction macros", function() {
 						});
 						it("multiple enchantments are triggered in order", function() {
 							var p = runPassage(
-								"[]<foo|(" + e.name + ":?foo)[1]"
+								"[A]<foo|(" + e.name + ":?foo)[1]"
 								+ "(" + e.name + ":?foo)[2]"
 								+ "(" + e.name + ":?foo)[3]");
 							$('tw-hook')[e.eventMethod]();
-							expect(p.text()).toBe("1");
+							expect(p.text()).toBe("A1");
 							$('tw-hook')[e.eventMethod]();
-							expect(p.text()).toBe("12");
+							expect(p.text()).toBe("A12");
 							$('tw-hook')[e.eventMethod]();
-							expect(p.text()).toBe("123");
+							expect(p.text()).toBe("A123");
 						});
 					} else {
 						it("doesn't disenchant the selected hook when the enchantment is " + e.action + "ed", function() {
@@ -201,6 +201,10 @@ describe("interaction macros", function() {
 						},20);
 					});
 				}
+				it("doesn't affect empty hooks", function() {
+					var p = runPassage("[]<foo|" + hooksetCall).find('tw-enchantment');
+					expect(p.length).toBe(0);
+				});
 				it("affects hooks inside other hooks", function() {
 					var p = runPassage("(if:true)[[cool]<foo|]" + hooksetCall).find('tw-enchantment');
 					expect(p.length).toBe(1);
@@ -350,12 +354,12 @@ describe("interaction macros", function() {
 						});
 					}
 					it("if given a changer, styles every selected hook using it", function() {
-						var p = runPassage("[]<foo|[]<foo|("+e.name+":?foo, (size: 2))[]");
+						var p = runPassage("[A]<foo|[A]<foo|("+e.name+":?foo, (size: 2))[]");
 						expect(p.find('tw-enchantment:first-of-type').attr('style')).toMatch(/size:\s*48px/);
 						expect(p.find('tw-enchantment:last-of-type').attr('style')).toMatch(/size:\s*48px/);
 					});
 					it("if given a lambda, uses it to produce a changer for each target", function() {
-						var p = runPassage("[]<foo|[]<bar|("+e.name+":?foo+?bar, via (size: pos*2))[]");
+						var p = runPassage("[A]<foo|[A]<bar|("+e.name+":?foo+?bar, via (size: pos*2))[]");
 						expect(p.find('tw-enchantment:first-of-type').attr('style')).toMatch(/size:\s*48px/);
 						expect(p.find('tw-enchantment:last-of-type').attr('style')).toMatch(/size:\s*96px/);
 					});
