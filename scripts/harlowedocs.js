@@ -141,7 +141,7 @@ nav img { display:block; margin: 0 auto;}
 @media screen and (max-width: 1200px) { nav { position: static; margin-top: 1rem; height:50vh; width: auto; max-width: 80vw; font-size: 120% } }
 
 /* Night mode */
-#nightBar { position: fixed; top:0%;right:12vw; border:1px solid #888; border-radius:0.2rem; z-index: 23; background: white; }
+#nightBar { position: fixed; top:0%;right:12vw; border:1px solid #888; border-radius:0.2rem; z-index: 25; background: white; }
 #night, #day { padding: 0.5rem 1rem; display:inline-block; cursor:pointer; }
 html.theme-dark #night { background: #444 }
 html:not(.theme-dark) #day { background: #ccc }
@@ -166,7 +166,7 @@ code { color:inherit; background:transparent; border:1px solid hsla(0,0%,50%,0.5
 
 /* Inline code */
 pre { display:inline; }
-.previewButton { z-index:22; background:inherit; color:inherit; cursor:pointer; position:absolute; right: 0px; bottom: 0px; padding:0.1rem 0.3rem; border-top:1px solid #888; border-left:1px solid #888; }
+.previewButton { z-index:24; background:inherit; color:inherit; cursor:pointer; position:absolute; right: 0px; bottom: 0px; padding:0.1rem 0.3rem; border-top:1px solid #888; border-left:1px solid #888; }
 .previewButton::after { content:"▶"; }
 .previewButton:hover { background: #ccc }
 :not(pre) > code { border:1px dotted hsla(0,0%,50%,0.5); display:inline; padding:1px; white-space:pre-wrap; font-size:1rem; }
@@ -180,7 +180,7 @@ table:not(.datamap) :not(pre) > code { white-space: pre-wrap; }
 #preview { display:none; z-index:21; position: fixed; width: 25vw; height:56vh; right:2vw; top: 6vh; overflow-y:scroll; border: 1px double #888; font-size:16px; transition: width 0.8s; }
 @media screen and (max-width: 1200px) { #preview, .previewButton, #previewCode, #fullPreviewBar, tw-debugger { display:none !important; } }
 html:not(.theme-dark) #preview tw-story { background-color:white; color:black }
-#previewCode { display:none; z-index:20; position:fixed; width:25vw; height:22vh; right: 2vw; bottom: 6vh; border: 1px double #888; transition: width 0.8s; }
+#previewCode { display:none; z-index:23; position:fixed; width:25vw; height:22vh; right: 2vw; bottom: 6vh; border: 1px double #888; transition: width 0.8s; }
 .CodeMirror { height: 100% !important; width:100% !important; background-color:white; }
 .previewCodeButton { font-size:200%; padding: 0.2rem 0.9rem; background-color:white; }
 html.theme-dark .previewCodeButton { color:white; background-color:black; }
@@ -192,7 +192,7 @@ tw-debugger .tabs { display: flex; justify-content: center; }
 tw-debugger .show-invisibles { display: block; margin: 0 auto; }
 tw-debugger .panel { border-color: #888 !important; }
 /* The debugger shouldn't steal clicks from the editor panel */
-tw-debugger { z-index: 0 !important; }
+tw-debugger { z-index: 22 !important; }
 
 /* Kludge for the (text-style:) macro */
 t-s::before { content: 'Example text'; }

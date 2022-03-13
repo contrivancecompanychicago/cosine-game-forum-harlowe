@@ -88,19 +88,16 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 						).render());
 						lambda = changer = null;
 					}
-					else {
-						const summary = changer.summary();
-						if (summary.includes('newTargets') || summary.includes('target')) {
-							/*
-								Since (enchant:) was given a lambda, and since lambdas can reference variables, it's not possible
-								to type-check this lambda until runtime, upon which the original <tw-expression> for the enchantment is long gone.
-								So, instead, the first item in the scope to produce an error gets replaced by it, and the rest of the scope is ignored.
-							*/
-							e.replaceWith(TwineError.create("macrocall",
-								`The lambda "${toSource(lambda)}" can't include a revision or enchantment changer like (replace:) or (click:).`
+					else if (!changer.canEnchant) {
+						/*
+							Since (enchant:) was given a lambda, and since lambdas can reference variables, it's not possible
+							to type-check this lambda until runtime, upon which the original <tw-expression> for the enchantment is long gone.
+							So, instead, the first item in the scope to produce an error gets replaced by it, and the rest of the scope is ignored.
+						*/
+						e.replaceWith(TwineError.create("macrocall",
+								`The lambda "${toSource(lambda)}" can't be or include a revision, enchantment, or interaction changer like (replace:), (click:), or (link:).`
 							).render());
-							lambda = changer = null;
-						}
+						lambda = changer = null;
 					}
 				} else {
 					changer = this.changer;

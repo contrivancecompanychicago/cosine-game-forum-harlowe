@@ -1002,6 +1002,48 @@ describe("style changer macros", function() {
 		});
 		// TODO:CSS tests
 	});
+	describe("the (action:) macro", function() {
+		it("requires 1 string argument", function() {
+			expect("(print:(action:))").markupToError();
+			expect("(print:(action:'mouseover'))").not.markupToError();
+			expect("(print:(action:'mouseout'))").not.markupToError();
+			expect("(print:(action:'doubleclick'))").not.markupToError();
+			expect("(print:(action:'click'))").not.markupToError();
+			expect("(print:(action:'click2'))").markupToError();
+		});
+		[['mouseover'],['mouseout'],['doubleclick','dblclick']].forEach(function(t) {
+			var type = t[0], event = t[1] || type;
+			describe("given '"+type+"'", function() {
+				it("when attached to link commands, gives the expression the 'enchantment-"+event+"' class", function() {
+					createPassage('',"Foo");
+					var p = runPassage("(action:'"+type+"')[[Foo]]");
+					expect(p.find('tw-expression.enchantment-'+event).length).toBe(1);
+					p = runPassage("(action:'"+type+"')(cycling-link:'foo','foo2','foo3')");
+					expect(p.find('tw-expression.enchantment-'+event).length).toBe(1);
+				});
+				it("when given to link changers, gives the link the 'enchantment-"+event+"' class", function() {
+					var p = runPassage("(link:'foo',(action:'"+type+"'))[]");
+					expect(p.find('tw-link.enchantment-'+event).length).toBe(1);
+				});
+				it("when given to (click:), gives the links the 'enchantment-"+event+"' class", function() {
+					var p = runPassage("(click:'foo',(action:'"+type+"'))[]foo");
+					expect(p.find('.link.enchantment-'+event).length).toBe(1);
+				});
+				it("activates the link when the enchantment is " + type + "ed", function() {
+					var p = runPassage("(link:'foo',(action:'"+type+"'))[bar]");
+					p.find('.enchantment-'+event)[event]();
+					expect(p.text()).toBe("bar");
+					p = runPassage("(action:'"+type+"')(cycling-link:'foo','foo2','foo3')");
+					p.find('.enchantment-'+event+'> tw-link')[event]();
+					expect(p.text()).toBe("foo2");
+					p = runPassage("(click:'foo',(action:'"+type+"'))[bar]foo");
+					p.find('.enchantment-'+event)[event]();
+					expect(p.text()).toBe("barfoo");
+				});
+			});
+		});
+		// TODO:CSS tests
+	});
 	describe("the (collapse:) macro", function() {
 		function tests(expect) {
 			it("eliminates runs of whitespace between { and }", function() {

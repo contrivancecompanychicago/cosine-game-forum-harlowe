@@ -3017,7 +3017,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 
 			When the dialog is on-screen, the entire game is essentially "paused" - until it is dismissed,
 			no further computations are performed, links can't be clicked (except links inside the dialog text itself),
-			(click:), (mouseover:) and (mouseout:) enchantments shouldn't work, and (live:) and (event:) macros
+			(click:) enchantments shouldn't work, and (live:) and (event:) macros
 			shouldn't fire.
 
 			For obvious reasons, you cannot supply a two-way bound variable to this macro. Doing so will cause an error to result.
@@ -3489,7 +3489,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 
 			When the dialog is on-screen, the entire game is essentially "paused" - until it is dismissed,
 			no further computations are performed, links can't be clicked (except links inside the dialog text itself),
-			(click:), (mouseover:) and (mouseout:) enchantments shouldn't work, and (live:) and (event:) macros
+			(click:) enchantments shouldn't work, and (live:) and (event:) macros
 			shouldn't fire.
 
 			A note about player-submitted strings: because most string-printing functionality in Harlowe (the (print:) macro,
@@ -3568,7 +3568,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 
 			When the dialog is on-screen, the entire game is essentially "paused" - until it is dismissed,
 			no further computations are performed, links can't be clicked (except links inside the dialog text itself),
-			(click:), (mouseover:) and (mouseout:) enchantments shouldn't work, and (live:) and (event:) macros
+			(click:) enchantments shouldn't work, and (live:) and (event:) macros
 			shouldn't fire.
 
 			See also:

@@ -93,12 +93,8 @@ define(['utils', 'utils/operationutils', 'internaltypes/changedescriptor', 'inte
 			of the macro call itself.
 			For instance, (font: "Skia") would result in a call of
 				ChangerCommand.create("font", ["Skia"])
-			
-			@param {String} macroName
-			@param {Array} params
-			@param {ChangerCommand} next
 		*/
-		create(macroName, params = [], next = null) {
+		create(macroName, params = [], next = null, canEnchant = true) {
 			if(!Array.isArray(params)) {
 				impossible('ChangerCommand.create', 'params was not an array but ' + params);
 			}
@@ -111,6 +107,11 @@ define(['utils', 'utils/operationutils', 'internaltypes/changedescriptor', 'inte
 					with. In this way, composed ChangerCommands are linked lists.
 				*/
 				next,
+				/*
+					If a Changer can NOT be used with (enchant:), (enchant-in:), (link-style:) etc., then this is false.
+					Used only by (replace:) and its ilk, and (link:) and its ilk.
+				*/
+				canEnchant,
 			});
 		},
 		

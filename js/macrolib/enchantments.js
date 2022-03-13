@@ -13,14 +13,11 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		Common function to test a changer and confirm it contains no revision macros.
 	*/
 	function notRevisionChanger(macroName, changer) {
-		if (ChangerCommand.isPrototypeOf(changer)) {
-			const summary = changer.summary();
-			if (['newTargets', 'target', 'appendSource', 'functions'].some(e => summary.includes(e))) {
-				return TwineError.create(
-					"datatype",
-					"The changer given to (" + macroName + ":) can't include a revision or enchantment changer like (replace:) or (click:)."
-				);
-			}
+		if (ChangerCommand.isPrototypeOf(changer) && !changer.canEnchant) {
+			return TwineError.create(
+				"datatype",
+				`The changer given to (${macroName}:) can't include a revision, enchantment, or interaction changer like (replace:), (click:), or (link:).`
+			);
 		}
 	}
 
@@ -658,7 +655,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 						`A string given to this (${e}:) macro was empty.`
 					);
 				}
-				return ChangerCommand.create(e, scopes.map(HookSet.from));
+				return ChangerCommand.create(e, scopes.map(HookSet.from), null, /*canEnchant*/ false);
 			},
 			(desc, ...scopes) => {
 				/*
@@ -701,7 +698,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 			The three (-with:) changers are implemented here, just after their "inverse phrased" counterparts.
 		*/
 		(e + "-with",
-			(_, addendum) => ChangerCommand.create(e + "-with", [addendum]),
+			(_, addendum) => ChangerCommand.create(e + "-with", [addendum], null, /*canEnchant*/ false),
 			(desc, addendum) => {
 				/*
 					The "appendSource" property of ChangeDescriptors allows multiple (append-with:)s to be
@@ -843,7 +840,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 				You may notice some of these are side-effects to a changer function's
 				proper task of altering a ChangeDescriptor. Alas...
 			*/
-			function makeEnchanter(desc, selector, changer) {
+			(desc, selector, changer) => {
 				/*
 					Prevent the target's source from running immediately.
 					This is unset when the event is finally triggered.
@@ -858,7 +855,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 				/*
 					If a rerender method was specified, then this is a "combo" macro,
 					which will render its hook's code into a separate target.
-					
+				    
 					Let's modify the descriptor to use that target and render method.
 					(Yes, the name "rerender" is #awkward.)
 				*/
@@ -894,9 +891,9 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 								a different styling than just turning the entire passage text into a link.
 							*/
 							target.attr('class',
-								target.children().is("tw-story, tw-sidebar, tw-passage") || target.children().css('display') === "block"
-								? enchantDesc.blockClassList
-								: enchantDesc.classList
+								target.children().is("tw-story, tw-sidebar, tw-passage") || ["block", "flex"].includes(target.children().css('display'))
+									? enchantDesc.blockClassList
+									: enchantDesc.classList
 							);
 							/*
 								Include the tabIndex so that they can also be clicked using the keyboard.
@@ -945,7 +942,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 								At last, the target originally specified
 								by the ChangeDescriptor can now be filled with the
 								ChangeDescriptor's original source.
-								
+							    
 								By passing the desc as the third argument,
 								all its values are assigned, not just the target.
 								The second argument may be extraneous. #awkward
@@ -1054,7 +1051,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 			player to activate all of them. They activate in the order they appear on the page - top to bottom.
 
 			See also:
-			(link:), (link-reveal:), (mouseover:), (mouseout:), (replace:), (click-replace:)
+			(link:), (link-reveal:), (replace:), (click-replace:)
 
 			Added in: 1.0.0
 			#links 9
@@ -1099,51 +1096,18 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		/*d:
 			(mouseover: HookName or String, [Changer or Lambda]) -> Changer
 
-			A variation of (click:) that, instead of showing the hook when the target is clicked, shows it
-			when the mouse pointer merely hovers over it. The target is also styled differently (with a dotted underline),
-			to denote this hovering functionality.
-
-			Example usage:
-			```
-			|1>[Hey, c'mover here, cutie.]
-			(mouseover:?1)[Wanna merge brains over this printer cable?]
-			```
-
-			Rationale:
-
-			(click:) and (link:) can be used to create links in your passage that reveal text or, in conjunction with
-			other macros, transform the text in myriad ways. This macro is exactly like (click:), except that instead of
-			making the target a link, it makes the target reveal the hook when the mouse hovers over it. This can convey
-			a mood of fragility and spontaneity in your stories, of text reacting to the merest of interactions.
+			A variation of (click:) that acts as if `(action:'mouseover')` was provided to it as the optional second changer
+			(in addition to any other changers).
 
 			Details:
-
-			This macro is subject to the same rules regarding the styling of its targets that (click:) has, so
-			consult (click:)'s details to review them. Note, though, that rather than making its targets appear as links, it instead,
-			by default, applies a dotted border around them.
-
-			You can add further styling to the targets by providing an optional changer or "via" lambda as a second value, similar to (link:)'s optional
-			changer. If a "via" lambda is supplied, then that lambda is used to compute a changer dynamically, based on specifics of
-			each hook that's enchanted, similar to lambdas provided to (enchant:).
-
-			This macro is not recommended for use in games or stories intended for use on touch devices, as
-			the concept of "hovering" over an element doesn't really make sense with that input method. In the event
-			that a story using this macro is played on a touch device, this macro will fall back to simply being activated
-			by clicking/touching.
-
-			Targeting ?Page, ?Passage or ?Sidebar:
-
-			When a (mouseover:) command is targeting the ?Passage or ?Sidebar, a dotted border will surround the area, and the hook will
-			run when the pointer hovers over that area, as expected.
-
-			While you can also target ?Page with this macro, the result won't be that interesting: if the mouse pointer is anywhere
-			on the page, it will immediately run.
+			This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
+			Harlowe 4.0.
 
 			See also:
-			(link:), (link-reveal:), (link-repeat:), (click:), (mouseout:), (replace:), (mouseover-replace:), (hover-style:)
+			(click:), (action:)
 
 			Added in: 1.0.0
-			#links 14
+			#deprecated
 		*/
 		{
 			name: "mouseover",
@@ -1151,59 +1115,25 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 				event    : ["mouseenter", hasTouchEvents ? "click" : ""].filter(Boolean),
 				once     : true,
 				rerender : "",
-				classList: "enchantment-mouseover",
+				classList: "link enchantment-mouseover",
 				blockClassList: "enchantment-mouseoverblock"
 			}
 		},
 		/*d:
 			(mouseout: HookName or String, [Changer or Lambda]) -> Changer
 
-			A variation of (click:) that, instead of showing the hook when the target is clicked, shows it
-			when the mouse pointer moves over it, and then leaves. The target is also styled differently (a translucent cyan frame),
-			to denote this hovering functionality.
-
-			Example usage:
-			```
-			|1>[CORE OVERRIDE]
-			(mouseout:?1)[Core overridden. The programs are going wild.]
-			```
-
-			Rationale:
-
-			(click:) and (link:) can be used to create links in your passage that reveal text or, in conjunction with
-			other macros, transform the text in myriad ways. This macro is exactly like (click:), but rather than
-			making the target a link, it makes the target reveal the hook when the mouse stops hovering over it.
-			This is very similar to clicking, but is subtly different, and conveys a sense of "pointing" at the element to
-			interact with it rather than "touching" it. You can use this in your stories to give a dream-like or unearthly
-			air to scenes or places, if you wish.
+			A variation of (click:) that acts as if `(action:'mouseout')` was provided to it as the optional second changer
+			(in addition to any other changers).
 
 			Details:
+			This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
+			Harlowe 4.0.
 
-			This macro is subject to the same rules regarding the styling of its targets that (click:) has, so
-			consult (click:)'s details to review them.
-
-			You can add further styling to the targets by providing an optional changer or "via" lambda as a second value, similar to (link:)'s optional
-			changer. If a "via" lambda is supplied, then that lambda is used to compute a changer dynamically, based on specifics of
-			each hook that's enchanted, similar to lambdas provided to (enchant:).
-
-			This macro is not recommended for use in games or stories intended for use on touch devices, as
-			the concept of "hovering" over an element doesn't really make sense with that input method. In the event
-			that a story using this macro is played on a touch device, this macro will fall back to simply being activated
-			by clicking/touching.
-
-			Targeting ?Page, ?Passage or ?Sidebar:
-
-			When a (mouseover:) command is targeting the ?Passage or ?Sidebar, a solid border will surround the area. When the mouse pointer enters it,
-			the area will turn translucent cyan until the pointer leaves, whereupon the hook will run, as expected.
-
-			While you can also target ?Page with this macro, the result won't be that interesting: the macro will only run when the pointer
-			leaves the page altogether, such as by proceeding to another browser tab. Additionally, the translucent cyan background won't be present.
-			
 			See also:
-			(link:), (link-reveal:), (link-repeat:), (click:), (mouseover:), (replace:), (mouseout-replace:), (hover-style:)
+			(click:), (action:)
 
 			Added in: 1.0.0
-			#links 19
+			#deprecated
 		*/
 		{
 			name: "mouseout",
@@ -1211,13 +1141,36 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 				event    : ["mouseleave", hasTouchEvents ? "click" : ""].filter(Boolean),
 				once     : true,
 				rerender : "",
-				classList: "enchantment-mouseout",
+				classList: "link enchantment-mouseout",
 				blockClassList: "enchantment-mouseoutblock"
+			}
+		},
+		/*
+			The Harlowe 3.3 "doubleclick" interaction type isn't used for anything except registering a jQuery event.
+			Everything else below explicitly excludes it.
+		*/
+		{
+			name: "doubleclick",
+			enchantDesc: {
+				event    : ["dblclick"],
+				once     : true,
+				rerender : "",
+				classList: "link enchantment-dblclick",
+				blockClassList: "enchantment-dblclickblock"
 			}
 		}
 	];
 	
+	/*
+		This adds the legacy interaction macros for Harlowe 3.
+	*/
 	interactionTypes.forEach((e) => {
+		/*
+			There aren't any legacy macros for the doubleclick action.
+		*/
+		if (e.name === "doubleclick") {
+			return;
+		}
 		Macros.addChanger(e.name, ...newEnchantmentMacroFns(e.enchantDesc, e.name));
 		/*
 			Only (click:) gets a (rerun:) variant.
@@ -1337,114 +1290,101 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 	/*d:
 		(mouseover-replace: HookName or String, [Changer or Lambda]) -> Changer
 
-		This is similar to (click-replace:), but uses the (mouseover:) macro's behaviour instead of
-		(click:)'s. For more information, consult the description of (click-replace:).
+		A variation of (click-replace:) that acts as if `(action:'mouseover')` was provided to it as the optional second changer
+		(in addition to any other changers).
 
-		Example usage:
-		```
-		You can't touch me!
-		(mouseover-replace: ?passage)[Aah! That tickles!]
-		```
+		Details:
+		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
+		Harlowe 4.0.
 
 		See also:
-		(mouseover-prepend:), (mouseover-append:)
+		(action:)
 
 		Added in: 1.0.0
-		#links 15
+		#deprecated
 	*/
 	/*d:
 		(mouseover-append: HookName or String, [Changer or Lambda]) -> Changer
 
-		This is similar to (click-append:), but uses the (mouseover:) macro's behaviour instead of
-		(click:)'s. For more information, consult the description of (click-append:).
+		A variation of (click-append:) that acts as if `(action:'mouseover')` was provided to it as the optional second changer
+		(in addition to any other changers).
 
-		Example usage:
-		```
-		You reach into the box...
-		(mouseover-append: "box...")[ ...and pull out the final jewel.]
-		```
-
-		See also:
-		(mouseover-prepend:), (mouseover-replace:)
+		Details:
+		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
+		Harlowe 4.0.
 
 		Added in: 1.0.0
-		#links 16
+		#deprecated
 	*/
 	/*d:
 		(mouseover-prepend: HookName or String, [Changer or Lambda]) -> Changer
 
-		This is similar to (click-prepend:), but uses the (mouseover:) macro's behaviour instead of
-		(click:)'s. For more information, consult the description of (click-prepend:).
+		A variation of (click-prepend:) that acts as if `(action:'mouseover')` was provided to it as the optional second changer
+		(in addition to any other changers).
 
-		Example usage:
-		```
-		#THE END
-		(mouseover-prepend: "END")[(REAL) ]
-		```
+		Details:
+		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
+		Harlowe 4.0.
 
 		See also:
-		(mouseover-replace:), (mouseover-append:)
+		(action:)
 
 		Added in: 1.0.0
-		#links 17
+		#deprecated
 	*/
 	/*d:
 		(mouseout-replace: HookName or String, [Changer or Lambda]) -> Changer
 
-		This is similar to (click-replace:), but uses the (mouseout:) macro's behaviour instead of
-		(click:)'s. For more information, consult the description of (click-replace:).
+		A variation of (click-replace:) that acts as if `(action:'mouseout')` was provided to it as the optional second changer
+		(in addition to any other changers).
 
-		Example usage:
-		```
-		You kiss her on the lips.
-		(mouseout-replace: "lips")[mouth that once sneered so cruelly at you.]
-		```
+		Details:
+		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
+		Harlowe 4.0.
 
 		See also:
-		(mouseout-prepend:), (mouseout-append:)
+		(action:)
 
 		Added in: 1.0.0
-		#links 20
+		#deprecated
 	*/
 	/*d:
 		(mouseout-append: HookName or String, [Changer or Lambda]) -> Changer
 
-		This is similar to (click-append:), but uses the (mouseout:) macro's behaviour instead of
-		(click:)'s. For more information, consult the description of (click-append:).
+		A variation of (click-append:) that acts as if `(action:'mouseout')` was provided to it as the optional second changer
+		(in addition to any other changers).
 
-		Example usage:
-		```
-		Hold my hand.
-		(mouseout-append: "hand.")[
-		Thank you.]
-		```
+		Details:
+		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
+		Harlowe 4.0.
 
 		See also:
-		(mouseout-prepend:), (mouseout-replace:)
+		(action:)
 
 		Added in: 1.0.0
-		#links 21
+		#deprecated
 	*/
 	/*d:
 		(mouseout-prepend: HookName or String, [Changer or Lambda]) -> Changer
 
-		This is similar to (click-prepend:), but uses the (mouseout:) macro's behaviour instead of
-		(click:)'s. For more information, consult the description of (click-prepend:).
+		A variation of (click-prepend:) that acts as if `(action:'mouseout')` was provided to it as the optional second changer
+		(in addition to any other changers).
 
-		Example usage:
-		```
-		Touch my cheek.
-		(mouseout-prepend: "cheek")[bristly, unshaven ]
-		```
+		Details:
+		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
+		Harlowe 4.0.
 
 		See also:
-		(mouseout-append:), (mouseout-replace:)
+		(action:)
 
 		Added in: 1.0.0
-		#links 22
+		#deprecated
 	*/
 	revisionTypes.forEach((revisionType) => {
 		interactionTypes.forEach((interactionType) => {
+			if (interactionType === "doubleclick") {
+				return;
+			}
 			const enchantDesc = assign({}, interactionType.enchantDesc, {
 					rerender: revisionType
 				}),
@@ -1479,38 +1419,34 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 	/*d:
 		(mouseover-goto: HookName or String, String) -> Command
 
-		This is similar to (click-goto:), but uses the (mouseover:) macro's behaviour instead of
-		(click:)'s. For more information, consult the description of (click-goto:).
+		A variation of (click-goto:) that acts as if `(action:'mouseover')` was provided to it as the optional second changer
+		(in addition to any other changers).
 
-		Example usage:
-		```
-		Wait... what's |2>[over there?]
-		(mouseover-goto: ?2, "Test")
-		```
+		Details:
+		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
+		Harlowe 4.0.
 
 		See also:
-		(link-goto:), (click-undo:), (mouseout-goto:)
+		(action:)
 
 		Added in: 3.0.0
-		#links 16
+		#deprecated
 	*/
 	/*d:
 		(mouseout-goto: HookName or String, String) -> Command
 
-		This is similar to (click-goto:), but uses the (mouseout:) macro's behaviour instead of
-		(click:)'s. For more information, consult the description of (click-goto:).
+		A variation of (click-goto:) that acts as if `(action:'mouseout')` was provided to it as the optional second changer
+		(in addition to any other changers).
 
-		Example usage:
-		```
-		You sink your head into your pillow.
-		(mouseout-goto:"pillow", "Test")
-		```
+		Details:
+		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
+		Harlowe 4.0.
 
 		See also:
-		(link-goto:), (click-undo:), (mouseover-goto:)
+		(action:)
 
 		Added in: 3.0.0
-		#links 21
+		#deprecated
 	*/
 	/*d:
 		(click-undo: HookName or String) -> Command
@@ -1537,40 +1473,39 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 	/*d:
 		(mouseover-undo: HookName or String, String) -> Command
 
-		This is similar to (click-undo:), but uses the (mouseover:) macro's behaviour instead of
-		(click:)'s. For more information, consult the description of (click-undo:).
+		A variation of (click-undo:) that acts as if `(action:'mouseover')` was provided to it as the optional second changer
+		(in addition to any other changers).
 
-		Example usage:
-		```
-		Now isn't the time to think about that. Look!
-		(mouseover-undo:"Look!")
-		```
+		Details:
+		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
+		Harlowe 4.0.
 
 		See also:
-		(link-undo:), (click-undo:), (mouseout-undo:)
+		(action:)
 
 		Added in: 3.2.0
-		#links 16
+		#deprecated
 	*/
 	/*d:
 		(mouseout-undo: HookName or String, String) -> Command
 
-		This is similar to (click-undo:), but uses the (mouseout:) macro's behaviour instead of
-		(click:)'s. For more information, consult the description of (click-undo:).
+		A variation of (click-undo:) that acts as if `(action:'mouseout')` was provided to it as the optional second changer
+		(in addition to any other changers).
 
-		Example usage:
-		```
-		You sink your face into your partner's shoulder.
-		(mouseout-undo:"your partner's shoulder")
-		```
+		Details:
+		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
+		Harlowe 4.0.
 
 		See also:
-		(link-undo:), (click-undo:), (mouseover-undo:)
+		(action:)
 
 		Added in: 3.2.0
-		#links 21
+		#deprecated
 	*/
 	interactionTypes.forEach((interactionType) => {
+		if (interactionType === "doubleclick") {
+			return;
+		}
 		['goto','undo'].forEach(type => {
 			const name = interactionType.name + "-" + type;
 			Macros.addCommand(name,

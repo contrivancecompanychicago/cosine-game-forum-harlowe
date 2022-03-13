@@ -4,7 +4,7 @@ $activecolour: #DD4B39;     // A cooked red
 $visitedcolour: #6941e1;    // A run-of-the-mill purple
 $visitedhovercolour: #E3E;  // A fierce magenta
 
-tw-link, .link, tw-icon, .enchantment-clickblock {
+tw-icon {
 	cursor: pointer;
 }
 
@@ -21,7 +21,21 @@ tw-link, .link, tw-icon, .enchantment-clickblock {
 	}
 }
 
+/*
+	For Harlowe 3 compatibility, this CSS resets the normal tw-link rules (whose specificity can't be changed).
+*/
+@mixin link-reset {
+	color:inherit;
+	font-weight:inherit;
+	transition: none;
+	&:hover, &:active {
+		color:inherit;
+	}
+	cursor: inherit;
+}
+
 tw-link, .enchantment-link {
+	cursor: pointer;
 	color: $linkcolour;
 	@include enchantable-color;
 	font-weight: bold;
@@ -52,16 +66,57 @@ tw-broken-link {
 	cursor: not-allowed;
 }
 
-.enchantment-mouseover {
+tw-link.enchantment-mouseover,                // (action:) given to (link:)
+.link.enchantment-mouseover,                  // (action:) given to (click:)
+tw-expression.enchantment-mouseover > tw-link // (action:)[[Link]]
+{
+	@include link-reset;
 	border-bottom: 2px dashed #999;
+	&.enchantment-button {
+		border-style: dashed;
+	}
 }
-.enchantment-mouseout {
+
+tw-link.enchantment-mouseout,
+.link.enchantment-mouseout,
+tw-expression.enchantment-mouseout > tw-link
+{
+	@include link-reset;
 	border: hsla(200,50%,50%,0.6) 1px solid;
+	border-radius: 0.2em;
 	&:hover {
 		background-color: hsla(200,25%,75%,0.75);
 		border: transparent 1px solid;
-		border-radius: 0.2em;
 	}
+}
+
+tw-link.enchantment-dblclick,
+.link.enchantment-dblclick,
+tw-expression.enchantment-dblclick > tw-link
+{
+	@include link-reset;
+	cursor: pointer;
+	border: 2px solid #999;
+	border-radius: 0;
+	&:active {
+		background-color: #999;
+	}
+}
+
+@mixin button-links {
+	border-radius: 16px;
+	border-style: solid;
+	border-width: 2px;
+	text-align:center;
+	padding:0px 8px;
+	display:block;
+}
+
+tw-link.enchantment-button,
+.link.enchantment-button,
+.enchantment-button:not(.link) tw-link,
+.enchantment-button:not(.link) .link {
+	@include button-links;
 }
 
 // We need the clickblock frame to always be above the contents. So, a large pseudo-element is necessary.
@@ -81,6 +136,7 @@ tw-broken-link {
 }
 
 .enchantment-clickblock {
+	cursor: pointer;
 	width:100%;
 	height:100%;
 	// This should always house a block element.
@@ -125,29 +181,14 @@ tw-broken-link {
 	border: transparent 2px solid;
 	border-radius: 0.2em;
 }
+.enchantment-dblclickblock > :not(tw-enchantment)::after {
+	@include enchantment-block;
+	cursor: pointer;
+	border: 2px solid #999;
+}
 
-@mixin button-links {
-	border-radius: 16px;
-	border-style: solid;
-	border-width: 2px;
-	text-align:center;
-	padding:0px 8px;
-	display:block;
-}
 /*
-	Button styling is applied in three ways: by (button:) changing normal links and (click:) links as their second argument...
-*/
-tw-link.enchantment-button,
-.enchantment-link.enchantment-button,
-/*
-	...by link changers and (click:) links being enchanted by (enchant:), or link expressions changed by attached (button:) changers...
-*/
-.enchantment-button:not(.enchantment-link) tw-link,
-.enchantment-button:not(.enchantment-link) .enchantment-link {
-	@include button-links;
-}
-/*
-	...and links inside (dialog:) dialogs.
+	Button styling also applies to links inside (dialog:) dialogs.
 */
 tw-dialog-links {
 	padding-top:1.5em;

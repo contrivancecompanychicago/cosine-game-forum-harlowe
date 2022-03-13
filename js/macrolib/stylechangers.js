@@ -502,7 +502,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		/*d:
 			(more:) -> Changer
 
-			Hooks that have this changer attached will only be run once no other exits - links, (mouseover:) or (mouseout:) elements - are remaining
+			Hooks that have this changer attached will only be run once no other exits - links and (click:)-enchanted areas - are remaining
 			in the passage, and will reveal "more" prose.
 
 			Example usage:
@@ -1114,7 +1114,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			of other interactive fiction engines' link options.
 
 			Details:
-			This is essentially a shortcut for a number of other changers added together. `(link: "Link Text", (button:))` is equivalent to
+			This is essentially a shortcut for a number of other changers added together. `(link: "Link Text", (button:))` is similar to
 			`(link:"Link Text",(align:"=><=")+(box:"X")+(b4r:"solid")+(css:"padding:0px")+(corner-radius:16))`. However, unlike the latter,
 			this changer is designed to work correctly with (click:) and `(enchant:"text")`, so that the button border matches the current link colour.
 
@@ -1147,6 +1147,119 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			},
 			[]
 		)
+		/*d:
+			(action: String) -> Changer
+
+			When attached to a link command, or given to a link changer macro as the second value, this changer turns the link into a different
+			kind of interaction element with a different appearance - one that is either activated by hovering the mouse pointer over it, hoving the mouse pointer
+			off of it, or double-clicking it. This does nothing when attached or supplied to a non-link hook.
+
+			Example usage:
+			```
+			(action:'mouseover')[[Now isn't the time to think about that. Look!->Test]]
+
+			|1>[Hey, c'mover here, cutie.](click:?1, (action:'mouseover'))[ Wanna merge brains over this printer cable?]
+			
+			(box:"X")|A>[You can't touch me!](click-replace: ?A,(action:'mouseover'))[Aah! That tickles!]
+			
+			You reach into the box...(click-append: "box...", (action:'mouseover'))[ ...and pull out the final jewel.]
+			
+			(link:"CORE OVERRIDE",(action:'mouseout'))[Core overridden. The programs are going wild.]
+			
+			You kiss her on the (link: "lips.",(action:'mouseout'))[mouth that once sneered so cruelly at you.]
+			
+			Hold my (link-reveal:"hand.",(action:'mouseout'))[ Thank you.]
+			```
+
+			Rationale:
+			Even though Harlowe (and Twine in general) is primarily a tool for writing serious non-linear prose works, it is also meant as a tool
+			for playful, experimental, and abstract works where the act of interaction with the text is put into focus. To that end,
+			macros like this one exist to provide alternative, unusual or unexpected ways for the player to interact with links.
+
+			Since these actions (especially double-clicking) differ from the usual convention of hyperlinks, it is recommended that your story
+			explains these kinds of links to the player. Or, if you'd prefer to surprise or conceal something from the player, you may choose not to,
+			and leave them to discover these interactions for themselves.
+
+			Details:
+			
+			The string values this accepts are listed below. Note that these strings are case-insensitive and dash-insensitive.
+			<style>t-s[mouseout]:hover { background-color: hsla(200,25%,75%,0.75); border: transparent 1px solid !important; }
+			t-s[doubleclick]:active { background-color: #999; }</style>
+
+			| String | Default appearance | Action
+			|---
+			| `"mouseover"` | <t-s style="border-bottom: 2px dashed #999"></t-s> | Move the mouse over the link to activate it (or press it on a touch device).
+			| `"mouseout"` | <t-s mouseout style="border: rgba(64,149,191,.6) 1px solid;border-radius: .2em;"></t-s> | Move the mouse onto the link, then off it, to activate it (or press it on a touch device).
+			| `"doubleclick"` | <t-s doubleclick style="border: 2px solid #999;"></t-s> | Double-click (or double-press) the link to activate it.
+			| `"click"` | | An unchanged link that is activated by clicking.
+
+			These actions cannot be combined - `(action:'doubleclick')+(action:'click')` will only behave like `(action:'click')`.
+
+			Each of these actions causes the links to have a slightly different sensation and mood to a normal link. `"mouseover"` conveys a mood of fragility and spontaneity in your stories, of text reacting to the merest of touches.
+			`"mouseout"` conveys a sense of "pointing" at the element to interact with it rather than "touching" it, and gives a dream-like or unearthly air to scenes or places.
+			`"doubleclick"` requires a more forceful interaction than clicking, and is commonly associated with desktop operating systems and the concept of "opening".
+			
+			Because this fundamentally changes the manner in which the link is interacted with, **this currently does nothing** when given to (enchant:), (enchant-in:), (line-style:), or other such macros.
+
+			It is *not* recommended using this with (click:) to enchant a hook which already contains a link.
+
+			While you can write something like `(click:?Page, (action:"mouseover"))`, the result won't be that interesting: if the mouse pointer is anywhere
+			on the page, the hook to which the (click:) changer is attached will immediately run.
+
+			See also:
+			(cycling-link:), (seq-link:)
+
+			Added in: 3.3.0
+			#links 99
+		*/
+		(...(() => {
+			const actions = {
+				click: {
+					className: 'enchantment-link',
+					blockClassName: "enchantment-clickblock",
+				},
+				doubleclick: {
+					className: 'enchantment-dblclick',
+					blockClassName: "enchantment-dblclickblock",
+				},
+				mouseover: {
+					className: 'enchantment-mouseover',
+					blockClassName: "enchantment-mouseoverblock",
+				},
+				mouseout: {
+					className: 'enchantment-mouseout',
+					blockClassName: "enchantment-mouseoutblock",
+				},
+			};
+
+			return [
+				"action",
+				(_, type) => ChangerCommand.create("action", [Utils.insensitiveName(type)]),
+				(d, type) => {
+					d.attr.push({
+						class() {
+							/*
+								This recursive call is to absolutely make sure that the element is block, so that the correct class is added.
+							*/
+							const isBlock = (function isBlock(target) {
+								target = $(target);
+								return target.is("tw-story, tw-sidebar, tw-passage")
+									|| ["block","flex"].includes(target.css('display'))
+									|| target.children().get().some(isBlock);
+							}(this));
+							/*
+								In short: this removes all of the action classes, then re-adds the specified action class.
+							*/
+							return Array.from(this.classList)
+								.filter(c => !Object.keys(actions).some(e => actions[e].className === c || actions[e].blockClassName === c))
+								.concat(actions[type][isBlock ? "blockClassName" : "className"]).join(' ');
+						},
+					});
+					return d;
+				},
+				[insensitiveSet(...Object.keys(actions))]
+			];
+		})())
 
 		/*d:
 			(border: String, [String], [String], [String]) -> Changer
@@ -1906,35 +2019,35 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 
 			| String | Example | Incompatible with
 			|---
-			| "none"           | <t-s></t-s> | 
-			| "bold"           | <t-s style="font-weight:bold"></t-s> | 
-			| "italic"         | <t-s style="font-style:italic"></t-s> | 
-			| "underline"      | <t-s style="text-decoration: underline"></t-s> | "double-underline", "wavy-underline", "strike", "double-strike", "wavy-strike"
-			| "double-underline" | <t-s style="text-decoration: underline;text-decoration-style:double"></t-s> | "underline", "wavy-underline","strike", "double-strike", "wavy-strike"
-			| "wavy-underline" | <t-s style="text-decoration: underline;text-decoration-style:wavy"></t-s> | "underline", "double-underline", "strike", "double-strike", "wavy-strike"
-			| "strike"         | <t-s style="text-decoration: line-through"></t-s> | "underline", "double-underline", "wavy-underline", "double-strike", "wavy-strike"
-			| "double-strike"  | <t-s style="text-decoration: line-through;text-decoration-style:double"></t-s> | "underline", "double-underline", "wavy-underline", "strike", "wavy-strike"
-			| "wavy-strike"    | <t-s style="text-decoration: line-through;text-decoration-style:wavy"></t-s> | "underline", "double-underline", "wavy-underline", "strike", "double-strike"
-			| "superscript"    | <t-s style="vertical-align:super;font-size:.83em"></t-s> | "subscript"
-			| "subscript"      | <t-s style="vertical-align:sub;font-size:.83em"></t-s> | "superscript"
-			| "mark"           | <t-s style="background-color: hsla(60, 100%, 50%, 0.6)"></t-s> | (background-color:)
-			| "outline"        | <t-s style="color:white; text-shadow: -1px -1px 0 black, 1px -1px 0 black, -1px  1px 0 black, 1px  1px 0 black"></t-s> | "shadow", "emboss", "blur", blurrier", "smear"
-			| "shadow"         | <t-s style="text-shadow: 0.08em 0.08em 0.08em black"></t-s> | "outline", "emboss", "blur", "blurrier", "smear"
-			| "emboss"         | <t-s style="text-shadow: 0.04em 0.04em 0em black"></t-s> | "outline", "shadow", "blur", "blurrier", "smear"
-			| "condense"       | <t-s style="letter-spacing:-0.08em"></t-s> | "expand"
-			| "expand"         | <t-s style="letter-spacing:0.1em"></t-s> | "condense"
-			| "blur"           | <t-s style="text-shadow: 0em 0em 0.08em black; color:transparent"></t-s> | "outline", "shadow", "emboss", "blurrier", "smear"
-			| "blurrier"       | <t-s style="text-shadow: 0em 0em 0.2em black; color:transparent"></t-s> | "outline", "shadow", "emboss", "blur", "smear"
-			| "smear"          | <t-s style="text-shadow: 0em 0em 0.02em black, -0.2em 0em 0.5em black, 0.2em 0em 0.5em black; color:transparent"></t-s> | "outline", "shadow", "emboss", "blur", "blurrier"
-			| "mirror"         | <t-s style="display:inline-block;transform:scaleX(-1)"></t-s> | "upside-down"
-			| "upside-down"    | <t-s style="display:inline-block;transform:scaleY(-1)"></t-s> | "mirror"
-			| "blink"          | <t-s style="animation:fade-in-out 1s steps(1,end) infinite alternate"></t-s> | "fade-in-out", "rumble", "shudder", "sway", "buoy", "fidget", (opacity:)
-			| "fade-in-out"    | <t-s style="animation:fade-in-out 2s ease-in-out infinite alternate"></t-s> | "blink", "rumble", "shudder", "sway", "buoy", "fidget", (opacity:)
-			| "rumble"         | <t-s style="display:inline-block;animation:rumble linear 0.1s 0s infinite"></t-s> | "fade-in-out", "blink", "sway", "fidget"
-			| "shudder"        | <t-s style="display:inline-block;animation:shudder linear 0.1s 0s infinite"></t-s> | "fade-in-out", "blink", "buoy", "fidget"
-			| "sway"           | <t-s style="display:inline-block;animation:sway 5s linear 0s infinite"></t-s> | "fade-in-out", "blink", "rumble", "buoy", "fidget"
-			| "buoy"           | <t-s style="display:inline-block;animation:buoy 5s linear 0s infinite"></t-s> | "fade-in-out", "blink", "shudder", "sway", "fidget"
-			| "fidget"         | <t-s style="display:inline-block;animation:fidget 60s step-end 0s infinite"></t-s> | "fade-in-out", "blink", "rumble", "shudder", "sway", "buoy"
+			| `"none"`           | <t-s></t-s> | 
+			| `"bold"`           | <t-s style="font-weight:bold"></t-s> | 
+			| `"italic"`         | <t-s style="font-style:italic"></t-s> | 
+			| `"underline"`      | <t-s style="text-decoration: underline"></t-s> | "double-underline", "wavy-underline", "strike", "double-strike", "wavy-strike"
+			| `"double-underline"` | <t-s style="text-decoration: underline;text-decoration-style:double"></t-s> | "underline", "wavy-underline","strike", "double-strike", "wavy-strike"
+			| `"wavy-underline"` | <t-s style="text-decoration: underline;text-decoration-style:wavy"></t-s> | "underline", "double-underline", "strike", "double-strike", "wavy-strike"
+			| `"strike"`         | <t-s style="text-decoration: line-through"></t-s> | "underline", "double-underline", "wavy-underline", "double-strike", "wavy-strike"
+			| `"double-strike"`  | <t-s style="text-decoration: line-through;text-decoration-style:double"></t-s> | "underline", "double-underline", "wavy-underline", "strike", "wavy-strike"
+			| `"wavy-strike"`    | <t-s style="text-decoration: line-through;text-decoration-style:wavy"></t-s> | "underline", "double-underline", "wavy-underline", "strike", "double-strike"
+			| `"superscript"`    | <t-s style="vertical-align:super;font-size:.83em"></t-s> | "subscript"
+			| `"subscript"`      | <t-s style="vertical-align:sub;font-size:.83em"></t-s> | "superscript"
+			| `"mark"`           | <t-s style="background-color: hsla(60, 100%, 50%, 0.6)"></t-s> | (background-color:)
+			| `"outline"`        | <t-s style="color:white; text-shadow: -1px -1px 0 black, 1px -1px 0 black, -1px  1px 0 black, 1px  1px 0 black"></t-s> | "shadow", "emboss", "blur", blurrier", "smear"
+			| `"shadow"`         | <t-s style="text-shadow: 0.08em 0.08em 0.08em black"></t-s> | "outline", "emboss", "blur", "blurrier", "smear"
+			| `"emboss"`         | <t-s style="text-shadow: 0.04em 0.04em 0em black"></t-s> | "outline", "shadow", "blur", "blurrier", "smear"
+			| `"condense"`       | <t-s style="letter-spacing:-0.08em"></t-s> | "expand"
+			| `"expand"`         | <t-s style="letter-spacing:0.1em"></t-s> | "condense"
+			| `"blur"`           | <t-s style="text-shadow: 0em 0em 0.08em black; color:transparent"></t-s> | "outline", "shadow", "emboss", "blurrier", "smear"
+			| `"blurrier"`       | <t-s style="text-shadow: 0em 0em 0.2em black; color:transparent"></t-s> | "outline", "shadow", "emboss", "blur", "smear"
+			| `"smear"`          | <t-s style="text-shadow: 0em 0em 0.02em black, -0.2em 0em 0.5em black, 0.2em 0em 0.5em black; color:transparent"></t-s> | "outline", "shadow", "emboss", "blur", "blurrier"
+			| `"mirror"`         | <t-s style="display:inline-block;transform:scaleX(-1)"></t-s> | "upside-down"
+			| `"upside-down"`    | <t-s style="display:inline-block;transform:scaleY(-1)"></t-s> | "mirror"
+			| `"blink"`          | <t-s style="animation:fade-in-out 1s steps(1,end) infinite alternate"></t-s> | "fade-in-out", "rumble", "shudder", "sway", "buoy", "fidget", (opacity:)
+			| `"fade-in-out"`    | <t-s style="animation:fade-in-out 2s ease-in-out infinite alternate"></t-s> | "blink", "rumble", "shudder", "sway", "buoy", "fidget", (opacity:)
+			| `"rumble"`         | <t-s style="display:inline-block;animation:rumble linear 0.1s 0s infinite"></t-s> | "fade-in-out", "blink", "sway", "fidget"
+			| `"shudder"`        | <t-s style="display:inline-block;animation:shudder linear 0.1s 0s infinite"></t-s> | "fade-in-out", "blink", "buoy", "fidget"
+			| `"sway"`           | <t-s style="display:inline-block;animation:sway 5s linear 0s infinite"></t-s> | "fade-in-out", "blink", "rumble", "buoy", "fidget"
+			| `"buoy"`           | <t-s style="display:inline-block;animation:buoy 5s linear 0s infinite"></t-s> | "fade-in-out", "blink", "shudder", "sway", "fidget"
+			| `"fidget"`         | <t-s style="display:inline-block;animation:fidget 60s step-end 0s infinite"></t-s> | "fade-in-out", "blink", "rumble", "shudder", "sway", "buoy"
 			
 			You can use the "none" style to remove an existing style from a combined changer. NOTE: As of Harlowe 3.2.2,
 			this can only be used to remove styles from combined changers, such as by `(set: $changer to it + (text-style:"none"))`,
@@ -2171,7 +2284,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			* (text-style:)
 			* (text-size:)
 			
-			More extensive mouse-based interactivity should use the (mouseover:) and (mouseout:) macros.
+			More extensive mouse-based interactivity should use the (action:) changer.
 
 			This macro is not recommended for use in games or stories intended for use on touch devices, as
 			the concept of "hovering" over an element doesn't really make sense with that input method.

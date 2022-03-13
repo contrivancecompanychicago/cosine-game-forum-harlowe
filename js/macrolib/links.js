@@ -10,8 +10,6 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 	const {optional,rest,either} = Macros.TypeSignature;
 	const emptyLinkTextMessages = ["Links can't have empty strings for their displayed text.",
 		"In the link syntax, a link's displayed text is inside the [[ and ]], and on the non-pointy side of the -> or <- arrow if it's there."];
-	//const emptyPassageNameMessages = ["Passage links must have a passage name.",
-	//	"In the link syntax, a link's passage name is inside the [[ and ]], and on the pointy side of the -> or <- arrow if it's there."];
 	const {assign} = Object;
 
 	/*
@@ -24,104 +22,136 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 		from this <tw-story> handler.
 	*/
 	Utils.onStartup(() => {
+		/*
+			A browser compatibility check for touch events (which suggest a touchscreen). If true, then mouseover and mouseout events
+			should have "click" added.
+			A copy of this appears in macrolib/enchantments.js.
+		*/
+		const hasTouchEvents = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+
+		function clickLinkEvent(e) {
+			const link = $(this),
+				/*
+					Since there can be a <tw-enchantment> between the parent <tw-expression>
+					that holds the linkPassageName data and this <tw-link> itself,
+					we need to explicitly attempt to reach the <tw-expression>.
+				*/
+				expression = link.closest('tw-expression'),
+				/*
+					Links' events are, due to limitations in the ChangeDescriptor format,
+					attached to the <tw-hook> or <tw-expression> containing the element.
+				*/
+				closest = link.closest('tw-expression, tw-hook'),
+				event = closest.data('clickEvent'),
+				/*
+					Don't do anything if control flow in any section is currently blocked
+					(which means the click input should be dropped).
+				*/
+				section = closest.data('section');
+
+			/*
+				The debug "open" buttons shouldn't activate enchantments on click.
+			*/
+			if (link.is('tw-open-button')) {
+				return;
+			}
+
+			if (section && section.stackTop && section.stackTop.blocked &&
+					/*
+						However, links inside (dialog:)s and other blocking elements may still have their
+						events occur. This is currently (as of October 2021) distinct from (click:) enchantments, which
+						are "passage-wide" and thus remain blocked.
+					*/
+					(!(section.stackTop.blocked instanceof $) || !section.stackTop.blocked.find(link).length)) {
+				return;
+			}
+
+			if (event) {
+				/*
+					If a link's body contains a <tw-error>, then don't
+					allow it to be clicked anymore, so that (for instance), the error message
+					can be expanded to see the line of additional advice.
+				*/
+				if (link.find('tw-error').length > 0) {
+					return;
+				}
+				e.stopPropagation();
+				event(link);
+				return;
+			}
+			/*
+				If no event was registered, then this must be a passage link.
+			*/
+			const next = expression.data('linkPassageName');
+			/*
+				The correct t8nDepart, t8nArrive and t8nTime belongs to the deepest <tw-enchantment>.
+				Iterate through each <tw-enchantment> and update these variables.
+				(A .each() loop is easier when working with a jQuery compared to a .reduce().)
+			*/
+
+			let transition = Object.assign({}, expression.data('passageT8n') || {});
+			/*
+				$().find() SHOULD return the tw-enchantments in ascending depth order.
+			*/
+			expression.find('tw-enchantment').each((_,e) => {
+				Object.assign(transition, $(e).data('passageT8n') || {});
+			});
+
+			if (next) {
+				e.stopPropagation();
+				// TODO: stretchtext
+				Engine.goToPassage(next, { transition });
+				return;
+			}
+			/*
+				Or, a (link-undo:) or (link-fullscreen:) link.
+			*/
+			if (link.is('[undo]')) {
+				e.stopPropagation();
+				Engine.goBack({ transition });
+				return;
+			}
+			if (link.is('[fullscreen]')) {
+				e.stopPropagation();
+				Engine.toggleFullscreen();
+				/*
+					Notice that the presence of the handler below means that we don't have to
+					run the link's event handler here, as it will be handled automatically.
+				*/
+				return;
+			}
+		}
 		Utils.storyElement.on(
 			/*
 				The jQuery event namespace is "passage-link".
 			*/
 			"click.passage-link",
-			'tw-link',
-			function clickLinkEvent(e) {
-				const link = $(this),
-					/*
-						Since there can be a <tw-enchantment> between the parent <tw-expression>
-						that holds the linkPassageName data and this <tw-link> itself,
-						we need to explicitly attempt to reach the <tw-expression>.
-					*/
-					expression = link.closest('tw-expression'),
-					/*
-						Links' events are, due to limitations in the ChangeDescriptor format,
-						attached to the <tw-hook> or <tw-expression> containing the element.
-					*/
-					closest = link.closest('tw-expression, tw-hook'),
-					event = closest.data('clickEvent'),
-					/*
-						Don't do anything if control flow in any section is currently blocked
-						(which means the click input should be dropped).
-					*/
-					section = closest.data('section');
+			/*
+				Only links that haven't been altered to use "mouseover" "mouseout" or "doubleclick" changers can be triggered by clicking.
+				This list of :not() classes is required for IE10 compatibility.
+			*/
+			'tw-link' + (!hasTouchEvents ? ':not(.enchantment-mouseover):not(.enchantment-mouseout):not(.enchantment-dblclick)' : ''),
+			clickLinkEvent
+		)
+		/*
+			These other events handle the different (action:)s that can be applied to a link.
+			"tw-link.enchantment-mouseover" refers to (action:) given to (link:),
+			and "tw-expression.enchantment-mouseover > tw-link" refers to (action:)[[Link]].
 
-				/*
-					The debug "open" buttons shouldn't activate enchantments on click.
-				*/
-				if (link.is('tw-open-button')) {
-					return;
-				}
-
-				if (section && section.stackTop && section.stackTop.blocked &&
-						/*
-							However, links inside (dialog:)s and other blocking elements may still have their
-							events occur. This is currently (as of October 2021) distinct from (click:) enchantments, which
-							are "passage-wide" and thus remain blocked.
-						*/
-						(!(section.stackTop.blocked instanceof $) || !section.stackTop.blocked.find(link).length)) {
-					return;
-				}
-
-				if (event) {
-					/*
-						If a link's body contains a <tw-error>, then don't
-						allow it to be clicked anymore, so that (for instance), the error message
-						can be expanded to see the line of additional advice.
-					*/
-					if (link.find('tw-error').length > 0) {
-						return;
-					}
-					e.stopPropagation();
-					event(link);
-					return;
-				}
-				/*
-					If no event was registered, then this must be a passage link.
-				*/
-				const next = expression.data('linkPassageName');
-				/*
-					The correct t8nDepart, t8nArrive and t8nTime belongs to the deepest <tw-enchantment>.
-					Iterate through each <tw-enchantment> and update these variables.
-					(A .each() loop is easier when working with a jQuery compared to a .reduce().)
-				*/
-
-				let transition = Object.assign({}, expression.data('passageT8n') || {});
-				/*
-					$().find() SHOULD return the tw-enchantments in ascending depth order.
-				*/
-				expression.find('tw-enchantment').each((_,e) => {
-					Object.assign(transition, $(e).data('passageT8n') || {});
-				});
-
-				if (next) {
-					e.stopPropagation();
-					// TODO: stretchtext
-					Engine.goToPassage(next, { transition });
-					return;
-				}
-				/*
-					Or, a (link-undo:) or (link-fullscreen:) link.
-				*/
-				if (link.is('[undo]')) {
-					e.stopPropagation();
-					Engine.goBack({ transition });
-					return;
-				}
-				if (link.is('[fullscreen]')) {
-					e.stopPropagation();
-					Engine.toggleFullscreen();
-					/*
-						Notice that the presence of the handler below means that we don't have to
-						run the link's event handler here, as it will be handled automatically.
-					*/
-					return;
-				}
-			}
+			This dissimilarity of link structures is something that'll probably be addressed in Harlowe 4.
+		*/
+		.on(
+			"mouseover.passage-link",
+			'tw-link.enchantment-mouseover, tw-expression.enchantment-mouseover > tw-link',
+			clickLinkEvent
+		).on(
+			"mouseout.passage-link",
+			'tw-link.enchantment-mouseout, tw-expression.enchantment-mouseout > tw-link',
+			clickLinkEvent
+		).on(
+			"dblclick.passage-link",
+			'tw-link.enchantment-dblclick, tw-expression.enchantment-dblclick > tw-link',
+			clickLinkEvent
 		);
 		/*
 			This handler updates all (link-fullscreen:) links' text, using their own event handlers,
@@ -373,16 +403,18 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 				if (!text) {
 					return TwineError.create("datatype", emptyLinkTextMessages[0]);
 				}
-				if (changer) {
-					const summary = changer.summary();
-					if (['newTargets', 'target', 'appendSource', 'functions'].some(e => summary.includes(e))) {
-						return TwineError.create(
-							"datatype",
-							"The changer given to (" + arr[0] + ":) can't include a revision or enchantment changer like (replace:) or (click:)."
-						);
-					}
+				if (changer && !changer.canEnchant) {
+					return TwineError.create(
+						"datatype",
+						`The changer given to (${arr[0]}:) can't be or include a revision, enchantment, or interaction changer like (replace:), (click:), or (link:).`
+					);
 				}
-				return ChangerCommand.create(arr[0], [text].concat(changer || []));
+				return ChangerCommand.create(arr[0], [text].concat(changer || []), null,
+					/*
+						The canEnchant boolean.
+						This should be "false", but for compatibility for Harlowe 3.3.0, this is currently true.
+					*/
+					true);
 			},
 			(desc, text, changer) => {
 				const name = arr[0];
@@ -1059,14 +1091,11 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			/*
 				Perform the usual changer type-check that's used for (link:) etc.
 			*/
-			if (changer) {
-				const summary = changer.summary();
-				if (['newTargets', 'target', 'appendSource', 'functions'].some(e => summary.includes(e))) {
-					return TwineError.create(
-						"datatype",
-						"The changer given to (link-reveal-goto:) can't include a revision or enchantment changer like (replace:) or (click:)."
-					);
-				}
+			if (changer && !changer.canEnchant) {
+				return TwineError.create(
+					"datatype",
+					"The changer given to (link-reveal-goto:) can't include a revision, enchantment, or interaction changer like (replace:), (click:), or (link:)."
+				);
 			}
 			/*
 				Being a variant of (link-goto:), this uses the same rules for passage name computation.
@@ -1080,7 +1109,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 				Because this is a desugaring of the link syntax, like (link-goto:), we should create
 				a broken link only when the changer is attached.
 			*/
-			return ChangerCommand.create("link-reveal-goto", [text,passage,changer].filter(e => e !== undefined));
+			return ChangerCommand.create("link-reveal-goto", [text,passage,changer].filter(e => e !== undefined), null, /*canEnchant*/ false);
 		},
 		(desc, text, passageName, changer) => {
 			/*

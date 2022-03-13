@@ -107,7 +107,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 				equal = false;
 				const ind = oldVal.indexOf(v);
 				/*
-					If this value can be found elsewhere in oldVal (suggesting a deletion
+					If this value can be found elsewhere in oldVal (potentially suggesting a deletion
 					earlier in this array) then try to serialise as an index to that.
 				*/
 				if (ind > -1) {
@@ -176,11 +176,24 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			if (!onlyInOld.size && !onlyInNew.size) {
 				ret = path;
 			}
+			/*
+				TODO: a better check than this to see if the valueRef is longer than the string representation?
+			*/
 			if (onlyInOld.size + onlyInNew.size > newVal.size) {
 				ret = toSource(newVal);
 			}
 			else {
-				ret = "it" + (onlyInNew.size ? "+" + toSource(onlyInNew) : '') + (onlyInOld.size ? "-" + toSource(onlyInOld) : '');
+				ret = path + (onlyInNew.size ? "+" + toSource(onlyInNew) : '') + (onlyInOld.size ? "-" + toSource(onlyInOld) : '');
+			}
+		}
+		/*
+			Strings are optimised only if they are appended or prepended versions of the previous string.
+		*/
+		else if (typeof newVal === "string" && typeof oldVal === "string" && newVal) {
+			if (newVal.startsWith(oldVal)) {
+				ret = path + "+" + toSource(newVal.slice(oldVal.length));
+			} else if (newVal.endsWith(oldVal)) {
+				ret = toSource(newVal.slice(0,newVal.length - oldVal.length)) + "+" + path;
 			}
 		}
 		if (!ret) {
@@ -378,10 +391,10 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 				}
 				/*
 					Second attempt at producing a valueRef:
-					When a map or array has been permuted, attempt to construct a smaller serialisation of that
+					When a data structure has been permuted, attempt to construct a smaller serialisation of that
 					change, based on the previous known value for the variable.
 				*/
-				else if (isArray(value) || value instanceof Map || value instanceof Set) {
+				else if (isArray(value) || value instanceof Map || value instanceof Set || typeof value === "string") {
 					for(let i = recent; i >= 0; i -= 1) {
 						const v = timeline[i].variables[prop];
 						if (v !== undefined) {

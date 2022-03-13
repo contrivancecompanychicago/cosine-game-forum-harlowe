@@ -165,34 +165,52 @@ describe("save macros", function() {
 				done();
 			}, 20);
 		});
-		it("can restore collection variables changed over multiple turns", function(done) {
+		it("can restore string variables changed over multiple turns", function(done) {
+			runPassage("(set:$a to (str-repeated:30,'1'))",'foo');
+			runPassage("(set:$a to it + (str-repeated:31,'2'))",'bar');
+			runPassage("(set:$a to (str-repeated:32,'3') + it)",'baz');
+			runPassage("(savegame:'1')",'quux');
+			runPassage("(set:$a to '')",'qux');
+			runPassage("(loadgame:'1')",'grault');
+			setTimeout(function() {
+				expect("(count:$a,'1') (count:$a,'2') (count:$a,'3') (print:$a's 1st + $a's last)").markupToPrint("30 31 32 32");
+				done();
+			}, 20);
+		});
+		it("can restore array variables changed over multiple turns", function(done) {
 			runPassage("(set:$longStr to (str-repeated:30,'1'))(set:$arr to (a:(dm:'HP',1,'XP',(str-repeated:40,'0'),'TP',(str-repeated:40,'1')),(dm:'HP',1,'TP',(str-repeated:40,'2'),'XP',(str-repeated:40,'0'))))",'foo');
 			runPassage("(set:$arr's 1st's HP to it + 1)                         (set:$arr's 2nd's MP to 20)",'bar');
 			runPassage("(set:$arr's 1st's HP to it + 1)(set:$arr's 1st's MP to 30)",'baz');
-			runPassage("(set:$arr's 1st's HP to it + 1)                         (set:$arr's 2nd's MP to 40)",'garply');
+			runPassage("(set:$arr's 1st's HP to it + 1)                         (set:$arr's 2nd's MP to 40) (set: $arr's 1st's XP to it + '7')",'garply');
 			runPassage("(savegame:'1')",'quux');
 			runPassage("(set:$arr to (a:))",'qux');
 			runPassage("(loadgame:'1')",'grault');
 			setTimeout(function() {
-				expect("(print: $arr's 1st's HP) (print:$arr's 1st's MP) (print:$arr's 1st's TP) (print:$arr's 2nd's HP) (print:$arr's 2nd's MP) (print:$arr's 2nd's TP)(erase-past:-1)").markupToPrint("4 30 " + '1'.repeat(40) + " 1 40 " + '2'.repeat(40));
-				runPassage("(set:$map to (dm:'A',(dm:'B',(dm:'C',(str-repeated:40,'1'),'c',(str-repeated:40,'2')))))",'foo2');
-				runPassage("(set:$map's A to $map's A)(set:$map's D to (dm:'E', $map's A's B's C))",'bar2');
-				runPassage("(set:$map's D's G to (str-repeated:40,'3'), $map's A's B's H to (str-repeated:40,'4'))",'baz2');
-				runPassage("(savegame:'2')",'quux2');
-				runPassage("(set:$map to (dm:))",'qux2');
-				runPassage("(loadgame:'2')",'grault2');
-				setTimeout(function() {
-					expect("(print: $map's A's B's C) (print: $map's D's E) (print: $map's A's B's H) (print: $map's D's G)").markupToPrint('1'.repeat(40) + " " + '1'.repeat(40) + " " + '4'.repeat(40) + " " + '3'.repeat(40));
-					runPassage("(set:$ds to (ds:(str-repeated:40,'1'),(str-repeated:40,'2')))(set:$ds2 to $ds, $ds3 to $ds, $ds4 to $ds)",'foo3');
-					runPassage("(set: $ds to it + (ds:(str-repeated:40,'3')), $ds2 to it - (ds:(str-repeated:40,'1')), $ds3 to it - (ds:(str-repeated:40,'2')) + (ds:(str-repeated:40,'4')))",'quux3');
-					runPassage("(savegame:'3')",'baz3');
-					runPassage("(set:$ds to (ds:))",'qux3');
-					runPassage("(loadgame:'3')",'grault3');
-					setTimeout(function() {
-						expect("(print: $ds) (print: $ds2) (print: $ds3)").markupToPrint('1'.repeat(40) + "," + '2'.repeat(40) + "," + '3'.repeat(40) + " " + '2'.repeat(40) + " " + '1'.repeat(40) + "," + '4'.repeat(40));
-						done();
-					}, 20);
-				}, 20);
+				expect("(print: $arr's 1st's HP) (print:$arr's 1st's MP) (print:$arr's 1st's TP) (print:$arr's 2nd's HP) (print:$arr's 2nd's MP) (print:$arr's 2nd's TP) (print:$arr's 1st's XP's last)").markupToPrint("4 30 " + '1'.repeat(40) + " 1 40 " + '2'.repeat(40) + " 7");
+				done();
+			}, 20);
+		});
+		it("can restore datamap variables changed over multiple turns", function(done) {
+			runPassage("(set:$map to (dm:'A',(dm:'B',(dm:'C',(str-repeated:40,'1'),'c',(str-repeated:40,'2'))),'J',(ds:1,2)))",'foo2');
+			runPassage("(set:$map's A to $map's A)(set:$map's D to (dm:'E', $map's A's B's C))",'bar2');
+			runPassage("(set:$map's D's G to (str-repeated:40,'3'), $map's A's B's H to (str-repeated:40,'4'), $map's J to it + (ds:3,4,5,6,7,8,9,10,11,12,13))",'baz2');
+			runPassage("(savegame:'2')",'quux2');
+			runPassage("(set:$map to (dm:))",'qux2');
+			runPassage("(loadgame:'2')",'grault2');
+			setTimeout(function() {
+				expect("(print: $map's A's B's C) (print: $map's D's E) (print: $map's A's B's H) (print: $map's D's G) (print: $map's J's length)").markupToPrint('1'.repeat(40) + " " + '1'.repeat(40) + " " + '4'.repeat(40) + " " + '3'.repeat(40) + " 13");
+				done();
+			}, 20);
+		});
+		it("can restore dataset variables changed over multiple turns", function(done) {
+			runPassage("(set:$ds to (ds:(str-repeated:40,'1'),(str-repeated:40,'2')))(set:$ds2 to $ds, $ds3 to $ds, $ds4 to $ds)",'foo3');
+			runPassage("(set: $ds to it + (ds:(str-repeated:40,'3')), $ds2 to it - (ds:(str-repeated:40,'1')), $ds3 to it - (ds:(str-repeated:40,'2')) + (ds:(str-repeated:40,'4')))",'quux3');
+			runPassage("(savegame:'3')",'baz3');
+			runPassage("(set:$ds to (ds:))",'qux3');
+			runPassage("(loadgame:'3')",'grault3');
+			setTimeout(function() {
+				expect("(print: $ds) (print: $ds2) (print: $ds3)").markupToPrint('1'.repeat(40) + "," + '2'.repeat(40) + "," + '3'.repeat(40) + " " + '2'.repeat(40) + " " + '1'.repeat(40) + "," + '4'.repeat(40));
+				done();
 			}, 20);
 		});
 		it("can restore changer command variables", function(done) {
