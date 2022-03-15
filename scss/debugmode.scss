@@ -253,7 +253,8 @@ $zindex: 999999;
 					overflow-wrap: anywhere;
 					overflow-y: scroll;
 					& ~ .to-desc {
-						width: 40%;
+						width: calc(40% - 2em);
+						margin-left: 2em;
 						display: inline-block;
 					}
 				}

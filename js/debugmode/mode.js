@@ -89,12 +89,14 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 		const replayEl = $(`<tw-eval-replay>${
 				replay.length === 1 ? '' : `<tw-eval-code></tw-eval-code>`
 			}<tw-eval-explanation></tw-eval-explanation>${
-				replay.length === 1 ? '' : `<tw-dialog-links><tw-link style='visibility:hidden'>← ←</tw-link><b></b><tw-link>→ →</tw-link></tw-dialog-links>`
+				replay.length === 1 ? '' : `<tw-dialog-links><tw-link style='visibility:hidden'>← 10</tw-link><tw-link style='visibility:hidden'>← ←</tw-link><b></b><tw-link>→ →</tw-link><tw-link>10 →</tw-link></tw-dialog-links>`
 			}</tw-eval-replay>`);
 		dialogElem.find('tw-dialog').css({width:'75vw','max-width':'75vw'}).prepend(replayEl);
-		const left = replayEl.find('tw-link:first-of-type');
+		const left10 = replayEl.find('tw-link:first-of-type');
+		const left = left10.next();
 		const center = left.next();
 		const right = center.next();
+		const right10 = right.next();
 		function doReplay() {
 			/*
 				Get the current frame of the replay, which is an object with { code, start, end, diff, desc, error } properties.
@@ -113,8 +115,8 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 			} else {
 				replayEl.find('tw-eval-code').empty().append(Highlight(f.code, 'macro', ind > 0 && f.start, ind > 0 && (f.end + f.diff)));
 				explanation.append(`<code class='${f.fromCode.length > 56 ? 'from-block' : 'from-inline'}'></code>`,
-					f.error ? `<span> caused an error:</span>`
-						: `<span> became </span>${!f.toDesc ? `<code class='to-code'></code>` : `<span class='to-desc'>${escape(f.toDesc)}.</span>`}`
+					f.error ? `<span> caused an error: </span>`
+						: `<span> became${f.ToDesc ? "…" : ''} </span>${!f.toDesc ? `<code class='to-code'></code>` : `<span class='to-desc'>${escape(f.toDesc)}.</span>`}`
 				);
 				f.error && explanation.append(f.error);
 				!f.toDesc && explanation.find('.to-code').append(Highlight(f.toCode, 'macro'));
@@ -122,13 +124,17 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 			explanation.find('code').first().append(Highlight(f.fromCode, 'macro'));
 
 			replayEl.find('mark').each((_,e) => { e.scrollIntoView(); });
+			left10.css('visibility', ind <= 9 ? 'hidden' : 'visible');
 			left.css('visibility', ind <= 0 ? 'hidden' : 'visible');
 			right.css('visibility', ind >= replay.length-1 ? 'hidden' : 'visible');
+			right10.css('visibility', ind >= replay.length-10 ? 'hidden' : 'visible');
 			center.html(`( ${ind+1}/${replay.length} )`);
 		}
 		doReplay();
+		left10.on('click', () => { ind = Math.max(0,ind-10); doReplay(); });
 		left.on('click', () => { ind = Math.max(0,ind-1); doReplay(); });
 		right.on('click', () => { ind = Math.min(replay.length-1,ind+1); doReplay(); });
+		right10.on('click', () => { ind = Math.min(replay.length-1,ind+10); doReplay(); });
 		/*
 			This has to be a prepend, so that inner errors' dialogs cover the current dialog.
 		*/

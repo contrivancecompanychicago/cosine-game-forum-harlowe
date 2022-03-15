@@ -1077,7 +1077,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			*/
 			return (this.object === State.variables ? "$" :
 					this.object.TwineScript_VariableStore ? "_" :
-					(objectName(this.object) + "'s ")) +
+					(toSource(this.object) + "'s ")) +
 				/*
 					If the property chain contains a single, potentially computed value, then get the
 					value's debug name. Otherwise, get the full chain's debug names.
@@ -1089,11 +1089,17 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		},
 		
 		get TwineScript_ObjectName() {
-			return this.TwineScript_ToSource() +
-				/*
-					Include the name of the VariableStore's scope, if this is a temp. variable.
-				*/
-				(this.object.TwineScript_VariableStoreName ? (" in " + this.object.TwineScript_VariableStoreName) : "");
+			/*
+				If this is a VarRef of a non-variable (such as ?hook's links's 1st) then perform
+				a variation of ToSource (above) that favours the object name of the root object.
+			*/
+			if (!this.object.TwineScript_VariableStore) {
+				return objectName(this.object) + "'s " + (this.propertyChain.length === 1
+						? propertyDebugName(this.propertyChain[0])
+						: this.propertyChain.reduce((a, e, i) => a + "'s " + propertyDebugName(e,i))
+					);
+			}
+			return `the ${this.object.TwineScript_VariableStoreName ? 'temp ' : ''}variable ${this.TwineScript_ToSource()}`;
 		},
 
 		/*

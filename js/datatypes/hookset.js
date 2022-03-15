@@ -375,14 +375,7 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 			TwineScript_ObjectName and _TypeName are used for error messages.
 		*/
 		get TwineScript_ObjectName() {
-			/*
-				Let's not bother printing out this hookset's entire heritage
-				if it's anything more than basic.
-			*/
-			if (this.property || this.next) {
-				return "a complex hook name";
-			}
-			return this.TwineScript_ToSource() + " (a hook name)";
+			return `the hook name ${this.TwineScript_ToSource()}`;
 		},
 
 		TwineScript_TypeID: "hookName",

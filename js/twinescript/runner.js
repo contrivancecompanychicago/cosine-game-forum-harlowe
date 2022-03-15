@@ -795,7 +795,11 @@ define([
 				*/
 				const ret = run(section, tokens);
 				if (hasEvalReplay) {
-					makeEvalReplayFrame(evalReplay, null, ` it ${operator} ${toSource(ret)} `, tokens, i);
+					makeEvalReplayFrame(evalReplay, null, ` it ${
+						// operator is a token type. All comparison ops' token types are camelCase
+						// versions of their original text.
+						operator.replace(/[A-Z]/g,e => ' '+e.toLowerCase())
+					} ${toSource(ret)} `, tokens, i);
 				}
 				return [ret];
 			};
