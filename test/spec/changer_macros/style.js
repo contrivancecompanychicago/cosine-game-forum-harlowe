@@ -692,6 +692,13 @@ describe("style changer macros", function() {
 				done();
 			});
 		});
+		it("works with (lch:) created colours", function(done) {
+			var p = runPassage("(background:(lch: 0.6, 80, 10))[Hey]").find('tw-hook');
+			setTimeout(function() {
+				expect(p.attr('style')).toMatch(/background-color:\s*rgb\(\s*255,\s*72,\s*127\s*\)/);
+				done();
+			});
+		});
 		it("given a gradient, applies it as the background-image property", function(done) {
 			var p = runPassage("(background:(gradient:45,0,(rgb:0,255,0),1,(rgb:0,0,0)))[Hey]").find('tw-hook');
 			setTimeout(function() {

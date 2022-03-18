@@ -3,7 +3,7 @@ define(['jquery'], ($) => {
 	/*d:
 		Colour data
 
-		Colours are special data values which can be provided to certain styling macros, such as (background:)
+		Colours are special data values which can be provided to certain styling macros, such as (bg:)
 		or (text-colour:). You can use built-in named colour values, or create other colours using the
 		(rgb:) or (hsl:) macros.
 
@@ -30,14 +30,15 @@ define(['jquery'], ($) => {
 		the glaring intensity that certain HTML colours, like pure #f00 red, are known to exhibit.)
 
 		In addition to these values, and the (rgb:) macro, you can also use HTML hex notation to specify
-		colours, such as `#691212` or `#a4e`. (Note that these are *not* strings, but bare values - `(background: #a4e)`
-		is valid, as is `(background:navy)`.) Of course, HTML hex notation is notoriously hard to read and write, so this
+		colours, such as `#691212` or `#a4e`. (Note that these are *not* strings, but bare values - `(bg: #a4e)`
+		is valid, as is `(bg:navy)`.) Of course, HTML hex notation is notoriously hard to read and write, so this
 		isn't recommended.
 
-		If you want to quickly obtain a colour which is the blending of two others, you can blend them
-		using the `+` operator: `red + orange + white` produces a blend of red and orange, tinted
+		If you want to quickly obtain a colour which is the mixture of two others, you can mix them
+		using the `+` operator: `red + orange + white` produces a mix of red and orange, tinted
 		white. `#a4e + black` is a dim purple. Note that the `transparent` built-in value allows you to make colours
-		partly transparent by blending them with it.
+		partly transparent by mixing them with it. If you want to mix colours in different proportions, such
+		as by making a 90% white, 10% yellow shade, then the (mix:) macro is also available to use.
 
 		Like datamaps, colour values have a few read-only data names, which let you examine the **r**ed, **g**reen and **b**lue
 		components that make up the colour, as well as its **h**ue, **s**aturation and **l**ightness, its **a**lpha transparency,
@@ -54,7 +55,7 @@ define(['jquery'], ($) => {
 		| `a` | `$colour's a` | The alpha percentage, a fractional number from 0 to 1.
 		| `lch` | `$colour's lch` | A datamap of LCH values for this colour.
 
-		These values can be used in the (hsl:) and (rgb:) macros to produce further colours. Note that some of these values
+		These values can be used in the (hsl:), (rgb:) and (lch:) macros to produce further colours. Note that some of these values
 		do not transfer one-to-one between representations! For instance, the hue of a gray is essentially irrelevant, so grays
 		will usually have a `h` value equal to 0, even if you provided a different hue to (hsl:). Furthermore, colours with a
 		lightness of 1 are always white, so their saturation and hue are irrelevant.
@@ -232,7 +233,7 @@ define(['jquery'], ($) => {
 		specs for CSS colours defined using RGB and HSL) into LCH values
 		where L is 0..1+, C is 0..100+, and H is 0..360.
 	*/
-	const D50white = [0.96422, 1.00000, 0.82521],
+	const D50white = [ 0.9642956764295677, 1, 0.8251046025104602 ],
 		kappa = 24389/27, epsilon = 216/24389,
 		down = a => a.map(v => [v]),
 		across = a => a.map(v => v[0]);
@@ -240,20 +241,24 @@ define(['jquery'], ($) => {
 	function sRGBToLCH({r,g,b,a}) {
 		// Taken from https://drafts.csswg.org/css-color-4/conversions.js
 		const sRGBtoXYZ = [
-			[0.4124564,  0.3575761,  0.1804375],
-			[0.2126729,  0.7151522,  0.0721750],
-			[0.0193339,  0.1191920,  0.9503041]
+			[ 0.41239079926595934, 0.357584339383878,   0.1804807884018343  ],
+			[ 0.21263900587151027, 0.715168678767756,   0.07219231536073371 ],
+			[ 0.01933081871559182, 0.11919477979462598, 0.9505321522496607  ]
 		];
 		const D65toD50 = [
-			[ 1.0478112,  0.0228866, -0.0501270],
-			[ 0.0295424,  0.9904844, -0.0170491],
-			[-0.0092345,  0.0150436,  0.7521316]
+			[  1.0479298208405488,    0.022946793341019088,  -0.05019222954313557 ],
+			[  0.029627815688159344,  0.990434484573249,     -0.01707382502938514 ],
+			[ -0.009243058152591178,  0.015055144896577895,   0.7518742899580008  ]
 		];
-		let f =
-			across(matMul(D65toD50, matMul(sRGBtoXYZ, down([r/255,g/255,b/255]))))
-			.map((v, i) => v / D50white[i])
-			.map(v => v > epsilon ? cbrt(v) : (kappa * v + 16)/116);
-		const Lab = [(116 * f[1]) - 16, 500 * (f[0] - f[1]), 200 * (f[1] - f[2])];
+		const RGBtoLinear = val => val < 0.04045 ? val / 12.92 : pow((val + 0.055) / 1.055, 2.4);
+		const XYZ = across(matMul(D65toD50, matMul(sRGBtoXYZ, down([r/255,g/255,b/255].map(RGBtoLinear)))));
+		const xyz = XYZ.map((v, i) => v / D50white[i]);
+		const f = xyz.map(v => v > epsilon ? cbrt(v) : (kappa * v + 16)/116);
+		const Lab = [
+			(116 * f[1]) - 16,
+			500 * (f[0] - f[1]),
+			200 * (f[1] - f[2])
+		];
 		const hue = atan2(Lab[2], Lab[1]) * 180 / PI;
 		return {
 			l: Lab[0]/100,
@@ -267,31 +272,31 @@ define(['jquery'], ($) => {
 		l*=100;
 		// Taken from https://drafts.csswg.org/css-color-4/conversions.js
 		const D50toD65 = [
-			[ 0.9555766, -0.0230393,  0.0631636],
-			[-0.0282895,  1.0099416,  0.0210077],
-			[ 0.0122982, -0.0204830,  1.3299098]
+			[  0.9554734527042182,   -0.023098536874261423,  0.0632593086610217   ],
+			[ -0.028369706963208136,  1.0099954580058226,    0.021041398966943008 ],
+			[  0.012314001688319899, -0.020507696433477912,  1.3303659366080753   ]
 		];
 		const XYZtosRGB = [
-			[ 3.2404542, -1.5371385, -0.4985314],
-			[-0.9692660,  1.8760108,  0.0415560],
-			[ 0.0556434, -0.2040259,  1.0572252]
+			[  3.2409699419045226,  -1.537383177570094,   -0.4986107602930034  ],
+			[ -0.9692436362808796,   1.8759675015077202,   0.04155505740717559 ],
+			[  0.05563007969699366, -0.20397695888897652,  1.0569715142428786  ]
+		];
+		const LinearToRGB = val => val > 0.0031308 ? (1.055 * pow(val, 1/2.4) - 0.055) : 12.92 * val;
+		const Lab = [
+			l, c * cos(h * PI / 180), (c * sin(h * PI / 180))
 		];
 		const f = [];
-		f[1] = (l + 16)/116;
-		f[0] = (c * cos(h * PI / 180))/500 + f[1];
-		f[2] = f[1] - (c * sin(h * PI / 180))/200;
-		const XYZ = [
+		f[1] = (Lab[0] + 16)/116;
+		f[0] = Lab[1]/500 + f[1];
+		f[2] = f[1] - Lab[2]/200;
+		const xyz = [
 			pow(f[0],3) > epsilon ? pow(f[0],3) : (116*f[0]-16)/kappa,
 			l > kappa * epsilon ? pow((l+16)/116,3) : l/kappa,
 			pow(f[2],3) > epsilon ? pow(f[2],3) : (116*f[2]-16)/kappa
-		].map((v, i) => v * D50white[i]);
-		const [r,g,b] = across(matMul(D50toD65, matMul(XYZtosRGB, down(XYZ)))).map(v=>v*255);
+		];
+		const XYZ = xyz.map((v, i) => v * D50white[i]);
+		const [r,g,b] = across(matMul(XYZtosRGB, matMul(D50toD65, down(XYZ)))).map(v=>min(255,max(0,LinearToRGB(v)*255)));
 		return {r,g,b,a};
-	}
-
-	function validsRGB(lcha) {
-		var rgba = LCHTosRGB(lcha);
-		return [rgba.r, rgba.g, rgba.b].every(v => v >= 0 && v <= 255);
 	}
 
 	/*
@@ -299,19 +304,22 @@ define(['jquery'], ($) => {
 		colour's chroma. This function (from https://css.land/lch) binary-searches
 		for the lowest chroma that can fit into RGB.
 	*/
-	function constrainLCH(lcha) {
-		if (validsRGB(lcha)) {
-			return lcha;
+	function LCHtoValidsRGB(lcha) {
+		let rgb = LCHTosRGB(lcha);
+		const validity = k => rgb[k] >= 1e-5 && rgb[k] <= 255-1e-5;
+		if (Object.keys(rgb).every(validity)) {
+			return rgb;
 		}
 		lcha = assign({},lcha);
 		let high = lcha.c;
 		let low = 0;
 		lcha.c /= 2;
 		while (high - low > 1e-5) {
-			(validsRGB(lcha)) ? (low = lcha.c) : (high = lcha.c);
+			rgb = LCHTosRGB(lcha);
+			(Object.keys(rgb).every(validity)) ? (low = lcha.c) : (high = lcha.c);
 			lcha.c = (high + low)/2;
 		}
-		return lcha;
+		return LCHTosRGB(lcha);
 	}
 
 	const Colour = Object.freeze({
@@ -339,9 +347,9 @@ define(['jquery'], ($) => {
 					You may notice this is a fairly glib blending algorithm. It's the same one from Game Maker,
 					though, so I'm hard-pressed to think of a more intuitive one.
 				*/
-				r : Math.min(Math.round((l.r + r.r) * 0.6), 0xFF),
-				g : Math.min(Math.round((l.g + r.g) * 0.6), 0xFF),
-				b : Math.min(Math.round((l.b + r.b) * 0.6), 0xFF),
+				r : min(round((l.r + r.r) * 0.6), 0xFF),
+				g : min(round((l.g + r.g) * 0.6), 0xFF),
+				b : min(round((l.b + r.b) * 0.6), 0xFF),
 				a : (l.a + r.a) / 2,
 			});
 		},
@@ -390,11 +398,11 @@ define(['jquery'], ($) => {
 			For each of these methods, use the colour's canonical LCH if it's present.
 		*/
 		toRGBA() {
-			return this.lch ? LCHTosRGB(constrainLCH(assign({}, this.lch, { a: this.a }))) : this;
+			return this.lch ? LCHtoValidsRGB(assign({ a: this.a }, this.lch)) : this;
 		},
 
 		toLCHA() {
-			return this.lch ? assign({}, this.lch) : sRGBToLCH(this);
+			return this.lch ? assign({ a: this.a }, this.lch) : sRGBToLCH(this);
 		},
 
 		/*
@@ -406,7 +414,6 @@ define(['jquery'], ($) => {
 			}
 			const lch = this.toLCHA();
 			lch.h = (lch.h+r) % 360;
-			lch.a = this.a;
 			return Colour.create(lch);
 		},
 
@@ -506,9 +513,10 @@ define(['jquery'], ($) => {
 		/*
 			This static method determines if a given string resembles a CSS3 color function.
 			This doesn't check if it's a valid or well-formed CSS function, though.
+			Currently only used by (background:).
 		*/
 		isCSS3Function(str) {
-			return (typeof str === "string" && /^(?:rgb|hsl)a?\(\s*\d+\s*,\s*\d+%?\s*,\s*\d+%?(?:,\s*\d+(?:\.\d+)?\s*)?\)$/.test(str));
+			return (typeof str === "string" && /^(?:rgb|hsl)a?\(\s*\d+(?:\.\d+)?\s*,\s*\d+(?:\.\d+)?%?\s*,\s*\d+(?:\.\d+)?%?(?:,\s*\d+(?:\.\d+)?\s*)?\)$/.test(str));
 		},
 	});
 	return Colour;

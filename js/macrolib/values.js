@@ -774,9 +774,9 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			can then layer such elements to produce a few interesting visual effects.
 
 			Example usage:
-			* `(lch: 0.6, 80, 10)` produces <tw-colour style="background:rgb(255,11,54);"></tw-colour>.
+			* `(lch: 0.6, 80, 10)` produces <tw-colour style="background:rgb(255, 54.6559266533235, 125.2194303105326)"></tw-colour>.
 			* `(lch: 0.6, 80, 10)'s lch's c` produces the number 80.
-			* `(lch: 0.9, 15, 142, 0.6)` produces <tw-colour style="background:rgba(188,201,151,0.6);"></tw-colour>
+			* `(lch: 0.9, 15, 142, 0.6)` produces <tw-colour style="rgba(208.35035299107486,232.9513865246509,208.11824116140272,0.6)"></tw-colour>
 			(a 40% transparent green).
 
 			Rationale:
@@ -789,8 +789,8 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			bright than the other, due to one hue being less luminous than the other.
 
 			The lightness in LCH more closely corresponds to how the human eye perceives luminosity - `(lch:0.9,80,120)`
-			produces <tw-colour style="background:hsl(86, 92.5%, 46.2%)"></tw-colour>, and `(lch:0.9,80,220)`
-			produces <tw-colour style="background:hsl(196.4, 100%, 74.2%)"></tw-colour>, which, as you can see, is a pair closer in luminosity
+			produces <tw-colour style="background:rgb(177.74927536801104, 245.82494825009778, 78.56222683552888)"></tw-colour>, and `(lch:0.9,80,220)`
+			produces <tw-colour style="background:rgb(171.75413233436592,237.65421375200268,254.99998540183145)"></tw-colour>, which, as you can see, is a pair closer in luminosity
 			than the previous pair. Note that this means the lightness and hue values of LCH are **not** directly transferable between (hsl:)
 			and this macro - they have different meanings in each. A hue angle in LCH is usually between 10 and 20 degrees less than its
 			angle in HSL, varying by the LCH lightness.
@@ -811,7 +811,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			providing a steadily increasing variable or a counter, such as `(lch: 0.9, 80, time / 100)`.
 
 			See also:
-			(hsl:), (rgb:), (gradient:), (complement:)
+			(hsl:), (rgb:), (gradient:), (complement:), (mix:)
 
 			Added in: 3.2.0
 			#colour 3
@@ -834,7 +834,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			When given a colour, this provides a complement to that colour.
 
 			Example usage:
-			`(complement:orange)` produces <tw-colour style="background:hsl(221, 100%, 71.1%);"></tw-colour>.
+			`(complement:orange)` produces <tw-colour style="background-color:rgba(0,176.93497486213232,255,1);"></tw-colour>.
 
 			Details:
 			This is a very simple macro - the returned colour is the same as the input colour, except that its LCH hue
@@ -846,7 +846,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			colour data.
 
 			See also:
-			(lch:)
+			(lch:), (mix:)
 
 			#colour 4
 		*/
@@ -854,10 +854,109 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 		[Colour])
 
 		/*d:
+			(mix: Number, Colour, Number, Colour) -> Colour
+
+			When given two pairs of values - each a number from 0 to 1 and a colour - this macro produces a mix of the two colours, using the numbers
+			as ratios of each colour. The colours are mixed using the LCH colourspace, used by the (lch:) macro.
+
+			Example usage:
+			* `(mix: 0.5, red, 0.5, blue)` produces <tw-colour style="background-color:rgba(208.84581206247847,51.16115242304117,178.9123116270067,1);"></tw-colour>. This is a rosy fuchsia,
+			whereas `red + blue` produces <tw-colour style="background-color:rgba(153,91,153,1);" data-raw=""></tw-colour>, a grayer fuchsia.
+			* `(mix: 0.5, white, 0.5, #00f)` produces <tw-colour style="background-color:rgba(174.65024704481542,137.99348220075095,254,1);"></tw-colour>. The slight
+			shift towards purple is a known weakness of the LCH colourspace.
+			* `(mix: 0.4, red, 0.1, white)` produces <tw-colour style="background-color:rgba(243.25474741442827,92.29028459127169,68.073065830466,0.5);"></tw-colour>, a 50% transparent light red.
+			Because the numbers only added up to 0.5, the result was 50% transparent (see below).
+
+			Rationale:
+
+			While you can mix colours in Harlowe using the + operator, such as by `red + yellow`, this operation doesn't easily
+			allow for different mix ratios, such as a one-quarter/three-quarters mix, instead mixing both colours equally.
+			In addition, in Harlowe 3, this uses the sRGB mixing method, which doesn't produce the most perceptually ideal colours, often making them
+			darker or grayer than expected. This macro provides a more sophisticated alternative, allowing ratios for each colour to be specified, and using the LCH colour
+			space to mix the colours, which tends to preserve chromaticity (colourfulness) better.
+
+			Details:
+
+			The colours are mixed in the LCH colourspace. What this means is: the colours are converted to their LCH datamaps (accessible as `$colour's lch`), and then
+			(omitting a few minor details) their hue, lightness and chroma values are averaged. Then, the averaged values are used to construct a new colour, as if by the
+			(lch:) macro.
+
+			The two numbers (the ratios) are decimal values from 0 to 1. Numbers above or below will produce an error when given.
+
+			If the two ratios do not add up to 1, then they will be scaled to compensate. For instance, for `(lch: 0.1, green, 0.3, blue)`, the 0.1 and 0.3 add up to 0.4,
+			but they *should* add up to 1, so they are scaled up to 0.25 and 0.75, respectively.
+
+			Additionally, if the two ratios add up to *less* than 1, then the difference will be converted into **additional transparency**, which is used to multiply
+			the mixed colour's alpha. For instance, for `(lch: 0.15, red, 0.45, blue)`, the ratios 0.15 and 0.45 add up to only 0.6, which is 0.4 less than 1.
+			So, the mixed colour's alpha (of 1) is multiplied by 0.6 (and thus made 40% more transparent than it would've been otherwise).
+
+			See also:
+			(lch:), (complement:)
+
+			#colour
+		*/
+		("mix", "Colour", (_, p1, c1, p2, c2) => {
+			c1 = c1.toLCHA();
+			c2 = c2.toLCHA();
+			/*
+				If the percents don't equal 1, the difference is converted
+				to an alpha multiplier, which is applied at the very end. This is in keeping with
+				CSS's color-mix().
+			*/
+			let alphaMultiplier = 1;
+			/*
+				Scale (normalise) the percents so that they total 1.
+			*/
+			if (p1 + p2 !== 1) {
+				if (p1 + p2 < 1) {
+					alphaMultiplier = p1 + p2;
+				}
+				[p1, p2] = [p1/(p1+p2), p2/(p1+p2)];
+			}
+			/*
+				The "powerless hue" step: since white or black don't have a hue, don't interpolate it
+				(instead, replace it with the other hue).
+			*/
+			if (c1.c < 2 || c1.l < 0.01 || c1.l > 0.99) {
+				c1.h = c2.h;
+			}
+			else if (c2.c < 2 || c2.l < 0.01 || c2.l > 0.99) {
+				c2.h = c1.h;
+			}
+			/*
+				Premultiply step: since transparent colours aren't perceptually as powerful
+				as solid colours, multiply (as in, reduce) the lightness and chroma by the alpha.
+			*/
+			c1.l *= c1.a; c1.c *= c1.a;
+			c2.l *= c2.a; c2.c *= c2.a;
+			/*
+				The default hue interpolation algorithm for CSS color-mix() is "shorten", seen below.
+			*/
+			if (c2.h - c1.h > 180) {
+				c1.h += 360;
+			}
+			else if (c2.h - c1.h < -180) {
+				c2.h += 360;
+			}
+			/*
+				Now, linearly interpolate all the values, and reverse the premultiply step by
+				dividing (as in, increasing) them by the new alpha.
+			*/
+			let newA = (c1.a*p1+c2.a*p2),
+				newL = (c1.l*p1+c2.l*p2)/newA,
+				newC = (c1.c*p1+c2.c*p2)/newA,
+				newH = (c1.h*p1+c2.h*p2)/newA;
+			/*
+				Finally, apply the aforementioned multiplier.
+			*/
+			return Colour.create({l: newL, c: newC, h: newH, a: newA * alphaMultiplier});
+		}, [percent, Colour, percent, Colour])
+
+		/*d:
 			(palette: String, Colour) -> Array
 
 			When given a string specifying a palette type, and a colour, this macro produces an array containing the given colour
-			followed by three additional colours that together form a palette, for use with (text-colour:), (background:), and other macros.
+			followed by three additional colours that together form a palette, for use with (text-colour:), (bg:), and other macros.
 
 			Example usage:
 			```

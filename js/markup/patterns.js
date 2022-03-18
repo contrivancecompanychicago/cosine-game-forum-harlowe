@@ -615,7 +615,7 @@
 			There are four special built-in hook names, ?Page, ?Passage, ?Sidebar, and ?Link, which, in addition to selecting named hooks,
 			also affect parts of the page that you can't normally style with macros. They can be styled using the (change:) or (enchant:) macros.
 
-			* `?Page` selects the page element (to be precise, the `<tw-story>` element) and using it with the (background:) macro lets you
+			* `?Page` selects the page element (to be precise, the `<tw-story>` element) and using it with the (change:) and (bg:) macros lets you
 			change the background of the entire page.
 			* `?Passage` affects just the element that contains the current passage's text (to be precise, the `<tw-passage>` element) and lets you,
 			for instance, change the (text-colour:) or (font:) of all the text, or apply complex (css:) to it.

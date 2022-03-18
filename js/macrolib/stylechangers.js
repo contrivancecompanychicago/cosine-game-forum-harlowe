@@ -1412,7 +1412,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			values anywhere. If a corner doesn't have a value, then it will use whatever the opposite corner's value is
 			(or the top-left value if it's the only one).
 
-			Obviously, unless the hook has a (background:) or a (border:), the rounded corners will not be visible, and this
+			Obviously, unless the hook has a (bg:) or a (border:), the rounded corners will not be visible, and this
 			changer will have no real effect.
 
 			If the hook has a (border:), values greater than the border's (border-width:) (which is 2 if it wasn't changed)
@@ -1422,7 +1422,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			provided a different padding value.
 
 			See also:
-			(border:), (background:), (border-size:)
+			(border:), (bg:), (border-size:)
 
 			Added in: 3.2.0
 			#borders 4
@@ -1466,7 +1466,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			the hook to remain.
 
 			See also:
-			(background:), (text-colour:)
+			(bg:), (text-colour:)
 
 			Added in: 3.2.0
 			#borders 2
@@ -1640,7 +1640,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 
 			Details:
 			This macro only affects the text colour. To change the text background, call upon
-			the (background:) macro.
+			the (bg:) macro.
 
 			This macro will change the colour of links inside the contained hook, with one exception: using
 			(change:) to change the entire passage (via `?passage` or `?page`) with (text-colour:)
@@ -1652,7 +1652,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			for the link will remain the same. You can alter that colour by styling the links using (hover-style:).
 
 			See also:
-			(background:)
+			(bg:), (border-colour:)
 
 			Added in: 1.0.0
 			#styling
@@ -1901,33 +1901,33 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			[Number]
 		)
 		/*d:
-			(background: Colour or String or Gradient) -> Changer
-			Also known as: (bg:)
+			(bg: Colour or String or Gradient) -> Changer
+			Also known as: (background:)
 
 			This styling changer alters the background colour or background image
 			of the attached hook. Supplying a gradient (produced by (gradient:)) will set the
-			background to that gradient. Supplying a colour (produced by (rgb:) or (hsl:),
+			background to that gradient. Supplying a colour (produced by (rgb:), (hsl:), (lch:) or another such macro),
 			a built-in colour value like `red`, or a bare colour value like #FA9138) will set
 			the background to a flat colour. CSS strings that resemble HTML hex colours (like "#FA9138") will
 			also provide flat colour. Other strings will be interpreted as an image URL,
 			and the background will be set to it.
 
 			Example usage:
-			* `(background: red + white)[Pink background]`
-			* `(background: (gradient: 0, 0,red, 1,black))[Red-black gradient background]`
-			* `(background: #663399)[Purple background]`
-			* `(background: "#663399")[Purple background]`
-			* `(background: "marble.png")[Marble texture background]`
+			* `(bg: red + white)[Pink background]`
+			* `(bg: (gradient: 0, 0,red, 1,black))[Red-black gradient background]`
+			* `(bg: #663399)[Purple background]`
+			* `(bg: "#663399")[Purple background]`
+			* `(bg: "marble.png")[Marble texture background]`
 
 			Details:
 			
-			Combining two (background:) changers will do nothing if they both influence the
-			colour or the image. For instance `(background:red) + (background:white)` will simply
-			produce the equivalent `(background:white)`. However, `(background:red) + (background:"mottled.png")`
+			Combining two (bg:) changers will do nothing if they both influence the
+			colour or the image. For instance `(bg:red) + (bg:white)` will simply
+			produce the equivalent `(bg:white)`. However, `(bg:red) + (bg:"mottled.png")`
 			will work as intended if the background image contains transparency, allowing the background
 			colour to appear through it. Note that gradients count as background images, not colours - you can
 			combine gradients whose colours are partially transparent with flat colours, such as
-			`(background: (gradient: 90, 0, (hsla:0,0,0,0.5), 1, (hsla:0,0,0,0))) + (background: red)`
+			`(bg: (gradient: 90, 0, (hsla:0,0,0,0.5), 1, (hsla:0,0,0,0))) + (bg: red)`
 
 			Currently, supplying other CSS colour names (such as `burlywood`) is not
 			permitted - they will be interpreted as image URLs regardless.
@@ -1945,13 +1945,13 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			(d, value) => {
 				let property;
 
-				//Convert TwineScript CSS colours to bad old hexadecimal.
+				//Convert colours to RGBA
 				if (Colour.isPrototypeOf(value)) {
-					value = value.toRGBAString(value);
+					value = value.toRGBAString();
 				}
-				//Convert TwineScript gradients into CSS linear-gradients.
+				//Convert gradients into CSS linear-gradients.
 				else if (Gradient.isPrototypeOf(value)) {
-					value = value.toLinearGradientString(value);
+					value = value.toLinearGradientString();
 				}
 				/*
 					Different kinds of values can be supplied to this macro
@@ -2030,7 +2030,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			| `"wavy-strike"`    | <t-s style="text-decoration: line-through;text-decoration-style:wavy"></t-s> | "underline", "double-underline", "wavy-underline", "strike", "double-strike"
 			| `"superscript"`    | <t-s style="vertical-align:super;font-size:.83em"></t-s> | "subscript"
 			| `"subscript"`      | <t-s style="vertical-align:sub;font-size:.83em"></t-s> | "superscript"
-			| `"mark"`           | <t-s style="background-color: hsla(60, 100%, 50%, 0.6)"></t-s> | (background-color:)
+			| `"mark"`           | <t-s style="background-color: hsla(60, 100%, 50%, 0.6)"></t-s> | (bg-color:)
 			| `"outline"`        | <t-s style="color:white; text-shadow: -1px -1px 0 black, 1px -1px 0 black, -1px  1px 0 black, 1px  1px 0 black"></t-s> | "shadow", "emboss", "blur", blurrier", "smear"
 			| `"shadow"`         | <t-s style="text-shadow: 0.08em 0.08em 0.08em black"></t-s> | "outline", "emboss", "blur", "blurrier", "smear"
 			| `"emboss"`         | <t-s style="text-shadow: 0.04em 0.04em 0em black"></t-s> | "outline", "shadow", "blur", "blurrier", "smear"
@@ -2041,13 +2041,13 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			| `"smear"`          | <t-s style="text-shadow: 0em 0em 0.02em black, -0.2em 0em 0.5em black, 0.2em 0em 0.5em black; color:transparent"></t-s> | "outline", "shadow", "emboss", "blur", "blurrier"
 			| `"mirror"`         | <t-s style="display:inline-block;transform:scaleX(-1)"></t-s> | "upside-down"
 			| `"upside-down"`    | <t-s style="display:inline-block;transform:scaleY(-1)"></t-s> | "mirror"
-			| `"blink"`          | <t-s style="animation:fade-in-out 1s steps(1,end) infinite alternate"></t-s> | "fade-in-out", "rumble", "shudder", "sway", "buoy", "fidget", (opacity:)
-			| `"fade-in-out"`    | <t-s style="animation:fade-in-out 2s ease-in-out infinite alternate"></t-s> | "blink", "rumble", "shudder", "sway", "buoy", "fidget", (opacity:)
-			| `"rumble"`         | <t-s style="display:inline-block;animation:rumble linear 0.1s 0s infinite"></t-s> | "fade-in-out", "blink", "sway", "fidget"
-			| `"shudder"`        | <t-s style="display:inline-block;animation:shudder linear 0.1s 0s infinite"></t-s> | "fade-in-out", "blink", "buoy", "fidget"
-			| `"sway"`           | <t-s style="display:inline-block;animation:sway 5s linear 0s infinite"></t-s> | "fade-in-out", "blink", "rumble", "buoy", "fidget"
-			| `"buoy"`           | <t-s style="display:inline-block;animation:buoy 5s linear 0s infinite"></t-s> | "fade-in-out", "blink", "shudder", "sway", "fidget"
-			| `"fidget"`         | <t-s style="display:inline-block;animation:fidget 60s step-end 0s infinite"></t-s> | "fade-in-out", "blink", "rumble", "shudder", "sway", "buoy"
+			| `"blink"`          | <t-s style="animation:fade-in-out 1s steps(1,end) infinite alternate"> (hover to preview)</t-s> | "fade-in-out", "rumble", "shudder", "sway", "buoy", "fidget", (opacity:)
+			| `"fade-in-out"`    | <t-s style="animation:fade-in-out 2s ease-in-out infinite alternate"> (hover to preview)</t-s> | "blink", "rumble", "shudder", "sway", "buoy", "fidget", (opacity:)
+			| `"rumble"`         | <t-s style="display:inline-block;animation:rumble linear 0.1s 0s infinite"> (hover to preview)</t-s> | "fade-in-out", "blink", "sway", "fidget"
+			| `"shudder"`        | <t-s style="display:inline-block;animation:shudder linear 0.1s 0s infinite"> (hover to preview)</t-s> | "fade-in-out", "blink", "buoy", "fidget"
+			| `"sway"`           | <t-s style="display:inline-block;animation:sway 5s linear 0s infinite"> (hover to preview)</t-s> | "fade-in-out", "blink", "rumble", "buoy", "fidget"
+			| `"buoy"`           | <t-s style="display:inline-block;animation:buoy 5s linear 0s infinite"> (hover to preview)</t-s> | "fade-in-out", "blink", "shudder", "sway", "fidget"
+			| `"fidget"`         | <t-s style="display:inline-block;animation:fidget 60s step-end 0s infinite"> (hover to preview)</t-s> | "fade-in-out", "blink", "rumble", "shudder", "sway", "buoy"
 			
 			You can use the "none" style to remove an existing style from a combined changer. NOTE: As of Harlowe 3.2.2,
 			this can only be used to remove styles from combined changers, such as by `(set: $changer to it + (text-style:"none"))`,
@@ -2273,7 +2273,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			True to its name, this macro can only be used for subtle style changes. Only the following changers (and combinations
 			thereof) may be given to (hover-style:) - any others will produce an error:
 			* (align:)
-			* (background:)
+			* (bg:)
 			* (css:)
 			* (font:)
 			* (text-colour:)
@@ -2401,7 +2401,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			While testing your passage, you may wish to examine what would happen if a changer, such as (if:) or (else:), were to have no effect on its hook.
 			But, removing and adding the macro from your passage code may get tedious and error-prone, especially if you need to disable several such
 			changers at once. Instead, you can simply temporarily change the macro's name to (test-true:), and change it back later. Regardless of what data is given
-			to this macro (colour data for (background:), booleans for (if:), hooks for (replace:)), this macro won't cause an error.
+			to this macro (colour data for (bg:), booleans for (if:), hooks for (replace:)), this macro won't cause an error.
 
 			Details:
 			While it will ignore all well-formed data given to it, (test-true:) will NOT suppress errors that are already present in the data.

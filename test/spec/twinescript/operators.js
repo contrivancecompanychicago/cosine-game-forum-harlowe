@@ -22,7 +22,7 @@ describe("twinescript operators", function () {
 			expect("(print: (ds:1) + (ds:2))").markupToPrint("1,2");
 			expect("(print: (a:...((ds:1,4,3) + (ds:2,3,4))))").markupToPrint("1,2,3,4");
 		});
-		it("can be used to blend colours", function () {
+		it("can be used to mix colours", function () {
 			expect(runPassage("(print: (rgb:0,255,0) + (rgb:0,0,0))").find('tw-colour')).toHaveBackgroundColour("#009900");
 			expect(runPassage("(print: (rgb:51,51,51) + (rgb:34,170,34))").find('tw-colour')).toHaveBackgroundColour("#338533");
 			expect(runPassage("(print: (rgba:0,255,0,0.8) + (rgba:0,0,0,0.5))").find('tw-colour')).toHaveBackgroundColour("rgba(0,153,0,0.65)");

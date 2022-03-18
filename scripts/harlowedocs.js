@@ -196,6 +196,8 @@ tw-debugger { z-index: 22 !important; }
 
 /* Kludge for the (text-style:) macro */
 t-s::before { content: 'Example text'; }
+/* Vitally important animation savings when not onscreen */
+table:not(:hover) t-s { animation: none !important; }
 
 /* Fullscreen preview */
 #fullPreviewBar { position:fixed; right: 27vw; top: 6vh; height: 88vh; width: 16px; cursor:pointer; background: hsla(0,0%,50%,0.25); border-left: solid 1px hsla(0,0%,0%,0.25); transition: right 0.8s; }
@@ -285,10 +287,6 @@ html.on('click', '#night', function() { $('html, tw-debugger').addClass('theme-d
     })
     .on('click', '.previewButton:not(.previewCodeButton)', function(e) { previewPassage(e.target.parentNode.textContent.replace(/\\u200B/g,''), e.target); });
 $('pre > code').append("<div class='previewButton' title='Run this Harlowe code.'></div>");
-}
-/* Chrome performance hack */
-if (!navigator.userAgent.includes("Firefox")) {
-	console.log("Removed animated elements for performance reasons:", $('[style*="animation:"]').remove());
 }
 </script>
 `;
