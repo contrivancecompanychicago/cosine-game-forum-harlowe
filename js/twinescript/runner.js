@@ -16,7 +16,7 @@ define([
 	'internaltypes/varref',
 	'internaltypes/twineerror'
 ],
-(Macros, State, {insensitiveName, impossible, escape}, {toSource,typeName,objectName}, Operations, Colour, HookSet, Lambda, Datatype, VarBind, CodeHook, TypedVar, AssignmentRequest, VarRef, TwineError) => {
+(Macros, State, {insensitiveName, impossible}, {toSource,objectName}, Operations, Colour, HookSet, Lambda, Datatype, VarBind, CodeHook, TypedVar, AssignmentRequest, VarRef, TwineError) => {
 
 	/*
 		This is used to find which lexer tokens represent "free variables" instead of pure deterministic data.
@@ -321,7 +321,7 @@ define([
 		Having evaluated a token, if debug mode is on, a replay frame of this
 		evaluation should be added to the evalReplay array.
 	*/
-	function makeEvalReplayFrame(evalReplay, val, transformation, tokens, i) {
+	function makeEvalReplayFrame(evalReplay, val, transformation, reason, it, tokens, i) {
 		const token = tokens[i];
 			/*
 				This replay system does not remove the whitespace tokens from before and after,
@@ -357,15 +357,6 @@ define([
 				toSource(val)}${
 					after && after.length && after[0].type === "whitespace" ? ' ' : ''
 				}`;
-
-			/*
-				Don't create a replay frame for tokens whose source representation doesn't change at all.
-			*/
-			if ((!before || (before.length === 1 && before[0].type === 'whitespace')) && 
-					(!after || (after.length === 1 && after[0].type === 'whitespace')) &&
-					resultSource.trim() === token.text.trim()) {
-				return;
-			}
 		}
 		else {
 			resultSource = transformation;
@@ -418,8 +409,30 @@ define([
 			start,
 			end,
 			diff,
+			reason,
+			itIdentifier: it !== undefined && objectName(it),
 			error: error && error.render(fullCode.slice(start, end), /*NoEvents*/ true),
 		});
+	}
+
+	/*
+		This helper function sets the It identifier to a passed-in VarRef,
+		while returning the original VarRef.
+		This can't be combined with makeAssignmentRequest, because the 'it'
+		identifier is often immediately used by the second argument of makeAssignmentRequest,
+		such as in "(set:$b to its 1st)", which compiles to:
+
+		Operations.makeAssignmentRequest(section.setIt(VarRef.create(State.variables,"b")),VarRef.create(section.Identifiers.it,"1st").get())
+	*/
+	function setIt(section, e) {
+		/*
+			Only set the it identifier if the given value is a VarRef or TypedVar.
+			Notice that this also returns TwineErrors.
+		*/
+		if (!(VarRef.isPrototypeOf(e) || TypedVar.isPrototypeOf(e))) {
+			return e;
+		}
+		return (section.Identifiers.it = e.get()), e;
 	}
 
 	/*
@@ -435,6 +448,9 @@ define([
 	return function run(section, tokens, isVarRef = false, isTypedVar = false) {
 		const {evalReplay} = section;
 		const hasEvalReplay = (evalReplay && evalReplay.length);
+		let evalReplayReason;        // Reason strings for eval replay frames.
+		let evalReplaySkip = false;  // Skip making an eval replay for this frame.
+		let evalReplayIt;            // If the It identifier changed, make a note of it.
 		const ops = Operations;
 		let token, ret;
 		/*
@@ -549,19 +565,40 @@ define([
 
 			if (isTypedVar) {
 				ret = TypedVar.create(Datatype.create('any'),ret);
+				evalReplayReason = hasEvalReplay && `Variables in 'to' or 'into' expressions with no -type to their left are considered to be 'any-type' variables that can store any storable value.`;
 			}
 			else if (!isVarRef && !TwineError.containsError(ret)) {
-				ret = ret.get();
+				const val = ret.get();
+				evalReplayReason = hasEvalReplay && (
+					/*
+						Sadly, since VarRefs currently (March 2022) lack a .has() method, this bespoke method will have to do.
+					*/
+					ret && ret.object === State.variables && !hasOwnProperty.call(ret.object, ret.compiledPropertyChain[0])
+					? "This variable didn't exist; for story-wide $ variables, a default value of 0 is used if they don't exist."
+					: "The variable contained that value at this time."
+				);
+				ret = val;
+			}
+			else {
+				evalReplaySkip = true;
 			}
 		}
 		else if (type === "hookName") {
 			ret = HookSet.create({type:'name', data:token.name});
+			evalReplaySkip = true;
 		}
 		else if (type === "number" || type === "cssTime") {
 			ret = token.value;
+			evalReplayReason = hasEvalReplay && type === "cssTime" && (
+				token.text.endsWith('ms')
+					? "The letters 'ms' at the end of numbers are ignored, so you can use them to indicate that a number represents milliseconds."
+					: "The letter 's' at the end of numbers represents 'seconds'. Harlowe converts them to milliseconds (multiplies them by 1000)."
+			);
+			evalReplaySkip = !evalReplayReason;
 		}
 		else if (type === "boolean") {
 			ret = token.text.toLowerCase() === "true";
+			evalReplaySkip = true;
 		}
 		else if (type === "string") {
 			/*
@@ -574,15 +611,20 @@ define([
 					If a literal newline has a \ before it (such as when invoking the escaped line ending syntax), DON'T escape the newline without escaping the \ first.
 				*/
 				(a === "\\" ? "\\\\" : a === "\n" ? "\\n" : a) + "\\n"));
+
+			evalReplaySkip = true;
 		}
 		else if (type === "hook") {
 			ret = CodeHook.create(token.children, token.text);
+			evalReplaySkip = true;
 		}
 		else if (type === "colour") {
 			ret = Colour.create(token.colour);
+			evalReplaySkip = true;
 		}
 		else if (type === "datatype") {
 			ret = Datatype.create(token.name);
+			evalReplaySkip = true;
 		}
 		else if (type === "spread") {
 			/*
@@ -593,9 +635,10 @@ define([
 		}
 		else if (type === "bind") {
 			ret = VarBind.create(run(section,  after, VARREF), token.text.startsWith('2') ? 'two way' : '');
+			evalReplaySkip = true;
 		}
 		else if (type === "to" || type === "into") {
-			const dest = (type === "to") ? section.setIt(run(section, before, VARREF, TYPEDVAR)) : run(section, after, VARREF, TYPEDVAR);
+			const dest = (type === "to") ? setIt(section, run(section, before, VARREF, TYPEDVAR)) : run(section, after, VARREF, TYPEDVAR);
 			if (TwineError.containsError(dest)) {
 				ret = dest;
 			} else {
@@ -618,7 +661,7 @@ define([
 				/*
 					This needs to be a VarRef so that (set: $b to 0, $d to $b) can work.
 				*/
-				const src = (type === "to") ? run(section, after, VARREF) : section.setIt(run(section, before, VARREF));
+				const src = (type === "to") ? run(section, after, VARREF) : setIt(section, run(section, before, VARREF));
 				if (TwineError.containsError(src)) {
 					return src;
 				}
@@ -645,6 +688,8 @@ define([
 					}
 				}
 				ret = AssignmentRequest.create(dest, src, type, srcRef);
+				evalReplaySkip = true;
+				evalReplayIt = section.Identifiers.it;
 			}
 		}
 		else if (type === "typeSignature") {
@@ -662,6 +707,7 @@ define([
 			const variable = run(section,  after, VARREF);
 			section.freeVariables = free;
 			ret = TypedVar.create(datatype, variable);
+			evalReplaySkip = true;
 		}
 		else if (type === "where" || type === "when" || type === "via") {
 			if (!after) {
@@ -688,6 +734,7 @@ define([
 					after,
 					source
 				);
+				evalReplaySkip = true;
 			}
 		}
 		else if (type === "making" || type === "each") {
@@ -724,6 +771,7 @@ define([
 						source
 					);
 				}
+				evalReplaySkip = true;
 			}
 		}
 		/*
@@ -745,6 +793,7 @@ define([
 				ops[token.operator](run(section,  before), run(section,  after)),
 				token.operator
 			);
+			evalReplaySkip = true;
 		}
 		/*
 			The following are the logical arithmetic operators.
@@ -771,8 +820,8 @@ define([
 				leftIsComparison        = isComparisonOp(before),
 				rightIsComparison       = isComparisonOp(after),
 				// This error message is used for elided "is not" comparisons.
-				ambiguityError = TwineError.create('operation', "This use of \"is not\" and \"" + type + "\" is grammatically ambiguous.",
-					"Maybe try rewriting this as \"__ is not __ " + type + " __ is not __\"");
+				ambiguityError = TwineError.create('operation', `This use of \"is not\" and \"${type}\" is grammatically ambiguous.`,
+					`Maybe try rewriting this as \"__ is not __ ${type} __ is not __\"`);
 
 			let operator;
 			/*
@@ -795,11 +844,17 @@ define([
 				*/
 				const ret = run(section, tokens);
 				if (hasEvalReplay) {
-					makeEvalReplayFrame(evalReplay, null, ` it ${
-						// operator is a token type. All comparison ops' token types are camelCase
-						// versions of their original text.
-						operator.replace(/[A-Z]/g,e => ' '+e.toLowerCase())
-					} ${toSource(ret)} `, tokens, i);
+					// operator is a token type. All comparison ops' token types are camelCase
+					// versions of their original text.
+					const op = operator.replace(/[A-Z]/g,e => ' '+e.toLowerCase());
+					makeEvalReplayFrame(evalReplay,
+						undefined, // No value is passed in for transformation frames
+						` it ${op} ${toSource(ret)} `,
+						`A missing 'it ${op}' was inferred to correct the 'and' operation.`,
+						undefined, // No It value is passed in
+						tokens,
+						i
+					);
 				}
 				return [ret];
 			};
@@ -908,6 +963,8 @@ define([
 				run(section,  after)
 			);
 			section.Identifiers.it = leftOp;
+			evalReplayIt = leftOp;
+			evalReplayReason = hasEvalReplay && !before && "A missing 'it' was inferred to complete the operation.";
 		}
 		else if (type === "addition" || type === "subtraction") {
 			if (!after) {
@@ -945,6 +1002,7 @@ define([
 				*/
 				token.type = type === 'addition' ? "positive" : "negative";
 				ret = run(section,  tokens);
+				evalReplayReason = hasEvalReplay && `The ${token.text} operator was re-interpreted as a ${token.type} sign.`;
 				token.type = type;
 			} else {
 				ret = ops[token.text](
@@ -1050,6 +1108,7 @@ define([
 				(link-goto:) token, in a manner similar to that in Renderer.
 			*/
 			ret = Macros.run("link-goto",section,[token.innerText,token.passage]);
+			evalReplayReason = hasEvalReplay && `Passage links are the same as (link-goto:) macro calls.`;
 		}
 		else if (type === "macro") {
 			/*
@@ -1112,6 +1171,7 @@ define([
 						*/
 						false, isTypedVar))
 				);
+				evalReplayReason = hasEvalReplay && variableCall && `I called ${objectName(macroRef)}.`;
 			}
 		}
 		else if (type === "grouping") {
@@ -1137,8 +1197,15 @@ define([
 			impossible("Section.run", `token ${type}${token.name ? ` (${token.name}:)` : ''} produced the section`);
 			return 0;
 		}
-		if (hasEvalReplay) {
-			makeEvalReplayFrame(evalReplay, ret, '', tokens, i);
+		if (hasEvalReplay && !evalReplaySkip) {
+			makeEvalReplayFrame(evalReplay,
+				ret,
+				'', // Since this is a normal replay frame, no special transformation is given.
+				evalReplayReason,
+				evalReplayIt,
+				tokens,
+				i
+			);
 		}
 		return ret;
 	};

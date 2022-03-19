@@ -88,7 +88,7 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 		const dialogElem = dialog({ buttons: [{name:"Understood", confirm:true, callback: Object}]});
 		const replayEl = $(`<tw-eval-replay>${
 				replay.length === 1 ? '' : `<tw-eval-code></tw-eval-code>`
-			}<tw-eval-explanation></tw-eval-explanation>${
+			}<tw-eval-explanation></tw-eval-explanation><tw-eval-it></tw-eval-it><tw-eval-reason></tw-eval-reason>${
 				replay.length === 1 ? '' : `<tw-dialog-links><tw-link style='visibility:hidden'>← 10</tw-link><tw-link style='visibility:hidden'>← ←</tw-link><b></b><tw-link>→ →</tw-link><tw-link>10 →</tw-link></tw-dialog-links>`
 			}</tw-eval-replay>`);
 		dialogElem.find('tw-dialog').css({width:'75vw','max-width':'75vw'}).prepend(replayEl);
@@ -111,7 +111,7 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 
 			if (!f.toCode && !f.toDesc && !f.error) {
 				code.html(Highlight(f.code, 'macro'));
-				explanation.html(`<center>Once upon a time, there was <code></code>.</center>`);
+				explanation.html(`<center>First, there was <code></code>.</center>`);
 			} else {
 				replayEl.find('tw-eval-code').empty().append(Highlight(f.code, 'macro', ind > 0 && f.start, ind > 0 && (f.end + f.diff)));
 				explanation.append(`<code class='${f.fromCode.length > 56 ? 'from-block' : 'from-inline'}'></code>`,
@@ -120,6 +120,10 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 				);
 				f.error && explanation.append(f.error);
 				!f.toDesc && explanation.find('.to-code').append(Highlight(f.toCode, 'macro'));
+				// Populate <tw-eval-it> and <tw-eval-reason>
+				explanation
+					.next().html(f.itIdentifier ? `(The <code class="cm-harlowe-3-identifier">it</code> identifier now refers to ${escape(f.itIdentifier)}.)` : '')
+					.next().text(f.reason || '');
 			}
 			explanation.find('code').first().append(Highlight(f.fromCode, 'macro'));
 

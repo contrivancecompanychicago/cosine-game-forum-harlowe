@@ -715,10 +715,22 @@ define([
 
 						`it` is case-insensitive: `IT`, `iT` and `It` are all acceptable as well.
 
+						Inferred `it`:
+
 						In some situations, the `it` keyword will be *inserted automatically* by Harlowe when the story runs. If you write an
 						incomplete comparison expression where the left-hand side is missing, like `(print: $red > 2 and < 4)`,
 						then, when running, the `it` keyword will automatically be inserted into the absent spot - producing, in this case,
 						`(print: $red > 2 and it < 4)`.
+
+						Inferred comparisons:
+
+						In addition to the above, there are some situations involving chains of `and` and `or` operators where Harlowe can insert
+						a missing `it` keyword *and a previously-used comparison operator*. If you write `(if: $a > 2 and 3)`, then Harlowe
+						will decide, since it is incorrect to use `and` directly with numbers, that what you *actually* meant was `(if: $a > 2 and it > 3)`.
+						Harlowe can make this inference even if the comparison is on the right side of the chain of `and` and `or` operators: `(if: 3 and 4 < $a)`
+						is interpreted by Harlowe as `(if: $a >= 4 and it >= 3)`, where the entire chain is reversed such that the setIt(`it` value becomes $a.
+
+						The `its` variant:
 
 						If the `it` keyword equals a datamap, string, array, or other "collection" data type, then you can access data values
 						using the `its` variant - `(print: $red is 'egg' and its length is 3)` or `(set:$red to its 1st)`. Much like the `'s`
@@ -986,26 +998,6 @@ define([
 				this.evalReplay.shift();
 			}
 			return ret;
-		},
-
-		/*
-			This helper function sets the It identifier to a passed-in VarRef,
-			while returning the original VarRef.
-			This can't be combined with makeAssignmentRequest, because the 'it'
-			identifier is often immediately used by the second argument of makeAssignmentRequest,
-			such as in "(set:$b to its 1st)", which compiles to:
-
-			Operations.makeAssignmentRequest(section.setIt(VarRef.create(State.variables,"b")),VarRef.create(section.Identifiers.it,"1st").get())
-		*/
-		setIt(e) {
-			/*
-				Only set the it identifier if the given value is a VarRef or TypedVar.
-				Notice that this also returns TwineErrors.
-			*/
-			if (!(VarRef.isPrototypeOf(e) || TypedVar.isPrototypeOf(e))) {
-				return e;
-			}
-			return (this.Identifiers.it = e.get()), e;
 		},
 
 		/*

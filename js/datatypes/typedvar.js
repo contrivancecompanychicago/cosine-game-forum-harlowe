@@ -30,13 +30,14 @@ define(['utils/operationutils','internaltypes/varref', 'internaltypes/twineerror
 		For more details, consult the (set:) and (macro:) articles.
 	*/
 	const TypedVar = freeze({
-		TwineScript_TypeName: "a TypedVar name",
+		TwineScript_TypeName: "a TypedVar (typed variable name)",
 		get TwineScript_ObjectName() {
-			return `a TypedVar (${this.TwineScript_ToSource()})`;
+			const typeSource = toSource(this.datatype);
+			return `the ${typeSource.length < 24 ? typeSource + "-" : ''}typed variable name, ${this.varRef.TwineScript_ToSource()}`;
 		},
 
 		TwineScript_Print() {
-			return "`[A TypedVar name]`";
+			return "`[A typed variable name]`";
 		},
 
 		TwineScript_Unstorable: true,

@@ -3,7 +3,7 @@ define(['utils/operationutils'], ({toSource}) => {
 	/*d:
 		Gradient data
 
-		Gradients are special composite data values which can be provided to (bg:). Much as colour data
+		Gradients are special composite data values which can be provided to (bg:) and (meter:). Much as colour data
 		represents a single colour that can be used with (text-colour:) or (bg:), gradients represent
 		special computer-generated backgrounds that smoothly transition from one colour on one side, to another colour
 		on its other side, with any number of other colours in between.

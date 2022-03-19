@@ -642,22 +642,18 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			if (obj.TwineScript_VariableStore) {
 				return TwineError.create("property",
 					// Don't use propertyDebugName(), because it puts the string name in quotes.
-					"There isn't a temp variable named _" + originalProp + " in this place.",
+					`There isn't a temp variable named _${originalProp} in this place.`,
 					"Temp variables only exist inside the same passage, hook, or lambda in which they're created.");
 			}
 			if (isArray(obj) && typeof prop === "number") {
-				return TwineError.create("property", "This array of " + (obj.length) + " elements doesn't have a "
-					+ propertyDebugName(originalProp)
-					+ " element.",
-					obj.length ? "It contains: " + andList(obj.map(objectName)) + '.' : "The array is empty.");
+				return TwineError.create("property", `This array of ${obj.length} elements doesn't have a ${propertyDebugName(originalProp)} element.`,
+					obj.length ? `It contains: ${andList(obj.map(objectName))}.` : "The array is empty.");
 			}
 			const keys = Array.from(typeof obj.keys === "function" && obj.keys());
-			return TwineError.create("property", "I can't find a "
+			return TwineError.create("property", 
 				// Use the original non-compiled property key in the error message.
-				+ propertyDebugName(originalProp)
-				+ " data name in "
-				+ objectName(obj),
-				obj instanceof Map && keys.length ? ("Its names include: " + andList(keys) + ".") : undefined);
+				`I can't find a ${propertyDebugName(originalProp)} data name in ${objectName(obj)}`,
+				obj instanceof Map && keys.length ? (`Its names include: ${andList(keys)}.`) : undefined);
 		}
 		return result;
 	}

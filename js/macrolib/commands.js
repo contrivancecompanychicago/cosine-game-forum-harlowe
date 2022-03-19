@@ -36,7 +36,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 	/*d:
 		VariableToValue data
 		
-		This is a special value that only (set:) and (put:) make use of.
+		This is a special value that only (set:), (put:) and (unpack:) make use of.
 		It's created by joining a value and a variable (or a TypedVar, or data structure containing TypedVars) with the `to` or `into` keywords:
 		`$emotion to 'flustered'` is an example of a VariableToValue. It exists primarily to make (set:) and (put:) more readable.
 	*/

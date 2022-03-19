@@ -359,6 +359,10 @@
 			**Note 2:** Even though named hooks' names are case-insensitive, variable names are case-sensitive. So, `$Chips` and `$chips` are considered
 			different variables.
 
+			**Note 3:** In Harlowe 3, If you use a story-wide variable that doesn't exist (that is, it hasn't been created via (set:), (put:), and so forth), then
+			a default value of 0 will be used in its place. So, `(print: $nonexistantVariable)` will show the text "0". This is likely to change in a future version
+			of Harlowe, however.
+
 			#coding 2
 		*/
 		variable          = "\\$(" + validPropertyName + ")",

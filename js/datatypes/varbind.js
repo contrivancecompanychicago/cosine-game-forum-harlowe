@@ -69,8 +69,14 @@ define(['jquery', 'utils', 'utils/operationutils', 'internaltypes/varref', 'inte
 		/*
 			These should normally only appear during type signature error messages.
 		*/
-		TwineScript_TypeName: "a bound variable",
-		TwineScript_ObjectName: "a bound variable",
+		TwineScript_TypeName: "a VarBind (bound variable name)",
+		get TwineScript_ObjectName() {
+			return `a ${this.bind} bind to ${this.varRef.TwineScript_ToSource()}`;
+		},
+
+		TwineScript_Print() {
+			return "`[A bound variable name]`";
+		},
 
 		TwineScript_Unstorable: true,
 
