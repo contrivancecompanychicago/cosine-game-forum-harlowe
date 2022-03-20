@@ -705,13 +705,16 @@ define([
 					/*d:
 						it -> Any
 
-						This keyword is a shorthand for the closest leftmost value in an expression. It lets you write
+						This keyword is a shorthand for the most recently evaluated expression's leftmost value. It lets you write
 						`(if: $candles < 2 and it > 5)` instead of `(if: $candles < 2 and $candles > 5)`, or `(set: $candles to it + 3)`
 						instead of `(set: $candles to $candles + 3)`. (You can't, however, use it in a (put:) or (move:) macro:
 						`(put:$red + $blue into it)` is invalid.)
 
-						Since `it` uses the closest leftmost value, `(print: $red > 2 and it < 4 and $blue > 2 and it < 4)` is the same as
-						`(print: $red > 2 and $red < 4 and $blue > 2 and $blue < 4)`.
+						Since `it` uses the most recent expression's leftward value, `(print: $red > 2 and it < 4 and $blue > 2 and it < 4)` is the same as
+						`(print: $red > 2 and $red < 4 and $blue > 2 and $blue < 4)`. This value of `it` changes to $blue in `it < 4` because
+						the expression `$blue > 2` was evaluated by Harlowe just before, and $blue is the leftmost value inside that expression.
+						(To get a greater sense of how Harlowe evaluates expressions, use Debug View in Harlowe's Debug Mode, then click on a 🔍
+						button in the passage.)
 
 						`it` is case-insensitive: `IT`, `iT` and `It` are all acceptable as well.
 
@@ -725,10 +728,19 @@ define([
 						Inferred comparisons:
 
 						In addition to the above, there are some situations involving chains of `and` and `or` operators where Harlowe can insert
-						a missing `it` keyword *and a previously-used comparison operator*. If you write `(if: $a > 2 and 3)`, then Harlowe
+						a missing `it` keyword *and the most recently-evaluated comparison operator*. If you write `(if: $a > 2 and 3)`, then Harlowe
 						will decide, since it is incorrect to use `and` directly with numbers, that what you *actually* meant was `(if: $a > 2 and it > 3)`.
-						Harlowe can make this inference even if the comparison is on the right side of the chain of `and` and `or` operators: `(if: 3 and 4 < $a)`
-						is interpreted by Harlowe as `(if: $a >= 4 and it >= 3)`, where the entire chain is reversed such that the setIt(`it` value becomes $a.
+
+						Special case - right-side inferred comparisons:
+
+						Harlowe will make inferences even if the comparison is on the right side of the chain of `and` and `or` operators, such as `(if: 3 and 4 < $a)`.
+						In these cases, however, Harlowe will slightly change the rules of the `it` keyword to conform to English grammar intuitions. `(if: 3 and 4 < $a)`
+						intuitively means "if both 3 and 4 are less than $a" in English. So, it is interpreted by Harlowe as follows.
+						Since `4 < $a` is the only complete expression, it is evaluated first. Then, the *rightmost* value, $a, becomes the `it` identifier's value.
+						Then, `3` becomes `3 < it`. The macro call is now equivalent to `(if: 3 < $a and 4 < $a)`.
+
+						Note that, since this special case **only** applies to `it` keywords that Harlowe inserts by itself, you shouldn't really worry about it when
+						writing your stories. Just be aware of how right-side inferred comparisons work.
 
 						The `its` variant:
 

@@ -379,7 +379,7 @@
 			or
 			(expression) of $a
 		*/
-		possessiveOperator = "'s" + mws,
+		possessiveOperator = "'s" + wb,
 		
 		/*
 			Computed properties are of the form:
@@ -396,11 +396,11 @@
 		
 		itsProperty         = "its" + mws + "(" + validPropertyName + ")",
 		
-		itsOperator         = "its" + mws,
+		itsOperator         = "its" + wb,
 		
 		belongingItProperty = "(" + validPropertyName + ")" + mws + "of" + mws + "it" + wb,
 		
-		belongingItOperator = "of" + wb + mws + "it" + wb,
+		belongingItOperator = "of" + mws + "it" + wb,
 
 		macro = {
 			opener:            "\\(",

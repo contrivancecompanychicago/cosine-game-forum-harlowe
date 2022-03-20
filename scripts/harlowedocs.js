@@ -192,7 +192,7 @@ tw-debugger .tabs { display: flex; justify-content: center; }
 tw-debugger .show-invisibles { display: block; margin: 0 auto; }
 tw-debugger .panel { border-color: #888 !important; }
 /* The debugger shouldn't steal clicks from the editor panel */
-tw-debugger { z-index: 22 !important; }
+tw-debugger:not(.show-dialog) { z-index: 22 !important; }
 
 /* Kludge for the (text-style:) macro */
 t-s::before { content: 'Example text'; }

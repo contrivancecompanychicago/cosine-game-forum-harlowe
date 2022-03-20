@@ -85,7 +85,7 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 	*/
 	function evalReplay(replay) {
 		let ind = 0;
-		const dialogElem = dialog({ buttons: [{name:"Understood", confirm:true, callback: Object}]});
+		const dialogElem = dialog({ buttons: [{name:"Understood", confirm:true, callback: () => !debugElement.find('tw-backdrop').length && debugElement.removeClass('show-dialog')}]});
 		const replayEl = $(`<tw-eval-replay>${
 				replay.length === 1 ? '' : `<tw-eval-code></tw-eval-code>`
 			}<tw-eval-explanation></tw-eval-explanation><tw-eval-it></tw-eval-it><tw-eval-reason></tw-eval-reason>${
@@ -111,7 +111,9 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 
 			if (!f.toCode && !f.toDesc && !f.error) {
 				code.html(Highlight(f.code, 'macro'));
-				explanation.html(`<center>First, there was <code></code>.</center>`);
+				explanation.html(`<center>First, there was <code></code>.</center>`)
+					// Empty <tw-eval-it> and <tw-eval-reason>
+					.next().empty().next().empty();
 			} else {
 				replayEl.find('tw-eval-code').empty().append(Highlight(f.code, 'macro', ind > 0 && f.start, ind > 0 && (f.end + f.diff)));
 				explanation.append(`<code class='${f.fromCode.length > 56 ? 'from-block' : 'from-inline'}'></code>`,
@@ -142,7 +144,7 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 		/*
 			This has to be a prepend, so that inner errors' dialogs cover the current dialog.
 		*/
-		debugElement.append(dialogElem);
+		debugElement.addClass('show-dialog').append(dialogElem);
 	}
 	$(document.documentElement).on('click', 'tw-expression, tw-error', debounce((e) => {
 		if ($(document.documentElement).is('.debug-mode')) {

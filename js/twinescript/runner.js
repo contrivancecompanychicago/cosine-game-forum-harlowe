@@ -321,14 +321,21 @@ define([
 		Having evaluated a token, if debug mode is on, a replay frame of this
 		evaluation should be added to the evalReplay array.
 	*/
-	function makeEvalReplayFrame(evalReplay, val, transformation, reason, it, tokens, i) {
-		const token = tokens[i];
+	function makeEvalReplayFrame(evalReplay, { val, fromCode /*not used yet*/, toCode, toDesc /*not used yet*/, reason, it, tokens, i }) {
+		let token = tokens[i];
 			/*
 				This replay system does not remove the whitespace tokens from before and after,
 				because it needs the full text length of these.
 			*/
 		let before = tokens.slice(0, i),
 			after = tokens.slice(i + 1);
+		/*
+			Obviously, if there's only one token in the array, the above is meaningless.
+		*/
+		if (tokens.length === 1) {
+			before = after = false;
+			token = tokens[0];
+		}
 		/*
 			Replays should stop at the first error, because seeing the same error propagate
 			upward isn't particularly enlightening.
@@ -345,27 +352,32 @@ define([
 		const basis = evalReplay[0].basis;
 
 		/*
+			Before and after can be swapped in one special case: right-side elided comparisons.
+		*/
+		if (before && before.length && after && after.length && before[0].start > after[0].start) {
+			[before, after] = [after, before];
+		}
+		/*
 			If a string for the transformed source wasn't provided,
 			compute it here from the val.
 		*/
 		let resultSource;
-		if (!transformation) {
+		if (!toCode) {
 			resultSource = `${
 					before && before.length && before[before.length-1].type === "whitespace" ? ' ' : ''
 				}${error ? "🐞" :
 				val && !val.TwineScript_ToSource && val.TwineScript_Unstorable ? objectName(val) :
 				toSource(val)}${
-					after && after.length && after[0].type === "whitespace" ? ' ' : ''
+					after && after.length &&
+						/*
+							Addition and subtraction tokens might actually be positive or negative tokens,
+							based on context that isn't visible here. Add trailing whitespace for the results of these anyway.
+						*/
+						(after[0].type === "whitespace" || token.type === "addition" || token.type === "subtraction") ? ' ' : ''
 				}`;
 		}
 		else {
-			resultSource = transformation;
-		}
-		/*
-			Before and after can be swapped in one special case: right-side elided comparisons.
-		*/
-		if (before.length && after.length && before[0].start > after[0].start) {
-			[before, after] = [after, before];
+			resultSource = toCode;
 		}
 		/*
 			Splicing a string in-place multiple times is a little tricky. We need the changes in
@@ -399,13 +411,13 @@ define([
 			/*
 				Each step depicts either the permution of a code structure into a Harlowe value, or an error being produced.
 			*/
-			fromCode: fullCode.slice(start, end),
+			fromCode: fromCode || fullCode.slice(start, end),
 			/*
 				Code transformations (such as by inferred 'it') are described using the resultant transformed code.
 				Plain evaluations are described using only the object name of the result value.
 			*/
-			toCode: !error && transformation,
-			toDesc: !error && !transformation && objectName(val),
+			toCode: !error && toCode,
+			toDesc: !error && !toCode && (toDesc || objectName(val)),
 			start,
 			end,
 			diff,
@@ -575,7 +587,7 @@ define([
 					*/
 					ret && ret.object === State.variables && !hasOwnProperty.call(ret.object, ret.compiledPropertyChain[0])
 					? "This variable didn't exist; for story-wide $ variables, a default value of 0 is used if they don't exist."
-					: "The variable contained that value at this time."
+					: ""
 				);
 				ret = val;
 			}
@@ -840,24 +852,60 @@ define([
 					return [...getElisionOperands(tokens.slice(0, i)), ...getElisionOperands(tokens.slice(i + 1))];
 				}
 				/*
-					For each elided comparison, make an evalReplay frame explaining the inferred "it" rule.
+					For each elided comparison, make an evalReplay frame explaining the inferred "it" rule,
+					followed by another evalReplay frame converting the 'it' to its value.
 				*/
 				const ret = run(section, tokens);
-				if (hasEvalReplay) {
+				if (hasEvalReplay && typeof ret !== 'boolean') {
 					// operator is a token type. All comparison ops' token types are camelCase
 					// versions of their original text.
 					const op = operator.replace(/[A-Z]/g,e => ' '+e.toLowerCase());
-					makeEvalReplayFrame(evalReplay,
-						undefined, // No value is passed in for transformation frames
-						` it ${op} ${toSource(ret)} `,
-						`A missing 'it ${op}' was inferred to correct the 'and' operation.`,
-						undefined, // No It value is passed in
+					makeEvalReplayFrame(evalReplay,{
+						toCode: ` it ${op} ${toSource(ret)} `,
+						reason: `A missing 'it ${op}' was inferred to correct the '${type}' operation.`,
+						tokens,
+						i,
+					});
+					makeEvalReplayFrame(evalReplay, {
+						toCode: ` ${toSource(section.Identifiers.it)} ${op} ${toSource(ret)} `,
 						tokens,
 						i
-					);
+					});
 				}
-				return [ret];
+				/*
+					This object, preserving tokens and the index, is only used for the replay frames generated
+					by elidedComparisonOperator, below.
+				*/
+				return [{val: ret, tokens, i}];
 			};
+
+			/*
+				This is used to implement "elided comparisons", such as (if: $A is $B or $C).
+				The right side, "or $C", is converted to "elidedComparisonOperator('or', 'is', $C)".
+				If $C is boolean, then the expression is considered to be (if: $A is ($B or $C)),
+				as usual. But, if it's not, then it's (if: ($A is $B) or ($A is $C)).
+			*/
+			const elidedComparisonOperator = (...values) => values.reduce((result, {val, tokens, i}) => {
+					if (typeof val === 'boolean') {
+						return val;
+					}
+					const ret = Operations[token.type](
+						result,
+						Operations[operator](section.Identifiers.it, val)
+					);
+					if (hasEvalReplay) {
+						/*
+							This is the replay frame for this individual value's comparison operation.
+						*/
+						makeEvalReplayFrame(evalReplay, {
+							val:ret, tokens, i
+						});
+					}
+					return ret;
+				},
+				// This is true when token.type is "and", and false for "or" -
+				// that is, the identity values for those operations.
+				token.type === "and");
 
 			/*
 				If the left side is a comparison operator, and the right side is not,
@@ -880,11 +928,10 @@ define([
 						Because getElisionOperands() calls run(), and run() affects the evalReplay, the order of these
 						calls is important.
 					*/
-					const evalBefore =  run(section, before);
-					const elisionOperands = getElisionOperands(after); /*all elided comparisons in after*/
+					const evalBefore = run(section, before);
 					ret = ops[type](
 						evalBefore,
-						ops.elidedComparisonOperator(token.type, operator, section.Identifiers.it, ...elisionOperands)
+						elidedComparisonOperator(...getElisionOperands(after))
 					);
 				}
 			}
@@ -933,11 +980,9 @@ define([
 						...tokens.slice(i + 1, rightIndex),
 					];
 					const evalAfter = run(section, swappedSides);
-					const elisionOperands = getElisionOperands(before);/*all elided comparisons in before*/
-
 					ret = ops[type](
 						evalAfter,
-						ops.elidedComparisonOperator(token.type, operator, section.Identifiers.it, ...elisionOperands)
+						elidedComparisonOperator(...getElisionOperands(before))
 					);
 				}
 			}
@@ -1002,8 +1047,8 @@ define([
 				*/
 				token.type = type === 'addition' ? "positive" : "negative";
 				ret = run(section,  tokens);
-				evalReplayReason = hasEvalReplay && `The ${token.text} operator was re-interpreted as a ${token.type} sign.`;
 				token.type = type;
+				evalReplaySkip = true;
 			} else {
 				ret = ops[token.text](
 					run(section,  before),
@@ -1022,16 +1067,29 @@ define([
 				(type === "negative" ? -1 : 1),
 				run(section, after)
 			);
+			/*
+				Because this is run only after the conversion and re-running of an "addition" or "subtraction" token
+				(see above) then skip this replay frame, too.
+			*/
+			evalReplaySkip = true;
 		}
 		else if (type === "not") {
 			ret = ops.not(run(section,  after));
 		}
 		else if (type === "belongingProperty") {
-			ret = VarRef.create(
-				run(section,  after, VARREF),
-				token.name
-			);
-			ret = isVarRef || TwineError.containsError(ret) ? ret : ret.get();
+			ret = VarRef.create(run(section,  after, isVarRef), token.name);
+			const isRef = isVarRef || TwineError.containsError(ret);
+			ret = isRef ? ret : ret.get();
+			/*
+				Create a replay frame for the variable resolving to its value (via the .get() above.)
+			*/
+			if (hasEvalReplay && !isRef) {
+				makeEvalReplayFrame(evalReplay, {
+					toCode: ` ${token.name} of ${toSource(ret)} `,
+					tokens,
+					i
+				});
+			}
 		}
 		else if (type === "belongingOperator" || type === "belongingItOperator") {
 			const value = run(section,  before);
@@ -1048,13 +1106,21 @@ define([
 				section.freeVariables.seedIter = State.seedIter;
 			}
 			ret = VarRef.create(
-				token.type.includes("It") ? section.Identifiers.it :
-					// Since, as with belonging properties, the variable is on the right,
-					// we must compile the right side as a varref.
-					run(section,  after, VARREF),
+				type === "belongingItOperator" ? section.Identifiers.it :
+					run(section,  after, isVarRef),
 				{computed:true,value}
 			);
 			ret = isVarRef || TwineError.containsError(ret) ? ret : ret.get();
+			/*
+				If this is a Belonging It operator, create a replay frame for the "it identifier".
+			*/
+			if (type === "belongingItOperator" && hasEvalReplay) {
+				makeEvalReplayFrame(evalReplay, {
+					toCode: ` ${toSource(value)} of ${toSource(section.Identifiers.it)} `,
+					tokens,
+					i
+				});
+			}
 		}
 		/*
 			Notice that this one is right-associative instead of left-associative.
@@ -1064,11 +1130,19 @@ define([
 				VarRef.create(a,1).get() VarRef.create(,2).get()
 		*/
 		else if (type === "property") {
-			ret = VarRef.create(
-				run(section, before, VARREF),
-				token.name
-			);
-			ret = isVarRef || TwineError.containsError(ret) ? ret : ret.get();
+			ret = VarRef.create(run(section, before, VARREF), token.name);
+			const isRef = isVarRef || TwineError.containsError(ret);
+			ret = isRef ? ret : ret.get();
+			/*
+				Create a replay frame for the variable.
+			*/
+			if (hasEvalReplay && !isRef) {
+				makeEvalReplayFrame(evalReplay, {
+					toCode: ` ${toSource(ret)}'s ${token.name} `,
+					tokens,
+					i
+				});
+			}
 		}
 		else if (type === "itsProperty" || type === "belongingItProperty") {
 			ret = VarRef.create(
@@ -1076,6 +1150,18 @@ define([
 				token.name
 			);
 			ret = isVarRef || TwineError.containsError(ret) ? ret : ret.get();
+			/*
+				Create a replay frame for the "it identifier".
+			*/
+			if (hasEvalReplay) {
+				makeEvalReplayFrame(evalReplay, {
+					toCode: type === "itsProperty"
+						? ` ${toSource(section.Identifiers.it)}'s ${token.name} `
+						: ` ${token.name} of ${toSource(section.Identifiers.it)} `,
+					tokens,
+					i
+				});
+			}
 		}
 		else if (type === "possessiveOperator" || type === "itsOperator") {
 			if (!after || (!before && token.type !== "itsOperator")) {
@@ -1100,6 +1186,14 @@ define([
 					{computed:true, value}
 				);
 				ret = isVarRef || TwineError.containsError(ret) ? ret : ret.get();
+
+				if (type === "itsOperator" && hasEvalReplay) {
+					makeEvalReplayFrame(evalReplay, {
+						toCode: ` ${toSource(section.Identifiers.it)}'s ${toSource(value)} `,
+						tokens,
+						i
+					});
+				}
 			}
 		}
 		else if (type === "twineLink") {
@@ -1176,6 +1270,7 @@ define([
 		}
 		else if (type === "grouping") {
 			ret = run(section,  token.children, isVarRef);
+			evalReplaySkip = true;
 		}
 		else if (type === "error") {
 			ret = TwineError.create('syntax', token.message, token.explanation || '');
@@ -1198,14 +1293,13 @@ define([
 			return 0;
 		}
 		if (hasEvalReplay && !evalReplaySkip) {
-			makeEvalReplayFrame(evalReplay,
-				ret,
-				'', // Since this is a normal replay frame, no special transformation is given.
-				evalReplayReason,
-				evalReplayIt,
+			makeEvalReplayFrame(evalReplay, {
+				val: ret,
+				reason: evalReplayReason,
+				it: evalReplayIt,
 				tokens,
 				i
-			);
+			});
 		}
 		return ret;
 	};
