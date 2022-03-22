@@ -92,34 +92,31 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			(str: ...[Number or String or Boolean or Array]) -> String
 			Also known as: (string:), (text:)
 			
-			(str:) accepts any amount of expressions and tries to convert them all
-			to a single String.
+			(str:) accepts any amount of values and tries to convert them all to a single String.
 			
-			Example usages:
-			* `(str: $cash + 200)`
-			* `(if: (str: $cash)'s length > 3)[Phew! Over four digits!]`
-			* `(str: ...$arr)`
+			Example usage:
+			* `(print: "YOU NEED: $" + (str: $cash + 200))` converts the number `$cash + 200` into a string, so `"YOU NEED: $"` can be added to it.
 			
 			Rationale:
 			Unlike in Twine 1 and SugarCube, Twine 2 will only convert numbers into strings, or strings
 			into numbers, if you explictly ask it to. This extra carefulness decreases
 			the likelihood of unusual bugs creeping into stories (such as adding 1 and "22"
-			and getting "122"). The (str:) macro (along with (num:)) is how you can convert
-			non-string values to a string.
+			and getting "122"). The (str:) macro offers a quick way to convert
+			non-string values to a string (and its counterpart, (num:), offers the reverse).
 			
-			Details:
-			This macro can also be used much like the (print:) macro - as it evaluates to a
-			string, and strings can be placed in the story source freely,
-			
+			Details:			
 			If you give an array to (str:), it will attempt to convert every element
-			contained in the array to a String, and then join them up with commas. So,
+			contained in the array to a string, and then join them up with commas. So,
 			`(str: (a: 2, "Hot", 4, "U"))` will result in the string "2,Hot,4,U".
 			If you'd rather this not occur, you can also pass the array's individual
-			elements using the `...` operator - this will join them with nothing in between.
-			So, `(str: ...(a: 2, "Hot", 4, "U"))` will result in the string "2Hot4U".
+			elements using the `...` operator - this will join them with nothing in between,
+			as if they were given individually. So, `(str: ...(a: 2, "Hot", 4, "U"))` will result in the string "2Hot4U".
+
+			If you want to convert numbers into strings in a more sophisticated way, such as by
+			including thousands separators or leading zeros, consider using (digit-format:).
 			
 			See also:
-			(num:)
+			(num:), (print:)
 
 			Added in: 1.0.0
 			#string 1
@@ -491,12 +488,134 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			`1st`, `2ndlast` and so forth. You can simply use numbers in brackets (such as `$inventoryArray's (2)`) to access a particular data value.
 			
 			See also:
-			(str:)
+			(str:), (digit-format:)
 
 			Added in: 3.2.0
 			#string
 		*/
 		(["str-nth","string-nth"], "String", (_, num) => nth(num), [parseInt])
+		/*d:
+			(digit-format: String, Number) -> String
+			
+			When given a special formatting string, followed by a number, this macro converts the number into a string using
+			the formatter as a guide. "#" characters in the formatting string represent optional digits; "0" characters
+			represent required digits. Other characters are considered either thousands separators or as the decimal point.
+
+			Examples:
+			* `(digitformat: "###.###", -1234.5678)` produces the string `"-234.567"`.
+			* `(digitformat: "###.###", -1/2)` produces the string `"-.5"`.
+			* `(print: "$" + (digitformat: "##0.00", 0.96)` prints `$0.96`.
+			* `(digitformat: "###,###", 155500)` produces the string `"155,500"`. Unlike every other character, commas are assumed to be thousands
+			separators unless a different separator character is used before them.
+			* `(digitformat: "### ###.", 500000)` produces the string `"500 000"`.
+			* `(altered: via (digitformat: "000", it), ...(range:1,5))` produces `(a:"001","002","003","004","005")`.
+			* `(digitformat: "###.###,", 1255.5)` produces the string `"1.255,"`. Note that the German decimal point `,` at the end
+			of the string cannot appear in the final string, but serves only to distinguish the `.` as being the thousands separator.
+			* `(digitformat: ".##,###", 1255.5)` produces the string `"55,3"`. Note that the German thousands separator at the front
+			of the string cannot appear in the final string (because no `0` or `#` characters are before it),
+			but serves only to distinguish the `,` as being the decimal point.
+			* `(digitformat: "##,##,###", 2576881)` produces the string `"25,76,881"`. This uses Indian numeral separators.
+
+			Rationale:
+			The (str:) macro is a general-purpose conversion macro for creating strings out of other Harlowe datatypes. However,
+			numbers have a number of different writing conventions depending on their context - in English, thousands separators
+			are common for larger numbers, and some contexts, like prices, need trailing or leading zeros. Other languages
+			have different separators than thousands separators, or use different decimal point characters. This macro lets you provide
+			a specific format in which a number is to be converted to a string, allowing the separators, zeros
+			and decimal point to be customised.
+
+			Details:
+			The decimal point in the format string is decided as follows: the rightmost character that isn't `#` or `0` is the decimal
+			point, *unless* it is `,` and the leftmost character that isn't `#` or `0` is also `,`. This is under the assumption that
+			most Harlowe users will be writing in English (the same assumption used for (str-nth:)) and thus formats like "###,###,###"
+			intend to use `,` in its English sense as a thousands separator.
+
+			If the decimal point has no digits (`#` or `0` characters) to its right, or the leftmost separator has no digits to its left,
+			then they are left off altogether. This can be used to precisely specify the decimal point and separator characters without
+			requiring them to appear in the final string: `"##.###,"` uses a trailing `,` to indicate that `,` is the decimal point, and
+			`.` is the thousands separator.
+
+			As a result of these two rules, it is *not* recommended that you include more formatting or context characters than what is required.
+			For instance, a format string like `"$00.00"` will *not* cause the final string to have "$", because the `$` will be interpreted as
+			a thousands separator, and thus removed.
+
+			If a number bigger than 99999999999999999999 is given, this macro will produce an error.
+
+			Errors in decimal representation caused by the underlying browser Javascript platform's floating-point number format,
+			such as `(digitformat: "##.##", 35.3)` producing "35.29", are currently not compensated for by Harlowe.
+
+			See also:
+			(str-nth:)
+
+			Added in: 3.3.0
+			#string
+		*/
+		("digit-format", "String", (_, format, num) => {
+			if (Math.abs(num) >= 1e+21) {
+				return TwineError.create("macrocall", "The number given to (digit-format:) is too big.");
+			}
+			/*
+				To figure out what exactly is the decimal point in the format string, these RegExps are called for.
+				These RegExps need 'g' so that .exec() will update their lastIndex, which is used below.
+			*/
+			const rightSepRE = /([^#0])(?=[#0]*$)/g;
+			const leftSepRE = /^[#0]*([^#0])/g;
+			const rightSeparator = (rightSepRE.exec(format) || [])[1];
+			const leftSeparator = (leftSepRE.exec(format) || [])[1];
+			/*
+				As usual, convert the format string to support astral plane characters.
+				Since the format string should be short, there's no need to worry about perf.
+			*/
+			format = [...format];
+			let formatDecimalPointIndex = format.length;
+			/*
+				The rule is: the rightmost digit separator character is the decimal point, UNLESS
+				it is ',' and the leftmost digit separator is also ','.
+			*/
+			if (rightSeparator && (rightSeparator !== "," || (leftSeparator && leftSeparator !== ","))) {
+				formatDecimalPointIndex = rightSepRE.lastIndex - 1;
+			}
+			/*
+				Use .toFixed() as the string conversion method, to avoid having to deal with '1e1' number notation.
+				The 16 is designed to circumvent toFixed()'s built-in rounding by getting as many decimal places
+				as needed.
+
+				Also note that the - is stripped off (to be reinserted later).
+			*/
+			let numStr = Math.abs(num).toFixed(16)
+				// Trim off leading and trailing zeros
+				.replace(/(\.\d*?)0+$/,(_, p1) => p1)
+				.replace(/^0+/,'');
+			let numberDecimalPointIndex = numStr.includes('.') ? numStr.indexOf('.') : numStr.length;
+			/*
+				Because aligning the format string with the number string is difficult due to separators,
+				the following is performed: the format string is iterated in reverse, and when a separator
+				is encountered, an offset is added to the number string offset to skip over it. Because
+				there are no separators after the decimal place, we can be certain that aligning the decimal
+				points of the format and number strings will produce the correct decimal place for the number string.
+			*/
+			let skip = 0;
+			let ret = '';
+			for (let i = format.length - 1; i >= 0; i-=1) {
+				const char = format[i];
+				if (char === "0" || char === "#") {
+					const numeral = numStr[numberDecimalPointIndex - formatDecimalPointIndex + i + skip];
+					ret = (numeral ? numeral : (char === "0" ? "0" : '')) + ret;
+				}
+				/*
+					If the decimal place is the final char or the first char in the format, skip it.
+				*/
+				else if (i < format.length-1 && i > 0) {
+					ret = char + ret;
+					/*
+						Since both the number string and the format string have a decimal point
+						character, don't skip over it.
+					*/
+					skip += (i === formatDecimalPointIndex ? 0 : 1);
+				}
+			}
+			return (num < 0 ? '-' : '') + ret;
+		}, [String, Number])
 
 		/*d:
 			Number data

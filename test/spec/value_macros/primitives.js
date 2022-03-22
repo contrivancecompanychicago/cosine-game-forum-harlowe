@@ -308,4 +308,28 @@ describe("primitive value macros", function() {
 			expect("(print: (str-nth:45))").markupToPrint("45th");
 		});
 	});
+	describe("the (digit-format:) macro", function() {
+		it("accepts 1 string and 1 number", function() {
+			expect("(digit-format:)").markupToError();
+			expect("(digit-format: 1.1)").markupToError();
+			expect("(digit-format: 'a')").markupToError();
+			expect("(digit-format: 1,1)").markupToError();
+			expect("(digit-format: '',1)(digit-format: '',-0.001)").not.markupToError();
+		});
+		it("stringifies the number according to the specified format", function() {
+			expect('(digitformat: "###.###", -1/2)').markupToPrint("-.5");
+			expect('(digitformat: "###.###", -1234.5678)').markupToPrint("-234.567");
+			expect('(digitformat: "##0.00", -1/2)').markupToPrint("-0.50");
+			expect('(digitformat: "##0.00", 0.96)').markupToPrint("0.96");
+			expect('(digitformat: "###,###", 155500)').markupToPrint("155,500");
+			expect('(digitformat: "### ###.", 500000)').markupToPrint("500 000");
+			expect('(digitformat: "000", 5.1)').markupToPrint("005");
+			expect('(digitformat: "###.###,", 1255.5)').markupToPrint("1.255");
+			expect('(digitformat: ".##,###", 1255.5)').markupToPrint("55,5");
+			expect('(digitformat: "##,##,###", 2576881)').markupToPrint("25,76,881");
+		});
+		it("errors if given a number over 999999999999999999999", function() {
+			expect("(print: (digit-format:'#',999999999999999999999+1))").markupToError();
+		});
+	});
 });
