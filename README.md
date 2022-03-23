@@ -33,6 +33,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where `(lch:)` and all lch-related colour conversions were slightly wrong, due to the conversion algorithm assuming linear-light sRGB instead of gamut sRGB.
  * Fixed a bug where colours created via `(lch:)` could sometimes have `r`, `g` or `b` datavalues higher than 255 or lower than 0.
  * Fixed a bug where `(background:)` didn't work when given a Harlowe colour with fractional `r`, `g`, or `b` datavalues.
+ * Checkboxes created by `(checkbox:)` and related macros are better vertically aligned to their text labels.
 
 #### Alterations
 
@@ -64,7 +65,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Code hooks can now be stored in variables and printed in the passage. This means that instead of storing long strings containing large amounts of markup that doesn't get highlighted in the syntax highlighter, you can instead store code hooks. Using a code hook in this way also signals (to anyone reading the code) what its purpose is for (to be displayed in the passage).
  * `(dialog:)`, `(confirm:)`, `(prompt:)`, `(replace-with:)`, `(append-with:)` and `(prepend-with)` have been altered to permit code hooks in place of the message string value.
  * Also, code hooks can be converted into strings using `(str:)`.
- * `true` and `false` are now case-insensitive. This fixes an inconsistencty between the syntax highlighter (which until now showed different-cased keywords like `TRUE` and `FALSE` as valid) as well as fixes an inconsistency with other keywords, such as datatypes (which were already case-insensitive, such as `INT`).
+ * `true` and `false` are now case-insensitive. This fixes an inconsistency between the syntax highlighter (which until now showed different-cased keywords like `TRUE` and `FALSE` as valid) as well as fixes an inconsistency with other keywords, such as datatypes (which were already case-insensitive, such as `INT`).
  * `(shuffled:)` and `(sorted:)` now accept 1 or 0 values without causing an error. This is to make it easier to sort or shuffle arrays (by spreading `...` them into these macros) without needing to care how many items the arrays contain.
  * `(sorted:)` may now accept any kind of data (not just strings and numbers) and may now be given an optional 'via' lambda, which is used to translate the values into strings or numbers, whereupon they are sorted *as if* they were those translated values. This can be used to sort values in a broad variety of ways. `(sorted: via its name, ...$creatures)` sorts the datamaps in the array stored in $creatures by their "name" values, for instance.
  * You may now give one or zero values after the rotation number to `(rotated:)` - for instance, `(rotated: 2, ...$arr)` will no longer make an error if $arr is empty.
@@ -74,6 +75,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * It is now an error to give two or more typed variables with the same name inside a `(p:)` string pattern (used as an `(unpack:)` destination or in another such macro).
  * It is now an error to give `?page` to `(show:)`, `(hide:)`, or `(rerun:)`.
  * `(mouseover:)`, `(mouseout:)` and all other macros beginning with "mouse" are now deprecated. I've decided that having so many variations of (click:) and its relatives, differing only by interaction type, is a bit untidy and unnecessary. I've now created an `(action:)` macro (see below) which can given as a changer to the appropriate "click" macro to replicate these macros' effects.
+ * The `any` data name (available on arrays as `any of (a:1,2)` and strings as `any of "ab"`) has been renamed to `some`, to avoid confusion with the `any` datatype and for naming consistency with `(some-pass:)`. `any` remains as a deprecated alias for compatibility, but is likely to be removed in a future version.
 
 ##### Compatibility
 
@@ -940,6 +942,6 @@ Use these commands to build Harlowe:
 * `make css`: Builds the CSS file, `build/harlowe-css.css`, from the Sass sources. This is an intermediate build product whose contents are included in the final `format.js` file.
 * `make docs`: Builds the official documentation file, `dist/harloweDocs.html`, deriving macro and markup definitions from specially-marked comments in the JS files.
 * `make format`: Builds the Harlowe `format.js` file.
-* `make all`: Builds the Harlowe `format.js` file, the documentation, and an example file, `dist/exampleOutput.html`, which is a standalone game that displays "Success!" when run, to confirm that the story format is capable of being bundled by Twine 2 correctly.
+* `make all`: Builds the Harlowe `format.js` file, the documentation, and an example file, `dist/exampleOutput.html`, which is a standalone game that confirms that the story format is capable of being bundled by Twine 2 correctly.
 * `make clean`: Deletes the `build` and `dist` directories and their contents.
 * `make dirs`: Produces empty `build` and `dist` directories, which usually shouldn't be necessary.

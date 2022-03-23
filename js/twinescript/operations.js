@@ -138,7 +138,7 @@ define([
 							);
 						}
 						/*
-							Now the other side is an "any" or "all" determiner. Swap the determiners' order, because "start of X [op] all of Y" only
+							Now the other side is a "some" ("any") or "all" determiner. Swap the determiners' order, because "start of X [op] all of Y" only
 							functions correctly if the "all" is unwound before the "start", i.e. each value in "all" is separately run
 							against each value in the "start", instead of vice-versa.
 						*/
@@ -171,7 +171,7 @@ define([
 					return negative;
 				}
 				/*
-					All that remains are the "any" and "all" determiners.
+					All that remains are the "some" ("any") and "all" determiners.
 				*/
 				const all = determiner === "all";
 				/*

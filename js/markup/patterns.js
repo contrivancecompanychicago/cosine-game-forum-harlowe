@@ -379,7 +379,7 @@
 			or
 			(expression) of $a
 		*/
-		possessiveOperator = "'s" + wb,
+		possessiveOperator = "'s" + mws,
 		
 		/*
 			Computed properties are of the form:
@@ -943,7 +943,7 @@
 		isNotA:    "is" + mws + "not" + mws + "an?" + wb,
 		matches:   "matches" + wb,
 		doesNotMatch: "does" + mws + "not" + mws + "match" + wb,
-		// "matches" has no "contains" equivalent, but you can use "any of $c matches t"
+		// "matches" has no "contains" equivalent, but you can use "some of $c matches t"
 		
 		and:       "and" + wb,
 		or:        "or"  + wb,

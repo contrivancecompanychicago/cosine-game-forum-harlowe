@@ -705,7 +705,9 @@ define([
 					/*d:
 						it -> Any
 
-						This keyword is a shorthand for the most recently evaluated expression's leftmost value. It lets you write
+						Like all identifiers, `it` is case-insensitive: `IT`, `iT` and `It` are all acceptable as well.
+
+						This keyword is usually a shorthand for the most recently evaluated expression's leftmost value. It lets you write
 						`(if: $candles < 2 and it > 5)` instead of `(if: $candles < 2 and $candles > 5)`, or `(set: $candles to it + 3)`
 						instead of `(set: $candles to $candles + 3)`. (You can't, however, use it in a (put:) or (move:) macro:
 						`(put:$red + $blue into it)` is invalid.)
@@ -716,22 +718,20 @@ define([
 						(To get a greater sense of how Harlowe evaluates expressions, use Debug View in Harlowe's Debug Mode, then click on a 🔍
 						button in the passage.)
 
-						`it` is case-insensitive: `IT`, `iT` and `It` are all acceptable as well.
-
-						Inferred `it`:
+						###Inferred `it`:
 
 						In some situations, the `it` keyword will be *inserted automatically* by Harlowe when the story runs. If you write an
 						incomplete comparison expression where the left-hand side is missing, like `(print: $red > 2 and < 4)`,
 						then, when running, the `it` keyword will automatically be inserted into the absent spot - producing, in this case,
 						`(print: $red > 2 and it < 4)`.
 
-						Inferred comparisons:
+						###Inferred comparisons:
 
 						In addition to the above, there are some situations involving chains of `and` and `or` operators where Harlowe can insert
 						a missing `it` keyword *and the most recently-evaluated comparison operator*. If you write `(if: $a > 2 and 3)`, then Harlowe
 						will decide, since it is incorrect to use `and` directly with numbers, that what you *actually* meant was `(if: $a > 2 and it > 3)`.
 
-						Special case - right-side inferred comparisons:
+						###Special case - right-side inferred comparisons:
 
 						Harlowe will make inferences even if the comparison is on the right side of the chain of `and` and `or` operators, such as `(if: 3 and 4 < $a)`.
 						In these cases, however, Harlowe will slightly change the rules of the `it` keyword to conform to English grammar intuitions. `(if: 3 and 4 < $a)`
@@ -742,7 +742,13 @@ define([
 						Note that, since this special case **only** applies to `it` keywords that Harlowe inserts by itself, you shouldn't really worry about it when
 						writing your stories. Just be aware of how right-side inferred comparisons work.
 
-						The `its` variant:
+						###Special case - `it` in lambdas:
+
+						There is another special case regarding the `it` identifier: inside `where`, `via` or `making` lambdas, `it` refers to the data value
+						that the lambda is currently operating on, saving you from having to write it, or, in some cases, name it at all. A lambda like
+						`_num where _num > 4` can be shortened to just `where it > 4` - the `it` identifier in this case replacing the `_num` temp variable entirely.
+
+						###The `its` variant:
 
 						If the `it` keyword equals a datamap, string, array, or other "collection" data type, then you can access data values
 						using the `its` variant - `(print: $red is 'egg' and its length is 3)` or `(set:$red to its 1st)`. Much like the `'s`

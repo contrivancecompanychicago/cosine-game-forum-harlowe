@@ -454,9 +454,10 @@ describe("property indexing", function() {
 			["arrays", "(a:2,4)"],
 			["datasets", "(ds:2,4)"]
 		].forEach(function(arr) {
-			it("only 'length', 'any' and 'all' can be used with " + arr[0], function() {
+			it("only 'length', 'some', 'any' and 'all' can be used with " + arr[0], function() {
 				expect('(set: $s to ' + arr[1] + ')(print: length of $s)').markupToPrint('2');
 				expect('(set: $s to ' + arr[1] + ')(print: thing of $s)').markupToError();
+				expect('(set: $s to ' + arr[1] + ')(print: some of $s is 0)').not.markupToError();
 				expect('(set: $s to ' + arr[1] + ')(print: any of $s is 0)').not.markupToError();
 				expect('(set: $s to ' + arr[1] + ')(print: all of $s is 0)').not.markupToError();
 			});
@@ -619,8 +620,9 @@ describe("property indexing", function() {
 				it("cannot be used to set arbitrary names", function() {
 					expect('(set: $a to "𐌎old")(set: $a\'s (a:1,"garply") to "ar")$a').markupToError();
 				});
-				it("cannot be used to set 'length', 'any' or 'all'", function() {
+				it("cannot be used to set 'length', 'some','any' or 'all'", function() {
 					expect('(set: $a to "𐌎old")(set: $a\'s (a:1,"length") to "ar")$a').markupToError();
+					expect('(set: $a to "𐌎old")(set: $a\'s (a:1,"some") to "ar")$a').markupToError();
 					expect('(set: $a to "𐌎old")(set: $a\'s (a:1,"any") to "ar")$a').markupToError();
 					expect('(set: $a to "𐌎old")(set: $a\'s (a:1,"all") to "ar")$a').markupToError();
 				});

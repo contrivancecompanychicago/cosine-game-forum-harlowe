@@ -9,14 +9,13 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 		letter is A". You want to write a "function" for how the search is to be conducted.
 
 		Lambdas are user-created functions that let you tell certain macros, like (find:), (altered:) and (folded:),
-		precisely how to search, alter, or combine the data provided to them. The easiest way to think of them is
-		as *search terms*, such as those you'd type into a search engine - terms like `(ulysses or odysseus) -joyce` -
-		but lambdas can do significantly more than just search.
+		precisely how to search, alter, or combine the data provided to them. Try thinking of them as stored expressions that
+		operate on a single value in the sequence of data, which are then run on every value in turn.
 
 		There are several types of lambdas, as well as lambdas that comprise multiple types.
 
-		* **"where"** lambdas, used by the (find:) macro, are used to search for and filter data. The lambda `_item where _item's
-		1st is "A"` tells the macro to searches for items whose `1st` is the string "A".
+		* **"where"** lambdas, used by the (find:) macro, are used to search for and filter data. The lambda `_item where _item's 1st is "A"`
+		tells the macro to searches for items whose `1st` is the string "A".
 		
 		* For certain macros, like (for:), you may want to use a "where" lambda that doesn't filter out any of the values -
 		`_item where true`, for instance, will include every item. There is a special, more readable **"each"** shorthand for this type
@@ -387,7 +386,6 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 				*/
 				const passedFilter = this.apply(section, {loop:arg, pos:pos+1, ignoreVia:true, tempVariables});
 				if ((error = TwineError.containsError(passedFilter))) {
-					error.message = `While running the ${nth(pos+1)} loop of this lambda, an error occurred:\n` + error.message;
 					return error;
 				}
 				return result.concat(passedFilter ? [arg] : []);

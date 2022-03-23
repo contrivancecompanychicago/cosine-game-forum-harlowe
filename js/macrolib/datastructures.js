@@ -49,15 +49,15 @@ define([
 			is true if it contains the number 1 anywhere, and false if it does not. `1 is in $array` is another way to write that.
 			The `is not in` operator is the opposite of `is in`, and is used to check that values aren't in arrays.
 			If you want to check if an array contains some, or all of the values, in another array (without needing to be in the
-			same order), you can compare with a special `any` or `all` name on the other array: `$array contains any of (a:2,4,6)`,
+			same order), you can compare with a special `some` (also known as `any` - no relation to the `any` datatype) or `all` name on the other array: `$array contains any of (a:2,4,6)`,
 			and `$array contains all of (a:2,4,6)` will check if `$array` contains some, or all, of the numbers 2, 4 and 6.
 			If you want to check if an array starts or ends with with a certain sequence of values, `start` and `end` data names
 			can be used with `is` and `is not` - `$array's start is (a:2,4)` is the same as `$array's 1stto2nd is (a:2,4)`, and
 			`$array's end is (a:3,6,9)` is the same as `$array's 3rdlasttolast is (a:3,6,9)`.
 
-			(Incidentally, `any` and `all` can also be used with other operators, like `is`, `is not`, `>`, `<`, `>=`, and `<=`,
+			(Incidentally, `some` and `all` can also be used with other operators, like `is`, `is not`, `>`, `<`, `>=`, and `<=`,
 			to compare every value in the array with a number or other value. For instance, `all of (a:2,4) >= 2` is true, as is
-			`any of (a:2,4) >= 4`.)
+			`some of (a:2,4) >= 4`.)
 
 			For a more thorough check of the contents of an array, you can use `matches` and a datatype pattern. For instance,
 			`$array matches (a: num, num)` lets you check that $array contains exactly two numbers, and `$array's start matches (a: 2,
@@ -91,15 +91,15 @@ define([
 			|---
 			| `is` | Evaluates to boolean `true` if both sides contain equal items in an equal order, otherwise `false`. | `(a:1,2) is (a:1,2)` (is true)
 			| `is not` | Evaluates to `true` if both sides differ in items or ordering. | `(a:4,5) is not (a:5,4)` (is true)
-			| `contains` | Evaluates to `true` if the left side contains the right side. | `(a:"Ape") contains "Ape"`<br>`(a:(a:99)) contains (a:99)`<br>`(a:1,2) contains any of (a:2,3)`<br>`(a:1,2) contains all of (a:2,1)`
+			| `contains` | Evaluates to `true` if the left side contains the right side. | `(a:"Ape") contains "Ape"`<br>`(a:(a:99)) contains (a:99)`<br>`(a:1,2) contains some of (a:2,3)`<br>`(a:1,2) contains all of (a:2,1)`
 			| `does not contain` | Evaluates to `true` if the left side does not contain the right side. | `(a:"Ape") does not contain "Egg"`
-			| `is in` | Evaluates to `true` if the right side contains the left side. | `"Ape" is in (a:"Ape")`<br>`(a:99) is in (a:(a:99))`<br>`any of (a:2,3) is in (a:1,2)`<br>`all of (a:2,1) is in (a:1,2)`
-			| `is not in` | Evaluates to `true` if the right side does not contain the left side. | `"Blood" is not in (a:"Sweat","Tears")`<br>`(a:98) is not in (a:(a:99))`<br>`any of (a:3,2) is not in (a:1,2)`
+			| `is in` | Evaluates to `true` if the right side contains the left side. | `"Ape" is in (a:"Ape")`<br>`(a:99) is in (a:(a:99))`<br>`some of (a:2,3) is in (a:1,2)`<br>`all of (a:2,1) is in (a:1,2)`
+			| `is not in` | Evaluates to `true` if the right side does not contain the left side. | `"Blood" is not in (a:"Sweat","Tears")`<br>`(a:98) is not in (a:(a:99))`<br>`some of (a:3,2) is not in (a:1,2)`
 			| `+` | Joins arrays. | `(a:1,2) + (a:1,2)` (is `(a:1,2,1,2)`)
 			| `-` | Subtracts arrays, producing an array containing every value in the left side but not the right. | `(a:1,1,2,3,4,5) - (a:1,2)` (is `(a:3,4,5)`)
 			| `...` | When used in a macro call, it separates each value in the right side. | `(a: 0, ...(a:1,2,3,4), 5)` (is `(a:0,1,2,3,4,5)`)
-			| `'s` | Obtains the item at the right numeric position, or the `length`, `any` or `all` values. | `(a:"Y","Z")'s 1st` (is "Y")<br>`(a:4,5)'s (2)` (is 5)<br>`(a:5,5,5)'s length` (is 3)
-			| `of` | Obtains the item at the left numeric position, or the `length`, `any` or `all` values. | `1st of (a:"Y","O")` (is "Y")<br>`(2) of (a:"P","S")` (is "S")<br>`length of (a:5,5,5)` (is 3)
+			| `'s` | Obtains the item at the right numeric position, or the `length`, `some` or `all` values. | `(a:"Y","Z")'s 1st` (is "Y")<br>`(a:4,5)'s (2)` (is 5)<br>`(a:5,5,5)'s length` (is 3)
+			| `of` | Obtains the item at the left numeric position, or the `length`, `some` or `all` values. | `1st of (a:"Y","O")` (is "Y")<br>`(2) of (a:"P","S")` (is "S")<br>`length of (a:5,5,5)` (is 3)
 			| `matches` | Evaluates to boolean `true` if the array on one side matches the pattern on the other. | `(a:2,3) matches (a: num, num)`, `(a: array) matches (a:(a: ))`
 			| `does not match` | Evaluates to boolean `true` if the array on one side does not match the pattern on the other. | `(a:2,3) does not match (a: num)`, `(a: str) does not match (a:(a:'Egg'))`
 			| `is a`, `is an` | Evaluates to boolean `true` if the right side is a datatype describing the left side. | `(a:2,3) is an array`, `(a: ) is an empty`
@@ -113,7 +113,7 @@ define([
 			| `1stto3rd`, `4thlastto2ndlast` etc. | `(a:1,2,3,4,5)'s 2ndto5th` | A subarray containing only the values between the given positions (such as the first, second and third for `1stto3rd`). This does NOT cause an error if it passes the bounds of the array - so `(a:1,2,3)'s 2ndto5th` is `(a:2,3)`.
 			| `length` | `(a:'G','H')'s length` | The length (number of data values) in the array.
 			| `random` | `(a:"a","e","i","o","u")'s random` (is `"a"`, `"e"`, `"i"`, `"o"` or `"u"`). | A random value in the array.
-			| `any`, `all` | `all of (a:1,2) < 3` | Usable only with comparison operators, these allow all or any of the values to be quickly compared.
+			| `some`, `any`, `all` | `some of (a:1,2) < 3`, `all of (a:1,2) is not 3` | Usable only with comparison operators, these allow all of the values to be quickly compared.  `any` is an old alias for `some` that functions identically, but which may be removed in a future version of Harlowe.
 			| `start`, `end` | `start of (a:1,2,3,4) is (a:1,2)`, `(a:1,2,3,4)'s end is not (a:2,4)` | Usable only with the `is`, `is not`, `matches` and `does not match` operators, these allow you to compare the start or end of arrays without having to specify an exact range of values to compare.
 			| Arrays of numbers, such as `(a:3,5)` | `$array's (a:1,-1)` | A subarray containing just the data values at the given positions in the array.
 
@@ -795,7 +795,7 @@ define([
 
 			Rationale:
 			The `contains` and `is in` operators can be used to quickly check if a sequence of values contains an exact value or values, and, combined with the
-			`all` and `any` data names, can check that the values in a sequence merely resemble a kind of value - for instance, that they're positive
+			`all` and `some` data names, can check that the values in a sequence merely resemble a kind of value - for instance, that they're positive
 			numbers, or strings beginning with "E". But, they are times when you're writing the same check over and over, like `is an empty or is a whitespace`,
 			or something more complicated, and would like the ability to store the check in a lambda and reuse it.
 
@@ -1620,7 +1620,7 @@ define([
 
 			* You can't access any positions within the dataset (so, for instance, the `1st`, `2ndlast`
 			and `last` aren't available, although the `length` still is) and can only use `contains`
-			and `is in` to see whether a value is inside (or, by using `any` and `all`, many values).
+			and `is in` to see whether a value is inside (or, by using `some` and `all`, many values).
 
 			* Datasets only contain unique values: adding the string "Go" to a dataset already
 			containing "Go" will do nothing. Values are considered unique if the `is` operator, when placed
@@ -1639,7 +1639,7 @@ define([
 			|---
 			| `is` | Evaluates to boolean `true` if both sides contain equal items, otherwise `false`. | `(ds:1,2) is (ds 2,1)` (is true)
 			| `is not` | Evaluates to `true` if both sides differ in items. | `(ds:5,4) is not (ds:5)` (is true)
-			| `contains` | Evaluates to `true` if the left side contains the right side. | `(ds:"Ape") contains "Ape"`<br>`(ds:(ds:99)) contains (ds:99)`<br>`(ds: 1,2,3) contains all of (a:2,3)`<br>`(ds: 1,2,3) contains any of (a:3,4)`
+			| `contains` | Evaluates to `true` if the left side contains the right side. | `(ds:"Ape") contains "Ape"`<br>`(ds:(ds:99)) contains (ds:99)`<br>`(ds: 1,2,3) contains all of (a:2,3)`<br>`(ds: 1,2,3) contains some of (a:3,4)`
 			| `does not contain` | Evaluates to `true` if the left side does not contain the right side. | `(ds:"Ape") does not contain "Egg"`
 			| `is in` | Evaluates to `true` if the right side contains the left side. | `"Ape" is in (ds:"Ape")`<br>`(a:3,4) is in (ds:1,2,3)`
 			| `is not in` | Evaluates to `true` if the right side does not contain the left side. | `"Hope" is not in (ds:"Famine","Plague","Pollution")`
@@ -1693,8 +1693,8 @@ define([
 			Rationale:
 			This can be thought of as an accompaniment to the `contains` operator. Usually, you just want to check if one or more occurrences
 			of the substring or value are in the given container. To check if an array or string contains any or all of the values,
-			you can use `contains` with the `all` property like so: `$arr contains all of (a:1,2)`
-			and `$arr contains any of (a:1,2)`. But, if you need an *exact* figure for the number of occurrences,
+			you can use `contains` with the `all` or `some` data names, like so: `$arr contains all of (a:1,2)`
+			and `$arr contains some of (a:1,2)`. But, if you need an *exact* figure for the number of occurrences,
 			this macro will be of use.
 
 			A note about newer macros:

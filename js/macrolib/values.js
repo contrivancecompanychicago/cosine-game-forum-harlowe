@@ -42,17 +42,17 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			specifying just the start and end position as a data name: `"Ducks"'s 1stto3rd` is "Duc", and `"Rags"'s 2ndlasttolast` is "gs".
 
 			If you want to check if a string contains any of another string's characters (without needing to be in the
-			same order), or all of them, special `any` and `all` data names are available for use with the `is`, `is not`, `matches` and `is a`
-			operators - `all of $name is "A"` checks if the variable consists only of capital "A"'s, and `any of $name is a whitespace` checks
+			same order), or all of them, special `some` (also known as `any` - no relation to the `any` datatype) and `all` data names are available for use with the `is`, `is not`, `matches` and `is a`
+			operators - `all of $name is "A"` checks if the variable consists only of capital "A"'s, and `some of $name is a whitespace` checks
 			if any of the variable's characters is a whitespace character (using the special "whitespace" datatype).
 
 			You can use the `contains` and `is in` operators to see if a certain string is contained within another: `"mother"
-			contains "moth"` is true, as is `"a" is in "a"`. Again, `any` and `all` can be used with `contains` and `is in` to check all their
-			characters - `all of $string is not "w"` is true if the string doesn't contain "w", and `$string contains any of "aeiou"` is true
+			contains "moth"` is true, as is `"a" is in "a"`. Again, `some` and `all` can be used with `contains` and `is in` to check all their
+			characters - `all of $string is not "w"` is true if the string doesn't contain "w", and `$string contains some of "aeiou"` is true
 			if the string contains those five letters. The opposite of the `is in` operator is `is not in` - `"w" is not in $string` is another way to phrase the above.
 
 			If you want to check if a string specifically starts or ends with with a certain substring, `start` and `end` data names can be used in a
-			similar way to `any` and `all` - `start of $addr is "http://"` is the same as `$addr's 1stto7th is "http://"` (but somewhat easier to write), and
+			similar way to `some` and `all` - `start of $addr is "http://"` is the same as `$addr's 1stto7th is "http://"` (but somewhat easier to write), and
 			`end of $angelName is "iel"` is the same as `$angelName's 3rdlasttolast is "iel"`.
 
 			Here is a table listing the aforementioned operations you can perform on strings, as well as a few others.
@@ -60,7 +60,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			| Operator | Function | Example
 			|---
 			| `+` | Joining. | `"A" + "Z"` (is "AZ")
-			| `is` | Evaluates to boolean `true` if both sides are equal, otherwise `false`. | `$name is "Frederika"`<br>`any of "Buxom" is "x"`
+			| `is` | Evaluates to boolean `true` if both sides are equal, otherwise `false`. | `$name is "Frederika"`<br>`some of "Buxom" is "x"`
 			| `is not` | Evaluates to boolean `true` if both sides are not equal, otherwise `false`. | `$friends is not $enemies`<br>`all of "Gadsby" is not "e"`
 			| `contains` | Evaluates to boolean `true` if the left side contains the right side, otherwise `false`. | `"Fear" contains "ear"`
 			| `does not contain` | Evaluates to boolean `true` if the left side does not contain the right side, otherwise `false`. | `"Fear" does not contain "Bee"`
@@ -68,7 +68,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			| `is not in` | Evaluates to `true` if the right string does not contain the left string. | `"Blood" is not in "Stone`
 			| `'s` | Obtaining the character or substring at the right numeric position. | `"YO"'s 1st` (is "Y")<br>`"PS"'s (2)` (is "S")<br>`"ear"'s (a: 2,3)` (is "ar")
 			| `of` | Obtaining the character at the left numeric position. | `1st of "YO"` (is "Y")<br>`(2) of "PS"` (is "S")<br>`(a: 2,3) of "ear"` (is "ar")
-			| `matches` | Evaluates to boolean `true` if the left side describes the right side. | `str matches "Contract"`, `any of "RED" matches "E"`
+			| `matches` | Evaluates to boolean `true` if the left side describes the right side. | `str matches "Contract"`, `some of "RED" matches "E"`
 			| `does not match` | Evaluates to boolean `true` if the left side does not describe the right side. | `str does not match "Minotaur"`, `"3" does not match "Three"`
 			| `is a`, `is an` | Evaluates to boolean `true` if the right side is a datatype describing the left side. | `"Boo" is a string`, `"   " is a whitespace`, `"" is an empty`
 			| `is not a`, `is not an` | Evaluates to boolean `true` if the right side does not describe the left side. | `"Boo" is not an empty`, `"" is not a whitespace`
@@ -80,7 +80,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			| `1st`,`2nd`,`last`, etc. | `$str's last`, `1st of $str` | A single character at the given position in the string. This causes an error if it passes the bounds of the string, such as `"elder"'s 8th`.
 			| `1stto3rd`, `4thlastto2ndlast` etc. | `"aeiou"'s 2ndto5th` | A substring containing only the characters between the given positions (such as the first, second and third for `1stto3rd`). This does NOT cause an error if it passes the bounds of the string - so `"Power"'s 3rdto9th` is `"wer"`.
 			| `length` | `"Penny"'s length` | The length (number of characters) in the string.
-			| `any`, `all` | `all of "aeiou" is not "y"` | Usable only with comparison operators, these allow all or any of the characters to be quickly compared.
+			| `some`, `any`, `all` | `all of "aeiou" is not "y"`, `some of "aaaba" is not "a"` | Usable only with comparison operators, these allow all of the characters to be quickly compared. `any` is an old alias for `some` that functions identically, but which may be removed in a future version of Harlowe.
 			| `start`, `end` | `start of $addr is "http://"`, `end of $angelName is "iel"` | Usable only with the `is`, `is not`, `matches` and `does not match` operators, these allow you to compare the start or end of strings without having to specify an exact range of characters to compare.
 			| `random` | A random character in the string. | `"aeiou"'s random` (is `"a"`, `"e"`, `"i"`, `"o"` or `"u"`).
 			| Arrays of numbers, such as `(a:3,5)` | `$str's (a:1,-1)` | A substring containing just the characters at the given positions in the string.

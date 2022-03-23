@@ -34,7 +34,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		an error instead if it is not.
 		@return {String|Error}
 	*/
-	const youCanOnlyAccess = "You can only access position strings/numbers ('4th', 'last', '2ndlast', (2), etc.) or slices ('1stTo2ndlast', '3rdTo5th'), ";
+	const youCanOnlyAccess = "You can only access position strings/numbers ('4th', 'last', '2ndlast', (2), etc.), slices ('1stTo2ndlast', '3rdTo5th'), ";
 	const noZeroth = "You can't access the '0th' or '0thlast' position of ";
 	function compilePropertyIndex(obj, prop) {
 		/*
@@ -58,7 +58,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			2ndlast, 3rdlast: reverse indices.
 			1stTo2ndlast, 3rdlastToLast: slices.
 			random: random index.
-			any, all, start, end: produce special "determiner" objects used for comparison operations.
+			some (any), all, start, end: produce special "determiner" objects used for comparison operations.
 		*/
 		if (isSequential(obj)) {
 			let match;
@@ -71,9 +71,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			*/
 			if (typeof prop === "number") {
 				if (prop === 0) {
-					return TwineError.create("property", "You can't access elements at position 0 of "
-					+ objectName(obj)
-					+ ".",
+					return TwineError.create("property", `You can't access elements at position 0 of ${objectName(obj)}.`,
 					"Only positive and negative position values exist.");
 				}
 				/*
@@ -143,8 +141,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			*/
 			else if (prop === "random") {
 				if (!obj.length) {
-					return TwineError.create("property", "I can't get a random value from "
-						+ objectName(obj) + ", because it's empty");
+					return TwineError.create("property", `I can't get a random value from ${objectName(obj)}, because it's empty`);
 				}
 				/*
 					Again, to get the true code point length of strings, Array.from() is called for.
@@ -159,21 +156,18 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 					+ andList(HookSet.TwineScript_Properties.map(p => "'" + p + "'"))
 					+ " of " + objectName(obj) + ", not " + objectName(prop) + ".");
 			}
-			else if (!["length","any","all","start","end","random"].includes(prop) && !HookSet.isPrototypeOf(obj)) {
-				return TwineError.create("property", youCanOnlyAccess + "'length', 'any', 'all', 'start', 'end', and 'random'"
-					+ " of " + objectName(obj) + ", not " + objectName(prop) + ".");
+			else if (!["length","some","any","all","start","end","random"].includes(prop) && !HookSet.isPrototypeOf(obj)) {
+				return TwineError.create("property", `${youCanOnlyAccess}'length', 'some', 'any', 'all', 'start', 'end', and 'random' of ${objectName(obj)}, not ${objectName(prop)}.`);
 			}
 		}
 		/*
 			Sets, being essentially a limited kind of arrays, cannot have any
-			property access other than 'length', 'any' and 'all'.
+			property access other than 'length', 'some' ('any'), and 'all'.
 		*/
 		else if (obj instanceof Set) {
-			if (!["length","any","all"].includes(prop)) {
-				return TwineError.create("property", "You can only get the 'length', 'any' and 'all' of "
-					+ objectName(obj)
-					+ ".",
-					"To check contained values, use the 'contains' operator.");
+			if (!["length","some","any","all"].includes(prop)) {
+				return TwineError.create("property",  `${youCanOnlyAccess}'length', 'some', 'any', and 'all' of ${objectName(obj)}.`,
+					"You can't access specific individual data values from datasets.");
 			}
 			/*
 				This kludge must be used to pave over a little difference
@@ -188,14 +182,13 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		*/
 		else if (isArray(obj.TwineScript_Properties) && !obj.TwineScript_Properties.includes(prop)) {
 			return TwineError.create("property",
-				"You can only get the " + andList(obj.TwineScript_Properties.map(p => "'" + p + "'"))
-				+ " of " + objectName(obj) + ", not " + objectName(prop) + ".");
+				`You can only get the ${andList(obj.TwineScript_Properties.map(p => "'" + p + "'"))} of ${objectName(obj)}, not ${objectName(prop)}.`);
 		}
 		/*
 			Numbers and booleans cannot have properties accessed.
 		*/
 		else if (typeof obj === "number" || typeof obj === "boolean") {
-			return TwineError.create("property", `You can't get any data values, let alone "${prop}", from ${ objectName(obj) }`);
+			return TwineError.create("property", `You can't get any data values, let alone "${prop}", from ${objectName(obj)}`);
 		}
 		return prop;
 	}
@@ -281,12 +274,12 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		to be compared succinctly.
 	*/
 	function createDeterminer(obj, prop) {
-		const name = `'${prop}' value${prop === "any" ? '' : 's'} of `;
+		const name = `'${prop}' value${prop === "any" || prop === "some" ? '' : 's'} of `;
 
 		return {
 			determiner: prop,
 			/*
-				The "any" and "all" determiners require the ability to extract code points
+				The "some" ("any") and "all" determiners require the ability to extract code points
 				from strings at will.
 			*/
 			array: [...obj],
@@ -297,7 +290,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			*/
 			string: typeof obj === "string" && obj,
 			TwineScript_ObjectName: name + objectName(obj),
-			TwineScript_ToSource() { return prop + " of " + toSource(obj); },
+			TwineScript_ToSource() { return `${prop} of ${toSource(obj)}`; },
 			TwineScript_TypeName: name + "a data structure",
 			TwineScript_Unstorable: true,
 			TwineScript_Print() {
@@ -327,7 +320,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		if (obj instanceof Map) {
 			return obj.get(prop);
 		}
-		if ((prop === "any" || prop === "all" || prop === "start" || prop === "end") && !obj.TwineScript_VariableStoreName) {
+		if ((prop === "some" || prop === "any" || prop === "all" || prop === "start" || prop === "end") && !obj.TwineScript_VariableStoreName) {
 			return createDeterminer(obj,prop);
 		}
 		/*
@@ -427,14 +420,12 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 						(as above) then get() isn't needed to check the variable's current contents.
 					*/
 					if (obj[prop] !== undefined) {
-						return TwineError.create("operation", "I can't alter " + (obj === State.variables ? "$" : "_") + prop
-							+ " because it's been restricted to a constant value.",
+						return TwineError.create("operation", `I can't alter ${obj === State.variables ? "$" : "_"}${prop} because it's been restricted to a constant value.`,
 							"This variable can't be changed for the rest of the story.");
 					}
 				}
 				else if (!matches(type,value)) {
-					return TwineError.create('operation', "I can't set " + (obj === State.variables ? "$" : "_") + prop + " to " + typeName(value)
-						+ " because it's been restricted to " + toSource(type) + "-type data.",
+					return TwineError.create('operation', `I can't set ${obj === State.variables ? "$" : "_"}${prop} to ${typeName(value)} because it's been restricted to ${toSource(type)}-type data.`,
 						"You can restrict a variable or data name by giving a typed variable to (set:) or (put:)."
 					);
 				}
@@ -454,7 +445,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		if (obj instanceof Map) {
 			if(typeof prop !== "string") {
 				return TwineError.create('operation',
-					objectName(obj) + " can only have string data names, not " + objectName(prop) + ".");
+					`${objectName(obj)} can only have string data names, not ${objectName(prop)}.`);
 			}
 			return true;
 		}
@@ -467,7 +458,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				Unlike in JavaScript, you can't change the length of
 				an array or string - it's fixed.
 			*/
-			if(["length","random","any","all","start","end"].includes(prop)) {
+			if(["length","random","some","any","all","start","end"].includes(prop)) {
 				return TwineError.create(
 					"operation",
 					"I can't forcibly alter the '" + prop + "' of " + objectName(obj) + ".",

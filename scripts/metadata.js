@@ -214,7 +214,9 @@ const
 
 		definition({input, 0:title, 1:name, 2:returnType}) {
 			const slugName =  name.replace(/\s/g,'-').toLowerCase();
+			const aka = ((macroAliases.exec(input) || [''])[0].match(/\w+$/) || []) || [];
 			let text = input.trim().replace(title, "\n<h2 class='def_title keyword_title' id=keyword_" + slugName + ">"
+				+ aka.map(e => "<a id=keyword_" + e + "></a>").join('')
 				+ "<a class='heading_link' href=#keyword_" + slugName + "></a>"
 				+ name + " keyword</h2>\n\n"
 				+ "<h3>" + name + " <span class=macro_returntype>&rarr;</span> <i>" + returnType + "</i></h3>\n");
@@ -225,7 +227,6 @@ const
 				{typeNames: true, macroNames:true}
 			);
 			const addedIn = ((macroAddedIn.exec(input) || [])[1] || '');
-			const aka = ((macroAliases.exec(text) || [''])[0].match(/\w+$/) || []) || [];
 
 			this.defs[title] = { text, anchor: "keyword_" + slugName, name, returnType, addedIn, aka };
 		},
@@ -268,8 +269,9 @@ const
 			Write out a macro title, which is simply "The (name:) macro",
 			but with an id that allows the element to be used as an anchor target.
 		*/
-		title: (name) =>
+		title: (name, aka) =>
 			"\n<h2 class='def_title macro_title' id=macro_" + name.toLowerCase() + ">" +
+				aka.map(e => "<a id=macro_" + e + "></a>").join('') +
 				"<a class='heading_link' href=#macro_" + name.toLowerCase() + "></a>The (" + name + ": ) macro</h2>\n",
 		/*
 			Write out a parameter signature, highlighting the pertinent parts:
@@ -300,15 +302,15 @@ const
 				"</i></h3>\n",
 
 		definition({input, 0:title, 1:name, 2:sig, 3:returnType}) {
+			const aka = ((macroAliases.exec(input) || [''])[0].match(macroEmpty) || []).map(e=> (new RegExp(macroEmpty).exec(e) || [])[1]) || [];
 			let text = input.trim()
 				/*
 					Convert the title signature into an anchor and an augmented parameter signature.
 				*/
-				.replace(title, Macro.title(name) + Macro.signature(name, sig, returnType));
+				.replace(title, Macro.title(name, aka) + Macro.signature(name, sig, returnType));
 
 			const {1:category, 2:categoryOrder} = (categoryTag.exec(text) || {});
 
-			const aka = ((macroAliases.exec(text) || [''])[0].match(macroEmpty) || []).map(e=> (new RegExp(macroEmpty).exec(e) || [])[1]) || [];
 			const abstract = ((macroAbstract.exec(input) || [])[1] || '').replace(/\n/g, ' ');
 			const addedIn = ((macroAddedIn.exec(input) || [])[1] || '');
 
@@ -350,10 +352,7 @@ function processTextTerms(text, name, allow) {
 		markupNamesLinked = [],
 		headingMatch = /<h2[^]+?<\/h2>/g.exec(text);
 	
-	const linkFn = {
-		markdown: (name, type, text = name) => "[" + text + "](#" + type + "_" + name.toLowerCase() + ")",
-		dokuwiki: (name, type, text = name) => "[[harlowe:" + name.toLowerCase() + "|" + text + "]]",
-	}[process.argv.includes("--doku") ? "dokuwiki" : "markdown"];
+	const linkFn = (name, type, text = name) => "[" + text + "](#" + type + "_" + name.toLowerCase() + ")";
 
 	text =
 		/*
