@@ -5,7 +5,7 @@ define(['jquery','utils','utils/typecolours','macros','lexer'], ($,{insensitiveN
 	*/
 
 	/*
-		This is mostly the same as the algorithm used in codemirror/mode, but with changer attachment not tracked.
+		This is mostly the same as the algorithm used in codemirror/mode.
 	*/
 	function highlightClasses(currentBranch) {
 		let counts = {};

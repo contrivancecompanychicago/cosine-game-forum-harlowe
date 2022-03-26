@@ -1,4 +1,4 @@
-Appendix: Syntax comparison with SugarCube 1
+Disabled Appendix: Syntax comparison with SugarCube 1
 
 [SugarCube 1](http://www.motoslave.net/sugarcube/1/), one of the other story formats included in Twine 2, uses different markup and syntax to Harlowe.
 Additionally, its offered features and design philosophy also differ. This table offers a *very rough guide* to some of the major differences.

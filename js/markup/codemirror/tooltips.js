@@ -170,17 +170,7 @@
 					defs.abstract
 				}</div>`;
 		},
-		text: ({changerAttachment, text}, path) => {
-			if (changerAttachment) {
-				if (text.trim() === "+") {
-					return `If the code to the left and right of this <b>+ sign</b> produces two <span class="cm-harlowe-3-macroName-changer">changer</span> values,`
-					+ ` then they will be added together (even though this text is outside of a macro call), removing the + sign and the surrounding whitespace.<br><br>`
-						+ `Note that there needs to be a hook or a command after the rightmost changer, so that the combined changer can attach to it.`;
-				}
-				return `If the code on the left produces a <span class="cm-harlowe-3-macroName-changer">changer</span>, and the code on the right is a hook or a <span class="cm-harlowe-3-macroName-command">command</span>`
-					+ ` (passage links are commands), then the changer will <b>attach</b> to the right, applying its changes and removing this whitespace.<br><br>`
-					+ `You can place any amount of whitespace, including newlines, between a changer and the hook or command it's attached to.`;
-			}
+		text: ({text}, path) => {
 			if (text.trim()) {
 				const insideMacro = path.reduce((a,t) =>
 						a === undefined ? t.type === "macro" ? true : t.type === "hook" ? false : a : a,

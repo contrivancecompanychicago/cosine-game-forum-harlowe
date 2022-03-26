@@ -60,14 +60,15 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			| Operator | Function | Example
 			|---
 			| `+` | Joining. | `"A" + "Z"` (is "AZ")
+			| `-` | Produces a copy of the left string with all occurrences of the right string removed. | `"abcdcba" - "bcd"` (is "acba")
 			| `is` | Evaluates to boolean `true` if both sides are equal, otherwise `false`. | `$name is "Frederika"`<br>`some of "Buxom" is "x"`
 			| `is not` | Evaluates to boolean `true` if both sides are not equal, otherwise `false`. | `$friends is not $enemies`<br>`all of "Gadsby" is not "e"`
 			| `contains` | Evaluates to boolean `true` if the left side contains the right side, otherwise `false`. | `"Fear" contains "ear"`
 			| `does not contain` | Evaluates to boolean `true` if the left side does not contain the right side, otherwise `false`. | `"Fear" does not contain "Bee"`
 			| `is in` | Checking if the right string contains the left string, otherwise `false`. | `"ugh" is in "Through"`
 			| `is not in` | Evaluates to `true` if the right string does not contain the left string. | `"Blood" is not in "Stone`
-			| `'s` | Obtaining the character or substring at the right numeric position. | `"YO"'s 1st` (is "Y")<br>`"PS"'s (2)` (is "S")<br>`"ear"'s (a: 2,3)` (is "ar")
-			| `of` | Obtaining the character at the left numeric position. | `1st of "YO"` (is "Y")<br>`(2) of "PS"` (is "S")<br>`(a: 2,3) of "ear"` (is "ar")
+			| `'s` | Obtains the character or substring at the right numeric position. `'s` cannot have any spaces to its left. | `"YO"'s 1st` (is "Y")<br>`"PS"'s (2)` (is "S")<br>`"ear"'s (a: 2,3)` (is "ar")
+			| `of` | Obtains the character at the left numeric position. | `1st of "YO"` (is "Y")<br>`(2) of "PS"` (is "S")<br>`(a: 2,3) of "ear"` (is "ar")
 			| `matches` | Evaluates to boolean `true` if the left side describes the right side. | `str matches "Contract"`, `some of "RED" matches "E"`
 			| `does not match` | Evaluates to boolean `true` if the left side does not describe the right side. | `str does not match "Minotaur"`, `"3" does not match "Three"`
 			| `is a`, `is an` | Evaluates to boolean `true` if the right side is a datatype describing the left side. | `"Boo" is a string`, `"   " is a whitespace`, `"" is an empty`
@@ -648,6 +649,8 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			| `does not match` | Evaluates to boolean `true` if one side does not describe the other. | `$coins does not match odd`
 			| `is a`, `is an` | Evaluates to boolean  `true` if the right side is a datatype describing the left side | `$credits is a num`, `2 is an even`
 			| `is not a`, `is not an` | Evaluates to boolean `true` if the right side does not describe the left side. | `0 is not an odd`, `13 is not an even`
+
+			`+` can also be used by itself to check if a variable is a number: `+$result` produces an error if $result is not a number.
 
 			You can only perform these operations (apart from `is`) on two pieces of data if they're both numbers. Adding the
 			string "5" to the number 2 would produce an error, and not the number 7 nor the string "52". You must

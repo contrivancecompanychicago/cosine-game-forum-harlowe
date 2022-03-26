@@ -6,6 +6,10 @@ define(['macros','utils/operationutils', 'datatypes/lambda', 'internaltypes/twin
 		Certain kinds of macros are not used inside the passage itself, but are used to mark the passage as being special in some way, or having certain
 		data available to other macros that inspect the story's state, such as (passages:) or (open-storylets:). These macros are "metadata" macros,
 		because they attach metadata to the passage. These macros must appear at the very start of those passages, ahead of every other kind of macro.
+		Using them in any other location will cause an error.
+
+		Every valid metadata macro is run only once, when the story begins. As such, "metadata" is not a type of data that's available to other macros,
+		and there is no need for a datatype called `metadata`.
 	*/
 	const {zeroOrMore, Any} = Macros.TypeSignature;
 

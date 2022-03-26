@@ -752,7 +752,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/lambda',
 
 			Example usage:
 			* `(str-find: digit, "PARSEC47"))` produces `(a:"4","7")`.
-			* `(str-find: (p:"S", ...alnum), "Mr. Smith, Mr. Schmitt, and Mr. Smithers"))` produces `(a:"Smith","Schmitt","Smithers")`.
+			* `(str-find: (p:"S", ...alnum), "Mr. Smith, Mr. Schmitt, and Mr. Smithers")` produces `(a:"Smith","Schmitt","Smithers")`.
 			* `(str-find:(p:"$", ...digit, ".", ...digit), "Apple pie - $5.50; Pumpkin pie - $14.50"))` produces `(a:"$5.50","$14.50")`.
 			* `(str-find:(p:...alnum-type _flavor, " pie - $", (p:...digit, ".", ...digit)-type _cost), "Apple pie - $5.50; Pumpkin pie - $14.50"))` produces the following:<br>
 			`(a:

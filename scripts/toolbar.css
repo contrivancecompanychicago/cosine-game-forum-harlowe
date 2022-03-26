@@ -210,8 +210,7 @@
 	border:1px solid hsla(0,0%,50%,0.5);
 	display:inline-block;
 }
-.harlowe-3-hideCode ~ * .cm-harlowe-3-root:not(.cm-harlowe-3-text):not(.cm-harlowe-3-string),
-.harlowe-3-hideCode ~ * .cm-harlowe-3-changerAttachment {
+.harlowe-3-hideCode ~ * .cm-harlowe-3-root:not(.cm-harlowe-3-text):not(.cm-harlowe-3-string) {
 	opacity:0.25;
 }
 .harlowe-3-tooltip {

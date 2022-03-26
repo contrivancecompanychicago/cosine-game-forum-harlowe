@@ -34,7 +34,6 @@
 		invalid      = "background-color: hsla(17,100%,50%,0.5) !important;",
 		intangible   = "font-weight:100; color: hsla(0,0,0,0.5)",
 		colorRegExp  = /hsla\((\d+),\s*(\d+)%,\s*(\d+)%,\s*(\d+\.\d+)\)/g,
-		changerAttachmentColour = Colours.changer.replace('color:','').replace('1.0','0.5'),
 		/*
 			This only changes in every major version of Harlowe.
 		*/
@@ -115,9 +114,6 @@
 
 		"strike":
 			"text-decoration: line-through;",
-
-		"changerAttachment.text":
-			"text-decoration: line-through dashed " + changerAttachmentColour + ";" + Colours.changer,
 
 		"verbatim":
 			"background-color: hsla(0,0%,50%,0.1);font:var(--font-monospaced)",

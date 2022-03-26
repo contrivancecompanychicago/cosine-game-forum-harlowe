@@ -98,7 +98,7 @@ define([
 			| `+` | Joins arrays. | `(a:1,2) + (a:1,2)` (is `(a:1,2,1,2)`)
 			| `-` | Subtracts arrays, producing an array containing every value in the left side but not the right. | `(a:1,1,2,3,4,5) - (a:1,2)` (is `(a:3,4,5)`)
 			| `...` | When used in a macro call, it separates each value in the right side. | `(a: 0, ...(a:1,2,3,4), 5)` (is `(a:0,1,2,3,4,5)`)
-			| `'s` | Obtains the item at the right numeric position, or the `length`, `some` or `all` values. | `(a:"Y","Z")'s 1st` (is "Y")<br>`(a:4,5)'s (2)` (is 5)<br>`(a:5,5,5)'s length` (is 3)
+			| `'s` | Obtains the item at the right numeric position, or the `length`, `some` or `all` values.  `'s` cannot have any spaces to its left. | `(a:"Y","Z")'s 1st` (is "Y")<br>`(a:4,5)'s (2)` (is 5)<br>`(a:5,5,5)'s length` (is 3)
 			| `of` | Obtains the item at the left numeric position, or the `length`, `some` or `all` values. | `1st of (a:"Y","O")` (is "Y")<br>`(2) of (a:"P","S")` (is "S")<br>`length of (a:5,5,5)` (is 3)
 			| `matches` | Evaluates to boolean `true` if the array on one side matches the pattern on the other. | `(a:2,3) matches (a: num, num)`, `(a: array) matches (a:(a: ))`
 			| `does not match` | Evaluates to boolean `true` if the array on one side does not match the pattern on the other. | `(a:2,3) does not match (a: num)`, `(a: str) does not match (a:(a:'Egg'))`
@@ -1482,8 +1482,8 @@ define([
 			| `is in` | Evaluates to `true` if the right side contains the name on the left. | `"HP" is in (dm:"HP",5)` (is true)
 			| `is not in` | Evaluates to `true` if the right side does not contain the name on the left. | `"XP" is not in (dm:"HP",5)` (is true)
 			| `+` | Joins datamaps, using the right side's value whenever both sides contain the same name. | `(dm:"HP",5) + (dm:"MP",5)`
-			| `'s` | Obtaining the value using the name on the right. | `(dm:"love",155)'s love` (is 155).
-			| `of` | Obtaining the value using the name on the left. | `love of (dm:"love",155)` (is 155).
+			| `'s` | Obtains the value using the name on the right. `'s` cannot have any spaces to its left. | `(dm:"love",155)'s love` (is 155).
+			| `of` | Obtains the value using the name on the left. | `love of (dm:"love",155)` (is 155).
 			| `matches` | Evaluates to boolean `true` if the datamap on one side matches the pattern on the other. | `(dm:"Love",2,"Fear",4) matches (dm: "Love", num, "Fear", num)`
 			| `does not match` | Evaluates to boolean `true` if the datamap on one side does not match the pattern on the other. | `(dm:"Love",2,"Fear",4) matches (dm: "Joy", num, "Sorrow", num)`
 			| `is a`, `is an` | Evaluates to boolean `true` if the right side is a datatype that describes the left side. | `(dm:'a',1) is a datamap`

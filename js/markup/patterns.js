@@ -1001,6 +1001,13 @@
 				| Strong emphasis | `**text**` | **text** |`<strong>text</strong>`
 				| Superscript | `meters/second^^2^^` | meters/second<sup>2</sup> | `meters/second<sup>2</sup>`
 
+				Emphasis and strong emphasis appear identical to italics and boldface by default (though they can be changed
+				using CSS) and are offered for those with familiarity with the Markdown language. Italics and boldface are offered
+				for those with familiarity with SugarCube, Twine 1, or TiddlyWiki.
+
+				The alternative Markdown emphasis syntax `_text_` and `__text__` is not available. Harlowe reserves the use of the _
+				character for temp variables.
+
 				Example usage:
 				```
 				You //can't// be serious! I have to go through the ''whole game''
@@ -1013,7 +1020,7 @@
 
 				A larger variety of text styles can be produced by using the (text-style:) macro, attaching it to
 				a text hook you'd like to style. And, furthermore, you can use HTML tags like `<mark>` as an additional
-				styling option.on.
+				styling option.
 
 				#basics
 			*/

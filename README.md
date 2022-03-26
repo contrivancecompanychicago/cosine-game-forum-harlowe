@@ -111,6 +111,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added `(after-error:)`, a variant of `(after:)` which only displays the attached hook when an error message is displayed. You may use this (in a "header" tagged passage) to show a personalised message to the story's players, possibly advising them to report a bug. Or, you might use this to try and recover the story by redirecting to another passage.
  * Added `(debug:)`, a command which causes Debug Mode to activate (or reactivate if it was exited), even if the story wasn't a test build initially.
  * Added the `codehook` datatype.
+ * The formerly (since Harlowe 1.0) undocumented use of the `-` operator with two strings, which removes all occurrences of the right string from the left, is now documented and "official". This is similar to using the `-` operator with two arrays.
 
 ##### Debug Mode
 
