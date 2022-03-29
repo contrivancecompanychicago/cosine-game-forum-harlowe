@@ -30,7 +30,7 @@ css = "{{CSS}}", JSON.stringify("<style title=\"Twine CSS\">" + read("build/harl
 
 # Since I can test in Firefox without compiling the ES6 files, default only compiles the CSS.
 
-default: dirs jshint css
+default: dirs css
 
 css: build/harlowe-css.css
 docs: build/harlowe-min.js build/twinemarkup-min.js css
@@ -38,7 +38,7 @@ docs: build/harlowe-min.js build/twinemarkup-min.js css
 
 format: dist/format.js
 
-all: dirs jshint dist/format.js docs dist/exampleOutput.html
+all: dirs dist/format.js docs dist/exampleOutput.html
 
 clean:
 	@-rm -f build/*
@@ -57,7 +57,7 @@ build/harlowe-css.css: scss/*.scss
 	| sass --stdin --style compressed \
 	> build/harlowe-css.css
 
-build/harlowe-min.js: js/*.js js/*/*.js js/*/*/*.js
+build/harlowe-min.js: js/*.js js/*/*.js
 	@node_modules/.bin/r.js -o $(requirejs_harlowe_flags) \
 	| babel --no-babelrc \
 	| uglifyjs $(uglify_flags) \

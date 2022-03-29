@@ -16,15 +16,17 @@
 .harlowe-3-stylePreview {
 	text-align: center;
 	user-select: none;
-	overflow: hidden;
 	background: black;
-	color: white;
 	font-family: 'Georgia',serif;
 	padding: 8px;
 	font-size: 1.5rem;
 	margin: 8px auto;
 	width: 50%;
 	position:relative;
+}
+.harlowe-3-stylePreview textarea {
+	background: black;
+	color: white;
 }
 .harlowe-3-stylePreview > span {
 	display:inline-block;
@@ -86,6 +88,7 @@
 .harlowe-3-labeledInput {
 	position: relative;
 	padding-bottom: 8px;
+	white-space:nowrap;
 }
 
 .harlowe-3-labeledInput > input[type=text] {
@@ -123,13 +126,15 @@
 	border-bottom: 1px solid hsla(0,0%,50%,0.5);
 	padding-bottom: 8px;
 }
-
+.harlowe-3-confirmButtons > span {
+	display:inline-block;
+	align-items:center;
+}
 .harlowe-3-resultCode {
 	max-width:50%;
 	overflow-x:auto;
 	white-space:pre;
 	display:inline-block;
-	vertical-align:middle;
 	padding:1px 0px;
 }
 .harlowe-3-resultCode * {
@@ -214,7 +219,6 @@
 	opacity:0.25;
 }
 .harlowe-3-tooltip {
-	font-family: "Source Sans Pro", sans-serif;
 	font-family: var(--font-system);
 	max-width:20vw;
 	position:absolute;
@@ -222,6 +226,12 @@
 	padding:8px;
 	display:block;
 	z-index:2;
+}
+/*
+	TwineJS 2.3
+*/
+[data-version^="2.3"] .harlowe-3-tooltip {
+	font-family: "Source Sans Pro", sans-serif;
 }
 .theme-light .harlowe-3-tooltip, [data-app-theme="light"] .harlowe-3-tooltip {
 	background:white;
@@ -299,4 +309,23 @@
 .harlowe-3-toolbarPanel .harlowe-3-confirmButtons { display:flex; justify-content: end; }
 .passage-edit-dialog.collapsed .harlowe-3-toolbarPanel {
 	display:none;
+}
+.harlowe-3-scrollWrapper {
+	overflow: hidden scroll;
+	max-height: 60vh;
+}
+.harlowe-3-toolbarPanel a[href] {
+	color: var(--dark-blue);
+	font-weight: bold;
+}
+.harlowe-3-toolbarPanel.card {
+	position: absolute;
+	width:576px;
+	height: auto;
+	top:0px;
+	padding:8px;
+}
+.story-format-toolbar + .harlowe-3-toolbarPanel .harlowe-3-confirmButtons {
+	justify-content: start;
+	flex-flow: row-reverse;
 }

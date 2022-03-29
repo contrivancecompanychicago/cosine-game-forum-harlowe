@@ -88,6 +88,11 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Very long lines in "(source:)" listings in the Variables panel should no longer push the other columns far offscreen.
  * Debug Mode no longer automatically, immediately enables itself whenever the first error of your story appears. Instead, this functionality can be added using the new `(after-error:)` and `(debug:)` macros (see below).
 
+##### Syntax highlighter
+
+ * The green line marking whitespace before hooks that's removed by changer attachment (added in 3.2.0) has been removed, due to the possibility of false positives when using non-changer variables in position (which is no longer an error, as mentioned above).
+ * Tooltips (if enabled) now dismiss themselves if you move the mouse cursor a bit.
+
 #### Additions
 
 ##### Coding & Macros
@@ -938,8 +943,8 @@ Harlowe is a story format file, called `format.js`, which is used by Twine 2. Th
 
 Use these commands to build Harlowe:
 
-* `make`: As the JS files can be run directly in a browser without compilation (as is used by the test suite), this only lints the JS source files and builds the CSS file using `make css`.
-* `make jshint`: Lints the JS source files.
+* `make`: As the JS files can be run directly in a browser without compilation (as is used by the test suite), this only builds the CSS file using `make css`.
+* `make jshint`: Lints the JS source files. There is a Visual Studio Code plugin that runs JSHint automatically as you edit, which is what I use lately, but this is still available to use.
 * `make css`: Builds the CSS file, `build/harlowe-css.css`, from the Sass sources. This is an intermediate build product whose contents are included in the final `format.js` file.
 * `make docs`: Builds the official documentation file, `dist/harloweDocs.html`, deriving macro and markup definitions from specially-marked comments in the JS files.
 * `make format`: Builds the Harlowe `format.js` file.

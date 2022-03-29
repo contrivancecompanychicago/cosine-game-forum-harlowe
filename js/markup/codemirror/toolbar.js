@@ -87,7 +87,15 @@
 		if (typeof name !== 'string') {
 			name = 'default';
 		}
-		const {height} = getComputedStyle(toolbarElem);
+
+		/*
+			Twine 2.4+ doesn't have a default panel.
+		*/
+		if (!twine23 && name === "default") {
+			toolbarElem[$$]('.harlowe-3-toolbarPanel').forEach(node => node.remove());
+			return;
+		}
+		
 		/*
 			Uncheck all checkboxes, return all <select>s to default, and clear all textareas.
 		*/
@@ -116,20 +124,26 @@
 			});
 			panel.onreset && panel.onreset();
 		});
+		
+		const {height} = getComputedStyle(toolbarElem);
 		toolbarElem[$$]('.harlowe-3-toolbarPanel').forEach(node => node.remove());
-		/*
-			Touch the maxHeight of the incoming panel, using the computed height of the current panel, to
-			animate its height as it enters.
-		*/
-		panels[name].style.maxHeight=height;
+		if (twine23) {
+			/*
+				Touch the maxHeight of the incoming panel, using the computed height of the current panel, to
+				animate its height as it enters.
+			*/
+			panels[name].style.maxHeight=height;
+			/*
+				For prefilled "use selection" input elements, pre-fill with the selected text now.
+			*/
+			toolbarElem[$$]('[data-use-selection]').forEach(node => node.value = cm.doc.getSelection());
+			// Sadly, I think using this setTimeout is necessary to get it to work.
+			// "70vh" is the absolute maximum height for these panels.
+			setTimeout(() => panels[name].style.maxHeight="70vh", 100);
+		} else {
+			panels[name].classList.add('card-button-card', 'card', 'floating');
+		}
 		toolbarElem.append(panels[name]);
-		/*
-			For prefilled "use selection" input elements, pre-fill with the selected text now.
-		*/
-		toolbarElem[$$]('[data-use-selection]').forEach(node => node.value = cm.doc.getSelection());
-		// Sadly, I think using this setTimeout is necessary to get it to work.
-		// "70vh" (or "50vh") is the absolute maximum height for these panels.
-		setTimeout(() => panels[name].style.maxHeight=(twine23 ? "70vh" : "50vh"), 100);
 	}
 
 	/*
@@ -457,6 +471,9 @@
 		Note: panel creation is deferred until first access - hence, this returns a zero-arity function.
 	*/
 	const folddownPanel = (...panelRows) => () => {
+		if (!panelRows.length) {
+			return;
+		}
 		/*
 			The MVC-style flow of element states into data, and back, is crudely performed here.
 			Elements can register "model" and "updater" functions. Model functions take a model object
@@ -490,7 +507,7 @@
 		/*
 			Since this is defined after update(), storing update() on it later should not cause a circular reference.
 		*/
-		const panelElem = el('<div class="harlowe-3-toolbarPanel" style="transition:max-height 0.8s;overflow-y:auto">');
+		const panelElem = el(`<div class="harlowe-3-toolbarPanel${!twine23 ? ' card floating' : ''}" style="transition:max-height 0.8s;overflow-y:auto">`);
 
 		const makeColourPicker = value => {
 			const makeSwatchRow = (colours, index, visible) =>
@@ -556,7 +573,7 @@
 						return button;
 					}
 					const elem = el(`<button title="${button.title}" class="harlowe-3-toolbarButton${button.active ? ' active' : ''}">${button.html}</button>`);
-					button.onClick && elem.addEventListener('click', button.onClick);
+					button.onClick && elem[ON]('click', button.onClick);
 					return elem;
 				}));
 			}
@@ -1032,9 +1049,17 @@
 				plusButton[ON]('click', () => { makeRow(); update(); renumber(); });
 			}
 			/*
-				The "Create" and "Cancel" buttons.
+				The "Create" and "Cancel" buttons. This is always the last row of a panel.
 			*/
 			if (type === "confirm") {
+				/*
+					If this is Twine 2.4, wrap all preceding elements inside a scrollable container div.
+				*/
+				if (!twine23) {
+					const wrapper = el(`<div style="harlowe-3-scrollWrapper"></div>`);
+					wrapper.append(...panelElem.childNodes);
+					panelElem.append(wrapper);
+				}
 				const buttons = el('<div class="harlowe-3-confirmButtons" style="padding-bottom:8px;"></div>');
 				const resultingCode = el(`<span>Resulting code: <span class="harlowe-3-resultCode"><code></code> <code></code></span></span>`);
 				const cancel = el(`<button class="${buttonClass()}">${fontIcon('times')} Cancel</button>`);
@@ -1489,7 +1514,7 @@
 		passagelink: (() => {
 				const passageT8nPreviews = () => [el('<br>'),{
 					type: 'inline-dropdown',
-					text: 'Departing passage transition: ',
+					text: 'Departing transition: ',
 					options: t8nNames,
 					model(m, el) {
 						const {value} = el[$]('select');
@@ -1499,7 +1524,7 @@
 					},
 				},{
 					type: 'inline-dropdown',
-					text: 'Arriving passage transition: ',
+					text: 'Arriving transition: ',
 					options: t8nNames,
 					model(m, el) {
 						const {value} = el[$]('select');
@@ -2700,7 +2725,7 @@
 					},
 					(() => {
 						const button = el('<button style="position:absolute;right:1em;margin-top:-2em">' + fontIcon('chevron-up') + "</button>");
-						button.addEventListener('click', () => {
+						button[ON]('click', () => {
 							toolbarElem.classList.toggle('harlowe-3-minimised');
 							const list = button.firstChild.classList;
 							list.toggle('fa-chevron-down');

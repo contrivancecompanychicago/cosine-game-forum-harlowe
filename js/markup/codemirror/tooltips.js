@@ -186,10 +186,13 @@
 	const tooltipElem = document.createElement("div");
 	tooltipElem.className = "harlowe-3-tooltip";
 	let tooltipAppearDelay = 0;
+	let tooltipDismissTicker = 0;
 
 	function tooltipAppear() {
 		if (tooltipAppearDelay < 1) {
 			tooltipElem.style.display = "";
+			// Dismiss the newly-appeared tooltip after this many mousemove events.
+			tooltipDismissTicker = 10;
 		} else {
 			tooltipAppearDelay -= 1;
 			requestAnimationFrame(tooltipAppear);
@@ -205,6 +208,20 @@
 		const cmElem = document.querySelector('.CodeMirror');
 		if (tooltipElem.compareDocumentPosition(document) & 1) {
 			cmElem.append(tooltipElem);
+			/*
+				If the tooltipElem is disconnected from the DOM,
+				then so is the previous cmElem to which it was appended.
+				.CodeMirror elements are destroyed by Twine 2.3, not detached.
+				This means it is safe to attach the mousemove event to this cmElem.
+			*/
+			cmElem.addEventListener('mousemove', () => {
+				if (tooltipElem.style.display !== "none") {
+					tooltipDismissTicker -= 1;
+					if (tooltipDismissTicker <= 0) {
+						tooltipElem.style.display = "none";
+					}
+				}
+			});
 		}
 		const cursor = doc.getCursor();
 		const path = tree.pathAt(doc.indexFromPos(cursor));
