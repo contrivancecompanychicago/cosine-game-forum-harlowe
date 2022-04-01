@@ -17,6 +17,7 @@
 	text-align: center;
 	user-select: none;
 	background: black;
+	color: white;
 	font-family: 'Georgia',serif;
 	padding: 8px;
 	font-size: 1.5rem;
@@ -63,6 +64,10 @@
 	position: relative;
 	padding-bottom: 8px;
 	margin-bottom: 8px
+}
+
+.harlowe-3-toolbarPanel label {
+	white-space:nowrap;
 }
 
 .harlowe-3-toolbarCheckboxRow > label {
@@ -328,4 +333,10 @@
 .story-format-toolbar + .harlowe-3-toolbarPanel .harlowe-3-confirmButtons {
 	justify-content: start;
 	flex-flow: row-reverse;
+}
+.harlowe-3-toolbarPanel textarea {
+	background: var(--white-translucent);
+	border-radius: var(--corner-round);
+	border: 1px solid var(--faint-gray);
+	color: var(--dark-gray);
 }

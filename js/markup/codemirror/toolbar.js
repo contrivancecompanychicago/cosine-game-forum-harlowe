@@ -28,6 +28,7 @@
 	const fontIcon = (name, w=20, h=20) =>
 		`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="${w}" height="${h}"><path fill='currentColor' d="${
 			({
+				search: `M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z`,
 				'align-right': `M16 224h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16zm416 192H16a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm3.17-384H172.83A12.82 12.82 0 0 0 160 44.83v38.34A12.82 12.82 0 0 0 172.83 96h262.34A12.82 12.82 0 0 0 448 83.17V44.83A12.82 12.82 0 0 0 435.17 32zm0 256H172.83A12.82 12.82 0 0 0 160 300.83v38.34A12.82 12.82 0 0 0 172.83 352h262.34A12.82 12.82 0 0 0 448 339.17v-38.34A12.82 12.82 0 0 0 435.17 288z`,
 				'list-ol': `M48 48a48 48 0 1 0 48 48 48 48 0 0 0-48-48zm0 160a48 48 0 1 0 48 48 48 48 0 0 0-48-48zm0 160a48 48 0 1 0 48 48 48 48 0 0 0-48-48zm448 16H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0-320H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16zm0 160H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16z`,
 				'list-ul': `M61.77 401l17.5-20.15a19.92 19.92 0 0 0 5.07-14.19v-3.31C84.34 356 80.5 352 73 352H16a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8h22.83a157.41 157.41 0 0 0-11 12.31l-5.61 7c-4 5.07-5.25 10.13-2.8 14.88l1.05 1.93c3 5.76 6.29 7.88 12.25 7.88h4.73c10.33 0 15.94 2.44 15.94 9.09 0 4.72-4.2 8.22-14.36 8.22a41.54 41.54 0 0 1-15.47-3.12c-6.49-3.88-11.74-3.5-15.6 3.12l-5.59 9.31c-3.72 6.13-3.19 11.72 2.63 15.94 7.71 4.69 20.38 9.44 37 9.44 34.16 0 48.5-22.75 48.5-44.12-.03-14.38-9.12-29.76-28.73-34.88zM496 224H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0-160H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16zm0 320H176a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h320a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zM16 160h64a8 8 0 0 0 8-8v-16a8 8 0 0 0-8-8H64V40a8 8 0 0 0-8-8H32a8 8 0 0 0-7.14 4.42l-8 16A8 8 0 0 0 24 64h8v64H16a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8zm-3.91 160H80a8 8 0 0 0 8-8v-16a8 8 0 0 0-8-8H41.32c3.29-10.29 48.34-18.68 48.34-56.44 0-29.06-25-39.56-44.47-39.56-21.36 0-33.8 10-40.46 18.75-4.37 5.59-3 10.84 2.8 15.37l8.58 6.88c5.61 4.56 11 2.47 16.12-2.44a13.44 13.44 0 0 1 9.46-3.84c3.33 0 9.28 1.56 9.28 8.75C51 248.19 0 257.31 0 304.59v4C0 316 5.08 320 12.09 320z`,
@@ -518,7 +519,8 @@
 
 			const ret = el('<div class=harlowe-3-singleColourPicker><input style="width:48px;margin-right:8px" type=color value="'
 				+ value + '"></div>');
-			const swatchSelect = el(`<select><option value="" selected>Harlowe built-ins</option></select>`);
+			const swatchSelectWrapper = el(`<span class="text-select-control"><select ${!twine23 ? `style="max-width: 9em;"` : ''}><option value="" selected>Harlowe built-ins</option></select></span>`);
+			const swatchSelect = swatchSelectWrapper[$]('select');
 			ret.append(makeSwatchRow(Object.keys(builtinColourNames), '', true));
 			openColors.forEach((row,i) => {
 				ret.append(makeSwatchRow(row, i));
@@ -528,7 +530,7 @@
 				ret[$$](`[data-index]`).forEach(ind => ind.style.display = 'none');
 				ret[$](`[data-index="${swatchSelect.value}"]`).style.display = "inline-block";
 			});
-			ret.append(swatchSelect, el('<br>'), new Text(`Opacity: `), el(`<input type=range style="width:64px;top:8px;position:relative" value=1 min=0 max=1 step=0.05>`));
+			ret.append(swatchSelectWrapper, el('<br>'), new Text(`Opacity: `), el(`<input type=range style="width:64px;top:8px;position:relative" value=1 min=0 max=1 step=0.05>`));
 
 			ret[ON]('click', ({target}) => {
 				if (target.classList.contains('harlowe-3-swatch')) {
@@ -565,7 +567,7 @@
 				ret = el('<small style="display:block">' + row.text + '</small>');
 			}
 			/*
-				Used only for the default panel.
+				Used only for the default panel and the Find panel.
 			*/
 			if (type === "buttons") {
 				panelElem.append(...row.buttons.map(button => {
@@ -595,8 +597,8 @@
 			/*
 				Checkboxes and radio buttons.
 			*/
-			if (type === "checkbox" || type === "checkboxrow") {
-				ret = el('<label style="display:block;"><input type="checkbox"></input>' + row.text + '</label>');
+			if (type.endsWith("checkbox") || type.endsWith("checkboxrow")) {
+				ret = el(`<label${inline ? '' : ' style="display:block"'}><input type="checkbox"></input>${row.text}</label>`);
 				if (type.endsWith('w')) {
 					row.subrow.reduce(reducer, ret);
 					row.subrow.forEach(r => {
@@ -633,6 +635,7 @@
 			*/
 			if (type.endsWith("textarea")) {
 				let inputType = 'text';
+				const tagName = row.multiline ? 'textarea' : 'input';
 				/*
 					Full Harlowe expressions.
 				*/
@@ -641,7 +644,7 @@
 						These have special update and model routines.
 					*/
 					row.update = (m, elem) => {
-						if (!m.expression && elem[$]('input').value) {
+						if (!m.expression && elem[$](tagName).value) {
 							elem.setAttribute('invalid', `This doesn't seem to be valid code.`);
 						}
 						else {
@@ -649,7 +652,7 @@
 						}
 					};
 					row.model = (m, elem) => {
-						const v = (elem[$]('input').value || '').trim();
+						const v = (elem[$](tagName).value || '').trim();
 						if (v) {
 							/*
 								Attempt to lex the data, and consider it invalid if it contains any text nodes.
@@ -671,21 +674,21 @@
 				*/
 				if (type.endsWith("string-textarea")) {
 					row.model || (row.model = (m, elem) => {
-						row.modelCallback(m, JSON.stringify(elem[$]('input').value || ''));
+						row.modelCallback(m, JSON.stringify(elem[$](tagName).value || ''));
 					});
 				}
 				if (type.endsWith("number-textarea")) {
 					inputType = 'number';
 					row.model || (row.model = (m, elem) => {
-						row.modelCallback(m, +elem[$]('input').value || 0);
+						row.modelCallback(m, +elem[$](tagName).value || 0);
 					});
 				}
-				ret = el('<' + (inline ? 'span' : 'div') + ' class="harlowe-3-labeledInput">'
-					+ row.text
-					+ '<input ' + (row.useSelection ? 'data-use-selection' : '') + (type.includes('passage') ? 'list="harlowe-3-passages"' : '') + ' style="width:'
-						+ (row.width) + ';margin' + (inline ? ':0 0.5rem' : '-left:1rem') + ';" type=' + inputType + ' placeholder="' + (row.placeholder || '')
-					+ '"></input></' + (inline ? 'span' : 'div') + '>');
-				ret[$]('input')[ON]('input', update);
+				ret = el(`<${inline ? 'span' : 'div'} class="harlowe-3-labeledInput">${
+						row.text
+					}<${tagName} ${row.useSelection ? 'data-use-selection' : ''}${type.includes('passage') ? 'list="harlowe-3-passages"' : ''} style="width:${row.width};margin${
+						inline ? ':0 0.5rem' : '-left:1rem'
+					};${row.multiline && inline ? 'display:inline-block;height:36px':''}" type=${inputType} placeholder="${row.placeholder || ''}"></${tagName}></${inline ? 'span' : 'div'}>`);
+				ret[$](tagName)[ON]('input', update);
 			}
 			if (type.endsWith("number") || type.endsWith("range")) {
 				ret = el('<' + (inline ? 'span' : 'div') + ' class="harlowe-3-labeledInput">'
@@ -793,9 +796,9 @@
 			if (type.endsWith("dropdown")) {
 				const dropdownDiv = el('<' + (inline ? 'span' : 'div') + ' style="' + (inline ? '' : 'width:50%;') + 'position:relative;">'
 					+ row.text
-					+ '<select style="' + (inline ? 'margin:0.5rem;' : 'margin-left:1rem;') + 'font-size:1rem;margin-top:4px"></select></' + (inline ? 'span' : 'div') + '>');
+					+ '<span class="text-select-control"><select style="' + (inline ? 'margin:0.5rem;' : 'margin-left:1rem;') + 'font-size:1rem;margin-top:4px"></select></span></' + (inline ? 'span' : 'div') + '>');
 				row.options.forEach((option,i) => {
-					dropdownDiv.lastChild.append(el('<option value="' + (!i ? '' : option) + '"' + (!option ? ' disabled' : !i ? ' selected' : '') + '>' + (option || '───────') + '</select>'));
+					dropdownDiv[$]('select').append(el('<option value="' + (!i ? '' : option) + '"' + (!option ? ' disabled' : !i ? ' selected' : '') + '>' + (option || '───────') + '</select>'));
 				});
 				dropdownDiv[$]('select')[ON]('change', update);
 				ret = dropdownDiv;
@@ -831,8 +834,9 @@
 			}
 			if (type === "macro-list") {
 				ret = el(`<div><div style="text-align:center">Category: </div></div>`);
-				const categorySelector = el(`<select>`);
-				ret.firstChild.append(categorySelector);
+				const categorySelectorWrapper = el(`<span class='text-select-control'><select></span>`);
+				ret.firstChild.append(categorySelectorWrapper);
+				const categorySelector = categorySelectorWrapper[$]('select');
 				const scrollBox = el(`<div style="margin-top:8px;border-top:1px solid hsla(0,0%,50%,0.5);max-height:40vh;overflow-y:scroll">`);
 				ret.append(scrollBox);
 				categorySelector[ON]('change', () => {
@@ -887,9 +891,9 @@
 			if (type.endsWith("dropdown-rows")) {
 				ret = el(`<${inline ? 'span' : 'div'}><span class="harlowe-3-dropdownRowLabel">${
 						row.text
-					}</span><select style="font-size:1rem;margin-top:4px;${
+					}</span><span class="text-select-control"><select style="font-size:1rem;margin-top:4px;${
 						row.width ? `width:${row.width};text-overflow:ellipsis` : ''
-					}"></select><span class="harlowe-3-dropdownRows"></span></${inline ? 'span' : 'div'}>`);
+					}"></select></span><span class="harlowe-3-dropdownRows"></span></${inline ? 'span' : 'div'}>`);
 				const selectEl = ret[$]('select');
 				row.options.forEach(([name, ...subrows], i) => {
 					if (!name) {
@@ -1048,12 +1052,17 @@
 				};
 				plusButton[ON]('click', () => { makeRow(); update(); renumber(); });
 			}
+			if (type === "scroll-wrapper") {
+				ret = el(`<div style="harlowe-3-scrollWrapper"></div>`);
+				row.contents.reduce(reducer, ret);
+			}
 			/*
 				The "Create" and "Cancel" buttons. This is always the last row of a panel.
 			*/
 			if (type === "confirm") {
 				/*
 					If this is Twine 2.4, wrap all preceding elements inside a scrollable container div.
+					This is a special convenience hack that saves me having to use "scroll-wrapper" a lot.
 				*/
 				if (!twine23) {
 					const wrapper = el(`<div style="harlowe-3-scrollWrapper"></div>`);
@@ -1468,7 +1477,7 @@
 								}
 							},
 						},
-						el(`<div style="height:${twine23 ? 1 : 3}rem">`),
+						el(`<br style="height:${twine23 ? 1 : 4}rem">`),
 						{
 							type: "inline-range",
 							text: "Angle (deg):",
@@ -2655,7 +2664,65 @@
 			},
 			confirmRow),
 
-		default: 
+		find: folddownPanel({
+				type: "scroll-wrapper",
+				contents: [{
+						type: "inline-textarea",
+						multiline: true,
+						width:"40%",
+						text: "Find:",
+						placeholder: "",
+						model(m, elem) {
+							m.query = elem[$]('textarea').value;
+						},
+					},{
+						type: 'buttons',
+						buttons: [
+							{ title:'Prev Result', html:`<b style="font-size:150%">↑</b>`, onClick: () => cm.constructor.signal(cm, 'harlowe-3-findNext',-1) },
+							{ title:'Next Result', html:`<b style="font-size:150%">↓</b>`, onClick: () => cm.constructor.signal(cm, 'harlowe-3-findNext', 1)  },
+						],
+					},{
+						type: 'inline-dropdown',
+						text: '',
+						options: ["Everywhere", "Only prose", "Only code", "Only selection"],
+						model(m, el) {
+							m.onlyIn = el[$]('select').value;
+						},
+					},{
+						type: "inline-checkbox",
+						text: "Match case",
+						model(m, elem) {
+							m.matchCase = elem && elem[$]('input').checked;
+							cm.constructor.signal(cm, 'harlowe-3-find', m);
+						},
+					},
+					el('<br>'),
+					{
+						type: "inline-textarea",
+						multiline: true,
+						width:"40%",
+						text: "Replace:",
+						placeholder: "",
+						model(m, elem) {
+							m.replaceQuery = elem[$]('textarea').value;
+						},
+					},{
+						type: 'buttons',
+						buttons: [
+							{ title:'Replace', html:`Replace`, onClick: ({target}) => cm.constructor.signal(cm, 'harlowe-3-replace', target.previousSibling.lastChild.value, false) },
+							{ title:'Replace All', html:`Replace All`, onClick: ({target}) => cm.constructor.signal(cm, 'harlowe-3-replace', target.previousSibling.previousSibling.lastChild.value, true)  },
+						],
+					},
+				],
+			},
+			(() => {
+				// This <span> wrapper ensures that it isn't considered a main panel button by the CSS.
+				const done = el(`<span style="float:right"><button class="primary">Done</button></span>`);
+				done.firstChild[ON]('click', switchPanel);
+				return done;
+			})()),
+
+		default:
 			/*
 				The default panel is present only if this is 2.3. In 2.4, an identical panel is created using the TwineJS extension API.
 			*/
@@ -2719,6 +2786,9 @@
 						},
 					},
 					el('<span class="harlowe-3-toolbarBullet">'),
+					
+					{ title:'Find and replace',     html:fontIcon('search'),        onClick: () => switchPanel('find')},
+
 					{ title:'Open the Harlowe documentation',
 						html: `<div style='font-weight:bold'>?</div>`,
 						onClick: () => window.open(`https://twine2.neocities.org/`, "Harlowe Documentation", 'noopener,noreferrer')
@@ -2789,6 +2859,7 @@
 		{ type: 'button', command() { switchPanel('macro'); },       label:'Macro…',  icon:'', },
 		hideCodeButton    = { type: 'button', command() { toolbarElem.classList.toggle('harlowe-3-hideCode'); cm.constructor.signal(cm,'cursorActivity'); },    label:'Proofread View',   iconOnly: true, icon:fontIconURI('eye'), },
 		hideTooltipButton = { type: 'button', command() { toolbarElem.classList.toggle('harlowe-3-hideTooltip'); cm.constructor.signal(cm,'cursorActivity'); }, label:'Coding Tooltips',  iconOnly: true, icon:fontIconURI('comment'), },
+		{ type: 'button', command() { switchPanel('find'); },        label:'Find/Replace', iconOnly: true, icon: fontIconURI('search'), },
 		{ type: 'button', command() { window.open(`https://twine2.neocities.org/`, "Harlowe Documentation", 'noopener,noreferrer'); }, label:'Show Manual', iconOnly: true, icon:t24Icon(5, 14, 'font-weight:bold;font-size:18px;','?'), },
 	].map(function recur(b,i) {
 		/*
@@ -2810,7 +2881,7 @@
 			Look for the TwineJS toolbar element in either 2.4 or 2.3.
 		*/
 		const passageTagsElem = document[$]('.story-format-toolbar') || document[$]('.editor .passageTags');
-		if (passageTagsElem) {
+		if (passageTagsElem && passageTagsElem.nextElementSibling !== toolbarElem) {
 			passageTagsElem.after(toolbarElem);
 		}
 		cm = cmObj;

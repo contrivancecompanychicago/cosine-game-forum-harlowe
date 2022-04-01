@@ -132,6 +132,10 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added a "Clear this panel" button to the Errors panel, which, when clicked, removes all of the recorded errors.
  * Added a close button to the panel, which exits Debug Mode when clicked.
 
+##### Other
+
+ * Added a Find/Replace panel to the editor toolbar.
+
 ### 3.2.3 changes (October 22, 2021):
 
 #### Bugfixes
@@ -446,6 +450,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 ##### Other
 
  * Added a "toggle fullscreen" button to the sidebar, underneath the "undo" and "redo" buttons. It should only appear if fullscreen mode is permitted by the browser. The same caveats about fullscreen mode for `(link-fullscreen:)` are present here.
+ * Added an editor toolbar, available in Twine's Passage Editor.
  * The syntax highlighter no longer highlights syntactic elements inside strings. While this had some fringe benefit in cases where strings contained code to be printed, I've decided it's too distracting in more usual cases.
  * The syntax highlighter now colourises macro names based on their returned data type.
  * Added a `<noscript>` element to the output HTML, containing a sentence instructing that JavaScript should be enabled to play the story (as per SugarCube).

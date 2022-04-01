@@ -192,22 +192,206 @@
 		}
 
 		/*
-			Perform specific style alterations based on certain specific token types.
+			Find/Replace functionality.
+			When a search is performed (using find()), currentQuery becomes a { query, regExp, onlyIn, matchCase } object,
+			and a CodeMirror overlay (below) is added that highlights the matches.
 		*/
-		function renderLine(_, __, lineElem) {
-			Array.from(lineElem.querySelectorAll('.cm-harlowe-3-colour')).forEach(elem => {
+		let matches = [];
+		/*
+			The matchIndex refers to the currently highlighted match, the target of "Replace One" operations.
+		*/
+		let matchIndex;
+		let currentQuery;
+		/*
+			findFromIndex allows a search to begin from a given index, setting the matchIndex correctly.
+		*/
+		let findFromIndex = -1;
+		const findOverlay = {
+			token(stream) {
 				/*
-					It may be a bit regrettable that the fastest way to get the HTML colour of a Harlowe
-					colour token is to re-lex it separately from the tree, but since it's a single token, it should nonetheless be quick enough.
-					(Plus, colour tokens are relatively rare in most passage prose).
+					To highlight, simply go through each match and apply the CSS class if the stream
+					is inside it.
+					Assumption: all matches entries are in ascending order.
 				*/
-				const {colour} = lex(elem.textContent, '', "macro").tokenAt(0);
+				const { line } = stream.lineOracle;
+				const ch = stream.pos;
+				for (let i = 0; i < matches.length; i += 1) {
+					const { start, end } = matches[i];
+
+					if (start.line > line || end.line < line) {
+						continue;
+					}
+					/*
+						This checks that the stream is currently within this match's range.
+						Because the end ch is noninclusive, "end.ch > ch" is used instead of "end.ch >= ch".
+					*/
+					if (start.line <= line && end.line >= line) {
+						if ((start.line < line || start.ch <= ch) && (end.line > line || end.ch > ch)) {
+							(end.line > line) ? stream.skipToEnd() : (stream.pos = end.ch);
+							return (matchIndex === i) ? "harlowe-3-findResultCurrent" : "harlowe-3-findResult";
+						}
+						else if (start.line === line && start.ch > ch) {
+							stream.pos = start.ch;
+							return;
+						}
+					}
+				}
+				stream.skipToEnd();
+			}
+		};
+		/*
+			The main finding function.
+			This can begin a search from a specific index (such as after using "Replace One").
+		*/
+		function harlowe3Find(q) {
+			cm.removeOverlay(findOverlay);
+			matches = [];
+			matchIndex = -1;
+			/*
+				Don't initialise a search for "".
+			*/
+			if (!q.query) {
+				currentQuery = undefined;
+				return;
+			}
+			currentQuery = q;
+			const {doc} = cm;
+			/*
+				The focused match is the one immediately after (or at) the cursor, or the first one if there is none after.
+			*/
+			const cursorIndex = findFromIndex > -1 ? findFromIndex : Math.max(0, doc.indexFromPos(doc.getCursor()) - 1);
+			/*
+				The actual work in finding the results is done using this RegExp. It is cached so that replace() can use it, too.
+			*/
+			q.regExp = new RegExp(q.query.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/mg, "\\$&"), q.matchCase ? "g" : "gi");
+			const fullText = doc.getValue();
+			const {onlyIn} = q;
+			let match;
+			matchLoop: while ((match = q.regExp.exec(fullText))) {
 				/*
-					The following CSS produces a colour stripe below colour literals, which doesn't interfere with the cursor border.
+					Process a result if it's at the front of the input stream.
 				*/
-				elem.setAttribute('style', `background:linear-gradient(to bottom,transparent,transparent 80%,${colour} 80.1%,${colour})`);
-			});
+				const matchLength = match[0].length || 1;
+				const {index} = match;
+				
+				if (onlyIn === "Only prose" || onlyIn === "Only code") {
+					/*
+						Search for text and string tokens in the result's branch.
+						If there are any, and "Only prose" is set, then break the loop (thus skipping the return at the end.)
+						If there are any, and "Only code" is set, then it's invalid - end and go to the next token.
+					*/
+					let currentToken = tree.tokenAt(index);
+					let currentBranch = tree.pathAt(index);
+					for (let j = index; j < index + matchLength; j += 1) {
+						if (j > currentToken.end) {
+							currentToken = tree.tokenAt(j);
+							currentBranch = tree.pathAt(j);
+						}
+						let i;
+						for (i = 0; i < currentBranch.length; i+=1) {
+							const {type} = currentBranch[i];
+							if (type === "text" || type === "string") {
+								/*
+									If this is a text/string node and "Only code" is set, then it's invalid. Otherwise, it's valid.
+								*/
+								if (onlyIn === "Only code") {
+									continue matchLoop;
+								}
+								break;
+							}
+						}
+						/*
+							If no text or string tokens were found, and "Only prose" is set, then it's invalid - end and go to the next token.
+						*/
+						if (i === currentBranch.length && onlyIn === "Only prose") {
+							continue matchLoop;
+						}
+					}
+				}
+				/*
+					Limit the search if "Only seiection" is set. This requires looping through every CodeMirror selection
+					(whose anchor-head order isn't obvious) and checking.
+				*/
+				else if (onlyIn === "Only selection") {
+					const selections = doc.listSelections();
+					for (let i = 0; i < selections.length; i += 1) {
+						const pos1 = doc.indexFromPos(selections[i].anchor),
+							pos2 = doc.indexFromPos(selections[i].head);
+						if (index < Math.min(pos1, pos2) || index + matchLength >= Math.max(pos1, pos2)) {
+							continue matchLoop;
+						}
+					}
+				}
+				/*
+					Add this match to the highlighter overlay's array.
+				*/
+				const start = doc.posFromIndex(index);
+				const end = doc.posFromIndex(index + matchLength);
+				matches.push({start, end});
+				if (matchIndex === -1) {
+					/*
+						Update the matchIndex if this is the match immediately after the cursor.
+					*/
+					if (index > cursorIndex) {
+						matchIndex = matches.length - 1;
+					}
+					/*
+						Don't scroll into view if this is a continued search.
+					*/
+					if (!findFromIndex) {
+						cm.scrollIntoView(start, cm.display.wrapper.offsetHeight / 2);
+					}
+				}
+			}
+			/*
+				If no matchIndex was set above, set it now.
+			*/
+			if (matchIndex === -1) {
+				matchIndex = 0;
+			}
+			cm.addOverlay(findOverlay);
+			/*
+				Reset this thing now.
+			*/
+			findFromIndex = -1;
 		}
+		function harlowe3FindNext(dir) {
+			matchIndex = (matchIndex + dir) % matches.length;
+			if (matchIndex < 0) {
+				matchIndex += matches.length;
+			}
+			matches[matchIndex] && cm.scrollIntoView(matches[matchIndex].start, cm.display.wrapper.offsetHeight / 2);
+			/*
+				This crudely refreshes the overlay.
+			*/
+			cm.removeOverlay(findOverlay);
+			cm.addOverlay(findOverlay);
+		}
+		function harlowe3Replace(newStr, all) {
+			const {doc} = cm;
+			const match = matches[matchIndex];
+			if (!all && match) {
+				findFromIndex = doc.indexFromPos(match.start) + newStr.length;
+				doc.replaceRange(newStr, match.start, match.end);
+			}
+			/*
+				Due to the slow, buggy nature of bundling multiple replaceRange() calls into a CodeMirror operation(),
+				this full replacement is done with a single replaceRange() that re-computes the matches using the original query RegExp.
+			*/
+			else if (matches.length) {
+				const veryStart = matches[0].start;
+				const veryEnd = matches[matches.length-1].end;
+				doc.replaceRange(doc.getValue().slice(doc.indexFromPos(veryStart), doc.indexFromPos(veryEnd)).replace(currentQuery.regExp, newStr), veryStart, veryEnd);
+			}
+			// Since this triggers change(), nothing more needs to be done to refresh the overlay.
+		}
+
+		/*
+			Because mode() can be called multiple times by TwineJS, special preparation must be done before attaching event handlers.
+			Each event handler here is a named function with "harlowe3" in their name, so that their copies can be spotted in the _handlers array.
+			Reminder that function name properties are well-specified since 2015.
+		*/
+		const on = (target, name, fn) => (!target._handlers || !(target._handlers[name] || []).some(e => e.name === fn.name)) && target.on(name, fn);
 		
 		let init = () => {
 			const doc = cm.doc;
@@ -220,28 +404,57 @@
 				Attach the all-important beforeChanged event, but make sure it's only attached once.
 				Note that this event is removed by TwineJS when it uses swapDoc to dispose of old docs.
 			*/
-			doc.on('beforeChange', (_, change) => {
+			on(doc, 'beforeChange', function harlowe3beforeChange(_, change) {
 				const oldText = doc.getValue();
 				forceFullChange(change, oldText);
 			});
-			doc.on('change', () => {
+			on(doc, 'change', function harlowe3Change() {
 				const text = doc.getValue();
 				tree = lexTree(text);
+				/*
+					Re-compute the current search query, if there is one.
+				*/
+				if (currentQuery && matches[matchIndex]) {
+					findFromIndex = doc.indexFromPos(matches[matchIndex].start) - 1;
+					harlowe3Find(currentQuery);
+				}
 			});
-			doc.on('cursorActivity', () => {
+			on(doc, 'cursorActivity', function harlowe3CursorActivity() {
 				cursorMarking(doc, tree);
 				tooltips && tooltips(cm, doc, tree);
 			});
-			cm.on('renderLine', renderLine);
+			/*
+				Perform specific style alterations based on certain specific token types.
+			*/
+			on(cm, 'renderLine', function harlowe3RenderLine(_, __, lineElem) {
+				Array.from(lineElem.querySelectorAll('.cm-harlowe-3-colour')).forEach(elem => {
+					/*
+						It may be a bit regrettable that the fastest way to get the HTML colour of a Harlowe
+						colour token is to re-lex it separately from the tree, but since it's a single token, it should nonetheless be quick enough.
+						(Plus, colour tokens are relatively rare in most passage prose).
+					*/
+					const {colour} = lex(elem.textContent, '', "macro").tokenAt(0);
+					/*
+						The following CSS produces a colour stripe below colour literals, which doesn't interfere with the cursor border.
+					*/
+					elem.setAttribute('style', `background:linear-gradient(to bottom,transparent,transparent 80%,${colour} 80.1%,${colour})`);
+				});
+			});
 			// Remove the toolbar, if it exists.
 			// This can't actually be in the Tooltips module because it must only be installed once.
-			cm.on('scroll', () => {
+			on(cm, 'scroll', function harlowe3Scroll() {
 				const tooltip = document.querySelector('.harlowe-3-tooltip');
 				tooltip && tooltip.remove();
 			});
-			// Remove the Insert key mode.
-			cm.addKeyMap({ Insert(){} });
-			cm.toggleOverwrite(false);
+			/*
+				These are signalled only by the Find/Replace Toolbar panel.
+			*/
+			on(cm, 'harlowe-3-find', harlowe3Find);
+			on(cm, 'harlowe-3-findNext', harlowe3FindNext);
+			on(cm, 'harlowe-3-replace', harlowe3Replace);
+			/*
+				Unset this function, now that this is all done.
+			*/
 			init = null;
 		};
 		
@@ -281,9 +494,10 @@
 				state.pos++;
 			},
 			token: function token(stream, state) {
-				if (init) {
-					init();
-				}
+				/*
+					Install the event handlers, if they haven't already been.
+				*/
+				init && init();
 				/*
 					We must render each token using the cumulative styles of all parent tokens
 					above it. So, we obtain the full path.
