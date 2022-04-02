@@ -15,7 +15,7 @@ const {execSync} = require('child_process'),
 		// The cursor token highlight should ignore the most common tokens, unwrapped text tokens.
 		`.${versionClass}cursor:not([class^='${versionClass}text ${versionClass}root']) { border-bottom: 2px solid darkgray; }` +
 
-		`.${versionClass}findResult { background-color: rgba(255,255,0,0.25) !important; } .${versionClass}findResultCurrent { background-color: rgba(255,128,0,0.25) !important; }` +
+		`.${versionClass}findResult { background-color: hsla(280,100%,70%,0.4) !important; } .${versionClass}findResultCurrent { background-color: hsla(320,100%,70%,0.6) !important; }` +
 		
 		".CodeMirror {padding: 0 !important}" +
 		// The line number bullets (see the lineNumbers option, above), are a bit too dark by default.

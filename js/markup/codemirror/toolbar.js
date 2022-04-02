@@ -574,7 +574,7 @@
 					if ('tagName' in button) {
 						return button;
 					}
-					const elem = el(`<button title="${button.title}" class="harlowe-3-toolbarButton${button.active ? ' active' : ''}">${button.html}</button>`);
+					const elem = el(`<button title="${button.title}" class="${buttonClass()}${button.active ? ' active' : ''}">${button.html}</button>`);
 					button.onClick && elem[ON]('click', button.onClick);
 					return elem;
 				}));
@@ -598,7 +598,7 @@
 				Checkboxes and radio buttons.
 			*/
 			if (type.endsWith("checkbox") || type.endsWith("checkboxrow")) {
-				ret = el(`<label${inline ? '' : ' style="display:block"'}><input type="checkbox"></input>${row.text}</label>`);
+				ret = el(`<label${inline ? '' : ' style="display:block"'} class="harlowe-3-checkboxRow"><input type="checkbox"></input>${row.text}</label>`);
 				if (type.endsWith('w')) {
 					row.subrow.reduce(reducer, ret);
 					row.subrow.forEach(r => {
@@ -615,17 +615,17 @@
 				ret[ON]('change', update);
 			}
 			if (type === "checkboxes") {
-				ret = el(`<div class="harlowe-3-toolbarCheckboxRow"><div${row.bold ? ' style="font-weight:bold"' :''}>${row.name}</div></div>`);
+				ret = el(`<div class="harlowe-3-toolbarCheckboxes"><div${row.bold ? ' style="font-weight:bold"' :''}>${row.name}</div></div>`);
 				row.options.forEach(box => {
-					const e = el(`<label${row.capitalise ? ' style="text-transform:capitalize;"' : ''}><input type="checkbox"></input>${box}</label>`);
+					const e = el(`<label${row.capitalise ? ' style="text-transform:capitalize;"' : ''} class="${buttonClass()}"><input type="checkbox"></input>${box}</label>`);
 					e[ON]('change', update);
 					ret.append(e);
 				});
 			}
 			if (type === "radios") {
-				ret = el(`<div class="harlowe-3-toolbarCheckboxRow"><div${row.bold ? ' style="font-weight:bold"':''}>${row.name}</div></div>`);
+				ret = el(`<div class="harlowe-3-toolbarCheckboxes"><div${row.bold ? ' style="font-weight:bold"':''}>${row.name}</div></div>`);
 				row.options.forEach((radio,i) => {
-					const e = el(`<label${row.capitalise ? ' style="text-transform:capitalize;"' : ''}><input type="radio" name="${row.name}" value="${radio}" ${!i ? 'checked' : ''}></input>${radio}</label>`);
+					const e = el(`<label${row.capitalise ? ' style="text-transform:capitalize;"' : ''} class="${buttonClass()}"><input type="radio" name="${row.name}" value="${radio}" ${!i ? 'checked' : ''}></input>${radio}</label>`);
 					e[ON]('change', update);
 					ret.append(e);
 				});
@@ -794,9 +794,9 @@
 				Dropdowns.
 			*/
 			if (type.endsWith("dropdown")) {
-				const dropdownDiv = el('<' + (inline ? 'span' : 'div') + ' style="' + (inline ? '' : 'width:50%;') + 'position:relative;">'
+				const dropdownDiv = el('<' + (inline ? 'span' : 'div') + ' style="white-space:nowrap;' + (inline ? '' : 'width:50%;') + 'position:relative;">'
 					+ row.text
-					+ '<span class="text-select-control"><select style="' + (inline ? 'margin:0.5rem;' : 'margin-left:1rem;') + 'font-size:1rem;margin-top:4px"></select></span></' + (inline ? 'span' : 'div') + '>');
+					+ '<span class="text-select-control"><select style="' + (inline ? 'margin:0.5rem;' : 'margin-left:1rem;') + 'font-size:0.9rem;margin-top:4px"></select></span></' + (inline ? 'span' : 'div') + '>');
 				row.options.forEach((option,i) => {
 					dropdownDiv[$]('select').append(el('<option value="' + (!i ? '' : option) + '"' + (!option ? ' disabled' : !i ? ' selected' : '') + '>' + (option || '───────') + '</select>'));
 				});
@@ -1065,7 +1065,7 @@
 					This is a special convenience hack that saves me having to use "scroll-wrapper" a lot.
 				*/
 				if (!twine23) {
-					const wrapper = el(`<div style="harlowe-3-scrollWrapper"></div>`);
+					const wrapper = el(`<div class="harlowe-3-scrollWrapper"></div>`);
 					wrapper.append(...panelElem.childNodes);
 					panelElem.append(wrapper);
 				}
@@ -1189,8 +1189,10 @@
 					smear:                 "text-shadow: 0em 0em 0.02em white, -0.2em 0em 0.5em white, 0.2em 0em 0.5em white; color:transparent",
 					mirror:                "display:inline-block;transform:scaleX(-1)",
 					"upside-down":         "display:inline-block;transform:scaleY(-1)",
-					blink:                 "animation:fade-in-out 1s steps(1,end) infinite alternate",
-					"fade-in-out":         "animation:fade-in-out 2s ease-in-out infinite alternate",
+					tall:                  "display:inline-block;transform:scaleY(1.5) translateY(-0.25ex)",
+					flat:                  "display:inline-block;transform:scaleY(0.5) translateY(0.25ex)",
+					blink:                 "animation:harlowe-3-fade-in-out 1s steps(1,end) infinite alternate",
+					"fade-in-out":         "animation:harlowe-3-fade-in-out 2s ease-in-out infinite alternate",
 					rumble:                "display:inline-block;animation:harlowe-3-rumble linear 0.1s 0s infinite",
 					shudder:               "display:inline-block;animation:harlowe-3-shudder linear 0.1s 0s infinite",
 					sway:                  "display:inline-block;animation:harlowe-3-sway 5s linear 0s infinite",
@@ -1251,10 +1253,10 @@
 					model,
 				},{
 					type: 'radios',
-					name: 'Flips',
+					name: 'Flips and stretches',
 					capitalise:true,
 					bold:true,
-					options: ["none", "mirror","upside-down"],
+					options: ["none", "mirror","upside-down", "tall", "flat"],
 					model,
 				},{
 					type: 'radios',
@@ -2669,7 +2671,7 @@
 				contents: [{
 						type: "inline-textarea",
 						multiline: true,
-						width:"40%",
+						width:"30%",
 						text: "Find:",
 						placeholder: "",
 						model(m, elem) {
@@ -2690,7 +2692,7 @@
 						},
 					},{
 						type: "inline-checkbox",
-						text: "Match case",
+						text: "Match Case",
 						model(m, elem) {
 							m.matchCase = elem && elem[$]('input').checked;
 							cm.constructor.signal(cm, 'harlowe-3-find', m);
@@ -2700,7 +2702,7 @@
 					{
 						type: "inline-textarea",
 						multiline: true,
-						width:"40%",
+						width:"30%",
 						text: "Replace:",
 						placeholder: "",
 						model(m, elem) {
@@ -2717,7 +2719,7 @@
 			},
 			(() => {
 				// This <span> wrapper ensures that it isn't considered a main panel button by the CSS.
-				const done = el(`<span style="float:right"><button class="primary">Done</button></span>`);
+				const done = el(`<span style="float:right;align-self:end;"><button class="variant-primary primary icon-button">Done</button></span>`);
 				done.firstChild[ON]('click', switchPanel);
 				return done;
 			})()),
@@ -2837,9 +2839,9 @@
 		{ type: 'button', command() { switchPanel('rotate'); },      label:'Rotate',      iconOnly: true, icon: t24Icon(-3, 14, 'transform:rotate(-30deg);font-family:serif;', 'R'), },
 		{ type: 'button', command() { switchPanel('textstyle'); },   label:'Styles…',     icon:'', },
 		{ type: 'button', command() { wrapSelection("\n#",""); },    label:'Header',      iconOnly: true, icon: t24Icon(0, 14, 'font-weight:bold;font-size:18px;','H'), },
-		{ type: 'button', command() { wrapSelection("\n* ",""); },   label:'Bullet List', iconOnly: true, icon: fontIconURI('list-ul'), },
-		{ type: 'button', command() { wrapSelection("\n0. ",""); },  label:'Number List', iconOnly: true, icon: fontIconURI('list-ol'), },
-		{ type: 'button', command() { wrapSelection("\n---\n",""); },label:'Horiz. Rule', iconOnly: true, icon: fontIconURI('minus'), },
+		{ type: 'button', command() { wrapSelection("\n* ",""); },   label:'Bullet list', iconOnly: true, icon: fontIconURI('list-ul'), },
+		{ type: 'button', command() { wrapSelection("\n0. ",""); },  label:'Number list', iconOnly: true, icon: fontIconURI('list-ol'), },
+		{ type: 'button', command() { wrapSelection("\n---\n",""); },label:'Horizontal rule', iconOnly: true, icon: fontIconURI('minus'), },
 		{ type: 'button', command() { switchPanel('align'); },       label:'Alignment',   iconOnly: true, icon: fontIconURI('align-right'), },
 		{ type: 'button', command() { switchPanel('columns'); },     label:'Columns',     iconOnly: true, icon: fontIconURI('columns'), },
 		{ type: 'button', command() { switchPanel('collapse'); },    label:'Collapse',    iconOnly: true, icon: t24Icon(0,10,'font-weight:bold;font-size:12px','{ }'), },
@@ -2857,9 +2859,9 @@
 		{ type: 'button', command() { switchPanel('hook'); },        label:'Hook…',   icon:'', },
 		{ type: 'button', command() { switchPanel('basicValue'); },  label:'Value…',  icon:'', },
 		{ type: 'button', command() { switchPanel('macro'); },       label:'Macro…',  icon:'', },
-		hideCodeButton    = { type: 'button', command() { toolbarElem.classList.toggle('harlowe-3-hideCode'); cm.constructor.signal(cm,'cursorActivity'); },    label:'Proofread View',   iconOnly: true, icon:fontIconURI('eye'), },
-		hideTooltipButton = { type: 'button', command() { toolbarElem.classList.toggle('harlowe-3-hideTooltip'); cm.constructor.signal(cm,'cursorActivity'); }, label:'Coding Tooltips',  iconOnly: true, icon:fontIconURI('comment'), },
-		{ type: 'button', command() { switchPanel('find'); },        label:'Find/Replace', iconOnly: true, icon: fontIconURI('search'), },
+		hideCodeButton    = { type: 'button', command() { toolbarElem.classList.toggle('harlowe-3-hideCode'); cm.constructor.signal(cm,'cursorActivity'); },    label:'Proofread view',   iconOnly: true, icon:fontIconURI('eye'), },
+		hideTooltipButton = { type: 'button', command() { toolbarElem.classList.toggle('harlowe-3-hideTooltip'); cm.constructor.signal(cm,'cursorActivity'); }, label:'Coding tooltips',  iconOnly: true, icon:fontIconURI('comment'), },
+		{ type: 'button', command() { switchPanel('find'); },        label:'Find and replace', iconOnly: true, icon: fontIconURI('search'), },
 		{ type: 'button', command() { window.open(`https://twine2.neocities.org/`, "Harlowe Documentation", 'noopener,noreferrer'); }, label:'Show Manual', iconOnly: true, icon:t24Icon(5, 14, 'font-weight:bold;font-size:18px;','?'), },
 	].map(function recur(b,i) {
 		/*

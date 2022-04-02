@@ -59,28 +59,22 @@
 	border-left: none;
 }
 
-.harlowe-3-toolbarCheckboxRow {
+.harlowe-3-toolbarCheckboxes {
 	border-bottom: 1px solid hsla(0,0%,50%,0.5);
 	position: relative;
 	padding-bottom: 8px;
 	margin-bottom: 8px
 }
 
-.harlowe-3-toolbarPanel label {
+.harlowe-3-toolbarPanel label:not(.harlowe-3-radioRow) {
 	white-space:nowrap;
 }
 
-.harlowe-3-toolbarCheckboxRow > label {
+.harlowe-3-toolbarCheckboxes > label {
 	min-width: 20%;
 	display: inline-block;
 }
 
-.harlowe-3-toolbarRadios {
-	border-bottom: 1px solid hsla(0,0%,50%,0.5);
-	position: relative;
-	padding-bottom: 8px;
-	margin-bottom: 8px
-}
 .harlowe-3-swatch {
 	width: 24px;
 	height: 24px;
@@ -93,7 +87,6 @@
 .harlowe-3-labeledInput {
 	position: relative;
 	padding-bottom: 8px;
-	white-space:nowrap;
 }
 
 .harlowe-3-labeledInput > input[type=text] {
@@ -334,9 +327,43 @@
 	justify-content: start;
 	flex-flow: row-reverse;
 }
-.harlowe-3-toolbarPanel textarea {
+.harlowe-3-toolbarPanel textarea, .harlowe-3-toolbarPanel [type="text"] {
 	background: var(--white-translucent);
 	border-radius: var(--corner-round);
 	border: 1px solid var(--faint-gray);
 	color: var(--dark-gray);
+}
+/*
+	Apply checkbox styling to line up with 2.4's design.
+*/
+html:not([data-version^="2.3"]) .harlowe-3-toolbarPanel [type="checkbox"] {
+	background: transparent;
+	border: 2px solid var(--dark-gray);
+	width:16px;
+	height:16px;
+	appearance:none;
+	position:relative;
+	border-radius:2px;
+	vertical-align: middle;
+}
+html:not([data-version^="2.3"]) .harlowe-3-toolbarPanel [type="checkbox"]:checked::before {
+	content: "✔";
+	position: absolute;
+	right: -2px;
+	top: -4px;
+	margin-right:3px;
+}
+/*
+	Because radioRows and checkboxes can have entire other interface elements (like colour pickers) as children,
+	they can't just be given icon-button as-is.
+*/
+.harlowe-3-radioRow {
+	padding: var(--grid-size);
+	padding-left: 0px;
+	padding-right: 0px;
+	user-select:none;
+	position:relative;
+}
+.harlowe-3-radioRow > :first-child, .harlowe-3-radioRow > :nth-child(2) {
+	cursor:pointer;
 }

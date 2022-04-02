@@ -1998,7 +1998,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			This applies one or more selected built-in text styles to the hook's text. Give this macro one of these strings (capitalisation and hyphens ignored):
 			`"none"`, `"bold"`, `"italic"`, `"underline"`, `"double-underline"`, `"wavy-underline"`, `"strike"`, `"double-strike"`, `"wavy-strike"`, `"superscript"`,
 			`"subscript"`, `"blink"`, `"shudder"`, `"mark"`, `"condense"`, `"expand"`, `"outline"`, `"shadow"`, `"emboss"`, `"smear"`, `"blur"`, `"blurrier"`,
-			`"mirror"`, `"upside-down"`, `"fade-in-out"`, `"rumble"`, `"sway"`, `"buoy"` or `"fidget"`.
+			`"mirror"`, `"upside-down"`, `"tall"`, `"flat"`, `"fade-in-out"`, `"rumble"`, `"sway"`, `"buoy"` or `"fidget"`.
 			
 			Example usage:
 			* `The shadow (text-style: "shadow")[flares] at you!` will style the word "flares" with a shadow.
@@ -2031,16 +2031,18 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			| `"superscript"`    | <t-s style="vertical-align:super;font-size:.83em"></t-s> | "subscript"
 			| `"subscript"`      | <t-s style="vertical-align:sub;font-size:.83em"></t-s> | "superscript"
 			| `"mark"`           | <t-s style="background-color: hsla(60, 100%, 50%, 0.6)"></t-s> | (bg-color:)
-			| `"outline"`        | <t-s style="color:white; text-shadow: -1px -1px 0 black, 1px -1px 0 black, -1px  1px 0 black, 1px  1px 0 black"></t-s> | "shadow", "emboss", "blur", blurrier", "smear"
-			| `"shadow"`         | <t-s style="text-shadow: 0.08em 0.08em 0.08em black"></t-s> | "outline", "emboss", "blur", "blurrier", "smear"
-			| `"emboss"`         | <t-s style="text-shadow: 0.04em 0.04em 0em black"></t-s> | "outline", "shadow", "blur", "blurrier", "smear"
+			| `"outline"`        | <t-s diurnal style="color:white; text-shadow: -1px -1px 0 black, 1px -1px 0 black, -1px  1px 0 black, 1px  1px 0 black"></t-s> | "shadow", "emboss", "blur", blurrier", "smear"
+			| `"shadow"`         | <t-s diurnal style="text-shadow: 0.08em 0.08em 0.08em black"></t-s> | "outline", "emboss", "blur", "blurrier", "smear"
+			| `"emboss"`         | <t-s diurnal style="text-shadow: 0.04em 0.04em 0em black"></t-s> | "outline", "shadow", "blur", "blurrier", "smear"
 			| `"condense"`       | <t-s style="letter-spacing:-0.08em"></t-s> | "expand"
 			| `"expand"`         | <t-s style="letter-spacing:0.1em"></t-s> | "condense"
-			| `"blur"`           | <t-s style="text-shadow: 0em 0em 0.08em black; color:transparent"></t-s> | "outline", "shadow", "emboss", "blurrier", "smear"
-			| `"blurrier"`       | <t-s style="text-shadow: 0em 0em 0.2em black; color:transparent"></t-s> | "outline", "shadow", "emboss", "blur", "smear"
-			| `"smear"`          | <t-s style="text-shadow: 0em 0em 0.02em black, -0.2em 0em 0.5em black, 0.2em 0em 0.5em black; color:transparent"></t-s> | "outline", "shadow", "emboss", "blur", "blurrier"
-			| `"mirror"`         | <t-s style="display:inline-block;transform:scaleX(-1)"></t-s> | "upside-down"
-			| `"upside-down"`    | <t-s style="display:inline-block;transform:scaleY(-1)"></t-s> | "mirror"
+			| `"blur"`           | <t-s diurnal style="text-shadow: 0em 0em 0.08em black; color:transparent"></t-s> | "outline", "shadow", "emboss", "blurrier", "smear"
+			| `"blurrier"`       | <t-s diurnal style="text-shadow: 0em 0em 0.2em black; color:transparent"></t-s> | "outline", "shadow", "emboss", "blur", "smear"
+			| `"smear"`          | <t-s diurnal style="text-shadow: 0em 0em 0.02em black, -0.2em 0em 0.5em black, 0.2em 0em 0.5em black; color:transparent"></t-s> | "outline", "shadow", "emboss", "blur", "blurrier"
+			| `"mirror"`         | <t-s style="display:inline-block;transform:scaleX(-1)"></t-s> | "upside-down", "tall", "flat"
+			| `"upside-down"`    | <t-s style="display:inline-block;transform:scaleY(-1)"></t-s> | "mirror", "tall", "flat"
+			| `"tall"`           | <t-s style="display:inline-block;transform:scaleY(1.5) translateY(-0.25ex)"></t-s> | "mirror", "upside-down", "flat"
+			| `"flat"`           | <t-s style="display:inline-block;transform:scaleY(0.5) translateY(0.25ex)"></t-s> | "mirror", "upside-down", "tall"
 			| `"blink"`          | <t-s style="animation:fade-in-out 1s steps(1,end) infinite alternate"> (hover to preview)</t-s> | "fade-in-out", "rumble", "shudder", "sway", "buoy", "fidget", (opacity:)
 			| `"fade-in-out"`    | <t-s style="animation:fade-in-out 2s ease-in-out infinite alternate"> (hover to preview)</t-s> | "blink", "rumble", "shudder", "sway", "buoy", "fidget", (opacity:)
 			| `"rumble"`         | <t-s style="display:inline-block;animation:rumble linear 0.1s 0s infinite"> (hover to preview)</t-s> | "fade-in-out", "blink", "sway", "fidget"
@@ -2056,7 +2058,8 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			Due to browser limitations, combining many of these changers won't work exactly as intended – `(text-style: "underline", "strike")`, for instance,
 			will cause only the latter of the two to be applied, in this case "strike". These incompatibilities are listed in the table above.
 			
-			Also due to browser limitations, hooks using "mirror" or "upside-down" will have their CSS `display` attribute set to `inline-block`.
+			Also due to browser limitations, hooks using "mirror", "upside-down", "tall", or "flat" will have their CSS `display` attribute set to `inline-block`. This means, among other
+			things, that the text inside them won't word-wrap.
 
 			Note that the animations "rumble" and "shudder" are particularly intense, and may induce frustration or illness in
 			motion-sensitive readers. Take care when using them.
@@ -2163,6 +2166,14 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 						upsidedown: {
 							display: "inline-block",
 							transform: "scaleY(-1)",
+						},
+						tall: {
+							display:"inline-block",
+							transform:"scaleY(1.5) translateY(-0.25ex)",
+						},
+						flat: {
+							display:"inline-block",
+							transform:"scaleY(0.5) translateY(0.25ex)",
 						},
 						fadeinout: {
 							animation: "fade-in-out 2s ease-in-out infinite alternate",

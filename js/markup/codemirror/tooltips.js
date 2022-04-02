@@ -11,6 +11,7 @@
 	const otherwiseFalse = ` Otherwise, it produces \`false\`.`;
 	const variableInProse =  `If they contain strings, numbers, commands or changers, you can place them directly in your prose to display the value, run the command, or apply the changer.`;
 	const lambdaClause = c => `The keyword <b>"${c}"</b> makes the code on the right into a <b>"${c}" lambda clause</b>. `;
+	const specialHookName = (name, what) => `Additionally, because it is the special name \`${name}\`", it also refers to <b>${what}</b>, and can be used to apply changers to ${what}.`;
 	const tooltipMessages = {
 		hr:                  "This is a <b>horizontal rule</b>. It extends across the entire passage width (or the column width, if it's in a column).",
 		bulleted:            "The `*` at the start of this line makes this a <b>bulleted list item</b>.",
@@ -22,8 +23,8 @@
 								text.trim().startsWith("|") && text.trim().endsWith("|") ? "This mark ends all of the preceding columns. The text after this is not in a column."
 								: `The text after this mark is in a <b>column</b> with width multiplier ${width}x, a left margin of ${marginLeft}em, and a right margin of ${marginRight}em. `
 								+ "Write more consecutive `|` marks to increase the width, and place `=` to the left and right to increase the margin on that side.",
-		em:                  enclosedText + "<b>emphasis style</b>.",
-		strong:              enclosedText + "<b>strong emphasis style</b>.",
+		em:                  enclosedText + "<b>emphasis style</b>. This is visually the same as italic style by default.",
+		strong:              enclosedText + "<b>strong emphasis style</b>. This is visually the same as bold style by default.",
 		bold:                enclosedText + "<b>bold style</b>.",
 		italic:              enclosedText + "<b>italic style</b>.",
 		strike:              enclosedText + "<b>strikethrough style</b>.",
@@ -68,7 +69,12 @@
 		belongingOperator:   token => tooltipMessages.property(token),
 		escapedStringChar:   ``,
 		string:              `This is <b>string data</b>. Strings are sequences of text data enclosed in matching " or ' marks. Use a \`\\\` inside a string to "escape" the next character. Escaped " or ' marks don't count as the end of the string.`,
-		hookName:            ({name}) => `This <b>hook name</b> refers to all hooks named "\`${name}\`" in this passage.`,
+		hookName:            ({name}) => `This <b>hook name</b> refers to all hooks named "\`${name}\`" in this passage.<br><br>`
+								+ (name.toLowerCase() === "page" ? specialHookName('page','the entire HTML page')
+									: name.toLowerCase() === "passage" ? specialHookName('passage','the entire passage')
+									: name.toLowerCase() === "link" ? specialHookName('link','every link in the passage')
+									: name.toLowerCase() === "sidebar" ? specialHookName('sidebar','the sidebar')
+									: ''),
 		cssTime:             ({value}) => `This is <b>number data</b> in CSS time format. Harlowe automatically converts this to a number of milliseconds, so this is identical to ${value}.`,
 		datatype:            `This is the name of a <b>datatype</b>. Use these names to check what kind of data a data value is, using the \`matches\` or \`is a\` operators.<br>`
 								+ `You can also use them in a \`(set:)\` or \`(put:)\` to restrict that variable's data for error-checking purposes. (See the documentation for details.)`,
@@ -139,7 +145,7 @@
 								+ `<br><br>Alternatively, if a datatype is to the right of it, that datatype becomes a <b>spread datatype</b> that matches zero or more of itself.`,
 		typeSignature:       `The <b>-type</b> suffix is used to restrict the variable on the right to only holding data that matches the data pattern on the left. Variables restricted in this way are called <b>typed variables</b>.`,
 		addition:            `Use the <b>addition operator</b> to add two numbers together, as well as join two strings or two arrays, and combine two datamaps, two datasets, two changers, or two colours.`
-								+ `This operator can also combine two hook names, creating a hook name that applies to both names of hooks.`,
+								+ ` This operator can also combine two hook names, creating a hook name that applies to both sets of hooks.`,
 		subtraction:         `Use the <b>subtraction operator</b> to subtract two numbers, as well as create a copy of the array or dataset on the left that doesn't contain values of the array or dataset on the right.`,
 		multiplication:      `Use the <b>multiplication operator</b> to multiply two numbers.`,
 		division:            ({text}) =>
@@ -187,6 +193,7 @@
 	tooltipElem.className = "harlowe-3-tooltip";
 	let tooltipAppearDelay = 0;
 	let tooltipDismissTicker = 0;
+	let tooltipToggleHints = 4;
 
 	function tooltipAppear() {
 		if (tooltipAppearDelay < 1) {
@@ -215,7 +222,10 @@
 				This means it is safe to attach the mousemove event to this cmElem.
 			*/
 			cmElem.addEventListener('mousemove', () => {
-				if (tooltipElem.style.display !== "none") {
+				/*
+					Only reduce the dismiss ticker if the mouse is off the tooltip.
+				*/
+				if (tooltipElem.style.display !== "none" && !cmElem.querySelector('harlowe-3-tooltip:hover')) {
 					tooltipDismissTicker -= 1;
 					if (tooltipDismissTicker <= 0) {
 						tooltipElem.style.display = "none";
@@ -237,7 +247,9 @@
 		if (message) {
 			message = message.replace(/`([^`]+)`/g, (_, inner) => `<code>${inner}</code>`);
 
-			tooltipElem.innerHTML = message + "<div class=harlowe-3-tooltipTail>";
+			tooltipElem.innerHTML = message
+				+ (tooltipToggleHints > 0 ? (tooltipToggleHints--, `<br><br><i>Use the ${(document.querySelector(`[aria-label^="Coding tooltips"],[title^="Coding tooltips"]`) || {}).innerHTML || 'tooltip'} toolbar button to toggle these popups!</i>`) : '')
+				+ "<div class=harlowe-3-tooltipTail>";
 			tooltipElem.removeAttribute('style');
 			const {width} = tooltipElem.getBoundingClientRect();
 			const {width:maxWidth} = cmElem.getBoundingClientRect();

@@ -179,6 +179,20 @@ describe("style changer macros", function() {
 				});
 			});
 		});
+		['tall','flat'].forEach(function(e) {
+			describe("'" + e + "' style", function() {
+				// We can't examine the elements any more than this.
+				it("uses a defined CSS transform ", function(done) {
+					var hook = runPassage("(text-style:'" + e + "')[Goobar]")
+						.find('tw-hook');
+					setTimeout(function() {
+						expect(hook.attr('style')).toMatch(new RegExp("transform:.*?\\s" +
+							((e === "flat") ? "scaleY\\(\\s*0.5\\s*\\) translateY\\(\\s*0.25ex\\s*\\)" : "scaleY\\(\\s*1.5\\s*\\) translateY\\(\\s*-0.25ex\\s*\\)")));
+						done();
+					});
+				});
+			});
+		});
 		['rumble','shudder','fade-in-out','blink'].forEach(function(e){
 			describe("'" + e + "' style", function() {
 				// We can't examine the elements any more than this.

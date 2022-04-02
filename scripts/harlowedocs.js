@@ -275,10 +275,22 @@ let html = $('html');
 let cm = CodeMirror.fromTextArea(previewCode.firstChild, { mode: null, lineWrapping:true });
 html.on('click', '.previewCodeButton', function(e) { previewPassage(cm.doc.getValue(), e.target)});
 try { cm.setOption('mode','harlowe-3'); } catch(e) {}
+function diurnalTextStyles() {
+	$('[diurnal]').each(function() { this.setAttribute('style', this.getAttribute('style').replace(/white|black/g, function(e) { return e === "white" ? "black" : "white" }))});
+}
+if (document.documentElement.classList.contains('theme-dark')) { diurnalTextStyles(); }
 
 /* Night Mode and Preview Buttons */
-html.on('click', '#night', function() { $('html, tw-debugger').addClass('theme-dark'); try { localStorage.setItem('darkMode', true); } catch(e){} })
-    .on('click', '#day',   function() { $('html, tw-debugger').removeClass('theme-dark'); try { localStorage.setItem('darkMode', false); } catch(e){} })
+html.on('click', '#night', function() {
+		$('html, tw-debugger').addClass('theme-dark');
+		diurnalTextStyles();
+		try { localStorage.setItem('darkMode', true); } catch(e){}
+	})
+    .on('click', '#day',   function() {
+		$('html, tw-debugger').removeClass('theme-dark');
+		diurnalTextStyles();
+		try { localStorage.setItem('darkMode', false); } catch(e){}
+	})
     .on('click', '#fullPreviewBar', function() {
         html.addClass('fullPreview')
             .on('click.previewOff', function(e) {
