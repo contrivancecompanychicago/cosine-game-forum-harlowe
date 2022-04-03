@@ -69,7 +69,7 @@
 		All output from the buttons and wizards is from this function, which places Harlowe code into the passage around the selection.
 		"stringify" indicates whether to convert the wrapped text to a string.
 	*/
-	function wrapSelection(before,after,innerText,stringify=false) {
+	function wrapSelection(before,after,sample,innerText,stringify=false) {
 		if (!cm || (before + after).length === 0) {
 			return;
 		}
@@ -77,7 +77,7 @@
 			Some syntax (such as links) directly replaces the current selection entirely. Others
 			wrap the selection, or, if none exists, the "Your Text Here" prompt text.
 		*/
-		const wrapped = innerText !== undefined ? innerText : cm.doc.getSelection() || "Your Text Here";
+		const wrapped = innerText !== undefined ? innerText : cm.doc.getSelection() || sample || "Your Text Here";
 		cm.doc.replaceSelection(before + (stringify ? stringify : String)(wrapped) + after, "around");
 	}
 	/*
@@ -1099,7 +1099,7 @@
 					if (typeof m.wrapEnd === 'function') {
 						m.wrapEnd = m.wrapEnd(m);
 					}
-					wrapSelection(m.output() + m.wrapStart, m.wrapEnd, m.innerText, m.wrapStringify);
+					wrapSelection(m.output() + m.wrapStart, m.wrapEnd, '', m.innerText, m.wrapStringify);
 					switchPanel();
 				});
 				buttons.append(resultingCode,cancel,confirm);
@@ -2720,7 +2720,10 @@
 			(() => {
 				// This <span> wrapper ensures that it isn't considered a main panel button by the CSS.
 				const done = el(`<span style="float:right;align-self:end;"><button class="variant-primary primary icon-button">Done</button></span>`);
-				done.firstChild[ON]('click', switchPanel);
+				done.firstChild[ON]('click', () => {
+					switchPanel();
+					cm.constructor.signal(cm, 'harlowe-3-findDone');
+				});
 				return done;
 			})()),
 
@@ -2732,16 +2735,16 @@
 			{
 				type: 'buttons',
 				buttons: [
-					{ title:'Bold',                    html:`<div style='font-family:serif;font-weight:bold'>B</div>`,              onClick: () => wrapSelection("''","''")},
-					{ title:'Italic',                  html:`<div style='font-family:serif;font-style:italic'>I</div>`,             onClick: () => wrapSelection("//","//")},
-					{ title:'Strikethrough',           html:`<div style='font-family:serif;text-decoration:line-through'>S</div>`,  onClick: () => wrapSelection("~~","~~")},
-					{ title:'Superscript',             html:`<div style='font-family:serif'>X<sup>2</sup></div>`,                   onClick: () => wrapSelection("^^","^^")},
+					{ title:'Bold',                    html:`<div style='font-family:serif;font-weight:bold'>B</div>`,              onClick: () => wrapSelection("''","''", "Bold Text")},
+					{ title:'Italic',                  html:`<div style='font-family:serif;font-style:italic'>I</div>`,             onClick: () => wrapSelection("//","//", "Italic Text")},
+					{ title:'Strikethrough',           html:`<div style='font-family:serif;text-decoration:line-through'>S</div>`,  onClick: () => wrapSelection("~~","~~", "Strikethrough Text")},
+					{ title:'Superscript',             html:`<div style='font-family:serif'>X<sup>2</sup></div>`,                   onClick: () => wrapSelection("^^","^^", "Superscript Text")},
 					{ title:'Text and background colour', html:`<div class='harlowe-3-bgColourButton'>`,                            onClick: () => switchPanel('textcolor')},
 					{ title:'Borders',                 html:fontIcon('border-style'),                                               onClick: () => switchPanel('borders'),},
 					{ title:'Rotated text',            html: '<div style="transform:rotate(-30deg);font-family:serif;font-weight:bold">R</div>', onClick: () => switchPanel('rotate')},
 					{ title:'Special text style',      html:'Styles…',                    onClick: () => switchPanel('textstyle')},
 					el('<span class="harlowe-3-toolbarBullet">'),
-					{ title:'Heading',                 html:`<div style='font-family:serif;font-weight:bold'>H</div>`,              onClick: () => wrapSelection("\n#","")},
+					{ title:'Heading',                 html:`<div style='font-family:serif;font-weight:bold'>H</div>`,              onClick: () => wrapSelection("\n#","","Heading Text")},
 					{ title:'Bulleted list item',      html:fontIcon('list-ul'),          onClick: () => wrapSelection("\n* ","")},
 					{ title:'Numbered list item',      html:fontIcon('list-ol'),          onClick: () => wrapSelection("\n0. ","")},
 					{ title:'Horizontal rule',         html:'<b>—</b>',                   onClick: () => wrapSelection("\n---\n","")},
@@ -2755,9 +2758,10 @@
 						onClick() {
 							const selection = cm.doc.getSelection();
 							const consecutiveGraves = (selection.match(/`+/g) || []).reduce((a,e) => Math.max(e.length, a), 0);
-							wrapSelection("`".repeat(consecutiveGraves+1), "`".repeat(consecutiveGraves+1));
+							wrapSelection("`".repeat(consecutiveGraves+1), "`".repeat(consecutiveGraves+1), "Verbatim Text (Markup Ignored)");
 						},
 					},
+					{ title:'Comments',                html:'<b>&lt;!--</b>',                 onClick: () => wrapSelection("<!--","-->", "Comments (Not Visible In-Game)")},
 					el('<span class="harlowe-3-toolbarBullet">'),
 					{ title:'Link element',            html:'Link…',                          onClick: () => switchPanel('passagelink')},
 					{ title:'Only show a portion of text if a condition is met', html:'If…',  onClick: () => switchPanel('if')},
@@ -2796,7 +2800,7 @@
 						onClick: () => window.open(`https://twine2.neocities.org/`, "Harlowe Documentation", 'noopener,noreferrer')
 					},
 					(() => {
-						const button = el('<button style="position:absolute;right:1em;margin-top:-2em">' + fontIcon('chevron-up') + "</button>");
+						const button = el('<button style="position:absolute;right:0em;margin-top:-2em">' + fontIcon('chevron-up') + "</button>");
 						button[ON]('click', () => {
 							toolbarElem.classList.toggle('harlowe-3-minimised');
 							const list = button.firstChild.classList;
@@ -2830,35 +2834,37 @@
 	const t24commands = {};
 	let hideCodeButton, hideTooltipButton;
 	const t24toolbar = twine23 ? [] : [
-		{ type: 'button', command() { wrapSelection("''","''"); },   label:'Bold',        iconOnly: true, icon: t24Icon(2, 14, 'font-weight:bold','B'), },
-		{ type: 'button', command() { wrapSelection("//","//"); },   label:'Italic',      iconOnly: true, icon: t24Icon(4, 14, 'font-style:italic','I'), },
-		{ type: 'button', command() { wrapSelection("~~","~~"); },   label:'Underline',   iconOnly: true, icon: t24Icon(2, 14, 'text-decoration:line-through','S'), },
-		{ type: 'button', command() { wrapSelection("^^","^^"); },   label:'Superscript', iconOnly: true, icon: t24Icon(1, 14, '', "x</text><text y='7' x='10' fill='currentColor' style='font-size:9px'>2"), },
-		{ type: 'button', command() { switchPanel('textcolor'); },   label:'Colours',     iconOnly: true, icon: svgURI(`<defs><linearGradient id="X"><stop offset="0%" stop-color="hsla(0,100%,50%,0.5)"/><stop offset="16%" stop-color="hsla(30,100%,50%,0.5)"/><stop offset="33%" stop-color="hsla(60,100%,50%,0.5)"/><stop offset="50%" stop-color="hsla(120,100%,50%,0.5)"/><stop offset="66%" stop-color="hsla(180,100%,50%,0.5)"/><stop offset="83%" stop-color="hsla(240,100%,50%,0.5)"/><stop offset="100%" stop-color="hsla(320,100%,50%,0.5)"/></linearGradient></defs><circle cx="8" cy="8" r="6" fill="url('#X')"/>`), },
-		{ type: 'button', command() { switchPanel('borders'); },     label:'Borders',     iconOnly: true, icon: fontIconURI('border-style'), },
-		{ type: 'button', command() { switchPanel('rotate'); },      label:'Rotate',      iconOnly: true, icon: t24Icon(-3, 14, 'transform:rotate(-30deg);font-family:serif;', 'R'), },
-		{ type: 'button', command() { switchPanel('textstyle'); },   label:'Styles…',     icon:'', },
-		{ type: 'button', command() { wrapSelection("\n#",""); },    label:'Header',      iconOnly: true, icon: t24Icon(0, 14, 'font-weight:bold;font-size:18px;','H'), },
-		{ type: 'button', command() { wrapSelection("\n* ",""); },   label:'Bullet list', iconOnly: true, icon: fontIconURI('list-ul'), },
-		{ type: 'button', command() { wrapSelection("\n0. ",""); },  label:'Number list', iconOnly: true, icon: fontIconURI('list-ol'), },
-		{ type: 'button', command() { wrapSelection("\n---\n",""); },label:'Horizontal rule', iconOnly: true, icon: fontIconURI('minus'), },
-		{ type: 'button', command() { switchPanel('align'); },       label:'Alignment',   iconOnly: true, icon: fontIconURI('align-right'), },
-		{ type: 'button', command() { switchPanel('columns'); },     label:'Columns',     iconOnly: true, icon: fontIconURI('columns'), },
-		{ type: 'button', command() { switchPanel('collapse'); },    label:'Collapse',    iconOnly: true, icon: t24Icon(0,10,'font-weight:bold;font-size:12px','{ }'), },
+		{ type: 'button', command() { wrapSelection("''","''", "Bold Text"); },            label:'Bold',        iconOnly: true, icon: t24Icon(2, 14, 'font-weight:bold','B'), },
+		{ type: 'button', command() { wrapSelection("//","//"), "Italic Text"; },          label:'Italic',      iconOnly: true, icon: t24Icon(4, 14, 'font-style:italic','I'), },
+		{ type: 'button', command() { wrapSelection("~~","~~", "Superscript Text"); },     label:'Underline',   iconOnly: true, icon: t24Icon(2, 14, 'text-decoration:line-through','S'), },
+		{ type: 'button', command() { wrapSelection("^^","^^", "Strikethrough Text"); },   label:'Superscript', iconOnly: true, icon: t24Icon(1, 14, '', "x</text><text y='7' x='10' fill='currentColor' style='font-size:9px'>2"), },
+		{ type: 'button', command() { switchPanel('textcolor'); },                         label:'Colours',     iconOnly: true, icon: svgURI(`<defs><linearGradient id="X"><stop offset="0%" stop-color="hsla(0,100%,50%,0.5)"/><stop offset="16%" stop-color="hsla(30,100%,50%,0.5)"/><stop offset="33%" stop-color="hsla(60,100%,50%,0.5)"/><stop offset="50%" stop-color="hsla(120,100%,50%,0.5)"/><stop offset="66%" stop-color="hsla(180,100%,50%,0.5)"/><stop offset="83%" stop-color="hsla(240,100%,50%,0.5)"/><stop offset="100%" stop-color="hsla(320,100%,50%,0.5)"/></linearGradient></defs><circle cx="8" cy="8" r="6" fill="url('#X')"/>`), },
+		{ type: 'button', command() { switchPanel('borders'); },                           label:'Borders',     iconOnly: true, icon: fontIconURI('border-style'), },
+		{ type: 'button', command() { switchPanel('rotate'); },                            label:'Rotate',      iconOnly: true, icon: t24Icon(-3, 14, 'transform:rotate(-30deg);font-family:serif;', 'R'), },
+		{ type: 'button', command() { switchPanel('textstyle'); },                         label:'Styles…',     icon:'', },
+		{ type: 'button', command() { wrapSelection("\n#","","Heading Text"); },           label:'Header',      iconOnly: true, icon: t24Icon(0, 14, 'font-weight:bold;font-size:18px;','H'), },
+		{ type: 'button', command() { wrapSelection("\n* ",""); },                         label:'Bullet list', iconOnly: true, icon: fontIconURI('list-ul'), },
+		{ type: 'button', command() { wrapSelection("\n0. ",""); },                        label:'Number list', iconOnly: true, icon: fontIconURI('list-ol'), },
+		{ type: 'button', command() { wrapSelection("\n---\n",""); },                      label:'Horizontal rule', iconOnly: true, icon: fontIconURI('minus'), },
+		{ type: 'button', command() { switchPanel('align'); },                             label:'Alignment',   iconOnly: true, icon: fontIconURI('align-right'), },
+		{ type: 'button', command() { switchPanel('columns'); },                           label:'Columns',     iconOnly: true, icon: fontIconURI('columns'), },
+		{ type: 'button', command() { switchPanel('collapse'); },                          label:'Collapse',    iconOnly: true, icon: t24Icon(0,10,'font-weight:bold;font-size:12px','{ }'), },
 		{ type: 'button',
 			command() {
 				const selection = cm.doc.getSelection();
 				const consecutiveGraves = (selection.match(/`+/g) || []).reduce((a,e) => Math.max(e.length, a), 0);
-				wrapSelection("`".repeat(consecutiveGraves+1), "`".repeat(consecutiveGraves+1));
+				wrapSelection("`".repeat(consecutiveGraves+1), "`".repeat(consecutiveGraves+1), "Verbatim Text (Markup Ignored)");
 			},
 			label:'Verbatim', iconOnly: true, icon: t24Icon(1,12,'font-size:11px','Vb'),
 		},
-		{ type: 'button', command() { switchPanel('passagelink'); }, label:'Link…',   icon:'', },
-		{ type: 'button', command() { switchPanel('if'); },          label:'If…',     icon:'', },
-		{ type: 'button', command() { switchPanel('input'); },       label:'Input…',  icon:'', },
-		{ type: 'button', command() { switchPanel('hook'); },        label:'Hook…',   icon:'', },
-		{ type: 'button', command() { switchPanel('basicValue'); },  label:'Value…',  icon:'', },
-		{ type: 'button', command() { switchPanel('macro'); },       label:'Macro…',  icon:'', },
+		{ type: 'button', command() { wrapSelection("<!--","-->", "Comments (Not Visible In-Game)"); },  label:'Comments', iconOnly: true, icon: t24Icon(-1,10,'font-weight:bold','&#10216;!-'), },
+
+		{ type: 'button', command() { switchPanel('passagelink'); },                       label:'Link…',   icon:'', },
+		{ type: 'button', command() { switchPanel('if'); },                                label:'If…',     icon:'', },
+		{ type: 'button', command() { switchPanel('input'); },                             label:'Input…',  icon:'', },
+		{ type: 'button', command() { switchPanel('hook'); },                              label:'Hook…',   icon:'', },
+		{ type: 'button', command() { switchPanel('basicValue'); },                        label:'Value…',  icon:'', },
+		{ type: 'button', command() { switchPanel('macro'); },                             label:'Macro…',  icon:'', },
 		hideCodeButton    = { type: 'button', command() { toolbarElem.classList.toggle('harlowe-3-hideCode'); cm.constructor.signal(cm,'cursorActivity'); },    label:'Proofread view',   iconOnly: true, icon:fontIconURI('eye'), },
 		hideTooltipButton = { type: 'button', command() { toolbarElem.classList.toggle('harlowe-3-hideTooltip'); cm.constructor.signal(cm,'cursorActivity'); }, label:'Coding tooltips',  iconOnly: true, icon:fontIconURI('comment'), },
 		{ type: 'button', command() { switchPanel('find'); },        label:'Find and replace', iconOnly: true, icon: fontIconURI('search'), },

@@ -193,6 +193,8 @@
 
 		/*
 			Find/Replace functionality.
+			This is in here instead of toolbar.js because on('change') needs to re-run existing searches
+			if the doc is edited while the find/replace panel is open.
 			When a search is performed (using find()), currentQuery becomes a { query, regExp, onlyIn, matchCase } object,
 			and a CodeMirror overlay (below) is added that highlights the matches.
 		*/
@@ -317,10 +319,11 @@
 					for (let i = 0; i < selections.length; i += 1) {
 						const pos1 = doc.indexFromPos(selections[i].anchor),
 							pos2 = doc.indexFromPos(selections[i].head);
-						if (index < Math.min(pos1, pos2) || index + matchLength >= Math.max(pos1, pos2)) {
-							continue matchLoop;
+						if (index >= Math.min(pos1, pos2) && index + matchLength < Math.max(pos1, pos2)) {
+							break;
 						}
 					}
+					continue matchLoop;
 				}
 				/*
 					Add this match to the highlighter overlay's array.
@@ -371,7 +374,7 @@
 			const {doc} = cm;
 			const match = matches[matchIndex];
 			if (!all && match) {
-				findFromIndex = doc.indexFromPos(match.start) + newStr.length;
+				findFromIndex = doc.indexFromPos(match.start) + newStr.length - 1;
 				doc.replaceRange(newStr, match.start, match.end);
 			}
 			/*
@@ -415,7 +418,12 @@
 					Re-compute the current search query, if there is one.
 				*/
 				if (currentQuery && matches[matchIndex]) {
-					findFromIndex = doc.indexFromPos(matches[matchIndex].start) - 1;
+					/*
+						Don't reset findFromIndex if harlowe3Replace() changed it.
+					*/
+					if (findFromIndex === -1) {
+						findFromIndex = doc.indexFromPos(matches[matchIndex].start) - 1;
+					}
 					harlowe3Find(currentQuery);
 				}
 			});
@@ -452,6 +460,9 @@
 			on(cm, 'harlowe-3-find', harlowe3Find);
 			on(cm, 'harlowe-3-findNext', harlowe3FindNext);
 			on(cm, 'harlowe-3-replace', harlowe3Replace);
+			on(cm, 'harlowe-3-findDone', function harlowe3FindDone() { 
+				cm.removeOverlay(findOverlay);
+			});
 			/*
 				Unset this function, now that this is all done.
 			*/
