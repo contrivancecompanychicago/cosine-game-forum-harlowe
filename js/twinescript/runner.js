@@ -1134,9 +1134,11 @@ define([
 			const isRef = isVarRef || TwineError.containsError(ret);
 			ret = isRef ? ret : ret.get();
 			/*
-				Create a replay frame for the variable.
+				Create a replay frame for the variable, unless it was a VarRef,
+				in which case a replay frame was already created.
+				The second containsError() check is in case the .get() produced an error.
 			*/
-			if (hasEvalReplay && !isRef) {
+			if (hasEvalReplay && !isVarRef && !TwineError.containsError(ret)) {
 				makeEvalReplayFrame(evalReplay, {
 					toCode: ` ${toSource(ret)}'s ${token.name} `,
 					tokens,

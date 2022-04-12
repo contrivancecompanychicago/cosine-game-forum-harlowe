@@ -735,7 +735,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			alter the transition animation used when (undo:) activates. Other kinds of changers
 			won't do anything, though.
 			
-			If undos aren't available (either due to this being the start of the story, or (erase-past:) being used)
+			If undos aren't available (either due to this being the start of the story, or (erase-undos:) being used)
 			then either the optional second string will be displayed (as markup) instead, or (if that wasn't provided) nothing will be displayed.
 
 			If the previous turn featured the use of (redirect:), (undo:) will take the player to the passage in which the
@@ -896,8 +896,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			with 0.2 opacity that changes to 0.4 when hovered over.
 
 			Like all sidebar icons, these will automatically hide themselves when they cannot be clicked, leaving a conspicuous space. In the
-			case of the "Undo" icon, it will be hidden if it's the first turn of the game, and there is nothing to undo - or if (erase-past:)
-			is used to prevent undos. If this is used in a passage, and (erase-past:) is used later in the passage to prevent undoing, then this will automatically,
+			case of the "Undo" icon, it will be hidden if it's the first turn of the game, and there is nothing to undo - or if (erase-undos:)
+			is used to prevent undos. If this is used in a passage, and (erase-undos:) is used later in the passage to prevent undoing, then this will automatically,
 			instantly hide itself.
 
 			See also:
@@ -1071,9 +1071,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 					callback a little simpler.
 				*/
 				if (name === "Undo") {
-					cd.data.erasePastEvent = icon => {
+					cd.data.eraseUndosEvent = icon => {
 						/*
-							Because (erase-past:) could have occurred inside a (dialog:), the icon should only be hidden when the section is unblocked.
+							Because (erase-undos:) could have occurred inside a (dialog:), the icon should only be hidden when the section is unblocked.
 						*/
 						cd.section.whenUnblocked(() => $(icon).css('visibility','hidden'));
 					};
@@ -2738,16 +2738,16 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			[String], false /* Can't have attachments.*/)
 
 		/*d:
-			(erase-past: Number) -> Command
+			(erase-undos: Number) -> Command
 
 			This macro, when used, "erases" previous turns, preventing the player from using undo features (like (link-undo:))
 			to return to them. Providing a positive number will erase that many turns from the start of the game, and providing a
 			negative number will erase all the turns up to that point from the end.
 
 			Example usage:
-			* `(erase-past:-2)` erases all previous turns up to and including the second-last turn.
-			* `(erase-past:-1)` erases all previous turns.
-			* `(erase-past:1)` erases the first turn. This could be useful for erasing a "title screen" turn
+			* `(erase-undos:-2)` erases all previous turns up to and including the second-last turn.
+			* `(erase-undos:-1)` erases all previous turns.
+			* `(erase-undos:1)` erases the first turn. This could be useful for erasing a "title screen" turn
 			from the story, which doesn't make sense for the player to "undo".
 
 			Rationale:
@@ -2760,23 +2760,30 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			throughout the story), this macro provides a more direct way of limiting undos. In particular, it makes it
 			easy to limit the *distance* that a player can undo from the current turn.
 
-			Be careful and judicious in your use of this macro. In most cases, limiting the player's ability to undo actions isn't
+			It is recommended that you be careful and judicious in your use of this macro. In most cases, limiting the player's ability to undo actions isn't
 			a particularly interesting or clever game design restriction. However, there are certain genres of game, such as
 			survival horror games or experiential dream simulators, where suddenly limiting the ability to undo at periodic intervals
 			can have a desirable disempowering effect.
+
+			There is one other situation where (erase-undos:) may be of use: when you're writing an "endless" story, one that will be played over an indefinite
+			number of turns, such as a kiosk or an art installation. Because Harlowe constantly maintains an undo cache, then over many thousands of turns,
+			the ever-increasing memory usage of the story may become detrimental to the browser's performance. Periodically using (erase-undos:) and (erase-visits:)
+			(in a "header" or "footer" tagged passage, for instance) to erase data from hundreds of turns ago (such as by `(erase-visits:-200)(erase-undos:-200)`
+			will keep the undo cache (and the record of visited passages) from growing beyond a certain point, preventing this situation from occurring.
 
 			Details:
 			This macro does nothing if it is run in a passage that has been returned to by "undo" (i.e. where there is one or more turns
 			one could "redo" using (icon-redo:)). It only functions in the "present".
 
-			If there aren't enough past turns to erase (for instance, when `(erase-past:4)` is run when only two turns have been taken) then
+			If there aren't enough past turns to erase (for instance, when `(erase-undos:4)` is run when only two turns have been taken) then
 			all past turns will be erased.
 
 			There is no way to "un-erase" the erased turns when this macro is used. Its effects are permanent.
 
 			Use of this macro will *not* affect the (history:) macro, the (visited:) macro, or the `visits` and `turns` keywords (nor
-			the debug-only (mock-visits:) and (mock-turns:) macros). These will continue to perform as if (erase-past:) was never called.
-			However, the turns that they refer to (in which the "visits" occurred) will no longer be accessible to the player.
+			the debug-only (mock-visits:) and (mock-turns:) macros). These will continue to perform as if (erase-undos:) was never called.
+			However, the turns that they refer to (in which the "visits" occurred) will no longer be accessible to the player. If you wish
+			to affect the (history:)
 
 			This macro will internally "flatten" every erased turn into a single data structure, which is used to ensure that
 			(history:) and (visited:) and other such features continue to behave as expected.
@@ -2788,17 +2795,73 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			If 0 is given, no past turns will be erased.
 
 			See also:
-			(restart:)
+			(restart:), (erase-visits:)
 
 			Added in: 3.3.0
 			#navigation 5
 		*/
-		("erase-past",
+		("erase-undos",
 			noop,
 			(_, number) => {
 				if (!State.futureLength) {
-					State.erasePast(number);
+					State.eraseUndos(number);
 				}
+			},
+		[parseInt], false /* Can't have attachments.*/)
+
+		/*d:
+			(erase-visits: Number) -> Command
+
+			This macro "erases" all visits that occurred before the given turn number - any passage visits that occurred on those turns are treated as if they didn't happen.
+			This causes (history:) to no longer list those passages at the start of the array, the `visits` identifier to report a different number for those passages, and
+			(if the only visit to a passage was erased) the (visited:) macro to no longer regard a passage as visited.
+
+			Example usage:
+			* `(erase-visits: -10)` causes all visits more than 10 turns old (that is, the 10thlast turn) to expire.
+			* `(erase-visits: -1)` erases all visits prior to this turn.
+
+			Rationale:
+			This macro forms a pair with (erase-undos:). These together allow you to erase two kinds of non-variable data tracked by Harlowe - the undo cache, and
+			the record of passage visits.
+
+			The `visits` identifier and the (history:) macro are not intended to be "special variables" that the author can permute as they may wish - they have a very specific meaning
+			within Harlowe's language. Using them as they are designed (as permanent records of when the player visited a passage or passages) is highly recommended. This is why
+			this macro only offers limited functionality for erasing visits.
+
+			That being said, there are a few edge-case situations when you'd want to use (erase-visits:). If your story consists entirely of "sub-stories" (like an anthology) that individually use `visits`,
+			but which also need to be revisitable/replayable without restarting the whole story with (restart:), then this (along with (erase-undos:)) can be used to erase all of the visits
+			once the player has finished a sub-story, so that (along with resetting its variables using (set:)) it can be replayed as it was.
+
+			The other situation is when you're writing an "endless" story, one that will be played over an indefinite number of turns, such as a kiosk or an art installation. Because
+			Harlowe is constantly recording visited passages (as part of the (history:) macro's functionality) then over many thousands of turns, the ever-increasing memory usage of the story may become
+			detrimental to the browser's performance. Periodically running both (erase-undos:) and (erase-visits:) (in a "header" or "footer" tagged passage, for instance) to erase data from
+			hundreds of turns ago (such as by `(erase-visits:-200)(erase-undos:-200)` will keep the record of visited passages (and the undo cache) from growing beyond a certain point,
+			preventing this situation from occurring.
+
+			Details:
+			You currently cannot use this macro to erase "mock visits" created with (mock-visits:).
+
+			The effects of (erase-visits:) can be undone by the player using (link-undo:), the sidebar undo button, and so forth, so previous turns are unaffected
+			by this command. This also means that the visits still "exist" as long as you can undo past the turn in which (erase-visits:) was used.
+
+			If there aren't enough past turns' visits to erase (for instance, when `(erase-visits:4)` is run when only two turns have been taken) then
+			all past visits will be erased.
+
+			If 0 is given, no past turns will be erased.
+
+			Because of the very specific purposes this macro is designed for, there is *no* way to erase visits of just a single passage, or after a certain turn, or in other, more specific ways.
+			If you really need to manipulate a passage's recorded visits like this, please use a variable to track "visits" to this passage instead.
+
+			See also:
+			(restart:), (erase-undos:)
+
+			Added in: 3.3.0
+			#navigation 5
+		*/
+		("erase-visits",
+			noop,
+			(_, number) => {
+				State.eraseVisits(number);
 			},
 		[parseInt], false /* Can't have attachments.*/)
 
@@ -3147,7 +3210,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			This command can't have changers attached - attempting to do so will produce an error.
 
 			See also:
-			(icon-restart:), (erase-past:)
+			(icon-restart:), (erase-undos:)
 
 			Added in: 1.0.0
 			#navigation
@@ -3394,12 +3457,12 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			Since there's always a possibility of a save failing, you should use (if:) and (else:) with (save-game:)
 			to display an apology message in the event that it returns false (as seen above).
 
-			Using the (erase-past:) macro will, as a side effect of its turn-erasing functionality, reduce the size of the data saved
+			Using the (erase-undos:) macro will, as a side effect of its turn-erasing functionality, reduce the size of the data saved
 			to browser localStorage by (save-game:). However, you should *not* use that macro solely on the hunch that it provides
-			performance benefits for your story. See the (erase-past:) macro's article for slightly more details.
+			performance benefits for your story. See the (erase-undos:) macro's article for slightly more details.
 			
 			See also:
-			(load-game:), (saved-games:), (erase-past:)
+			(load-game:), (saved-games:), (erase-undos:)
 
 			Added in: 1.0.0
 			#saving

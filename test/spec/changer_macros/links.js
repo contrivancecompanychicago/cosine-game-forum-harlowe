@@ -361,7 +361,7 @@ describe("link macros", function() {
 		it("displays the optional second string, or nothing, if undos aren't available", function(){
 			clearState();
 			expect("(link-undo:'Wow')").markupToPrint('');
-			expect("(erase-past:1)(link-undo:'Wow','foo **bar**')").markupToPrint('foo bar');
+			expect("(erase-undos:1)(link-undo:'Wow','foo **bar**')").markupToPrint('foo bar');
 		});
 		it("renders to a <tw-link> element containing the link text", function() {
 			runPassage("","grault");
@@ -402,9 +402,9 @@ describe("link macros", function() {
 			link.trigger($.Event('keydown', { which: 13 }));
 			expect($('tw-passage p').text()).toBe("garply");
 		});
-		it("changes its text if (erase-past:) erases the entire past after it", function() {
+		it("changes its text if (erase-undos:) erases the entire past after it", function() {
 			runPassage("","grault");
-			runPassage("(link-undo:'mire','foo bar')(erase-past:1)");
+			runPassage("(link-undo:'mire','foo bar')(erase-undos:1)");
 			expect($('tw-passage tw-link').length).toBe(0);
 			expect($('tw-passage tw-expression').text()).toBe('foo bar');
 		});

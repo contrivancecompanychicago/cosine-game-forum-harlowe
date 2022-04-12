@@ -370,7 +370,7 @@ define([
 					it becomes isolated as an object, and thus observable.
 				*/
 				TwineScript_TypeName: "a spreaded '...' value",
-				TwineScript_ObjectName: plural([...val].length, "spreaded '...' value"),
+				TwineScript_ObjectName: plural(typeof val === 'string' || Array.isArray(val) ? [...val].length : 1, "spreaded '...' value"),
 				TwineScript_Unstorable: true,
 				TwineScript_ToSource() {
 					return ''+[...val].map(toSource);

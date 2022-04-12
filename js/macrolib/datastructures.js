@@ -1109,8 +1109,11 @@ define([
 			passages the tester has actually visited on this playthrough. It will also cause `(history: where its name contains "A")`
 			to produce an array starting with `"A"`.
 
+			By default, Harlowe records an unlimited amount of passage visits. However, you can use the (erase-visits:) macro to
+			make Harlowe "forget" visits that are a certain number of turns old. This is the only way to directly alter this macro's output.
+
 			See also:
-			(visited:), (passage:), (mock-visits:)
+			(visited:), (passage:), (mock-visits:), (erase-visits:)
 
 			Added in: 1.0.0
 			#game state
@@ -1171,8 +1174,11 @@ define([
 			If you're testing your story in debug mode using (mock-visits:), then any "mock" visit you simulate
 			will be counted as a visit.
 
+			By default, Harlowe records an unlimited amount of passage visits. However, you can use the (erase-visits:) macro to
+			make Harlowe "forget" visits that are a certain number of turns old. This is the only way to directly alter this macro's output.
+
 			See also:
-			(history:), (passage:), (mock-visits:)
+			(history:), (passage:), (mock-visits:), (erase-visits:)
 
 			Added in: 1.0.0
 			#game state

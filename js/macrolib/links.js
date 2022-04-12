@@ -762,10 +762,10 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 			by using this macro.
 
 			Details:
-			As with (undo:), (link-storylet:) and such, if undos aren't available (either due to this being the start of the story, or (erase-past:) being used)
+			As with (undo:), (link-storylet:) and such, if undos aren't available (either due to this being the start of the story, or (erase-undos:) being used)
 			then either the optional second string will be displayed instead, or (if that wasn't provided) nothing will be displayed.
 
-			If this is used in a passage, and (erase-past:) is used later in the passage to prevent undoing, then this link's text will automatically
+			If this is used in a passage, and (erase-undos:) is used later in the passage to prevent undoing, then this link's text will automatically
 			be replaced with the optional second string (or disappear if it's not provided). This is similar to how (link-fullscreen:) will
 			update itself if another macro changes the player's fullscreen status.
 
@@ -794,13 +794,13 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 				*/
 				cd.data.section = section;
 				/*
-					Since (erase-past:) means there is a possibility this link text could abruptly change, the current tempVariables
+					Since (erase-undos:) means there is a possibility this link text could abruptly change, the current tempVariables
 					object must be stored for reuse, as the section pops it when normal rendering finishes.
 				*/
 				const {tempVariables} = section.stackTop;
-				cd.data.erasePastEvent = () =>
+				cd.data.eraseUndosEvent = () =>
 					/*
-						Because (erase-past:) could have occurred inside a (dialog:), the text should only be updated when the section is unblocked.
+						Because (erase-undos:) could have occurred inside a (dialog:), the text should only be updated when the section is unblocked.
 					*/
 					cd.data.section.whenUnblocked(() => {
 						/*

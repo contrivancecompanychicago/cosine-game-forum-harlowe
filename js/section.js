@@ -834,7 +834,7 @@ define([
 
 						Also known as: visit
 
-						This keyword (which can alternatively be written as "visit") evaluates to the number of times
+						This keyword (which can alternatively be written as "visit") always equals the number of times
 						the current passage has been visited this game, including the current visit.
 
 						Much like the "turns" keyword, its main purpose is to be used in (if:) macros, such as `(if: visits is 1)`,
@@ -858,6 +858,9 @@ define([
 						For testing purposes, it can be convenient to temporarily alter `visits`'s value, so as to recreate a
 						certain game state. The (mock-visits:) macro, usable only in debug mode, lets you increase the number of
 						times certain passages have been "visited", so that this keyword produces higher numbers when in those passages.
+
+						By default, Harlowe records an unlimited amount of passage visits. However, you can use the (erase-visits:) macro to
+						make Harlowe "forget" visits that are a certain number of turns old.
 
 						Added in: 3.1.0
 					*/

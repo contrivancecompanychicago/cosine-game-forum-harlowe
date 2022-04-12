@@ -24,6 +24,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where using `(append:?Link)` (or one of its relatives) to append text to a hook enchanted with `(click:)` wouldn't work correctly (the text would be placed next to the link instead of inside).
  * Fixed a bug where `(enchant:)`, `(click:)`, and other enchantment macros could enchant empty hooks such as `|A>[]` (wrapping them with `<tw-enchantment>` elements), even though Harlowe usually considers empty hooks to be nonexistent, and hides them with its default CSS.
    * Note: this means that, given constructions like `[]<A|` and `(click:?A)[]`, revision macros like `(append:?Link)` will no longer consider ?A (as long as it is empty) to be a link via the `(click:)`, and cannot append to it - you'll have to explicitly refer to it via `(append:?A)` instead.
+ * Fixed a bug where chained `'s` syntax, like `$array's 1st's 2nd`, produced bad error messages when the deepest dataname (in that example, `1st`) wasn't present.
  * Fixed a bug where `'s` and `of` sometimes wouldn't be syntax-highlighted correctly.
  * The `it` identifier is now cleared (to the default value of 0) whenever the player changes passages.
  * Fixed a bug where using a custom macro in a `(storylet:)` lambda would cause Debug Mode to constantly reload the Storylets and Variables panels, hurting performance.
@@ -111,8 +112,9 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Added `(redirect:)`, a variant of `(go-to:)` which doesn't create a new turn, and instead extends the current turn, but still performing the same actions as `(go-to:)` - transitioning passages out and in, removing temp variables, rendering the header and footer, adding a passage name to the `(history:)` array, and so forth. This precludes a problem with `(go-to:)`, where using it bare in a passage will prevent the player from using the undo feature to unwind past it, as returning to that turn will cause it to immediately create a new turn. Because this is intended for actions which don't represent narrative time advancing, there isn't any plan to add link and click counterparts for this.
  * Added the `turns` keyword, which evaluates to the number of turns the player has taken. Because the addition of `(redirect:)` means that `(history:)'s length` is no longer a reliable means of measuring the number of turns taken, this keyword is functionally necessary in addition to being a convenient shorthand.
  * Added `(mock-turns:)`, a debug-only macro for artificially increasing the value that `turns` produces.
- * Added `(erase-past:)`, a macro that removes turns from the "undo cache", preventing the player from undoing to that point ever again. `(erase-past:-2)` erases all but the last two turns (including the current turn). `(erase-past:2)` erases the first two turns. This does *not* affect `(history:)`, `(visited:)`, or the `visits` and `turns` keywords, which will continue to behave as if `(erase-past:)` was never used.
+ * Added `(erase-undos:)`, a macro that removes turns from the "undo cache", preventing the player from undoing to that point ever again. `(erase-undos:-2)` erases all but the last two turns (including the current turn). `(erase-undos:2)` erases the first two turns. This does *not* affect `(history:)`, `(visited:)`, or the `visits` and `turns` keywords, which will continue to behave as if `(erase-undos:)` was never used.
    * Using this to erase the entire undo cache will automatically cause `(link-undo:)` links to update themselves using their optional second string.
+ * Added `(erase-visits:)`, a macro that causes Harlowe to "forget" passage visits before the specified turn number, affecting `(history:)`, `(visited:)` and the `visits` identifier. `(erase-visits:-15)` causes all passage visits older than 15 turns to be forgotten. When combined with `(erase-undos:)`, this lets you erase the two kinds of non-variable data that Harlowe stores as part of the game state and saves in browser localStorage.
  * Added `(after-error:)`, a variant of `(after:)` which only displays the attached hook when an error message is displayed. You may use this (in a "header" tagged passage) to show a personalised message to the story's players, possibly advising them to report a bug. Or, you might use this to try and recover the story by redirecting to another passage.
  * Added `(debug:)`, a command which causes Debug Mode to activate (or reactivate if it was exited), even if the story wasn't a test build initially.
  * Added the `codehook` datatype.
@@ -136,6 +138,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 ##### Other
 
  * Added a Find/Replace panel to the editor toolbar.
+ * Added a HTML comments button to the editor toolbar, which wraps the selected text in HTML comments.
 
 ### 3.2.3 changes (October 22, 2021):
 

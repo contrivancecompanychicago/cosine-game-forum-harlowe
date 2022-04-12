@@ -226,13 +226,13 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 		passage: "",
 		variables: create(null),
 		/*
-			This optional string is only used for (redirect:)s, and represents each passage redirected to during the previous moment.
+			This array of strings is only used for (redirect:)s, and represents each passage redirected to during the previous moment.
 			These are added to (history:).
-			When (erase-past:) is used, it also holds 
+			When (erase-undos:) is used, it also holds 
 		*/
 		visits: undefined,
 		/*
-			A number of additional turns which were erased by (erase-past:).
+			A number of additional turns which were erased by (erase-undos:).
 		*/
 		turns: undefined,
 		/*
@@ -247,6 +247,10 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 		*/
 		mockVisits: undefined,
 		mockTurns: undefined,
+		/*
+			When (erase-visits:) is used, the preceding turns' (before the eraseVisits number) visits are to be ignored from now on.
+		*/
+		eraseVisits: undefined,
 
 		/*
 			Make a new Moment that comes temporally after this.
@@ -275,7 +279,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 	/*
 		Debug Mode event handlers are stored here by on(). "forward" and "back" handlers are called
 		when the present changes, and thus when play(), fastForward() and rewind() have been called.
-		"load" handlers are called exclusively in deserialise(). "redirect" and "erasePast" are
+		"load" handlers are called exclusively in deserialise(). "redirect" and "eraseUndos" are
 		called for their respective methods.
 	*/
 	const eventHandlers = {
@@ -287,7 +291,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 		beforeBack: [],
 		beforeLoad: [],
 
-		erasePast: [],
+		eraseUndos: [],
 	};
 
 	/*
@@ -339,9 +343,10 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 	function newCurrentVariables() {
 		const ret = Moment.create();
 		/*
-			The CurrentVariables always has a visits array, which increases with each turn (with visited passage names and (redirect:)s).
+			The CurrentVariables has a pastVisits array, which is the full record of passage visits.
+			Each element is a turn, which can be a single string or an array of redirects.
 		*/
-		ret.visits = [];
+		ret.pastVisits = [];
 		assign(ret.variables, {
 			/*
 				Note that it's not possible for userland TwineScript to directly access or
@@ -439,7 +444,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 
 	/*
 		This is used to flatten a timeline into a single moment, which is either the present (for reconstructCurrentVariables),
-		or a past moment (for erasePast).
+		or a past moment (for eraseUndos).
 
 		Assumption: this always flattens onto a single moment at the "end" of the array of moments.
 	*/
@@ -452,7 +457,6 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 		const deletions = create(null);
 		/*
 			This iterates backwards through the timeline, adding missing variables to the flat dest moment.
-
 		*/
 		for (let i = array.length - 1; i >= 0; i -= 1) {
 			const moment = array[i];
@@ -462,19 +466,32 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			for (let name of ["mockVisits","mockTurns","seed","seedIter"]) {
 				hasOwnProperty.call(moment,name) && !hasOwnProperty.call(dest,name) && (dest[name] = moment[name]);
 			}
+			moment.eraseVisits && (dest.eraseVisits = Math.max(dest.eraseVisits || 0, moment.eraseVisits));
 			/*
 				These, however, are cumulative across turns.
 			*/
 			moment.turns !== undefined      && (dest.turns = (dest.turns || 0) + moment.turns);
-			dest.visits || (dest.visits = []);
-			moment.visits !== undefined     && (dest.visits = moment.visits.concat(dest.visits));
+			dest.pastVisits || (dest.pastVisits = []);
+
 			/*
 				"visits" only refers to past visits, such as those given to (history:),
 				so the final moment's passage name shouldn't be included.
 			*/
 			if (i !== array.length-1) {
-				dest.visits.unshift(moment.passage);
+				if (Array.isArray(dest.pastVisits[0])) {
+					dest.pastVisits[0].unshift(moment.passage);
+				}
+				else {
+					dest.pastVisits.unshift(moment.passage);
+				}
 			}
+			/*
+				If a moment has a pastVisits array, then it represents various turns erased with (erase-undos:).
+				These go before its own visits (redirects).
+			*/
+			moment.pastVisits !== undefined && (dest.pastVisits.unshift(moment.pastVisits));
+			moment.visits !== undefined && (dest.pastVisits.unshift(moment.visits));
+
 			for (let prop in moment.variables) {
 				/*
 					The TwineScript_TypeDefs object (of inaccessible/non-writable data structures) doesn't need to have its contents cloned.
@@ -505,6 +522,13 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 					}
 				}
 			}
+		}
+		/*
+			When visits have been erased, remove them from the pastVisits array.
+			(But take into account when visits have already been erased using (erase-undos:)).
+		*/
+		if (dest.eraseVisits) {
+			dest.pastVisits = dest.pastVisits.slice(dest.eraseVisits - (dest.turns || 0));
 		}
 		/*
 			Having flattened it down, the final moment shouldn't have any valueRefs remaining.
@@ -650,25 +674,24 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			it's ideal to do as little work as necessary in this.
 		*/
 		history() {
-			let ret = CurrentVariables.visits;
+			let ret = CurrentVariables.pastVisits.slice(CurrentVariables.eraseVisits).reduce((a,e)=>a.concat(e),[]);
 			/*
 				(mock-visits:) always adds its strings to the start.
 			*/
 			if (CurrentVariables.mockVisits) {
 				ret = CurrentVariables.mockVisits.concat(ret);
 			}
-			
 			return ret;
 		},
 
 		/*
-			Used by (erase-past:). All moments before the specified index are flattened into the new first moment.
+			Used by (erase-undos:). All moments before the specified index are flattened into the new first moment.
 			This cannot erase timeline[recent];
 
 			Note that this should simply never be called when used in a past moment (not the one at the end of the timeline)
 			so we can assume that recent is always timeline.length-1.
 		*/
-		erasePast(ind) {
+		eraseUndos(ind) {
 			if (ind < 0) {
 				ind = (timeline.length) + ind;
 			}
@@ -687,13 +710,13 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			const first = timeline[0];
 			flattenMomentVariables(excised, first);
 			/*
-				Because flattenMomentVariables won't put the final moment's "passage" into the visits
+				Because flattenMomentVariables won't put the final moment's "passage" into the pastVisits
 				array yet (because "visits" only applies to past passages, as per (history:)) we must do it
 				ourselves here.
 			*/
-			first.visits.push(excised[excised.length-1].passage);
+			first.pastVisits.push(excised[excised.length-1].passage);
 			/*
-				"turns" is only ever increased by (erase-past:), and represents erased turns that must
+				"turns" is only ever increased by (erase-undos:), and represents erased turns that must
 				nonetheless be counted by the turns identifier. Here, each excised turn increments the counter.
 			*/
 			first.turns = (first.turns || 0) + excised.length;
@@ -702,6 +725,14 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 				it's simpler to just update its own "turns" in kind.
 			*/
 			CurrentVariables.turns = (CurrentVariables.turns || 0) + excised.length;
+			/*
+				If the first moment (that is, the only moment that cannot be undone past)
+				has an eraseVisits number, erase all of the specified visits before it.
+				Because all other moments can still be undone, their erased visits can't actually be erased yet.
+			*/
+			if (first.eraseVisits) {
+				first.pastVisits = first.pastVisits.slice(first.eraseVisits - first.turns);
+			}
 		
 			serialisedPast = '';
 			/*
@@ -710,12 +741,25 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			*/
 			if (recent === 0) {
 				$("tw-link[undo], tw-icon[alt='Undo']", Utils.storyElement).each((_, link) => {
-					($(link).closest('tw-expression, tw-hook').data('erasePastEvent') || Object)(link);
+					($(link).closest('tw-expression, tw-hook').data('eraseUndosEvent') || Object)(link);
 				});
 			}
 			
-			// Call the 'erasePast' event handler.
-			eventHandlers.erasePast.forEach(fn => fn());
+			// Call the 'eraseUndos' event handler.
+			eventHandlers.eraseUndos.forEach(fn => fn());
+		},
+
+		eraseVisits(ind) {
+			if (ind < 0) {
+				ind = (timeline.length) + ind;
+			}
+			/*
+				You can't erase visits from the turns after the current turn.
+			*/
+			if (ind > recent + CurrentVariables.turns) {
+				ind = recent + CurrentVariables.turns;
+			}
+			present.eraseVisits = CurrentVariables.eraseVisits = Math.max(CurrentVariables.eraseVisits || 0, ind);
 		},
 
 		/*
@@ -785,7 +829,20 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			eventHandlers.beforeForward.forEach(fn => fn());
 
 			// Push the soon-to-be past passage name into the cache.
-			present.passage && CurrentVariables.visits.push(present.passage);
+			if (present.passage) {
+				/*
+					If redirects were performed this turn, place the soon-to-be past passage name into the subarray holding those redirects.
+				*/
+				if (present.visits && present.visits.length && Array.isArray(CurrentVariables.pastVisits[CurrentVariables.pastVisits.length-1])) {
+					CurrentVariables.pastVisits[CurrentVariables.pastVisits.length-1].push(present.passage);
+				}
+				else {
+					/*
+						Otherwise, just put the string at the end of the visits array.
+					*/
+					CurrentVariables.pastVisits.push(present.passage);
+				}
+			}
 			// Assign the passage name.
 			present.passage = newPassageName;
 
@@ -812,7 +869,20 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			*/
 			present.visits = (present.visits || []).concat(newPassageName);
 			// The departing passage name still goes into the cache.
-			present.passage && CurrentVariables.visits.push(present.passage);
+			if (present.passage) {
+				/*
+					If previous redirects were performed this turn, place the soon-to-be past passage name into the subarray holding those redirects.
+				*/
+				if (Array.isArray(CurrentVariables.pastVisits[CurrentVariables.pastVisits.length-1])) {
+					CurrentVariables.pastVisits[CurrentVariables.pastVisits.length-1].push(present.passage);
+				}
+				else {
+					/*
+						Otherwise, create a new sub-array.
+					*/
+					CurrentVariables.pastVisits.push([present.passage]);
+				}
+			}
 			// Assign the passage name.
 			present.passage = newPassageName;
 		},
@@ -1064,6 +1134,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 				if (variable.visits === undefined
 						&& variable.turns === undefined
 						&& variable.mockVisits  === undefined
+						&& variable.eraseVisits === undefined
 						&& variable.mockTurns  === undefined
 						&& variable.seed === undefined
 						&& variable.seedIter === undefined

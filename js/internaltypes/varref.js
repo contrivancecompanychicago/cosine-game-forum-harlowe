@@ -637,7 +637,8 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 					"Temp variables only exist inside the same passage, hook, or lambda in which they're created.");
 			}
 			if (isArray(obj) && typeof prop === "number") {
-				return TwineError.create("property", `This array of ${obj.length} elements doesn't have a ${propertyDebugName(originalProp)} element.`,
+				return TwineError.create("property", `This array of ${obj.length} elements doesn't have a ${propertyDebugName(
+						originalProp + (typeof originalProp === "number" ? 1 : ''))} element.`,
 					obj.length ? `It contains: ${andList(obj.map(objectName))}.` : "The array is empty.");
 			}
 			const keys = Array.from(typeof obj.keys === "function" && obj.keys());
@@ -697,6 +698,13 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			let deepestObject = this.object;
 			for(let i = 0; i < this.compiledPropertyChain.length - 1; i += 1) {
 				deepestObject = get(deepestObject, this.compiledPropertyChain[i]);
+				/*
+					This can produce an error in the case of things like $a's 1st's 1st, where $a is (a:).
+					The outer '1st' compiles the left side as a VarRef.
+				*/
+				if (TwineError.containsError(deepestObject)) {
+					return deepestObject;
+				}
 			}
 
 			return get(deepestObject, this.compiledPropertyChain.slice(-1)[0],

@@ -60,7 +60,7 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 <div class='tabs'></div>
 <label style='user-select:none'>Turns: </label><select class='turns' disabled></select>
 <button class='show-invisibles'>🔍 Debug View</button>
-<button class='show-dom'><sup>&lt;</sup><sub>&gt;</sub> DOM View</button>
+<button class='show-dom'><span style="vertical-align:text-top">&lt;</span><span style="vertical-align:text-bottom">&gt;</span> DOM View</button>
 <button class='close'>✖</button>
 <div class='resizer-h'>
 </tw-debugger>`);
@@ -230,7 +230,7 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 		const children = turnsDropdown.children().get();
 		const { timeline } = State;
 		/*
-			This number reflects the actual turn number, which includes turns erased by (erase-past:).
+			This number reflects the actual turn number, which includes turns erased by (erase-undos:).
 		*/
 		let num = 0;
 		timeline.forEach(({turns = 0, passage}, i) => {
@@ -245,7 +245,7 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 			}
 		});
 		/*
-			If something (such as (erase-past:), or erasing the future by advancing from a past turn)
+			If something (such as (erase-undos:), or erasing the future by advancing from a past turn)
 			reduces the timeline length from what it once was, remove those unneeded <option>s.
 		*/
 		if (timeline.length < children.length) {
@@ -280,7 +280,7 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 	*/
 	State.on('forward', updateTurnsDropdown)
 		.on('load', updateTurnsDropdown)
-		.on('erasePast', () => updateTurnsDropdown)
+		.on('eraseUndos', () => updateTurnsDropdown)
 		/*
 			'back', however, can simply remove the final turn from the menu.
 		*/
