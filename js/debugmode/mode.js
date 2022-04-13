@@ -147,11 +147,9 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 		debugElement.addClass('show-dialog').append(dialogElem);
 	}
 	$(document.documentElement).on('click', 'tw-expression, tw-error', debounce((e) => {
-		if ($(document.documentElement).is('.debug-mode')) {
-			const replay = $(e.target).data('evalReplay');
-			if (replay) {
-				evalReplay(replay);
-			}
+		const replay = $(e.target).data('evalReplay');
+		if (replay) {
+			evalReplay(replay);
 		}
 		e.stopPropagation();
 	}));

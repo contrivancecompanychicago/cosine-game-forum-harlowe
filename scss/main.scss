@@ -249,10 +249,13 @@ tw-folddown {
 	}
 }
 /*
-	This is only visible in Debug View.
+	This is only visible in Debug View, OR in an error.
 */
 tw-open-button[replay] {
 	display:none;
+}
+tw-error tw-open-button {
+	display:inline !important;
 }
 tw-open-button::after {
 	content: attr(label);

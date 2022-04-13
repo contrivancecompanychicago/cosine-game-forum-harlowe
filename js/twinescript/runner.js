@@ -16,7 +16,7 @@ define([
 	'internaltypes/varref',
 	'internaltypes/twineerror'
 ],
-(Macros, State, {insensitiveName, impossible}, {toSource,objectName}, Operations, Colour, HookSet, Lambda, Datatype, VarBind, CodeHook, TypedVar, AssignmentRequest, VarRef, TwineError) => {
+(Macros, State, {insensitiveName, impossible}, {toSource,typeName,objectName}, Operations, Colour, HookSet, Lambda, Datatype, VarBind, CodeHook, TypedVar, AssignmentRequest, VarRef, TwineError) => {
 
 	/*
 		This is used to find which lexer tokens represent "free variables" instead of pure deterministic data.
@@ -1077,18 +1077,23 @@ define([
 			ret = ops.not(run(section,  after));
 		}
 		else if (type === "belongingProperty") {
-			ret = VarRef.create(run(section,  after, isVarRef), token.name);
-			const isRef = isVarRef || TwineError.containsError(ret);
+			const container = run(section,  after, isVarRef);
+			ret = VarRef.create(container, token.name);
+			let isRef = isVarRef || TwineError.containsError(ret);
 			ret = isRef ? ret : ret.get();
 			/*
 				Create a replay frame for the variable resolving to its value (via the .get() above.)
+				The second containsError() check is in case the .get() produced an error.
 			*/
+			isRef = isVarRef || TwineError.containsError(ret);
 			if (hasEvalReplay && !isRef) {
 				makeEvalReplayFrame(evalReplay, {
 					toCode: ` ${token.name} of ${toSource(ret)} `,
 					tokens,
 					i
 				});
+			} else if (!isRef) {
+				evalReplayReason = `The value to the right of 'of', ${typeName(container)}, had a "${token.name}" data name corresponding to that data value.`;
 			}
 		}
 		else if (type === "belongingOperator" || type === "belongingItOperator") {
@@ -1130,20 +1135,25 @@ define([
 				VarRef.create(a,1).get() VarRef.create(,2).get()
 		*/
 		else if (type === "property") {
-			ret = VarRef.create(run(section, before, VARREF), token.name);
-			const isRef = isVarRef || TwineError.containsError(ret);
+			const container = run(section, before, VARREF);
+			ret = VarRef.create(container, token.name);
+			let isRef = isVarRef || TwineError.containsError(ret);
 			ret = isRef ? ret : ret.get();
 			/*
 				Create a replay frame for the variable, unless it was a VarRef,
 				in which case a replay frame was already created.
 				The second containsError() check is in case the .get() produced an error.
 			*/
-			if (hasEvalReplay && !isVarRef && !TwineError.containsError(ret)) {
+			isRef = isVarRef || TwineError.containsError(ret);
+			if (hasEvalReplay && VarRef.isPrototypeOf(container) && !isRef) {
 				makeEvalReplayFrame(evalReplay, {
 					toCode: ` ${toSource(ret)}'s ${token.name} `,
 					tokens,
 					i
 				});
+			}
+			else if (!isRef) {
+				evalReplayReason = `The value to the left of 's, ${typeName(container)}, had a "${token.name}" data name corresponding to that data value.`;
 			}
 		}
 		else if (type === "itsProperty" || type === "belongingItProperty") {

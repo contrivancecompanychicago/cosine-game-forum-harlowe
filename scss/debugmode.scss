@@ -228,65 +228,67 @@ $zindex: 999999;
 			content: attr(type) " \"" attr(name) "\"";
 		}
 	}
-	tw-eval-replay {
-		tw-eval-code, tw-eval-explanation {
-			max-height: 20vh;
-			overflow: auto;
-			margin:10px auto;
-		}
-		tw-eval-code {
-			display:block;
-			font-family: monospace;
-			padding-bottom: 1ex;
-			border-bottom: 2px solid gray;
-		}
-		tw-eval-explanation {
-			display:block;
-			text-align:center;
-			& > code {
-				white-space: pre-wrap;
-				&.from-block {
-					width: 40%;
-					display: inline-block;
-					text-align:left;
-					max-height: 4em;
-					overflow-wrap: anywhere;
-					overflow-y: scroll;
-					& ~ .to-desc {
-						width: calc(40% - 2em);
-						margin-left: 2em;
-						display: inline-block;
-					}
-					& + span::after {
-						content: "...";
-					}
-				}
-				&.from-inline {
-					text-align: right;
-				}
-			}
-			& > :nth-child(2) {
-				white-space:pre;
-			}
-			& > .to-desc {
+}
+
+// Debug Replays can be seen outside of "Debug View" if they are on <tw-error>s.
+tw-eval-replay {
+	tw-eval-code, tw-eval-explanation {
+		max-height: 20vh;
+		overflow: auto;
+		margin:10px auto;
+	}
+	tw-eval-code {
+		display:block;
+		font-family: monospace;
+		padding-bottom: 1ex;
+		border-bottom: 2px solid gray;
+	}
+	tw-eval-explanation {
+		display:block;
+		text-align:center;
+		& > code {
+			white-space: pre-wrap;
+			&.from-block {
+				width: 40%;
+				display: inline-block;
 				text-align:left;
+				max-height: 4em;
+				overflow-wrap: anywhere;
+				overflow-y: scroll;
+				& ~ .to-desc {
+					width: calc(40% - 2em);
+					margin-left: 2em;
+					display: inline-block;
+				}
+				& + span::after {
+					content: "...";
+				}
+			}
+			&.from-inline {
+				text-align: right;
 			}
 		}
-		tw-eval-reason {
-			text-align:center;
-			font-size:80%;
-			font-style:italic;
-			display:block;
+		& > :nth-child(2) {
+			white-space:pre;
 		}
-		tw-eval-it {
-			text-align:center;
-			font-size:80%;
-			display:block;
+		& > .to-desc {
+			text-align:left;
 		}
-		tw-dialog-links {
-			@include flexbox;
-			@include justify-content(space-around);
-		}
+	}
+	tw-eval-reason {
+		text-align:center;
+		font-size:80%;
+		font-style:italic;
+		display:block;
+	}
+	tw-eval-it {
+		text-align:center;
+		font-size:80%;
+		display:block;
+	}
+	tw-dialog-links {
+		@include flexbox;
+		@include justify-content(space-around);
 	}
 }
 
