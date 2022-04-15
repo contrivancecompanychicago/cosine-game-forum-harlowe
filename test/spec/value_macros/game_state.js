@@ -156,14 +156,6 @@ describe("game state macros", function() {
 			expect("$foo").not.markupToPrint("51");
 		});
 	});
-	function waitForGoto(callback) {
-		setTimeout(function f() {
-			if($('tw-passage:last-of-type tw-expression[name=go-to], tw-passage:last-of-type tw-expression[name=redirect]').length > 0) {
-				return setTimeout(f, 20);
-			}
-			callback();
-		}, 20);
-	}
 	describe("the (erase-visits:) macro", function() {
 		it("takes an integer", function() {
 			expect("(erase-visits:)").markupToError();
@@ -209,7 +201,7 @@ describe("game state macros", function() {
 						runPassage("(erase-visits:4)(history:)", "foo11");
 						expect($('tw-expression:last-child').text()).toBe('foo9,foo10');
 						done();
-					});	
+					});
 				});
 			});
 			it("and undoing turns", function(done) {

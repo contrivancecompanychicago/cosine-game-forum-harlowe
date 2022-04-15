@@ -61,6 +61,14 @@ window.runPassage = function(text, name, tags, keepCache) {
 window.deletePassage = function(name) {
 	Passages.delete(name);
 };
+window.waitForGoto = function(callback) {
+	setTimeout(function f() {
+		if($('tw-passage:last-of-type tw-expression[name=go-to], tw-passage:last-of-type tw-expression[name=redirect]').length > 0) {
+			return setTimeout(f, 20);
+		}
+		callback();
+	}, 20);
+}
 var combinations = new Set(function recur(prefix, arr) {
 	var ret = [];
 	if (prefix.length >= 4) {

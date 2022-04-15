@@ -685,7 +685,7 @@
 				}
 				ret = el(`<${inline ? 'span' : 'div'} class="harlowe-3-labeledInput">${
 						row.text
-					}<${tagName} ${row.useSelection ? 'data-use-selection' : ''}${type.includes('passage') ? 'list="harlowe-3-passages"' : ''} style="width:${row.width};margin${
+					}<${tagName} ${row.useSelection ? 'data-use-selection' : ''}${type.includes('passage') ? 'list="harlowe-3-passages"' : ''} style="width:${row.width};padding:var(--grid-size);margin${
 						inline ? ':0 0.5rem' : '-left:1rem'
 					};${row.multiline && inline ? 'display:inline-block;height:36px':''}" type=${inputType} placeholder="${row.placeholder || ''}"></${tagName}></${inline ? 'span' : 'div'}>`);
 				ret[$](tagName)[ON]('input', update);
@@ -693,7 +693,7 @@
 			if (type.endsWith("number") || type.endsWith("range")) {
 				ret = el('<' + (inline ? 'span' : 'div') + ' class="harlowe-3-labeledInput">'
 					+ row.text
-					+ '<input style="" type=' + (type.endsWith("range") ? "range" : "number")
+					+ '<input style="padding:var(--grid-size)" type=' + (type.endsWith("range") ? "range" : "number")
 					+ ' min=' + row.min + ' max=' + row.max + ' value=' + row.value + (row.step ? ' step=' + row.step : '') + '></input></' + (inline ? 'span' : 'div') + '>');
 				ret[$]('input')[ON]('change', update);
 			}
@@ -937,7 +937,7 @@
 					if (ret.childNodes.length > 100) {
 						return;
 					}
-					const line = el(`<div class="harlowe-3-dataRow"><input type=text style="width:85%;" placeholder="${row.placeholder}"></input><button class="${buttonClass()} harlowe-3-rowMinus">${
+					const line = el(`<div class="harlowe-3-dataRow"><input type=text style="width:80%;padding:var(--grid-size)" placeholder="${row.placeholder}"></input><button class="${buttonClass()} harlowe-3-rowMinus">${
 							fontIcon('minus')
 						}</button><button class="${buttonClass()} harlowe-3-rowPlus">${
 							fontIcon('plus')
@@ -1070,14 +1070,12 @@
 					panelElem.append(wrapper);
 				}
 				const buttons = el('<div class="harlowe-3-confirmButtons" style="padding-bottom:8px;"></div>');
-				const resultingCode = el(`<span>Resulting code: <span class="harlowe-3-resultCode"><code></code> <code></code></span></span>`);
 				const cancel = el(`<button class="${buttonClass()}">${fontIcon('times')} Cancel</button>`);
 				const confirm = el(`<button class="${buttonClass(true)} create">${fontIcon('check')} Add</button>`);
 				confirm.setAttribute('style', disabledButtonCSS);
 				updaterFns.push(m => {
 					const setAttr = !m.valid ? 'setAttribute' : 'removeAttribute';
 					confirm[setAttr]('style', disabledButtonCSS);
-					resultingCode[setAttr]('hidden','');
 					if (m.valid) {
 						if (typeof m.wrapStart === 'function') {
 							m.wrapStart = m.wrapStart(m);
@@ -1085,8 +1083,6 @@
 						if (typeof m.wrapEnd === 'function') {
 							m.wrapEnd = m.wrapEnd(m);
 						}
-						resultingCode[$]('code:first-of-type').textContent = m.output() + m.wrapStart;
-						resultingCode[$]('code:last-of-type').textContent = m.wrapEnd;
 					}
 				});
 				
@@ -1102,7 +1098,7 @@
 					wrapSelection(m.output() + m.wrapStart, m.wrapEnd, '', m.innerText, m.wrapStringify);
 					switchPanel();
 				});
-				buttons.append(resultingCode,cancel,confirm);
+				buttons.append(cancel,confirm);
 				ret = buttons;
 			}
 			if (nested) {
@@ -2041,7 +2037,7 @@
 								}[v] || v;
 							},
 						},
-						new Text("a certain data value."), el('<br>'),
+						new Text("a value."), el('<br>'),
 						dataValueRow(),
 						{
 							type: 'text',
@@ -2680,7 +2676,7 @@
 					},{
 						type: 'buttons',
 						buttons: [
-							{ title:'Prev Result', html:`<b style="font-size:150%">↑</b>`, onClick: () => cm.constructor.signal(cm, 'harlowe-3-findNext',-1) },
+							{ title:'Previous Result', html:`<b style="font-size:150%">↑</b>`, onClick: () => cm.constructor.signal(cm, 'harlowe-3-findNext',-1) },
 							{ title:'Next Result', html:`<b style="font-size:150%">↓</b>`, onClick: () => cm.constructor.signal(cm, 'harlowe-3-findNext', 1)  },
 						],
 					},{
@@ -2843,8 +2839,10 @@
 		{ type: 'button', command() { switchPanel('rotate'); },                            label:'Rotate',      iconOnly: true, icon: t24Icon(-3, 14, 'transform:rotate(-30deg);font-family:serif;', 'R'), },
 		{ type: 'button', command() { switchPanel('textstyle'); },                         label:'Styles…',     icon:'', },
 		{ type: 'button', command() { wrapSelection("\n#","","Heading Text"); },           label:'Header',      iconOnly: true, icon: t24Icon(0, 14, 'font-weight:bold;font-size:18px;','H'), },
-		{ type: 'button', command() { wrapSelection("\n* ",""); },                         label:'Bullet list', iconOnly: true, icon: fontIconURI('list-ul'), },
-		{ type: 'button', command() { wrapSelection("\n0. ",""); },                        label:'Number list', iconOnly: true, icon: fontIconURI('list-ol'), },
+		{ type: 'menu', icon: fontIconURI('list-ul'), label: 'List', iconOnly: true, items: [
+			{ type: 'button', command() { wrapSelection("\n* ",""); },                         label:'Bulleted list item', },
+			{ type: 'button', command() { wrapSelection("\n0. ",""); },                        label:'Numbered list item', },
+		]},
 		{ type: 'button', command() { wrapSelection("\n---\n",""); },                      label:'Horizontal rule', iconOnly: true, icon: fontIconURI('minus'), },
 		{ type: 'button', command() { switchPanel('align'); },                             label:'Alignment',   iconOnly: true, icon: fontIconURI('align-right'), },
 		{ type: 'button', command() { switchPanel('columns'); },                           label:'Columns',     iconOnly: true, icon: fontIconURI('columns'), },
@@ -2880,6 +2878,9 @@
 			*/
 			t24commands[i] = (cmObj) => { cm = cmObj; command(); };
 			b.command = i + '';
+		}
+		if (b.type === 'menu') {
+			b.items = b.items.map((b,j) => recur(b, i + '.' + j));
 		}
 		return b;
 	});

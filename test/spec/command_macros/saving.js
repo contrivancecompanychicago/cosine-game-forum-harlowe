@@ -499,14 +499,64 @@ describe("save macros", function() {
 			}, 90);
 		});
 		it("doesn't disrupt (history:)'s cache even after using (erase-undos:)", function(done) {
-			runPassage("", 'baz');
-			runPassage("", 'qux');
-			runPassage("(erase-undos:2)(savegame:'1')",'grault');
-			expect("(loadgame:'1')").not.markupToError();
+			createPassage("(redirect:'foo3')", "foo2");
+			createPassage("(redirect:'foo4')", "foo3");
+			createPassage("", "foo4");
+			createPassage("", "foo8");
+			runPassage("(redirect:'foo2')", "foo1");
+			waitForGoto(function() {
+				runPassage("", "foo5");
+				runPassage("", "foo6");
+				runPassage("(redirect:'foo8')", "foo7");
+				waitForGoto(function() {
+					runPassage("(erase-undos:2)(savegame:'1')",'grault');
+					expect("(loadgame:'1')").not.markupToError();
+					setTimeout(function() {
+						expect("(history:)").markupToPrint('foo1,foo2,foo3,foo4,foo5,foo6,foo7,foo8,grault');
+						done();
+					}, 90);
+				});
+			});			
+		});
+		it("doesn't disrupt (history:)'s cache even after using (erase-visits:)", function(done) {
+			createPassage("(redirect:'foo3')", "foo2");
+			createPassage("(redirect:'foo4')", "foo3");
+			createPassage("", "foo4");
+			createPassage("", "foo8");
+			runPassage("(redirect:'foo2')", "foo1");
+			waitForGoto(function() {
+				runPassage("", "foo5");
+				runPassage("", "foo6");
+				runPassage("(redirect:'foo8')", "foo7");
+				waitForGoto(function() {
+					runPassage("(erase-visits:2)(history:)", "foo9");
+					expect($('tw-expression:last-child').text()).toBe('foo6,foo7,foo8');
+					runPassage("(save-game:'1')",'baz');
+					expect("(load-game:'1')").not.markupToError();
+					setTimeout(function() {
+						expect("(history:)").markupToPrint('foo6,foo7,foo8,foo9,baz');
+						done();
+					}, 90);
+				});
+			});
+		});
+		it("doesn't disrupt (history:)'s cache even after using (erase-visits:) with (erase-undos:)", function(done) {
+			runPassage("", "foo0");
+			createPassage("(redirect:'foo3')", "foo2");
+			createPassage("(redirect:'foo4')", "foo3");
+			createPassage("", "foo4");
+			runPassage("(redirect:'foo2')", "foo1");
 			setTimeout(function() {
-				expect("(history:)").markupToPrint('baz,qux,grault');
-				done();
-			}, 90);
+				runPassage("(erase-visits:2)", "foo5");
+				runPassage("", "foo6");
+				runPassage("(erase-undos:-1)", "foo7");
+				runPassage("(savegame:'1')", "foo8");
+				expect("(loadgame:'1')").not.markupToError();
+				setTimeout(function() {
+					expect("(history:)").markupToPrint('foo5,foo6,foo7,foo8');
+					done();
+				}, 90);
+			},90);
 		});
 		it("produces a user-friendly prompt for deletion if the save data is invalid", function(done) {
 			runPassage("uno", "uno");

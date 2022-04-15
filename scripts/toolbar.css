@@ -22,8 +22,10 @@
 	padding: 8px;
 	font-size: 1.5rem;
 	margin: 8px auto;
-	width: 50%;
-	position:relative;
+	width: 60%;
+	position: sticky;
+	top: 0;
+	z-index: 1;
 }
 .harlowe-3-stylePreview textarea {
 	background: black;
@@ -358,7 +360,6 @@ html:not([data-version^="2.3"]) .harlowe-3-toolbarPanel [type="checkbox"]:checke
 	they can't just be given icon-button as-is.
 */
 .harlowe-3-radioRow {
-	padding: var(--grid-size);
 	padding-left: 0px;
 	padding-right: 0px;
 	user-select:none;
@@ -366,4 +367,10 @@ html:not([data-version^="2.3"]) .harlowe-3-toolbarPanel [type="checkbox"]:checke
 }
 .harlowe-3-radioRow > :first-child, .harlowe-3-radioRow > :nth-child(2) {
 	cursor:pointer;
+}
+.harlowe-3-radioRow > div {
+	padding: var(--grid-size);
+}
+.harlowe-3-toolbarPanel select {
+	padding: var(--grid-size);
 }

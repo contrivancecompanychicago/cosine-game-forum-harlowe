@@ -478,7 +478,11 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 				so the final moment's passage name shouldn't be included.
 			*/
 			if (i !== array.length-1) {
-				if (Array.isArray(dest.pastVisits[0])) {
+				/*
+					If the next moment had visits, then that means this moment has redirects.
+					So, bundle this passage name in with the redirects in the array on the front of pastVisits.
+				*/
+				if (array[i+1].visits !== undefined && Array.isArray(dest.pastVisits[0])) {
 					dest.pastVisits[0].unshift(moment.passage);
 				}
 				else {
@@ -522,13 +526,6 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 					}
 				}
 			}
-		}
-		/*
-			When visits have been erased, remove them from the pastVisits array.
-			(But take into account when visits have already been erased using (erase-undos:)).
-		*/
-		if (dest.eraseVisits) {
-			dest.pastVisits = dest.pastVisits.slice(dest.eraseVisits - (dest.turns || 0));
 		}
 		/*
 			Having flattened it down, the final moment shouldn't have any valueRefs remaining.
@@ -732,6 +729,11 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			*/
 			if (first.eraseVisits) {
 				first.pastVisits = first.pastVisits.slice(first.eraseVisits - first.turns);
+				/*
+					Modify the eraseVisits number of this turn, now that (some of) the given visits are permanently erased,
+					so that history() doesn't "erase" them again.
+				*/
+				first.eraseVisits -= first.turns;
 			}
 		
 			serialisedPast = '';
@@ -1135,6 +1137,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 						&& variable.turns === undefined
 						&& variable.mockVisits  === undefined
 						&& variable.eraseVisits === undefined
+						&& variable.pastVisits === undefined
 						&& variable.mockTurns  === undefined
 						&& variable.seed === undefined
 						&& variable.seedIter === undefined

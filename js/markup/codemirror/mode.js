@@ -612,7 +612,7 @@
 	} else {
 		this.editorExtensions = {
 			twine: {
-				"2.4.0-beta2": {
+				"2.4 || 2.4.0-beta3": {
 					codeMirror: {
 						mode,
 						toolbar,

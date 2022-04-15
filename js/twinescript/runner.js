@@ -1088,7 +1088,7 @@ define([
 			isRef = isVarRef || TwineError.containsError(ret);
 			if (hasEvalReplay && !isRef) {
 				makeEvalReplayFrame(evalReplay, {
-					toCode: ` ${token.name} of ${toSource(ret)} `,
+					toCode: ` ${token.name} of ${toSource(container.get())} `,
 					tokens,
 					i
 				});
@@ -1147,9 +1147,9 @@ define([
 			isRef = isVarRef || TwineError.containsError(ret);
 			if (hasEvalReplay && VarRef.isPrototypeOf(container) && !isRef) {
 				makeEvalReplayFrame(evalReplay, {
-					toCode: ` ${toSource(ret)}'s ${token.name} `,
+					toCode: ` ${toSource(container.get())}'s ${token.name} `,
 					tokens,
-					i
+					i,
 				});
 			}
 			else if (!isRef) {

@@ -143,14 +143,6 @@ describe("basic command macros", function() {
 			});
 		});
 	});
-	function waitForGoto(callback) {
-		setTimeout(function f() {
-			if($('tw-passage:last-of-type tw-expression[name=go-to], tw-passage:last-of-type tw-expression[name=redirect]').length > 0) {
-				return setTimeout(f, 20);
-			}
-			callback();
-		}, 20);
-	}
 	['go-to','redirect'].forEach(function(name){
 		describe("the ("+name+":) macro", function() {
 			it("requires exactly 1 string argument", function() {

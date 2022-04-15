@@ -225,7 +225,7 @@
 				/*
 					Only reduce the dismiss ticker if the mouse is off the tooltip.
 				*/
-				if (tooltipElem.style.display !== "none" && !cmElem.querySelector('harlowe-3-tooltip:hover')) {
+				if (tooltipElem.style.display !== "none" && !cmElem.querySelector('.harlowe-3-tooltip:hover')) {
 					tooltipDismissTicker -= 1;
 					if (tooltipDismissTicker <= 0) {
 						tooltipElem.style.display = "none";
