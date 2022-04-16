@@ -687,7 +687,7 @@
 						row.text
 					}<${tagName} ${row.useSelection ? 'data-use-selection' : ''}${type.includes('passage') ? 'list="harlowe-3-passages"' : ''} style="width:${row.width};padding:var(--grid-size);margin${
 						inline ? ':0 0.5rem' : '-left:1rem'
-					};${row.multiline && inline ? 'display:inline-block;height:36px':''}" type=${inputType} placeholder="${row.placeholder || ''}"></${tagName}></${inline ? 'span' : 'div'}>`);
+					};${row.multiline && inline ? 'display:inline-block;height:40px':''}" type=${inputType} placeholder="${row.placeholder || ''}"></${tagName}></${inline ? 'span' : 'div'}>`);
 				ret[$](tagName)[ON]('input', update);
 			}
 			if (type.endsWith("number") || type.endsWith("range")) {
@@ -714,7 +714,7 @@
 							colour
 						}" data-pos="${percent}" class=harlowe-3-colourStop style="left:calc(${
 							percent * 100
-						}% - 8px); top:-8px"><div class=harlowe-3-colourStopButtons style="left:${-464*percent}px">`
+						}% - 8px); top:-8px"><div class=harlowe-3-colourStopButtons style="left:${-(twine23 ? 464 : 384)*percent - (twine23 ? 0 : 40)}px">`
 						+ `</div></div>`
 					);
 					const picker = makeColourPicker(colour);
@@ -756,7 +756,7 @@
 							/*
 								Reposition the colour stop's button bar so that it's always entirely visible.
 							*/
-							target.firstChild.style.left = `${-464*pos}px`;
+							target.firstChild.style.left = `${-(twine23 ? 464 : 384)*pos - (twine23 ? 0 : 40)}px`;
 							target.setAttribute('data-pos', pos);
 							update();
 						};
@@ -2682,7 +2682,7 @@
 					},{
 						type: 'inline-dropdown',
 						text: '',
-						options: ["Everywhere", "Only prose", "Only code", "Only selection"],
+						options: ["Everywhere", "Only in prose", "Only in code", "Only in selection"],
 						model(m, el) {
 							m.onlyIn = el[$]('select').value;
 						},
@@ -2830,14 +2830,23 @@
 	const t24commands = {};
 	let hideCodeButton, hideTooltipButton;
 	const t24toolbar = twine23 ? [] : [
-		{ type: 'button', command() { wrapSelection("''","''", "Bold Text"); },            label:'Bold',        iconOnly: true, icon: t24Icon(2, 14, 'font-weight:bold','B'), },
-		{ type: 'button', command() { wrapSelection("//","//"), "Italic Text"; },          label:'Italic',      iconOnly: true, icon: t24Icon(4, 14, 'font-style:italic','I'), },
-		{ type: 'button', command() { wrapSelection("~~","~~", "Superscript Text"); },     label:'Underline',   iconOnly: true, icon: t24Icon(2, 14, 'text-decoration:line-through','S'), },
-		{ type: 'button', command() { wrapSelection("^^","^^", "Strikethrough Text"); },   label:'Superscript', iconOnly: true, icon: t24Icon(1, 14, '', "x</text><text y='7' x='10' fill='currentColor' style='font-size:9px'>2"), },
+		{ type: 'menu', label: 'Styles',
+				icon: svgURI(
+						`<text y='11' x='-7' fill='currentColor' style='/*harlowe-3*/font-weight:bold;font-size:80%'>B</text>`
+						+ `<text y='8' x='1' fill='currentColor' style='/*harlowe-3*/font-style:italic;font-size:80%'>I</text>`
+						+ `<text y='13' x='5' fill='currentColor' style='/*harlowe-3*/text-decoration:line-through;font-size:80%'>S</text>`
+					).replace("%2780%27","%27144%27"),
+				items: [
+			{ type: 'button', command() { wrapSelection("''","''", "Bold Text"); },            label:'Bold',          },
+			{ type: 'button', command() { wrapSelection("//","//"), "Italic Text"; },          label:'Italic',        },
+			{ type: 'button', command() { wrapSelection("~~","~~", "Superscript Text"); },     label:'Superscript',   },
+			{ type: 'button', command() { wrapSelection("^^","^^", "Strikethrough Text"); },   label:'Strikethrough', },
+			{ type: 'separator', },
+			{ type: 'button', command() { switchPanel('textstyle'); },                         label:'More Styles…',  },
+		]},
 		{ type: 'button', command() { switchPanel('textcolor'); },                         label:'Colours',     iconOnly: true, icon: svgURI(`<defs><linearGradient id="X"><stop offset="0%" stop-color="hsla(0,100%,50%,0.5)"/><stop offset="16%" stop-color="hsla(30,100%,50%,0.5)"/><stop offset="33%" stop-color="hsla(60,100%,50%,0.5)"/><stop offset="50%" stop-color="hsla(120,100%,50%,0.5)"/><stop offset="66%" stop-color="hsla(180,100%,50%,0.5)"/><stop offset="83%" stop-color="hsla(240,100%,50%,0.5)"/><stop offset="100%" stop-color="hsla(320,100%,50%,0.5)"/></linearGradient></defs><circle cx="8" cy="8" r="6" fill="url('#X')"/>`), },
 		{ type: 'button', command() { switchPanel('borders'); },                           label:'Borders',     iconOnly: true, icon: fontIconURI('border-style'), },
 		{ type: 'button', command() { switchPanel('rotate'); },                            label:'Rotate',      iconOnly: true, icon: t24Icon(-3, 14, 'transform:rotate(-30deg);font-family:serif;', 'R'), },
-		{ type: 'button', command() { switchPanel('textstyle'); },                         label:'Styles…',     icon:'', },
 		{ type: 'button', command() { wrapSelection("\n#","","Heading Text"); },           label:'Header',      iconOnly: true, icon: t24Icon(0, 14, 'font-weight:bold;font-size:18px;','H'), },
 		{ type: 'menu', icon: fontIconURI('list-ul'), label: 'List', iconOnly: true, items: [
 			{ type: 'button', command() { wrapSelection("\n* ",""); },                         label:'Bulleted list item', },
@@ -2855,7 +2864,7 @@
 			},
 			label:'Verbatim', iconOnly: true, icon: t24Icon(1,12,'font-size:11px','Vb'),
 		},
-		{ type: 'button', command() { wrapSelection("<!--","-->", "Comments (Not Visible In-Game)"); },  label:'Comments', iconOnly: true, icon: t24Icon(-1,10,'font-weight:bold','&#10216;!-'), },
+		{ type: 'button', command() { wrapSelection("<!--","-->", "HTML Comments (Not Visible In-Game)"); },  label:'Comments', iconOnly: true, icon: t24Icon(-1,10,'font-weight:bold','&#10216;!-'), },
 
 		{ type: 'button', command() { switchPanel('passagelink'); },                       label:'Link…',   icon:'', },
 		{ type: 'button', command() { switchPanel('if'); },                                label:'If…',     icon:'', },
@@ -2866,7 +2875,7 @@
 		hideCodeButton    = { type: 'button', command() { toolbarElem.classList.toggle('harlowe-3-hideCode'); cm.constructor.signal(cm,'cursorActivity'); },    label:'Proofread view',   iconOnly: true, icon:fontIconURI('eye'), },
 		hideTooltipButton = { type: 'button', command() { toolbarElem.classList.toggle('harlowe-3-hideTooltip'); cm.constructor.signal(cm,'cursorActivity'); }, label:'Coding tooltips',  iconOnly: true, icon:fontIconURI('comment'), },
 		{ type: 'button', command() { switchPanel('find'); },        label:'Find and replace', iconOnly: true, icon: fontIconURI('search'), },
-		{ type: 'button', command() { window.open(`https://twine2.neocities.org/`, "Harlowe Documentation", 'noopener,noreferrer'); }, label:'Show Manual', iconOnly: true, icon:t24Icon(5, 14, 'font-weight:bold;font-size:18px;','?'), },
+		{ type: 'button', command() { window.open(`https://twine2.neocities.org/`, "Harlowe Documentation", 'noopener,noreferrer'); }, label:'Show Manual', iconOnly: true, icon:t24Icon(3, 12, 'font-weight:bold;font-size:19px;','?'), },
 	].map(function recur(b,i) {
 		/*
 			The above definition is split into separate command and toolbar objects, as per the TwineJS 2.4 spec.

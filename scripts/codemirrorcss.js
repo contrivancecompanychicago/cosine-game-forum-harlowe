@@ -12,8 +12,8 @@ const {execSync} = require('child_process'),
 			In Twine 2.4+, always put "non-prose" code in monospace.
 		*/
 		`.${versionClass}root:not([class^='${versionClass}text']):not([class^='${versionClass}verbatim']) { font-family:var(--font-monospaced); }` +
-		// The cursor token highlight should ignore the most common tokens, unwrapped text tokens.
-		`.${versionClass}cursor:not([class^='${versionClass}text ${versionClass}root']) { border-bottom: 2px solid darkgray; }` +
+		// The cursor token highlight should ignore the most common tokens, unwrapped text tokens, as well as verbatim tokens.
+		`.${versionClass}cursor:not([class^='${versionClass}verbatim']):not([class^='${versionClass}text ${versionClass}root']) { border-bottom: 2px solid darkgray; }` +
 
 		`.${versionClass}findResult { background-color: hsla(280,100%,70%,0.4) !important; } .${versionClass}findResultCurrent { background-color: hsla(320,100%,70%,0.6) !important; }` +
 		

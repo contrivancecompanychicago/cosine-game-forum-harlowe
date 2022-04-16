@@ -40,45 +40,68 @@
 		The mode is defined herein.
 	*/
 	const mode = () => {
-		let cm, tree,
+		let cm;
+
+		/*
+			To handle 2.4's multi-editor mode, this WeakMap stores multiple parse trees (plus referenceTokens) tied to CodeMirror docs.
+		*/
+		const editors = new WeakMap();
+
+		const docData = (doc) => {
+			if (editors.has(doc)) {
+				return editors.get(doc);
+			}
+			const ret = {};
+			editors.set(doc, ret);
+			/*
+				Use refreshTree() to create all the relevant data structures for this doc, including the tree.
+			*/
+			refreshTree(doc);
+			return ret;
+		};
+
+		/*
+			Refresh (re-lex) an existing doc's tree.
+		*/
+		function refreshTree(doc) {
+			let data;
+			/*
+				If the doc doesn't exist, quickly create it now.
+			*/
+			if (!editors.has(doc)) {
+				data = {};
+				editors.set(doc, data);
+			}
+			else {
+				data = editors.get(doc);
+			}
+			data.tree = lex(doc.getValue());
 			// These caches are used to implement special highlighting when the cursor
 			// rests on variables or hookNames, such that all the other variable/hook
 			// tokens are highlighted as well.
-			referenceTokens = {
+			data.referenceTokens = {
 				variable: [],
 				tempVariable: [],
 				hook: [],
 				hookName: [],
-				clear() {
-					this.variable = [];
-					this.tempVariable = [];
-					this.hook = [];
-					this.hookName = [];
-				}
 			};
-
-		function lexTreePostProcess(token) {
-			if (token.type === "variable" || token.type === "tempVariable"
-					|| token.type === "hook" || token.type === "hookName") {
-				referenceTokens[token.type].push(token);
-			}
-			/*
-				Don't syntax-highlight the interiors of strings.
-			*/
-			if (token.type === "string") {
+			data.tree.children.forEach(function lexTreePostProcess(token) {
+				if (token.type === "variable" || token.type === "tempVariable"
+						|| token.type === "hook" || token.type === "hookName") {
+					data.referenceTokens[token.type].push(token);
+				}
 				/*
-					Invalidate both the childAt cache and the children array.
+					Don't syntax-highlight the interiors of strings.
 				*/
-				token.childAt = undefined;
-				token.children = [];
-			}
-			token.children.forEach(lexTreePostProcess);
-		}
-		function lexTree(str) {
-			const tree = lex(str);
-			referenceTokens.clear();
-			tree.children.forEach(lexTreePostProcess);
-			return tree;
+				if (token.type === "string") {
+					/*
+						Invalidate both the childAt cache and the children array.
+					*/
+					token.childAt = undefined;
+					token.children = [];
+				}
+				token.children.forEach(lexTreePostProcess);
+			});
 		}
 		
 		/*
@@ -126,7 +149,8 @@
 			the token that the cursor is resting on.
 		*/
 		let cursorMarks = [];
-		function cursorMarking(doc, tree) {
+		function cursorMarking(doc) {
+			const {tree, referenceTokens} = docData(doc);
 			if (cursorMarks.length) {
 				cursorMarks.forEach(mark => mark.clear());
 				cursorMarks = [];
@@ -267,6 +291,7 @@
 			*/
 			q.regExp = new RegExp(q.query.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/mg, "\\$&"), q.matchCase ? "g" : "gi");
 			const fullText = doc.getValue();
+			const tree = docData(doc).tree;
 			const {onlyIn} = q;
 			let match;
 			matchLoop: while ((match = q.regExp.exec(fullText))) {
@@ -396,13 +421,11 @@
 		*/
 		const on = (target, name, fn) => (!target._handlers || !(target._handlers[name] || []).some(e => e.name === fn.name)) && target.on(name, fn);
 		
-		let init = () => {
-			const doc = cm.doc;
+		let init = (doc) => {
 			/*
 				Use the Harlowe lexer to compute a full parse tree.
 			*/
-			tree = lexTree(doc.getValue());
-
+			refreshTree(doc);
 			/*
 				Attach the all-important beforeChanged event, but make sure it's only attached once.
 				Note that this event is removed by TwineJS when it uses swapDoc to dispose of old docs.
@@ -412,8 +435,7 @@
 				forceFullChange(change, oldText);
 			});
 			on(doc, 'change', function harlowe3Change() {
-				const text = doc.getValue();
-				tree = lexTree(text);
+				refreshTree(doc);
 				/*
 					Re-compute the current search query, if there is one.
 				*/
@@ -428,8 +450,8 @@
 				}
 			});
 			on(doc, 'cursorActivity', function harlowe3CursorActivity() {
-				cursorMarking(doc, tree);
-				tooltips && tooltips(cm, doc, tree);
+				cursorMarking(doc);
+				tooltips && tooltips(cm, doc, docData(doc).tree);
 			});
 			/*
 				Perform specific style alterations based on certain specific token types.
@@ -508,7 +530,11 @@
 				/*
 					Install the event handlers, if they haven't already been.
 				*/
-				init && init();
+				init && init(stream.lineOracle.doc);
+				/*
+					Fetch the tree for this doc.
+				*/
+				const {tree} = docData(stream.lineOracle.doc);
 				/*
 					We must render each token using the cumulative styles of all parent tokens
 					above it. So, we obtain the full path.
