@@ -4,7 +4,7 @@ SHELL := /bin/zsh
 requirejs_harlowe_flags = baseUrl=js mainConfigFile=js/harlowe.js name=harlowe include=almond \
 	insertRequire=harlowe wrap=true useStrict=true out=stdout logLevel=4 optimize=none
 
-requirejs_twinemarkup_flags = baseUrl=js/markup name=markup include=codemirror/shortdefs,codemirror/tooltips,codemirror/toolbar,codemirror/mode useStrict=true out=stdout logLevel=4 optimize=none
+requirejs_twinemarkup_flags = baseUrl=js/markup name=markup include=codemirror/utils,codemirror/toolbarpanel,codemirror/tooltips,codemirror/toolbar,codemirror/mode useStrict=true out=stdout logLevel=4 optimize=none
 
 jshint_flags = --reporter scripts/jshintreporter.js
 

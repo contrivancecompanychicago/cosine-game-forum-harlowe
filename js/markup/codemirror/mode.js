@@ -11,7 +11,7 @@
 	/*
 		Import the TwineMarkup lexer function, and store it locally.
 	*/
-	let lex, toolbar, tooltips, shortDefs, commands;
+	let lex, toolbar, tooltips, ShortDefs, commands;
 	if(typeof module === 'object') {
 		({lex} = require('../lexer'));
 	}
@@ -23,16 +23,16 @@
 	// Loaded in HarloweDocs's preview pane.
 	else if (this.window) {
 		lex = this.Markup.lex;
-		shortDefs = this.ShortDefs;
+		ShortDefs = this.Utils.ShortDefs;
 	}
 	// Loaded as a story format in TwineJS (any ver)
 	else {
-		({Markup:{lex}, Toolbar:toolbar, ToolbarCommands:commands, Tooltips:tooltips, ShortDefs:shortDefs} = (this.modules || this));
+		({Markup:{lex}, Toolbar:toolbar, ToolbarCommands:commands, Tooltips:tooltips, Utils:{ShortDefs}} = (this.modules || this));
 	}
 	/*
 		Produce an object holding macro names, using both their names and their aliases.
 	*/
-	const validMacros = Object.entries(shortDefs.Macro).reduce((a,[name,macro])=> {
+	const validMacros = Object.entries(ShortDefs.Macro).reduce((a,[name,macro])=> {
 		[name, ...macro.aka].forEach(name => a[name] = macro);
 		return a;
 	}, {});
@@ -85,6 +85,7 @@
 				hook: [],
 				hookName: [],
 			};
+			data.cursorMarks = [];
 			data.tree.children.forEach(function lexTreePostProcess(token) {
 				if (token.type === "variable" || token.type === "tempVariable"
 						|| token.type === "hook" || token.type === "hookName") {
@@ -148,12 +149,12 @@
 			This 'cursorActivity' event handler applies CodeMirror marks based on
 			the token that the cursor is resting on.
 		*/
-		let cursorMarks = [];
 		function cursorMarking(doc) {
-			const {tree, referenceTokens} = docData(doc);
+			const data = docData(doc);
+			let {tree, cursorMarks, referenceTokens} = data;
 			if (cursorMarks.length) {
 				cursorMarks.forEach(mark => mark.clear());
-				cursorMarks = [];
+				cursorMarks = data.cursorMarks = [];
 			}
 			const token = tree.tokenAt(doc.indexFromPos(doc.getCursor()));
 			// If the cursor is at the end of the passage, or there is no text, then
@@ -470,7 +471,7 @@
 					elem.setAttribute('style', `background:linear-gradient(to bottom,transparent,transparent 80%,${colour} 80.1%,${colour})`);
 				});
 			});
-			// Remove the toolbar, if it exists.
+			// Remove the tooltip, if it exists.
 			// This can't actually be in the Tooltips module because it must only be installed once.
 			on(cm, 'scroll', function harlowe3Scroll() {
 				const tooltip = document.querySelector('.harlowe-3-tooltip');

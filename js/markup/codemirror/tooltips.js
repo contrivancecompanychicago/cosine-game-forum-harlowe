@@ -276,12 +276,12 @@
 	// this.loaded implies TwineJS 2.3.
 	if (this && this.loaded) {
 		this.modules || (this.modules = {});
-		({ShortDefs} = this.modules);
+		({ShortDefs} = this.modules.Utils);
 		this.modules.Tooltips = Tooltips;
 	}
 	// This can't be loaded in HarloweDocs.
 	else if (!this.window) {
-		({ShortDefs} = this);
+		({ShortDefs} = this.Utils);
 		this.Tooltips = Tooltips;
 	}
 }.call(eval('this')));
