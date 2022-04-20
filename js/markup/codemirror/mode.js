@@ -2,16 +2,9 @@
 (function() {
 	'use strict';
 	/*
-		First, a preamble of helpers.
-		
-		This is a copy of Utils.insensitiveName(), used to check macro names.
-	*/
-	const insensitiveName = (e) => (e + "").toLowerCase().replace(/-|_/g, "");
-
-	/*
 		Import the TwineMarkup lexer function, and store it locally.
 	*/
-	let lex, toolbar, tooltips, ShortDefs, commands;
+	let lex, toolbar, tooltips, commands, ShortDefs, insensitiveName;
 	if(typeof module === 'object') {
 		({lex} = require('../lexer'));
 	}
@@ -23,11 +16,11 @@
 	// Loaded in HarloweDocs's preview pane.
 	else if (this.window) {
 		lex = this.Markup.lex;
-		ShortDefs = this.Utils.ShortDefs;
+		({ShortDefs, insensitiveName} = this.Utils);
 	}
 	// Loaded as a story format in TwineJS (any ver)
 	else {
-		({Markup:{lex}, Toolbar:toolbar, ToolbarCommands:commands, Tooltips:tooltips, Utils:{ShortDefs}} = (this.modules || this));
+		({Markup:{lex}, Toolbar:toolbar, ToolbarCommands:commands, Tooltips:tooltips, Utils:{ShortDefs, insensitiveName}} = (this.modules || this));
 	}
 	/*
 		Produce an object holding macro names, using both their names and their aliases.
@@ -432,10 +425,22 @@
 				Note that this event is removed by TwineJS when it uses swapDoc to dispose of old docs.
 			*/
 			on(doc, 'beforeChange', function harlowe3beforeChange(_, change) {
+				/*
+					Do nothing if this is detached from the DOM.
+				*/
+				if (!doc.cm.display.wrapper.parentNode) {
+					return;
+				}
 				const oldText = doc.getValue();
 				forceFullChange(change, oldText);
 			});
 			on(doc, 'change', function harlowe3Change() {
+				/*
+					Do nothing if this is detached from the DOM.
+				*/
+				if (!doc.cm.display.wrapper.parentNode) {
+					return;
+				}
 				refreshTree(doc);
 				/*
 					Re-compute the current search query, if there is one.
@@ -452,7 +457,7 @@
 			});
 			on(doc, 'cursorActivity', function harlowe3CursorActivity() {
 				cursorMarking(doc);
-				tooltips && tooltips(cm, doc, docData(doc).tree);
+				tooltips && tooltips(doc, docData(doc).tree);
 			});
 			/*
 				Perform specific style alterations based on certain specific token types.
@@ -522,20 +527,30 @@
 
 				return {
 					pos: 0,
+					disconnected: null,
 				};
 			},
 			blankLine(state) {
 				state.pos++;
 			},
 			token: function token(stream, state) {
+				const {doc} = stream.lineOracle;
+				/*
+					If the CM doc is disconnected from the DOM (somehow), don't bother doing anything.
+				*/
+				if (state.disconnected === null ? (state.disconnected = !doc.cm.display.wrapper.parentNode) : state.disconnected) {
+					state.pos++;
+					stream.next();
+					return null;
+				}
 				/*
 					Install the event handlers, if they haven't already been.
 				*/
-				init && init(stream.lineOracle.doc);
+				init && init(doc);
 				/*
 					Fetch the tree for this doc.
 				*/
-				const {tree} = docData(stream.lineOracle.doc);
+				const {tree} = docData(doc);
 				/*
 					We must render each token using the cumulative styles of all parent tokens
 					above it. So, we obtain the full path.

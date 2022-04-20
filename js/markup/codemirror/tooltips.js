@@ -1,9 +1,17 @@
 /*jshint strict:true*/
 (function() {
 	'use strict';
-	let ShortDefs;
-	const insensitiveName = e => (e + "").toLowerCase().replace(/-|_/g, "");
-	const twine23 = !!document.querySelector('html[data-version^="2.3."]');
+	let ShortDefs, twine23, insensitiveName;
+	
+	// this.loaded implies TwineJS 2.3.
+	if (this && this.loaded) {
+		({ShortDefs, twine23, insensitiveName} = this.modules.Utils);
+	}
+	// This can't be loaded in HarloweDocs.
+	else if (!this.window) {
+		({ShortDefs, twine23, insensitiveName} = this.Utils);
+	}
+
 	const docsURL = (anchor, contents) => `<a href="https://twine2.neocities.org/#${anchor}" target="_blank" rel="noopener noreferrer">${contents}</a>`;
 
 	const enclosedText = "This markup gives the enclosed text ";
@@ -206,14 +214,15 @@
 		}
 	}
 
-	function Tooltips(cm, doc, tree) {
+	function Tooltips(doc, tree) {
+		const {cm} = doc;
 		tooltipElem.setAttribute('style', 'display:none');
 		if (doc.somethingSelected()) {
 			tooltipAppearDelay = 0;
 			return;
 		}
-		const cmElem = document.querySelector('.CodeMirror');
-		if (tooltipElem.compareDocumentPosition(document) & 1) {
+		const cmElem = cm.display.wrapper;
+		if (tooltipElem.parentNode !== cmElem) {
 			cmElem.append(tooltipElem);
 			/*
 				If the tooltipElem is disconnected from the DOM,
@@ -273,15 +282,10 @@
 			}
 		}
 	}
-	// this.loaded implies TwineJS 2.3.
 	if (this && this.loaded) {
-		this.modules || (this.modules = {});
-		({ShortDefs} = this.modules.Utils);
 		this.modules.Tooltips = Tooltips;
 	}
-	// This can't be loaded in HarloweDocs.
 	else if (!this.window) {
-		({ShortDefs} = this.Utils);
 		this.Tooltips = Tooltips;
 	}
 }.call(eval('this')));

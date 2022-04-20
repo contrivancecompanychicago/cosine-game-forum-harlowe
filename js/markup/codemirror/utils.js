@@ -6,6 +6,11 @@
 	*/
 	const {round} = Math;
 	/*
+		This is a copy of Utils.insensitiveName(), used to check macro names.
+	*/
+	const insensitiveName = (e) => (e + "").toLowerCase().replace(/-|_/g, "");
+
+	/*
 		This SHORTDEFS token is actually replaced with an object literal listing
 		of the currently defined Harlowe macros at compile-time, from the metadata script.
 	*/
@@ -142,6 +147,7 @@
 		buttonClass,
 		builtinColourNames,
 		fontIcon,
+		insensitiveName,
 	};
 
 	// Loaded in TwineJS 2.3.
