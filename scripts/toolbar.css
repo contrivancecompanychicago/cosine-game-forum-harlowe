@@ -215,8 +215,11 @@
 	border:1px solid hsla(0,0%,50%,0.5);
 	display:inline-block;
 }
-.harlowe-3-hideCode ~ * .cm-harlowe-3-root:not(.cm-harlowe-3-text):not(.cm-harlowe-3-string) {
+.harlowe-3-hideCode .cm-harlowe-3-root:not(.cm-harlowe-3-text):not(.cm-harlowe-3-string) {
 	opacity:0.25;
+}
+.harlowe-3-hideTooltip .harlowe-3-tooltip {
+	display:none;
 }
 .harlowe-3-tooltip {
 	font-family: var(--font-system);
@@ -238,9 +241,6 @@
 }
 .theme-dark .harlowe-3-tooltip, [data-app-theme="dark"] .harlowe-3-tooltip {
 	background:black;
-}
-.harlowe-3-hideTooltip ~ * .harlowe-3-tooltip {
-	display:none;
 }
 .harlowe-3-tooltipMacroSignature {
 	display:block;

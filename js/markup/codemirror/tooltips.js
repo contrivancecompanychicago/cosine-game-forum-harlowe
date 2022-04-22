@@ -123,7 +123,7 @@
 			}
 			return '';
 		},
-		whitespace:          `<b>Whitespace</b> within macro calls is simply used to separate values. You can use as much or as little as you like to make your code more readable.`,
+		whitespace:          `<b>Whitespace</b> within macro calls is simply used to separate syntax elements. You can use as much or as little as you like to make your code more readable.`,
 		error:               (_,[{message, explanation}]) => message + (explanation ? "<br>" + explanation : ''),
 		boolean:             `The keywords <b>true</b> or <b>false</b> are the two <b>boolean values</b>. They are produced by comparison operators (\`<\`, \`>\`, \`is\`, etc.) and other macros.`,
 		is:                  `The <b>"is" operator</b> produces the boolean value \`true\` if the values on each sides of it are exactly the same.` + otherwiseFalse,
@@ -214,14 +214,18 @@
 		}
 	}
 
-	function Tooltips(doc, tree) {
+	function Tooltips(doc, docData) {
+		const {tree} = docData;
 		const {cm} = doc;
 		tooltipElem.setAttribute('style', 'display:none');
-		if (doc.somethingSelected()) {
+		const cmElem = cm.display.wrapper;
+		/*
+			Don't display the tooltip at all under these circumstances.
+		*/
+		if (cmElem.classList.contains('harlowe-3-hideTooltip') || doc.somethingSelected()) {
 			tooltipAppearDelay = 0;
 			return;
 		}
-		const cmElem = cm.display.wrapper;
 		if (tooltipElem.parentNode !== cmElem) {
 			cmElem.append(tooltipElem);
 			/*

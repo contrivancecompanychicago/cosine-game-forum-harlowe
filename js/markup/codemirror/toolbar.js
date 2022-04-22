@@ -1781,7 +1781,7 @@
 					{ title:'Proofreading view (dim all code except strings)',
 						html:fontIcon('eye'),
 						onClick: ({target}) => {
-							toolbarElem.classList.toggle('harlowe-3-hideCode');
+							cm.display.wrapper.classList.toggle('harlowe-3-hideCode');
 							if (target.tagName.toLowerCase() === "svg") {
 								target = target.parentNode;
 							}
@@ -1792,7 +1792,7 @@
 						html: fontIcon('comment'),
 						active: true,
 						onClick: ({target}) => {
-							toolbarElem.classList.toggle('harlowe-3-hideTooltip');
+							cm.display.wrapper.classList.toggle('harlowe-3-hideTooltip');
 							if (target.tagName.toLowerCase() === "svg") {
 								target = target.parentNode;
 							}
@@ -1887,8 +1887,12 @@
 		{ type: 'button', command() { switchPanel('hook'); },                              label:'Hook…',   icon:'', },
 		{ type: 'button', command() { switchPanel('basicValue'); },                        label:'Value…',  icon:'', },
 		{ type: 'button', command() { switchPanel('macro'); },                             label:'Macro…',  icon:'', },
-		hideCodeButton    = { type: 'button', command() { toolbarElem.classList.toggle('harlowe-3-hideCode'); cm.constructor.signal(cm,'cursorActivity'); },    label:'Proofread view',   iconOnly: true, icon:fontIconURI('eye'), },
-		hideTooltipButton = { type: 'button', command() { toolbarElem.classList.toggle('harlowe-3-hideTooltip'); cm.constructor.signal(cm,'cursorActivity'); }, label:'Coding tooltips',  iconOnly: true, icon:fontIconURI('comment'), },
+		/*
+			As a convenient hack to support multi-editor in 2.4, the hideCode, etc. classes are placed on the .CodeMirror element
+			rather than the (global) harloweToolbar element.
+		*/
+		hideCodeButton    = { type: 'button', command() { cm.display.wrapper.classList.toggle('harlowe-3-hideCode'); cm.constructor.signal(cm,'cursorActivity'); },    label:'Proofread view',   iconOnly: true, icon:fontIconURI('eye'), },
+		hideTooltipButton = { type: 'button', command() { cm.display.wrapper.classList.toggle('harlowe-3-hideTooltip'); cm.constructor.signal(cm,'cursorActivity'); }, label:'Coding tooltips',  iconOnly: true, icon:fontIconURI('comment'), },
 		{ type: 'button', key: 'Ctrl-F', command() { switchPanel('find'); },        label:'Find and replace', iconOnly: true, icon: fontIconURI('search'), },
 		{ type: 'button', command() { window.open(`https://twine2.neocities.org/`, "Harlowe Documentation", 'noopener,noreferrer'); }, label:'Show Manual', iconOnly: true, icon:t24Icon(3, 12, 'font-weight:bold;font-size:19px;','?'), },
 	].map(function recur(b,i) {
@@ -1927,8 +1931,8 @@
 		*/
 		t24toolbar.forEach(item => {
 			let replaceColor = foregroundColor;
-			if ((item === hideCodeButton && toolbarElem.classList.contains('harlowe-3-hideCode'))
-					|| (item === hideTooltipButton && !toolbarElem.classList.contains('harlowe-3-hideTooltip'))) {
+			if ((item === hideCodeButton && cm.display.wrapper.classList.contains('harlowe-3-hideCode'))
+					|| (item === hideTooltipButton && !cm.display.wrapper.classList.contains('harlowe-3-hideTooltip'))) {
 				replaceColor = '#0a60c2';
 			}
 			item.icon && (item.icon = item.icon.replace(/fill%3D%27[^']+?%27/g, `fill%3D%27${window.escape(replaceColor)}%27`));

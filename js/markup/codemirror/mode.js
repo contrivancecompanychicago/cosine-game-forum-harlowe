@@ -456,7 +456,7 @@
 			});
 			on(doc, 'cursorActivity', function harlowe3CursorActivity() {
 				cursorMarking(doc);
-				tooltips && tooltips(doc, docData(doc).tree);
+				tooltips && tooltips(doc, docData(doc));
 			});
 			/*
 				Perform specific style alterations based on certain specific token types.
