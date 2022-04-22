@@ -865,17 +865,12 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			if (!present) {
 				Utils.impossible("State.redirect","present is undefined!");
 			}
-			/*
-				Each moment stores the passages visited by (redirect:)s that occured during it,
-				solely for the sake of (history:).
-			*/
-			present.visits = (present.visits || []).concat(newPassageName);
 			// The departing passage name still goes into the cache.
 			if (present.passage) {
 				/*
 					If previous redirects were performed this turn, place the soon-to-be past passage name into the subarray holding those redirects.
 				*/
-				if (Array.isArray(CurrentVariables.pastVisits[CurrentVariables.pastVisits.length-1])) {
+				if (present.visits && present.visits.length && Array.isArray(CurrentVariables.pastVisits[CurrentVariables.pastVisits.length-1])) {
 					CurrentVariables.pastVisits[CurrentVariables.pastVisits.length-1].push(present.passage);
 				}
 				else {
@@ -885,6 +880,11 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 					CurrentVariables.pastVisits.push([present.passage]);
 				}
 			}
+			/*
+				Each moment stores the passages visited by (redirect:)s that occured during it,
+				solely for the sake of (history:). Note that this must be done AFTER the above, due to the present.visits.length check.
+			*/
+			present.visits = (present.visits || []).concat(newPassageName);
 			// Assign the passage name.
 			present.passage = newPassageName;
 		},

@@ -41,16 +41,13 @@
 		const editors = new WeakMap();
 
 		const docData = (doc) => {
-			if (editors.has(doc)) {
-				return editors.get(doc);
+			if (!editors.has(doc)) {
+				/*
+					Use refreshTree() to create all the relevant data structures for this doc, including the tree.
+				*/
+				refreshTree(doc);
 			}
-			const ret = {};
-			editors.set(doc, ret);
-			/*
-				Use refreshTree() to create all the relevant data structures for this doc, including the tree.
-			*/
-			refreshTree(doc);
-			return ret;
+			return editors.get(doc);
 		};
 
 		/*
@@ -62,7 +59,9 @@
 				If the doc doesn't exist, quickly create it now.
 			*/
 			if (!editors.has(doc)) {
-				data = {};
+				data = {
+					tooltipsEnabled: true,
+				};
 				editors.set(doc, data);
 			}
 			else {

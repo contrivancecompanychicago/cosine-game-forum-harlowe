@@ -1743,19 +1743,19 @@
 			{
 				type: 'buttons',
 				buttons: [
-					{ title:'Bold',                    html:`<div style='font-family:serif;font-weight:bold'>B</div>`,              onClick: () => wrapSelection(cm.doc, "''","''", "Bold Text")},
-					{ title:'Italic',                  html:`<div style='font-family:serif;font-style:italic'>I</div>`,             onClick: () => wrapSelection(cm.doc, "//","//", "Italic Text")},
-					{ title:'Strikethrough',           html:`<div style='font-family:serif;text-decoration:line-through'>S</div>`,  onClick: () => wrapSelection(cm.doc, "~~","~~", "Strikethrough Text")},
-					{ title:'Superscript',             html:`<div style='font-family:serif'>X<sup>2</sup></div>`,                   onClick: () => wrapSelection(cm.doc, "^^","^^", "Superscript Text")},
+					{ title:'Bold',                    html:`<div style='font-family:serif;font-weight:bold'>B</div>`,              onClick: () => wrapSelection("''","''", "Bold Text")},
+					{ title:'Italic',                  html:`<div style='font-family:serif;font-style:italic'>I</div>`,             onClick: () => wrapSelection("//","//", "Italic Text")},
+					{ title:'Strikethrough',           html:`<div style='font-family:serif;text-decoration:line-through'>S</div>`,  onClick: () => wrapSelection("~~","~~", "Strikethrough Text")},
+					{ title:'Superscript',             html:`<div style='font-family:serif'>X<sup>2</sup></div>`,                   onClick: () => wrapSelection("^^","^^", "Superscript Text")},
 					{ title:'Text and background colour', html:`<div class='harlowe-3-bgColourButton'>`,                            onClick: () => switchPanel('textcolor')},
 					{ title:'Borders',                 html:fontIcon('border-style'),                                               onClick: () => switchPanel('borders'),},
 					{ title:'Rotated text',            html: '<div style="transform:rotate(-30deg);font-family:serif;font-weight:bold">R</div>', onClick: () => switchPanel('rotate')},
 					{ title:'Special text style',      html:'Styles…',                    onClick: () => switchPanel('textstyle')},
 					el('<span class="harlowe-3-toolbarBullet">'),
 					{ title:'Heading',                 html:`<div style='font-family:serif;font-weight:bold'>H</div>`,              onClick: () => wrapSelection("\n#","","Heading Text")},
-					{ title:'Bulleted list item',      html:fontIcon('list-ul'),          onClick: () => wrapSelection(cm.doc, "\n* ","")},
-					{ title:'Numbered list item',      html:fontIcon('list-ol'),          onClick: () => wrapSelection(cm.doc, "\n0. ","")},
-					{ title:'Horizontal rule',         html:'<b>—</b>',                   onClick: () => wrapSelection(cm.doc, "\n---\n","")},
+					{ title:'Bulleted list item',      html:fontIcon('list-ul'),          onClick: () => wrapSelection("\n* ","")},
+					{ title:'Numbered list item',      html:fontIcon('list-ol'),          onClick: () => wrapSelection("\n0. ","")},
+					{ title:'Horizontal rule',         html:'<b>—</b>',                   onClick: () => wrapSelection("\n---\n","")},
 					{ title:'Alignment',               html:fontIcon('align-right'),      onClick: () => switchPanel('align')},
 					{ title:'Columns',                 html:fontIcon('columns'),          onClick: () => switchPanel('columns')},
 					el('<span class="harlowe-3-toolbarBullet">'),
@@ -1782,7 +1782,7 @@
 						html:fontIcon('eye'),
 						onClick: ({target}) => {
 							toolbarElem.classList.toggle('harlowe-3-hideCode');
-							if (target.tagName.toLowerCase() === "i") {
+							if (target.tagName.toLowerCase() === "svg") {
 								target = target.parentNode;
 							}
 							target.classList.toggle('active');
@@ -1793,7 +1793,7 @@
 						active: true,
 						onClick: ({target}) => {
 							toolbarElem.classList.toggle('harlowe-3-hideTooltip');
-							if (target.tagName.toLowerCase() === "i") {
+							if (target.tagName.toLowerCase() === "svg") {
 								target = target.parentNode;
 							}
 							target.classList.toggle('active');

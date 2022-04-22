@@ -130,6 +130,12 @@ describe("game state macros", function() {
 			runPassage("(erase-undos:2)","qux");
 			expect("(history:)").markupToPrint("foo1,foo2,qux");
 		});
+		it("doesn't interfere with (history:) when using (redirect:)", function() {
+			runPassage("", "foo1");
+			runPassage("", "foo2");
+			runPassage("(erase-undos:2)","qux");
+			expect("(history:)").markupToPrint("foo1,foo2,qux");
+		});
 		it("doesn't interfere with (visited:)", function() {
 			runPassage("", "foo1");
 			runPassage("", "foo2");
@@ -226,11 +232,14 @@ describe("game state macros", function() {
 					createPassage("", "foo4");
 					runPassage("(redirect:'foo2')", "foo1");
 					waitForGoto(function() {
-						runPassage("", "foo5");
-						runPassage("(erase-undos:-1)", "foo6");
-						runPassage("(erase-visits:2)(history:)", "foo7");
-						expect($('tw-expression:last-child').text()).toBe('foo5,foo6');
-						done();
+						runPassage("(redirect:'foo2')", "foo5");
+						waitForGoto(function() {
+							runPassage("", "foo6");
+							runPassage("(erase-undos:-1)", "foo7");
+							runPassage("(erase-visits:2)(history:)", "foo8");
+							expect($('tw-expression:last-child').text()).toBe('foo5,foo2,foo3,foo4,foo6,foo7');
+							done();
+						});
 					});
 				});
 				it("after", function(done) {
@@ -240,27 +249,14 @@ describe("game state macros", function() {
 					createPassage("", "foo4");
 					runPassage("(redirect:'foo2')", "foo1");
 					waitForGoto(function() {
-						runPassage("", "foo5");
-						runPassage("(erase-visits:2)", "foo6");
-						runPassage("(erase-undos:-2)(history:)", "foo7");
-						expect($('tw-expression:last-child').text()).toBe('foo5,foo6');
-						runPassage("", "foo8");
-						done();
-					});
-				});
-				it("erasing the (erase-visits:) turn", function(done) {
-					runPassage("", "foo0");
-					createPassage("(redirect:'foo3')", "foo2");
-					createPassage("(redirect:'foo4')", "foo3");
-					createPassage("", "foo4");
-					runPassage("(redirect:'foo2')", "foo1");
-					waitForGoto(function() {
-						runPassage("(erase-visits:2)", "foo5");
-						runPassage("", "foo6");
-						runPassage("(erase-undos:-1)(history:)", "foo7");
-						expect($('tw-expression:last-child').text()).toBe('foo5,foo6');
-						runPassage("", "foo8");
-						done();
+						runPassage("(redirect:'foo2')", "foo5");
+						waitForGoto(function() {
+							runPassage("", "foo6");
+							runPassage("(erase-visits:2)", "foo7");
+							runPassage("(erase-undos:-2)(history:)", "foo8");
+							expect($('tw-expression:last-child').text()).toBe('foo5,foo2,foo3,foo4,foo6,foo7');
+							done();
+						});
 					});
 				});
 			});
