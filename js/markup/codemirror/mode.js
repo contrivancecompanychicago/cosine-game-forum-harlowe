@@ -415,6 +415,27 @@
 		const on = (target, name, fn) => (!target._handlers || !(target._handlers[name] || []).some(e => e.name === fn.name)) && target.on(name, fn);
 		
 		let init = (doc) => {
+			if (!cm) {
+				/*
+					CodeMirror doesn't allow modes to have full access to the text of
+					the document. This hack overcomes this respectable limitation.
+				*/
+				cm = doc.cm;
+
+				/*
+					This (along with the arrow-function binding above) is used to provide line numbers
+					for everything except TwineJS 2.4.
+				*/
+				if (this.window || this.modules) {
+					cm.setOption('lineNumbers', true);
+					cm.setOption('lineNumberFormatter', () => "\u2022");
+				}
+			}
+			/*
+				Install the toolbar, if it's been loaded. (This function will early-exit if the toolbar's already installed.)
+			*/
+			toolbar && toolbar(cm);
+
 			/*
 				Use the Harlowe lexer to compute a full parse tree.
 			*/
@@ -497,38 +518,10 @@
 		};
 		
 		return {
-			/*
-				The startState is vacant because all of the computation is done
-				inside token().
-				The purpose of the arrow-function binding is written below.
-			*/
-			startState: () => {
-				if (!cm) {
-					/*
-						CodeMirror doesn't allow modes to have full access to the text of
-						the document. This hack overcomes this respectable limitation.
-					*/
-					cm = document.querySelector('.CodeMirror').CodeMirror;
-
-					/*
-						This (along with the arrow-function binding above) is used to provide line numbers
-						for everything except TwineJS 2.4.
-					*/
-					if (this.window || this.modules) {
-						cm.setOption('lineNumbers', true);
-						cm.setOption('lineNumberFormatter', () => "\u2022");
-					}
-				}
-				/*
-					Install the toolbar, if it's been loaded. (This function will early-exit if the toolbar's already installed.)
-				*/
-				toolbar && toolbar(cm);
-
-				return {
-					pos: 0,
-					disconnected: null,
-				};
-			},
+			startState: () => ({
+				pos: 0,
+				disconnected: null,
+			}),
 			blankLine(state) {
 				state.pos++;
 			},

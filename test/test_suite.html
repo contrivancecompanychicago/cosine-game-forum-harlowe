@@ -182,7 +182,7 @@ var jasmineMatcher = (function() {
 		}),
 		markupToPrint: Object.bind(Object,{
 			compare: function(a,e) {
-				var result = (runPassage(a).find('br').replaceWith(document.createTextNode('\n')).end().text() || '');
+				var result = (runPassage(a).find('br').replaceWith(document.createTextNode('\n')).end().find('script').remove().end().text() || '');
 				if (e instanceof RegExp ? e.exec(result) : result === e) {
 					return { pass: true,  message: "Expected markup '" + a + "' not to print '" + e + "'" };
 				} else {

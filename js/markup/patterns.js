@@ -516,7 +516,7 @@
 			from elements created via markup.
 
 			You can include a `<script>` tag in your passage to run Javascript code. The code will run as soon as the
-			containing passage code is rendered.
+			containing passage code is rendered. See the "HTML script tag" article for more details.
 
 			You can also include a `<style>` tag containing CSS code. The CSS should affect the entire page
 			until the element is removed from the DOM. You could use this in a "header" or "footer" tagged passage, inside an (if:) hook,

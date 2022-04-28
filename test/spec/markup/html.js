@@ -63,6 +63,31 @@ describe("HTML in twinemarkup", function() {
 				done();
 			},1000);
 		});
+		it("can access global Harlowe variables", function() {
+			expect("(set: $foo to 8)<script>$foo -= 1;</script>$foo").markupToPrint("7");
+		});
+		it("can access global Harlowe temp variables", function() {
+			expect("(set: _foo to 9)<script>_foo += 4;</script>_foo").markupToPrint("13");
+			expect("[(set: _foo to 8)[(set:_bar to 7)]<script>_foo = (typeof _bar === 'undefined');</script>(print:_foo)]").markupToPrint("true");
+		});
+		it("produces an error if a Javascript error occurs", function() {
+			spyOn(console,'error');
+			expect("(set: _foo to 9)<script>_foo =</script>_foo").markupToError("13");
+			expect(console.error).toHaveBeenCalledTimes(1);
+		});
+		it("errors if a non-Harlowe value is assigned to a Harlowe variable", function() {
+			["new Map([['a',2]])", "new Set([1,3,5])", "[1,3,[5]]", "true", "2.111", "'abc'"].forEach(function(e){
+				expect("(set: $foo to 0)<script>$foo = " + e + "</script>$foo").not.markupToError();
+			});
+			["NaN","Infinity","{}","new Map([[3,2]])","new Map([['a',{}]])","new Set([{}])","[{}]","/foo/g","document.body","null","undefined"].forEach(function(e){
+				expect("(set: $foo to 0)<script>$foo = " + e + "</script>$foo").markupToError();
+			});
+		});
+		it("errors if a Harlowe-only value is accessed from Javascript", function() {
+			["(hsl:200,0.5,0.5)", "via it + 1", "(text-style:'bold')", "(v6m-print:'A')"].forEach(function(e){
+				expect("(set: $foo to " + e + ")<script>window.foo = $foo</script>$foo").markupToError();
+			});
+		});
 		afterEach(function() {
 			delete window.foo;
 		});

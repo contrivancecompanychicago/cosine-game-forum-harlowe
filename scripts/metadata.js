@@ -1,7 +1,6 @@
 'use strict';
 
 const fs = require('fs');
-const {Colours:typeColours} = require('../js/utils/typecolours');
 const insensitiveName = (e) => (e + "").toLowerCase().replace(/-|_/g, "");
 /*
 	This extracts Harlowe macro and syntax metadata by reading
@@ -150,8 +149,8 @@ const
 		regExp: /^\s*([\w ]+) markup\n/,
 
 		navLink(def) {
-			// Change this for 3.3.0
-			const isNew = false;
+			// Change this for 4.0.0
+			const isNew = (def.name === "HTML script tag");
 
 			return `<li><a href="#${def.anchor}" ${isNew ? "class='nav_new'": ""}>${def.name}</a></li>`;
 		},

@@ -7,18 +7,17 @@ define([
 	'state',
 	'utils/operationutils',
 	'utils/renderutils',
+	'utils/scripttag',
 	'datatypes/changercommand',
 	'datatypes/colour',
 	'datatypes/lambda',
-	'datatypes/typedvar',
 	'datatypes/codehook',
 	'internaltypes/changedescriptor',
-	'internaltypes/varref',
 	'internaltypes/varscope',
 	'internaltypes/twineerror',
 	'internaltypes/twinenotifier',
 ],
-($, Utils, run, Operations, State, {printBuiltinValue,objectName,typeID,isObject}, {collapse}, ChangerCommand, Colour, Lambda, TypedVar, CodeHook, ChangeDescriptor, VarRef, VarScope, TwineError, TwineNotifier) => {
+($, Utils, run, Operations, State, {printBuiltinValue,objectName,typeID,isObject}, {collapse}, runScriptTag, ChangerCommand, Colour, Lambda, CodeHook, ChangeDescriptor, VarScope, TwineError, TwineNotifier) => {
 
 	const {assign} = Object;
 	let Section;
@@ -1007,7 +1006,7 @@ define([
 			try {
 				ret = run(this, args);
 			} catch(e) {
-				window.console && console.error(e);
+				window.console && window.console.error(e);
 				this.evalReplay = null;
 				return TwineError.create('', `An internal error occurred while trying to run ${[].concat(args).map(e=>e.text).join('')}.`,
 					`The error was "${e.message}".\nIf this is the latest version of Harlowe, please consider reporting a bug (see the documentation).`);
@@ -1343,7 +1342,7 @@ define([
 			/*
 				Execute the expressions immediately.
 			*/
-			dom.findAndFilter('tw-hook,tw-expression')
+			dom.findAndFilter('tw-hook,tw-expression,script[type="application/x-harlowe"]')
 					.each((_, expr) => {
 				/*
 					This is used to halt the loop if a hook contained a blocker - the call to renderInto()
@@ -1444,6 +1443,43 @@ define([
 						}
 						if (expr.data('code')) {
 							runExpression.call(this, expr);
+						}
+						break;
+					}
+					case 'script':
+					{
+						/*
+							So that jQuery and document.querySelector calls can access the entire DOM of the passage,
+							the <tw-story> element is reattached early. This is a bit regrettable performance-wise,
+							but it seems to be the only way to make these things work as expected.
+						*/
+						Utils.reattachStoryElement();
+
+						/*
+							Do nothing if there's no inner text (which would be the case if it has a [src]) attribute.
+						*/
+						if (!expr.text()) {
+							break;
+						}
+						try {
+							runScriptTag(expr.text(), this.stackTop.tempVariables);
+						} catch(e) {
+							/*
+								runScriptTag can throw either TwineErrors (such as errors from VarRef.set())
+								or plain JS errors.
+							*/
+							if (TwineError.isPrototypeOf(e)) {
+								expr.replaceWith(e.render(expr.text(), expr));
+							}
+							else {
+								window.console && window.console.error(e);
+								expr.replaceWith(
+									TwineError.create('',
+										`A Javascript error occurred while running this <script> element.`,
+										`The error was "${e}". Check the browser console for more details.`
+									).render(expr.text(), expr)
+								);
+							}
 						}
 					}
 				}

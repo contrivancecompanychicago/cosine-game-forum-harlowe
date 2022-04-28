@@ -472,6 +472,17 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 			const elements = $($.parseHTML(html, document, true));
 
 			/*
+				To prevent the browser from running raw <script> elements, their MIME is changed to 'x-harlowe',
+				so that Section can run them alongside <tw-expression>s.
+			*/
+			elements.findAndFilter('script:not([src])').each((_,e) => {
+				const type = e.getAttribute('type');
+				if (!type || type.toLowerCase() === "text/javascript") {
+					e.setAttribute('type', 'application/x-harlowe');
+				}
+			});
+
+			/*
 				Blocker macros must be evaluated prior to the main macros' execution. To do this without
 				disturbing the trees of the macros, "copies" are made of the blockers using
 				Object.create(). The blockers' positions in the tree are marked

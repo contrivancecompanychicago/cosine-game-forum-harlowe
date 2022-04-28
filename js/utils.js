@@ -63,6 +63,8 @@ define(['jquery', 'markup', 'utils/polyfills'],
 	let
 		//A binding for the cached <tw-story> reference (see below).
 		storyElement,
+		// Used for detaching and reattaching the storyElement.
+		storyElementParent,
 		//A binding for story options.
 		// - debug: set by its presence on <tw-storydata>
 		// - evalReplay: set to true or false by Debug Mode.
@@ -658,6 +660,26 @@ define(['jquery', 'markup', 'utils/polyfills'],
 		*/
 		get storyElement() {
 			return storyElement;
+		},
+
+		/*
+			Detach the <tw-story> element when some complicated DOM manipulation is in order.
+			Note that this does not preserve wrapping <tw-enchantment>s.
+		*/
+		detachStoryElement() {
+			if (document.documentElement.contains(storyElement[0])) {
+				storyElementParent = storyElement.parent();
+				storyElement.detach();
+			}
+		},
+		/*
+			Reattach the <tw-story> and any <tw-enchantment> elements (or whatnot)
+			that now surround it.
+		*/
+		reattachStoryElement() {
+			if (!document.documentElement.contains(storyElement[0])) {
+				(storyElementParent || $(document.body)).append(storyElement.parents().length ? storyElement.parents().last() : storyElement);
+			}
 		},
 
 		options

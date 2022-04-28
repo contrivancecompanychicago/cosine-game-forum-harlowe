@@ -82,6 +82,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
  * A minor (3.x) version increase usually shouldn't have significant incompatibilities with existing code, but there is something I must mention: arbitrary Javascript syntax embedded in Harlowe macro calls is no longer permitted, and will produce an error. This includes stuff like `(if: (document.title = "Wowie") is 1)[]` (which does nothing except change the window title to "Wowie") or writing `(set: $a = 1)` instead of `(set: $a to 1)`. This was a necessary sacrifice as a result of the aforementioned macro code rewrite. Since these were never part of the Harlowe language description, and were essentially undefined behaviour, I feel that it's fine to remove it in a "minor" version - however, this could inconvenience numerous people, which is why I'd avoided implementing this for so long. If you personally had been using this "feature" for purposes that Harlowe's macros can't fulfill, please post a [bug report](https://foss.heptapod.net/games/harlowe/-/issues) describing it, and I'll see what I can do about adding a macro or some other feature to support it.
    * Furthermore, as a result of the implementation of both this and `(seed:)` (see below), random macros will no longer produce different "rolls" when the player uses Undo to return to a previous turn - instead, the exact same roll that occurred on that turn will happen again. While this may be welcomed as a desired feature (in that it makes the Undo feature more intuitive in its behaviour), it may impact certain niche uses of these macros, so do take care.
+ * Additionally, due to the change to `<script>` elements inside passages (below), the run time of `<script>` elements has been changed to line up with Harlowe macros and hooks. A `<script>` element's code will now run as soon as it appears in the passage, instead of waiting until after every other macro and expression has run (as it did in 3.2.0 and below). Because the run time of `<script>` elements was *also* never part of the Harlowe language description, I feel fine altering this as well, but if you were relying on that specific run time, consider wrapping your code in a `setTimeout` callback or a `$()` callback.
 
 ##### Debug Mode
 
@@ -95,6 +96,10 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Tooltips (if enabled) now dismiss themselves if you move the mouse cursor a bit.
 
 #### Additions
+
+##### Markup
+
+ * HTML `<script>` elements inside passages can now access Harlowe variables and temp variables - simply use the name of the variable as if it was a Javascript variable, such as by `(set: _foo to 9)<script>_foo += 4;</script>`. However, only variables containing certain data types can be accessed in `<script>` elements - numbers, booleans, strings, datamaps, datasets and arrays. Moreover, the latter three data structures can't contain any data types other than those aforementioned. Attempting to assign Javascript values to Harlowe variables that don't match any of those data types will cause an error. Note that this change *only* applies to `<script>` elements without a "src" attribute - Harlowe variables are still inaccessible to included Javascript files. As always, consult the documentation for more details.
 
 ##### Coding & Macros
 

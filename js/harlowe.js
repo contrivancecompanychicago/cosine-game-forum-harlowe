@@ -9,7 +9,6 @@ require.config({
 		jquery:                       '../node_modules/jquery/dist/jquery',
 		almond:                       '../node_modules/almond/almond',
 		"es6-shim":                   '../node_modules/es6-shim/es6-shim',
-		jqueryplugins:                'utils/jqueryplugins',
 		
 		markup:                       './markup/markup',
 		lexer:                        './markup/lexer',
@@ -17,7 +16,7 @@ require.config({
 	},
 	deps: [
 		'es6-shim',
-		'jqueryplugins',
+		'utils/jqueryplugins',
 	],
 });
 require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', 'passages', 'utils', 'utils/renderutils', 'internaltypes/varscope', 'internaltypes/twineerror', 'macros',

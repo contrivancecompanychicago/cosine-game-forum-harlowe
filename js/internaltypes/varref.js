@@ -1035,7 +1035,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				computed property objects, or just a single one of those.
 				So, convert a single passed value to an array of itself.
 			*/
-			propertyChain = [].concat(propertyChain);
+			!Array.isArray(propertyChain) && (propertyChain = [].concat(propertyChain));
 			/*
 				If the passed-in object is another varRef, expand the
 				propertyChain to include its own, and use its object.

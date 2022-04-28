@@ -174,7 +174,7 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 			Because rendering a passage is a somewhat intensive DOM manipulation,
 			the <tw-story> is detached before and reattached after.
 		*/
-		story.detach();
+		Utils.detachStoryElement();
 
 		/*
 			Make the passage's tags visible in the DOM, on both the <tw-passage> and
@@ -353,17 +353,13 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 		);
 
 		/*
-			Re-enable (load-game:) usage immediately after the passage has rendered. While this won't
+			Re-enable (load-game:) usage immediately after the passage has rendered. While this won't stop
 			certain (load-game:) loops caused by guarding each call with very low (after:) timeouts or whatnot,
 			it's still fairly good at stopping unintentional loops.
 		*/
 		section.loadedGame = false;
 		
-		/*
-			Reattach the <tw-story> and any <tw-enchantment> elements (or whatnot)
-			that now surround it.
-		*/
-		parent.append(story.parents().length ? story.parents().last() : story);
+		Utils.reattachStoryElement();
 		/*
 			In stretchtext, scroll the window to the top of the inserted element,
 			minus an offset of 5% of the viewport's height.

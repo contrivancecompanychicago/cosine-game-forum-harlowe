@@ -783,12 +783,29 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		return ret;
 	}
 
+	/*
+		This is used for JS/Harlowe intercommunication by <script> tags.
+	*/
+	function isHarloweJSValue(v) {
+		return (typeof v === sString || typeof v === sBoolean
+			|| (typeof v === sNumber && !Number.isNaN(v) && Math.abs(v) !== Infinity)
+			|| (Array.isArray(v) && v.every(isHarloweJSValue))
+			|| (v instanceof Set && [...v].every(isHarloweJSValue))
+			|| (v instanceof Map && [...v.values()].every(isHarloweJSValue) &&
+					/*
+						Harlowe as of 3.3.0 only allows string keys for Maps, but a future
+						version may relax this constraint.
+					*/
+					[...v.keys()].every(v => typeof v === sString)));
+	}
+
 	const OperationUtils = Object.freeze({
 		isObject,
 		isValidDatamapName,
 		collectionType,
 		isSequential,
 		unstorableValue,
+		isHarloweJSValue,
 		clone,
 		objectName,
 		typeName,
