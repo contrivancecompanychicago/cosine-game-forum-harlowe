@@ -429,11 +429,11 @@ describe("save macros", function() {
 				}, 90);
 			}, 90);
 		});
-		it("can restore variables even after using (erase-undos:)", function(done) {
+		it("can restore variables even after using (forget-undos:)", function(done) {
 			runPassage("(set:str-type $foo to (str-repeated:40,'A'))(set:dm-type $baz to (dm:$foo,'1'))", "uno");
 			runPassage("(set:$foo to it + 'C', $baz's B to 2)","tres");
 			runPassage("(set:$foo to it + 'D', $baz's C to 2)","cuatro");
-			runPassage("(erase-undos:-1)(set:$foo to it+'B')(savegame:'1','Filename')", "dos");
+			runPassage("(forget-undos:-1)(set:$foo to it+'B')(savegame:'1','Filename')", "dos");
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
 				expect("$foo(print:$baz's C)").markupToPrint("A".repeat(40) + "CDB2");
@@ -488,17 +488,17 @@ describe("save macros", function() {
 				}, 90);
 			}, 90);
 		});
-		it("doesn't cause startup passages to re-run even after using (erase-undos:)", function(done) {
+		it("doesn't cause startup passages to re-run even after using (forget-undos:)", function(done) {
 			runPassage("(Set:$foo to 76)", "foo1");
 			createPassage("(Set:$foo to 51)", "foo2", ["startup"]);
-			runPassage("(erase-undos:-1)(savegame:'1')",'grault');
+			runPassage("(forget-undos:-1)(savegame:'1')",'grault');
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
 				expect("$foo").not.markupToPrint("51");
 				done();
 			}, 90);
 		});
-		it("doesn't disrupt (history:)'s cache even after using (erase-undos:)", function(done) {
+		it("doesn't disrupt (history:)'s cache even after using (forget-undos:)", function(done) {
 			createPassage("(redirect:'foo3')", "foo2");
 			createPassage("(redirect:'foo4')", "foo3");
 			createPassage("", "foo4");
@@ -509,7 +509,7 @@ describe("save macros", function() {
 				runPassage("", "foo6");
 				runPassage("(redirect:'foo8')", "foo7");
 				waitForGoto(function() {
-					runPassage("(erase-undos:2)(savegame:'1')",'grault');
+					runPassage("(forget-undos:2)(savegame:'1')",'grault');
 					expect("(loadgame:'1')").not.markupToError();
 					setTimeout(function() {
 						expect("(history:)").markupToPrint('foo1,foo2,foo3,foo4,foo5,foo6,foo7,foo8,grault');
@@ -518,7 +518,7 @@ describe("save macros", function() {
 				});
 			});			
 		});
-		it("doesn't disrupt (history:)'s cache even after using (erase-visits:)", function(done) {
+		it("doesn't disrupt (history:)'s cache even after using (forget-visits:)", function(done) {
 			createPassage("(redirect:'foo3')", "foo2");
 			createPassage("(redirect:'foo4')", "foo3");
 			createPassage("", "foo4");
@@ -529,7 +529,7 @@ describe("save macros", function() {
 				runPassage("", "foo6");
 				runPassage("(redirect:'foo8')", "foo7");
 				waitForGoto(function() {
-					runPassage("(erase-visits:2)(history:)", "foo9");
+					runPassage("(forget-visits:2)(history:)", "foo9");
 					expect($('tw-expression:last-child').text()).toBe('foo6,foo7,foo8');
 					runPassage("(save-game:'1')",'baz');
 					expect("(load-game:'1')").not.markupToError();
@@ -540,16 +540,16 @@ describe("save macros", function() {
 				});
 			});
 		});
-		it("doesn't disrupt (history:)'s cache even after using (erase-visits:) with (erase-undos:)", function(done) {
+		it("doesn't disrupt (history:)'s cache even after using (forget-visits:) with (forget-undos:)", function(done) {
 			runPassage("", "foo0");
 			createPassage("(redirect:'foo3')", "foo2");
 			createPassage("(redirect:'foo4')", "foo3");
 			createPassage("", "foo4");
 			runPassage("(redirect:'foo2')", "foo1");
 			setTimeout(function() {
-				runPassage("(erase-visits:2)", "foo5");
+				runPassage("(forget-visits:2)", "foo5");
 				runPassage("", "foo6");
-				runPassage("(erase-undos:-1)", "foo7");
+				runPassage("(forget-undos:-1)", "foo7");
 				runPassage("(savegame:'1')", "foo8");
 				expect("(loadgame:'1')").not.markupToError();
 				setTimeout(function() {
@@ -589,10 +589,10 @@ describe("save macros", function() {
 				done();
 			},90);
 		});
-		it("can restore mock visits even after using (erase-undos:)", function(done) {
+		it("can restore mock visits even after using (forget-undos:)", function(done) {
 			Utils.options.debug = true;
 			runPassage("(mock-visits:'test','test','test')",'test');
-			runPassage("(erase-undos:1)(savegame:'1')",'bar');
+			runPassage("(forget-undos:1)(savegame:'1')",'bar');
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
 				expect("(print:visits)").markupToPrint('5'); // 3 mocks, 1 visit above, plus this passage
@@ -612,10 +612,10 @@ describe("save macros", function() {
 				done();
 			},90);
 		});
-		it("can restore mock turns even after using (erase-undos:)", function(done) {
+		it("can restore mock turns even after using (forget-undos:)", function(done) {
 			Utils.options.debug = true;
 			runPassage("(mock-turns:11)",'qux');
-			runPassage("(erase-undos:1)(savegame:'1')",'bar');
+			runPassage("(forget-undos:1)(savegame:'1')",'bar');
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
 				expect("(print:turns)").markupToPrint('14'); // 3 mocks, 1 visit above, plus this passage
@@ -664,9 +664,9 @@ describe("save macros", function() {
 				done();
 			},90);
 		});
-		it("can restore the PRNG seed even after using (erase-undos:)", function(done) {
+		it("can restore the PRNG seed even after using (forget-undos:)", function(done) {
 			runPassage("(seed:'AAA')(random:1,100000000)",'test');
-			runPassage("(erase-undos:1)(savegame:'1')",'bar');
+			runPassage("(forget-undos:1)(savegame:'1')",'bar');
 			expect("(loadgame:'1')").not.markupToError();
 			setTimeout(function() {
 				expect("(random:1,100000000)").markupToPrint('24547054');

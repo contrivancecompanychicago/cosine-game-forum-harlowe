@@ -100,21 +100,21 @@ describe("game state macros", function() {
 		});
 	});
 
-	describe("the (erase-undos:) macro", function() {
+	describe("the (forget-undos:) macro", function() {
 		it("takes an integer", function() {
-			expect("(erase-undos:)").markupToError();
-			expect("(erase-undos:'A')").markupToError();
-			expect("(erase-undos:2)").not.markupToError();
-			expect("(erase-undos:2.1)").markupToError();
-			expect("(erase-undos:-2)").not.markupToError();
+			expect("(forget-undos:)").markupToError();
+			expect("(forget-undos:'A')").markupToError();
+			expect("(forget-undos:2)").not.markupToError();
+			expect("(forget-undos:2.1)").markupToError();
+			expect("(forget-undos:-2)").not.markupToError();
 		});
 		it("deletes past turns from the start of the history, preventing undos", function() {
 			runPassage("", "foo1");
 			runPassage("", "foo2");
-			expect("(erase-undos:2)(undo:'foo bar')").markupToPrint('foo bar');
+			expect("(forget-undos:2)(undo:'foo bar')").markupToPrint('foo bar');
 			runPassage("", "foo1");
 			runPassage("(undo:'foo bar')", "foo2");
-			runPassage("(erase-undos:2)", "foo3");
+			runPassage("(forget-undos:2)", "foo3");
 			Engine.goBack();
 			expect($('tw-passage tw-expression').text()).toBe('foo bar');
 		});
@@ -122,59 +122,59 @@ describe("game state macros", function() {
 			for(var i = 0; i < 100; i += 1) {
 				runPassage("", "foo" + i);
 			}
-			expect("(erase-undos:-1)(undo:'foo bar')").markupToPrint('foo bar');
+			expect("(forget-undos:-1)(undo:'foo bar')").markupToPrint('foo bar');
 		});
 		it("doesn't interfere with (history:)", function() {
 			runPassage("", "foo1");
 			runPassage("", "foo2");
-			runPassage("(erase-undos:2)","qux");
+			runPassage("(forget-undos:2)","qux");
 			expect("(history:)").markupToPrint("foo1,foo2,qux");
 		});
 		it("doesn't interfere with (history:) when using (redirect:)", function() {
 			runPassage("", "foo1");
 			runPassage("", "foo2");
-			runPassage("(erase-undos:2)","qux");
+			runPassage("(forget-undos:2)","qux");
 			expect("(history:)").markupToPrint("foo1,foo2,qux");
 		});
 		it("doesn't interfere with (visited:)", function() {
 			runPassage("", "foo1");
 			runPassage("", "foo2");
-			runPassage("(erase-undos:2)","qux");
+			runPassage("(forget-undos:2)","qux");
 			expect("(print:(visited:'foo1'))").markupToPrint("true");
 		});
 		it("doesn't interfere with visits", function() {
 			runPassage("");
 			runPassage("", "foo2");
-			runPassage("(erase-undos:2)","qux");
+			runPassage("(forget-undos:2)","qux");
 			expect("(print:visits)").markupToPrint("2");
 		});
 		it("doesn't interfere with turns", function() {
 			runPassage("");
 			runPassage("", "foo2");
-			runPassage("(erase-undos:2)","qux");
+			runPassage("(forget-undos:2)","qux");
 			expect("(print:turns)").markupToPrint("4");
 		});
 		it("doesn't cause startup passages to re-run", function() {
 			runPassage("(Set:$foo to 76)", "foo1");
 			runPassage("", "foo2");
 			createPassage("(Set:$foo to 51)", "foo3", ["startup"]);
-			runPassage("(erase-undos:-1)","qux");
+			runPassage("(forget-undos:-1)","qux");
 			expect("$foo").not.markupToPrint("51");
 		});
 	});
-	describe("the (erase-visits:) macro", function() {
+	describe("the (forget-visits:) macro", function() {
 		it("takes an integer", function() {
-			expect("(erase-visits:)").markupToError();
-			expect("(erase-visits:'A')").markupToError();
-			expect("(erase-visits:2)").not.markupToError();
-			expect("(erase-visits:2.1)").markupToError();
-			expect("(erase-visits:-2)").not.markupToError();
+			expect("(forget-visits:)").markupToError();
+			expect("(forget-visits:'A')").markupToError();
+			expect("(forget-visits:2)").not.markupToError();
+			expect("(forget-visits:2.1)").markupToError();
+			expect("(forget-visits:-2)").not.markupToError();
 		});
 		it("deletes past visits from the start of the history, affecting (history:)", function() {
 			runPassage("", "foo1");
 			runPassage("", "foo2");
 			runPassage("", "foo3");
-			runPassage("(erase-visits:2)(history:)", "foo4");
+			runPassage("(forget-visits:2)(history:)", "foo4");
 			expect($('tw-expression:last-child').text()).toBe('foo3');
 			runPassage("", "foo5");
 			runPassage("(history:)", "foo6");
@@ -184,7 +184,7 @@ describe("game state macros", function() {
 			for(var i = 0; i < 100; i += 1) {
 				runPassage("", "foo" + i);
 			}
-			expect("(erase-visits:-3)(history:)").markupToPrint('foo98,foo99');
+			expect("(forget-visits:-3)(history:)").markupToPrint('foo98,foo99');
 		});
 		describe("works with (redirect:)", function() {
 			it("by itself", function(done) {
@@ -198,13 +198,13 @@ describe("game state macros", function() {
 					runPassage("", "foo6");
 					runPassage("(redirect:'foo8')", "foo7");
 					waitForGoto(function() {
-						runPassage("(erase-visits:2)(history:)", "foo9");
+						runPassage("(forget-visits:2)(history:)", "foo9");
 						expect($('tw-expression:last-child').text()).toBe('foo6,foo7,foo8');
 
-						runPassage("(erase-visits:1)(history:)", "foo10");
+						runPassage("(forget-visits:1)(history:)", "foo10");
 						expect($('tw-expression:last-child').text()).toBe('foo6,foo7,foo8,foo9');
 	
-						runPassage("(erase-visits:4)(history:)", "foo11");
+						runPassage("(forget-visits:4)(history:)", "foo11");
 						expect($('tw-expression:last-child').text()).toBe('foo9,foo10');
 						done();
 					});
@@ -220,11 +220,11 @@ describe("game state macros", function() {
 					runPassage("", "foo6");
 					runPassage("", "foo7");
 					Engine.goBack();
-					expect("(erase-visits:1)(history:)").markupToPrint('foo5,foo6');
+					expect("(forget-visits:1)(history:)").markupToPrint('foo5,foo6');
 					done();
 				});
 			});
-			describe("and (erase-undos:)", function() {
+			describe("and (forget-undos:)", function() {
 				it("before", function(done) {
 					runPassage("", "foo0");
 					createPassage("(redirect:'foo3')", "foo2");
@@ -235,8 +235,8 @@ describe("game state macros", function() {
 						runPassage("(redirect:'foo2')", "foo5");
 						waitForGoto(function() {
 							runPassage("", "foo6");
-							runPassage("(erase-undos:-1)", "foo7");
-							runPassage("(erase-visits:2)(history:)", "foo8");
+							runPassage("(forget-undos:-1)", "foo7");
+							runPassage("(forget-visits:2)(history:)", "foo8");
 							expect($('tw-expression:last-child').text()).toBe('foo5,foo2,foo3,foo4,foo6,foo7');
 							done();
 						});
@@ -252,8 +252,8 @@ describe("game state macros", function() {
 						runPassage("(redirect:'foo2')", "foo5");
 						waitForGoto(function() {
 							runPassage("", "foo6");
-							runPassage("(erase-visits:2)", "foo7");
-							runPassage("(erase-undos:-2)(history:)", "foo8");
+							runPassage("(forget-visits:2)", "foo7");
+							runPassage("(forget-undos:-2)(history:)", "foo8");
 							expect($('tw-expression:last-child').text()).toBe('foo5,foo2,foo3,foo4,foo6,foo7');
 							done();
 						});

@@ -228,11 +228,11 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 		/*
 			This array of strings is only used for (redirect:)s, and represents each passage redirected to during the previous moment.
 			These are added to (history:).
-			When (erase-undos:) is used, it also holds 
+			When (forget-undos:) is used, it also holds erased visits.
 		*/
 		visits: undefined,
 		/*
-			A number of additional turns which were erased by (erase-undos:).
+			A number of additional turns which were erased by (forget-undos:).
 		*/
 		turns: undefined,
 		/*
@@ -248,9 +248,9 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 		mockVisits: undefined,
 		mockTurns: undefined,
 		/*
-			When (erase-visits:) is used, the preceding turns' (before the eraseVisits number) visits are to be ignored from now on.
+			When (forget-visits:) is used, the preceding turns' (before the forgetVisits number) visits are to be ignored from now on.
 		*/
-		eraseVisits: undefined,
+		forgetVisits: undefined,
 
 		/*
 			Make a new Moment that comes temporally after this.
@@ -279,7 +279,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 	/*
 		Debug Mode event handlers are stored here by on(). "forward" and "back" handlers are called
 		when the present changes, and thus when play(), fastForward() and rewind() have been called.
-		"load" handlers are called exclusively in deserialise(). "redirect" and "eraseUndos" are
+		"load" handlers are called exclusively in deserialise(). "redirect" and "forgetUndos" are
 		called for their respective methods.
 	*/
 	const eventHandlers = {
@@ -291,7 +291,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 		beforeBack: [],
 		beforeLoad: [],
 
-		eraseUndos: [],
+		forgetUndos: [],
 	};
 
 	/*
@@ -444,7 +444,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 
 	/*
 		This is used to flatten a timeline into a single moment, which is either the present (for reconstructCurrentVariables),
-		or a past moment (for eraseUndos).
+		or a past moment (for forgetUndos).
 
 		Assumption: this always flattens onto a single moment at the "end" of the array of moments.
 	*/
@@ -466,7 +466,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			for (let name of ["mockVisits","mockTurns","seed","seedIter"]) {
 				hasOwnProperty.call(moment,name) && !hasOwnProperty.call(dest,name) && (dest[name] = moment[name]);
 			}
-			moment.eraseVisits && (dest.eraseVisits = Math.max(dest.eraseVisits || 0, moment.eraseVisits));
+			moment.forgetVisits && (dest.forgetVisits = Math.max(dest.forgetVisits || 0, moment.forgetVisits));
 			/*
 				These, however, are cumulative across turns.
 			*/
@@ -490,7 +490,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 				}
 			}
 			/*
-				If a moment has a pastVisits array, then it represents various turns erased with (erase-undos:).
+				If a moment has a pastVisits array, then it represents various turns erased with (forget-undos:).
 				These go before its own visits (redirects).
 			*/
 			moment.pastVisits !== undefined && (dest.pastVisits.unshift(moment.pastVisits));
@@ -671,7 +671,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			it's ideal to do as little work as necessary in this.
 		*/
 		history() {
-			let ret = CurrentVariables.pastVisits.slice(CurrentVariables.eraseVisits).reduce((a,e)=>a.concat(e),[]);
+			let ret = CurrentVariables.pastVisits.slice(CurrentVariables.forgetVisits).reduce((a,e)=>a.concat(e),[]);
 			/*
 				(mock-visits:) always adds its strings to the start.
 			*/
@@ -682,13 +682,13 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 		},
 
 		/*
-			Used by (erase-undos:). All moments before the specified index are flattened into the new first moment.
+			Used by (forget-undos:). All moments before the specified index are flattened into the new first moment.
 			This cannot erase timeline[recent];
 
 			Note that this should simply never be called when used in a past moment (not the one at the end of the timeline)
 			so we can assume that recent is always timeline.length-1.
 		*/
-		eraseUndos(ind) {
+		forgetUndos(ind) {
 			if (ind < 0) {
 				ind = (timeline.length) + ind;
 			}
@@ -713,7 +713,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			*/
 			first.pastVisits.push(excised[excised.length-1].passage);
 			/*
-				"turns" is only ever increased by (erase-undos:), and represents erased turns that must
+				"turns" is only ever increased by (forget-undos:), and represents erased turns that must
 				nonetheless be counted by the turns identifier. Here, each excised turn increments the counter.
 			*/
 			first.turns = (first.turns || 0) + excised.length;
@@ -724,16 +724,16 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			CurrentVariables.turns = (CurrentVariables.turns || 0) + excised.length;
 			/*
 				If the first moment (that is, the only moment that cannot be undone past)
-				has an eraseVisits number, erase all of the specified visits before it.
+				has an forgetVisits number, erase all of the specified visits before it.
 				Because all other moments can still be undone, their erased visits can't actually be erased yet.
 			*/
-			if (first.eraseVisits) {
-				first.pastVisits = first.pastVisits.slice(first.eraseVisits - first.turns);
+			if (first.forgetVisits) {
+				first.pastVisits = first.pastVisits.slice(first.forgetVisits - first.turns);
 				/*
-					Modify the eraseVisits number of this turn, now that (some of) the given visits are permanently erased,
+					Modify the forgetVisits number of this turn, now that (some of) the given visits are permanently erased,
 					so that history() doesn't "erase" them again.
 				*/
-				first.eraseVisits -= first.turns;
+				first.forgetVisits -= first.turns;
 			}
 		
 			serialisedPast = '';
@@ -743,15 +743,15 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			*/
 			if (recent === 0) {
 				$("tw-link[undo], tw-icon[alt='Undo']", Utils.storyElement).each((_, link) => {
-					($(link).closest('tw-expression, tw-hook').data('eraseUndosEvent') || Object)(link);
+					($(link).closest('tw-expression, tw-hook').data('forgetUndosEvent') || Object)(link);
 				});
 			}
 			
-			// Call the 'eraseUndos' event handler.
-			eventHandlers.eraseUndos.forEach(fn => fn());
+			// Call the 'forgetUndos' event handler.
+			eventHandlers.forgetUndos.forEach(fn => fn());
 		},
 
-		eraseVisits(ind) {
+		forgetVisits(ind) {
 			if (ind < 0) {
 				ind = (timeline.length) + ind;
 			}
@@ -761,7 +761,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			if (ind > recent + CurrentVariables.turns) {
 				ind = recent + CurrentVariables.turns;
 			}
-			present.eraseVisits = CurrentVariables.eraseVisits = Math.max(CurrentVariables.eraseVisits || 0, ind);
+			present.forgetVisits = CurrentVariables.forgetVisits = Math.max(CurrentVariables.forgetVisits || 0, ind);
 		},
 
 		/*
@@ -1136,7 +1136,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 				if (variable.visits === undefined
 						&& variable.turns === undefined
 						&& variable.mockVisits  === undefined
-						&& variable.eraseVisits === undefined
+						&& variable.forgetVisits === undefined
 						&& variable.pastVisits === undefined
 						&& variable.mockTurns  === undefined
 						&& variable.seed === undefined

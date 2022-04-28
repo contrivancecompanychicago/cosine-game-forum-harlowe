@@ -1109,14 +1109,14 @@ define([
 			passages the tester has actually visited on this playthrough. It will also cause `(history: where its name contains "A")`
 			to produce an array starting with `"A"`.
 
-			By default, Harlowe records an unlimited amount of passage visits. However, you can use the (erase-visits:) macro to
+			By default, Harlowe records an unlimited amount of passage visits. However, you can use the (forget-visits:) macro to
 			make Harlowe "forget" visits that are a certain number of turns old. This is the only way to directly alter this macro's output.
 
 			See also:
-			(visited:), (passage:), (mock-visits:), (erase-visits:)
+			(visited:), (passage:), (mock-visits:), (forget-visits:)
 
 			Added in: 1.0.0
-			#game state
+			#game state 1
 		*/
 		("history", "Array", (section, lambda) => {
 			const history = State.history();
@@ -1174,14 +1174,14 @@ define([
 			If you're testing your story in debug mode using (mock-visits:), then any "mock" visit you simulate
 			will be counted as a visit.
 
-			By default, Harlowe records an unlimited amount of passage visits. However, you can use the (erase-visits:) macro to
+			By default, Harlowe records an unlimited amount of passage visits. However, you can use the (forget-visits:) macro to
 			make Harlowe "forget" visits that are a certain number of turns old. This is the only way to directly alter this macro's output.
 
 			See also:
-			(history:), (passage:), (mock-visits:), (erase-visits:)
+			(history:), (passage:), (mock-visits:), (forget-visits:)
 
 			Added in: 1.0.0
-			#game state
+			#game state 2
 		*/
 		("visited", "Boolean", (section, condition) => {
 			let history = State.history();
@@ -1242,7 +1242,7 @@ define([
 			(history:), (passages:), (metadata:)
 
 			Added in: 1.1.0
-			#game state
+			#game state 3
 		*/
 		("passage", "Datamap", (_, passageName) => clone(Passages.get(passageName || State.passage))
 			|| TwineError.create('macrocall', "There's no passage named '" + passageName + "' in this story."),
@@ -1288,7 +1288,7 @@ define([
 			(history:), (passage:), (metadata:)
 
 			Added in: 3.1.0
-			#game state
+			#game state 4
 		*/
 		("passages", "Array", (section, lambda) => {
 			const sort = NaturalSort("en"),

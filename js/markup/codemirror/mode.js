@@ -416,10 +416,6 @@
 		
 		let init = (doc) => {
 			if (!cm) {
-				/*
-					CodeMirror doesn't allow modes to have full access to the text of
-					the document. This hack overcomes this respectable limitation.
-				*/
 				cm = doc.cm;
 
 				/*
@@ -525,7 +521,7 @@
 			blankLine(state) {
 				state.pos++;
 			},
-			token: function token(stream, state) {
+			token(stream, state) {
 				const {doc} = stream.lineOracle;
 				/*
 					If the CM doc is disconnected from the DOM (somehow), don't bother doing anything.

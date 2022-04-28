@@ -858,7 +858,7 @@ define([
 						certain game state. The (mock-visits:) macro, usable only in debug mode, lets you increase the number of
 						times certain passages have been "visited", so that this keyword produces higher numbers when in those passages.
 
-						By default, Harlowe records an unlimited amount of passage visits. However, you can use the (erase-visits:) macro to
+						By default, Harlowe records an unlimited amount of passage visits. However, you can use the (forget-visits:) macro to
 						make Harlowe "forget" visits that are a certain number of turns old.
 
 						Added in: 3.1.0
