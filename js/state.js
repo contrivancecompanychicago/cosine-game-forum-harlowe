@@ -1,6 +1,10 @@
 "use strict";
 define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils', 'markup'],
 ($, Utils, Passages, TwineError, {objectName,toSource,is}, {lex}) => {
+	/*
+		State
+		Singleton controlling the running game state.
+	*/
 	const {assign, create, defineProperty} = Object;
 	const {isArray} = Array;
 	const {imul} = Math;
@@ -31,10 +35,11 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			return false;
 		}
 	});
-
+	
 	/*
-		State
-		Singleton controlling the running game state.
+		The global variable scope. This is progressively mutated as the game progresses,
+		and deltas of these changes (on a per-turn basis) are stored in Moments in the Timeline array.
+
 	*/
 	let CurrentVariables;
 
@@ -335,114 +340,6 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 	let serialisedPast = '';
 
 	/*
-		The global variable scope. This is progressively mutated as the game progresses,
-		and deltas of these changes (on a per-turn basis) are stored in Moments in the Timeline array.
-
-		TODO: Move all methods (EXCEPT TwineScript_Set() and TwineScript_Delete(), which are called by VarRef) off this and onto State itself.
-	*/
-	function newCurrentVariables() {
-		const ret = Moment.create();
-		/*
-			The CurrentVariables has a pastVisits array, which is the full record of passage visits.
-			Each element is a turn, which can be a single string or an array of redirects.
-		*/
-		ret.pastVisits = [];
-		assign(ret.variables, {
-			/*
-				Note that it's not possible for userland TwineScript to directly access or
-				modify this base object.
-			*/
-			TwineScript_ObjectName: "this story's variables",
-	
-			/*
-				This is the root prototype of every frame's variable type definitions. Inside a TypeDefs
-				is every variable name that this variables collection contains, mapped to a Harlowe datatype.
-			*/
-			TwineScript_TypeDefs: create(null),
-	
-			/*
-				This is used to distinguish to (set:) that this is a variable store,
-				and assigning to its properties does affect game state.
-			*/
-			TwineScript_VariableStore: "global",
-	
-			/*
-				All read/update/delete operations on this scope also update the delta for the current moment (present).
-			*/
-			TwineScript_Delete(prop) {
-				delete this[prop];
-				/*
-					Setting this Moment's variable to 'null' marks it as deleted, for serialisation.
-					Note that the SystemVariables store has this as 'undefined' (via the previous
-					statement) so this (probably) isn't visible outside of State.
-				*/
-				present.variables[prop] = null;
-				delete present.valueRefs[prop];
-			},
-	
-			TwineScript_Set(prop, value, valueRef) {
-				this[prop] = value;
-				/*
-					It's not necessary to clone (pass-by-value) the value when placing it on the delta,
-					because once placed in the variable store, it should be impossible to mutate
-					the value anymore - only by replacing it with another TwineScript_Set().
-				*/
-				present.variables[prop] = value;
-				/*
-					The value reference (used for save file reconstruction) is also recorded.
-				*/
-				if (valueRef) {
-					present.valueRefs[prop] = valueRef;
-				}
-				/*
-					Second attempt at producing a valueRef:
-					When a data structure has been permuted, attempt to construct a smaller serialisation of that
-					change, based on the previous known value for the variable.
-				*/
-				else if (isArray(value) || value instanceof Map || value instanceof Set || typeof value === "string") {
-					for(let i = recent; i >= 0; i -= 1) {
-						const v = timeline[i].variables[prop];
-						if (v !== undefined) {
-							const viaValueRef = modifierValueRef(v, value, 'it');
-							/*
-								If it was serialised as just {via:"it"}, then we've discovered that
-								the new value is identical to the previous value. If that's the case, simply
-								delete this variable from the present moment instead of creating a valueRef
-								for it.
-							*/
-							if (viaValueRef) {
-								if (viaValueRef.via === "it") {
-									delete present.variables[prop];
-								} else {
-									present.valueRefs[prop] = viaValueRef;
-								}
-							}
-							break;
-						}
-					}
-				}
-			},
-	
-			TwineScript_GetProperty(prop) {
-				return this[prop];
-			},
-	
-			TwineScript_DefineType(prop, type) {
-				this.TwineScript_TypeDefs[prop] = type;
-				/*
-					VarRef.defineType() automatically installs TwineScript_TypeDefs on destination objects,
-					but we need to also install it on the present moment.
-				*/
-				if (!hasOwnProperty.call(present.variables,"TwineScript_TypeDefs")) {
-					present.variables.TwineScript_TypeDefs = create(null);
-				}
-				present.variables.TwineScript_TypeDefs[prop] = type;
-			},
-		});
-		return ret;
-	}
-
-	/*
 		This is used to flatten a timeline into a single moment, which is either the present (for reconstructCurrentVariables),
 		or a past moment (for forgetUndos).
 
@@ -539,24 +436,141 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 		}
 	};
 
+
+	/*
+		The history cache, essentially a flattened version of pastVisits, is used for speeding up (history:) lookups, which are commonly used in storylets and other places.
+	*/
+	function reconstructCurrentHistory() {
+		/*
+			(mock-visits:) always adds its strings to the start.
+		*/
+		CurrentVariables.history = CurrentVariables.pastVisits.slice(CurrentVariables.forgetVisits).reduce((a,e)=>a.concat(e), []);
+		if (CurrentVariables.mockVisits) {
+			CurrentVariables.history = CurrentVariables.mockVisits.concat(CurrentVariables.history);
+		}
+	}
 	/*
 		Whenever a turn is undone or the game state is reloaded entirely, the CurrentVariables must be rebuilt.
 	*/
 	function reconstructCurrentVariables() {
+		const ret = Moment.create();
+		/*
+			The CurrentVariables has a pastVisits array, which is the full record of passage visits.
+			Each element is a turn, which can be a single string or an array of redirects.
+		*/
+		ret.pastVisits = [];
+		/*
+			The CurrentVariables object's variables store needs the appropriate methods and flagging properties.
+			TODO: Move all methods (EXCEPT TwineScript_Set() and TwineScript_Delete(), which are called by VarRef) off this and onto State itself.
+		*/
+		assign(ret.variables, {
+			/*
+				Note that it's not possible for userland TwineScript to directly access or
+				modify this base object.
+			*/
+			TwineScript_ObjectName: "this story's variables",
+	
+			/*
+				This is the root prototype of every frame's variable type definitions. Inside a TypeDefs
+				is every variable name that this variables collection contains, mapped to a Harlowe datatype.
+			*/
+			TwineScript_TypeDefs: create(null),
+	
+			/*
+				This is used to distinguish to (set:) that this is a variable store,
+				and assigning to its properties does affect game state.
+			*/
+			TwineScript_VariableStore: "global",
+	
+			/*
+				All read/update/delete operations on this scope also update the delta for the current moment (present).
+			*/
+			TwineScript_Delete(prop) {
+				delete this[prop];
+				/*
+					Setting this Moment's variable to 'null' marks it as deleted, for serialisation.
+					Note that the SystemVariables store has this as 'undefined' (via the previous
+					statement) so this (probably) isn't visible outside of State.
+				*/
+				present.variables[prop] = null;
+				delete present.valueRefs[prop];
+			},
+	
+			TwineScript_Set(prop, value, valueRef) {
+				this[prop] = value;
+				/*
+					It's not necessary to clone (pass-by-value) the value when placing it on the delta,
+					because once placed in the variable store, it should be impossible to mutate
+					the value anymore - only by replacing it with another TwineScript_Set().
+				*/
+				present.variables[prop] = value;
+				/*
+					The value reference (used for save file reconstruction) is also recorded.
+				*/
+				if (valueRef) {
+					present.valueRefs[prop] = valueRef;
+				}
+				/*
+					Second attempt at producing a valueRef:
+					When a data structure has been permuted, attempt to construct a smaller serialisation of that
+					change, based on the previous known value for the variable.
+				*/
+				else if (isArray(value) || value instanceof Map || value instanceof Set || typeof value === "string") {
+					for(let i = recent; i >= 0; i -= 1) {
+						const v = timeline[i].variables[prop];
+						if (v !== undefined) {
+							const viaValueRef = modifierValueRef(v, value, 'it');
+							/*
+								If it was serialised as just {via:"it"}, then we've discovered that
+								the new value is identical to the previous value. If that's the case, simply
+								delete this variable from the present moment instead of creating a valueRef
+								for it.
+							*/
+							if (viaValueRef) {
+								if (viaValueRef.via === "it") {
+									delete present.variables[prop];
+								} else {
+									present.valueRefs[prop] = viaValueRef;
+								}
+							}
+							break;
+						}
+					}
+				}
+			},
+	
+			TwineScript_GetProperty(prop) {
+				return this[prop];
+			},
+	
+			TwineScript_DefineType(prop, type) {
+				this.TwineScript_TypeDefs[prop] = type;
+				/*
+					VarRef.defineType() automatically installs TwineScript_TypeDefs on destination objects,
+					but we need to also install it on the present moment.
+				*/
+				if (!hasOwnProperty.call(present.variables,"TwineScript_TypeDefs")) {
+					present.variables.TwineScript_TypeDefs = create(null);
+				}
+				present.variables.TwineScript_TypeDefs[prop] = type;
+			},
+		});
+
 		/*
 			Flatten every moment into the new CurrentVariables object.
 		*/
-		const ret = newCurrentVariables();
 		flattenMomentVariables(timeline.slice(0, recent + 1), ret);
 		/*
-			Now we're done, except for recalibrating the PRNG.
+			Now we're done, except for recalibrating the PRNG and updating the history cache.
 		*/
 		CurrentVariables = ret;
+		reconstructCurrentHistory();
 		/*
 			If we're undoing to the start, restore the initial seed state.
 		*/
 		PRNG = mulberryMurmur32(ret.seed, ret.seedIter);
 	}
+
 	reconstructCurrentVariables();
 	present.seed = CurrentVariables.seed;
 	present.seedIter = 0;
@@ -655,6 +669,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 		set mockVisits(value) {
 			CurrentVariables.mockVisits = value;
 			present.mockVisits = value;
+			reconstructCurrentHistory();
 		},
 
 		get mockTurns() {
@@ -671,14 +686,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			it's ideal to do as little work as necessary in this.
 		*/
 		history() {
-			let ret = CurrentVariables.pastVisits.slice(CurrentVariables.forgetVisits).reduce((a,e)=>a.concat(e),[]);
-			/*
-				(mock-visits:) always adds its strings to the start.
-			*/
-			if (CurrentVariables.mockVisits) {
-				ret = CurrentVariables.mockVisits.concat(ret);
-			}
-			return ret;
+			return CurrentVariables.history;
 		},
 
 		/*
@@ -762,13 +770,12 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 				ind = recent + CurrentVariables.turns;
 			}
 			present.forgetVisits = CurrentVariables.forgetVisits = Math.max(CurrentVariables.forgetVisits || 0, ind);
+			reconstructCurrentHistory();
 		},
 
 		/*
 			Did we ever visit this passage, given its name?
 			Return the number of times visited.
-
-			TODO: rewrite to use CurrentVariables's visits, and make (visited:) use this
 		*/
 		passageNameVisited(name) {
 			let ret = 0;
@@ -776,36 +783,11 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			if (!Passages.get(name)) {
 				return 0;
 			}
-			for (let i = 0; i <= recent; i++) {
-				ret += +(name === timeline[i].passage);
+			for (let i = 0; i < CurrentVariables.history.length; i++) {
+				ret += +(name === CurrentVariables.history[i]);
 			}
 
 			return ret;
-		},
-
-		/*
-			Return how long ago this named passage has been visited,
-			or infinity if it was never visited.
-			This isn't exposed directly to authors.
-
-			TODO: rewrite to use CurrentVariables's visits.
-		*/
-		passageNameLastVisited(name) {
-			if (!Passages.get(name)) {
-				return Infinity;
-			}
-
-			if (name === present.passage) {
-				return 0;
-			}
-
-			for (let i = recent; i > 0; i--) {
-				if (timeline[i].passage === name) {
-					return (recent-i) + 1;
-				}
-			}
-
-			return Infinity;
 		},
 
 		/*
@@ -844,6 +826,10 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 					*/
 					CurrentVariables.pastVisits.push(present.passage);
 				}
+				/*
+					Also update the history cache, which is essentially a flattened version of pastVisits.
+				*/
+				CurrentVariables.history.push(present.passage);
 			}
 			// Assign the passage name.
 			present.passage = newPassageName;
@@ -879,6 +865,10 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 					*/
 					CurrentVariables.pastVisits.push([present.passage]);
 				}
+				/*
+					Also update the history cache, which is essentially a flattened version of pastVisits.
+				*/
+				CurrentVariables.history.push(present.passage);
 			}
 			/*
 				Each moment stores the passages visited by (redirect:)s that occured during it,
@@ -893,19 +883,9 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			Rewind the state. This will fail and return false if the player is at the first moment.
 		*/
 		rewind(arg) {
-			let steps = 1,
+			let steps = (arg !== undefined) ? arg : 1,
 				moved = false;
 
-			if (arg) {
-				if (typeof arg === "string") {
-					steps = this.passageNameLastVisited(arg);
-					if (steps === Infinity) {
-						return;
-					}
-				} else if (typeof arg === "number") {
-					steps = arg;
-				}
-			}
 			for (; steps > 0 && recent > 0; steps--) {
 				moved = true;
 				recent -= 1;

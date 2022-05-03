@@ -1049,7 +1049,7 @@ define([
 			(history: [Lambda]) -> Array
 
 			This returns an array containing the string names of all of the passages
-			the player has visited up to now, in the order that the player visited them. An optional lambda
+			the player has previously visited up to now, in the order that the player visited them. An optional lambda
 			can filter the passages, by checking the (passage:) datamap of each. The (mock-visits:) macro
 			can, during debugging, artifically add values to this array to simulate having visited various passages.
 
@@ -1110,7 +1110,7 @@ define([
 			to produce an array starting with `"A"`.
 
 			By default, Harlowe records an unlimited amount of passage visits. However, you can use the (forget-visits:) macro to
-			make Harlowe "forget" visits that are a certain number of turns old. This is the only way to directly alter this macro's output.
+			make Harlowe "forget" visits that are a certain number of turns old.
 
 			See also:
 			(visited:), (passage:), (mock-visits:), (forget-visits:)
@@ -1184,13 +1184,13 @@ define([
 			#game state 2
 		*/
 		("visited", "Boolean", (section, condition) => {
-			let history = State.history();
 			if (typeof condition === "string") {
 				if (!Passages.has(condition)) {
 					return TwineError.create('macrocall', "There's no passage named '" + condition + "' in this story.");
 				}
-				return State.passage === condition || history.includes(condition);
+				return State.passageNameVisited(condition) > 0 || State.passage === condition;
 			}
+			let history = State.history();
 			/*
 				From here, the condition is a lambda.
 			*/

@@ -286,7 +286,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 
 		Details:
 		As soon as a hook with (output:) attached is encountered, all further macros and code in the CodeHook will be ignored,
-		just as how (output:) behaves. This behaviour is unique among changers.
+		just as how (go-to:) and (redirect:) behave. This behaviour is unique among changers.
 
 		You can combine (output:) with other changers, like (text-style:) or (link:). The hook that is displayed by the command
 		will have those other changers applied to it.
@@ -309,11 +309,15 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 				(output:) commands are deferred render commands, but they need access to the temp variables
 				present at the time of creation, inside the custom macro. This #awkward hack leverages
 				loopVars to store the tempVariables, as just one sad little loop.
+
+				This must collect all of the tempVariables in this stack, so an 'in' loop (without hasOwnProperty) must be used.
 			*/
-			cd.loopVars = Object.keys(stackTop.tempVariables).reduce((a,key) => {
-				a[key] = [stackTop.tempVariables[key]];
-				return a;
-			},{});
+			cd.loopVars = {};
+			for(let key in stackTop.tempVariables) {
+				if(!key.startsWith('TwineScript_')) {
+					cd.loopVars[key] = [stackTop.tempVariables[key]];
+				}
+			}
 			/*
 				This is used to suppress the output hook (that which this changer is attached to) from being run inside the
 				custom macro.

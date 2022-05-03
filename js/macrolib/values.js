@@ -970,6 +970,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			See also:
 			(lch:), (mix:)
 
+			Added in: 3.2.0
 			#colour 4
 		*/
 		("complement", "Colour", (_, colour) => colour.LCHRotate(180),
@@ -1015,6 +1016,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			See also:
 			(lch:), (complement:)
 
+			Added in: 3.3.0
 			#colour
 		*/
 		("mix", "Colour", (_, p1, c1, p2, c2) => {
@@ -1112,6 +1114,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			the given colour's luminosity is very low or very high (near 0 or 1) then the returned colours will have a luminosity near
 			the other extremity.
 
+			Added in: 3.2.0
 			#colour 5
 		*/
 		("palette", "Array", (_, type, bg) => {

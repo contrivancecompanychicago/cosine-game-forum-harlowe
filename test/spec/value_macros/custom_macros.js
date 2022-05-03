@@ -119,6 +119,7 @@ describe("custom macros", function() {
 		});
 		it("temp variables in the hook retain their values", function() {
 			expect("(set: $e to (macro:str-type _a,[(output:)[(print:_a+'qux')]]))($e:'baz')").markupToPrint("bazqux");
+			expect("(set: $e to (macro:str-type _a,[ [(output:)[(print:_a+'qux')]]]))($e:'baz')").markupToPrint("bazqux");
 			expect("($e:'baz')").markupToPrint("bazqux");
 		});
 		it("output hooks run the intended number of times", function() {
