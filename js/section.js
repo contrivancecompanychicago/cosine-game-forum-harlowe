@@ -806,7 +806,7 @@ define([
 
 						Also known as: turn
 
-						This keyword evaluates to the number of turns that have occurred in this game. A "turn" is any movement to a
+						This keyword (which can alternatively be written as "turn") evaluates to the number of turns that have occurred in this game. A "turn" is any movement to a
 						passage, including movements back to the same passage, by passage links or by various (go-to:)-related macros.
 						(redirect:) does not cause a new turn to occur, so using it will not increase this value.
 
@@ -814,7 +814,7 @@ define([
 						text is displayed, such as by `(if: turns > 7)`. It is also useful in (storylet:) lambdas, such as `(storylet: when turns > 7)`,
 						for storylets that should only be available when a certain number of turns have elapsed.
 
-						For testing purposes, it can be convenient to temporarily alter `visits`'s value, so as to recreate a
+						For testing purposes, it can be convenient to temporarily alter `turns`'s value, so as to recreate a
 						certain game state. The (mock-turns:) macro, usable only in debug mode, lets you artificially increase the number
 						that this evaluates to.
 

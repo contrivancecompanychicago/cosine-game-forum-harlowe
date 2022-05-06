@@ -20,7 +20,19 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			escape that character. `\"` and `\"` will become a `"` and `'`, respectively.
 			If you want to include a `\` character by itself, write `\\`.
 
-			You can place line breaks inside strings, thus causing the strings to span multiple lines.
+			When the `\` character precedes the letters `n`, `t`, `b`, `f`, `v`, `r`, they will both be replaced with a certain whitespace character. Except for `\n`, these are
+			**not** intended to be used by authors for any reason, are included purely for compatibility with Javascript, and are listed here for reference.
+
+			| Combination | Result | Example
+			|---
+			| `\n` | A newline (also known as a line break) |
+			| `\t` | A tab character (normally only the same size as a single space) |
+			| `\b`, `\f`, `\v`, `\r` | A zero-width character that takes up a position in the string but isn't visible in the passage (included for compatibility with Javascript) |
+			| `\x` | If the next two characters are hexadecimal digits (0-9, A-F, or a-f), all four of these are replaced with a character whose Unicode code point is the value of the digits. | `"\xFE"` (is `"þ"`)
+			| `\u` | If the next four characters are hexadecimal digits (0-9, A-F, or a-f), OR if the next characters are `{`, one to five hexadecimal digits, and `}`, then all of these are replaced with a character whose Unicode code point is the value of the digits. | `"\u00FE"` (is `"þ"`), `"\u{1F494}"` (is `"💔"`)
+
+			Note that you don't have to use `\n` to encode line breaks inside strings. You can simply insert them directly, thus causing the strings to span multiple lines.
+			However, you may wish to use `\n` sometimes to save vertical space in your passage code.
 			
 			When making a story, you'll mostly work with strings that you intend to insert into
 			the passage source. If a string contains markup, then the markup will be processed when it's

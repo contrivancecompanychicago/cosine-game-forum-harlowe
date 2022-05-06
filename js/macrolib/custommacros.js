@@ -110,7 +110,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		You can, of course, have zero parameters, for a macro that needs no input values, and simply outputs a complicated (or randomised) value
 		by itself.
 
-		Currently, (macro:) code hooks do NOT have access to temp variables created outside of the (macro:) call. `(set: _name to "Fox", _aCustomMacro to (macro:[(output-data:_name)])) (_aCustomMacro:)`
+		Currently, (macro:) code hooks do NOT have access to temp variables created outside of the (macro:) call. `(set: _name to "Fox")(set:_aCustomMacro to (macro:[(output-data:_name)])) (_aCustomMacro:)`
 		will cause an error, because _name isn't accessible inside the _aCustomMacro macro. They do, however, have access to global variables (which begin with `$`).
 
 		Much like with typed variables given to (set:) or (put:), each temp variable associated with a parameter is restricted to the given data type. So,
@@ -402,8 +402,8 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		* `(set: $askDLG to (partial:"dialog", bind _result))` sets $askDLG to a custom macro that calls (dialog:) bound to the _result temp variable. This
 		can be used repeatedly to show dialogs that ask input from the player, without having to include the bound variable each time.
 		* `(set: $next to (partial:"link-goto", "==>"))` creates a custom macro that produces passage links, where the link text is always "==>".
-		* `(set: $next2 to (partial: $next, "Continue"))` takes the previous example's custom macro, stored in $next, and makes a version where the passage name is always "Continue".
 		Calling `($next2:)` would thus be equivalent to `(link-goto: "==>", "Continue")`.
+		* `(set: $next2 to (partial: $next, "Continue"))` takes the previous example's custom macro, stored in $next, and makes a version where the passage name is always "Continue".
 		* `(set: $envNoise to (partial:'either',"","",""))` creates a custom macro that randomly chooses between three empty strings and any other values you might
 		give. This could be used for random flavour text in environments: `($envNoise:"You hear a jingling windchime")` would only display the text
 		"You hear a jingling windchime" 25% of the time the macro is run.
@@ -414,12 +414,13 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		a *partial macro call* - one that isn't finished, but which can be used to make finished calls to that macro, by providing the remaining values.
 
 		You may notice that a number of macros in Harlowe have a "configuration-first" ordering of their values - (rotated:) takes the number of rotations first,
-		(sorted:) takes the optional sorting lambda first, (cycling-link:) takes the optional bound variable first, and so forth.
+		(sorted:) takes the optional sorting lambda first, (cycling-link:) takes the optional bound variable first, and so forth. This ordering works well with
+		(partial:).
 
 		Details:
 
 		Don't fall into the trap of thinking the values given to (partial:) will be re-evaluated on each call of the custom macro! For instance,
-		`(partial: "count", (history: ))` will *not* produce a custom macro that is always equivalent to `(count:(history: ),` and some other numbers.
+		`(partial: "count", (history: ))` will *not* produce a custom macro that is always equivalent to `(count:(history: ), ..._someOtherNumbers)`.
 		Remember that (history:) produces an array of passage names each time it's called. It is that array that is given to (partial:), so every
 		call to the produced custom macro will use *that* array, and not whatever the current (history:) array would be.
 

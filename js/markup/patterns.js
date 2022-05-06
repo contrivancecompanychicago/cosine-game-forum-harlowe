@@ -1011,7 +1011,7 @@
 				Example usage:
 				```
 				You //can't// be serious! I have to go through the ''whole game''
-				again? ^^Jeez, louise!^^
+				again? ^^Jeez, Louise!^^
 				```
 
 				Details:
@@ -1066,10 +1066,19 @@
 				differently as a result of being nested.
 
 				Text inside macro calls (in particular, text inside strings provided to macro) will not be collapsed.
-				Neither will text *outputted* by macro calls, either - `{(print:"   ")}` will still print all 3 spaces,
+				Neither will text *outputted* by macro calls, either - `{(print:"\n\n\n")}` will still print 3 newlines
+				(see the String article for the meaning of the \n escape code),
 				and `{(display:"Attic")}` will still display all of the whitespace in the "Attic" passage.
 
-				Also, text inside the verbatim syntax, such as `` Thunder`   `hound ``, will not be collapsed either.
+				Also, newlines inside the verbatim syntax will not be collapsed either.
+				```
+				{Thunder`
+				`hound}
+				```
+
+				Note that Harlowe's default CSS already collapses consecutive spaces in a single line, but not vertical whitespace (which is converted to `<br>` elements).
+				If you change it, using the `white-space` CSS property (such as by `white-space:break-spaces` in your story stylesheet),
+				then the effects of this syntax in removing horizontal whitespace will become noticeable.
 
 				If the markup contains a (replace:) command attached to a hook, the hook will still have its whitespace
 				collapsed, even if it is commanded to replace text outside of the markup.up.

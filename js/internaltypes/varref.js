@@ -141,7 +141,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			*/
 			else if (prop === "random") {
 				if (!obj.length) {
-					return TwineError.create("property", `I can't get a random value from ${objectName(obj)}, because it's empty`);
+					return TwineError.create("property", `I can't get a random value from ${objectName(obj)}, because it's empty.`);
 				}
 				/*
 					Again, to get the true code point length of strings, Array.from() is called for.
@@ -152,12 +152,11 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				HookSets should be the only sequential with additional string properties.
 			*/
 			else if (HookSet.isPrototypeOf(obj) && !HookSet.TwineScript_Properties.includes(prop)) {
-				return TwineError.create("property", youCanOnlyAccess
-					+ andList(HookSet.TwineScript_Properties.map(p => "'" + p + "'"))
-					+ " of " + objectName(obj) + ", not " + objectName(prop) + ".");
+				return TwineError.create("property", `${youCanOnlyAccess
+					+ andList(HookSet.TwineScript_Properties.map(p => "'" + p + "'"))} of ${objectName(obj)}, not ${typeof prop === "string" ? toSource(prop) : objectName(prop)}.`);
 			}
 			else if (!["length","some","any","all","start","end","random"].includes(prop) && !HookSet.isPrototypeOf(obj)) {
-				return TwineError.create("property", `${youCanOnlyAccess}'length', 'some', 'any', 'all', 'start', 'end', and 'random' of ${objectName(obj)}, not ${objectName(prop)}.`);
+				return TwineError.create("property", `${youCanOnlyAccess}'length', 'some', 'any', 'all', 'start', 'end', and 'random' of ${objectName(obj)}, not ${typeof prop === "string" ? toSource(prop) : objectName(prop)}.`);
 			}
 		}
 		/*
@@ -182,13 +181,13 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		*/
 		else if (isArray(obj.TwineScript_Properties) && !obj.TwineScript_Properties.includes(prop)) {
 			return TwineError.create("property",
-				`You can only get the ${andList(obj.TwineScript_Properties.map(p => "'" + p + "'"))} of ${objectName(obj)}, not ${objectName(prop)}.`);
+				`You can only get the ${andList(obj.TwineScript_Properties.map(p => "'" + p + "'"))} of ${objectName(obj)}, not ${typeof prop === "string" ? toSource(prop) : objectName(prop)}.`);
 		}
 		/*
 			Numbers and booleans cannot have properties accessed.
 		*/
 		else if (typeof obj === "number" || typeof obj === "boolean") {
-			return TwineError.create("property", `You can't get any data values, let alone "${prop}", from ${objectName(obj)}`);
+			return TwineError.create("property", `You can't get any data values, let alone ${objectName(prop)}, from ${objectName(obj)}`);
 		}
 		return prop;
 	}

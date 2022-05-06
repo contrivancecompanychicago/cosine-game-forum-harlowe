@@ -365,7 +365,7 @@ define([
 		if (!toCode) {
 			resultSource = `${
 					before && before.length && before[before.length-1].type === "whitespace" ? ' ' : ''
-				}${error ? "🐞" :
+				}${error ? " 🐞 " :
 				val && !val.TwineScript_ToSource && val.TwineScript_Unstorable ? objectName(val) :
 				toSource(val)}${
 					after && after.length &&
@@ -618,12 +618,17 @@ define([
 				literals are currently exactly equal to JS string literals (minus template
 				strings and newlines).
 			*/
-			ret = eval(token.text.replace(/(.?)\n/g, (_,a) =>
+			const t = token.text.replace(/(.?)\n/g, (_,a) =>
 				/*
 					If a literal newline has a \ before it (such as when invoking the escaped line ending syntax), DON'T escape the newline without escaping the \ first.
 				*/
-				(a === "\\" ? "\\\\" : a === "\n" ? "\\n" : a) + "\\n"));
+				(a === "\\" ? "\\\\" : a === "\n" ? "\\n" : a) + "\\n")
+				/*
+					Remove octal literals (plus the \0 escape), as they will throw in strict mode.
+				*/
+				.replace(/(\\*)\\0/g, (_,a) => (a ? '\\'.repeat(a.length*2) : '') + "0");
 
+			ret = eval(t);
 			evalReplaySkip = true;
 		}
 		else if (type === "hook") {
@@ -1088,7 +1093,7 @@ define([
 			isRef = isVarRef || TwineError.containsError(ret);
 			if (hasEvalReplay && !isRef) {
 				makeEvalReplayFrame(evalReplay, {
-					toCode: ` ${token.name} of ${toSource(container.get())} `,
+					toCode: ` ${token.name} of ${toSource(VarRef.isPrototypeOf(container) ? container.get() : container)} `,
 					tokens,
 					i
 				});

@@ -1,6 +1,6 @@
 "use strict";
 define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'utils/renderutils', 'passages', 'section', 'debugmode/panel', 'debugmode/highlight',  'utils/typecolours'],
-($, Utils, NaturalSort, State, Engine, VarRef, TwineError, {objectName, isObject, toSource, typeID}, {dialog}, Passages, Section, Panel, Highlight, {Colours:typeColours, CSS:syntaxCSS}) => { let DebugMode = (initialError, code) => {
+($, Utils, NaturalSort, State, Engine, VarRef, TwineError, {objectName, isObject, toSource, typeID}, {dialog}, Passages, Section, Panel, Highlight, {CSS:syntaxCSS}) => { let DebugMode = (initialError, code) => {
 	/*
 		Debug Mode
 

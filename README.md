@@ -14,6 +14,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a long-standing bug where temp variables created outside a live hook (a hook with `(live:)`, `(event:)`, `(more:)`, or `(after:)` attached) couldn't then be used inside it.
  * Most of the other changers, including `(t8n:)`, should now work correctly when combined with `(live:)`, `(event:)`, `(more:)`, or `(after:)`.
  * Fixed a long-standing bug where the string given to `(hook:)` was case-sensitive and dash-sensitive, even though hooks named by the tag markup (`<name|`) and referred to by the hook name syntax (`?name`) are case-insensitive and dash-insensitive.
+ * Fixed a long-standing bug where a Javascript error would occur if a string contained `\0` followed by two digits (except 8 or 9).
  * Fixed a custom macro bug where any commands inside an `(output:)`-attached hook (such as `(output:)[(set:$a to it + 1)]`) would be run twice while being outputted. (Generally, you'd want to place those commands before the `(output:)` hook, though.)
  * Fixed a bug where using spread `...` to spread the individual characters of a string that contains astral plane Unicode characters (such as 𝐇) wouldn't work at all.
  * Fixed a bug where the `command` datatype didn't work at all.

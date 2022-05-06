@@ -376,8 +376,14 @@ define([
 				/*
 					(sorted:)'s type restrictions are complex enough that we must check the major restriction ourselves here.
 				*/
-				const invalid = args.find(e => typeof e !== "string" && typeof e !== "number");
+				const invalid = args.filter(e => typeof e !== "string" && typeof e !== "number");
 				if (invalid && invalid.length) {
+					/*
+						Special error message for giving a single array.
+					*/
+					if (invalid.length === 1 && Array.isArray(invalid[0])) {
+						return TwineError.create('macrocall', `Please give multiple numbers or strings to (sorted:), not a single array.`, `You can use the spread ... syntax to spread out the array's values into (sorted:).`);
+					}
 					return TwineError.create('datatype', `If (sorted:) isn't given a 'via' lambda, it must be given only numbers and strings, not ${objectName(invalid[0])}.`);
 				}
 				return args.sort(EnSort);
