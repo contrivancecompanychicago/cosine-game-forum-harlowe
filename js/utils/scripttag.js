@@ -31,7 +31,7 @@ define(['state','utils/operationutils', 'internaltypes/varref', 'internaltypes/t
 		To eliminate any confusion: These names are *not* Javascript variables, or even global `window` properties, but object getters and setters added to the script's scope using a `with` statement.
 		These names do not pollute or overwrite the global scope (although they shadow any global variables with the same names, such as `window.$arr` being shadowed by a Harlowe variable $arr), and
 		remain accessible and current even inside a callback created within the script. Moreover, even though these names are created using a `with` statement, it is still possible to opt
-		into Javascript's ["strict mode"](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode) by placing the `"use strict";` pragma at the start of the script.
+		into Javascript's ["strict mode"](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode) by placing the `"use strict"` pragma at the start of the script.
 
 		If "strict mode" is not enabled for the script, an error will **not** occur if you attempt to assign to a Harlowe variable that doesn't exist, such as by writing `$arr = []` - instead, a global
 		Javascript variable will be created.

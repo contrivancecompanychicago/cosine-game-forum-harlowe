@@ -75,9 +75,14 @@ describe("twinescript literals", function() {
 			expect("(print: 'A\\B')").markupToPrint("AB");
 			expect('(print: "A\\"B")').markupToPrint("A\"B");
 			expect("(print: 'A\\'B')").markupToPrint("A'B");
+			expect('(print:"\\xFE")').markupToPrint("þ");
+			expect('(print:"\\u00FE")').markupToPrint("þ");
 		});
 		it("can contain close-brackets", function() {
 			expect('(print: ")")').markupToPrint(")");
+		});
+		it("don't error if they contain legacy octal escapes", function() {
+			expect('(print: "\\022 \\\\022 \\\\\\022")').markupToPrint("022 \\022 \\\\022");
 		});
 	});
 	function expectColourToBe(str, colour) {

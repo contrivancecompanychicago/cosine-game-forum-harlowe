@@ -426,7 +426,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 
 		Unlike macros created with (macro:), the "params" data name of macros created with (partial:) is always an empty array.
 
-		As of 3.3.0, this can NOT be used with metadata macros such as (metadata:) or (storylet:). Giving "metadata", "storylet" or other such
+		As of 3.3.0, this can **not** be used with metadata macros such as (metadata:) or (storylet:). Giving "metadata", "storylet" or other such
 		macros' names will produce an error.
 
 		See also:

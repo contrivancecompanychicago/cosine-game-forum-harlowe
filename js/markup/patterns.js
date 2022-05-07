@@ -678,7 +678,7 @@
 			```
 			(font: "Courier New")[This is a hook.
 
-			As you can see, this has a macro instance in front of it.]
+			As you can see, this has a macro call in front of it.]
 			This text is outside the hook.
 			```
 
@@ -1081,7 +1081,7 @@
 				then the effects of this syntax in removing horizontal whitespace will become noticeable.
 
 				If the markup contains a (replace:) command attached to a hook, the hook will still have its whitespace
-				collapsed, even if it is commanded to replace text outside of the markup.up.
+				collapsed, even if it is commanded to replace text outside of the markup.
 
 				You may apply this collapsing effect to specific hooks using the (collapse:) macro. In particular,
 				if you wish for the entire passage's whitespace to collapse, consider using (change: ?passage) and (collapse:).

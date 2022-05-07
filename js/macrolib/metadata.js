@@ -36,7 +36,7 @@ define(['macros','utils/operationutils', 'datatypes/lambda', 'internaltypes/twin
 		Example usage:
 
 		* `(storylet: when $season is "winter" and $married is false and visits is 0)`
-		* `(storylet: when "mortuary" is in (history: ))`
+		* `(storylet: when (visited: "mortuary"))`
 
 		Rationale:
 		Storylets are mini-stories within a story - disconnected sequences of passages that can be visited non-linearly when certain conditions are fulfilled.

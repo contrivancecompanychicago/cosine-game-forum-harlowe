@@ -290,7 +290,7 @@ describe("patterns", function() {
 					expect("(print: (" + name + ":alnum-type _a, alnum-type _b, alnum-type _a) matches 'red blue green')").markupToError();
 				});
 			}
-			if (name === 'p') {
+			if (name === 'p' || name === 'p-not-before') {
 				return;
 			}
 			it("works inside (p:)", function() {
@@ -401,6 +401,18 @@ describe("patterns", function() {
 				expect("(print: (p:'red',(p-not:...'1234'),string) does not match 'red3')").markupToPrint('true');
 				expect("(print: (p:'red',(p-not:digit),string) does not match 'red3')").markupToPrint('true');
 				expect("(print: (p:'red',(p-not:digit),string) does not match 'red6green')").markupToPrint('true');
+			});
+		});
+		describe("(p-not-before:)", function() {
+			basicTest("p-not-before", '""', false, false);
+			it("matches the empty string", function() {
+				expect("(print: (pnotbefore:'r','b') matches '') (print: (pnotbefore:'r','b') does not match 'r' and it does not match 'b')").markupToPrint('true true');
+			});
+			it("when used in (p:), matches the empty string, unless the sequence follows", function() {
+				expect("(print: (p:'red',(pnotbefore:whitespace,'blue'),str) matches 'redgreen' and it matches 'redblue' and it matches 'red blu')").markupToPrint('true');
+				expect("(print: (p:'red',(pnotbefore:whitespace,'blue'),str) does not match 'red bluegreen' and it does not match 'red blue')").markupToPrint('true');
+				expect('(print: (p-many:(p-either:(p: "0", (p-not-before:"0")), (p:"1", (p-not-before:"1")), whitespace)) matches "0 0 01 10101 101")').markupToPrint('true');
+				expect('(print: (p-many:(p-either:(p: "0", (p-not-before:"0")), (p:"1", (p-not-before:"1")), whitespace)) does not match "0 0 01 10101 110")').markupToPrint('true');
 			});
 		});
 	});

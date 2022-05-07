@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatypes/datatype', 'datatypes/typedvar', 'internaltypes/twineerror', 'internaltypes/varscope'],
-($, Macros, {anyRealLetter, anyUppercase, anyLowercase, anyCasedLetter, realWhitespace, impossible}, {objectName, toSource}, Lambda, Datatype, TypedVar, TwineError, VarScope) => {
+define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatypes/datatype', 'datatypes/typedvar', 'internaltypes/twineerror', 'internaltypes/varscope'],
+(Macros, {anyRealLetter, anyUppercase, anyLowercase, anyCasedLetter, realWhitespace, impossible}, {objectName, toSource}, Lambda, Datatype, TypedVar, TwineError, VarScope) => {
 
 	const {rest, either, optional, nonNegativeInteger} = Macros.TypeSignature;
 	const {assign, create} = Object;
@@ -377,7 +377,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/lambda',
 			This is part of a suite of string pattern macros. Consult the (p:) article to learn more about string patterns, special user-created datatypes
 			that can match very precise kinds of strings.
 
-			Unlike the other macros, each of this macro's arguments represents a different possible match, **not** parts of a single sequence. If
+			Like (p-not:), and unlike the other macros, each of this macro's arguments represents a different possible match, **not** parts of a single sequence. If
 			you need a possibility to be a sequence of values, you can nest the (p:) macro inside this one, such as in `(p-either: (p:str," Crystal"), "N/A")`.
 
 			You can use this macro, along with the spread `...` operator, to succinctly check if the string matches one in a set of characters. For example, to
@@ -438,7 +438,7 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/lambda',
 			(p-not: ...String or Datatype) -> Datatype
 			Also known as: (pattern-not:)
 
-			Given any number of string characters or non-spread datatypes, this creates a string pattern that matches any one character that doesn't
+			Given any number of single characters or non-spread datatypes, this creates a string pattern that matches any one character that doesn't
 			match any of those values.
 
 			Example usage:
@@ -454,13 +454,13 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/lambda',
 			Unlike many pattern datatype macros, this will error if given any datatype that could match 0 or 2+ characters. So, passing `str`, `empty`, any spread datatype like `...digit`,
 			or any string with more or less than 1 character, will produce an error.
 
-			When you use this in (unpack:), such as `(unpack: "-" into (p-many:(p-not:'s'))-type _isLord`, and the optional pattern doesn't match,
+			When you use this in (unpack:), such as `(unpack: "-" into (p-many:(p-not:'s'))-type _a)`, and the optional pattern doesn't match,
 			the variable will be set to the empty string "".
 
 			While you can use this as the datatype of a TypedVar, you can't nest TypedVars inside this.
 
 			See also:
-			(p-not-before:)
+			(p:), (p-opt:), (p-not-before:)
 
 			Added in: 3.2.0.
 			#patterns
@@ -475,11 +475,44 @@ define(['jquery', 'macros', 'utils', 'utils/operationutils', 'datatypes/lambda',
 					typeof e === "string" ? [...e].length !== 1 : e.rest || e.regExp || ['str','empty'].includes(e.name));
 
 				if (wrong) {
-					return TwineError.create("datatype", "(p-not:) should only be given single character");
+					return TwineError.create("datatype", "(p-not:) should only be given single characters, or datatypes that match single characters");
 				}
 				return createPattern({
 					name: "p-not", fullArgs, canContainTypedVars: false,
 					makeRegExpString: subargs => "[^" + subargs.map(e => (e.startsWith("[") && e.endsWith("]")) ? e.slice(1,-1) : e).join('') + "]"
+				});
+			},
+		PatternSignature)
+
+		/*d:
+			(p-not-before: ...String or Datatype) -> Datatype
+			Also known as: (pattern-not-before:)
+
+			Creates a string pattern that matches the empty string, *unless* it is followed by the given sequence of strings or datatypes. This is best used inside another
+			pattern macro like (p:), alongside a pattern to match, where it serves as an extra restriction on that pattern (making it match only if it's "not before" something).
+
+			Example usage:
+			* `(str-replaced: (p: "$", (p-not-before: digit)), "", _text)` produces a copy of the string in the temp variable _text, but with all dollar signs removed, *except* where the dollar sign is before a digit.
+			* `(p-many:(p-either:(p: "0", (p-not-before:"0")), (p:"1", (p-not-before:"1")), whitespace))` matches a string with sequences of *alternating* 0's and 1's, plus whitespace. It matches
+			`"0 0 01 10101 101"` but not `"0 0 01 10101 110"`.
+
+			Details:
+			This is part of a suite of string pattern macros. Consult the (p:) article to learn more about string patterns, special user-created datatypes
+			that can match very precise kinds of strings.
+
+			While you can use this as the datatype of a TypedVar, this won't accomplish much, since, as explained, it only matches the empty string. Additionally, you can't nest TypedVars inside this.
+
+			See also:
+			(p:), (p-opt:), (p-not:)
+
+			Added in: 3.3.0.
+			#patterns
+		*/
+		(["p-not-before","pattern-not-before"], "Datatype",
+			(_, ...fullArgs) => {
+				return createPattern({
+					name: "p-not-before", fullArgs, canContainTypedVars: false,
+					makeRegExpString: subargs => "(?!" + subargs.join('') + ")"
 				});
 			},
 		PatternSignature)
