@@ -319,7 +319,7 @@ describe("property indexing", function() {
 			});
 			describe("'lines'", function() {
 				it("selects all of the lines in a hook", function(done) {
-					expect('foo\nbar\nbaz\n(replace: ?passage\'s lines)[1]').markupToPrint("1\n1\n1\n");
+					expect('foo\nbar\nbaz\n(replace: ?passage\'s lines)[1]').markupToPrint("1\n1\n1\n1");
 					expect('foo\nbar\nbaz\n(replace: ?passage\'s lines\'s 2nd)[1]').markupToPrint("foo\n1\nbaz\n");
 					expect('foo\n[bar\nbaz]<1|qux\n(replace: ?passage\'s lines\'s 2nd)[1]').markupToPrint("foo\n1\nbazqux\n");
 					expect('foo\n[bar\nbaz]<1|qux\n(replace: ?passage\'s lines\'s 3nd)[1]').markupToPrint("foo\nbar\n1\n");
@@ -331,16 +331,17 @@ describe("property indexing", function() {
 					},20);
 				});
 				it("works with only one line", function(done) {
-					var a = runPassage('(enchant:?passage\'s lines, (text-style:"shadow"))I just want to say hello to you').find('tw-enchantment');
+					runPassage('(enchant:?passage\'s lines, (text-style:"shadow"))I just want to say hello to you');
 					setTimeout(function(){
-						expect(a.attr('style')).toMatch(/text-shadow/);
+						expect($('tw-passage tw-enchantment').attr('style')).toMatch(/text-shadow/);
 						done();
 					},20);
 				});
 				it("works with (hover-style:)", function(done) {
-					var a = runPassage('|a>[foo\nbar\nbaz](enchant: ?a\'s lines,(hover-style:(background:white)))').find('tw-hook tw-enchantment');
-					a.mouseenter();
+					runPassage('|a>[foo\nbar\nbaz](enchant: ?a\'s lines,(hover-style:(background:white)))');
 					setTimeout(function() {
+						var a = $('tw-hook tw-enchantment');
+						a.mouseenter();
 						expect(a).toHaveBackgroundColour("#ffffff");
 						done();
 					},20);

@@ -228,37 +228,44 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 					*/
 					const brs = elements.findAndFilter('br:not(tw-sidebar *),tw-consecutive-br:not(tw-sidebar *)').get();
 					/*
-						Place all of the text nodes into the current collection. When one is found that's after
-						the current <br>, create a new collection.
+						Place all of the elements into the current collection. When one of the <br>s is found, instead start a new collection.
+						This includes empty elements because they may become filled (e.g. <tw-expression>s) later.
 						Again, due to the cost of $().add(), this uses element arrays, and only converts to jQuery at the end.
 					*/
 					let lines = [[]];
-					elements.textNodes(notTwError + ":not(tw-sidebar, tw-sidebar *)").forEach(node => {
-						if (brs.length && (node.compareDocumentPosition(brs[0]) & 2)) {
-							brs.shift();
-							lines.push([]);
+					elements.contents().each(function recur(_, node) {
+						/*
+							Exclude the sidebar from the passage.
+						*/
+						if ((node.tagName || '').toLowerCase() === 'tw-sidebar') {
+							return;
+						}
+						if (brs.length) {
+							/*
+								If this node is the next <br>, start a new line.
+							*/
+							if (node === brs[0]) {
+								brs.shift();
+								/*
+									If the current line array had content that must be wrapped, create a new line array.
+									Otherwise, use the existing empty array.
+								*/
+								if (lines[lines.length-1].length) {
+									lines.push([]);
+								}
+								return;
+							}
+							/*
+								If this node CONTAINS the next <br>, then it spans a line.
+								Recursively process its contents.
+							*/
+							else if (node.compareDocumentPosition(brs[0]) & 16) {
+								$(node).contents().each(recur);
+								return;
+							}
 						}
 						lines[lines.length-1] = lines[lines.length-1].concat(node);
 					});
-					/*
-						Some extra work needs to be done in order to make sure text nodes inside inline structures (such as in "baz**qux**garply")
-						aren't pulled out by the .wrapAll() call below. This involves replacing them, inside each line array, with their highest
-						parent that's still entirely within the line.
-					*/
-					lines = lines.map(line => line.map(node => {
-						let {parentNode} = node;
-						/*
-							If this node's parent node doesn't contain every text node in the line (i.e. isn't a trivial parent like <tw-passage>),
-							and does not contain text nodes outside the line (i.e. doesn't cross lines), replace the node with it.
-						*/
-						/*jshint -W083 */
-						while ($(parentNode).textNodes().every(cn => line.includes(cn))
-								&& !line.every(cn => $(parentNode).has(cn).length)) {
-							node = parentNode;
-							({parentNode} = node);
-						}
-						return node;
-					}));
 					const ret = $(lines.map(e => $(e).wrapAll('<tw-pseudo-hook>').parent()[0]));
 					return ret;
 				}

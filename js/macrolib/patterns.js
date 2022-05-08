@@ -930,12 +930,12 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatype
 
 			| Macro call | `it` | `pos` | `_a` | `_phoneNum` | Replacement made by the lambda
 			|---
-			| `(str-replaced: (p: (p-many:digit)-type _a, "%"), via _a + " percent", "5% 10%")` | `"5%"` | `1` | `"5"` | n/a | `"5 percent"`
-			| |`"10%"` | `2` | `"10"` | n/a | `"10 percent"`
-			| `(str-replaced: alnum, via it + "-", "Fred...?")` | `"F"` | `1` | n/a | n/a | `"F-"`
-			| |`"r"` | `2` | n/a | n/a  | `"r-"`
-			| |`"e"` | `3` | n/a | n/a  | `"e-"`
-			| |`"d"` | `4` | n/a | n/a  | `"d-"`
+			| `(str-replaced: (p: (p-many:digit)-type _a, "%"), via _a + " percent", "5% 10%")` | `"5%"` | `1` | `"5"` | `"5 percent"`
+			| |`"10%"` | `2` | `"10"` | `"10 percent"`
+			| `(str-replaced: alnum, via it + "-", "Fred...?")` | `"F"` | `1` | n/a | `"F-"`
+			| |`"r"` | `2` | n/a | `"r-"`
+			| |`"e"` | `3` | n/a | `"e-"`
+			| |`"d"` | `4` | n/a | `"d-"`
 
 			The TypedVars used in the pattern are *only* usable in the lambda. They essentially do not exist outside of the macro call, and will not be accessible to macros elsewhere in the passage.
 

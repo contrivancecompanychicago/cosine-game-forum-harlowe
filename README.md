@@ -28,6 +28,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
    * Note: this means that, given constructions like `[]<A|` and `(click:?A)[]`, revision macros like `(append:?Link)` will no longer consider ?A (as long as it is empty) to be a link via the `(click:)`, and cannot append to it - you'll have to explicitly refer to it via `(append:?A)` instead.
  * Fixed a bug where chained `'s` syntax, like `$array's 1st's 2nd`, produced bad error messages when the deepest dataname (in that example, `1st`) wasn't present.
  * Fixed a bug where `'s` and `of` sometimes wouldn't be syntax-highlighted correctly.
+ * Improved the behaviour of enchanting a hook's lines when those lines contain macros or links, sometimes causing those elements to be excluded from the enchantment, or falsely considered to be lines on their own.
+ * Fixed a bug where `(replace:)` targeting `?passage's lines` (and similar such code) wouldn't replace the line that itself was on, unless some text was before it in the line.
  * The `it` identifier is now cleared (to the default value of 0) whenever the player changes passages.
  * Fixed a bug where using a custom macro in a `(storylet:)` lambda would cause Debug Mode to constantly reload the Storylets and Variables panels, hurting performance.
  * Fixed a bug where single errors would sometimes be listed multiple times in Debug Mode's error log.
