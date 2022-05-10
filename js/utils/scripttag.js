@@ -52,7 +52,7 @@ define(['state','utils/operationutils', 'internaltypes/varref', 'internaltypes/t
 		or Array will be converted to instances of the base class.
 		* Story-wide variables that were only created after the `<script>` was run will NOT be available to the script, even if the script creates a callback function that is called later.
 		
-		Finally, there is no way to call Harlowe macros from Javascript, at present.
+		Finally, there is no way to call Harlowe macros from Javascript, at present. There is also no way to access identifiers like `exits` or `visited` from Javascript, at present.
 
 		A redundant note:
 

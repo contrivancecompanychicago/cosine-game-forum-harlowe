@@ -313,7 +313,7 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 				Cache the evalReplay of section, so that the eval() doesn't clobber it.
 			*/
 			const {evalReplay} = section;
-			section.evalReplay = null;
+			section.evalReplay = [];
 
 			/*
 				If this lambda has no "making" clauses (and isn't a "when" lambda), then the "it"
@@ -354,8 +354,58 @@ define(['utils', 'utils/operationutils', 'internaltypes/varscope', 'internaltype
 			else {
 				ret = via ? section.eval(via) : true;
 			}
+			/*
+				Having finished running eval(), pop the lambda's stack.
+			*/
 			section.stack.shift();
-			section.evalReplay = evalReplay;
+			if (evalReplay) {
+				/*
+					This creates a special "lambda replay frame" which contains a table of loops and results.
+				*/
+				let last = evalReplay[evalReplay.length-1];
+				/*
+					Subsequent loops of the lambda reuse the same replay frame, IF it's the same lambda.
+				*/
+				if (!(last || {}).lambda || last.lambda.obj !== this) {
+					last = ({
+						lambda: {
+							obj: this,
+							/*
+								The pos needs to be stored, too, just in case it's different from what one might expect
+								(as is the case for (folded:) lambdas).
+							*/
+							pos: [],
+							loop: [],
+							making: [],
+							result: [],
+							replay: [],
+						},
+						/*
+							Since this doesn't alter the structure of the interpreted code, reuse the previous replay frame's code.
+							Note that this definitely cannot be the first replay frame, and there's always going to be a previous one.
+						*/
+						code: evalReplay[evalReplay.length-1].code,
+					});
+					last.fromCode = last.code;
+					evalReplay.push(last);
+				}
+				/*
+					Populate the (now) existing lambda replay frame with the results of this loop.
+				*/
+				last.lambda.loop.push(loopArg);
+				last.lambda.pos.push(lambdaPos);
+				makingArg !== undefined && last.lambda.making.push(makingArg);
+				last.lambda.result.push(ret);
+				/*
+					Store the replay of this loop, too.
+					Note that at this moment, section.evalReplay is the debug replay produced by the execution of this lambda loop.
+				*/
+				last.lambda.replay.push(section.evalReplay);
+				/*
+					All that being done, we now swap the section's evalReplay back.
+				*/
+				section.evalReplay = evalReplay;
+			}
 			/*
 				Prepend a little extra context to the message if it's an error.
 			*/

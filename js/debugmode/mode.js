@@ -99,7 +99,7 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 		const right10 = right.next();
 		function doReplay() {
 			/*
-				Get the current frame of the replay, which is an object with { code, start, end, diff, desc, error } properties.
+				Get the current frame of the replay, which is an object with { code, start, end, diff, desc, error, lambda } properties.
 				The first one also has { basis }.
 			*/
 			const f = replay[ind];
@@ -109,25 +109,64 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 			const explanation = replayEl.find('tw-eval-explanation').empty();
 			const code = replayEl.find('tw-eval-code');
 
-			if (!f.toCode && !f.toDesc && !f.error) {
-				code.html(Highlight(f.code, 'macro'));
-				explanation.html(`<center>First, there was <code></code>.</center>`)
-					// Empty <tw-eval-it> and <tw-eval-reason>
-					.next().empty().next().empty();
-			} else {
+			if (f.toCode || f.toDesc || f.error || f.lambda) {
 				replayEl.find('tw-eval-code').empty().append(Highlight(f.code, 'macro', ind > 0 && f.start, ind > 0 && (f.end + f.diff)));
-				explanation.append(`<code class='${f.fromCode.length > 56 ? 'from-block' : 'from-inline'}'></code>`,
+				explanation.append(
+					/*
+						Every frame except for a lambda frame has a "From" code block in the explanation.
+					*/
+					!f.lambda ? `<code class='${f.fromCode.length > 56 ? 'from-block' : 'from-inline'}'></code>` : '',
+					/*
+						What lies to the right (or for lambda frames, the centre) depends on the type of frame.
+					*/
 					f.error ? `<span> caused an error: </span>`
+						: f.lambda ? `<span>The lambda <code class='to-lambda'></code> was run, producing these results.</span>`
 						: `<span> became${f.ToDesc ? "…" : ''} </span>${!f.toDesc ? `<code class='to-code'></code>` : `<span class='to-desc'>${escape(f.toDesc)}.</span>`}`
 				);
-				f.error && explanation.append(f.error);
-				!f.toDesc && explanation.find('.to-code').append(Highlight(f.toCode, 'macro'));
+				if (f.error) {
+					explanation.append(f.error);
+				} else if (f.lambda) {
+					const codeCell = (tag, code) => $(`<${tag}><code></${tag}>`).find('code').append(Highlight(code, 'macro')).end();
+
+					explanation.find('.to-lambda').append(
+						Highlight(f.lambda.obj.source, 'macro')
+					).end().append(
+						$('<table>').append(
+							$('<tr>').append(
+								codeCell('th', 'pos'),
+								f.lambda.obj.loop ? codeCell('th',  "_" + f.lambda.obj.loop.getName()).append(' / ', $('<code>').append(Highlight('it', 'macro'))) : codeCell('th','it'),
+								f.lambda.obj.making && codeCell('th', "_" + f.lambda.obj.making.getName()),
+								$('<th>Result</th>'),
+							),
+							...f.lambda.loop.map((loop,i) => {
+								const error = TwineError.containsError(f.lambda.result[i]);
+								return $('<tr>').append(
+									codeCell('td', toSource(f.lambda.pos[i])),
+									codeCell('td', toSource(loop)),
+									f.lambda.obj.making && codeCell('td', toSource(f.lambda.making[i])),
+									error ? $('<td>').append(error.render(f.lambda.obj.source, /*NoEvents*/ true))
+										: codeCell('td', toSource(f.lambda.result[i])).append(
+											(f.lambda.obj.where || f.lambda.obj.when || f.lambda.obj.via) && $("<tw-open-button replay label='🔍'>").data('evalReplay', f.lambda.replay[i])
+										),
+								);
+							})
+						),
+					);
+				} else if (!f.toDesc) {
+					explanation.find('.to-code').append(Highlight(f.toCode, 'macro'));
+				}
 				// Populate <tw-eval-it> and <tw-eval-reason>
 				explanation
 					.next().html(f.itIdentifier ? `(The <code class="cm-harlowe-3-identifier">it</code> identifier now refers to ${escape(f.itIdentifier)}.)` : '')
 					.next().text(f.reason || '');
 			}
-			explanation.find('code').first().append(Highlight(f.fromCode, 'macro'));
+			else {
+				code.html(Highlight(f.code, 'macro'));
+				explanation.html(`<center>First, there was <code></code>.</center>`)
+					// Empty <tw-eval-it> and <tw-eval-reason>
+					.next().empty().next().empty();
+			} 
+			!f.lambda && explanation.find('code').first().append(Highlight(f.fromCode, 'macro'));
 
 			replayEl.find('mark').each((_,e) => { e.scrollIntoView(); });
 			left10.css('visibility', ind <= 9 ? 'hidden' : 'visible');
@@ -142,11 +181,20 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 		right.on('click', () => { ind = Math.min(replay.length-1,ind+1); doReplay(); });
 		right10.on('click', () => { ind = Math.min(replay.length-1,ind+10); doReplay(); });
 		/*
-			This has to be a prepend, so that inner errors' dialogs cover the current dialog.
+			This check means that inner errors' dialogs cover the current dialog.
+			All dialogs must cover the debug panel, though.
 		*/
-		debugElement.addClass('show-dialog').append(dialogElem);
+		if (debugElement.find('tw-backdrop').length) {
+			debugElement.find('tw-backdrop').before(dialogElem);
+		} else {
+			debugElement.addClass('show-dialog').append(dialogElem);
+		}
 	}
-	$(document.documentElement).on('click', 'tw-expression, tw-error', debounce((e) => {
+	/*
+		This is the event for the buttons that show Debug Replays.
+		<tw-eval-explanation> refers to lambda result cells, which have sub-replays that can be viewed.
+	*/
+	$(document.documentElement).on('click', 'tw-expression, tw-error, tw-eval-explanation', debounce((e) => {
 		const replay = $(e.target).data('evalReplay');
 		if (replay) {
 			evalReplay(replay);
