@@ -695,11 +695,13 @@ define([
 			(altered: Lambda, [...Any]) -> Array
 
 			This takes a "via" lambda and a sequence of values, and creates a new array with the same values in the same order,
-			but altered via the operation in the lambda's "via" clause.
+			but altered via the operation in the lambda's "via" clause. An optional "where" clause can also be provided, which,
+			if its condition is false, causes that particular value to be unchanged.
 
 			Example usage:
 			* `(altered: _monster via "Dark " + _monster, "Wolf", "Ape", "Triffid")` produces `(a: "Dark Wolf", "Dark Ape", "Dark Triffid")`
 			* `(altered: _player via _player + (dm: "HP", _player's HP - 1), ...$players)` produces an array of $players datamaps whose "HP" datavalue is decreased by 1.
+			* `(altered: via it * -1 where it is an odd, 1,2,3,4,5,6)` produces `(a:-1,2,-3,4,-5,6)`. Because `2 is an odd` produces `false`, the 2 is unaltered, and so forth.
 
 			Rationale:
 			Transforming entire arrays or datasets, performing an operation on every item at once, allows arrays to be modified with the same ease
@@ -718,8 +720,8 @@ define([
 			This allows you to write `(altered: $lambda, ...$array)` without checking whether $array contains any values (which
 			you may not be certain of, if it contains the result of a previous (find:)).
 
-			The temp variable, which you can name anything you want, is controlled entirely by the lambda - it doesn't exist
-			outside of it, it won't alter identically-named temp variables outside of it, and you can't manually (set:)
+			The temp variable (if you choose to name it instead of using `it`) is controlled entirely by the lambda - it doesn't exist
+			outside of it, it won't alter identically-named temp variables outside, and you can't manually (set:)
 			it within the lambda.
 
 			You can refer to other variables, including other temp variables, in the `via` expression. For instance, you can write
@@ -734,8 +736,11 @@ define([
 			Added in: 2.0.0
 			#data structure
 		*/
-		("altered", "Array", (section, lambda, ...args) => args.map((loop, pos) => lambda.apply(section, {loop, pos:pos+1})),
-		[Lambda.TypeSignature('via'), zeroOrMore(Any)])
+		("altered", "Array", (section, lambda, ...args) => args.map((loop, pos) => {
+			const result = lambda.apply(section, {loop, pos:pos+1});
+			return (result === null) ? loop : result;
+		}),
+		[either(Lambda.TypeSignature('via'), Lambda.TypeSignature('where', 'via')), zeroOrMore(Any)])
 		/*d:
 			(find: Lambda, [...Any]) -> Array
 
@@ -768,8 +773,8 @@ define([
 			result in an empty array being returned. This allows you to write `(find: $lambda, ...$array)` without checking whether $array contains
 			any values (which you may not be certain of, if it contains the result of a previous (find:)).
 
-			The temp variable, which you can name anything you want, is controlled entirely by the lambda - it doesn't exist
-			outside of it, it won't alter identically-named temp variables outside of it, and you can't manually (set:)
+			The temp variable (if you choose to name it instead of using `it`) is controlled entirely by the lambda - it doesn't exist
+			outside of it, it won't alter identically-named temp variables outside, and you can't manually (set:)
 			it within the lambda.
 
 			You can refer to other variables, including other temp variables, in the `where` condition. For instance, you can
@@ -817,8 +822,8 @@ define([
 
 			If zero values are given to (all-pass:), then it will return true by default.
 
-			The temp variable, which you can name anything you want, is controlled entirely by the lambda - it doesn't exist
-			outside of it, it won't alter identically-named temp variables outside of it, and you can't manually (set:)
+			The temp variable (if you choose to name it instead of using `it`) is controlled entirely by the lambda - it doesn't exist
+			outside of it, it won't alter identically-named temp variables outside, and you can't manually (set:)
 			it within the lambda.
 
 			You can refer to other variables, including other temp variables, in the `where` condition. For instance, you can
@@ -961,6 +966,7 @@ define([
 		[either(Lambda.TypeSignature('where','via','making'), Lambda.TypeSignature('via','making')), rest(Any)])
 		/*d:
 			(datanames: Datamap) -> Array
+			Also known as: (dm-names:), (datamap-names:)
 			
 			This takes a datamap, and returns a sorted array of its data names, sorted
 			alphabetically.
@@ -981,10 +987,11 @@ define([
 			Added in: 1.1.0
 			#data structure
 		*/
-		("datanames", "Array", (_, map) =>  Array.from(map.keys()).sort(NaturalSort("en")),
+		(["datanames", "dm-names", "datamap-names"], "Array", (_, map) =>  Array.from(map.keys()).sort(NaturalSort("en")),
 		[Map])
 		/*d:
 			(datavalues: Datamap) -> Array
+			Also known as: (dm-values:), (datamap-values:)
 			
 			This takes a datamap, and returns an array of its values, sorted
 			alphabetically by their name.
@@ -1006,7 +1013,7 @@ define([
 			Added in: 1.1.0
 			#data structure
 		*/
-		("datavalues", "Array", (_, map) =>
+		(["datavalues", "dm-values", "datamap-values"], "Array", (_, map) =>
 			/*
 				We first need to sort values by their keys (thus necessitating using .entries())
 				then extracting just the values.
@@ -1017,6 +1024,7 @@ define([
 		[Map])
 		/*d:
 			(dataentries: Datamap) -> Array
+			Also known as: (dm-entries:), (datamap-entries:)
 			
 			This takes a datamap, and returns an array of its name/value pairs. Each pair
 			is a datamap that only has "name" and "value" data. The pairs are ordered by their name.
@@ -1040,7 +1048,7 @@ define([
 			Added in: 2.0.0
 			#data structure
 		*/
-		("dataentries", "Array", (_, map) =>
+		(["dataentries", "dm-entries", "datamap-entries"], "Array", (_, map) =>
 			/*
 				As with (datavalues:), we need to sort values by their keys.
 			*/
@@ -1050,6 +1058,68 @@ define([
 				e => new Map([["name", e[0]], ["value", clone(e[1])]])
 			),
 		[Map])
+		/*d:
+			(dm-altered: Lambda, Datamap) -> Datamap
+			Also known as: (datamap-altered:)
+			
+			This is a variant of (altered:) which takes a "via" lambda and a single datamap, and creates a new datamap with the same datanames, but with the values changed by the
+			'via' lambda. The 'via' lambda is given a datamap with 'name' and 'value' datanames (identical to those in the array produced by (data-entries:)), so that the name of
+			each data value can be used in the lambda, but it must produce a single data value. An optional "where" clause can also be provided, which, if its condition
+			is false, causes that particular value to be unchanged.
+			
+			Example usage:
+			* `(dm-altered: via its value + 10 where its name is not 'Pluck', (dm: 'Caution', 2, 'Pluck', 5, 'Suspicion', 1))` produces `(dm: 'Caution',12,'Pluck',5,'Suspicion',11)`. Note
+			that the `it` value in the lambda is `(dm:'name', 'Caution', 'value', 2)` for the first loop, `(dm:'name', 'Pluck', 'value', 5)` for the second loop, and `(dm:'name', 'Suspicion', 'value', 1)`
+			for the third loop.
+			* `(dm-altered: _a via 1 where _a's value is a num, $dm)` produces a copy of the datamap in $dm, but with all the number values changed to 1.
+			
+			Rationale:
+			Generally, datamaps (unlike arrays) are not designed to have all of their values looped over and altered in one go, as each value is meant to have its own distinct meaning
+			relative to the others. But, there are a few situations where this is desirable, such as altering multiple numbers in a statistics datamap to fit a particular range (such as from 1 to 100).
+			This essentially combines (dataentries:) with (altered:) (or perhaps (folded:)) by letting you operate on each value while also having access to its name, and automates the process of
+			creating the new datamap from the altered (dataentries:).
+
+			Details:
+
+			Unlike (altered:), you must supply a datamap as the second value. Additionally, similar to (dataentries:), only one datamap can be given to this macro. If
+			you want to alter multiple datamaps with the same lambda, you may want to combine this with (altered:), in a manner
+			similar to this: `(altered: _dm, via (dm-altered: $lambda, _dm), ...$arrayOfDatamaps)`.
+
+			Of course, if any operation should cause an error, such as trying to add a string to a number, an error will result.
+
+			The temp variable (if you choose to name it instead of using `it`) is controlled entirely by the lambda - it doesn't exist
+			outside of it, it won't alter identically-named temp variables outside, and you can't manually (set:)
+			it within the lambda.
+
+			You can refer to other variables, including other temp variables, in the `via` expression. For instance, you can write
+			`(dm-altered: _accessory via _name + "'s " + _accessory's value, "Glove", "Hat", "Purse")`. However, for obvious reasons,
+			if the outer temp variable is named the same as the lambda's temp variable, it can't be referred to in the expression.
+
+			If the given datamap is empty (has no values) then another empty datamap will be returned.
+			
+			See also:
+			(altered:), (dataentries:)
+			
+			Added in: 3.3.0
+			#data structure
+		*/
+		(["dm-altered", "datamap-altered"], "Datamap", (section, lambda, map) => {
+			return Array.from(map.entries()).sort(
+				(a,b) => ([a[0],b[0]].sort(NaturalSort("en"))[0] === a[0] ? -1 : 1)
+			).reduce((a, e, pos) => {
+				if (TwineError.containsError(a)) {
+					return a;
+				}
+				const loop = new Map([["name", e[0]], ["value", clone(e[1])]]);
+				const result = lambda.apply(section, {loop, pos:pos+1});
+				if (TwineError.containsError(result)) {
+					return result;
+				}
+				a.set(e[0], result === null ? e[1] : result);
+				return a;
+			}, new Map());
+		},
+		[either(Lambda.TypeSignature('via'), Lambda.TypeSignature('where', 'via')), Map])
 		
 		/*d:
 			(history: [Lambda]) -> Array

@@ -62,11 +62,12 @@ describe("lambdas", function() {
 describe("lambda macros", function() {
 	'use strict';
 	describe("the (altered:) macro", function() {
-		it("accepts a 'via' lambda, plus zero or more other values", function() {
+		it("accepts a 'via' or 'where via' lambda, plus zero or more other values", function() {
 			expect("(altered:)").markupToError();
 			expect("(altered:1)").markupToError();
-			for(var i = 2; i < 10; i += 1) {
+			for(var i = 2; i < 8; i += 1) {
 				expect("(altered: _a via _a*2," + "2,".repeat(i) + ")").not.markupToError();
+				expect("(altered: _a via _a*2 where _a is a num," + "2,".repeat(i) + ")").not.markupToError();
 			}
 			expect("(altered: each _a, 2)").markupToError();
 			expect("(altered: _a where _a*2, 2)").markupToError();
@@ -81,6 +82,9 @@ describe("lambda macros", function() {
 			expect("(altered: _a via _a's A, (dm: 'A', 4), (dm: 'A', 7))").markupToPrint("4,7");
 			expect("(altered: _a via 'b' is in _a, (ds: 'b'), (ds:), (ds:3,'b'))").markupToPrint("true,false,true");
 			expect("(altered: _a via _a's r, (rgb: 20,60,90), (rgba: 120,10,10,0.1))").markupToPrint("20,120");
+		});
+		it("if the optional 'where' lambda fails, leaves the value for that iteration unaltered", function() {
+			expect("(altered: _a via _a*-1 where _a is an odd, 1,2,3,4,5)").markupToPrint("-1,2,-3,4,-5");
 		});
 		it("if one iteration errors, the result is an error", function() {
 			expect("(altered: _a via _a*2, 1, 2, true, 4)").markupToError();
@@ -264,6 +268,28 @@ describe("lambda macros", function() {
 		});
 		it("doesn't affect temporary variables outside it", function() {
 			expect("(set: _a to 1)(set: _b to 2)(folded: _a making _b via _a + _b, 3, 4, 7) _a _b").markupToPrint("14 1 2");
+		});
+	});
+	describe("the (dm-altered:) macro", function() {
+		it("accepts a 'via' lambda, plus one datamap", function() {
+			expect("(dm-altered:)").markupToError();
+			expect("(dm-altered:via it + (a:))").markupToError();
+			expect("(dm-altered:via it + (a:), (a:))").markupToError();
+			expect("(dm-altered:via its value, (dm:))").not.markupToError();
+		});
+		it("returns the datamap modified by the 'via' lambda, which receives a 'name' and 'value' datamap for each pair", function() {
+			expect("(set:_a to (dm-altered:where its name is not 'Pluck' via its value + 10, (dm: 'Caution', 2, 'Pluck', 5, 'Suspicion', 1)))(datanames:_a) (datavalues:_a)").markupToPrint('Caution,Pluck,Suspicion 12,5,11');
+			expect("(set:_a to (dm-altered:via 1 where its value is an odd, (dm: 'A', 5, 'B', 2, 'C', 3, 'D', 7)))(datanames:_a) (datavalues:_a)").markupToPrint('A,B,C,D 1,2,1,1');
+			expect("(set:_a to (dm-altered:via 2 where it is a datamap and (datanames:it) is (a:'name','value'), (dm: 'A', 5, 'B', 2, 'C', 3, 'D', 7)))(datanames:_a) (datavalues:_a)").markupToPrint('A,B,C,D 2,2,2,2');
+		});
+		it("if the datamap is empty, an empty datamap is returned", function() {
+			expect("(print: (dm-altered:where its name is not 'Pluck' via its value + 10, (dm:)) is (dm:))").markupToPrint('true');
+		});
+		it("correctly propagates errors", function() {
+			expect("(set:_a to (dm-altered:where its name is not 'Pluck' via its value + 10, (dm: 'Caution', 2, 'Pluck', 5, 'Suspicion', '1')))").markupToError();
+		});
+		it("is aliased as (datamap-altered:)", function() {
+			expect("(set:_a to (datamap-altered:where its name is not 'Pluck' via its value + 10, (dm: 'Caution', 2, 'Pluck', 5, 'Suspicion', 1)))(datanames:_a) (datavalues:_a)").markupToPrint('Caution,Pluck,Suspicion 12,5,11');
 		});
 	});
 });

@@ -136,20 +136,29 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 								codeCell('th', 'pos'),
 								f.lambda.obj.loop ? codeCell('th',  "_" + f.lambda.obj.loop.getName()).append(' / ', $('<code>').append(Highlight('it', 'macro'))) : codeCell('th','it'),
 								f.lambda.obj.making && codeCell('th', "_" + f.lambda.obj.making.getName()),
-								$('<th>Result</th>'),
+								f.lambda.obj.where && codeCell('th', 'where').append(' result'),
+								f.lambda.obj.via && codeCell('th', 'via').append(' result'),
 							),
-							...f.lambda.loop.map((loop,i) => {
-								const error = TwineError.containsError(f.lambda.result[i]);
-								return $('<tr>').append(
-									codeCell('td', toSource(f.lambda.pos[i])),
-									codeCell('td', toSource(loop)),
-									f.lambda.obj.making && codeCell('td', toSource(f.lambda.making[i])),
-									error ? $('<td>').append(error.render(f.lambda.obj.source, /*NoEvents*/ true))
-										: codeCell('td', toSource(f.lambda.result[i])).append(
-											(f.lambda.obj.where || f.lambda.obj.when || f.lambda.obj.via) && $("<tw-open-button replay label='🔍'>").data('evalReplay', f.lambda.replay[i])
+							...f.lambda.loops.map(({ it, pos, making, whereResult, whereReplay, viaResult, viaReplay, }) =>
+								$('<tr>').append(
+									codeCell('td', toSource(pos)),
+									codeCell('td', toSource(it)),
+									making !== undefined && codeCell('td', toSource(making)),
+
+									whereResult !== undefined && whereResult !== null &&
+										(TwineError.containsError(whereResult) ? $('<td>').append(whereResult.render(f.lambda.obj.source, /*NoEvents*/ true))
+											: codeCell('td', toSource(whereResult))
+										).append(
+											whereReplay && $("<tw-open-button replay label='🔍'>").data('evalReplay', whereReplay)
 										),
-								);
-							})
+									viaResult !== undefined && viaResult !== null &&
+										(TwineError.containsError(viaResult) ? $('<td>').append(viaResult.render(f.lambda.obj.source, /*NoEvents*/ true))
+											: codeCell('td', toSource(viaResult))
+										).append(
+											viaReplay && $("<tw-open-button replay label='🔍'>").data('evalReplay', viaReplay)
+										),
+								)
+							)
 						),
 					);
 				} else if (!f.toDesc) {

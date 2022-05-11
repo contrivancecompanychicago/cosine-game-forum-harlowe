@@ -288,6 +288,10 @@ describe("data structure macros", function () {
 			runPassage("(set: $a to (datamap:'D1',1,'E',2,'e',3,'É',4,'D11',5,'D2',6,'F',7))");
 			expect("(print: (datanames:$a))").markupToPrint("D1,D2,D11,e,E,É,F");
 		});
+		it("is aliased as (dm-names:) and (datamap-names:)", function() {
+			expect("(print: (datanames:(dm:'D1',1,'E',2)) is (datamapnames:(dm:'D1',1,'E',2)))").markupToPrint("true");
+			expect("(print: (datanames:(dm:'D1',1,'E',2)) is (dm-names:(dm:'D1',1,'E',2)))").markupToPrint("true");
+		});
 	});
 	describe("the (datavalues:) macro", function() {
 		it("accepts 1 datamap", function() {
@@ -308,6 +312,10 @@ describe("data structure macros", function () {
 			expect("(set:$a to (a:1,2,3))"
 				+"(set:$b to (datavalues: (datamap: 'a', $a)))"
 				+"(set:$b's 1st's 1st to 4)$a").markupToPrint("1,2,3");
+		});
+		it("is aliased as (dm-values:) and (datamap-values:)", function() {
+			expect("(print: (datavalues:(dm:'D1',1,'E',2)) is (dm-values:(dm:'D1',1,'E',2)))").markupToPrint("true");
+			expect("(print: (datavalues:(dm:'D1',1,'E',2)) is (datamap-values:(dm:'D1',1,'E',2)))").markupToPrint("true");
 		});
 	});
 	describe("the (dataentries:) macro", function() {
@@ -333,6 +341,10 @@ describe("data structure macros", function () {
 			expect("(set:$a to (a:1,2,3))"
 				+"(set:$b to (dataentries: (datamap: 'a', $a)))"
 				+"(set:$b's 1st's value's 1st to 4)$a").markupToPrint("1,2,3");
+		});
+		it("is aliased as (dm-entries:) and (datamap-entries:)", function() {
+			expect("(print: (dataentries:(dm:'D1',1,'E',2)) is (dm-entries:(dm:'D1',1,'E',2)))").markupToPrint("true");
+			expect("(print: (dataentries:(dm:'D1',1,'E',2)) is (datamap-entries:(dm:'D1',1,'E',2)))").markupToPrint("true");
 		});
 	});
 	describe("the (datamap:) macro", function() {
