@@ -588,8 +588,8 @@ define([
 			Rationale:
 			There are a couple of other macros which accept data in pairs - the most notable being
 			(dm:), which takes data names and data values paired. This macro can help
-			with using such macros. For instance, you can supply an array of (datanames:) and
-			(datavalues:) to (interlaced:), and supply that to (dm:), to produce the original
+			with using such macros. For instance, you can supply an array of (dm-names:) and
+			(dm-values:) to (interlaced:), and supply that to (dm:), to produce the original
 			datamap again. Or, you can supply just the names, and use a macro like (repeated:) to
 			fill the other values.
 			
@@ -965,55 +965,55 @@ define([
 		},
 		[either(Lambda.TypeSignature('where','via','making'), Lambda.TypeSignature('via','making')), rest(Any)])
 		/*d:
-			(datanames: Datamap) -> Array
+			(dm-names: Datamap) -> Array
 			Also known as: (dm-names:), (datamap-names:)
 			
 			This takes a datamap, and returns a sorted array of its data names, sorted
 			alphabetically.
 			
 			Example usage:
-			`(datanames: (dm:'B','Y', 'A','X'))` produces the array `(a: 'A','B')`
+			`(dm-names: (dm:'B','Y', 'A','X'))` produces the array `(a: 'A','B')`
 			
 			Rationale:
 			Sometimes, you may wish to obtain some information about a datamap. You may want
 			to list all of its data names, or determine how many entries it has. You can use
-			the (datanames:) macro to do these things: if you give it a datamap, it produces
+			the (dm-names:) macro to do these things: if you give it a datamap, it produces
 			a sorted array of all of its names. You can then (print:) them, check the length
 			of the array, obtain a subarray, and other things you can do to arrays.
 			
 			See also:
-			(datavalues:), (dataentries:)
+			(dm-values:), (dataentries:)
 
 			Added in: 1.1.0
 			#data structure
 		*/
-		(["datanames", "dm-names", "datamap-names"], "Array", (_, map) =>  Array.from(map.keys()).sort(NaturalSort("en")),
+		(["dm-names", "datamap-names","datanames"], "Array", (_, map) =>  Array.from(map.keys()).sort(NaturalSort("en")),
 		[Map])
 		/*d:
-			(datavalues: Datamap) -> Array
+			(dm-values: Datamap) -> Array
 			Also known as: (dm-values:), (datamap-values:)
 			
 			This takes a datamap, and returns an array of its values, sorted
 			alphabetically by their name.
 			
 			Example usage:
-			`(datavalues: (dm:'B',24, 'A',25))` produces the array `(a: 25,24)`
+			`(dm-values: (dm:'B',24, 'A',25))` produces the array `(a: 25,24)`
 			
 			Rationale:
 			Sometimes, you may wish to examine the values stored in a datamap without
 			referencing every name - for instance, determining if 0 is one of the values.
 			(This can't be determined using the `contains` keyword, because that only checks
 			the map's data names.) You can extract all of the datamap's values into an array
-			to compare and analyse them using (datavalues:). The values will be sorted by
+			to compare and analyse them using (dm-values:). The values will be sorted by
 			their associated names.
 			
 			See also:
-			(datanames:), (dataentries:)
+			(dm-names:), (dataentries:)
 
 			Added in: 1.1.0
 			#data structure
 		*/
-		(["datavalues", "dm-values", "datamap-values"], "Array", (_, map) =>
+		(["dm-values", "datamap-values", "datavalues"], "Array", (_, map) =>
 			/*
 				We first need to sort values by their keys (thus necessitating using .entries())
 				then extracting just the values.
@@ -1038,19 +1038,19 @@ define([
 			Rationale:
 			There are occasions where operating on just the names, or the values, of
 			a datamap isn't good enough - you'll want both. Rather than the verbose process
-			of taking the (datanames:) and (datavalues:) arrays and using them (interlaced:)
+			of taking the (dm-names:) and (dm-values:) arrays and using them (interlaced:)
 			with each other, you can use this macro instead, which allows the name and value of
 			each entry to be referenced using "name" and "value" properties.
 			
 			See also:
-			(datanames:), (datavalues:)
+			(dm-names:), (dm-values:)
 			
 			Added in: 2.0.0
 			#data structure
 		*/
-		(["dataentries", "dm-entries", "datamap-entries"], "Array", (_, map) =>
+		(["dm-entries", "datamap-entries", "dataentries"], "Array", (_, map) =>
 			/*
-				As with (datavalues:), we need to sort values by their keys.
+				As with (dm-values:), we need to sort values by their keys.
 			*/
 			Array.from(map.entries()).sort(
 				(a,b) => ([a[0],b[0]].sort(NaturalSort("en"))[0] === a[0] ? -1 : 1)
@@ -1550,8 +1550,8 @@ define([
 			`(dm: "dog", "bark")`.
 			
 			You may notice that you usually need to know the names a datamap contains in order to access its values. There are certain
-			macros which provide other ways of examining a datamap's contents: (datanames:) provides a sorted array of its names,
-			(datavalues:) provides a sorted array of its values, and (dataentries:) provides an array of names and values.
+			macros which provide other ways of examining a datamap's contents: (dm-names:) provides a sorted array of its names,
+			(dm-values:) provides a sorted array of its values, and (dataentries:) provides an array of names and values.
 
 			To summarise, the following operators work on datamaps.
 			
@@ -1559,7 +1559,7 @@ define([
 			|---
 			| `is` | Evaluates to boolean `true` if both sides contain equal names and values, otherwise `false`. | `(dm:"HP",5) is (dm:"HP",5)` (is true)
 			| `is not` | Evaluates to `true` if both sides differ in items or ordering. | `(dm:"HP",5) is not (dm:"HP",4)` (is true)<br>`(dm:"HP",5) is not (dm:"MP",5)` (is true)
-			| `contains` | Evaluates to `true` if the left side contains the name on the right.<br>(To check that a datamap contains a value, try using `contains` with (datavalues:)) | `(dm:"HP",5) contains "HP"` (is true)<br>`(dm:"HP",5) contains 5` (is false)
+			| `contains` | Evaluates to `true` if the left side contains the name on the right.<br>(To check that a datamap contains a value, try using `contains` with (dm-values:)) | `(dm:"HP",5) contains "HP"` (is true)<br>`(dm:"HP",5) contains 5` (is false)
 			| `does not contain` | Evaluates to `true` if the left side does not contain the name on the right. | `(dm:"HP",5) does not contain "MP"` (is true)
 			| `is in` | Evaluates to `true` if the right side contains the name on the left. | `"HP" is in (dm:"HP",5)` (is true)
 			| `is not in` | Evaluates to `true` if the right side does not contain the name on the left. | `"XP" is not in (dm:"HP",5)` (is true)
@@ -1798,7 +1798,7 @@ define([
 			you can try subtracting two (count:)s - `(count: "Though","ugh") - (count: "Though","h")` produces 1.
 
 			See also:
-			(find:), (str-find:), (datanames:), (datavalues:)
+			(find:), (str-find:), (dm-names:), (dm-values:)
 
 			Added in: 1.0.0
 			#data structure

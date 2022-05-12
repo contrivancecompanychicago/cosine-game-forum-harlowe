@@ -329,10 +329,9 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatype
 
 			Details:
 
-			When (p:), and other macros like (p-many:), are given multiple values, it is treated as a **sequence**. Strings are matched to sequences as follows: first, Harlowe checks if the start of the string matches the
-			first value in the pattern. If it matches, then the part of the start that matched the first value is excluded, and Harlowe then checks if the start of the remaining portion of
-			the string matches the next value in the pattern. When every part of the string has been matched to every one of the values, then the whole string is considered a match for the whole
-			sequence.
+			When (p:), and some (but not all) macros like (p-many:), are given multiple values, it is treated as a **sequence**. Strings are matched to sequences as follows: first,
+			Harlowe checks if the start of the string matches the first value in the pattern. If it matches, then Harlowe checks if the start of the remaining portion of the string
+			matches the next value in the pattern. When every part of the string has been matched to every one of the values, then the whole string is considered a match for the whole sequence.
 
 			For example, in the case of `"egg orb" matches (p:"egg",whitespace,"orb")`:
 			0. Harlowe checks if the start of `"egg orb"` matches `"egg"`. It does, so the portion that matches `"egg"` is excluded, leaving `" orb"`.
@@ -463,7 +462,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatype
 			(p:), (p-opt:), (p-not-before:)
 
 			Added in: 3.2.0.
-			#patterns
+			#patterns 6
 		*/
 		(["p-not","pattern-not"], "Datatype",
 			(_, ...fullArgs) => {
@@ -506,13 +505,52 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatype
 			(p:), (p-opt:), (p-not:)
 
 			Added in: 3.3.0.
-			#patterns
+			#patterns 8
 		*/
 		(["p-not-before","pattern-not-before"], "Datatype",
 			(_, ...fullArgs) => {
 				return createPattern({
 					name: "p-not-before", fullArgs, canContainTypedVars: false,
 					makeRegExpString: subargs => "(?!" + subargs.join('') + ")"
+				});
+			},
+		PatternSignature)
+
+		/*d:
+			(p-before: ...String or Datatype) -> Datatype
+			Also known as: (pattern-before:)
+
+			Creates a string pattern that matches the empty string, *only* it is followed by the given sequence of strings or datatypes. This is best used inside another
+			pattern macro like (p:), alongside a pattern to match, where it serves as an extra restriction on that pattern (making it match only if it's "not before" something).
+
+			Example usage:
+			```
+			(str-find: (p:(p-many:digit), (p-before:(p-either:"AM","PM"))), "I arrived home at 42nd Street at 11PM and was in bed by 2AM.")
+			```
+			This example produces `(a:"11","2")`. Without the (p-before:) call around the (p-either:) call, this would produce `(a:"11PM","2AM")`.
+
+			Rationale:
+			While you can already select a continuous span of text by simply providing multiple values to (p:) and the like, this can be inconvenient for macros such as (str-find:) and (str-replaced:) -
+			if you only want to find a subset of the match (such as just the digits before "AM" or "PM" in the above example), you'll have to strip the unwanted portion off afterward using a dataname like `1stto2ndlast`.
+			As an alternative, you can use (p-before:) in the pattern to specify a portion of the pattern that should be checked, but not included in the match substring itself.
+
+			Details:
+			This is part of a suite of string pattern macros. Consult the (p:) article to learn more about string patterns, special user-created datatypes
+			that can match very precise kinds of strings.
+
+			While you can use this as the datatype of a TypedVar, this won't accomplish much, since, as explained, it only matches the empty string. Additionally, you can't nest TypedVars inside this.
+
+			See also:
+			(p:), (p-opt:), (p-not:)
+
+			Added in: 3.3.0.
+			#patterns 7
+		*/
+		(["p-before","pattern-before"], "Datatype",
+			(_, ...fullArgs) => {
+				return createPattern({
+					name: "p-before", fullArgs, canContainTypedVars: false,
+					makeRegExpString: subargs => "(?=" + subargs.join('') + ")"
 				});
 			},
 		PatternSignature)
@@ -622,7 +660,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatype
 			(p:), (p-opt:), (p-many:), (p-either:)
 
 			Added in: 3.2.0.
-			#patterns 5
+			#patterns 10
 		*/
 		(["p-ins","pattern-ins","p-insensitive","pattern-insensitive"], "Datatype",
 			(_, ...fullArgs) => createPattern({

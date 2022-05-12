@@ -98,6 +98,9 @@ describe("lambda macros", function() {
 		it("sets the 'it' identifier to the loop value", function() {
 			expect("(print: (altered: _a via it*2, 1)'s 1st + 1)").markupToPrint("3");
 		});
+		it("'where' can't alter the 'it' value given to 'via'", function() {
+			expect("(print: (altered: where it is an odd via it*2, 3,2))").markupToPrint("6,2");
+		});
 		it("errors if the optional datatype doesn't match", function() {
 			expect("(print: (altered: str-type _a via it is not '2', 1))").markupToError();
 		});

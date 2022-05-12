@@ -425,7 +425,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 
 			Example usage:
 			* `(joined:" ", "Philias", "Silus", "Sebastus", "Brotch")` produces the string "Philias Silus Sebastus Brotch".
-			* `(joined:" or ", ...(datavalues: (dm: "Breakfast", "Toast", "Dinner", "Pasta", "Lunch", "Soup")))` produces the string `"Toast or Pasta or Soup"`.
+			* `(joined:" or ", ...(dm-values: (dm: "Breakfast", "Toast", "Dinner", "Pasta", "Lunch", "Soup")))` produces the string `"Toast or Pasta or Soup"`.
 
 			Rationale:
 			If you have a list of strings stored in an array, which may be the names of related concepts, such as inventory objects or suspect names,

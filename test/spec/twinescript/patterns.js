@@ -415,6 +415,15 @@ describe("patterns", function() {
 				expect('(print: (p-many:(p-either:(p: "0", (p-not-before:"0")), (p:"1", (p-not-before:"1")), whitespace)) does not match "0 0 01 10101 110")').markupToPrint('true');
 			});
 		});
+		describe("(p-before:)", function() {
+			it("matches the empty string", function() {
+				expect("(print: (p:(pbefore:'r'),'r') matches 'r') (print: (pbefore:'r','b') does not match 'r' and it does not match 'b')").markupToPrint('true true');
+			});
+			it("when used in (p:), matches the empty string if the sequence follows", function() {
+				expect("(print: (p:'red',(pbefore:whitespace,'blue'),str) matches 'red blue' and it does not match 'redblue' and it does not match 'red')").markupToPrint('true');
+				expect('(print: (p-many:(p-either:(p: digit, (p-before: whitespace)), whitespace)) matches " 2  2 1 4 1 " and it does not match " 22 ")').markupToPrint('true');
+			});
+		});
 	});
 	describe("(datatype:)", function() {
 		it("takes most kinds of data, and produces a datatype that matches it", function() {
