@@ -517,7 +517,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			Examples:
 			* `(digitformat: "###.###", -1234.5678)` produces the string `"-234.567"`.
 			* `(digitformat: "###.###", -1/2)` produces the string `"-.5"`.
-			* `(print: "$" + (digitformat: "##0.00", 0.96)` prints `$0.96`.
+			* `(print: "$" + (digitformat: "##0.00", 0.96))` prints `$0.96`.
 			* `(digitformat: "###,###", 155500)` produces the string `"155,500"`. Unlike every other character, commas are assumed to be thousands
 			separators unless a different separator character is used before them.
 			* `(digitformat: "### ###.", 500000)` produces the string `"500 000"`.
@@ -1430,7 +1430,8 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			In situations where you would write something like this,
 			
 			```
-			{(if: not $lostTheSword)[
+			{(set:$lostTheSword to (either:true,false))
+			(if: not $lostTheSword)[
 			(set: $weapon to "a holy sword")
 			](else: )[
 			(set:$weapon to "an unholy swear-word")
@@ -1439,11 +1440,12 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 
 			you could instead simply write this.
 
-			`(set: $weapon to (cond: not $lostTheSword, "a holy sword", "an unholy swear-word"))`
+			`(set:$lostTheSword to (either:true,false))(set: $weapon to (cond: not $lostTheSword, "a holy sword", "an unholy swear-word"))`
 
 			Details:
 			This macro is intended to resemble the "cond" function in Lisp, as well as the "ternary" operator in numerous other
-			programming languages. It also might remind you of the values given to (dm:) - a piece of metadata, followed by its matching
+			programming languages (though it does *not* perform short-circuiting).
+			It also might remind you of the values given to (dm:) - a piece of metadata, followed by its matching
 			data - except that (dm:) ties names to data, whereas this ties conditions to data.
 
 			If only one value was given to (cond:), then that value will be returned as-is.

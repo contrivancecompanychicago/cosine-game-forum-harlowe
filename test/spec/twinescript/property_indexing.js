@@ -322,7 +322,8 @@ describe("property indexing", function() {
 					expect('foo\nbar\nbaz\n(replace: ?passage\'s lines)[1]').markupToPrint("1\n1\n1\n1");
 					expect('foo\nbar\nbaz\n(replace: ?passage\'s lines\'s 2nd)[1]').markupToPrint("foo\n1\nbaz\n");
 					expect('foo\n[bar\nbaz]<1|qux\n(replace: ?passage\'s lines\'s 2nd)[1]').markupToPrint("foo\n1\nbazqux\n");
-					expect('foo\n[bar\nbaz]<1|qux\n(replace: ?passage\'s lines\'s 3nd)[1]').markupToPrint("foo\nbar\n1\n");
+					// This next one is an unfortunate compromise (2022-5-20)
+					expect('foo\n[bar\nbaz]<1|qux\n(replace: ?passage\'s lines\'s 3nd)[1]').markupToPrint("foo\nbar\n1qux\n");
 
 					var a = runPassage('foo\nbar\n(enchant:?passage\'s lines, (text-colour:#333))').find('tw-enchantment');
 					setTimeout(function(){

@@ -1494,6 +1494,7 @@
 							min: 0,
 							max: 10,
 							step: 1,
+							width: "25%",
 							model(m, elem) {
 								m.placement = elem[$]('input').value/10;
 							},
@@ -1504,6 +1505,7 @@
 							min: 1,
 							max: 10,
 							step: 1,
+							width: "25%",
 							model(m, elem) {
 								m.width = elem[$]('input').value/10;
 								const area = 1 - m.width;
@@ -1759,17 +1761,17 @@
 					{ title:'Alignment',               html:fontIcon('align-right'),      onClick: () => switchPanel('align')},
 					{ title:'Columns',                 html:fontIcon('columns'),          onClick: () => switchPanel('columns')},
 					el('<span class="harlowe-3-toolbarBullet">'),
-					{ title:'Collapse whitespace (at runtime)', html:'<b>{}</b>',         onClick: () => switchPanel('collapse')},
+					{ title:'Collapse whitespace (in-game)', html:'<b>{}</b>',         onClick: () => switchPanel('collapse')},
 					{
 						title:'Verbatim (ignore all markup)',
 						html:'Vb',
 						onClick() {
 							const selection = cm.doc.getSelection();
 							const consecutiveGraves = (selection.match(/`+/g) || []).reduce((a,e) => Math.max(e.length, a), 0);
-							wrapSelection("`".repeat(consecutiveGraves+1), "`".repeat(consecutiveGraves+1), "Verbatim Text (Markup Ignored)");
+							wrapSelection("`".repeat(consecutiveGraves+1), "`".repeat(consecutiveGraves+1), "Verbatim Text");
 						},
 					},
-					{ title:'Comments',                html:'<b>&lt;!--</b>',                 onClick: () => wrapSelection("<!--","-->", "Comments (Not Visible In-Game)")},
+					{ title:'Comments',                html:'<b>&lt;!--</b>',                 onClick: () => wrapSelection("<!--","-->", "HTML Comments (Not Visible In-Game)")},
 					el('<span class="harlowe-3-toolbarBullet">'),
 					{ title:'Link element',            html:'Link…',                          onClick: () => switchPanel('passagelink')},
 					{ title:'Only show a portion of text if a condition is met', html:'If…',  onClick: () => switchPanel('if')},
@@ -1861,25 +1863,25 @@
 		]},
 		{ type: 'button', command() { switchPanel('textcolor'); },                         label:'Colours',     iconOnly: true, icon: svgURI(`<defs><linearGradient id="X"><stop offset="0%" stop-color="hsla(0,100%,50%,0.5)"/><stop offset="16%" stop-color="hsla(30,100%,50%,0.5)"/><stop offset="33%" stop-color="hsla(60,100%,50%,0.5)"/><stop offset="50%" stop-color="hsla(120,100%,50%,0.5)"/><stop offset="66%" stop-color="hsla(180,100%,50%,0.5)"/><stop offset="83%" stop-color="hsla(240,100%,50%,0.5)"/><stop offset="100%" stop-color="hsla(320,100%,50%,0.5)"/></linearGradient></defs><circle cx="8" cy="8" r="6" fill="url('#X')"/>`), },
 		{ type: 'button', command() { switchPanel('borders'); },                           label:'Borders',     iconOnly: true, icon: fontIconURI('border-style'), },
-		{ type: 'button', command() { switchPanel('rotate'); },                            label:'Rotate',      iconOnly: true, icon: t24Icon(-3, 14, 'transform:rotate(-30deg);font-family:serif;', 'R'), },
-		{ type: 'button', command() { wrapSelection("\n#","","Heading Text"); },           label:'Header',      iconOnly: true, icon: t24Icon(0, 14, 'font-weight:bold;font-size:18px;','H'), },
-		{ type: 'menu', icon: fontIconURI('list-ul'), label: 'List', iconOnly: true, items: [
+		{ type: 'button', command() { switchPanel('rotate'); },                            label:'Rotated text',iconOnly: true, icon: t24Icon(-3, 14, 'transform:rotate(-30deg);font-family:serif;', 'R'), },
+		{ type: 'button', command() { wrapSelection("\n#","","Heading Text"); },           label:'Heading',     iconOnly: true, icon: t24Icon(0, 14, 'font-weight:bold;font-size:18px;','H'), },
+		{ type: 'menu', icon: fontIconURI('list-ul'), label: 'List item', iconOnly: true, items: [
 			{ type: 'button', command() { wrapSelection("\n* ",""); },                         label:'Bulleted list item', },
 			{ type: 'button', command() { wrapSelection("\n0. ",""); },                        label:'Numbered list item', },
 		]},
-		{ type: 'button', command() { wrapSelection("\n---\n",""); },                      label:'Horizontal rule', iconOnly: true, icon: fontIconURI('minus'), },
+		{ type: 'button', command() { wrapSelection("\n---\n",""); },                      label:'Horizontal Rule', iconOnly: true, icon: fontIconURI('minus'), },
 		{ type: 'button', command() { switchPanel('align'); },                             label:'Alignment',   iconOnly: true, icon: fontIconURI('align-right'), },
 		{ type: 'button', command() { switchPanel('columns'); },                           label:'Columns',     iconOnly: true, icon: fontIconURI('columns'), },
-		{ type: 'button', command() { switchPanel('collapse'); },                          label:'Collapse',    iconOnly: true, icon: t24Icon(0,10,'font-weight:bold;font-size:12px','{ }'), },
+		{ type: 'button', command() { switchPanel('collapse'); },                          label:'Collapse whitespace (in-game)', iconOnly: true, icon: t24Icon(0,10,'font-weight:bold;font-size:12px','{ }'), },
 		{ type: 'button',
 			command() {
 				const selection = cm.doc.getSelection();
 				const consecutiveGraves = (selection.match(/`+/g) || []).reduce((a,e) => Math.max(e.length, a), 0);
-				wrapSelection("`".repeat(consecutiveGraves+1), "`".repeat(consecutiveGraves+1), "Verbatim Text (Markup Ignored)");
+				wrapSelection("`".repeat(consecutiveGraves+1), "`".repeat(consecutiveGraves+1), "Verbatim Text");
 			},
-			label:'Verbatim', iconOnly: true, icon: t24Icon(1,12,'font-size:11px','Vb'),
+			label:'Verbatim (ignore all markup inside)', iconOnly: true, icon: t24Icon(1,12,'font-size:11px','Vb'),
 		},
-		{ type: 'button', command() { wrapSelection("<!--","-->", "HTML Comments (Not Visible In-Game)"); },  label:'Comments', iconOnly: true, icon: t24Icon(-1,10,'font-weight:bold','&#10216;!-'), },
+		{ type: 'button', command() { wrapSelection("<!--","-->", "Comment Text"); },  label:'HTML Comments (Not Visible In-Game)', iconOnly: true, icon: t24Icon(-1,10,'font-weight:bold','&#10216;!-'), },
 
 		{ type: 'button', command() { switchPanel('passagelink'); },                       label:'Link…',   icon:'', },
 		{ type: 'button', command() { switchPanel('if'); },                                label:'If…',     icon:'', },
@@ -1891,10 +1893,10 @@
 			As a convenient hack to support multi-editor in 2.4, the hideCode, etc. classes are placed on the .CodeMirror element
 			rather than the (global) harloweToolbar element.
 		*/
-		hideCodeButton    = { type: 'button', command() { cm.display.wrapper.classList.toggle('harlowe-3-hideCode'); cm.constructor.signal(cm,'cursorActivity'); },    label:'Proofread view',   iconOnly: true, icon:fontIconURI('eye'), },
-		hideTooltipButton = { type: 'button', command() { cm.display.wrapper.classList.toggle('harlowe-3-hideTooltip'); cm.constructor.signal(cm,'cursorActivity'); }, label:'Coding tooltips',  iconOnly: true, icon:fontIconURI('comment'), },
-		{ type: 'button', key: 'Ctrl-F', command() { switchPanel('find'); },        label:'Find and replace', iconOnly: true, icon: fontIconURI('search'), },
-		{ type: 'button', command() { window.open(`https://twine2.neocities.org/`, "Harlowe Documentation", 'noopener,noreferrer'); }, label:'Show Manual', iconOnly: true, icon:t24Icon(3, 12, 'font-weight:bold;font-size:19px;','?'), },
+		hideCodeButton    = { type: 'button', command() { cm.display.wrapper.classList.toggle('harlowe-3-hideCode'); cm.constructor.signal(cm,'cursorActivity'); },    label:'Proofreading View (dim all code except strings)',   iconOnly: true, icon:fontIconURI('eye'), },
+		hideTooltipButton = { type: 'button', command() { cm.display.wrapper.classList.toggle('harlowe-3-hideTooltip'); cm.constructor.signal(cm,'cursorActivity'); }, label:'Coding Tooltips (show a tooltip when the cursor rests on code structures)',  iconOnly: true, icon:fontIconURI('comment'), },
+		{ type: 'button', key: 'Ctrl-F', command() { switchPanel('find'); },        label:'Find and Replace', iconOnly: true, icon: fontIconURI('search'), },
+		{ type: 'button', command() { window.open(`https://twine2.neocities.org/`, "Harlowe Documentation", 'noopener,noreferrer'); }, label:'Show Manual (opens a new tab)', iconOnly: true, icon:t24Icon(3, 12, 'font-weight:bold;font-size:19px;','?'), },
 	].map(function recur(b,i) {
 		/*
 			The above definition is split into separate command and toolbar objects, as per the TwineJS 2.4 spec.

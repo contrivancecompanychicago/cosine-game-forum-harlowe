@@ -760,9 +760,9 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatype
 			is given, it defaults to removing whitespace, as if `whitespace` was the first argument.
 
 			Example usage:
-			* `(trimmed:"   Contract Annulled ")` produces "Contract Annulled".
+			* `(trimmed:"   Contract Annulled ")` produces `"Contract Annulled"`.
 			* `(trimmed: "$", $treasureValue)` produces the string stored in $treasureValue with leading or trailing "$" signs removed.
-			* `(trimmed: digit, "john61112")` produces "john".
+			* `(trimmed: digit, "john61112")` produces `"john"`.
 
 			Rationale:
 			Removing certain leading or trailing characters in a string is a common operation, and is essentially equivalent to extracting a single substring from within a string.
@@ -824,8 +824,8 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatype
 			Example usage:
 			* `(str-find: digit, "PARSEC47"))` produces `(a:"4","7")`.
 			* `(str-find: (p:"S", ...alnum), "Mr. Smith, Mr. Schmitt, and Mr. Smithers")` produces `(a:"Smith","Schmitt","Smithers")`.
-			* `(str-find:(p:"$", ...digit, ".", ...digit), "Apple pie - $5.50; Pumpkin pie - $14.50"))` produces `(a:"$5.50","$14.50")`.
-			* `(str-find:(p:...alnum-type _flavor, " pie - $", (p:...digit, ".", ...digit)-type _cost), "Apple pie - $5.50; Pumpkin pie - $14.50"))` produces the following:<br>
+			* `(str-find:(p:"$", ...digit, ".", ...digit), "Apple pie - $5.50; Pumpkin pie - $14.50")` produces `(a:"$5.50","$14.50")`.
+			* `(str-find:(p:...alnum-type _flavor, " pie - $", (p:...digit, ".", ...digit)-type _cost), "Apple pie - $5.50; Pumpkin pie - $14.50")` produces the following:<br>
 			`(a:
 				(dm:"cost","5.50","flavor","Apple","match","Apple pie - $5.50"),
 				(dm:"cost","14.50","flavor","Pumpkin","match","Pumpkin pie - $14.50")
@@ -966,7 +966,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatype
 
 			Here's a short table summarising some of the above information.
 
-			| Macro call | `it` | `pos` | `_a` | `_phoneNum` | Replacement made by the lambda
+			| Macro call | `it` | `pos` | `_a` | Replacement made by the lambda
 			|---
 			| `(str-replaced: (p: (p-many:digit)-type _a, "%"), via _a + " percent", "5% 10%")` | `"5%"` | `1` | `"5"` | `"5 percent"`
 			| |`"10%"` | `2` | `"10"` | `"10 percent"`

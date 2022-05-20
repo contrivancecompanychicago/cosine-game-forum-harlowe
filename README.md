@@ -29,7 +29,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
    * Note: this means that, given constructions like `[]<A|` and `(click:?A)[]`, revision macros like `(append:?Link)` will no longer consider ?A (as long as it is empty) to be a link via the `(click:)`, and cannot append to it - you'll have to explicitly refer to it via `(append:?A)` instead.
  * Fixed a bug where chained `'s` syntax, like `$array's 1st's 2nd`, produced bad error messages when the deepest dataname (in that example, `1st`) wasn't present.
  * Fixed a bug where `'s` and `of` sometimes wouldn't be syntax-highlighted correctly.
- * Improved the behaviour of enchanting a hook's lines when those lines contain macros or links, sometimes causing those elements to be excluded from the enchantment, or falsely considered to be lines on their own.
+ * Improved the behaviour of enchanting a hook's lines (using either (enchant:) or (line-style:)) when those lines contain macros or links, sometimes causing those elements to be excluded from the enchantment, or falsely considered to be lines on their own.
  * Fixed a bug where `(replace:)` targeting `?passage's lines` (and similar such code) wouldn't replace the line that itself was on, unless some text was before it in the line.
  * The `it` identifier is now cleared (to the default value of 0) whenever the player changes passages.
  * Fixed a bug where using a custom macro in a `(storylet:)` lambda would cause Debug Mode to constantly reload the Storylets and Variables panels, hurting performance.
@@ -53,7 +53,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
    * Also, number and boolean variables are short enough that saving them as a reference isn't necessary, so they won't be saved as indexes even if they are "pure".
    * Variables changed using `(unpack:)` or `2bind` currently aren't considered "pure".
    * As a consequence of this change, save files from older versions of your story are much more likely to become invalidated whenever you make minor changes to passage prose, so do take note of that.
- * As an additional save file optimisation, global variables holding arrays, datasets or datamaps, whose inner data values have only changed slightly compared to previous turns, will now be saved in a shorter form using the `it` identifier to refer to values which were unchanged. As an example, if a gloval variable contains `(a:(passage:'A1'),(passage:'A2'),(passage:'A3'))` (an array containing 3 large datamaps), and on a subsequent turn it is changed to `(a:(passage:'A2'),(passage:'A3'),"A string")`, then on that turn, it will be serialised as `(a:its 2nd,its 3rd,"A string")`.
+ * As an additional save file optimisation, global variables holding arrays, datasets or datamaps, whose inner data values have only changed slightly compared to previous turns, will now be saved in a shorter form using the `it` identifier to refer to values which were unchanged. As an example, if a global variable contains `(a:(passage:'A1'),(passage:'A2'),(passage:'A3'))` (an array containing 3 large datamaps), and on a subsequent turn it is changed to `(a:(passage:'A2'),(passage:'A3'),"A string")`, then on that turn, it will be serialised as `(a:its 2nd,its 3rd,"A string")`.
    * This optimisation also applies to global variables holding long strings, as long as they have simply been appended or prepended to over multiple turns.
  * Slightly improved performance of changing passages in stories that contain a very large number of passages.
  * Slightly improved performance of rendering and re-rendering hooks.
@@ -69,7 +69,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
  * Now, macros and variables in "changer position" (directly in front of a hook with only whitespace between) will no longer cause an error if they do not produce changers, booleans or commands. Instead, these values will be printed directly, as usual. This restriction was originally in Harlowe in order to protect against typos of variable names or macro names when intending to insert a changer. However, I've since decided that other error-prevention measures in the editor/syntax highlighter/Debug Mode ought to be used instead, given that this restriction tended to force authors to tediously wrap various expressions in `(print:)` calls to avoid them becoming attached.
  * Code hooks can now be stored in variables and printed in the passage. This means that instead of storing long strings containing large amounts of markup that doesn't get highlighted in the syntax highlighter, you can instead store code hooks. Using a code hook in this way also signals (to anyone reading the code) what its purpose is for (to be displayed in the passage).
- * `(dialog:)`, `(confirm:)`, `(prompt:)`, `(replace-with:)`, `(append-with:)` and `(prepend-with)` have been altered to permit code hooks in place of the message string value.
+ * `(dialog:)`, `(confirm:)`, `(prompt:)`, `(replace-with:)`, `(append-with:)` and `(prepend-with:)` have been altered to permit code hooks in place of the message string value.
  * Also, code hooks can be converted into strings using `(str:)`.
  * `true` and `false` are now case-insensitive. This fixes an inconsistency between the syntax highlighter (which until now showed different-cased keywords like `TRUE` and `FALSE` as valid) as well as fixes an inconsistency with other keywords, such as datatypes (which were already case-insensitive, such as `INT`).
  * `(shuffled:)` and `(sorted:)` now accept 1 or 0 values without causing an error. This is to make it easier to sort or shuffle arrays (by spreading `...` them into these macros) without needing to care how many items the arrays contain.
@@ -100,6 +100,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 ##### Syntax highlighter
 
  * The green line marking whitespace before hooks that's removed by changer attachment (added in 3.2.0) has been removed, due to the possibility of false positives when using non-changer variables in position (which is no longer an error, as mentioned above).
+ * Code inside HTML comments is no longer highlighted.
  * Tooltips (if enabled) now dismiss themselves if you move the mouse cursor a bit.
 
 #### Additions

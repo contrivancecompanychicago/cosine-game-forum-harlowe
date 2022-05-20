@@ -302,13 +302,22 @@ describe("enchantment macros", function () {
 			expect($(a[2])).toHaveColour("#333333");
 			// Extra check for the link
 			a.find('tw-link').click();
-			expect($(p.find('tw-enchantment')[3]).text()).toBe('corge');
+			expect($(p.find('tw-enchantment')[3]).text()).toBe('garply');
 			expect($(p.find('tw-enchantment')[3])).toHaveColour("#333333");
+			expect($(p.find('tw-enchantment')[4]).text()).toBe('corge');
 		});
 		it("works with only one line", function(done) {
 			var a = runPassage('(line-style:(text-style:"shadow"))[=I just want to say hello to you');
 			setTimeout(function(){
 				expect(a.find('tw-enchantment').attr('style')).toMatch(/text-shadow/);
+				done();
+			},20);
+		});
+		it("works with half a line", function(done) {
+			var a = runPassage('I just want (line-style:(text-style:"shadow"))[=to say hello to you');
+			setTimeout(function(){
+				expect(a.find('tw-enchantment').attr('style')).toMatch(/text-shadow/);
+				expect(a.find('tw-enchantment').text()).toBe('to say hello to you');
 				done();
 			},20);
 		});

@@ -579,8 +579,8 @@
 				let ret = '';
 				for (let i = 0; i < currentBranch.length; i+=1) {
 					const {type,text} = currentBranch[i];
-					// If the type is "verbatim", erase all of the class names before it.
-					if (type === "verbatim") {
+					// If the type is "verbatim" or "comment", erase all of the class names before it.
+					if (type === "verbatim" || type === "comment") {
 						ret = '';
 					}
 					let name = "harlowe-3-" + type;

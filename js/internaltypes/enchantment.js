@@ -57,7 +57,19 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 					It is either a HookSet (when used with (enchant:)) or a jQuery (when attached to a hook)
 				*/
 				if (localHook) {
-					if (!(localHook.jquery ? localHook : localHook.hooks(section)).has(e[0]).length) {
+					localHook = localHook.jquery ? localHook : localHook.hooks(section);
+
+					/*
+						If the localHook is INSIDE this scope, use the contained localHook instead.
+					*/
+					const containedLocalHook = e.find(localHook);
+					if (containedLocalHook.length) {
+						e = containedLocalHook;
+					}
+					/*
+						Otherwise, if the localHook does not contain the scope, don't do anything.
+					*/
+					else if (!localHook.has(e[0]).length) {
 						return;
 					}
 				}

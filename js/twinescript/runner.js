@@ -1293,7 +1293,16 @@ define([
 			ret = TwineError.create('syntax', token.message, token.explanation || '');
 		}
 		else if (type === "text") {
-			ret = TwineError.create('syntax', `"${token.text}" isn't valid Harlowe syntax for the inside of a macro call.`,
+			/*
+				Give a couple of different messages if it seems like it was something else.
+				Is it a position index?
+			*/
+			let msg;
+			if (token.text.trim().match(/^\d+(?:th|nd|st|rd)(?:last)?(?:to\d+(?:nth|nd|st|rd)(?:last)?)?$/g)) {
+				msg = `Position data names like "${token.text}" need to be either left of "of" or right of "'s".`;
+			}
+
+			ret = TwineError.create('syntax', msg || `"${token.text}" isn't valid Harlowe syntax for the inside of a macro call.`,
 				"Maybe you misspelled something? Also, as of 3.3.0, Javascript syntax is not allowed inside macro calls.");
 		}
 		else {

@@ -114,8 +114,8 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		/*d:
 			(if: Boolean) -> Changer
 			
-			This macro accepts only booleans, and produces a changer that can be attached to hooks
-			to hide them "if" the value was false.
+			This macro accepts only booleans (variables with `true` or `false`, or expressions using `is`, `contains`, or another such operator),
+			and produces a changer that can be attached to hooks to hide them "if" the value was false.
 			
 			Example usage:
 			`(if: $legs is 8)[You're a spider!]` will show the `You're a spider!` hook if `$legs` is `8`.

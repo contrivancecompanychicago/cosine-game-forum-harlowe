@@ -234,10 +234,18 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 					*/
 					let lines = [[]];
 					elements.contents().each(function recur(_, node) {
+						const tagName = (node.tagName || '').toLowerCase();
 						/*
 							Exclude the sidebar from the passage.
 						*/
-						if ((node.tagName || '').toLowerCase() === 'tw-sidebar') {
+						if (tagName === 'tw-sidebar') {
+							return;
+						}
+						/*
+							Always delve deeper into the <tw-passage> or <tw-transition-container> element.
+						*/
+						if (tagName === 'tw-passage' || tagName === 'tw-transition-container') {
+							$(node).contents().each(recur);
 							return;
 						}
 						if (brs.length) {
@@ -246,27 +254,25 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 							*/
 							if (node === brs[0]) {
 								brs.shift();
-								/*
-									If the current line array had content that must be wrapped, create a new line array.
-									Otherwise, use the existing empty array.
-								*/
-								if (lines[lines.length-1].length) {
-									lines.push([]);
-								}
+								lines.push([]);
 								return;
 							}
 							/*
 								If this node CONTAINS the next <br>, then it spans a line.
-								Recursively process its contents.
+								There's no good way to wrap this, so, the compromise is to treat the first and last parts of it
+								as separate "lines" in themselves.
+								Start a new line, recursively process its contents, then start another new line.
 							*/
 							else if (node.compareDocumentPosition(brs[0]) & 16) {
+								lines.push([]);
 								$(node).contents().each(recur);
+								lines.push([]);
 								return;
 							}
 						}
-						lines[lines.length-1] = lines[lines.length-1].concat(node);
+						lines[lines.length-1].push(node);
 					});
-					const ret = $(lines.map(e => $(e).wrapAll('<tw-pseudo-hook>').parent()[0]));
+					const ret = $(lines.map(e => e.length ? $(e).wrapAll('<tw-pseudo-hook>').parent()[0] : false).filter(Boolean));
 					return ret;
 				}
 			}
