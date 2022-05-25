@@ -135,10 +135,18 @@ define(['utils', 'utils/operationutils', 'internaltypes/changedescriptor', 'inte
 				tail = tail.next;
 			}
 			tail.next = other;
+
+			/*
+				Combine the canEnchant flags of both, too.
+			*/
+			clone.canEnchant = this.canEnchant && other.canEnchant;
 			return clone;
 		},
 		
 		TwineScript_is(other) {
+			/*
+				Since the canEnchant flag is fixed based on the macroName, it doesn't need to be compared.
+			*/
 			if (ChangerCommand.isPrototypeOf(other)) {
 				return this.macroName === other.macroName &&
 					is(this.params, other.params) &&
@@ -150,31 +158,38 @@ define(['utils', 'utils/operationutils', 'internaltypes/changedescriptor', 'inte
 			/*
 				Each link in the chain needs to be cloned, not just the start.
 			*/
-			let clone = this.create(this.macroName, this.params, this.next), tail = clone;
+			let clone = ChangerCommand.create(this.macroName, this.params, this.next), tail = clone;
 			while (tail.next) {
 				tail = tail.next = tail.next.TwineScript_Clone();
 			}
+			/*
+				Copy the canEnchant flag, too.
+			*/
+			clone.canEnchant = this.canEnchant;
 			return clone;
 		},
 		
 		/*
-			Only Section calls this, at the point where a
-			ChangerCommand is ready to be run on a descriptor.
+			Only Section calls this, at the point where a ChangerCommand is ready to be run on a descriptor.
+
+			'head' is only used by recursive calls, and contains the first changer in the chain.
 		*/
-		run(desc) {
+		run(desc, head) {
 			/*
-				We need to spread the params array.
+				Special #awkward case for the "output" changer: it receives the head changer instead of its params, because
+				it needs to store it for serialisation purposes.
 			*/
-			const result = commandRegistry[this.macroName](desc, ...this.params);
+			const params = (this.macroName === "output" ? [head || this] : this.params);
+			const error = commandRegistry[this.macroName](desc, ...params);
 			/*
 				If this function returns a result, it should just be a ChangeDescriptor. If it's a
 				TwineError, then it needs to be returned and rendered by section.renderInto() immediately.
 			*/
-			if (TwineError.containsError(result)) {
-				return result;
+			if (TwineError.containsError(error)) {
+				return error;
 			}
 			if (this.next) {
-				this.next.run(desc);
+				this.next.run(desc, head || this);
 			}
 		},
 

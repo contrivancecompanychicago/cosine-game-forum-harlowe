@@ -557,8 +557,12 @@ describe("data structure macros", function () {
 					expect("(print:(v6m-source:2) is (verbatim-source:2))").markupToPrint('true');
 				});
 			}
-			it("doesn't serialise custom macros' commands", function() {
-				expect('(set:$a to (macro:[(output:)[]]))(' + e + ':($a:))').markupToError();
+			it("can serialise custom macros' commands", function() {
+				runPassage('(set:$a to (macro:any-type _a, any-type _b, [(output:)[]]))(set:$b to $a)(set:$c to $a)');
+				sourceTest('($a:)','($a:)');
+				sourceTest('($b:24,"A")','($b:24,"A")');
+				sourceTest('($c:24,"A")','($c:24,"A")');
+				sourceTest('($a:24,"A")','($a:24,"A")');
 			});
 		});
 	});

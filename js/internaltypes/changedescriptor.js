@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, transitionIn}, {exec}, HookSet) => {
+define(['jquery', 'utils', 'renderer', 'datatypes/hookset', 'internaltypes/twineerror'], ($, {impossible, transitionIn}, {exec}, HookSet, TwineError) => {
 	const {assign,keys,create,seal} = Object;
 	const {isArray} = Array;
 	/*
@@ -139,7 +139,10 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset'], ($, {impossible, tr
 				If a ChangerCommand was passed in, run it.
 			*/
 			if (changer) {
-				changer.run(ret);
+				const error = changer.run(ret);
+				if (TwineError.containsError(error)) {
+					return error;
+				}
 			}
 			return ret;
 		},

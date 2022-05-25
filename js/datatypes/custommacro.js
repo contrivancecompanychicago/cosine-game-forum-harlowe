@@ -1,5 +1,6 @@
 "use strict";
-define(['jquery','utils','renderer','utils/operationutils','internaltypes/changedescriptor', 'internaltypes/varref', 'internaltypes/varscope', 'internaltypes/twineerror', 'internaltypes/twinenotifier'], ($, {andList}, Renderer, {objectName, typeName, matches, toSource}, ChangeDescriptor, VarRef, VarScope, TwineError, TwineNotifier) => {
+define(['jquery','utils','renderer','utils/operationutils','internaltypes/changedescriptor', 'internaltypes/varref', 'internaltypes/varscope', 'internaltypes/twineerror', 'internaltypes/twinenotifier'],
+($, {andList}, Renderer, {objectName, typeName, matches, toSource}, ChangeDescriptor, VarRef, VarScope, TwineError, TwineNotifier) => {
 	const {assign,create} = Object;
 	/*d:
 		CustomMacro data
@@ -22,8 +23,8 @@ define(['jquery','utils','renderer','utils/operationutils','internaltypes/change
 	*/
 
 	/*
-		If a custom macro returns a changeDescriptor, it should be considered a command macro.
-		That means it should return an object similar to that returned by commandMaker in Macros.
+		If a custom macro returns a {changer, hook, vars} object, it should be considered a command macro.
+		That means macroEntryFn should return an object similar to that returned by commandMaker in Macros.
 		Note that custom commands actually differ from internal command macros in an important respect:
 		the macro's entire body is run, and errors reported, at command creation.
 		Normally, (link-goto:) and other macros only drop errors when the command itself is deployed,
@@ -32,23 +33,43 @@ define(['jquery','utils','renderer','utils/operationutils','internaltypes/change
 		one that can be further permuted by TwineScript_Attach().
 	*/
 	const commandObjectName = "a custom command";
-	const makeCommandObject = cd => {
+	const makeCommandObject = (macro, args, {changer, hook, vars}) => {
+		/*
+			Note that this has no section - that is only added when TwineScript_Run() is called.
+			This allows the custom command, which could contain (replace:) or other such revision operations,
+			to work across passages.
+		*/
+		const cd = ChangeDescriptor.create({source: hook, loopVars: vars}, changer);
+		if (TwineError.containsError(cd)) {
+			return cd;
+		}
+		/*
+			Since there's no way to call custom macros without assigning them to variables, this "unnamed"
+			string shouldn't ever appear.
+		*/
+		const knownName = macro.TwineScript_KnownName || "unnamed";
 		const ret = assign({
 			TwineScript_TypeID:   "command",
 			TwineScript_ObjectName: commandObjectName,
 			TwineScript_TypeName: commandObjectName,
 			TwineScript_Print: () => "`[" + commandObjectName + "]`",
-			TwineScript_Attach: changer => {
-				changer.run(cd);
+			TwineScript_Attach: attachedChanger => {
+				const error = attachedChanger.run(cd);
+				if (TwineError.containsError(error)) {
+					return error;
+				}
 				return ret;
 			},
+			TwineScript_Run: section => {
+				cd.section = section;
+				return cd;
+			},
 			/*
-				When this command is run, simply return the fully permuted CD.
+				While this is output by (source:), this is not used for State serialisation.
 			*/
-			TwineScript_Run: () => cd,
-			/*
-				Note that since these cannot be serialised, they can't have a TwineScript_ToSource() method.
-			*/
+			TwineScript_ToSource() {
+				return "(" + knownName + ":" + args.map(toSource) + ")";
+			},
 		});
 		return ret;
 	};
@@ -192,7 +213,7 @@ define(['jquery','utils','renderer','utils/operationutils','internaltypes/change
 				Attach all those saved-up notifiers to the DOM.
 			*/
 			dom.prepend(notifiers.map(n => n.render()),"<br>");
-			return TwineError.create('propagated', errors.length + ' error' + (errors.length > 1 ? 's' : '') + ' occurred when running ' + macro.TwineScript_ObjectName + '.',
+			return TwineError.create('propagated', `${errors.length} error${errors.length > 1 ? 's' : ''} occurred when running ${macro.TwineScript_ObjectName}.`,
 				undefined, dom);
 		}
 
@@ -200,19 +221,14 @@ define(['jquery','utils','renderer','utils/operationutils','internaltypes/change
 			Currently, custom macros are required to return something, even if that thing is an error.
 		*/
 		if (output === undefined) {
-			return TwineError.create("custommacro", macro.TwineScript_ObjectName + " didn't output any data or hooks using (output:) or (output-data:).");
+			return TwineError.create("custommacro", `${macro.TwineScript_ObjectName} didn't output any data or hooks using (output:) or (output-data:).`);
 		}
 		/*
-			As described above, if (output:) was run, and a ChangeDescriptor was
+			As described above, if (output:) was run, and a {changer,vars,hook} object was
 			returned, then this custom macro should be considered a command macro.
 		*/
-		if (ChangeDescriptor.isPrototypeOf(output)) {
-			/*
-				Unset the 'output' Boolean, which was used to suppress the CD being rendered inside
-				the custom macro.
-			*/
-			output.output = false;
-			return makeCommandObject(output);
+		if (typeof output === "object" && "changer" in output) {
+			return makeCommandObject(macro, args, output);
 		}
 		/*
 			Otherwise, simply return the outputted value.
@@ -239,7 +255,12 @@ define(['jquery','utils','renderer','utils/operationutils','internaltypes/change
 			be sufficient given macros shouldn't be mutatable from user code.
 		*/
 		TwineScript_Clone() {
-			return assign(create(CustomMacro), this);
+			const ret = assign(create(CustomMacro), this);
+			/*
+				The clone needs a new macroEntryFn so that references to called and TwineScript_KnownName use this copy, not the original.
+			*/
+			ret.fn = macroEntryFn(ret);
+			return ret;
 		},
 
 		/*
@@ -255,7 +276,7 @@ define(['jquery','utils','renderer','utils/operationutils','internaltypes/change
 			Used exclusively by (partial:).
 		*/
 		createFromFn(fn, objectName, toSource, typeSignature) {
-			return assign(create(this), {
+			return assign(create(CustomMacro), {
 				/*
 					Currently, custom macros created by (partial:) don't have any params visible to the author.
 					This could be modified to support, for partials of built-ins, a conversion of Harlowe built-ins' type signatures…
@@ -276,7 +297,7 @@ define(['jquery','utils','renderer','utils/operationutils','internaltypes/change
 			that Macros.addCustom() will pass into the macroEntryFn on execution: varNames and body.
 		*/
 		create(params, body) {
-			const ret = assign(create(this), {
+			const ret = assign(create(CustomMacro), {
 				params,
 				/*
 					The number of times this has been called throughout the whole story. Used
@@ -308,7 +329,7 @@ define(['jquery','utils','renderer','utils/operationutils','internaltypes/change
 				/*
 					knownName is assigned to whatever variable this data structure was last assigned to, by VarRef.set().
 				*/
-				TwineScript_KnownName: "an unnamed custom macro",
+				TwineScript_KnownName: "",
 				TwineScript_ObjectName: `a custom macro (with ${params.length ? andList(params.map(toSource)) : 'no params'})`,
 			});
 			ret.fn = macroEntryFn(ret);

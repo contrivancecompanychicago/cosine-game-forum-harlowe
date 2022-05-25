@@ -409,7 +409,7 @@ define([
 		evalReplay.push({
 			code: fullCode.slice(0, start) + resultSource + fullCode.slice(end),
 			/*
-				Each step depicts either the permution of a code structure into a Harlowe value, or an error being produced.
+				Each step depicts either the permutation of a code structure into a Harlowe value, or an error being produced.
 			*/
 			fromCode: fromCode || fullCode.slice(start, end),
 			/*

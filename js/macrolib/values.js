@@ -141,7 +141,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 		/*d:
 			(source: Any) -> String
 
-			When given almost any data value, this will produce a string of Harlowe source code that can, when run, create
+			When given almost any data value, this will produce a string representation of Harlowe source code that can, when run, create
 			that value exactly.
 
 			Example usage:
@@ -161,10 +161,15 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			generally be absent, so `(source: (a:2,    3,   4))` produces `"(a:2,3,4)"`. Also, if you call a macro using one if its aliases,
 			such as (array:) for (a:), then the source will still use its "default" name. So, `(source: (array:1))` produces `"(a:1)"`.
 
-			Commands created by custom macros (via the (output:) macro) cannot be given to this macro - attempting to do so will produce an error.
-
 			Note that you can't easily print the string returned by (source:), because, funnily enough, Harlowe will immediately
 			re-render it. You can use (verbatim-source:) to accomplish this instead.
+
+			A special note about commands created by custom macros (via the (output:) macro): as of Harlowe 3.3.0, these *can* be given to this macro. However,
+			the representation of this command will be a custom macro call, using the variable name that held the custom macro, *at the point the command was created*.
+			What this means is that, for a custom macro stored in `$a`, the call `($a:2)` will produce a command whose (source:) representation is `"($a:2)""`. But, if
+			the custom macro's variable is repurposed, such as by `(set: $a to 0)`, then the command will *still* be represented as `"($a:2)"`, even though $a no longer
+			contains the custom macro which created the command. You can generally avoid this issue by keeping custom macros in the same variables for the full duration of
+			the story.
 
 			See also:
 			(datatype:), (verbatim-source:)

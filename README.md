@@ -84,6 +84,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * It is now an error to give `?page` to `(show:)`, `(hide:)`, or `(rerun:)`.
  * `(mouseover:)`, `(mouseout:)` and all other macros beginning with "mouse" are now deprecated. I've decided that having so many variations of (click:) and its relatives, differing only by interaction type, is a bit untidy and unnecessary. I've now created an `(action:)` macro (see below) which can given as a changer to the appropriate "click" macro to replicate these macros' effects.
  * The `any` data name (available on arrays as `any of (a:1,2)` and strings as `any of "ab"`) has been renamed to `some`, to avoid confusion with the `any` datatype and for naming consistency with `(some-pass:)`. `any` remains as a deprecated alias for compatibility, but is likely to be removed in a future version.
+ * Custom commands (created with custom macros that use `(output:)`) can now be given to `(source:)` and `(v6m-source:)`.
 
 ##### Compatibility
 

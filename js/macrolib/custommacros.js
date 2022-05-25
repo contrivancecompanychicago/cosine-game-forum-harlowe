@@ -303,7 +303,19 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 	*/
 	addChanger(["output", "out"],
 		() => Object.assign(ChangerCommand.create("output", [])),
-		(cd) => {
+		(cd, changer) => {
+			/*
+				How this changer works is as follows: as hard-coded in ChangerCommand.run(), instead of the (empty) params above, this is given the head changer that this is combined with.
+				That changer, the hook's source, and the temp variables are outputted as a {changer, vars, hook} object, which is used by CustomMacro's macroEntryFn to make a Custom Command.
+
+				These three things are needed for serialisation of the Custom Command in State.
+
+				Later, when the command is run, the head changer is used to permute a descriptor with no section (as that is added later).
+				Obviously, this (output:) changer should do nothing in that case. Hence, the following check is needed.
+			*/
+			if (!cd.section) {
+				return;
+			}
 			const {section:{stack,stackTop}} = cd;
 			/*
 				(output:) commands are deferred render commands, but they need access to the temp variables
@@ -312,29 +324,23 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 
 				This must collect all of the tempVariables in this stack, so an 'in' loop (without hasOwnProperty) must be used.
 			*/
-			cd.loopVars = {};
+			const loopVars = {};
 			for(let key in stackTop.tempVariables) {
 				if(!key.startsWith('TwineScript_')) {
-					cd.loopVars[key] = [stackTop.tempVariables[key]];
+					loopVars[key] = [stackTop.tempVariables[key]];
 				}
 			}
+			outputValue("output", stack, {changer, vars:loopVars, hook: cd.source});
 			/*
 				This is used to suppress the output hook (that which this changer is attached to) from being run inside the
 				custom macro.
 			*/
 			cd.output = true;
 
-			outputValue("output", stack, cd);
 			/*
 				Unlike a command, changers have to explicitly block the section's control flow like so.
 			*/
 			stackTop.blocked = true;
-			/*
-				This leaves the passed-in CD unchanged.
-				I believe every changer in Harlowe returns the same ChangeDescriptor, so any changers added to (output:)
-				before or after are still given to stackTop.
-			*/
-			return cd;
 		},
 		[]);
 

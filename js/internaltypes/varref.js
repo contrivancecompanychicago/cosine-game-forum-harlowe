@@ -836,7 +836,14 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 						of the parent object to the same variable.
 					*/
 					if (value.TwineScript_KnownName !== undefined) {
-						value.TwineScript_KnownName = this.TwineScript_ObjectName;
+						/*
+							Only clone the value if it already has a knownName (which implies that it's already in a variable, and
+							being copied from one to another).
+						*/
+						if (value.TwineScript_KnownName !== '') {
+							value = clone(value);
+						}
+						value.TwineScript_KnownName = toSource(this);
 					}
 					/*
 						If the property is an array of properties, and the value is sequential also,
