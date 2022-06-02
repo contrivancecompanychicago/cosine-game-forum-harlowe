@@ -47,18 +47,19 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'internaltypes/twineer
 		const metadata = {};
 		Markup.lex(src,name).children.forEach(function outsideMacroFn(token) {
 			if (token.type === "macro") {
-				if (metadataMacros.some(f => token.name === f)) {
+				const name = insensitiveName(token.name);
+				if (metadataMacros.some(f => name === f)) {
 					/*
 						If an error was already reported for this metadata name, don't replace it.
 					*/
-					if (TwineError.isPrototypeOf(metadata[token.name])) {
+					if (TwineError.isPrototypeOf(metadata[name])) {
 						return;
 					}
 					/*
 						Metadata macros can't appear after non-metadata macros.
 					*/
 					if (afterNonMetadataMacro) {
-						metadata[token.name] = TwineError.create("syntax", 'The (' + token.name + ":) macro can't appear after non-metadata macros.");
+						metadata[name] = TwineError.create("syntax", `The (${token.name}:) macro can't appear after non-metadata macros.`);
 						return;
 					}
 					/*
@@ -67,18 +68,19 @@ define(['jquery', 'utils/naturalsort', 'utils', 'markup', 'internaltypes/twineer
 						Technically we don't need this, because Passage.loadMetadata() raises a separate error if two metadata macros
 						override each other's data. But, this one is more incisively descriptive.
 					*/
-					if (metadata[token.name]) {
-						metadata[token.name] = TwineError.create("syntax", 'There is more than one (' + token.name + ":) macro.");
+					if (metadata[name]) {
+						metadata[name] = TwineError.create("syntax", `There is more than one (${token.name}:) macro.`);
 						return;
 					}
-					metadata[token.name] = token;
+					metadata[name] = token;
 				}
 				else {
 					afterNonMetadataMacro = true;
 				}
 				token.children.forEach(function nestedMacroFn(token) {
-					if (token.type === "macro" && metadataMacros.some(f => token.name === f)) {
-						metadata[token.name] = TwineError.create("syntax", 'The (' + token.name + ":) macro can't be inside another macro.");
+					const name = insensitiveName(token.name);
+					if (token.type === "macro" && metadataMacros.some(f => name === f)) {
+						metadata[name] = TwineError.create("syntax", `The (${token.name}:) macro can't be inside another macro.`);
 					}
 					else token.children.forEach(nestedMacroFn);
 				});

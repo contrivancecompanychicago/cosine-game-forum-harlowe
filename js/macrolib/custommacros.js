@@ -295,6 +295,11 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 
 		Attempting to use (output:) outside of a custom macro's CodeHook will cause an error.
 
+		As of 3.3.0, custom commands created by (output:) that are stored in story-wide variables can be saved using (save-game:),
+		just like any other value. Be warned, however, that these commands take up space in browser storage proprotional to the number and size of
+		temp variables used inside the custom macro, and the size of the attached hook. If you're concerned about browser storage space, consider
+		limiting the complexity of custom commands you store in story variables.
+
 		See also:
 		(output-data:), (error:)
 
@@ -306,7 +311,7 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 		(cd, changer) => {
 			/*
 				How this changer works is as follows: as hard-coded in ChangerCommand.run(), instead of the (empty) params above, this is given the head changer that this is combined with.
-				That changer, the hook's source, and the temp variables are outputted as a {changer, vars, hook} object, which is used by CustomMacro's macroEntryFn to make a Custom Command.
+				That changer, the hook's source, and the temp variables are outputted as a {changer, variables, hook} object, which is used by CustomMacro's macroEntryFn to make a Custom Command.
 
 				These three things are needed for serialisation of the Custom Command in State.
 
@@ -319,18 +324,21 @@ define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changerco
 			const {section:{stack,stackTop}} = cd;
 			/*
 				(output:) commands are deferred render commands, but they need access to the temp variables
-				present at the time of creation, inside the custom macro. This #awkward hack leverages
-				loopVars to store the tempVariables, as just one sad little loop.
+				present at the time of creation, inside the custom macro.
 
 				This must collect all of the tempVariables in this stack, so an 'in' loop (without hasOwnProperty) must be used.
 			*/
-			const loopVars = {};
+			const variables = {};
 			for(let key in stackTop.tempVariables) {
 				if(!key.startsWith('TwineScript_')) {
-					loopVars[key] = [stackTop.tempVariables[key]];
+					variables[key] = stackTop.tempVariables[key];
 				}
 			}
-			outputValue("output", stack, {changer, vars:loopVars, hook: cd.source});
+			outputValue("output", stack, {changer, variables,
+				/*
+					The hook, which at this point is probably an array of tokens, must be converted back to its source code.
+				*/
+				hook: Array.isArray(cd.source) ? '[' + cd.source.map(e => e.text).join('') + ']' : cd.source});
 			/*
 				This is used to suppress the output hook (that which this changer is attached to) from being run inside the
 				custom macro.

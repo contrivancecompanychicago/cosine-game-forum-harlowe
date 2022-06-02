@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operationutils', 'markup'],
-($, Utils, Passages, TwineError, {objectName,toSource,is}, {lex}) => {
+define(['jquery','utils', 'passages', 'datatypes/customcommand', 'utils/operationutils', 'markup'],
+($, Utils, Passages, CustomCommand, {toSource,is}, {lex}) => {
 	/*
 		State
 		Singleton controlling the running game state.
@@ -323,14 +323,6 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 		Its passage name should equal that of recent.
 	*/
 	let present = Moment.create();
-	
-	/*
-		The serialisability status of the story state.
-		This is irreversibly set to a triplet of [var, value, turn] values,
-		which are used for error messages, whenever a non-serialisable object
-		is stored in a variable.
-	*/
-	let serialiseProblem;
 
 	/*
 		A cache of the serialised JSON form of the past moments. Invalidated (made falsy) whenever pastward temporal movement
@@ -972,7 +964,6 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			present.seedIter = 0;
 			serialisedPast = '';
 			PRNG = mulberryMurmur32();
-			serialiseProblem = undefined;
 			eventHandlers.load.forEach(fn => fn(timeline));
 		},
 
@@ -1037,17 +1028,6 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 	*/
 
 	/*
-		This helper checks if serialisation is possible for this data value.
-	*/
-	function isSerialisable(obj) {
-		const jsType = typeof obj;
-		return !TwineError.containsError(obj) && (
-			typeof obj.TwineScript_ToSource === "function" || isArray(obj) || obj instanceof Map
-				|| obj instanceof Set || jsType === "string" || jsType === "number" || jsType === "boolean"
-		);
-	}
-
-	/*
 		Serialise the game history, from the present backward (ignoring the redo cache)
 		into a JSON string.
 		
@@ -1065,44 +1045,56 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 		whatToSerialise = timeline.slice(!serialisedPast ? 0 : newPresent ? recent-1 : recent, recent+1);
 
 		/*
-			We must determine if the state is serialisable.
-			Once it is deemed unserialisable, it remains that way for the rest
-			of the story. (Note: currently, rewinding back past a point
-			where an unserialisable object was (set:) does NOT revert the
-			serialisability status.)
+			This serialises a single variable from an object. This is used both for Moments' variables
+			AND for custom commands' internal variables (which must be serialised too).
+		*/
+		const serialiseVar = (src, key) => {
+			/*
+				Serialising the TypeDefs, which is the only VariableStore property
+				that isn't directly user-created, and is a plain JS object,
+				requires a little special-casing.
+			*/
+			if (key === "TwineScript_TypeDefs") {
+				const ret = {};
+				for (let typeDef in src[key]) {
+					/*
+						Since the datatypes inside are Harlowe values,
+						they should be serialised to source as well.
+					*/
+					ret[typeDef] = toSource(src[key][typeDef]);
+				}
+				return ret;
+			}
+			/*
+				"null", representing deleted variables, is passed as-is to become a JSON null.
+				(Currently (Jan 2022), though, nothing can delete values.)
+			*/
+			else if (src[key] === null) {
+				return null;
+			}
+			/*
+				Custom commands must be serialised in this rather complicated manner, involving a special TwineScript method
+				for retrieving its internals.
+			*/
+			else if (src[key] && hasOwnProperty.call(src[key], 'TwineScript_CustomCommand')) {
+				const desc = src[key].TwineScript_CustomCommand();
+				const ret = {
+					changer: toSource(desc.changer),
+					toSource: desc.toSource,
+					hook: toSource(desc.hook),
+					variables: Object.keys(desc.variables).reduce((a,e) => {
+						a[e] = serialiseVar(desc.variables, e);
+						return a;
+					}, {}),
+				};
+				return ret;
+			}
+			/*
+				This should be every other value.
+			*/
+			return toSource(src[key]);
+		};
 
-			Create an array (of [var, value] pairs) that shows each variable that
-			couldn't be serialised at each particular turn.
-		*/
-		const serialisability = whatToSerialise.map(
-			(moment) => Object.keys(moment.variables || {})
-				.filter((e) => moment.variables[e] && !e.startsWith('TwineScript_') && !isSerialisable(moment.variables[e]))
-				.map(e => [e, moment.variables[e]])
-		);
-		/*
-			Identify the variable and value that can't be serialised, and the turn it occurred,
-			and save them into serialiseProblem. But, if such a problem was already found previously,
-			use that instead.
-		*/
-		if (!serialiseProblem) {
-			serialiseProblem = (serialisability.reduce(
-				(problem, [name, value], turn) => (problem || (name && [name, value, turn + 1])),
-				undefined
-			));
-		}
-		/*
-			If it can't be serialised, return a TwineError with all the details.
-		*/
-		if (serialiseProblem) {
-			const [problemVar, problemValue, problemTurn] = serialiseProblem;
-
-			return TwineError.create(
-				"saving",
-				"The variable $" + problemVar + " holds " + objectName(problemValue)
-				+ " (which is, or contains, a complex data value) at start of turn " + problemTurn
-				+ "; the game can no longer be saved."
-			);
-		}
 		/*
 			Note: This MUST NOT be an arrow function, because JSON.stringify uses 'this' in the given callback.
 			As of Oct 2021, it's currently not decided what should happen when a mock visits savefile is loaded outside of Debug Mode.
@@ -1137,29 +1129,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 			if (Moment.isPrototypeOf(this) && name === "variables") {
 				const ret = {};
 				for (let key in this.variables) {
-					/*
-						Serialising the TypeDefs, which is the only VariableStore property
-						that isn't directly user-created, and is a plain JS object,
-						requires a little special-casing.
-					*/
-					if (key === "TwineScript_TypeDefs") {
-						ret[key] = {};
-						for (let typeDef in this.variables[key]) {
-							/*
-								Since the datatypes inside are Harlowe values,
-								they should be serialised to source as well.
-							*/
-							ret[key][typeDef] = toSource(this.variables[key][typeDef]);
-						}
-					}
-					/*
-						"null", representing deleted variables, is passed as-is to become a JSON null.
-						(Currently (Jan 2022), though, nothing can delete values.)
-					*/
-					else if (this.variables[key] === null) {
-						 ret[key] = null;
-					}
-					else if (this.valueRefs[key]) {
+					if (this.valueRefs[key]) {
 						/*
 							Values with a reference are serialised as an object (generated in Runner by the "to" and "into" handler)
 							of at least {at: passage name, from: index, to: index}, which is used to reconstruct the value
@@ -1168,7 +1138,7 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 						ret[key] = this.valueRefs[key];
 					}
 					else {
-						ret[key] = toSource(this.variables[key]);
+						ret[key] = serialiseVar(this.variables, key);
 					}
 				}
 				return ret;
@@ -1211,25 +1181,69 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 	function recompileValues(section, pastTimeline, moment, obj) {
 		for (let key in obj) {
 			if (hasOwnProperty.call(obj, key) && !key.startsWith("TwineScript_")) {
-				/*
-					ValueRefs are objects consisting of { at, from, to } plus execution environment.
-					whereas normal variables are strings of Harlowe source.
-
-					Note that TypeDefs values can't be serialised as "reconstruct",
-					so this check won't do anything unwanted to them.
-				*/
 				if (typeof obj[key] === "object") {
 					/*
-						Save and re-use this ValueRef for the next time the game is saved.
-					*/
-					moment.valueRefs[key] = obj[key];
+						ValueRefs are objects consisting of { at, from, to } plus execution environment.
+						whereas normal variables are strings of Harlowe source.
 
-					if (hasOwnProperty.call(obj[key],'via')) {
+						Note that TypeDefs values can't be serialised as "reconstruct",
+						so this check won't do anything unwanted to them.
+					*/
+					if (hasOwnProperty.call(obj[key],'at')) {
 						/*
-							If this is a 'via' valueRef, then there SHOULD be a previous value for this
-							variable in a preceding turn. Retrieve that, and set it to the 'it' value
-							for the section.
+							Save and re-use this ValueRef for the next time the game is saved.
 						*/
+						moment.valueRefs[key] = obj[key];
+
+
+						const {at,from,to,seed,seedIter,blockedValues} = obj[key];
+						/*
+							The tokens comprising the value ref are lexed. But, some preprocessing
+							(currently, just blockedValues) must be done on them.
+						*/
+						const source = Passages.get(at).get('source');
+						const tokens = lex(source.slice(from, to), '', 'macro');
+						/*
+							If the value contains any number of random features, set the PRNG
+							to the state it was at from the start.
+							Note that since every recompileValues() consumer resets the PRNG afterward,
+							this is safe.
+						*/
+						if (seed !== undefined && seedIter !== undefined) {
+							PRNG = mulberryMurmur32(seed,seedIter);
+						}
+						/*
+							Blocked values pose a problem: normally, Renderer marks these with blockedValue:true
+							and creates instances of them that Section runs first as "blockers" to populate blockedValues.
+							So, when Section is unblocked, the macros with blockedValue:true are replaced with a matching
+							blockedValue. To replicate this phenomenon, we have to #awkward-ly copy the marking loop from Renderer.
+						*/
+						if (blockedValues !== undefined) {
+							section.stackTop.blockedValues = blockedValues;
+							/*jshint -W083*/
+							tokens.forEach(function recur(token) {
+								if (token.type !== "string" && token.type !== "hook") {
+									token.children.every(recur);
+								}
+								if (token.type === "macro") {
+									const name = Utils.insensitiveName(token.name);
+									/*
+										As with Renderer, these two names are hard-coded.
+									*/
+									if (name === "prompt" || name === "confirm") {
+										token.blockedValue = true;
+									}
+								}
+							});
+						}
+						obj[key] = section.eval(tokens);
+					}
+					/*
+						If this is a 'via' valueRef, then there SHOULD be a previous value for this
+						variable in a preceding turn. Retrieve that, and set it to the 'it' value
+						for the section.
+					*/
+					else if (hasOwnProperty.call(obj[key],'via')) {
 						for (let i = pastTimeline.length-1; i >= 0; i -= 1) {
 							if (hasOwnProperty.call(pastTimeline[i].variables, key)) {
 								section.Identifiers.it = pastTimeline[i].variables[key];
@@ -1238,50 +1252,18 @@ define(['jquery','utils', 'passages', 'internaltypes/twineerror', 'utils/operati
 						}
 						obj[key] = section.eval(lex(obj[key].via, '', 'macro'));
 						section.Identifiers.it = 0;
-						continue;
 					}
+					/*
+						If this is a custom command (which is a { changer, hook, toSource, variables } object) then
+						this slightly complicated recompilation is necessary.
+					*/
+					else if (hasOwnProperty.call(obj[key], 'changer')) {
+						obj[key].changer = section.eval(lex(obj[key].changer, '', 'macro'));
+						obj[key].hook    = section.eval(lex(obj[key].hook,    '', 'macro'));
+						recompileValues(section, pastTimeline, moment, obj[key].variables);
 
-					const {at,from,to,seed,seedIter,blockedValues} = obj[key];
-					/*
-						The tokens comprising the value ref are lexed. But, some preprocessing
-						(currently, just blockedValues) must be done on them.
-					*/
-					const source = Passages.get(at).get('source');
-					const tokens = lex(source.slice(from, to), '', 'macro');
-					/*
-						If the value contains any number of random features, set the PRNG
-						to the state it was at from the start.
-						Note that since every recompileValues() consumer resets the PRNG afterward,
-						this is safe.
-					*/
-					if (seed !== undefined && seedIter !== undefined) {
-						PRNG = mulberryMurmur32(seed,seedIter);
+						obj[key] = CustomCommand.create(obj[key]);
 					}
-					/*
-						Blocked values pose a problem: normally, Renderer marks these with blockedValue:true
-						and creates instances of them that Section runs first as "blockers" to populate blockedValues.
-						So, when Section is unblocked, the macros with blockedValue:true are replaced with a matching
-						blockedValue. To replicate this phenomenon, we have to #awkward-ly copy the marking loop from Renderer.
-					*/
-					if (blockedValues !== undefined) {
-						section.stackTop.blockedValues = blockedValues;
-						/*jshint -W083*/
-						tokens.forEach(function recur(token) {
-							if (token.type !== "string" && token.type !== "hook") {
-								token.children.every(recur);
-							}
-							if (token.type === "macro") {
-								const name = Utils.insensitiveName(token.name);
-								/*
-									As with Renderer, these two names are hard-coded.
-								*/
-								if (name === "prompt" || name === "confirm") {
-									token.blockedValue = true;
-								}
-							}
-						});
-					}
-					obj[key] = section.eval(tokens);
 				}
 				else {
 					obj[key] = section.eval(lex(obj[key], '', 'macro'));

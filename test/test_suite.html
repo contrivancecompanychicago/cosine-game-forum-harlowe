@@ -213,6 +213,38 @@ var jasmineMatcher = (function() {
 				}
 			}
 		}),
+		markupToLoad: Object.bind(Object,{
+			compare: function(a,e) {
+				var p = runPassage(a);
+				var error = p.find('tw-error:not(.javascript)');
+				var loadgameError = $('tw-story').find('tw-dialog').filter((_,e) => e.textContent.startsWith('Sorry to interrupt... The story tried to load saved data, but there was a problem.'));
+				if (error.length > 0) {
+					var text = error.contents()[0].textContent;
+					return { pass: false,  message: "Expected markup '" + a + "' not to error, but its error was '" + text + "'" };
+				}
+				else if (loadgameError.length > 0) {
+					return { pass: false,  message: "Expected markup '" + a + "' to load, but it caused a save data load error.\n" + loadgameError.text() };
+				}
+				else {
+					return { pass: true, message: "Expected markup '" + a + "' not to error, but it succeeded." };
+				}
+			},
+			negativeCompare: function(a,e) {
+				var p = runPassage(a);
+				var error = p.find('tw-error:not(.javascript)');
+				var loadgameError = $('tw-story').find('tw-dialog').filter((_,e) => e.textContent.startsWith('Sorry to interrupt... The story tried to load saved data, but there was a problem.'));
+				if (error.length > 0) {
+					var text = error.contents()[0].textContent;
+					return { pass: true,  message: "Expected markup '" + a + "' not to error, but its error was '" + text + "'" };
+				}
+				else if (loadgameError.length > 0) {
+					return { pass: true,  message: "Expected markup '" + a + "' to load, but it caused a save data load error.\n" + loadgameError.text() };
+				}
+				else {
+					return { pass: false, message: "Expected markup '" + a + "' not to error, but it succeeded." };
+				}
+			}
+		}),
 		toHaveColour: Object.bind(Object,{
 			compare: function(a,colour) {
 				colour = colour.replace(/(\(|\))/g, "\\$1");

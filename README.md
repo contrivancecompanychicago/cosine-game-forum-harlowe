@@ -32,6 +32,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Improved the behaviour of enchanting a hook's lines (using either (enchant:) or (line-style:)) when those lines contain macros or links, sometimes causing those elements to be excluded from the enchantment, or falsely considered to be lines on their own.
  * Fixed a bug where `(replace:)` targeting `?passage's lines` (and similar such code) wouldn't replace the line that itself was on, unless some text was before it in the line.
  * The `it` identifier is now cleared (to the default value of 0) whenever the player changes passages.
+ * Fixed a bug where metadata macros (`(storylet:)`, `(metadata:)` and the like) wouldn't work at all if their macro names weren't entirely in lowercase with no dashes or underscores (which is not the case for other macros).
  * Fixed a bug where using a custom macro in a `(storylet:)` lambda would cause Debug Mode to constantly reload the Storylets and Variables panels, hurting performance.
  * Fixed a bug where single errors would sometimes be listed multiple times in Debug Mode's error log.
  * `(mouseover:)` and `(mouseout:)` enchanted elements (including those enchanted using variants of those macros) now have a tabindex attribute as well.
@@ -85,6 +86,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * `(mouseover:)`, `(mouseout:)` and all other macros beginning with "mouse" are now deprecated. I've decided that having so many variations of (click:) and its relatives, differing only by interaction type, is a bit untidy and unnecessary. I've now created an `(action:)` macro (see below) which can given as a changer to the appropriate "click" macro to replicate these macros' effects.
  * The `any` data name (available on arrays as `any of (a:1,2)` and strings as `any of "ab"`) has been renamed to `some`, to avoid confusion with the `any` datatype and for naming consistency with `(some-pass:)`. `any` remains as a deprecated alias for compatibility, but is likely to be removed in a future version.
  * Custom commands (created with custom macros that use `(output:)`) can now be given to `(source:)` and `(v6m-source:)`.
+ * Saving custom commands to story-wide variables no longer prevents `(save-game:)` from working - these variables can now be successfully saved in browser storage along with all the others. This change means that every valid Harlowe value (that can be set in a variable) can now be saved using `(save-game:)`.
 
 ##### Compatibility
 
@@ -98,7 +100,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Very long lines in "(source:)" listings in the Variables panel should no longer push the other columns far offscreen.
  * Debug Mode no longer automatically, immediately enables itself whenever the first error of your story appears. Instead, this functionality can be added using the new `(after-error:)` and `(debug:)` macros (see below).
 
-##### Syntax highlighter
+##### Syntax Highlighter
 
  * The green line marking whitespace before hooks that's removed by changer attachment (added in 3.2.0) has been removed, due to the possibility of false positives when using non-changer variables in position (which is no longer an error, as mentioned above).
  * Code inside HTML comments is no longer highlighted.

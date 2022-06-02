@@ -1,6 +1,6 @@
 "use strict";
-define(['jquery','utils','renderer','utils/operationutils','internaltypes/changedescriptor', 'internaltypes/varref', 'internaltypes/varscope', 'internaltypes/twineerror', 'internaltypes/twinenotifier'],
-($, {andList}, Renderer, {objectName, typeName, matches, toSource}, ChangeDescriptor, VarRef, VarScope, TwineError, TwineNotifier) => {
+define(['jquery','utils','renderer','utils/operationutils','datatypes/customcommand', 'internaltypes/varref', 'internaltypes/varscope', 'internaltypes/twineerror', 'internaltypes/twinenotifier'],
+($, {andList}, Renderer, {objectName, typeName, matches, toSource}, CustomCommand, VarRef, VarScope, TwineError, TwineNotifier) => {
 	const {assign,create} = Object;
 	/*d:
 		CustomMacro data
@@ -21,58 +21,7 @@ define(['jquery','utils','renderer','utils/operationutils','internaltypes/change
 
 		For more information about custom macros, see the (macro:) macro's article.
 	*/
-
-	/*
-		If a custom macro returns a {changer, hook, vars} object, it should be considered a command macro.
-		That means macroEntryFn should return an object similar to that returned by commandMaker in Macros.
-		Note that custom commands actually differ from internal command macros in an important respect:
-		the macro's entire body is run, and errors reported, at command creation.
-		Normally, (link-goto:) and other macros only drop errors when the command itself is deployed,
-		but I decided not to complicate macroEntryFn by doing that for just custom commands.
-		This means the TwineScript_Run() function here simply returns a pre-permuted CD (albeit
-		one that can be further permuted by TwineScript_Attach().
-	*/
-	const commandObjectName = "a custom command";
-	const makeCommandObject = (macro, args, {changer, hook, vars}) => {
-		/*
-			Note that this has no section - that is only added when TwineScript_Run() is called.
-			This allows the custom command, which could contain (replace:) or other such revision operations,
-			to work across passages.
-		*/
-		const cd = ChangeDescriptor.create({source: hook, loopVars: vars}, changer);
-		if (TwineError.containsError(cd)) {
-			return cd;
-		}
-		/*
-			Since there's no way to call custom macros without assigning them to variables, this "unnamed"
-			string shouldn't ever appear.
-		*/
-		const knownName = macro.TwineScript_KnownName || "unnamed";
-		const ret = assign({
-			TwineScript_TypeID:   "command",
-			TwineScript_ObjectName: commandObjectName,
-			TwineScript_TypeName: commandObjectName,
-			TwineScript_Print: () => "`[" + commandObjectName + "]`",
-			TwineScript_Attach: attachedChanger => {
-				const error = attachedChanger.run(cd);
-				if (TwineError.containsError(error)) {
-					return error;
-				}
-				return ret;
-			},
-			TwineScript_Run: section => {
-				cd.section = section;
-				return cd;
-			},
-			/*
-				While this is output by (source:), this is not used for State serialisation.
-			*/
-			TwineScript_ToSource() {
-				return "(" + knownName + ":" + args.map(toSource) + ")";
-			},
-		});
-		return ret;
-	};
+	let CustomMacro;
 
 	/*
 		This creates the "fn" function, normally present in built-in macros' entries in Macros,
@@ -224,11 +173,17 @@ define(['jquery','utils','renderer','utils/operationutils','internaltypes/change
 			return TwineError.create("custommacro", `${macro.TwineScript_ObjectName} didn't output any data or hooks using (output:) or (output-data:).`);
 		}
 		/*
-			As described above, if (output:) was run, and a {changer,vars,hook} object was
+			As described above, if (output:) was run, and a {changer,variables,toSource,hook} object was
 			returned, then this custom macro should be considered a command macro.
 		*/
 		if (typeof output === "object" && "changer" in output) {
-			return makeCommandObject(macro, args, output);
+			/*
+				Since there's no way to call custom macros without assigning them to variables, this "unnamed"
+				string shouldn't ever appear.
+			*/
+			return CustomCommand.create(
+				assign(output, { toSource: `(${macro.TwineScript_KnownName || "unnamed"}:${args.map(toSource)})` })
+			);
 		}
 		/*
 			Otherwise, simply return the outputted value.
@@ -236,7 +191,7 @@ define(['jquery','utils','renderer','utils/operationutils','internaltypes/change
 		return output;
 	};
 
-	const CustomMacro = Object.seal({
+	CustomMacro = Object.seal({
 		TwineScript_TypeID:   "macro",
 		TwineScript_TypeName: "a custom macro",
 		TwineScript_GetProperty(prop) {

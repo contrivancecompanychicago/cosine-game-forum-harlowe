@@ -688,7 +688,7 @@ define([
 					If it is indeed pure, or its environment has been captured, create a prose reference to this location.
 				*/
 				let srcRef;
-				if (freeVariables && typeof freeVariables === "object" &&
+				if (token.place && freeVariables && typeof freeVariables === "object" &&
 						/*
 							ValueRefs shouldn't be used if the value was a Number or Boolean.
 						*/

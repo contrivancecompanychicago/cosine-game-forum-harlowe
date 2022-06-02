@@ -20,11 +20,11 @@ describe("metadata macros", function() {
 		});
 		it("errors at startup when a passage's (storylet:) appeared after a non-metadata macro", function() {
 			var errors;
-			errors = createPassage("(set: $b to 1)(storylet: when $b is 1)", "grault");
+			errors = createPassage("(set: $b to 1)(story-let: when $b is 1)", "grault");
 			expect(errors.length).not.toBe(0);
-			errors = createPassage("(storylet: when $b is (a:))", "grault");
+			errors = createPassage("(story-let: when $b is (a:))", "grault");
 			expect(errors.length).toBe(0);
-			errors = createPassage("(set: $b to 1)(storylet: when $b is 1)", "grault");
+			errors = createPassage("(set: $b to 1)(story-let: when $b is 1)", "grault");
 			expect(errors.length).not.toBe(0);
 		});
 		it("errors at startup when a passage has two or more (storylet:) calls", function() {
@@ -60,7 +60,7 @@ describe("metadata macros", function() {
 			expect("(link-storylet: 'ears', 2, 'bar')").not.markupToError();
 		});
 		it("given an index n, creates a link to the nth open storylet, using the same order as (open-storylets:)", function() {
-			createPassage("**foobarbaz(storylet: when  true is true)**", "grault");
+			createPassage("**foobarbaz(Story-let: when  true is true)**", "grault");
 			createPassage("|a>[(storylet: when  $a is 1)]", "garply");
 			createPassage("(storylet: when  true is false)", "corge");
 			createPassage("(storylet: when  $a is > 1)", "quux");
@@ -70,7 +70,7 @@ describe("metadata macros", function() {
 			expect("(link-storylet:1) (link-storylet:2)").markupToPrint("grault quux");
 		});
 		it("given an index n, links to the nth (open-storylets:) result", function() {
-			createPassage("**foobarbaz(storylet: when $a is 1)**", "grault");
+			createPassage("**foobarbaz(Story-let: when $a is 1)**", "grault");
 			createPassage("|a>[(storylet: when $a is 1)]", "garply");
 			createPassage("(storylet: when $a is > 1)", "corge");
 			createPassage("(storylet: when $a is > 1)", "quux");
@@ -78,14 +78,14 @@ describe("metadata macros", function() {
 			expect("(set:$a to 2)(link-storylet: 2)").markupToPrint('quux');
 		});
 		it("if the index n is negative, links to the nthlast (open-storylets:) result", function() {
-			createPassage("**foobarbaz(storylet: when $a > 1)**", "grault");
+			createPassage("**foobarbaz(Story-let: when $a > 1)**", "grault");
 			createPassage("|a>[(storylet: when $a > 1)]", "garply");
 			createPassage("(storylet: when $a is > 1)", "corge");
 			createPassage("(storylet: when $a is > 1)", "quux");
 			expect("(set:$a to 2)(link-storylet: -1) (link-storylet: -2)").markupToPrint('quux grault');
 		});
 		it("given a 'where' lambda, creates a link to the first (open-storylets:) result to match the condition", function() {
-			createPassage("**foobarbaz(storylet: when $a is 1)**", "grault");
+			createPassage("**foobarbaz(Story-let: when $a is 1)**", "grault");
 			createPassage("|a>[(storylet: when $a is 1)]", "garply");
 			createPassage("(storylet: when $a is > 1)", "corge");
 			createPassage("(storylet: when $a is > 1)", "quux");
@@ -119,7 +119,7 @@ describe("metadata macros", function() {
 	});
 	describe("the (open-storylets:) macro", function() {
 		it("returns a sorted array of passages with (storylet:) in their prose, whose lambda returns true", function() {
-			createPassage("**foobarbaz(storylet: when  true is true)**", "grault");
+			createPassage("**foobarbaz(Story-let: when  true is true)**", "grault");
 			createPassage("|a>[(storylet: when  $a is 1)]", "garply");
 			createPassage("(storylet: when  true is false)", "corge");
 			createPassage("(storylet: when  $a is > 1)", "quux");
@@ -129,7 +129,7 @@ describe("metadata macros", function() {
 			expect("(for: each _a, ...(open-storylets:))[(print:_a's name) ]").markupToPrint("grault quux ");
 		});
 		it("uses an optional 'where' lambda to restrict the returned storylets", function() {
-			createPassage("**foobarbaz(storylet: when $a is 1)**", "grault");
+			createPassage("**foobarbaz(Story-let: when $a is 1)**", "grault");
 			createPassage("|a>[(storylet: when $a is 1)]", "garply");
 			createPassage("(storylet: when $a is > 1)", "corge");
 			createPassage("(storylet: when $a is > 1)", "quux");
