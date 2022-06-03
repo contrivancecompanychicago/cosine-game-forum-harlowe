@@ -38,15 +38,17 @@ define(['internaltypes/changedescriptor', 'internaltypes/twineerror'], (ChangeDe
 				This allows the custom command, which could contain (replace:) or other such revision operations,
 				to work across passages.
 			*/
-			const cd = ChangeDescriptor.create({source: hook, loopVars}, changer);
+			let cd = ChangeDescriptor.create({source: hook, loopVars}, changer);
 			if (TwineError.containsError(cd)) {
 				return cd;
 			}
 			const ret = assign(create(this), {
-				/*
-					TODO: doesn't this mutate the custom command??
-				*/
-				TwineScript_Attach: attachedChanger => {
+				TwineScript_Attach: (section, attachedChanger) => {
+					/*
+						While there aren't that many applicable changers that use Section, those that do
+						need to have it passed in.
+					*/
+					cd.section = section;
 					const error = attachedChanger.run(cd);
 					if (TwineError.containsError(error)) {
 						return error;
@@ -55,7 +57,16 @@ define(['internaltypes/changedescriptor', 'internaltypes/twineerror'], (ChangeDe
 				},
 				TwineScript_Run: section => {
 					cd.section = section;
-					return cd;
+					/*
+						As with normal commands, the ChangeDescriptor must be cleaned after TwineScript_Run() is called.
+					*/
+					const oldCd = cd;
+					/*
+						We don't need to check for errors here because, if the create() call above didn't error,
+						then neither will this one.
+					*/
+					cd = ChangeDescriptor.create({source: hook, loopVars}, changer);
+					return oldCd;
 				},
 				/*
 					While this is output by (source:), this is not used for State serialisation.

@@ -1256,7 +1256,7 @@ define([
 			See also:
 			(history:), (passage:), (mock-visits:), (forget-visits:)
 
-			Added in: 1.0.0
+			Added in: 3.3.0
 			#game state 2
 		*/
 		("visited", "Boolean", (section, condition) => {

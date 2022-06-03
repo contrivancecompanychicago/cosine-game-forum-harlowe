@@ -556,6 +556,73 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatype
 		PatternSignature)
 
 		/*d:
+			(p-start: ...String or Datatype) -> Datatype
+			Also known as: (pattern-start:)
+
+			Identical to (p:), except that when used with macros that search for substrings in strings, like (str-find:), (str-replaced:) and (trimmed:), this only matches if the given strings or datatypes
+			appear at the very start of the string.
+
+			Example usage:
+			* `(str-replaced: (p-start:"Ben:"), "Former Ben:", _text)` produces a copy of the string in the temp variable _text, but if the string begins with "Ben:", it is changed to "Former Ben:".
+			This does not affect any instances of "Ben:" elsewhere in the string.
+			* `(str-find: (p-start: (p-many:(p-either: digit, "A"))), _text)` examines the string in _text, and, if it begins with either digits or the letter A, produces an array with a string of those digits.
+			Otherwise, it produces an empty array.
+			* `(trimmed: (p-start: whitespace), _text)` trims off whitespace from the start of _text, but not the end.
+
+			Details:
+			This is part of a suite of string pattern macros. Consult the (p:) article to learn more about string patterns, special user-created datatypes
+			that can match very precise kinds of strings.
+
+			When this datatype is used with the `matches` operator, it is essentially identical to (p:), in the sense that `matches` compares an entire string with an entire pattern, rather than just a portion.
+
+			See also:
+			(p-end:), (p-before:)
+
+			Added in: 3.3.0.
+			#patterns 9
+		*/
+		(["p-start","pattern-start"], "Datatype",
+			(_, ...fullArgs) => {
+				return createPattern({
+					name: "p-start", fullArgs,
+					makeRegExpString: subargs => "^(?:" + subargs.join('') + ")"
+				});
+			},
+		PatternSignature)
+		/*d:
+			(p-end: ...String or Datatype) -> Datatype
+			Also known as: (pattern-start:)
+
+			Identical to (p:), except that when used with macros that search for substrings in strings, like (str-find:), (str-replaced:) and (trimmed:), this only matches if the given strings or datatypes
+			appear at the very end of the string.
+
+			Example usage:
+			* `(str-replaced: (p-end: ...newline), "\n", _text)` produces a copy of the string in the temp variable _text, but if the string ends with many newlines, they are replaced with a single newline.
+			This does not affect multiple newlines elsewhere in the string.
+			* `(trimmed: (p-end: ...whitespace), _text)` trims off whitespace from the end of _text, but not the start.
+
+			Details:
+			This is part of a suite of string pattern macros. Consult the (p:) article to learn more about string patterns, special user-created datatypes
+			that can match very precise kinds of strings.
+
+			When this datatype is used with the `matches` operator, it is essentially identical to (p:), in the sense that `matches` compares an entire string with an entire pattern, rather than just a portion.
+
+			See also:
+			(p-start:), (p-before:)
+
+			Added in: 3.3.0.
+			#patterns 10
+		*/
+		(["p-end","pattern-end"], "Datatype",
+			(_, ...fullArgs) => {
+				return createPattern({
+					name: "p-end", fullArgs,
+					makeRegExpString: subargs => "(?:" + subargs.join('') + ")$"
+				});
+			},
+		PatternSignature)
+
+		/*d:
 			(p-many: [Number], [Number], ...String or Datatype) -> Datatype
 			Also known as: (pattern-many:)
 
@@ -763,6 +830,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatype
 			* `(trimmed:"   Contract Annulled ")` produces `"Contract Annulled"`.
 			* `(trimmed: "$", $treasureValue)` produces the string stored in $treasureValue with leading or trailing "$" signs removed.
 			* `(trimmed: digit, "john61112")` produces `"john"`.
+			* `(trimmed: (p-start: whitespace), _text)` trims off whitespace from the start of the string in _text, but not the end.
 
 			Rationale:
 			Removing certain leading or trailing characters in a string is a common operation, and is essentially equivalent to extracting a single substring from within a string.
@@ -822,7 +890,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatype
 			and data values matching the portions of the string matched by those typed variables, as well as a "match" data name for the full substring.
 
 			Example usage:
-			* `(str-find: digit, "PARSEC47"))` produces `(a:"4","7")`.
+			* `(str-find: digit, "PARSEC47")` produces `(a:"4","7")`.
 			* `(str-find: (p:"S", ...alnum), "Mr. Smith, Mr. Schmitt, and Mr. Smithers")` produces `(a:"Smith","Schmitt","Smithers")`.
 			* `(str-find:(p:"$", ...digit, ".", ...digit), "Apple pie - $5.50; Pumpkin pie - $14.50")` produces `(a:"$5.50","$14.50")`.
 			* `(str-find:(p:...alnum-type _flavor, " pie - $", (p:...digit, ".", ...digit)-type _cost), "Apple pie - $5.50; Pumpkin pie - $14.50")` produces the following:<br>

@@ -1100,8 +1100,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 			(in addition to any other changers).
 
 			Details:
-			This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
-			Harlowe 4.0.
+			This macro is currently deprecated - while you may use it in this version, it is likely to be removed in a potential 
+			Harlowe 4.0. Use of the (action:) macro is recommended instead.
 
 			See also:
 			(click:), (action:)
@@ -1126,8 +1126,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 			(in addition to any other changers).
 
 			Details:
-			This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
-			Harlowe 4.0.
+			This macro is currently deprecated - while you may use it in this version, it is likely to be removed in a potential 
+			Harlowe 4.0. Use of the (action:) macro is recommended instead.
 
 			See also:
 			(click:), (action:)
@@ -1294,8 +1294,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		(in addition to any other changers).
 
 		Details:
-		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
-		Harlowe 4.0.
+		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in a potential 
+		Harlowe 4.0. Use of the (action:) macro is recommended instead.
 
 		See also:
 		(action:)
@@ -1310,8 +1310,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		(in addition to any other changers).
 
 		Details:
-		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
-		Harlowe 4.0.
+		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in a potential 
+		Harlowe 4.0. Use of the (action:) macro is recommended instead.
 
 		Added in: 1.0.0
 		#deprecated
@@ -1323,8 +1323,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		(in addition to any other changers).
 
 		Details:
-		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
-		Harlowe 4.0.
+		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in a potential 
+		Harlowe 4.0. Use of the (action:) macro is recommended instead.
 
 		See also:
 		(action:)
@@ -1339,8 +1339,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		(in addition to any other changers).
 
 		Details:
-		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
-		Harlowe 4.0.
+		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in a potential 
+		Harlowe 4.0. Use of the (action:) macro is recommended instead.
 
 		See also:
 		(action:)
@@ -1355,8 +1355,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		(in addition to any other changers).
 
 		Details:
-		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
-		Harlowe 4.0.
+		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in a potential 
+		Harlowe 4.0. Use of the (action:) macro is recommended instead.
 
 		See also:
 		(action:)
@@ -1371,8 +1371,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		(in addition to any other changers).
 
 		Details:
-		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
-		Harlowe 4.0.
+		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in a potential 
+		Harlowe 4.0. Use of the (action:) macro is recommended instead.
 
 		See also:
 		(action:)
@@ -1423,8 +1423,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		(in addition to any other changers).
 
 		Details:
-		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
-		Harlowe 4.0.
+		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in a potential 
+		Harlowe 4.0. Use of the (action:) macro is recommended instead.
 
 		See also:
 		(action:)
@@ -1439,8 +1439,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		(in addition to any other changers).
 
 		Details:
-		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
-		Harlowe 4.0.
+		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in a potential 
+		Harlowe 4.0. Use of the (action:) macro is recommended instead.
 
 		See also:
 		(action:)
@@ -1477,8 +1477,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		(in addition to any other changers).
 
 		Details:
-		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
-		Harlowe 4.0.
+		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in a potential 
+		Harlowe 4.0. Use of the (action:) macro is recommended instead.
 
 		See also:
 		(action:)
@@ -1493,8 +1493,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 		(in addition to any other changers).
 
 		Details:
-		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in
-		Harlowe 4.0.
+		This macro is currently deprecated - while you may use it in this version, it is likely to be removed in a potential 
+		Harlowe 4.0. Use of the (action:) macro is recommended instead.
 
 		See also:
 		(action:)

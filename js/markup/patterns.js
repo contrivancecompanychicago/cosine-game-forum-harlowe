@@ -483,7 +483,8 @@
 			```
 
 			Details:
-			There must not be any whitespace between the `\` and the line break. Otherwise, it won't work.
+			There must not be any whitespace between the `\` and the line break. Otherwise, it won't work. (In the Twine editor, the `\` will change
+			from yellow to gray, indicating it's no longer considered an escaped line break.)
 
 			Like most passage text markup, this cannot be used inside a macro call (for instance, `(print: \`<br>
 			`3)`) - but since line breaks between values in macro calls are ignored, this doesn't matter.

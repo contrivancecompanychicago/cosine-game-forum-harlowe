@@ -397,10 +397,7 @@ define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changer
 		/*
 			For attachables: this ChangeDescriptor is a private variable of the object,
 			permuted by TwineScript_Attach(), and given to the runFn whenever that's
-			finally called.
-			This SHOULD not cause a problem where reusing a command in a variable multiple times
-			causes the descriptor to be permuted multiple times, provided those are written
-			sensibly and don't use existing values of the descriptor. ._.
+			finally called. Afterward, this is "cleaned" (by being remade anew).
 		*/
 		let cd = ChangeDescriptor.create();
 
@@ -430,7 +427,15 @@ define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changer
 					changer.run(cd);
 					return ret;
 				},
-				TwineScript_Run: section => runFn(cd, section, ...args),
+				TwineScript_Run: section => {
+					const ret = runFn(cd, section, ...args);
+					/*
+						As mentioned above, because TwineScript_Attach() permutes the cd, we have to clean it after
+						Section has finally run this command.
+					*/
+					cd = ChangeDescriptor.create();
+					return ret;
+				},
 			} : {
 				TwineScript_Run: section => runFn(section, ...args),
 		});

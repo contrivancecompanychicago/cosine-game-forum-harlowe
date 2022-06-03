@@ -68,6 +68,16 @@ describe("basic command macros", function() {
 				done();
 			});
 		});
+		it("isn't mutated by attached style changers", function(done) {
+			var p = runPassage("(set:$a to (print: 'X'))(text-rotate: 20)$a $a");
+			var expr = p.find('tw-expression:nth-of-type(3)');
+			setTimeout(function() {
+				expect(expr.attr('style')).toMatch(/rotate\(20deg\)/);
+				expr = p.find('tw-expression:nth-of-type(4)');
+				expect(expr.attr('style')).not.toMatch(/rotate\(20deg\)/);
+				done();
+			});
+		});
 	});
 
 	describe("the (verbatim-print:) macro", function() {

@@ -126,6 +126,16 @@ describe("custom macros", function() {
 			expect("(set: $foo to 0)(set:$myMacro to (macro:[(set:$foo to it + 1)(out:)[$foo]]))($myMacro:)").markupToPrint('1');
 			expect("(set: $foo to 0)(set:$myMacro to (macro:[(out:)[(set:$foo to it + 1)$foo]]))($myMacro:)").markupToPrint('1');
 		});
+		it("custom commands aren't mutated by attached style changers", function(done) {
+			var p = runPassage("(set:$a to (macro:[(out:)[Z]]))(set:$b to ($a:)) (text-rotate: 20)$b $b");
+			var expr = p.find('tw-expression:nth-of-type(4)');
+			setTimeout(function() {
+				expect(expr.attr('style')).toMatch(/rotate\(20deg\)/);
+				expr = p.find('tw-expression:nth-of-type(5)');
+				expect(expr.attr('style')).not.toMatch(/rotate\(20deg\)/);
+				done();
+			});
+		});
 	});
 	describe("(error:)", function() {
 		it("takes a string, and produces an error with the given message", function() {

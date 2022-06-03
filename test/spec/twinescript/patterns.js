@@ -290,7 +290,7 @@ describe("patterns", function() {
 					expect("(print: (" + name + ":alnum-type _a, alnum-type _b, alnum-type _a) matches 'red blue green')").markupToError();
 				});
 			}
-			if (name === 'p' || name === 'p-not-before') {
+			if (name === 'p' || name === 'p-not-before' || name === 'p-start' || name === 'p-end') {
 				return;
 			}
 			it("works inside (p:)", function() {
@@ -319,6 +319,40 @@ describe("patterns", function() {
 				stringTypes.forEach(function(e) {
 					expect("(print: (p:..." + e[0] + ",'red','blue',..." + e[0] + ") matches '" + e[1].repeat(3) + "redblue" + e[1].repeat(6) + "')").markupToPrint('true');
 				});
+			});
+		});
+		describe("(p-start:)", function() {
+			basicTest("p-start");
+			it("matches strings matching the sequence", function() {
+				expect("(print: (pstart:'red','blue') matches 'redblue')").markupToPrint('true');
+				expect("(print: (pstart:'\\red*') matches '\\red*')").markupToPrint('true');
+				expect("(print: (pstart:'red','blue') does not match 'xredxblue' and it does not match 'xredbluex' and it does not match 'redbluexx')").markupToPrint('true');
+			});
+			it("when used with (str-find:), only matches the start of strings", function() {
+				expect("(v6m-source:(str-find: (pstart:'red', digit), 'red1 red3 red5'))").markupToPrint('(a:"red1")');
+			});
+			it("when used with (str-replaced:), only matches the start of strings", function() {
+				expect("(print:(str-replaced: (pstart:'red', digit), 'blue', 'red1 red3 red5'))").markupToPrint('blue red3 red5');
+			});
+			it("when used with (trimmed:), only matches the start of strings", function() {
+				expect("(print:(trimmed: (pstart:'red', digit), 'red1 red3 red5'))").markupToPrint(' red3 red5');
+			});
+		});
+		describe("(p-end:)", function() {
+			basicTest("p-start");
+			it("matches strings matching the sequence", function() {
+				expect("(print: (pend:'red','blue') matches 'redblue')").markupToPrint('true');
+				expect("(print: (pend:'\\red*') matches '\\red*')").markupToPrint('true');
+				expect("(print: (pend:'red','blue') does not match 'xredxblue' and it does not match 'xredbluex' and it does not match 'redbluexx')").markupToPrint('true');
+			});
+			it("when used with (str-find:), only matches the end of strings", function() {
+				expect("(v6m-source:(str-find: (pend:'red', digit), 'red1 red3 red5'))").markupToPrint('(a:"red5")');
+			});
+			it("when used with (str-replaced:), only matches the end of strings", function() {
+				expect("(print:(str-replaced: (pend:'red', digit), 'blue', 'red1 red3 red5'))").markupToPrint('red1 red3 blue');
+			});
+			it("when used with (trimmed:), only matches the end of strings", function() {
+				expect("(print:(trimmed: (pend:'red', digit), 'red1 red3 red5'))").markupToPrint('red1 red3 ');
 			});
 		});
 		describe("(p-many:)", function() {

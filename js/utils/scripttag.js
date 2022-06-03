@@ -5,7 +5,7 @@ define(['state','utils/operationutils', 'internaltypes/varref', 'internaltypes/t
 
 		This section details further information about the workings of `<script>` elements placed inside Harlowe passages, and how the Javascript code relates to the Harlowe code in the containing passage.
 
-		If a `<script>` tag has a `type` attribute, and the MIME-type in that attribute is anything other than 'text/javascript', Harlowe will ignore it (in keeping with the HTML language's normal behaviour).
+		If a `<script>` tag has a `type` attribute, and the MIME-type in that attribute is anything other than 'text/javascript', Harlowe will ignore it (in keeping with HTML's normal behaviour).
 
 		No Harlowe internal methods and modules are currently accessible inside scripts. However, [jQuery 3.6](https://api.jquery.com/) may be accessed from the `$` global variable. This is a third-party library that Harlowe uses internally
 		and whose code is included in every compiled story, and is *not* retrieved via CDN or any online connections.
