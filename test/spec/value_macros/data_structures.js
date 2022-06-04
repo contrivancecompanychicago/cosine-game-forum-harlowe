@@ -318,31 +318,31 @@ describe("data structure macros", function () {
 			expect("(print: (datavalues:(dm:'D1',1,'E',2)) is (datamap-values:(dm:'D1',1,'E',2)))").markupToPrint("true");
 		});
 	});
-	describe("the (dataentries:) macro", function() {
+	describe("the (dm-entries:) macro", function() {
 		it("accepts 1 datamap", function() {
-			expect("(dataentries:)").markupToError();
-			expect("(dataentries: (datamap:'1','1'))").not.markupToError();
-			expect("(dataentries: (datamap:'1','1'), (datamap:'2','1'))").markupToError();
+			expect("(dm-entries:)").markupToError();
+			expect("(dm-entries: (datamap:'1','1'))").not.markupToError();
+			expect("(dm-entries: (datamap:'1','1'), (datamap:'2','1'))").markupToError();
 		});
 		it("returns an array containing datamaps of the name/value pairs in the datamap", function() {
 			runPassage("(set: $a to (datamap:'A', 'Food', 'B', 7))");
-			expect("(print: (dataentries:$a)'s 1st's name)").markupToPrint("A");
-			expect("(print: (dataentries:$a)'s 1st's value)").markupToPrint("Food");
-			expect("(print: (dataentries:$a)'s 2nd's name)").markupToPrint("B");
-			expect("(print: (dataentries:$a)'s 2nd's value)").markupToPrint("7");
-			expect("(print: (datanames:(dataentries:$a)'s 2nd))").markupToPrint("name,value");
-			expect("(print: (dataentries:(datamap:))'s length)").markupToPrint("0");
+			expect("(print: (dm-entries:$a)'s 1st's name)").markupToPrint("A");
+			expect("(print: (dm-entries:$a)'s 1st's value)").markupToPrint("Food");
+			expect("(print: (dm-entries:$a)'s 2nd's name)").markupToPrint("B");
+			expect("(print: (dm-entries:$a)'s 2nd's value)").markupToPrint("7");
+			expect("(print: (datanames:(dmentries:$a)'s 2nd))").markupToPrint("name,value");
+			expect("(print: (dmentries:(datamap:))'s length)").markupToPrint("0");
 		});
 		it("returns the pairs in their names's natural-sort order", function() {
 			runPassage("(set: $a to (datamap:'D1',1,'E',2,'e',3,'É',4,'D11',5,'D2',6,'F',7))");
-			expect("(altered: _entry via _entry's name, ...(dataentries: $a))").markupToPrint("D1,D2,D11,e,E,É,F");
+			expect("(altered: _entry via _entry's name, ...(dmentries: $a))").markupToPrint("D1,D2,D11,e,E,É,F");
 		});
 		it("doesn't pass data by reference", function() {
 			expect("(set:$a to (a:1,2,3))"
-				+"(set:$b to (dataentries: (datamap: 'a', $a)))"
+				+"(set:$b to (dmentries: (datamap: 'a', $a)))"
 				+"(set:$b's 1st's value's 1st to 4)$a").markupToPrint("1,2,3");
 		});
-		it("is aliased as (dm-entries:) and (datamap-entries:)", function() {
+		it("is aliased as (data-entries:) and (datamap-entries:)", function() {
 			expect("(print: (dataentries:(dm:'D1',1,'E',2)) is (dm-entries:(dm:'D1',1,'E',2)))").markupToPrint("true");
 			expect("(print: (dataentries:(dm:'D1',1,'E',2)) is (datamap-entries:(dm:'D1',1,'E',2)))").markupToPrint("true");
 		});

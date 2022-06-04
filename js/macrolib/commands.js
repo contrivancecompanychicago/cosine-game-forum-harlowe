@@ -1194,6 +1194,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 		The meter will graph the value of the bound variable, from 0 to the given maximum value number (which must be positive). For instance, if that number is 20, then if the bound variable is 5,
 		the meter bar will be 25% full.
 
+		As of Harlowe 3.3.0, using the `2bind` keyword instead of `bind` will produce an error.
+
 		The meter is a "box" element, which takes up the full width of the passage or hook in which it's contained. Placing it inside column markup can
 		allow you to place text alongside it, or other (meter:) commands, if you so desire.
 
@@ -1221,7 +1223,10 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 		#input and interface
 	*/
 	Macros.addCommand('meter',
-		(_, __, widthStr, labelOrGradient) => {
+		(varBind, __, widthStr, labelOrGradient) => {
+			if (varBind.bind === "two way") {
+				return TwineError.create("datatype", "(meter:) shouldn't be given two-way bound variables.", 'Change the "2bind" keyword to just "bind".');
+			}
 			if (typeof labelOrGradient === 'string' && !labelOrGradient.trim()) {
 				return TwineError.create("datatype", `The label string given to (meter:) can't be empty or only whitespace.`);
 			}
@@ -1330,7 +1335,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			/*
 				This standard twoWayBindEvent updates the meter's CSS, very simply.
 			*/
-			cd.data.twoWayBindEvent = (expr, obj, name) => {
+			cd.data.twoWayBindEvent = (_, obj, name) => {
 				if (bind.varRef.matches(obj,name)) {
 					const value = bind.varRef.get();
 					if (typeof value === "number") {
@@ -1403,7 +1408,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			The bound variable will be set to the first value as soon as the cycling link is displayed - so, even if the player doesn't
 			interact with the link at all, the variable will still have the intended value.
 
-			If the bound variable has already been given a type restriction (such as by `(set:num-type $candy)`), then, if that type isn't `string` or `str`, an error
+			If the bound variable has already been given a type restriction (such as by `(set:num-type $candy to 1)`), then, if that type isn't `string` or `str`, an error
 			will result.
 
 			If you use (replace:) to alter the text inside a (cycling-link:), such as `(cycling-link: bind $tattoo, "Star", "Feather")(replace:"Star")[Claw]`,
@@ -1446,7 +1451,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			The bound variable will be set to the first value as soon as the sequence link is displayed - so, even if the player doesn't
 			interact with the link at all, the variable will still have the intended value.
 
-			If the bound variable has already been given a type restriction (such as by `(set:num-type $candy)`), then, if that type isn't `string` or `str`, an error
+			If the bound variable has already been given a type restriction (such as by `(set:num-type $candy to 1)`), then, if that type isn't `string` or `str`, an error
 			will result.
 
 			If you use (replace:) to alter the text inside a (seq-link:), such as `(seq-link: bind $candy, "Two candies", "One candy", "Some wrappers")(replace:"Two")[Five]`,
@@ -1805,7 +1810,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 
 		If the bound variable isn't two-way, the checkbox will be unchecked when it appears, and the variable will be set to `false` as soon as it is displayed.
 
-		If the bound variable has already been given a type restriction (such as by `(set:num-type $candy)`), then, if that type isn't `string` or
+		If the bound variable has already been given a type restriction (such as by `(set:num-type $candy to 1)`), then, if that type isn't `string` or
 		`str`, an error will result.
 
 		If the label string is empty, an error will result.
@@ -1856,6 +1861,13 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 					box.replaceWith(result.render(''));
 				}
 			};
+			/*
+				Perform the initial set() as this enters the passage.
+			*/
+			const error = bind.set(checked);
+			if (TwineError.containsError(error)) {
+				return error;
+			}
 			/*
 				In HTML, checkboxes and labels are associated with [for] and [id] attribute keys.
 			*/
@@ -1984,7 +1996,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 		If the bound variable isn't two-way, the variable will be set to the box's contents as soon as it is displayed - so, it will become the optional
 		initial text string, or, if it wasn't given, an empty string.
 
-		If the bound variable has already been given a type restriction (such as by `(set:num-type $candy)`), then, if that type isn't `string` or
+		If the bound variable has already been given a type restriction (such as by `(set:num-type $candy to 1)`), then, if that type isn't `string` or
 		`str`, an error will result.
 
 		The optional initial text string given to this macro will *not* be parsed as markup, but inserted into the box verbatim - so, giving
@@ -2109,6 +2121,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 				*/
 				initialText = force ? '' : text;
 
+			let setToVariable = false;
 			if (bind.bind === "two way") {
 				/*
 					If double-binding is present, change the provided text to match the variable, if it
@@ -2123,6 +2136,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 						changing the variable's string and the <textarea>'s all at once.
 					*/
 					const result = bind.set(initialText);
+					setToVariable = true;
 					if (TwineError.containsError(result)) {
 						return result;
 					}
@@ -2143,7 +2157,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 					}
 				};
 			}
-			else if (bind) {
+			if (bind && !setToVariable) {
 				/*
 					For normal binds, do the reverse, even before player input has been received.
 				*/
@@ -3098,7 +3112,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			(varBind, message, ...buttons) => {
 				if (VarBind.isPrototypeOf(varBind)) {
 					if (varBind.bind === "two way") {
-						return TwineError.create("datatype", "(dialog:) shouldn't be given two-way bound variables.");
+						return TwineError.create("datatype", "(dialog:) shouldn't be given two-way bound variables.", 'Change the "2bind" keyword to just "bind".');
 					}
 					/*
 						The type signature isn't good enough to specify that this needs a VarRef and a string, so this
@@ -3113,7 +3127,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 				}
 				const blank = buttons.findIndex(e => e === "");
 				if (blank > -1) {
-					return TwineError.create("datatype", "(dialog:)'s " + Utils.nth(blank+1) + " link text shouldn't be an empty string.");
+					return TwineError.create("datatype", `(dialog:)'s ${Utils.nth(blank + 1)} link text shouldn't be an empty string.`);
 				}
 			},
 			(cd, section, varBind, message, ...buttons) => {

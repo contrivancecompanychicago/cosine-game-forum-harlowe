@@ -432,9 +432,11 @@ describe("interface macros", function(){
 					p.find('textarea').val('Bar').trigger('input');
 					expect(p.find('tw-error:not(.javascript)').length).toBe(1);
 				});
-				it("if one-way-bound, sets the bound variable on entry", function() {
-					runPassage("("+name+":bind $foo, \"XXX===\",3,'Foo')");
-					expect("$foo").markupToPrint("Foo");
+				it("if bound, sets the bound variable on entry", function() {
+					['bind','2bind'].forEach(function(e) {
+						runPassage("("+name+":"+e+" $foo, \"XXX===\",3,'Foo')");
+						expect("$foo").markupToPrint("Foo");
+					});
 				});
 				it("if two-way-bound, updates the <textarea> on entry", function() {
 					runPassage("(set:$foo to 'Baz')");
@@ -594,6 +596,10 @@ describe("interface macros", function(){
 			p.find('input').click();
 			expect("(print:$foo)").markupToPrint("true");
 		});
+		it("sets the bound variable on entry", function() {
+			runPassage('(set:$foo to 12)(checkbox:bind $foo, "bar")');
+			expect("(print:$foo)").markupToPrint("false");
+		});
 		it("renders markup in the label text", function() {
 			var p = runPassage("(checkbox:bind $x,'//glower//')");
 			expect(p.find('i').text()).toBe("glower");
@@ -640,7 +646,7 @@ describe("interface macros", function(){
 		});
 	});
 	describe("the (meter:) macro", function() {
-		it("accepts a bound number variable, a positive number, a sizing string, an optional string label, and an optional colour or gradient", function() {
+		it("accepts a one-way bound number variable, a positive number, a sizing string, an optional string label, and an optional colour or gradient", function() {
 			expect("(meter:)").markupToError();
 			expect("(meter: bind $foo)").markupToError();
 			expect("(meter: bind $foo, 10)").markupToError();
@@ -650,6 +656,7 @@ describe("interface macros", function(){
 			expect("(meter: bind $foo, 10, '=X', red)").not.markupToError();
 			expect("(meter: bind $foo, 10, '=X', (gradient:90,0,red,1,white))").not.markupToError();
 			expect("(meter: bind $foo, 10, '=X', 'Yo', red)").not.markupToError();
+			expect("(meter: 2bind $foo, 10, '=X', 'Yo', red)").markupToError();
 			expect("(meter: bind $foo, -1, '=X', 'Yo', red)").markupToError();
 		});
 		it("creates a <tw-meter> with a background-size relative to the bound variable's value", function() {

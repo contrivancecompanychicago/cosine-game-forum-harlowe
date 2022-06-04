@@ -326,7 +326,7 @@ define([
 			Rationale:
 			The main purpose of arrays is to store data values in a specific order - feats the player has performed,
 			names of open storylets from (open-storylets:), visited passage names from (history:), names of file slots as produced
-			by `(dataentries:(saved-games: ))`, to name just a few examples. However, there are times when you want to work with
+			by `(dm-entries:(saved-games: ))`, to name just a few examples. However, there are times when you want to work with
 			the same array in a different order, either because the default ordering isn't to your needs - for instance, you wish to list open
 			storylets by one of their metadata values - or you need to include special exceptions to the normal ordering - for instance, you want to sort
 			(history:) passages with a certain tag higher than others. This macro can be used to create a sorted array,
@@ -982,7 +982,7 @@ define([
 			of the array, obtain a subarray, and other things you can do to arrays.
 			
 			See also:
-			(dm-values:), (dataentries:)
+			(dm-values:), (dm-entries:)
 
 			Added in: 1.1.0
 			#data structure
@@ -1008,7 +1008,7 @@ define([
 			their associated names.
 			
 			See also:
-			(dm-names:), (dataentries:)
+			(dm-names:), (dm-entries:)
 
 			Added in: 1.1.0
 			#data structure
@@ -1023,16 +1023,16 @@ define([
 			),
 		[Map])
 		/*d:
-			(dataentries: Datamap) -> Array
-			Also known as: (dm-entries:), (datamap-entries:)
+			(dm-entries: Datamap) -> Array
+			Also known as: (dataentries:), (datamap-entries:)
 			
 			This takes a datamap, and returns an array of its name/value pairs. Each pair
 			is a datamap that only has "name" and "value" data. The pairs are ordered by their name.
 			
 			Example usage:
-			* `(dataentries: (dm:'B',24, 'A',25))` produces the following array:
+			* `(dm-entries: (dm:'B',24, 'A',25))` produces the following array:
 			`(a: (dm: "name", "A", "value", 25), (dm: "name", "B", "value", 24))`
-			* `(altered: _entry via _entry's name + ":" + _entry's value, ...(dataentries: $m))` creates
+			* `(altered: _entry via _entry's name + ":" + _entry's value, ...(dm-entries: $m))` creates
 			an array of strings from the $m datamap's names and values.
 			
 			Rationale:
@@ -1076,12 +1076,12 @@ define([
 			Rationale:
 			Generally, datamaps (unlike arrays) are not designed to have all of their values looped over and altered in one go, as each value is meant to have its own distinct meaning
 			relative to the others. But, there are a few situations where this is desirable, such as altering multiple numbers in a statistics datamap to fit a particular range (such as from 1 to 100).
-			This essentially combines (dataentries:) with (altered:) (or perhaps (folded:)) by letting you operate on each value while also having access to its name, and automates the process of
-			creating the new datamap from the altered (dataentries:).
+			This essentially combines (dm-entries:) with (altered:) (or perhaps (folded:)) by letting you operate on each value while also having access to its name, and automates the process of
+			creating the new datamap from the altered (dm-entries:).
 
 			Details:
 
-			Unlike (altered:), you must supply a datamap as the second value. Additionally, similar to (dataentries:), only one datamap can be given to this macro. If
+			Unlike (altered:), you must supply a datamap as the second value. Additionally, similar to (dm-entries:), only one datamap can be given to this macro. If
 			you want to alter multiple datamaps with the same lambda, you may want to combine this with (altered:), in a manner
 			similar to this: `(altered: _dm, via (dm-altered: $lambda, _dm), ...$arrayOfDatamaps)`.
 
@@ -1098,7 +1098,7 @@ define([
 			If the given datamap is empty (has no values) then another empty datamap will be returned.
 			
 			See also:
-			(altered:), (dataentries:)
+			(altered:), (dm-entries:)
 			
 			Added in: 3.3.0
 			#data structure
@@ -1551,7 +1551,7 @@ define([
 			
 			You may notice that you usually need to know the names a datamap contains in order to access its values. There are certain
 			macros which provide other ways of examining a datamap's contents: (dm-names:) provides a sorted array of its names,
-			(dm-values:) provides a sorted array of its values, and (dataentries:) provides an array of names and values.
+			(dm-values:) provides a sorted array of its values, and (dm-entries:) provides an array of names and values.
 
 			To summarise, the following operators work on datamaps.
 			

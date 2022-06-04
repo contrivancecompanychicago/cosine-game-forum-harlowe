@@ -4,10 +4,6 @@ $activecolour: #DD4B39;     // A cooked red
 $visitedcolour: #6941e1;    // A run-of-the-mill purple
 $visitedhovercolour: #E3E;  // A fierce magenta
 
-tw-icon {
-	cursor: pointer;
-}
-
 @mixin enchantable-color {
 	/*
 		Links only inherit colours from styled elements that are inside the passage,

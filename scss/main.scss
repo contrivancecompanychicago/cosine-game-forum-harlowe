@@ -122,6 +122,7 @@ tw-story {
 	input[type=checkbox] {
 		transform: scale(1.5);
 		margin:0 0.5em 0.5em 0.5em;
+		vertical-align: middle;
 	}
 
 	/*
@@ -172,6 +173,7 @@ tw-icon {
 		&:hover {
 			opacity: 0.4;
 		}
+		cursor:pointer;
 	}
 	&[data-label]::after {
 		font-weight:bold;

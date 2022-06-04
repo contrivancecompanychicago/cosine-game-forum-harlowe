@@ -42,6 +42,9 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where colours created via `(lch:)` could sometimes have `r`, `g` or `b` datavalues higher than 255 or lower than 0.
  * Fixed a bug where `(background:)` didn't work when given a Harlowe colour with fractional `r`, `g`, or `b` datavalues.
  * Checkboxes created by `(checkbox:)` and related macros are better vertically aligned to their text labels.
+ * `(icon-counter:)` no longer uses the pointing hand cursor when the mouse hovers over it.
+ * `(meter:)` now produces an error if given a bound variable using `2bind` instead of `bind` (for consistency with `(dialog:)`).
+ * `(checkbox:)`, `(input-box:)` and `(force-input-box:)` now set the bound variable as soon as the element appears in the passage (For consistency with `(cycling-link:)`).
 
 #### Alterations
 

@@ -560,7 +560,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		@method get
 		@return {Error|Anything}
 	*/
-	function get(obj, prop, originalProp = prop) {
+	function get(obj, prop, originalProp = prop, returnUndefined = false) {
 		/*
 			{first, last} properties are slices (continuous subsets) created by the "?a's 2ndlasttolast" accesses.
 			This syntax should only be usable with sequentials (as determined by isSequential()).
@@ -616,7 +616,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 			An additional error condition exists for get(): if the property
 			doesn't exist, don't just return undefined.
 		*/
-		if (result === undefined) {
+		if (result === undefined && !returnUndefined) {
 			/*
 				If the property is actually a State.variables access,
 				then it's a variable, and uses the defaultValue in place
@@ -714,6 +714,24 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				this.propertyChain.slice(-1)[0]
 			);
 		},
+
+		has() {
+			/*
+				This is the same as VarRefProto.get(), except that it only checks for existence.
+			*/
+			let deepestObject = this.object;
+			for(let i = 0; i < this.compiledPropertyChain.length - 1; i += 1) {
+				deepestObject = get(deepestObject, this.compiledPropertyChain[i], undefined, true);
+				if (deepestObject === undefined || TwineError.containsError(deepestObject)) {
+					return false;
+				}
+			}
+			return get(deepestObject, this.compiledPropertyChain.slice(-1)[0],
+				/*
+					originalProp doesn't need to be passed in for this call.
+				*/
+				undefined, true) !== undefined;
+		},
 		
 		/*
 			A wrapper around Javascript's [[set]], which does a lot of
@@ -727,11 +745,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				The identifiers store has a different, better error message produced by canSet().
 			*/
 			if (this.object && !this.object.TwineScript_VariableStore && !this.object.TwineScript_Identifiers) {
-				return TwineError.create("macrocall", "I can't (set:) "
-					+ objectName(this)
-					+ ", if the "
-					+ (objectName(this.object).match(/ (.+$)/) || ['',"value"])[1]
-					+ " isn't stored in a variable.",
+				return TwineError.create("macrocall", `I can't (set:) ${objectName(this)}, if the ${(objectName(this.object).match(/ (.+$)/) || ['', "value"])[1]} isn't stored in a variable.`,
 					"Modifying data structures that aren't in variables won't change the game state at all."
 				);
 			}
@@ -758,8 +772,7 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				*/
 				let unstorable;
 				if ((unstorable = unstorableValue(value))) {
-					return TwineError.create("operation", objectName(value) + " can't be stored"
-						+ (value.TwineScript_Unstorable ? '' : collectionType(value) ? " because it holds " + objectName(unstorable) : '') + ".");
+					return TwineError.create("operation", `${objectName(value)} can't be stored${value.TwineScript_Unstorable ? '' : collectionType(value) ? ` because it holds ${objectName(unstorable)}` : ''}.`);
 				}
 
 				/*
@@ -790,10 +803,10 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 				*/
 				if (typeof object === "string") {
 					if (typeof value !== "string") {
-						return TwineError.create("datatype", "I can't put this non-string value, " + objectName(value) + ", in a string.");
+						return TwineError.create("datatype", `I can't put this non-string value, ${objectName(value)}, in a string.`);
 					}
 					else if (value.length !== (isArray(property) ? property.length : 1)) {
-						return TwineError.create("datatype", objectName(value) + "is not the right length to fit into this string location.");
+						return TwineError.create("datatype", `${objectName(value)}is not the right length to fit into this string location.`);
 					}
 					/*
 						Convert strings to an array of code points, to ensure that the indexes are correct.
