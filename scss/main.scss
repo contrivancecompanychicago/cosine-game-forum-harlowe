@@ -115,6 +115,15 @@ tw-story {
 		border-style:none;
 		padding: 2px;
 	}
+	/*
+		These are created by (input:)
+	*/
+	input[type=text] {
+		background-color: transparent;
+		font:inherit;
+		color:inherit;
+		border-style:none;
+	}
 
 	/*
 		These are created by (checkbox:).

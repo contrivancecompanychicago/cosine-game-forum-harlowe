@@ -340,10 +340,129 @@ describe("interface macros", function(){
 			});
 		});
 	});
+	["input","force-input"].forEach(function(name, force) {
+		describe("the ("+name+":) macro", function() {
+			if (!force) {
+				it("accepts an optional bound variable, plus two optional strings", function() {
+					expect("("+name+":)").not.markupToError();
+					expect("("+name+":2)").markupToError();
+					expect("("+name+":true)").markupToError();
+					expect("("+name+":bind _a)").not.markupToError();
+					expect("("+name+":'a')").not.markupToError();
+					expect("("+name+":'a','a')").not.markupToError();
+					expect("("+name+":bind _a,'a')").not.markupToError();
+					expect("("+name+":bind _a,'a','a')").not.markupToError();
+					expect("("+name+":'a','a','a')").markupToError();
+					expect("("+name+":'a',2)").markupToError();
+				});
+			}
+			else {
+				it("accepts an optional bound variable, an optional string, and a string", function() {
+					expect("("+name+":)").markupToError();
+					expect("("+name+":2)").markupToError();
+					expect("("+name+":true)").markupToError();
+					expect("("+name+":bind _a)").markupToError();
+					expect("("+name+":'a')").not.markupToError();
+					expect("("+name+":'a','a')").not.markupToError();
+					expect("("+name+":bind _a,'a')").not.markupToError();
+					expect("("+name+":bind _a,'a','a')").not.markupToError();
+					expect("("+name+":'a','a','a')").markupToError();
+					expect("("+name+":'a',2)").markupToError();
+				});
+			}
+			it("creates an <input> element", function() {
+				var p = runPassage("("+name+":'Foo')");
+				expect(p.find('input[type=text]').length).toBe(1);
+			});
+			it("gives the <input> a placeholder using the optional first string", function() {
+				var p = runPassage("("+name+":'Baz<>','Foo')");
+				expect(p.find('input[type=text]').attr('placeholder')).toBe("Baz<>");
+			});
+			if (!force) {
+				it("fills the <input> with the given initial text", function() {
+					expect(runPassage("("+name+":'A','Foo<>')").find('input[type=text]').val()).toBe("Foo<>");
+					expect(runPassage("("+name+":'Qux<>')").find('input[type=text]').val()).toBe("Qux<>");
+				});
+			}
+			it("doesn't error when the <input> is edited", function() {
+				var t = runPassage("("+name+":'Foo')").find('input[type=text]');
+				expect(function() {
+					t.val('Bar').trigger('input');
+				}).not.toThrow();
+			});
+			if (!force) {
+				it("if bound, sets the bound variable when the <input> is edited", function() {
+					['bind','2bind'].forEach(function(e) {
+						var t = runPassage("("+name+":"+e+" $foo,'Foo')").find('input[type=text]');
+						t.val('Bar').trigger('input');
+						expect("$foo").markupToPrint("Bar");
+						runPassage("(set:$foo to '')");
+					});
+				});
+				it("errors if the bound variable can't contain strings", function() {
+					var p = runPassage('(set:num-type $foo to 2)('+name+':bind $foo,"Baz")');
+					p.find('input[type=text]').val('Bar').trigger('input');
+					expect(p.find('tw-error:not(.javascript)').length).toBe(1);
+				});
+				it("if bound, sets the bound variable on entry", function() {
+					['bind','2bind'].forEach(function(e) {
+						runPassage("("+name+":"+e+" $foo, 'Baz','Foo')");
+						expect("$foo").markupToPrint("Foo");
+					});
+				});
+				it("if two-way-bound, updates the <input> on entry", function() {
+					runPassage("(set:$foo to 'Baz')");
+					var t = runPassage("("+name+":2bind $foo,'','Foo')").find('input[type=text]');
+					expect(t.val()).toBe('Baz');
+				});
+				it("if two-way-bound, updates the <input> when the variable updates", function(done) {
+					var p = runPassage("("+name+":2bind $foo, 'Qux','Foo')(link:'X')[(set:$foo to 'Baz')]");
+					p.find('tw-hook tw-link').click();
+					setTimeout(function(){
+						expect(p.find('input[type=text]').val()).toBe("Baz");
+						done();
+					},20);
+				});
+				it("if two-way-bound, updates the <input> when the bound data structure property updates", function(done) {
+					var p = runPassage("(set:$foo to (dm:'qux','Quux'))("+name+":2bind $foo's qux, 'Bar','Foo')(link:'X')[(set:$foo to (dm:'qux','Baz'))]");
+					p.find('tw-hook tw-link').click();
+					setTimeout(function(){
+						expect(p.find('input[type=text]').val()).toBe("Baz");
+						done();
+					},20);
+				});
+			}
+			else {
+				it("when text is input, its characters are changed to those of the provided string", function() {
+					var t = runPassage("("+name+":bind $foo,'','quxquuxcorge')").find('input[type=text]');
+					expect(t.val('foobar').trigger('input').val()).toBe('quxquu');
+				});
+				it("if one-way-bound, sets the bound variable when the <textarea> is edited", function() {
+					var t = runPassage("("+name+":bind $foo, '','quxquuxcorge')").find('input[type=text]');
+					t.val('Foo').trigger('input');
+					expect("$foo").markupToPrint("qux");
+				});
+				it("if two-way-bound, updates the <input> and variable on entry", function() {
+					runPassage("(set:$foo to 'Baz')");
+					var t = runPassage("("+name+":2bind $foo,'','quxquuxcorge')").find('input[type=text]');
+					expect(t.val()).toBe('qux');
+					expect("$foo").markupToPrint("qux");
+				});
+				it("if two-way-bound, updates the <input> when the variable updates", function(done) {
+					var p = runPassage("("+name+":2bind $foo, '','quxquuxcorge')(link:'X')[(set:$foo to 'Baz')]");
+					p.find('tw-hook tw-link').click();
+					setTimeout(function(){
+						expect(p.find('input[type=text]').val()).toBe("qux");
+						done();
+					},20);
+				});
+			}
+		});
+	});
 	["input-box","force-input-box"].forEach(function(name, force) {
 		describe("the ("+name+":) macro", function() {
 			if (!force) {
-				it("accepts a sizing string, plus three optional values", function() {
+				it("accepts an optional bound variable and a sizing string, plus three optional values", function() {
 					expect("("+name+":'XX==')").not.markupToError();
 					expect("("+name+":bind _a,'XX==')").not.markupToError();
 					expect("("+name+":'XX==',2)").not.markupToError();
@@ -365,7 +484,7 @@ describe("interface macros", function(){
 				});
 			}
 			else {
-				it("accepts a sizing string and text, plus an optional height number between", function() {
+				it("accepts an optional bound variable, a sizing string and text, plus an optional height number", function() {
 					expect("("+name+":'XX==')").markupToError();
 					expect("("+name+":'Foo')").markupToError();
 					expect("("+name+":bind _a,'XX==')").markupToError();
@@ -375,7 +494,7 @@ describe("interface macros", function(){
 					expect("("+name+":'XX==',2,'Foo')").not.markupToError();
 				});
 			}
-			it("errors if the height string isn't a positive integer", function() {
+			it("errors if the height number isn't a positive integer", function() {
 				expect("("+name+":bind _a,'X',2.1)").markupToError();
 				expect("("+name+":bind _a,'X',0)").markupToError();
 				expect("("+name+":bind _a,'X',-2)").markupToError();
@@ -427,7 +546,7 @@ describe("interface macros", function(){
 						runPassage("(set:$foo to '')");
 					});
 				});
-				it("errors if the bound variable can't contain booleans", function() {
+				it("errors if the bound variable can't contain strings", function() {
 					var p = runPassage('(set:num-type $foo to 2)('+name+':bind $foo,"XX=")');
 					p.find('textarea').val('Bar').trigger('input');
 					expect(p.find('tw-error:not(.javascript)').length).toBe(1);
