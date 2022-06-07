@@ -287,7 +287,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		/*
 			Number and patterns ranges have more precise descriptions.
 		*/
-		else if (plain && obj.pattern && obj.pattern === "range") {
+		else if (plain && obj.pattern === "range") {
 			/*
 				Custom patterns have special names which should be used for self-description.
 			*/

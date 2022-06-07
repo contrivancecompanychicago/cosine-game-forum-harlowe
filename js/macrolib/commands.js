@@ -1963,13 +1963,12 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 	
 		A command macro that creates a single-line text input element, allowing the player
 		to input any amount of text without newlines, which can optionally be automatically stored in a variable.
-		The first string specifies the value of the gray placeholder message (that browsers display inside the element when it is empty),
-		and the second string specifies an initial default value to fill the element with.
+		The first string specifies the horizontal position and width, and the second string specifies an initial default value to fill the element with.
 
 		Example usage:
-		* `(input: "Cheese Honey Sandwich")` produces an element that initially contains "Cheese Honey Sandwich", and which has no placeholder text. Altering the contained text does nothing.
-		* `(input: bind _name, "Calder Faust")` produces an element that initially contains "Calder Faust", and which has no placeholder text. Altering it automatically updates the _name temp variable.
-		* `(input: bind _spell, "Type a spell name", "")` produces an element with the placeholder "Type a spell name" and no initial default text inside it. Altering it automatically updates the _spell temp variable.
+		* `(input: "Cheese Honey Sandwich")` produces an element that initially contains "Cheese Honey Sandwich", and which is 100% of the available width. Altering the contained text does nothing.
+		* `(input: bind _name, "=X=", "Calder Faust")` produces an element that initially contains "Calder Faust", and which is 33% of the available width. Altering it automatically updates the _name temp variable.
+		* `(input: bind _spell)` produces an element which is 100% of the available width, and with no initial default text inside it. Altering it automatically updates the _spell temp variable.
 
 		Rationale:
 		While there are other means of accepting player text input into the story, such as the (prompt:) macro, you may desire an input region
@@ -1979,8 +1978,13 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 		Details:
 		This macro has no mandatory values - `(input:)` by itself will produce a text input element with no bound variable, no placeholder and no default value.
 
-		The produced element is always the entire width of the containing area, similar to (button:). You may use the aligner or column markup to control this element's width, or
-		place text alongside it.
+		The optional sizing string is the same kind of line given to (box:) - a sequence of zero or more `=` signs, then a sequence of characters (preferably "X"), then zero or
+		more `=` signs. Think of this string as a visual depiction of the element's horizontal proportions - the `=` signs are the space to
+		the left and right, and the characters in the middle are the element itself. Also, to avoid ambiguity with the second string given to this macro,
+		a string representing 100% width (no margins) must be a single character, such as just "X". If you need the initial contents of the element to be a single character,
+		provide an "X" sizing string before it, so that it's clear which is which.
+
+		The produced element always occupies an entire line of the containing area, as with (box:) and (button:). If you wish to place it alongside other text, consider using it inside the column markup.
 
 		This macro accepts two-way binds using the `2bind` syntax. These will cause the element's contents to always match the current value of the bound
 		variable, and automatically update itself whenever any other macro changes it. However, if the variable no longer contains a string, then
@@ -2031,7 +2035,15 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 
 		Details:
 		Unlike (input:), the final string is mandatory, as it holds the text that the input element will contain as the player "types" it in.
-		
+
+		The optional sizing string is the same kind of line given to (box:) - a sequence of zero or more `=` signs, then a sequence of characters (preferably "X"), then zero or
+		more `=` signs. Think of this string as a visual depiction of the box's horizontal proportions - the `=` signs are the space to
+		the left and right, and the characters in the middle are the box itself. Also, to avoid ambiguity with the second string given to this macro,
+		a string representing 100% width (no margins) must be a single character, such as just "X". If you need the initial contents of the element to be a single character,
+		provide an "X" sizing string before it, so that it's clear which is which.
+
+		The produced element always occupies an entire line of the containing area, as with (box:) and (button:). If you wish to place it alongside other text, consider using it inside the column markup.
+
 		Because you already know what the text in the element will become, you may feel there's no need to have a bound variable. However, you might wish to bind a temporary
 		variable, and then check using a live macro when that variable has become filled with the full string, thus indicating that the player has read it. Otherwise,
 		there is no mechanism to ensure that the player actually type out the entire string.
@@ -2047,9 +2059,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 		#input and interface 4
 	*/
 	/*d:
-		(input-box: [Bind], String, [Number], [String]) -> Command
+		(input-box: [Bind], [String], [Number], [String]) -> Command
 
-		A command macro that creates a multi-line text input box of the given position, width (specified by the first string) and height (specified by
+		A command macro that creates a multi-line text input box of the given position, width (specified by the first, optional string) and height (specified by
 		the optional number), allowing the player to input any amount of text, which can optionally be automatically stored in a variable.
 		The final optional string specifies an initial default value to fill the box with.
 
@@ -2067,11 +2079,13 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 		paragraphs, which may be desirable if the story is themed around writing.
 
 		Details:
-		Most of the values you can give to this macro are optional. The only mandatory value is the sizing line, which is the same kind of
-		line given to (box:) - a sequence of zero or more `=` signs, then a sequence of characters (preferably "X"), then zero or
+		The optional sizing string is the same kind of line given to (box:) - a sequence of zero or more `=` signs, then a sequence of characters (preferably "X"), then zero or
 		more `=` signs. Think of this string as a visual depiction of the box's horizontal proportions - the `=` signs are the space to
 		the left and right, and the characters in the middle are the box itself. Also, to avoid ambiguity with the second string given to this macro,
-		a string representing 100% width (no margins) must be a single character, such as just "X".
+		a string representing 100% width (no margins) must be a single character, such as just "X". If you need the initial contents of the element to be a single character,
+		provide an "X" sizing string before it, so that it's clear which is which.
+
+		The produced element always occupies an entire line of the containing area, as with (box:) and (button:). If you wish to place it alongside other text, consider using it inside the column markup.
 
 		The optional number, which must come directly after the sizing line, is a height, in text lines. If this is absent, the box will be sized to 3
 		lines. Harlowe's default CSS applies `resize:none` to the box, preventing it (in most browsers) from being resizable by the player.
@@ -2102,9 +2116,9 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 		#input and interface 5
 	*/
 	/*d:
-		(force-input-box: [Bind], String, [Number], String) -> Command
+		(force-input-box: [Bind], [String], [Number], String) -> Command
 
-		A command macro that creates an empty text input box of the given position width (specified by the first string) and height (specified by
+		A command macro that creates an empty text input box of the given position, width (specified by the first, optional string) and height (specified by
 		the optional number), which appears to offer the player a means to input text, but instead replaces every keypress inside it with characters
 		from a pre-set string that's relevant to the story.
 
@@ -2148,33 +2162,22 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			const
 				box = name.endsWith('box'),
 				varBindProvided = VarBind.isPrototypeOf(args[0]),
-				heightProvided = box && typeof args[1 + varBindProvided] === "number",
-				placeholderProvided = !box && typeof args[+varBindProvided] === "string" && typeof args[1 + varBindProvided] === "string",
-				textProvided = typeof args[box + varBindProvided + heightProvided + placeholderProvided] === "string",
-				widthStr = box && args[+varBindProvided];
+				firstStrProvided = typeof args[+varBindProvided] === "string",
+				heightProvided = box && typeof args[firstStrProvided + varBindProvided] === "number",
+				firstStr = !firstStrProvided ? args[varBindProvided + heightProvided] : args[+varBindProvided],
+				widthStrProvided = geomParse(firstStr).size > 0,
+				text = widthStrProvided ? args[varBindProvided + heightProvided + firstStrProvided] : firstStr;
 
 			/*
-				For boxes, type-check that the string given is a sizing line.
+				Type-check that (force-input-box:) does, indeed, receive a string.
 			*/
-			if (box && (typeof widthStr !== "string" || widthStr.search(geomStringRegExp) === -1
-					/*
-						A rather uncomfortable check needs to be made here: because widthStrs can have zero "=" signs
-						on either side, and a middle portion consisting of essentially anything, the default text box
-						could be confused for it, unless all 100%-width strings are prohibited to just single characters.
-					*/
-					|| (!widthStr.includes("=") && widthStr.length > 1))) {
-				return TwineError.create("datatype", `The (${name}:) macro requires a sizing line ("==X==", "==X", "=XXXX=" etc.) be provided, not ${JSON.stringify(widthStr)}.`);
-			}
-			/*
-				Second, type-check that (force-input-box:) does, indeed, receive a string.
-			*/
-			if (name.startsWith('force') && !textProvided) {
+			if (name.startsWith('force') && typeof text !== 'string') {
 				return TwineError.create("datatype", `The (${name}:) macro requires a string of text to forcibly input.`);
 			}
 			/*
 				Remaining type-checks: that there are no other values than the given optional values.
 			*/
-			const intendedLength = box + varBindProvided + heightProvided + textProvided + placeholderProvided;
+			const intendedLength = varBindProvided + heightProvided + widthStrProvided + (typeof text === "string");
 			if (args.length > intendedLength) {
 				return TwineError.create("datatype", `An incorrect combination of values was given to this (${name}:) macro.`);
 			}
@@ -2187,21 +2190,25 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 					Again, these contrived lines extract which of the three optional values were given.
 				*/
 				varBindProvided = VarBind.isPrototypeOf(args[0]),
-				heightProvided = box && typeof args[1 + varBindProvided] === "number",
-				placeholderProvided = !box && typeof args[+varBindProvided] === "string" && typeof args[1 + varBindProvided] === "string",
+				firstStrProvided = typeof args[+varBindProvided] === "string",
+				heightProvided = box && typeof args[firstStrProvided + varBindProvided] === "number",
 				/*
 					Now the values are actually extracted and computed.
 				*/
 				bind = varBindProvided && args[0],
 				height = heightProvided ? args[1 + varBindProvided] : 3,
-				{marginLeft,size} = box ? geomParse(args[+varBindProvided]) : {};
+				{marginLeft,size} = firstStrProvided ? geomParse(args[+varBindProvided]) : {},
+				/*
+					If a size was returned from the above, that means the first string is a sizing string, and the
+					second string contains the text. Otherwise, the first string contains the text.
+				*/
+				text = (size ? args[varBindProvided + heightProvided + firstStrProvided] : firstStrProvided && args[+varBindProvided]) || '';
 
-			let text = (typeof args[box + varBindProvided + heightProvided + placeholderProvided] === "string") ? args[box + varBindProvided + heightProvided + placeholderProvided] : '',
+			let
 				/*
 					(force-input-box:)es have no initial text, UNLESS they're bound to a string variable (see below).
 				*/
-				initialText = force ? '' : text,
-				placeholder = placeholderProvided ? args[+varBindProvided] : '';
+				initialText = force ? '' : text;
 
 			let setToVariable = false;
 			if (bind.bind === "two way") {
@@ -2263,7 +2270,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			/*
 				The <textarea> is created with its height directly feeding into its rows value.
 			*/
-			let source = `<${box ? 'textarea' : `input type=text placeholder="${Utils.escape(placeholder)}"`} style="width:100%" ${box ? `rows=${height}>` : 'value="'}${Utils.escape(initialText)}${box ? '</textarea>' : '">'}`;
+			let source = `<${box ? 'textarea' : `input type=text`} style="width:100%" ${box ? `rows=${height}>` : 'value="'}${Utils.escape(initialText)}${box ? '</textarea>' : '">'}`;
 			/*
 				(force-input:) has a different event to (input:) - updating the contents on its
 				own terms (that is, with the canned text string.)
@@ -2303,8 +2310,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 				/*
 					These need to be on the <tw-enchantment> so that the resulting border is one that (border:) can correctly replace.
 				*/
-				'margin-left': box ? marginLeft + "%" : undefined,
-				width: box ? size + '%' : '100%',
+				'margin-left': size ? marginLeft + "%" : undefined,
+				width: size ? size + '%' : '100%',
 				/*
 					The default border style can be overridden with (border:).
 				*/

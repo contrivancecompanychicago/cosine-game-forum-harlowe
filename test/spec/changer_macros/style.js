@@ -1007,9 +1007,10 @@ describe("style changer macros", function() {
 		});
 	});
 	describe("the (button:) macro", function() {
-		it("requires 0 arguments", function() {
+		it("takes an optional sizing string", function() {
 			expect("(print:(button:))").not.markupToError();
 			expect("(print:(button:1))").markupToError();
+			expect("(print:(button:'==XXX'))").not.markupToError();
 		});
 		it("gives the enchanted elements the 'enchantment-button' class", function() {
 			var p = runPassage("(link:'foo',(button:))[]");
@@ -1020,6 +1021,19 @@ describe("style changer macros", function() {
 		it("works with (enchant:) given ?Link", function() {
 			var p = runPassage("(enchant:?Link,(button:))[[Test]]","Test");
 			expect(p.find('tw-enchantment.enchantment-button > tw-link').length).toBe(1);
+		});
+		it("if a string is given, gives the hook the specified margins and width", function() {
+			[
+				['=XX=', 25, 50],
+				['X===', 0, 25],
+				['==XXXXXXXX', 20, 80],
+			].forEach(function(a) {
+				var code = a[0], marginLeft=a[1], width=a[2];
+
+				var s = runPassage("(button:'" + code + "')[[Test]]",'Test').find('tw-link').parent().attr('style');
+				expect(s).toMatch(RegExp("\\bleft:\\s*"+marginLeft+"%"));
+				expect(s).toMatch(RegExp("\\bwidth:\\s*"+width+"%"));
+			});
 		});
 		// TODO:CSS tests
 	});

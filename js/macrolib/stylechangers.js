@@ -1098,13 +1098,14 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 		)
 
 		/*d:
-			(button:) -> Changer
+			(button: [String]) -> Changer
 
-			When applied to a link, this changer styles it so that it resembles a button, and makes it take up the entire passage width. It is not
-			recommended that this be used on non-link hooks.
+			When applied to a link, this changer styles it so that it resembles a button, and makes it take up the entire passage width. The optional sizing
+			string lets you specify width and horizontal margins for the button. It is not recommended that this be used on non-link hooks.
 
 			Example usage:
 			* `(button:)[[Go to the cemetery]]` applies the button style to a single passage link.
+			* `(button:"=XXX=")[[Hug your husband]]` turns the link into a button that occupies 60% of the available width, centered.
 			* `(enchant:?link's 2ndlast + ?link's last, (button:))` enchants the second-last and last links in the passage with the button style.
 
 			Rationale:
@@ -1117,6 +1118,10 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			This is essentially a shortcut for a number of other changers added together. `(link: "Link Text", (button:))` is similar to
 			`(link:"Link Text",(align:"=><=")+(box:"X")+(b4r:"solid")+(css:"padding:0px")+(corner-radius:16))`. However, unlike the latter,
 			this changer is designed to work correctly with (click:) and `(enchant:"text")`, so that the button border matches the current link colour.
+
+			The optional sizing string is the same kind of line given to (box:) - a sequence of zero or more `=` signs, then a sequence of characters (preferably "X"), then zero or
+			more `=` signs. Think of this string as a visual depiction of the button's horizontal proportions - the `=` signs are the space to
+			the left and right, and the characters in the middle are the button itself.
 
 			To make (button:) links appear in two or more columns, or make two (button:) links appear side-by-side, consider using the column markup.
 
@@ -1132,8 +1137,14 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			#styling
 		*/
 		("button",
-			() => ChangerCommand.create("button", []),
-			(d) => {
+			(_, sizingStr) => {
+				if (sizingStr !== undefined && !geomParse(sizingStr).size) {
+					return TwineError.create("datatype", `The string given to (button:) should be a sizing line ("==X==", "==X", "=XXXX=" etc.), not ${JSON.stringify(sizingStr)}.`);
+				}
+				return ChangerCommand.create("button", sizingStr ? [sizingStr] : []);
+			},
+			(d, sizingStr) => {
+				const {marginLeft,size} = geomParse(sizingStr);
 				/*
 					In order for this to be validly considered usable with (enchant:), it should only have an "attr" item instead of a "functions" item.
 					This is currently the only way for a ChangeDescriptor to modify an element's class... as uncomfortable as it is.
@@ -1143,9 +1154,13 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 						return this.className + (this.classList.contains('enchantment-button') ? '' : ' '.repeat(this.className.length > 0) + 'enchantment-button');
 					},
 				});
+				d.styles.push({
+					'margin-left': size ? marginLeft + "%" : undefined,
+					width: size ? size + '%' : '100%',
+				});
 				return d;
 			},
-			[]
+			[optional(String)]
 		)
 		/*d:
 			(action: String) -> Changer

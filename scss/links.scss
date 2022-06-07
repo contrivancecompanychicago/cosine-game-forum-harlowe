@@ -114,6 +114,10 @@ tw-link.enchantment-button,
 .enchantment-button:not(.link) .link {
 	@include button-links;
 }
+// This is necessary to allow sizing strings given to (button:) to work.
+.enchantment-button {
+	display: block;
+}
 
 // We need the clickblock frame to always be above the contents. So, a large pseudo-element is necessary.
 // Also, to account for the contents' padding, it needs to be attached to the contents itself.

@@ -526,9 +526,17 @@ define(['jquery', 'utils', 'renderer'], function($, Utils, Renderer) {
 	*/
 	const geomStringRegExp = /^(=*)([^=]+)=*$/;
 	function geomParse(str) {
+		if (!str) {
+			return {marginLeft:0, size:0};
+		}
 		const length = str.length;
 		const [matched, left, inner] = (geomStringRegExp.exec(str) || []);
-		if (!matched) {
+		if (!matched
+				/*
+					If a garbage string was given (that is, a string of length > 1 with no = sizers)
+					then return the error value as well.
+				*/
+				|| (inner === str && inner.length > 1)) {
 			return {marginLeft:0, size:0};
 		}
 		return {marginLeft: (left.length/length)*100, size: (inner.length/length)*100};
