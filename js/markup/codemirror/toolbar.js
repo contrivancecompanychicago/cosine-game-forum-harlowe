@@ -551,7 +551,9 @@
 							m.changerNamed('t8n-arrive').push(stringify(value));
 						}
 					},
-				},{
+				},
+				el('<br>'),
+				{
 					type: "inline-number",
 					text: "Transition time (sec): ",
 					value: 0.8,
@@ -1729,7 +1731,7 @@
 			},
 			(() => {
 				// This <span> wrapper ensures that it isn't considered a main panel button by the CSS.
-				const done = el(`<span style="float:right;align-self:end;"><button class="variant-primary primary icon-button">Done</button></span>`);
+				const done = el(`<span style="${!twine23 ? 'position:absolute;bottom:var(--grid-size);right:var(--grid-size);' : 'float:right;'}"><button class="variant-primary primary icon-button">Done</button></span>`);
 				done.firstChild[ON]('click', () => {
 					switchPanel();
 					cm.constructor.signal(cm, 'harlowe-3-findDone');

@@ -311,7 +311,7 @@
 	display:none;
 }
 .harlowe-3-scrollWrapper {
-	overflow: hidden scroll;
+	overflow: hidden auto;
 	max-height: 60vh;
 }
 .harlowe-3-toolbarPanel a[href] {

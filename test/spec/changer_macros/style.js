@@ -438,14 +438,14 @@ describe("style changer macros", function() {
 			});
 			if (name === "time") {
 				it("changes the animation-duration of the transition", function() {
-					var p = runPassage("(transition-"+name+":2s)+(t8n:'pulse')[foo]");
+					runPassage("(transition-"+name+":2s)+(t8n:'pulse')[foo]");
 					expect($('tw-transition-container[data-t8n="pulse"]').css('animation-duration')).toMatch(/^2000ms$|^2s$/);
 				});
 			}
 			if (name === "delay") {
-				it("changes the animation-delay of the transition", function() {
-					var p = runPassage("(transition-"+name+":2s)+(t8n:'pulse')[foo]");
-					expect($('tw-transition-container[data-t8n="pulse"]').css('animation-delay')).toMatch(/^2000ms$|^2s$/);
+				it("changes the animation-play-state of the transition", function() {
+					runPassage("(transition-"+name+":2s)+(t8n:'pulse')[foo]");
+					expect($('tw-transition-container[data-t8n="pulse"]').css('animation-play-state')).toBe('paused');
 				});
 			}
 			// TODO: Add .css() tests of output, including passage links.
