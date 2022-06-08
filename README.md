@@ -28,6 +28,10 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where using `(append:?Link)` (or one of its relatives) to append text to a hook enchanted with `(click:)` wouldn't work correctly (the text would be placed next to the link instead of inside).
  * Fixed a bug where `(enchant:)`, `(click:)`, and other enchantment macros could enchant empty hooks such as `|A>[]` (wrapping them with `<tw-enchantment>` elements), even though Harlowe usually considers empty hooks to be nonexistent, and hides them with its default CSS.
    * Note: this means that, given constructions like `[]<A|` and `(click:?A)[]`, revision macros like `(append:?Link)` will no longer consider ?A (as long as it is empty) to be a link via the `(click:)`, and cannot append to it - you'll have to explicitly refer to it via `(append:?A)` instead.
+ * Fixed a bug where `pos` used in lambdas given to `(char-style:)` would, for each character, be a number relative to the entire passage, not the attached hook.
+ * Fixed a bug where `(t8n-delay:)` would sometimes cause transitioning-in hooks to briefly flicker into visibility once the delay ran out and the transition began.
+ * Partially fixed a bug where, whenever a hook or passage would finish transitioning in, elements inside it that were still transitioning would have their transitions stutter or judder.
+   * Note: due to inconsistencies in CSS animation performance across devices and when a large numbers of elements are simultaneously animating (in particular when using `(char-style:)`), this bug may still sometimes occur. A more robust fix for this is likely to appear in 4.0.0.
  * Fixed a bug where chained `'s` syntax, like `$array's 1st's 2nd`, produced bad error messages when the deepest dataname (in that example, `1st`) wasn't present.
  * Fixed a bug where `'s` and `of` sometimes wouldn't be syntax-highlighted correctly.
  * Improved the behaviour of enchanting a hook's lines (using either (enchant:) or (line-style:)) when those lines contain macros or links, sometimes causing those elements to be excluded from the enchantment, or falsely considered to be lines on their own.

@@ -127,37 +127,60 @@ define(['jquery', 'markup', 'utils/polyfills'],
 			Each frame, reduce the duration, and potentially reduce it further if this
 			transition can be skipped and an input is being held.
 		*/
-		let previousTimestamp = null, elapsedRealTime = 0, duration = time + delay;
+		let previousTimestamp = null, elapsedVisibleTime = 0, duration = time + delay;
 		function animate(timestamp) {
 			if (el[0].compareDocumentPosition(document) & 1) {
 				duration = 0;
 			}
+			let delta;
 			if (previousTimestamp) {
-				duration -= (timestamp - previousTimestamp);
-				elapsedRealTime += (timestamp - previousTimestamp);
+				delta = (timestamp - previousTimestamp);
+				duration -= delta;
 			}
 			previousTimestamp = timestamp;
 			/*
 				The test for whether a transition can be skipped is simply that any key is being held.
 			*/
 			if (transitionSkip > 0 && (keysHeldCount + buttonsHeldCount) > 0) {
-				duration -= transitionSkip;
-				el.css('animation-delay', ((cssTimeUnit(el.css('animation-delay')) || 0) - transitionSkip) + "ms");
+				el.data('expediteAnim')(transitionSkip);
+			}
+			/*
+				If the remaining duration exceeds the initial delay (that is, if it's currently eating into the "time" interval rather than
+				the "delay" interval), remove the 'visibility:hidden' guard and start the animation
+			*/
+			if (duration <= time) {
+				elapsedVisibleTime += delta || 0;
+				if (el.css('animation-play-state') === 'paused') {
+					el.css({visibility:'', 'animation-play-state':'running'});
+				}
+				else {
+				}
 			}
 			if (duration <= 0) {
-				endFn(elapsedRealTime);
+				el.removeData('expediteAnim');
+				endFn();
 			}
 			else {
 				requestAnimationFrame(animate);
 			}
-			/*
-				If the remaining duration exceeds the initial delay (that is, if it's currently eating into the "time" interval rather than
-				the "delay" interval), remove the 'visibility:hidden' guard.
-			*/
-			if (duration <= time) {
-				el.css('visibility', '');
-			}
 		}
+		/*
+			A method that allows the animation to be expedited by a certain amount of time, which is currently only required
+			for cases when an animating parent has finished and is unwrapping.
+		*/
+		el.data('expediteAnim', (expedite) => {
+			/*
+				If no expedite time is given, assume the animation has been force-restarted by its parents being unwrapped.
+				Thus, expedite it by its own elapsedVisibleTime.
+			*/
+			if (expedite === undefined) {
+				expedite = elapsedVisibleTime;
+			}
+			duration -= expedite;
+			if (el.css('animation-play-state') === 'running') {
+				el.css('animation-delay', ((cssTimeUnit(el.css('animation-delay')) || 0) - expedite) + "ms");
+			}
+		});
 		!duration ? animate() : requestAnimationFrame(animate);
 	}
 
@@ -432,8 +455,9 @@ define(['jquery', 'markup', 'utils/polyfills'],
 				el.css('transform-origin', transitionOrigin);
 			}
 			el.attr("data-t8n", transIndex).addClass("transition-out").css({
-				'animation-duration': transitionTime + "ms",
-				'animation-delay':   (transitionDelay - expedite) + "ms",
+				'animation-duration': `${transitionTime}ms`,
+				'animation-delay':   `${-expedite}ms`,
+				'animation-play-state': 'paused',
 			});
 
 			/*
@@ -504,14 +528,14 @@ define(['jquery', 'markup', 'utils/polyfills'],
 				el.css('transform-origin', transitionOrigin);
 			}
 			el.attr("data-t8n", transIndex).addClass("transition-in").css(Object.assign({
-				'animation-duration': transitionTime + "ms",
-				'animation-delay':   (transitionDelay - expedite) + "ms",
+				'animation-duration': `${transitionTime}ms`,
+				'animation-delay':    `${-expedite}ms`,
 			},
 			/*
-				For delayed animations, initially hide the transitioning element using visiblity:hidden.
+				For delayed animations, initially hide the transitioning element using visiblity:hidden and animation-play-state:paused.
 				onTransitionComplete will then remove this at the correct time.
 			*/
-			(transitionDelay - expedite) ? { visibility: 'hidden' } : {}));
+			(transitionDelay - expedite) ? { visibility: 'hidden', 'animation-play-state': 'paused' } : {}));
 
 			/*
 				To give newly-created sections time to render and apply changers, such as (box:) to hooks,
@@ -535,7 +559,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 				}
 			});
 
-			onTransitionComplete(el, transitionTime, transitionDelay - expedite, transitionSkip, (elapsedRealTime) => {
+			onTransitionComplete(el, transitionTime, transitionDelay - expedite, transitionSkip, () => {
 				/*
 					Unwrap the wrapping... unless it contains a non-unwrappable element,
 					in which case the wrapping must just have its attributes removed.
@@ -545,13 +569,14 @@ define(['jquery', 'markup', 'utils/polyfills'],
 					/*
 						Nested transitioning elements restart their animations when they're momentarily
 						detached from the DOM by unwrap().
-						For each nested transition, such as <tw-transition-container>,
-						take their existing animation delay and decrease it by the delay.
-						(Negative delays expedite the animation conveniently.)
+						For each nested transition, expedite its animation.
 					*/
 					el.find('tw-transition-container, .transition-in, .transition-out').each((_,child) => {
 						child = $(child);
-						child.css('animation-delay', (cssTimeUnit(child.css('animation-delay') || 0) - elapsedRealTime) + "ms");
+						/*
+							This method is attached and removed by onTransitionComplete().
+						*/
+						(child.data('expediteAnim') || Object)();
 					});
 					/*
 						Because detaching elements (using unwrap()) resets the scroll positions of an element,

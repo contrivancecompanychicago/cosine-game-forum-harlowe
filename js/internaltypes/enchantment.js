@@ -51,6 +51,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 			/*
 				Now, enchant each selected word or hook within the scope.
 			*/
+			let pos = 0;
 			scope.forEach(section, (e, i) => {
 				/*
 					The localHook is a restriction created by (enchant-in:) or its ilk, limiting the given scope even further.
@@ -82,6 +83,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 				if (e.is(':empty') && (!e.data('source') || !e.data('source').length)) {
 					return;
 				}
+				pos += 1;
 				/*
 					Lambdas are given to enchantments exclusively through (enchant:). They override any
 					other changers (which shouldn't be on here anyway) and instead call the author-supplied
@@ -89,7 +91,7 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 				*/
 				let changer;
 				if (lambda) {
-					changer = lambda.apply(section, { loop: scope.TwineScript_GetProperty(i), pos: i+1 });
+					changer = lambda.apply(section, { loop: scope.TwineScript_GetProperty(i), pos });
 					if (TwineError.containsError(changer)) {
 						e.replaceWith(changer.render());
 						lambda = changer = null;

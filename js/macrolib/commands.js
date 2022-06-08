@@ -3279,7 +3279,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			(goto-url:)
 
 			Added in: 1.0.0
-			#url
+			#window
 		*/
 		("open-url",
 			noop,
@@ -3353,7 +3353,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			(open-url:)
 
 			Added in: 1.0.0
-			#url
+			#window
 		*/
 		("goto-url",
 			noop,
@@ -3786,7 +3786,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			descriptive values about the URL, instead of a single string.
 
 			Added in: 1.0.0
-			#url
+			#window
 		*/
 		("page-url", "String", () => window.location.href, []);
 });

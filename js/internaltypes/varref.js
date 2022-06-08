@@ -273,10 +273,14 @@ define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'd
 		to be compared succinctly.
 	*/
 	function createDeterminer(obj, prop) {
-		const name = `'${prop}' value${prop === "any" || prop === "some" ? '' : 's'} of `;
+		const name = `"${prop} value${prop === "any" ? '' : 's'}" of `;
 
 		return {
 			determiner: prop,
+			/*
+				This is used solely for error messages.
+			*/
+			determined: obj,
 			/*
 				The "some" ("any") and "all" determiners require the ability to extract code points
 				from strings at will.

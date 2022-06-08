@@ -367,6 +367,18 @@ describe("enchantment macros", function () {
 			// The ! should appear to the left in the rendered passage.
 			expect('(char-style:(background:green))["ٱٹ!‏"]').markupToPrint('"ٱٹ!‏"');
 		});
+		it("'pos' equals the number of the char in the passage", function() {
+			var p = runPassage('(char-style:via (bg:(hsl:pos*8,0.5,0.5)))[ABCD]');
+			expect(p.find('tw-enchantment:first-child')).toHaveBackgroundColour('#bf503f');
+			expect(p.find('tw-enchantment:last-child')).toHaveBackgroundColour('#bf833f');
+		});
+		it("'pos' is unique for each hook", function() {
+			var p = runPassage('(char-style:via (bg:(hsl:pos*8,0.5,0.5)))[ABCD] (char-style:via (bg:(hsl:pos*8,0.5,0.5)))[ABCD]');
+			expect(p.find('tw-hook:first-of-type tw-enchantment:first-child')).toHaveBackgroundColour('#bf503f');
+			expect(p.find('tw-hook:first-of-type tw-enchantment:last-child')).toHaveBackgroundColour('#bf833f');
+			expect(p.find('tw-hook:last-of-type tw-enchantment:first-child')).toHaveBackgroundColour('#bf503f');
+			expect(p.find('tw-hook:last-of-type tw-enchantment:last-child')).toHaveBackgroundColour('#bf833f');
+		});
 		it("doesn't create <tw-pseudo-hook>s", function() {
 			expect(runPassage('(char-style:(background:green))[=foo\n[bar]<a|\n').find('tw-pseudo-hook').length).toBe(0);
 		});

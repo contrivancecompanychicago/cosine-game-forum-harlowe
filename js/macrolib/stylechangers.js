@@ -906,11 +906,13 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			A changer that, when added to a (transition:) changer, delays the start of the transition by a given time.
 
 			Example usage:
-			`(t8n:"slide-right")+(t8n-delay:3s)[Sorry I'm late.]` makes the text slide in from the right, but only
+			* `(t8n:"slide-right")+(t8n-delay:3s)[Sorry I'm late.]` makes the text slide in from the right, but only
 			after 3 seconds have passed.
+			* `(char-style: via (t8n-delay:pos*60)+(t8n:'dissolve'))[A pleasure to make your acquaintance.]` causes
+			each character in the hook to appear one-by-one in a 'typewriter' effect.
 
 			Details:
-			Much like (live:), this macro should be given a number of milliseconds (such as `50ms`) or seconds
+			Much like (live:) and (after:), this macro should be given a number of milliseconds (such as `50ms`) or seconds
 			(such as `10s`). Providing negative seconds/milliseconds is not permitted and will result in an error.
 
 			Unlike (transition-time:), this does nothing when attached to links, because clicking the link should

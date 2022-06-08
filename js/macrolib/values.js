@@ -207,7 +207,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 			there isn't a succinct option using that syntax. When gathering the characters in string $a
 			between position 1 and $b, where $b is a negative position counting from the end, `(range:1, $b)` doesn't work, and
 			the best you can do without this macro is something like `$a's (range: 1, $b + $a's length)`. So, this
-			macro can be used as a slightly shorter alternative, by writing `(subarray: $a, 1, -$b)`.
+			macro can be used as a slightly shorter alternative, by writing `(substring: $a, 1, -$b)`.
 			
 			Details:
 			As mentioned above, if you provide negative numbers, they will be treated as being offset from the end

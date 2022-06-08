@@ -364,9 +364,7 @@ define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Uti
 				{jQuery} The <tw-hook> element to manipulate.
 		*/
 		forEach(section, fn) {
-			const ret = hooks.call(this, section).each(function(i) {
-				fn($(this), i);
-			});
+			const ret = hooks.call(this, section).each((i,e) => fn($(e),i));
 			/*
 				After calling hooks(), we must remove the <tw-pseudo-hook> elements.
 				We don't normalize() the text nodes because that may rejoin various split chars

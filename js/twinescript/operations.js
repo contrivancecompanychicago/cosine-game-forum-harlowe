@@ -50,10 +50,7 @@ define([
 			if (typeof left !== type || typeof right !== type) {
 				return TwineError.create(
 					"operation",
-					"I can only "
-						+ operationVerb + " " + type + "s, not "
-						+ objectName(typeof left !== type ? left : right)
-						+ ".",
+					`I can only ${operationVerb} ${type}s, not ${objectName(typeof left !== type ? left : right)}.`,
 					message
 				);
 			}
@@ -88,7 +85,7 @@ define([
 						TwineScript errors are handled by TwineScript, not JS,
 						so don't throw this error, please.
 					*/
-				const msg = objectName(left) + " isn't the same type of data as " + objectName(right);
+				const msg = `${objectName(left)} isn't the same type of data as ${objectName(right)}`;
 				/*
 					Special hints for type conversion.
 				*/
@@ -118,14 +115,14 @@ define([
 			}
 			let [determinerValue, otherValue] = left.determiner ? [left,right] : right.determiner ? [right,left] : [];
 			if (determinerValue) {
-				const { determiner } = determinerValue;
+				const { determiner, determined } = determinerValue;
 				/*
 					The "start" and "end" determiners are implemented here. They involve progressively marching through each subsequence from the start
 					or end of the value, and comparing to the other side until a true (or, if negated, false) match is found.
 				*/
 				if (determiner === "start" || determiner === "end") {
 					if (disallowStartEnd) {
-						return TwineError.create("operation", "I can't use '" + disallowStartEnd + "' with the 'start' or 'end' of " + objectName(determinerValue) + ".");
+						return TwineError.create("operation", `I can't use '${disallowStartEnd}' with the 'start' or 'end' of ${objectName(determined)}.`);
 					}
 					if (otherValue.determiner) {
 						/*
@@ -263,7 +260,7 @@ define([
 				Having got this far, there's nothing else that can be added.
 				Return an error.
 			*/
-			return TwineError.create("operation", "I can't use + on " + objectName(l) + ".");
+			return TwineError.create("operation", `I can't use + on ${objectName(l)}.`);
 		}),
 		"-":  doNotCoerce((l, r) => {
 			/*
@@ -298,18 +295,18 @@ define([
 			if (typeof l === "number") {
 				return l - r;
 			}
-			return TwineError.create("operation", "I can't use - on " + objectName(l) + ".");
+			return TwineError.create("operation", `I can't use - on ${objectName(l)}.`);
 		}),
 		"*":  onlyPrimitives("number", doNotCoerce((l, r) => l * r), "multiply"),
 		"/":  onlyPrimitives("number", doNotCoerce((l, r) => {
 			if (r === 0) {
-				return TwineError.create("operation", "I can't divide " + objectName(l) + " by zero.");
+				return TwineError.create("operation", `I can't divide ${objectName(l)} by zero.`);
 			}
 			return l / r;
 		}), "divide"),
 		"%":  onlyPrimitives("number", doNotCoerce((l, r) => {
 			if (r === 0) {
-				return TwineError.create("operation", "I can't modulo " + objectName(l) + " by zero.");
+				return TwineError.create("operation", `I can't modulo ${objectName(l)} by zero.`);
 			}
 			return l % r;
 		}), "modulus"),

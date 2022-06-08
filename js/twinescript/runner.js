@@ -387,6 +387,7 @@ define([
 		*/
 		let start = (before.length ? before[0] : token).start - basis;
 		let end = (after.length ? after[after.length-1] : token).end - basis;
+
 		for (let i of evalReplay) {
 			/*
 				Previous substitutions that start before this push both the start and end forward.
@@ -402,6 +403,17 @@ define([
 				end += i.diff;
 			}
 		}
+		
+		if (!fromCode) {
+			fromCode = fullCode.slice(start, end);
+			/*
+				Don't create a replay frame if the fromCode and toCode are identical.
+			*/
+			if (toCode && toCode.trim() === fromCode.trim()) {
+				return;
+			}
+		}
+		
 		/*
 			This difference is that of the result source length vs. the original (token + inferiors) text length.
 		*/
@@ -411,7 +423,7 @@ define([
 			/*
 				Each step depicts either the permutation of a code structure into a Harlowe value, or an error being produced.
 			*/
-			fromCode: fromCode || fullCode.slice(start, end),
+			fromCode,
 			/*
 				Code transformations (such as by inferred 'it') are described using the resultant transformed code.
 				Plain evaluations are described using only the object name of the result value.
