@@ -176,11 +176,11 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		string to the error message facilities.
 	*/
 	/*
-		This helper function 
+		This helper function produces a truncated list of the first few elements, followed by 'and X other items'.
 	*/
 	function truncatedList(list, maxLength, itemNoun, itemNameFn) {
 		let ret = '', i = 0;
-		while (ret.length < maxLength && i < list.length) {
+		while (ret.length <= maxLength && i < list.length) {
 			/*
 				Array listings should list the full objectName of each value,
 				but datamaps should only list their string keys, without "a string named".

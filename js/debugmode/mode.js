@@ -425,7 +425,8 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 				if (trail) {
 					row.find('.variable-path').html((tempScope ? "_" : "$") + escape(trail));
 				}
-				row.find('.variable-name').html((!trail ? (tempScope ? "_" : "$") : '') + escape(name + ''));
+				// Replace the final text node in .variable-name
+				row.find('.variable-name').contents().last().replaceWith($.parseHTML((!trail ? (tempScope ? "_" : "$") : '') + escape(name + '')));
 				row.find('.temporary-variable-scope').html(tempScope || '');
 				row.find('.variable-value').html(val);
 				const folddownButton = row.find('tw-folddown');
@@ -453,10 +454,8 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 					// Variable type
 					"<td class='variable-type'>" + (typeName || '') + '</td>',
 					// Variable name
-					"<td class='variable-name cm-harlowe-3-" + (tempScope ? "tempV" : "v") + "ariable'>"
-						+ (trail ? "<span class='variable-path'>"
-							+ (tempScope ? "_" : "$")
-							+ escape(trail) + "</span> " : '')
+					"<td class='variable-name cm-harlowe-3-" + (tempScope ? "tempV" : "v") + "ariable'><span class='variable-path'>"
+						+ (trail ? (tempScope ? "_" : "$") + escape(trail) : '') + "</span> "
 						+ (!trail ? (tempScope ? "_" : "$") : '') + escape(name + '') + "</td>",
 					// Variable Scope
 					"<td class='temporary-variable-scope'>" + (tempScope || '') + "</td>",

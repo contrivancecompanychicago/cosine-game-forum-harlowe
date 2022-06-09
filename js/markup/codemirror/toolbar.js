@@ -910,7 +910,7 @@
 						*/
 						{
 							type: "inline-textarea",
-							width:"30%",
+							width:"20%",
 							text: "The passage ",
 							placeholder: "Passage name",
 							model(m, elem) {
@@ -956,8 +956,8 @@
 						*/
 						{
 							type: "inline-textarea",
-							width:"20%",
-							text: "Passages with the tag ",
+							width:"15%",
+							text: "Passages tagged ",
 							placeholder: "Tag name",
 							model(m, elem) {
 								const v = elem[$]('input').value;

@@ -49,6 +49,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * `(icon-counter:)` no longer uses the pointing hand cursor when the mouse hovers over it.
  * `(meter:)` now produces an error if given a bound variable using `2bind` instead of `bind` (for consistency with `(dialog:)`).
  * `(checkbox:)`, `(input-box:)` and `(force-input-box:)` now set the bound variable as soon as the element appears in the passage (For consistency with `(cycling-link:)`).
+ * Fixed a bug where Debug Mode's variables panel listings of data structures' contents would have the wrong names (`$A's 1st` becoming just `1st`) after changing passages.
 
 #### Alterations
 
