@@ -76,7 +76,8 @@
 		belongingProperty:   token => tooltipMessages.property(token),
 		belongingOperator:   token => tooltipMessages.property(token),
 		escapedStringChar:   ``,
-		string:              `This is <b>string data</b>. Strings are sequences of text data enclosed in matching " or ' marks. Use a \`\\\` inside a string to "escape" the next character. Escaped " or ' marks don't count as the end of the string.`,
+		string:              `This is <b>string data</b>. Strings are sequences of text data enclosed in matching " or ' marks. Use a \`\\\` inside a string to "escape" the next character. Escaped " or ' marks don't count as the end of the string.<br><br>`
+								+ `If a string matches a passage name, it will be <span class="cm-harlowe-3-passageString">underlined</span>. If it matches a tag name, it will be <span class="cm-harlowe-3-tagString">dotted</span>.`,
 		hookName:            ({name}) => `This <b>hook name</b> refers to all hooks named "\`${name}\`" in this passage.<br><br>`
 								+ (name.toLowerCase() === "page" ? specialHookName('page','the entire HTML page')
 									: name.toLowerCase() === "passage" ? specialHookName('passage','the entire passage')

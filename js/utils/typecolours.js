@@ -153,6 +153,15 @@
 		colour:       Colours.colour,
 		cssTime:      Colours.number,
 
+		/*
+			Strings with the same name as passages are coloured the same as global variables
+			(in the sense that both are author-created identifiers) and have an additional thin underline.
+		*/
+		passageString:
+			Colours.variable + ';text-decoration:underline 1px;',
+		tagString:
+			Colours.variable + ';text-decoration:underline 1px dotted;',
+
 		"variableOccurrence, hookOccurrence":
 			"background: hsla(159,50%,75%,1.0) !important;",
 

@@ -49,7 +49,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * `(icon-counter:)` no longer uses the pointing hand cursor when the mouse hovers over it.
  * `(meter:)` now produces an error if given a bound variable using `2bind` instead of `bind` (for consistency with `(dialog:)`).
  * `(checkbox:)`, `(input-box:)` and `(force-input-box:)` now set the bound variable as soon as the element appears in the passage (For consistency with `(cycling-link:)`).
- * Fixed a bug where Debug Mode's variables panel listings of data structures' contents would have the wrong names (`$A's 1st` becoming just `1st`) after changing passages.
+ * Fixed a bug where Debug Mode's Variables panel listings of data structures' contents would have the wrong names (`$A's 1st` becoming just `1st`) after changing passages.
 
 #### Alterations
 
@@ -110,11 +110,13 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Debug Mode's colour scheme is now white-on-black, to match Harlowe's default colour scheme. You may use the new options panel (see below) to change it back to white.
  * Very long lines in "(source:)" listings in the Variables panel should no longer push the other columns far offscreen.
  * Debug Mode no longer automatically, immediately enables itself whenever the first error of your story appears. Instead, this functionality can be added using the new `(after-error:)` and `(debug:)` macros (see below).
+ * Data structure values more than 4 levels deep no longer get separate rows in Debug Mode's Variables panel.
 
 ##### Syntax Highlighter
 
  * The green line marking whitespace before hooks that's removed by changer attachment (added in 3.2.0) has been removed, due to the possibility of false positives when using non-changer variables in position (which is no longer an error, as mentioned above).
  * Code inside HTML comments is no longer highlighted.
+ * Strings that match the name of an existing passage (such as those given to `(display:)` or compared with `(history:)`) are now coloured differently and have an additional thin underline. Additionally, strings that match an existing passage tag now have a dotted underline.
  * Tooltips (if enabled) now dismiss themselves if you move the mouse cursor a bit.
 
 #### Additions

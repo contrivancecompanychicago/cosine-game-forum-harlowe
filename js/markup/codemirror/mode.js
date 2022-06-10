@@ -36,6 +36,64 @@
 		let cm;
 
 		/*
+			Story data is obtained from localStorage every time the editor is opened.
+		*/
+		let passages;
+		let passageTags;
+		const storyData = () => {
+			passages = new Set();
+			passageTags = new Set();
+			/*
+				1: Find the list of all stories.
+			*/
+			let stories;
+			try {
+				stories = localStorage.getItem("twine-stories").split(',');
+			} catch(e) {
+				return;
+			}
+			/*
+				2: Get the story with the most recent lastUpdate AND whose name is contained in the current window title
+				(which is the only part of the 2.4 DOM that lists the current story).
+				This isn't a perfect check by any means, but since this functionality provides optional extra highlighting,
+				it's not too serious an issue...
+			*/
+			let currentStory, highestLastUpdate = 0;
+			for (let story of stories) {
+				try {
+					story = JSON.parse(localStorage.getItem("twine-stories-" + story));
+					const lastUpdate = Date.parse(story.lastUpdate);
+					if (lastUpdate > highestLastUpdate && document.title.includes(story.name)) {
+						currentStory = story;
+						highestLastUpdate = lastUpdate;
+					}
+				} catch(e) {
+					continue;
+				}
+			}
+			if (!currentStory) {
+				return;
+			}
+			/*
+				3: Find the list of all passages, and add the ones that are in this story.
+			*/
+			try {
+				for (let p of localStorage.getItem("twine-passages").split(',')) {
+					p = JSON.parse(localStorage.getItem("twine-passages-" + p));
+					if (p.story === currentStory.id) {
+						passages.add(p.name);
+						for (let t of p.tags) {
+							passageTags.add(t);
+						}
+					}
+				}
+			} catch(e) {
+				return;
+			}
+		};
+
+
+		/*
 			To handle 2.4's multi-editor mode, this WeakMap stores multiple parse trees (plus referenceTokens) tied to CodeMirror docs.
 		*/
 		const editors = new WeakMap();
@@ -433,6 +491,11 @@
 			toolbar && toolbar(cm);
 
 			/*
+				Refresh the story data.
+			*/
+			storyData();
+
+			/*
 				Use the Harlowe lexer to compute a full parse tree.
 			*/
 			refreshTree(doc);
@@ -591,6 +654,19 @@
 						name += "-" + (counts[name]);
 					}
 					switch(type) {
+						/*
+							Strings matching passage names or tag names get special highlighting.
+						*/
+						case "string": {
+							const val = text.slice(1,-1);
+							if (passages.has(val)) {
+								name += " harlowe-3-passageString";
+							}
+							else if (passageTags.has(val)) {
+								name += " harlowe-3-tagString";
+							}
+							break;
+						}
 						/*
 							It's an error if a text node appears inside a macro, but not inside a code hook.
 						*/

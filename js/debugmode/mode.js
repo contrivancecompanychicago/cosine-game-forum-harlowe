@@ -516,8 +516,7 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 		*/
 		function recursiveUpdateVariables(row) {
 			/*
-				Note that in Harlowe, pass-by-reference and circular structures should be impossible to
-				produce. However, just in case, here's a crude emergency exit.
+				Just in case, here's a crude emergency exit.
 			*/
 			if (rows.length > 500) {
 				return;
@@ -525,24 +524,27 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 			rows.push(row);
 			const path = row.path.concat(row.name);
 			const {value, tempScope} = row;
-			if (Array.isArray(value)) {
-				value.forEach((elem,i) =>
-					recursiveUpdateVariables({name: nth(i+1), path, value:elem, tempScope})
-				);
-			}
-			else if (value instanceof Map) {
-				[...value].forEach(([key,elem]) =>
-					recursiveUpdateVariables({name:key,       path, value:elem, tempScope})
-				);
-			}
-			else if (value instanceof Set) {
-				/*
-					Sets don't have keys. So, using "???" for every entry is what we're forced to do
-					to keep this display consistent with the others.
-				*/
-				[...value].forEach((elem,i) =>
-					recursiveUpdateVariables({name: i,  dataset:true,    path, value:elem, tempScope})
-				);
+			// Maximum depth of recursive data structure entries is 4.
+			if (path.length <= 4) {
+				if (Array.isArray(value)) {
+					value.forEach((elem,i) =>
+						recursiveUpdateVariables({name: nth(i+1), path, value:elem, tempScope})
+					);
+				}
+				else if (value instanceof Map) {
+					[...value].forEach(([key,elem]) =>
+						recursiveUpdateVariables({name:key,       path, value:elem, tempScope})
+					);
+				}
+				else if (value instanceof Set) {
+					/*
+						Sets don't have keys. So, using "???" for every entry is what we're forced to do
+						to keep this display consistent with the others.
+					*/
+					[...value].forEach((elem,i) =>
+						recursiveUpdateVariables({name: i,  dataset:true,    path, value:elem, tempScope})
+					);
+				}
 			}
 		}
 		for (let name in globals) {
