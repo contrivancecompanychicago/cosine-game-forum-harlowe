@@ -1,27 +1,21 @@
-Introduction 2: Welcome to the world of 3.2.0
+Introduction 2: 3.3.0: The relentless rush toward the present
 
-Dear fellow author of hypertext fiction: this version of Harlowe is most unlike others before it - despite a commitment to backwards-compatibility letting it be numbered a "minor" release, its wealth of added features is truly incredible. Let me explain in brief how this came to be. In April 2020, as the COVID-19 pandemic death toll (and the even greater permanent disability toll) was steadily rising worldwide, I came to something of a quiet realisation... that it was very possible I would not live to the end of this year, and, furthermore, it was probable that many Harlowe users would not live to the end of this year. I thought about Harlowe, and about how so much functionality I'd always envisioned for it - custom macros, string patterns, fullscreen support - was still unimplemented, and came to a decision that I absolutely had to finally get all of it in, this year.
+*2022-06-12 - A message from Harlowe developer Leon Arnott ([@webbedspace](https://twitter.com/webbedspace))*
 
-So, I worked diligently on Harlowe for 9 months. In retrospect, it feels like my life lost all meaning except for Harlowe. Honestly, it was perhaps less like 9 months of productivity and more like a 9-month-long panic attack. (This is what most "COVID-19 productivity" stories are actually like, deep down. Please, don't admire me. Love yourself.)
+Once again, thank you for using the Harlowe story format for Twine. As this (2022) is my 8th year of developing this programming language, my gratitude for my users deepens. Y'know, it seems like no matter how much work I sink into this, the amount of work still before me remains the same as ever. 3.2.0 once seemed fresh, pristine and stable, a break from the old and haggard past versions, and a grand leap into the present. Now, having finished 3.3.0, I look back to 3.2.0 and can only see it as ugly and unbearable as all that came before. It seems that I have to constantly rush forward in order to reach the present, to touch it for just a single moment. Alas, such is the life of a toolmaker, always ready to believe that the next reforging of their hammerhead will be the last.
 
-But at the end, Harlowe finally became, for the first time, a hypertext fiction coding language I could be proud of. Even now, there's still some extra features I wish I'd been able to fit in, but this version feels like the first version where Harlowe is "complete", as my original vision for the story format in 2014 had resembled.
+3.2.0 was a frantic rush of new, long-desired features, such as an editor toolbar and custom macros. As such, 3.3.0 has taken a different tack, tuning up the basic game engine and giving additions to 
+3.3.0 development has prioritised performance improvements. Many features that, until now, poorly scaled to large, data-rich stories, such as the game-saving system and basic macro execution, have been given much-needed optimisations. On a tangent, I'd like to emphasise something important: serious performance issues **should** be reported as bugs in Harlowe if you encounter them! Please, *please* report situations which cause excessive slowness in Harlowe stories, or else there's no guarantee I'll find out about it and fix it.
 
-And now you get to enjoy all of this, and more.
+A second priority has been making debugging in Debug Mode better. Even though 3.2.0 added a lot of features to Debug Mode, I've tried to improve other parts of the debugging workflow in 3.3.0. The big feature in this respect is the new Replay system, which allows both error messages and successful Harlowe macro calls to be examined and 'replayed', to better understand how Harlowe understood and computed them. If a macro deep inside an expression returned a value you didn't expect it to, this can help you dig down and discover the discrepancy for yourself. In addition, 3.3.0 mostly eliminates the "Javascript error message" and adds new error messages for basic syntax errors, which had always been a blemish on Harlowe's user experience.
 
- * A means of creating custom macros, using (macro:), (output:) and (output-data:).
- * String patterns, an advanced means of matching strings comprehensively, that can be used with `matches` and the new (split:) and (trimmed:) macros.
- * Changers for creating block elements, (box:) and (float-box:), with the latter allowing you to overlay a box of text anywhere in the browser window.
- * Support for storylets as an alternative to hard-coded links between sections of a game, provided by (storylet:), (open-storylets:), and their related macros.
- * Macros for adding and creating the sidebar's icons, allowing you to freely customise it using (replace:) and other macros.
- * Several new interaction/UI command macros, such as (input-box:), (checkbox:) and (meter:).
- * (set:), (put:) and (move:) now support optional type-restrictions on variables.
- * A changer and a command for displaying text verbatim, (verbatim:) and (verbatim-print:).
- * Interaction macros for toggling fullscreen mode, (link-fullscreen:) and (icon-fullscreen:).
- * Assorted pieces of "missing" common functionality, like (rerun:), (link-rerun:), (text-size:), (border:), (opacity:) and (joined:).
- * A small selection of debugging-focused macros, such as (ignore:), (test-false:), (test-true:) and (assert:).
- * Additional features for Debug Mode, including an enchantments panel, buttons for producing the source code of variables, and a DOM View button that shows the basic HTML DOM structure of the page.
- * Heavily improved in-editor syntax highlighting that now colours macros by their datatype and can, if enabled, show tooltips for code structures.
+Of course, a couple handfuls of new macros and identifiers have been added, too. These fall into the following groups:
+ * Shorthands for common idioms and use-cases (`turns`, `(visited:)`, `(partial:)`, `(dm-altered:)`).
+ * "Missing" tools for certain feature sets (`(str-replaced:)` and `(str-find:)` for string manipulation, `(p-start:)` for patterns, `(click-rerun:)` and `(redirect:)` for links, etc).
+ * Niche features with powerful ramifications (`(seed:)`, `(forget-undos:)`, `(scroll:)`).
 
-And, most importantly, a new toolbar has been implemented for the Twine 2 editor that allows common Harlowe code idioms to be quickly created.
+And, of course, another huge cacophony of bugs, some years-old, have been dealt with in this release.
 
-For a complete list of changes and outlines of how to use the above features, consult the <a href="#changes_3.2.0-changes-(jan-4,-2021)">change log</a> section.
+Do take care, of course, to watch out for bugs in this version. In particular, please report any bugs in the saving system - be it `(load-game:)` reproducibly failing in an unaltered story, or variables changing to bizarre values after `(load-game:)` has run.
+
+For a complete list of changes and outlines of how to use the above features, consult the <a href="#section_changes">change log</a> section. **Pay special care to the <a href="#compatibility">compatibility</a> section if you are upgrading a story from 3.2.0!**

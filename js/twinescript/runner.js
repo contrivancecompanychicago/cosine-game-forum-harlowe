@@ -43,6 +43,7 @@ define([
 					name === "monthday" ||
 					name === "weekday" ||
 					name === "history" ||
+					name === "visited" ||
 					name === "passage") {
 				section.freeVariables = true;
 			}
@@ -78,7 +79,7 @@ define([
 		*/
 		else if (token.type === "identifier") {
 			const name = insensitiveName(token.text);
-			if (name === "time" || name === "exits" || name === "it" || name === "visits") {
+			if (name === "time" || name === "exits" || name === "it" || name === "visits" || name === "turns") {
 				section.freeVariables = true;
 			}
 		}

@@ -1898,7 +1898,7 @@
 		hideCodeButton    = { type: 'button', command() { cm.display.wrapper.classList.toggle('harlowe-3-hideCode'); cm.constructor.signal(cm,'cursorActivity'); },    label:'Proofreading View (dim all code except strings)',   iconOnly: true, icon:fontIconURI('eye'), },
 		hideTooltipButton = { type: 'button', command() { cm.display.wrapper.classList.toggle('harlowe-3-hideTooltip'); cm.constructor.signal(cm,'cursorActivity'); }, label:'Coding Tooltips (show a tooltip when the cursor rests on code structures)',  iconOnly: true, icon:fontIconURI('comment'), },
 		{ type: 'button', key: 'Ctrl-F', command() { switchPanel('find'); },        label:'Find and Replace', iconOnly: true, icon: fontIconURI('search'), },
-		{ type: 'button', command() { window.open(`https://twine2.neocities.org/`, "Harlowe Documentation", 'noopener,noreferrer'); }, label:'Show Manual (opens a new tab)', iconOnly: true, icon:t24Icon(3, 12, 'font-weight:bold;font-size:19px;','?'), },
+		{ type: 'button', command() { window.open(`https://twine2.neocities.org/`, "Harlowe Documentation", 'noopener,noreferrer'); }, label:'Show Manual (opens a new tab)', iconOnly: true, icon:t24Icon(3, 14, 'font-weight:bold;font-size:19px;','?'), },
 	].map(function recur(b,i) {
 		/*
 			The above definition is split into separate command and toolbar objects, as per the TwineJS 2.4 spec.

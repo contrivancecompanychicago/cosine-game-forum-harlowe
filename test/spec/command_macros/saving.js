@@ -354,11 +354,13 @@ describe("save macros", function() {
 			});
 		});
 		it("can restore variables with impure values", function(done) {
-			runPassage("(set:$a to 1)(set:$arr to (a:'" + "E".repeat(30) + "', $a))", 'baz');
+			runPassage("(set:$a to 1)(set:$arr to (a:'" + "E".repeat(30) + "', $a))"
+				+ "(set:$turns to turns, $exits to exits, $visits to visits)", 'baz');
 			runPassage("(savegame:'1')",'grault');
 			expect("(loadgame:'1')").markupToLoad();
 			setTimeout(function() {
 				expect("$arr").markupToPrint("E".repeat(30) + ",1");
+				expect("$turns $exits $visits").markupToPrint("1 0 1");
 				done();
 			}, 90);
 		});
