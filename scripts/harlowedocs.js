@@ -25,7 +25,6 @@ let navElement = "<nav><img src='icon.svg' width=96 height=96></img>";
 */
 const {version} = JSON.parse(fs.readFileSync('package.json'));
 navElement += `<div class=nav_version><p>Harlowe ${version} manual</p>
-<p><a href="/1.html">1.2.4</a> | <a href="/2.html">2.1.0</a> | <b>${version}</b></p>
 </div>`;
 
 let currentCategory;

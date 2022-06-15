@@ -462,7 +462,7 @@
 				ret = el(`<${inline ? 'span' : 'div'} class="harlowe-3-labeledInput">${
 						row.text
 					}<${tagName} ${row.useSelection ? 'data-use-selection' : ''}${type.includes('passage') ? 'list="harlowe-3-passages"' : ''} style="width:${row.width};${row.multiline ? `max-width:${row.width};` : ''}padding:var(--grid-size);margin${
-						inline ? ':0 0.5rem' : '-left:1rem'
+						inline ? ':2px 0.5rem 0 0.5rem' : '-left:1rem'
 					};${row.multiline && inline ? 'display:inline-block;height:40px':''}" type=${inputType} placeholder="${row.placeholder || ''}"></${tagName}></${inline ? 'span' : 'div'}>`);
 				ret[$](tagName)[ON]('input', update);
 			}

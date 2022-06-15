@@ -1805,7 +1805,16 @@
 					},
 					el('<span class="harlowe-3-toolbarBullet">'),
 					
-					{ title:'Find and replace',     html:fontIcon('search'),        onClick: () => switchPanel('find')},
+					{ title:'Find and replace',     html:fontIcon('search'),        onClick: () => {
+						switchPanel('find');
+						const selection = cm.doc.getSelection();
+						const findArea = document[$]('.harlowe-3-toolbarPanel textarea');
+						if (findArea) {
+							findArea.focus();
+							findArea.value = selection;
+							findArea.dispatchEvent(new Event("input"));
+						}
+					}},
 
 					{ title:'Open the Harlowe documentation',
 						html: `<div style='font-weight:bold'>?</div>`,
@@ -1846,20 +1855,36 @@
 	const t24commands = {};
 	const t24keymap = {
 		name: 'harlowe-3-keymap',
+		'Ctrl-G'() {
+			panels.find.parentNode && cm.constructor.signal(cm, 'harlowe-3-findNext',1);
+		},
+		'Shift-Ctrl-G'() {
+			panels.find.parentNode && cm.constructor.signal(cm, 'harlowe-3-findNext',-1);
+		},
+		'Ctrl-H'() {
+			if (!panels.find.parentNode) {
+				switchPanel('find');
+			}
+			else {
+				const replaceArea = panels.find[$$]('textarea')[1];
+				cm.constructor.signal(cm, 'harlowe-3-replace', replaceArea.value, false);
+			}
+		},
 	};
 	let hideCodeButton, hideTooltipButton;
+	const Ctrl = navigator.userAgent.includes('Macintosh') ? "⌘" : "Ctrl";
 	const t24toolbar = twine23 ? [] : [
-		{ type: 'menu', label: 'Styles',
+		{ type: 'menu', label: 'Styles', iconOnly: true,
 				icon: svgURI(
-						`<text y='11' x='-7' fill='currentColor' style='/*harlowe-3*/font-weight:bold;font-size:80%'>B</text>`
-						+ `<text y='8' x='1' fill='currentColor' style='/*harlowe-3*/font-style:italic;font-size:80%'>I</text>`
-						+ `<text y='13' x='5' fill='currentColor' style='/*harlowe-3*/text-decoration:line-through;font-size:80%'>S</text>`
-					).replace("%2780%27","%27144%27"),
+						`<text y='11' x='-3' fill='currentColor' style='/*harlowe-3*/font-weight:bold;font-size:80%'>B</text>`
+						+ `<text y='8' x='4' fill='currentColor' style='/*harlowe-3*/font-style:italic;font-size:80%'>I</text>`
+						+ `<text y='13' x='7' fill='currentColor' style='/*harlowe-3*/text-decoration:line-through;font-size:80%'>S</text>`
+					).replace("%2780%27","%27108%27"),
 				items: [
-			{ type: 'button', key: 'Ctrl-B', command() { wrapSelection("''","''", "Bold Text"); },            label:'Bold',          },
-			{ type: 'button', key: 'Ctrl-I', command() { wrapSelection("//","//"), "Italic Text"; },          label:'Italic',        },
-			{ type: 'button', key: 'Ctrl--', command() { wrapSelection("~~","~~", "Superscript Text"); },     label:'Superscript',   },
-			{ type: 'button', key: 'Ctrl-Shift-6', command() { wrapSelection("^^","^^", "Strikethrough Text"); },   label:'Strikethrough', },
+			{ type: 'button', key: 'Ctrl-B', command() { wrapSelection("''","''", "Bold Text"); },            label:`Bold [${Ctrl}+B]`,          },
+			{ type: 'button', key: 'Ctrl-I', command() { wrapSelection("//","//"), "Italic Text"; },          label:`Italic [${Ctrl}+I]`,        },
+			{ type: 'button', key: 'Ctrl--', command() { wrapSelection("~~","~~", "Strikethrough Text"); },     label:`Strikethrough [${Ctrl}+-]`,   },
+			{ type: 'button', key: 'Ctrl-.', command() { wrapSelection("^^","^^", "Superscript Text"); },   label:`Superscript [${Ctrl}+.]`, },
 			{ type: 'separator', },
 			{ type: 'button', command() { switchPanel('textstyle'); },                         label:'More Styles…',  },
 		]},
@@ -1868,36 +1893,56 @@
 		{ type: 'button', command() { switchPanel('rotate'); },                            label:'Rotated text',iconOnly: true, icon: t24Icon(-3, 14, 'transform:rotate(-30deg);font-family:serif;', 'R'), },
 		{ type: 'button', command() { wrapSelection("\n#","","Heading Text"); },           label:'Heading',     iconOnly: true, icon: t24Icon(0, 14, 'font-weight:bold;font-size:18px;','H'), },
 		{ type: 'menu', icon: fontIconURI('list-ul'), label: 'List item', iconOnly: true, items: [
-			{ type: 'button', command() { wrapSelection("\n* ",""); },                         label:'Bulleted list item', },
-			{ type: 'button', command() { wrapSelection("\n0. ",""); },                        label:'Numbered list item', },
+			{ type: 'button', command() { wrapSelection("\n* ",""); },                         label:'Bulleted List Item', },
+			{ type: 'button', command() { wrapSelection("\n0. ",""); },                        label:'Numbered List Item', },
 		]},
 		{ type: 'button', command() { wrapSelection("\n---\n",""); },                      label:'Horizontal Rule', iconOnly: true, icon: fontIconURI('minus'), },
 		{ type: 'button', command() { switchPanel('align'); },                             label:'Alignment',   iconOnly: true, icon: fontIconURI('align-right'), },
 		{ type: 'button', command() { switchPanel('columns'); },                           label:'Columns',     iconOnly: true, icon: fontIconURI('columns'), },
-		{ type: 'button', command() { switchPanel('collapse'); },                          label:'Collapse whitespace (in-game)', iconOnly: true, icon: t24Icon(0,10,'font-weight:bold;font-size:12px','{ }'), },
+		{ type: 'button', command() { switchPanel('collapse'); },                          label:'Collapse Whitespace (In-Game)', iconOnly: true, icon: t24Icon(0,10,'font-weight:bold;font-size:12px','{ }'), },
 		{ type: 'button',
 			command() {
 				const selection = cm.doc.getSelection();
 				const consecutiveGraves = (selection.match(/`+/g) || []).reduce((a,e) => Math.max(e.length, a), 0);
 				wrapSelection("`".repeat(consecutiveGraves+1), "`".repeat(consecutiveGraves+1), "Verbatim Text");
 			},
-			label:'Verbatim (ignore all markup inside)', iconOnly: true, icon: t24Icon(1,12,'font-size:11px','Vb'),
+			label:'Verbatim (Ignore All Markup Inside)', iconOnly: true, icon: t24Icon(1,12,'font-size:11px','Vb'),
 		},
-		{ type: 'button', command() { wrapSelection("<!--","-->", "Comment Text"); },  label:'HTML Comments (Not Visible In-Game)', iconOnly: true, icon: t24Icon(-1,10,'font-weight:bold','&#10216;!-'), },
+		{ type: 'button', command() { wrapSelection("<!--","-->", "Comment Text"); },  label:`HTML Comments (Not Run In-Game)`, iconOnly: true, icon: t24Icon(-1,10,'font-weight:bold','&#10216;!-'), },
 
-		{ type: 'button', command() { switchPanel('passagelink'); },                       label:'Link…',   icon:'', },
-		{ type: 'button', command() { switchPanel('if'); },                                label:'If…',     icon:'', },
-		{ type: 'button', command() { switchPanel('input'); },                             label:'Input…',  icon:'', },
-		{ type: 'button', command() { switchPanel('hook'); },                              label:'Hook…',   icon:'', },
-		{ type: 'button', command() { switchPanel('basicValue'); },                        label:'Value…',  icon:'', },
-		{ type: 'button', command() { switchPanel('macro'); },                             label:'Macro…',  icon:'', },
+		{ type: 'menu', label: '(Macro:)',
+			items: [
+				{ type: 'button', command() { switchPanel('passagelink'); },                       label:'Link…',   icon:'', },
+				{ type: 'button', command() { switchPanel('if'); },                                label:'If…',     icon:'', },
+				{ type: 'button', command() { switchPanel('input'); },                             label:'Input…',  icon:'', },
+				{ type: 'button', command() { switchPanel('hook'); },                              label:'Hook…',   icon:'', },
+				{ type: 'button', command() { switchPanel('basicValue'); },                        label:'Value…',  icon:'', },
+				{ type: 'separator', },
+				{ type: 'button', command() { switchPanel('macro'); },                             label:'List All Macros…',  icon:'', },
+			]
+		},
+
 		/*
 			As a convenient hack to support multi-editor in 2.4, the hideCode, etc. classes are placed on the .CodeMirror element
 			rather than the (global) harloweToolbar element.
 		*/
 		hideCodeButton    = { type: 'button', command() { cm.display.wrapper.classList.toggle('harlowe-3-hideCode'); cm.constructor.signal(cm,'cursorActivity'); },    label:'Proofreading View (dim all code except strings)',   iconOnly: true, icon:fontIconURI('eye'), },
 		hideTooltipButton = { type: 'button', command() { cm.display.wrapper.classList.toggle('harlowe-3-hideTooltip'); cm.constructor.signal(cm,'cursorActivity'); }, label:'Coding Tooltips (show a tooltip when the cursor rests on code structures)',  iconOnly: true, icon:fontIconURI('comment'), },
-		{ type: 'button', key: 'Ctrl-F', command() { switchPanel('find'); },        label:'Find and Replace', iconOnly: true, icon: fontIconURI('search'), },
+		{ type: 'button', key: 'Ctrl-F',
+			command() { 
+				switchPanel('find');
+				const selection = cm.doc.getSelection();
+				const findArea = panels.find[$]('.harlowe-3-toolbarPanel textarea');
+				if (findArea) {
+					findArea.focus();
+					if (selection) {
+						findArea.value = selection;
+						findArea.dispatchEvent(new Event("input"));
+					}
+				}
+			},
+			label:`Find and Replace [${Ctrl}+F]`, iconOnly: true, icon: fontIconURI('search'),
+		},
 		{ type: 'button', command() { window.open(`https://twine2.neocities.org/`, "Harlowe Documentation", 'noopener,noreferrer'); }, label:'Show Manual (opens a new tab)', iconOnly: true, icon:t24Icon(3, 14, 'font-weight:bold;font-size:19px;','?'), },
 	].map(function recur(b,i) {
 		/*

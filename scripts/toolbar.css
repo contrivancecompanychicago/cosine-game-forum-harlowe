@@ -356,6 +356,13 @@ html:not([data-version^="2.3"]) .harlowe-3-toolbarPanel [type="checkbox"]:checke
 	margin-right:3px;
 }
 /*
+	A simple dropdown menu colour fix.
+*/
+select > option {
+	background-color: var(--light-gray);
+	color: var(--dark-gray) !important;
+}
+/*
 	Because radioRows and checkboxes can have entire other interface elements (like colour pickers) as children,
 	they can't just be given icon-button as-is.
 */

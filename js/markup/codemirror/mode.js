@@ -352,7 +352,7 @@
 				const matchLength = match[0].length || 1;
 				const {index} = match;
 				
-				if (onlyIn === "Only prose" || onlyIn === "Only code") {
+				if (onlyIn === "Only in prose" || onlyIn === "Only in code") {
 					/*
 						Search for text and string tokens in the result's branch.
 						If there are any, and "Only prose" is set, then break the loop (thus skipping the return at the end.)
@@ -372,7 +372,7 @@
 								/*
 									If this is a text/string node and "Only code" is set, then it's invalid. Otherwise, it's valid.
 								*/
-								if (onlyIn === "Only code") {
+								if (onlyIn === "Only in code") {
 									continue matchLoop;
 								}
 								break;
@@ -381,16 +381,16 @@
 						/*
 							If no text or string tokens were found, and "Only prose" is set, then it's invalid - end and go to the next token.
 						*/
-						if (i === currentBranch.length && onlyIn === "Only prose") {
+						if (i === currentBranch.length && onlyIn === "Only in prose") {
 							continue matchLoop;
 						}
 					}
 				}
 				/*
-					Limit the search if "Only seiection" is set. This requires looping through every CodeMirror selection
+					Limit the search if "Only selection" is set. This requires looping through every CodeMirror selection
 					(whose anchor-head order isn't obvious) and checking.
 				*/
-				else if (onlyIn === "Only selection") {
+				else if (onlyIn === "Only in selection") {
 					const selections = doc.listSelections();
 					for (let i = 0; i < selections.length; i += 1) {
 						const pos1 = doc.indexFromPos(selections[i].anchor),
