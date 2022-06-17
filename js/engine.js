@@ -129,6 +129,9 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 			e=$(e);
 			const enchantedProperties = e.data('enchantedProperties');
 			if (enchantedProperties) {
+				/*
+					An identical line to this appears in Enchantment.disenchant()
+				*/
 				story.css(enchantedProperties.reduce((a,e)=>(a[e] = "",a),{}));
 			}
 			/*

@@ -143,6 +143,26 @@ const
 		},
 	}),
 
+	Interface = new Defs({
+		defName: "Editing and debugging Harlowe",
+		defCode: "interface",
+		regExp: /^\s*Interface (\d+): (.+?)\n/,
+
+		definition({input, 0:title, 1:categoryOrder, 2:name}) {
+			const slugName =  name.replace(/\s/g,'-').toLowerCase();
+			let text = input.trim().replace(title, "\n<h2 class='def_title interface_title' id=interface_" + slugName + ">"
+				+ "<a class='heading_link' href=#interface_" + slugName + "></a>" + name + "</h2>\n");
+
+			text = processTextTerms(
+				text,
+				name,
+				{markupNames:true, macroNames:true}
+			);
+
+			this.defs[title] = { text, anchor: "interface_" + slugName, name, categoryOrder };
+		},
+	}),
+
 	Markup = new Defs({
 		defName: "Passage markup",
 		defCode: "markup",
@@ -482,4 +502,4 @@ paths.forEach(function(path) {
 	});
 });
 // Order of this object determines the overall document order.
-module.exports = {Introduction, Markup, Macro, Keyword, PassageTag, Type, Changes, Appendix};
+module.exports = {Introduction, Interface, Markup, Macro, Keyword, PassageTag, Type, Changes, Appendix};

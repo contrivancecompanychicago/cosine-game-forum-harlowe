@@ -16,6 +16,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a long-standing bug where the string given to `(hook:)` was case-sensitive and dash-sensitive, even though hooks named by the tag markup (`<name|`) and referred to by the hook name syntax (`?name`) are case-insensitive and dash-insensitive.
  * Fixed a long-standing bug where a Javascript error would occur if a string contained `\0` followed by two digits (except 8 or 9).
  * Fixed a long-standing bug where a lambda with both a `where` and `via` clause would result in the `where` clause affecting the `it` value in the `via` clause, instead of the `it` value being the same in both clauses.
+ * Fixed a long-standing bug where enchanting `?Page` with `(background:)` would, if the current passage was taller than the browser window, cause the background to only cover the length of the browser window.
+ * Fixed a bug where enchanting `?Page` with `(background:)` using `(gradient:)` or `(stripes:)` would, upon leaving the passage with that enchantment, cause the page background to become transparent (i.e. whatever the browser's default is) instead of the default black (unless the story stylesheet changed it).
  * Fixed a custom macro bug where any commands inside an `(output:)`-attached hook (such as `(output:)[(set:$a to it + 1)]`) would be run twice while being outputted. (Generally, you'd want to place those commands before the `(output:)` hook, though.)
  * Fixed a bug where using spread `...` to spread the individual characters of a string that contains astral plane Unicode characters (such as 𝐇) wouldn't work at all.
  * Fixed a bug where the `command` datatype didn't work at all.

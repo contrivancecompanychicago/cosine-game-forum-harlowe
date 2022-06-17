@@ -27,8 +27,6 @@ const {version} = JSON.parse(fs.readFileSync('package.json'));
 navElement += `<div class=nav_version><p>Harlowe ${version} manual</p>
 </div>`;
 
-let currentCategory;
-
 Object.keys(metadata).map(e => metadata[e]).forEach(e=>{
 	outputFile += `\n<h1 id=section_${e.defCode}>${e.defName}</h1>\n`;
 	navElement += `<h5>${e.defName}</h5><ul class=list_${e.defCode}>`;

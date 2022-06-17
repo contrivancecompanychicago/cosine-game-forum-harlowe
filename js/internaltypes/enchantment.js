@@ -157,7 +157,13 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 								background-image and background-color to be "inherited".
 							*/
 							if (e === "background-color" || e === "background-image") {
-								a.background = 'transparent';
+								a['background-color'] = 'transparent';
+								a['background-image'] = 'none';
+								/*
+									The other one of these properties must be added to enchantedProperties, so that
+									it is removed later.
+								*/
+								enchantedProperties.push(`background-${e === "background-color" ? 'image' : 'color'}`);
 							}
 							else {
 								a[e] = "inherit";
@@ -194,7 +200,10 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 					may entirely alter the style attribute.
 				*/
 				if (e.is(Utils.storyElement)) {
-					wrapping.css({ width: '100%', height: '100%' });
+					/*
+						Don't use 'width' or 'height' in case the page is taller than the browser window (i.e. <body>).
+					*/
+					wrapping.css({ 'min-width': '100%', 'min-height': '100%' });
 				}
 				/*
 					If the wrapping has been given a (collapse:) changer, whose influence is signaled
@@ -231,14 +240,18 @@ define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changerc
 				Clear all existing <tw-enchantment> wrapper elements placed by
 				the previous call to enchantScope().
 			*/
-			this.enchantments.each(function() {
-				const c = $(this).contents();
+			this.enchantments.each((_,e) => {
+				e = $(e);
+				const c = e.contents();
 				c.unwrap();
 				/*
 					Undo the preceding CSS "inherit" kludge for <tw-story>.
 				*/
-				const enchantedProperties = $(this).data('enchantedProperties');
+				const enchantedProperties = e.data('enchantedProperties');
 				if (enchantedProperties) {
+					/*
+						An identical line to this appears in Engine.showPassage().
+					*/
 					Utils.storyElement.css(enchantedProperties.reduce((a,e)=>(a[e] = "",a),{}));
 				}
 			});

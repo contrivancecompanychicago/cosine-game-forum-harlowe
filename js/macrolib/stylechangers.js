@@ -1988,7 +1988,11 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 						background-size:cover allows the image to fully cover the area
 						without tiling, which I believe is slightly more desired.
 					*/
-					property = {"background-size": "cover", "background-image": "url(" + value + ")"};
+					property = {
+						"background-size": "cover",
+						"background-image": `url(${value})`,
+						"background-attachment": "fixed",
+					};
 				}
 				d.styles.push(property, {
 					/*
