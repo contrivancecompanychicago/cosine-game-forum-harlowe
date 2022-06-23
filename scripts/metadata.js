@@ -144,7 +144,7 @@ const
 	}),
 
 	Interface = new Defs({
-		defName: "Editing and debugging Harlowe",
+		defName: "Editing and debugging",
 		defCode: "interface",
 		regExp: /^\s*Interface (\d+): (.+?)\n/,
 
@@ -387,7 +387,7 @@ function processTextTerms(text, name, allow) {
 		/*
 			Convert specific markup names into hyperlinks.
 		*/
-		.replace(/([^\-\w])(whitespace)\b/ig, function(text, $1, $2){
+		.replace(/([^\-\w])(whitespace)\b/ig, (text, $1, $2) => {
 			if (!allow.markupNames) {
 				return text;
 			}
@@ -407,7 +407,7 @@ function processTextTerms(text, name, allow) {
 		/*
 			Convert type names into hyperlinks.
 		*/
-		.replace(typeName, function(text, preceding, matchName, plural){
+		.replace(typeName, (text, preceding, matchName, plural) => {
 			if (!allow.typeNames) {
 				return text;
 			}
@@ -494,7 +494,7 @@ paths.forEach(function(path) {
 	}
 	defs.forEach((defText) => {
 		let match;
-		[Introduction,Appendix,Markup,Macro,Type,Keyword,Changes,PassageTag].forEach(e=> {
+		[Introduction,Interface,Appendix,Markup,Macro,Type,Keyword,Changes,PassageTag].forEach(e=> {
 			if ((match = defText.match(e.regExp))) {
 				e.definition(match);
 			}

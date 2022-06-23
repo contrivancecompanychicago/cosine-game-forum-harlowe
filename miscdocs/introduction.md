@@ -1,6 +1,6 @@
 Introduction 2: 3.3.0: The relentless rush toward the present
 
-*2022-06-12 - A message from Harlowe developer Leon Arnott ([@webbedspace](https://twitter.com/webbedspace))*
+*2022-06-20 - A message from Harlowe developer Leon Arnott*
 
 Once again, thank you for using the Harlowe story format for Twine. As this (2022) is my 8th year of developing this programming language, my gratitude for my users deepens. Y'know, it seems like no matter how much work I sink into this, the amount of work still before me remains the same as ever. 3.2.0 once seemed fresh, pristine and stable, a break from the old and haggard past versions, and a grand leap into the present. Now, having finished 3.3.0, I look back to 3.2.0 and can only see it as ugly and unbearable as all that came before. It seems that I have to constantly rush forward in order to reach the present, to touch it for just a single moment. Alas, such is the life of a toolmaker, always ready to believe that the next reforging of their hammerhead will be the last.
 

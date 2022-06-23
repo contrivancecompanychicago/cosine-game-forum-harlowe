@@ -526,8 +526,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 				the end of each target, rather than replacing it entirely.
 
 				Example usage:
-				* `(append: "Emily", "Em")[, my maid] ` adds ", my maid " to the end of every occurrence of "Emily" or "Em".
-				* `(append: ?dress)[ from happier days]` adds " from happier days" to the end of the `|dress>` hook.
+				* `(append: "Emily")[, my maid] ` adds ", my maid " to the end of every occurrence of "Emily".
+				* `(append: ?dress)[ from happier days]` adds " from happier days" to the end of any hook tagged with `|dress>`.
 
 				Rationale:
 				As this is a variation of (replace:), the rationale for this macro can be found in
@@ -588,8 +588,8 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 
 				Example usage:
 
-				* `(prepend: "Emily", "Em")[Miss ] ` adds "Miss " to the start of every occurrence of "Emily" or "Em".
-				* `(prepend: ?dress)[my wedding ]` adds "my wedding " to the start of the `|dress>` hook.
+				* `(prepend: "Emily")[Miss ] ` adds "Miss " to the start of every occurrence of "Emily".
+				* `(prepend: ?dress)[my wedding ]` adds "my wedding " to the start of any hook tagged with `|dress>`.
 
 				Rationale:
 				As this is a variation of (replace:), the rationale for this macro can be found in
