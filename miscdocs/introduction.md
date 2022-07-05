@@ -18,4 +18,4 @@ And, of course, another huge cacophony of bugs, some years-old, have been dealt 
 
 Do take care, of course, to watch out for bugs in this version. In particular, please report any bugs in the saving system - be it `(load-game:)` reproducibly failing in an unaltered story, or variables changing to bizarre values after `(load-game:)` has run.
 
-For a complete list of changes and outlines of how to use the above features, consult the <a href="#section_changes">change log</a> section. **Pay special care to the <a href="#compatibility">compatibility</a> section if you are upgrading a story from 3.2.0!**
+For a complete list of changes and outlines of how to use the above features, consult the <a href="#section_changes">change log</a> section. **Pay special care to the <a href="#compatibility">compatibility</a> section if you are upgrading a story from 3.2.3!**
