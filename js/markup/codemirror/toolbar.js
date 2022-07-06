@@ -7,6 +7,11 @@
 
 	let cm, Patterns, ToolbarPanel, Utils;
 
+	/*
+		Each time the tooltip setting is changed, that setting is used for subsequent opened editor windows.
+	*/
+	let lastTooltipSetting = true;
+
 	// This can only be loaded in TwineJS, not any other place.
 	if (this && this.loaded) {
 		({Patterns, Utils, ToolbarPanel} = this.modules);
@@ -1927,7 +1932,16 @@
 			rather than the (global) harloweToolbar element.
 		*/
 		hideCodeButton    = { type: 'button', command() { cm.display.wrapper.classList.toggle('harlowe-3-hideCode'); cm.constructor.signal(cm,'cursorActivity'); },    label:'Proofreading View (dim all code except strings)',   iconOnly: true, icon:fontIconURI('eye'), },
-		hideTooltipButton = { type: 'button', command() { cm.display.wrapper.classList.toggle('harlowe-3-hideTooltip'); cm.constructor.signal(cm,'cursorActivity'); }, label:'Coding Tooltips (show a tooltip when the cursor rests on code structures)',  iconOnly: true, icon:fontIconURI('comment'), },
+		hideTooltipButton = { type: 'button',
+			command() {
+				const {wrapper} = cm.display;
+				wrapper.classList.toggle('harlowe-3-hideTooltip');
+				wrapper.classList.toggle('harlowe-3-showTooltip');
+				lastTooltipSetting = wrapper.classList.contains('harlowe-3-showTooltip');
+				cm.constructor.signal(cm,'cursorActivity');
+			},
+			label:'Coding Tooltips (show a tooltip when the cursor rests on code structures)',  iconOnly: true, icon:fontIconURI('comment'),
+		},
 		{ type: 'button', key: 'Ctrl-F',
 			command() { 
 				switchPanel('find');
@@ -1974,7 +1988,12 @@
 			passageTagsElem.after(toolbarElem);
 		}
 		cm = cmObj;
-		!twine23 && cm.addKeyMap(t24keymap);
+		if (!twine23) {
+			cm.addKeyMap(t24keymap);
+			if (!cm.display.wrapper.className.match(/harlowe-3-....Tooltip/)) {
+				cm.display.wrapper.classList.toggle(`harlowe-3-${lastTooltipSetting ? 'show' : 'hide'}Tooltip`);
+			}
+		}
 		/*
 			Colourise the icons for each toolbar button based on the current appTheme (light mode or dark mode).
 		*/
