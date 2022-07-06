@@ -7,6 +7,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 #### Bugfixes
 
  * Fixed a bug where the CSS for the "dissolve" transition (used for default passage transitions, among other things) wasn't compiled correctly.
+ * Now, line breaks in raw HTML `<svg>` elements are no longer converted into erroneous `<br>` elements (similar to the existing exception for `<table>` elements).
  * Fixed a bug where Debug Mode's "Turns" dropdown menu wouldn't automatically update to match the current passage.
 
 ### 3.3.0 changes (July 5, 2022):

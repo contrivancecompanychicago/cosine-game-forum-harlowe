@@ -229,7 +229,7 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 				}
 				case "br": {
 					/*
-						The HTMLTableStack is a small hack to suppress implicit <br>s inside <table> elements.
+						The HTMLTableStack is a small hack to suppress implicit <br>s inside <table> and <svg> elements.
 						Normally, browser DOM parsers will move <br>s inside <table>, <tbody>,
 						<thead>, <tfoot> or <tr> elements outside, which is usually quite undesirable
 						when laying out table HTML in passage text.
@@ -275,7 +275,7 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 						are not filtered out by this: these are left to the discretion of the author.
 					*/
 					const insensitiveText = token.text.toLowerCase();
-					if (/^<\/?(?:table|thead|tbody|tr|tfoot|td|th)\b/.test(insensitiveText)) {
+					if (/^<\/?(?:table|thead|tbody|tr|tfoot|td|th|svg)\b/.test(insensitiveText)) {
 						HTMLTableStack[token.text.startsWith('</') ? "shift" : "unshift"](insensitiveText);
 					}
 					out += token.text.startsWith('</')
