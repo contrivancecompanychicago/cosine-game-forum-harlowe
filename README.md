@@ -2,6 +2,13 @@
 
 Documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
+### 3.3.1 changes (unreleased):
+
+#### Bugfixes
+
+ * Fixed a bug where the CSS for the "dissolve" transition (used for default passage transitions, among other things) wasn't compiled correctly.
+ * Fixed a bug where Debug Mode's "Turns" dropdown menu wouldn't automatically update to match the current passage.
+
 ### 3.3.0 changes (July 5, 2022):
 
 #### Bugfixes
@@ -109,7 +116,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 ##### Debug Mode
 
- * Debug Mode's colour scheme is now white-on-black, to match Harlowe's default colour scheme. You may use the new options panel (see below) to change it back to white.
+ * Debug Mode's colour scheme is now white-on-black, to match Harlowe's default colour scheme. You may use the new settings panel (see below) to change it back to white.
  * Very long lines in "(source:)" listings in the Variables panel should no longer push the other columns far offscreen.
  * Debug Mode no longer automatically, immediately enables itself whenever the first error of your story appears. Instead, this functionality can be added using the new `(after-error:)` and `(debug:)` macros (see below).
  * Data structure values more than 4 levels deep no longer get separate rows in Debug Mode's Variables panel.
@@ -158,11 +165,11 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 ##### Debug Mode
 
- * A new Debug Mode options panel has been added, letting you set a few options for Debug Mode's display and behaviour. These options are saved in browser localStorage in a story-specific slot, so they should persist across debugging sessions for your story.
- * The new Debug Mode options panel also lets you toggle a new feature that turns the entire panel transparent when the mouse cursor isn't hovering on it, letting you see the whole page better.
+ * A new Debug Mode settings panel has been added, letting you set a few settings for Debug Mode's display and behaviour. These settings are saved in browser localStorage in a story-specific slot, so they should persist across debugging sessions for your story.
+ * The new Debug Mode settings panel also lets you toggle a new feature that turns the entire panel transparent when the mouse cursor isn't hovering on it, letting you see the whole page better.
  * Added a "replay" feature to Debug Mode. When you use Debug View, special 🔍 icons will appear on macro calls in the passage. Clicking those will produce a dialog showing a step-by-step view of how the macro call's code was interpreted by Harlowe.
  * Variable panel values have more detailed descriptions - for instance, `(a:)` is called "an empty array", and `(a: "Weather the storm", "Search for shelter")` is called "an array (with the string "Weather the storm", and 1 other item)" instead of both being just "an array".
- * The width of the Debug Mode element (which you can adjust using the resizer added in 3.2.0) is now saved in localStorage alongside these options, and should also persist across debugging sessions.
+ * The width of the Debug Mode element (which you can adjust using the resizer added in 3.2.0) is now saved in localStorage alongside these settings, and should also persist across debugging sessions.
  * Columns in Debug Mode panels can now be sorted by clicking the column headers, as is typical of many apps with columnar data. The columns will remain sorted as the data changes. The Storylet panel is also sorted (placing open storylets first) by default.
  * The source code in the Source, Variables and Storylet panels is now syntax-highlighted, in a manner roughly matching its highlighting in the Twine editor.
  * The Source panel now shows the header and footer passages' source code as well, in separate fold-down sections.

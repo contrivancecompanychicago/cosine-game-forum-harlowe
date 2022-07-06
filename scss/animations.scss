@@ -6,12 +6,18 @@
 	}
 }
 
-/* The following are used for (text-style:)s only */
+/*
+	Fixes bug where the first rule in <style title="Twine CSS"> is discarded(???)
+	TODO: Investigate this.
+*/
+head { display:none; }
 
 @include keyframes(appear) {
 	0% { opacity: 0 }
 	to { opacity: 1 }
 }
+
+/* The following are used for (text-style:)s only */
 
 @include keyframes(fade-in-out) {
 	0%,to { opacity: 0 }

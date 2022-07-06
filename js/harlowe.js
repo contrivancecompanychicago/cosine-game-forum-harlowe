@@ -185,7 +185,7 @@ require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', '
 			// it means the sessionData is invalid. Just ignore it - it's only temporary data.
 			if (State.deserialise(tempSection, sessionData) === true) {
 				// This is copied from (load-game:).
-				Engine.showPassage(State.passage, false /* stretchtext value */);
+				Engine.showPassage(State.passage);
 				return;
 			}
 		}

@@ -93,6 +93,7 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 	function showPassage (name, displayOptions = {}) {
 		/*
 			displayOptions should only contain 'stretch', 'transition' and 'loadgame' properties.
+			The first two are used further below.
 		*/
 		const {loadedGame} = displayOptions;
 

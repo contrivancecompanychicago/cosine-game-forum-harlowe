@@ -50,7 +50,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset', 'internaltypes/twine
 		// {String} [transition]      Which built-in transition to use.
 		transition:       "",
 		
-		// {Number} [transitionTime]  The duration of the transition, in ms, or null if the default speed should be used.
+		// {Number} [transitionTime]  The duration of the transition, in ms, or null/undefined if the default speed should be used.
 		transitionTime:   null,
 
 		// {Boolean} [transitionDeferred]  Whether or not the transition given above should not be used, but saved for an interaction element

@@ -32,7 +32,7 @@
 		warmHookBG   = nestedBG(40, 100, 50),
 		coolHookBG   = nestedBG(220, 100, 50),
 		invalid      = "background-color: hsla(17,100%,50%,0.5) !important;",
-		intangible   = "font-weight:100; color: hsla(0,0,0,0.5)",
+		intangible   = "font-weight:100; color: hsla(0,0%,0%,0.5)",
 		colorRegExp  = /hsla\((\d+),\s*(\d+)%,\s*(\d+)%,\s*(\d+\.\d+)\)/g,
 		/*
 			This only changes in every major version of Harlowe.

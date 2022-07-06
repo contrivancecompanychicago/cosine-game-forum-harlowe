@@ -432,6 +432,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 			if (el.length === 0) {
 				return;
 			}
+			// This can't be inlined into the call as a default, because it references transIndex.
 			transitionTime = transitionTime || defaultTransitionTime(transIndex);
 
 			/*
@@ -506,6 +507,7 @@ define(['jquery', 'markup', 'utils/polyfills'],
 			if (el.length === 0) {
 				return;
 			}
+			// This can't be inlined into the call as a default, because it references transIndex.
 			transitionTime = transitionTime || defaultTransitionTime(transIndex);
 			/*
 				If the element is not a tw-hook, tw-passage, tw-sidebar or tw-expression, we must

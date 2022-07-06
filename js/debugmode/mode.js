@@ -311,6 +311,9 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 			in the State history.
 		*/
 		turnsDropdown[timeline.length >= 1 ? 'removeAttr' : 'attr']('disabled');
+
+		/* Update the dropdown to match the current passage */
+		turnsDropdown.val(State.pastLength);
 	});
 	turnsDropdown.change(({target:{value}}) => {
 		/*
