@@ -2051,7 +2051,7 @@ define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'da
 			| `"wavy-strike"`    | <t-s style="text-decoration: line-through;text-decoration-style:wavy"></t-s> | "underline", "double-underline", "wavy-underline", "strike", "double-strike"
 			| `"superscript"`    | <t-s style="vertical-align:super;font-size:.83em"></t-s> | "subscript"
 			| `"subscript"`      | <t-s style="vertical-align:sub;font-size:.83em"></t-s> | "superscript"
-			| `"mark"`           | <t-s style="background-color: hsla(60, 100%, 50%, 0.6)"></t-s> | (bg-color:)
+			| `"mark"`           | <t-s style="background-color: hsla(60, 100%, 50%, 0.6)"></t-s> | (bg:)
 			| `"outline"`        | <t-s diurnal style="color:white; text-shadow: -1px -1px 0 black, 1px -1px 0 black, -1px  1px 0 black, 1px  1px 0 black"></t-s> | "shadow", "emboss", "blur", blurrier", "smear"
 			| `"shadow"`         | <t-s diurnal style="text-shadow: 0.08em 0.08em 0.08em black"></t-s> | "outline", "emboss", "blur", "blurrier", "smear"
 			| `"emboss"`         | <t-s diurnal style="text-shadow: 0.04em 0.04em 0em black"></t-s> | "outline", "shadow", "blur", "blurrier", "smear"

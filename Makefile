@@ -14,7 +14,7 @@ uglify_flags = -c --comments -m -b beautify=false,ascii_only=true
 # and replaces every instance of the former in the stream with the latter.
 
 node_replace = node -e '\
-	var read = e => require("fs").readFileSync(e,"utf8"); \
+	var read = e => require("fs").readFileSync(e,"utf8").replace(/^\uFEFF/, ""); \
 	with(process)\
 		stdin.pipe(require("replacestream")($(1))).pipe(stdout)'
 
