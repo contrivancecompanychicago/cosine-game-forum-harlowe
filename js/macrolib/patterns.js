@@ -32,20 +32,20 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatype
 				const {varRef} = pattern;
 				if (!canContainTypedVars) {
 					return TwineError.create("operation",
-						"Optional string patterns, like (" + name + ":)" + (name === "p-many" ? " with a minimum of 0 matches" : '') + ", can't have typed variables inside them.");
+						`Optional string patterns, like (${name}:)${name === "p-many" ? " with a minimum of 0 matches" : ''}, can't have typed variables inside them.`);
 				}
 				/*
 					If typed globals aren't allowed, check that it's a temp variable without a property access.
 				*/
 				if (!canContainTypedGlobals && !VarScope.isPrototypeOf(varRef.object)) {
-					return TwineError.create("operation", "Only typed temp variables can be used in patterns given to (" + name + ":)");
+					return TwineError.create("operation", `Only typed temp variables can be used in patterns given to (${name}:)`);
 				}
 				/*
 					Check that this TypedVar name isn't repeated.
 				*/
 				const varName = varRef.getName();
 				if (varName in typedVarNames) {
-					return TwineError.create("operation", "There's already a typed temp variable named _" + varName + " inside this (" + name + ":) call.");
+					return TwineError.create("operation", `There's already a typed temp variable named _${varName} inside this (${name}:) call.`);
 				}
 				typedVarNames[varName] = true;
 
@@ -64,13 +64,13 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatype
 					const typedVars = pattern.typedVars();
 					if (!canContainTypedVars && typedVars.length) {
 						return TwineError.create("operation",
-							"(" + name + ":) can't have typed variables inside its pattern.");
+							`(${name}:) can't have typed variables inside its pattern.`);
 					}
 					/*
 						If typed globals aren't allowed, check that it's a temp variable without a property access.
 					*/
 					if (!canContainTypedGlobals && typedVars.some(v => !VarScope.isPrototypeOf(v.varRef.object))) {
-						return TwineError.create("operation", "Only typed temp variables can be used in patterns given to (" + name + ":)");
+						return TwineError.create("operation", `Only typed temp variables can be used in patterns given to (${name}:)`);
 					}
 				}
 				if (pattern.regExp) {
@@ -123,12 +123,12 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatype
 					return ".*?";
 				}
 				if (['even','odd','int','num'].includes(pName)) {
-					return TwineError.create("datatype", "Please use string datatypes like 'digit' in (" + name + ":) instead of number datatypes.");
+					return TwineError.create("datatype", `Please use string datatypes like 'digit' in (${name}:) instead of number datatypes.`);
 				}
 				/*
 					If this datatype isn't one of the above, produce an error. This is left in the resulting mapped array, to be dredged out just afterward.
 				*/
-				return TwineError.create("datatype", "The (" + name + ":) macro must only be given string-related datatypes, not " + objectName(pattern) + ".");
+				return TwineError.create("datatype", `The (${name}:) macro must only be given string-related datatypes, not ${objectName(pattern)}.`);
 			}
 			/*
 				If it's a string, then it's user-authored, so it needs to have all RegExp-specific
@@ -140,7 +140,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatype
 					This is where (p-ins:) is implemented - this line, which turns every uppercase or lowercase character intoa RegExp character class for both.
 				*/
 				if (insensitive) {
-					pattern = pattern.replace(RegExp("(" + anyUppercase + "|" + anyLowercase + ")", 'g'), a => "[" + a.toUpperCase() + a.toLowerCase() + "]");
+					pattern = pattern.replace(RegExp(`(${anyUppercase}|${anyLowercase})`, 'g'), a => "[" + a.toUpperCase() + a.toLowerCase() + "]");
 				}
 				return pattern;
 			}
@@ -215,8 +215,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatype
 			*/
 			destructure(value) {
 				if (typeof value !== "string") {
-					return [TwineError.create("operation", "I can't put " + objectName(value) + " into "
-					+ this.TwineScript_ToSource() + " because it isn't a string.")];
+					return [TwineError.create("operation", `I can't put ${objectName(value)} into ${this.TwineScript_ToSource()} because it isn't a string.`)];
 				}
 				/*
 					If this pattern doesn't have any typedVars at all (i.e. it isn't a destructuring pattern at all) then
@@ -231,8 +230,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatype
 				*/
 				const results = (RegExp("^" + (this.rest ? "(?:" : "") + regExp + (this.rest ? ")*" : "") + "$").exec(value) || []).slice(1);
 				if (!results.length) {
-					return [TwineError.create("operation", "I can't put " + objectName(value) + " because it doesn't match the pattern "
-						+ this.TwineScript_ToSource() + ".")];
+					return [TwineError.create("operation", `I can't put ${objectName(value)} because it doesn't match the pattern ${this.TwineScript_ToSource()}.`)];
 				}
 				/*
 					Because every "optional match" pattern macro forbids TypedVars in it, we can safely assume every match lines up
@@ -258,7 +256,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatype
 			},
 			TwineScript_IsTypeOf(value) {
 				if (!canBeUsedAlone) {
-					return TwineError.create("operation", "A (" + name + ":) datatype must only be used with a (p:) macro.");
+					return TwineError.create("operation", `A (${name}:) datatype must only be used with a (p:) macro.`);
 				}
 				return typeof value === "string" && !!value.match("^" + (this.rest ? "(?:" : "") + regExp + (this.rest ? ")*" : "") + "$");
 			},
@@ -281,7 +279,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatype
 			This could be avoided if string patterns were an actual subclass of Datatype, though...
 		*/
 		Object.defineProperty(ret, 'TwineScript_ObjectName', { get() {
-			return "a (" + name + ":)" + " datatype";
+			return `a (${name}:) datatype`;
 		}});
 		return ret;
 	};
@@ -299,7 +297,7 @@ define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatype
 			followed by a space, followed by 1-6 alphanumeric letters.
 			* `(set:$upperFirst to (p:uppercase,(p-many:lowercase)))(set:$upperFirst-type $name to "Edgar")` creates a custom datatype, $upperFirst, and
 			creates a typed variable using it, called $name.
-			* `(unpack: $roadName into (p:str, (p-many:(p-either:'St','Rd','Ln','Ave','Way')-type _roadTitle)))` extracts either "St", "Rd", "ln", "Ave", or "Way"
+			* `(unpack: $roadName into (p:str,(p-either:'St','Rd','Ln','Ave','Way')-type _roadTitle))` extracts either "St", "Rd", "ln", "Ave", or "Way"
 			from the end of the $roadName string, putting it in _roadTitle, while producing an error if such an ending isn't in $roadName.
 			* `(p:"$", digit, ...digit) matches "$21000"` checks if the right side is a string consisting of "$" followed by one or more digits.
 

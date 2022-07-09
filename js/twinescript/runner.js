@@ -723,7 +723,7 @@ define([
 			}
 		}
 		else if (type === "typeSignature") {
-			const datatype = run(section,  before, isVarRef);
+			const datatype = run(section,  before);
 			/*
 				TypedVars are the one case where variable children shouldn't be considered freeVariables.
 				So, reinstate the current value after the right (NOT left) side is run.

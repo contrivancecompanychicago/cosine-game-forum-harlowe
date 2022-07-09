@@ -966,7 +966,7 @@ define([
 		[either(Lambda.TypeSignature('where','via','making'), Lambda.TypeSignature('via','making')), rest(Any)])
 		/*d:
 			(dm-names: Datamap) -> Array
-			Also known as: (dm-names:), (datamap-names:)
+			Also known as: (data-names:), (datamap-names:)
 			
 			This takes a datamap, and returns a sorted array of its data names, sorted
 			alphabetically.
@@ -991,7 +991,7 @@ define([
 		[Map])
 		/*d:
 			(dm-values: Datamap) -> Array
-			Also known as: (dm-values:), (datamap-values:)
+			Also known as: (data-values:), (datamap-values:)
 			
 			This takes a datamap, and returns an array of its values, sorted
 			alphabetically by their name.
@@ -1024,7 +1024,7 @@ define([
 		[Map])
 		/*d:
 			(dm-entries: Datamap) -> Array
-			Also known as: (dataentries:), (datamap-entries:)
+			Also known as: (data-entries:), (datamap-entries:)
 			
 			This takes a datamap, and returns an array of its name/value pairs. Each pair
 			is a datamap that only has "name" and "value" data. The pairs are ordered by their name.

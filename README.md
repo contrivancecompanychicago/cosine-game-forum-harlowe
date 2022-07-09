@@ -7,8 +7,14 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 #### Bugfixes
 
  * Fixed a bug where the CSS for the "dissolve" transition (used for default passage transitions, among other things) wasn't compiled correctly.
+ * Fixed a bug where using variables containing datatypes or data patterns with the `-type` syntax (such as `$pattern-type $name`) wouldn't work at all.
  * Now, line breaks in raw HTML `<svg>` elements are no longer converted into erroneous `<br>` elements (similar to the existing exception for `<table>` elements).
  * Fixed a bug where Debug Mode's "Turns" dropdown menu wouldn't automatically update to match the current passage.
+ * Toolbar: fixed a bug where the status of the "Coding tooltips" setting wouldn't persist after closing and reopening the passage editor.
+
+#### Alterations
+
+ * To attempt to fit the Harlowe Toolbar onto a single row in Twine 2.4, the buttons "Heading" and "Horizontal Rule" have been moved to the List Item submenu (which is now "List and Line Items") and "Columns" has been moved to a new submenu on the "Alignment" button.
 
 ### 3.3.0 changes (July 5, 2022):
 

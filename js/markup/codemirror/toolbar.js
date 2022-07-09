@@ -1896,14 +1896,17 @@
 		{ type: 'button', command() { switchPanel('textcolor'); },                         label:'Colours',     iconOnly: true, icon: svgURI(`<defs><linearGradient id="X"><stop offset="0%" stop-color="hsla(0,100%,50%,0.5)"/><stop offset="16%" stop-color="hsla(30,100%,50%,0.5)"/><stop offset="33%" stop-color="hsla(60,100%,50%,0.5)"/><stop offset="50%" stop-color="hsla(120,100%,50%,0.5)"/><stop offset="66%" stop-color="hsla(180,100%,50%,0.5)"/><stop offset="83%" stop-color="hsla(240,100%,50%,0.5)"/><stop offset="100%" stop-color="hsla(320,100%,50%,0.5)"/></linearGradient></defs><circle cx="8" cy="8" r="6" fill="url('#X')"/>`), },
 		{ type: 'button', command() { switchPanel('borders'); },                           label:'Borders',     iconOnly: true, icon: fontIconURI('border-style'), },
 		{ type: 'button', command() { switchPanel('rotate'); },                            label:'Rotated text',iconOnly: true, icon: t24Icon(-3, 14, 'transform:rotate(-30deg);font-family:serif;', 'R'), },
-		{ type: 'button', command() { wrapSelection("\n#","","Heading Text"); },           label:'Heading',     iconOnly: true, icon: t24Icon(0, 14, 'font-weight:bold;font-size:18px;','H'), },
-		{ type: 'menu', icon: fontIconURI('list-ul'), label: 'List item', iconOnly: true, items: [
+		{ type: 'menu', icon: fontIconURI('list-ul'), label: 'List and line items', iconOnly: true, items: [
 			{ type: 'button', command() { wrapSelection("\n* ",""); },                         label:'Bulleted List Item', },
 			{ type: 'button', command() { wrapSelection("\n0. ",""); },                        label:'Numbered List Item', },
+			{ type: 'separator', },
+			{ type: 'button', command() { wrapSelection("\n#","","Heading Text"); },           label:'Heading', },
+			{ type: 'button', command() { wrapSelection("\n---\n",""); },                      label:'Horizontal Rule', },
 		]},
-		{ type: 'button', command() { wrapSelection("\n---\n",""); },                      label:'Horizontal Rule', iconOnly: true, icon: fontIconURI('minus'), },
-		{ type: 'button', command() { switchPanel('align'); },                             label:'Alignment',   iconOnly: true, icon: fontIconURI('align-right'), },
-		{ type: 'button', command() { switchPanel('columns'); },                           label:'Columns',     iconOnly: true, icon: fontIconURI('columns'), },
+		{ type: 'menu', icon: fontIconURI('align-center'), label: 'Alignment and columns', iconOnly: true, items: [
+			{ type: 'button', command() { switchPanel('align'); },                             label:'Alignment', },
+			{ type: 'button', command() { switchPanel('columns'); },                           label:'Columns', },
+		]},
 		{ type: 'button', command() { switchPanel('collapse'); },                          label:'Collapse Whitespace (In-Game)', iconOnly: true, icon: t24Icon(0,10,'font-weight:bold;font-size:12px','{ }'), },
 		{ type: 'button',
 			command() {
@@ -1940,7 +1943,7 @@
 				lastTooltipSetting = wrapper.classList.contains('harlowe-3-showTooltip');
 				cm.constructor.signal(cm,'cursorActivity');
 			},
-			label:'Coding Tooltips (show a tooltip when the cursor rests on code structures)',  iconOnly: true, icon:fontIconURI('comment'),
+			label:'Coding Tooltips (when the cursor rests on code structures)',  iconOnly: true, icon:fontIconURI('comment'),
 		},
 		{ type: 'button', key: 'Ctrl-F',
 			command() { 

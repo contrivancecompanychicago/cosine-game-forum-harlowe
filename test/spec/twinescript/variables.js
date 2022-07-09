@@ -146,6 +146,11 @@ describe("variables", function() {
 				expect("(set: (p:...digit)-type $h to '0041')$h").markupToPrint('0041');
 				expect("(set: (p:...(p: ':', digit))-type $c to ':4:5:6')$c").markupToPrint(':4:5:6');
 			});
+			it("works with datatypes in variables", function() {
+				expect("(set:$str to str)(set:$str-type $name to \"Edgar\")$name").markupToPrint("Edgar");
+				expect("(set:$str to str)(set:(p:$str)-type $name2 to \"Edgar\")$name2").markupToPrint("Edgar");
+				expect("(set:$upperFirst to (p:uppercase,(p-many:lowercase)))(set:$upperFirst-type $name3 to \"Edgar\")$name3").markupToPrint("Edgar");
+			});
 		});
 		it("errors if given unpacking patterns", function() {
 			expect("(set: (a:num-type $a, num-type $b) to (a:2,3))$a $b").markupToError();
