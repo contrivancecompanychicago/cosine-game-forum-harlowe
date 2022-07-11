@@ -52,7 +52,7 @@
 			Whitespace markup
 
 			"Whitespace" is a term that refers to "space" characters that you use to separate programming code tokens,
-			such as the spacebar space, and the tab character. They are considered interchangeable in type and quantity -
+			such as the spacebar space, and the tab character. When used inside the macro syntax, they are considered interchangeable in type and quantity -
 			using two spaces usually has the same effect as using one space, one tab, and so forth.
 
 			Harlowe tries to also recognise most forms of [Unicode-defined whitespace](https://en.wikipedia.org/wiki/Whitespace_character#Unicode),

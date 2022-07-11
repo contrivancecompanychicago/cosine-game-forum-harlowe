@@ -471,7 +471,7 @@
 					+ row.text
 					+ '<input style="padding:var(--grid-size);' + (row.width ? `width:${row.width}` : '') + '" type=' + (type.endsWith("range") ? "range" : "number")
 					+ ' min=' + row.min + ' max=' + row.max + ' value=' + row.value + (row.step ? ' step=' + row.step : '') + '></input></' + (inline ? 'span' : 'div') + '>');
-				ret[$]('input')[ON]('change', update);
+				ret[$]('input')[ON](type.endsWith("range") ? 'input' : 'change', update);
 			}
 			if (type.endsWith("colour")) {
 				ret = el('<' + (inline ? 'span' : 'div') + ' class="harlowe-3-labeledInput">'

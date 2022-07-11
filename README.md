@@ -10,7 +10,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where using variables containing datatypes or data patterns with the `-type` syntax (such as `$pattern-type $name`) wouldn't work at all.
  * Now, line breaks in raw HTML `<svg>` elements are no longer converted into erroneous `<br>` elements (similar to the existing exception for `<table>` elements).
  * Fixed a bug where Debug Mode's "Turns" dropdown menu wouldn't automatically update to match the current passage.
- * Toolbar: fixed a bug where the status of the "Coding tooltips" setting wouldn't persist after closing and reopening the passage editor.
+ * Toolbar: Fixed a bug where the status of the "Coding tooltips" setting wouldn't persist after closing and reopening the passage editor.
+ * Toolbar: Now, for toolbar dialogs that include preview panes and sliders, dragging the slider updates the pane instantly, rather than only when the slider stops moving.
 
 #### Alterations
 
