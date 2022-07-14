@@ -2,7 +2,13 @@
 
 Documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
-### 3.3.1 changes (unreleased):
+### 3.3.2 changes (unreleased):
+
+#### Bugfixes
+
+ * Fixed a crash caused by completely empty 'header', 'footer', 'startup', 'debug-header', 'debug-footer' and 'debug-startup' passages.
+
+### 3.3.1 changes (July 13, 2022):
 
 #### Bugfixes
 

@@ -63,6 +63,9 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 				};
 			}
 		}
+		if (!newToken) {
+			return;
+		}
 		/*
 			Normally, most markup can't punch out of headers or footers and infect all further transclusions. However, in Harlowe 3, due to undefined behaviour,
 			unclosed markup can. So, to continue to support this in 3.3.0, the following code is used.

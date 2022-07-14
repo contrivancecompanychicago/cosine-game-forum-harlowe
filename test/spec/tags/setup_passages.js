@@ -146,4 +146,13 @@ describe("setup passages", function() {
 		createPassage("garply","F",['footer']);
 		expect("grault").markupToPrint('foobarquxbazgraultgarplycorge');
 	});
+	it("work when empty", function() {
+		createPassage("","A",['startup']);
+		createPassage("","B",['debug-startup']);
+		createPassage("","D",['debug-header']);
+		createPassage("","C",['header']);
+		createPassage("","E",['debug-footer']);
+		createPassage("","F",['footer']);
+		expect("grault").not.markupToError();
+	});
 });
