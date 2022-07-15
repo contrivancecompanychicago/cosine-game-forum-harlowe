@@ -588,8 +588,7 @@ define([
 			}
 			/*
 				The (stop:) command causes the nearest (live:) command enclosing
-				it to be stopped. Inside an (if:), it allows one-off live events to be coded.
-				If a (stop:) is in the rendering target, we shan't continue running.
+				it to be stopped. If a (stop:) is in the rendering target, we shan't continue running.
 			*/
 			if (target.find("tw-expression[name='stop']").length) {
 				return;
@@ -1342,7 +1341,16 @@ define([
 			/*
 				Execute the expressions immediately.
 			*/
+			let elemData = new Map();
 			dom.findAndFilter('tw-hook,tw-expression,script[type="application/x-harlowe"]')
+					/*
+						For compatibility with 3.2, each expression's data is cached, in case they are removed from the DOM
+						before running. This should be removed in 4.0, so that the more intuitive behaviour (removing from the DOM
+						prevents expressions from running) is used instead.
+					*/
+					.each((_, expr) => {
+						elemData.set(expr, $(expr).data());
+					})
 					.each((_, expr) => {
 				/*
 					This is used to halt the loop if a hook contained a blocker - the call to renderInto()
@@ -1361,7 +1369,7 @@ define([
 						/*
 							Since hooks can be re-ran with (rerun:), their original content AST needs to be stored.
 						*/
-						let src = expr.popData('source');
+						let src = expr.popData('source') || (elemData.get(expr) || {}).source;
 						if (src) {
 							expr.data('originalSource', src);
 						}
@@ -1405,7 +1413,8 @@ define([
 							Blocker expressions are identified by having 'blockers' data, which should persist across
 							however many executions it takes for the passage to become unblocked.
 						*/
-						if (expr.data('blockers')) {
+						const blockers = expr.data('blockers') || (elemData.get(expr) || {}).blockers;
+						if (blockers) {
 							if (evaluateOnly) {
 								expr.removeData('blockers').removeData('code').replaceWith(
 									TwineError.create("syntax",
@@ -1415,7 +1424,6 @@ define([
 								);
 								return;
 							}
-							const blockers = expr.data('blockers');
 							if (blockers.length) {
 								/*
 									The first blocker can now be taken out and run, which
@@ -1441,7 +1449,8 @@ define([
 								expr.removeData('blockers');
 							}
 						}
-						if (expr.data('code')) {
+						const code = expr.data('code') || (elemData.get(expr) || {}).code;
+						if (code) {
 							runExpression.call(this, expr);
 						}
 						break;

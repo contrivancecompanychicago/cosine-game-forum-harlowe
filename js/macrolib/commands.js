@@ -2883,7 +2883,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			Use of this macro will *not* affect the (history:) macro, the (visited:) macro, or the `visits` and `turns` keywords (nor
 			the debug-only (mock-visits:) and (mock-turns:) macros). These will continue to perform as if (forget-undos:) was never called.
 			However, the turns that they refer to (in which the "visits" occurred) will no longer be accessible to the player. If you wish
-			to affect the (history:)
+			to affect the (history:) macro and the like, consider using (forget-visits:).
 
 			This macro will internally "flatten" every forgotten turn into a single data structure, which is used to ensure that
 			(history:) and (visited:) and other such features continue to behave as expected.
