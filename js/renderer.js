@@ -275,12 +275,12 @@ define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 						are not filtered out by this: these are left to the discretion of the author.
 					*/
 					const insensitiveText = token.text.toLowerCase();
-					if (/^<\/?(?:table|thead|tbody|tr|tfoot|td|th|svg)\b/.test(insensitiveText)) {
+					if (/^<\/?(?:table|thead|tbody|tr|tfoot|td|th|svg)\b/.test(insensitiveText) && !token.text.endsWith('/>')) {
 						HTMLTableStack[token.text.startsWith('</') ? "shift" : "unshift"](insensitiveText);
 					}
 					out += token.text.startsWith('</')
 						? token.text
-						: token.text.replace(/>$/, " data-raw>");
+						: token.text.replace(/(\/)?>$/, (_, e) => ` data-raw${e ? `></${token.text.match(/[\w-]+/)}` : ''}>`);
 					break;
 				}
 				case "sub": // Note: there's no sub syntax yet.

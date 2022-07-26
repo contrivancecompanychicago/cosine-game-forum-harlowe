@@ -6,6 +6,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 #### Bugfixes
 
+ * Fixed a long-standing bug where XML-style self-closing HTML tags (like `<div/>`) didn't self-close.
  * Fixed a crash caused by completely empty 'header', 'footer', 'startup', 'debug-header', 'debug-footer' and 'debug-startup' passages.
  * Fixed a bug where a `(replace:)` call targeting the hook containing it (including special hook names like `?passage`) would cause all subsequent macros and expressions to be ignored (similar to what would happen if a `(go-to:)` was used).
    * Note: since the aforementioned behaviour is arguably more intuitive than the 3.2 behaviour, it is possible that this fix will be intentionally reverted in 4.0. As of right now, it is considered a 3.2 compatibility bug.

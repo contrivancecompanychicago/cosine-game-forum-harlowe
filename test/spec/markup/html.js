@@ -40,6 +40,14 @@ describe("HTML in twinemarkup", function() {
 			);
 		});
 	});
+	describe("XML self-closing tags", function() {
+		it("turn into their respective elements", function() {
+			expectHTMLToBecome(
+				"<div /><b/>Hey",
+				"<div></div><b></b>Hey"
+			);
+		});
+	});
 	describe("elements with attributes", function() {
 		it("retain their attributes", function() {
 			var DOM = runPassage("<div id='gerald' style='background-color:black'>Hey</div>?");
