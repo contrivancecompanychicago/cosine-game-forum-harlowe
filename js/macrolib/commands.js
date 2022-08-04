@@ -487,7 +487,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 
 			Example usage:
 			* `(v6m-print: (source: $textChanger))` prints out the source of the value stored in $textChanger.
-			* `(set: $name to (v6m-print: (prompt: "Enter your name:")))` prompts the player for their name, then
+			* `(set: $name to (v6m-print: (prompt: "Enter your name:", "")))` prompts the player for their name, then
 			stores a command that displays that name verbatim whenever it's printed.
 
 			Rationale:
@@ -2005,6 +2005,11 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 		inside an (input:) bound variable, which, when displayed, produces either an error or some effect that undermines the story. In order to
 		display those strings safely, you may use either the verbatim markup, the (verbatim:) changer, or (verbatim-print:).
 
+		As of 3.3.2, Harlowe will attempt to auto-focus input elements when they are added to the passage, allowing the player to
+		type into them immediately. If multiple input elements are present, the first (highest) one will be auto-focused.
+		Note that any further input elements added to the passage (via (after:) or some other means) will be auto-focused
+		even if the player is currently typing into an existing element.
+
 		See also:
 		(input-box:), (force-input:), (prompt:)
 
@@ -2051,6 +2056,11 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 		If the bound variable is two-way, and it contains a string, then, when the input box appears, a number of fixed text characters equal to the string's length will be
 		inserted into the input element automatically, and then the variable will update to match. Otherwise, if the bound variable is one-way, the variable will simply
 		become an empty string (and then be updated to match the element's contents whenever the player "types" into it).
+
+		As of 3.3.2, Harlowe will attempt to auto-focus input elements when they are added to the passage, allowing the player to
+		type into them immediately. If multiple input elements are present, the first (highest) one will be auto-focused.
+		Note that any further input elements added to the passage (via (after:) or some other means) will be auto-focused
+		even if the player is currently typing into an existing element.
 
 		See also:
 		(input:), (force-input-box:), (prompt:)
@@ -2109,6 +2119,11 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 		inside an (input-box:) bound variable, which, when displayed, produces either an error or some effect that undermines the story. In order to
 		display those strings safely, you may use either the verbatim markup, the (verbatim:) changer, or (verbatim-print:).
 
+		As of 3.3.2, Harlowe will attempt to auto-focus input elements when they are added to the passage, allowing the player to
+		type into them immediately. If multiple input elements are present, the first (highest) one will be auto-focused.
+		Note that any further input elements added to the passage (via (after:) or some other means) will be auto-focused
+		even if the player is currently typing into an existing element.
+
 		See also:
 		(force-input-box:), (input:), (prompt:)
 
@@ -2147,6 +2162,11 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 		If the bound variable is two-way, and it contains a string, then, when the input box appears, a number of fixed text characters equal to the string's length will be
 		inserted into the input box automatically, and then the variable will update to match. Otherwise, if the bound variable is one-way, the variable will simply
 		become an empty string (and then be updated to match the box's contents whenever the player "types" into it).
+
+		As of 3.3.2, Harlowe will attempt to auto-focus input elements when they are added to the passage, allowing the player to
+		type into them immediately. If multiple input elements are present, the first (highest) one will be auto-focused.
+		Note that any further input elements added to the passage (via (after:) or some other means) will be auto-focused
+		even if the player is currently typing into an existing element.
 
 		See also:
 		(input-box:), (force-input:), (prompt:)
@@ -3697,8 +3717,6 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 					certain local events within the dialog (such as (link:)s) to still be usable.
 				*/
 				section.stackTop.blocked = d;
-				// Regrettably, this arbitrary timeout seems to be the only reliable way to focus the <input>.
-				setTimeout(() => d.find('input').last().focus(), 100);
 				/*
 					This return value shouldn't be used anywhere.
 				*/

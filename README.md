@@ -11,6 +11,11 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
  * Fixed a bug where a `(replace:)` call targeting the hook containing it (including special hook names like `?passage`) would cause all subsequent macros and expressions to be ignored (similar to what would happen if a `(go-to:)` was used).
    * Note: since the aforementioned behaviour is arguably more intuitive than the 3.2 behaviour, it is possible that this fix will be intentionally reverted in 4.0. As of right now, it is considered a 3.2 compatibility bug.
 
+#### Alterations
+
+ * Now, `<input>` elements in `(prompt:)` dialogs have been given the CSS style `border:solid white` to make them more visually consistent with `(input:)` elements.
+ * Now, Harlowe will attempt to auto-focus `(input:)` and `(input-box:)` elements when they are added to the passage, allowing the player to type into them immediately. If multiple `(input:)` or `(input-box:)` elements are present, the first (highest) one will be auto-focused. Note that any further `(input:)` elements added to the passage (via `(after:)` or some other means) will be auto-focused even if the player is currently typing into an existing element.
+
 ### 3.3.1 changes (July 13, 2022):
 
 #### Bugfixes

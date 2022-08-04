@@ -16,6 +16,7 @@ tw-dialog {
 	input[type=text] {
 		font-size: inherit;
 		width:100%;
+		border:solid $color !important;
 	}
 }
 tw-dialog-links {

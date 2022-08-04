@@ -376,6 +376,32 @@ describe("interface macros", function(){
 				var p = runPassage("("+name+":'Foo')");
 				expect(p.find('input[type=text]').length).toBe(1);
 			});
+			it("the first <input> element is auto-focused when it appears", function(done) {
+				var p = runPassage("("+name+":'Foo')\n("+name+":'Bar')");
+				setTimeout(function() {
+					expect(p.find('input[type=text]').get(0) === document.activeElement).toBe(true);
+					done();
+				},100);
+			});
+			it("the first <input> element is auto-focused when it appears", function(done) {
+				var p = runPassage("("+name+":'Foo')\n("+name+":'Bar')");
+				setTimeout(function() {
+					expect(p.find('input[type=text]').get(0) === document.activeElement).toBe(true);
+					done();
+				},100);
+			});
+			it("the first <input> element remains auto-focused after its container finishes transitioning", function(done) {
+				createPassage("("+name+":'Bar')", "baz");
+				runPassage("(t8n-time:150ms)+(t8n-arrive:'shudder')(goto:'baz')");
+				setTimeout(function() {
+					var elem = $('tw-story input[type=text]').get(0);
+					expect(elem === document.activeElement).toBe(true);
+					setTimeout(function() {
+						expect(elem === document.activeElement).toBe(true);
+						done();
+					},150);
+				},150);
+			});
 
 			it("gives the hook the specified margins and width, as well as display:block", function() {
 				[
@@ -522,6 +548,32 @@ describe("interface macros", function(){
 			it("creates a <textarea> element", function() {
 				var p = runPassage("("+name+":\"XXX===\",3,'Foo')");
 				expect(p.find('textarea').length).toBe(1);
+			});
+			it("the first <textarea> element is auto-focused when it appears", function(done) {
+				var p = runPassage("("+name+":'Foo')\n("+name+":'Bar')");
+				setTimeout(function() {
+					expect(p.find('textarea').get(0) === document.activeElement).toBe(true);
+					done();
+				},100);
+			});
+			it("the first <textarea> element is auto-focused when it appears", function(done) {
+				var p = runPassage("("+name+":'Foo')\n("+name+":'Bar')");
+				setTimeout(function() {
+					expect(p.find('textarea').get(0) === document.activeElement).toBe(true);
+					done();
+				},100);
+			});
+			it("the first <textarea> element remains auto-focused after its container finishes transitioning", function(done) {
+				createPassage("("+name+":'Bar')", "baz");
+				runPassage("(t8n-time:150ms)+(t8n-arrive:'shudder')(goto:'baz')");
+				setTimeout(function() {
+					var elem = $('tw-story textarea').get(0);
+					expect(elem === document.activeElement).toBe(true);
+					setTimeout(function() {
+						expect(elem === document.activeElement).toBe(true);
+						done();
+					},150);
+				},150);
 			});
 			if (!force) {
 				it("fills the <textarea> with the given initial text", function() {

@@ -1511,6 +1511,12 @@ define([
 			dom.findAndFilter('tw-collapsed,[collapsing=true]').each(function() {
 				collapse($(this));
 			});
+
+			/*
+				Focus any <input> elements (from (input:) and (input-box:)) that were added to the page.
+				Regrettably, this arbitrary timeout seems to be the only reliable way to focus the <input>.
+			*/
+			setTimeout(() => dom.find('input, textarea').first().focus(), 100);
 			
 			/*
 				After evaluating the expressions, pop the passed-in data stack object (and its scope).

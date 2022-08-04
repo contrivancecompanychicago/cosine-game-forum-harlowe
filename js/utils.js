@@ -594,12 +594,20 @@ define(['jquery', 'markup', 'utils/polyfills'],
 						}
 					}
 					/*
-						Now, unwrap, and restore the scroll positions.
+						Additionally, if the wrapper contains the active element, save it and 
+					*/
+					const activeElem = el.find(document.activeElement);
+
+					/*
+						Now, unwrap, and restore the scroll positions and focused elements.
 					*/
 					el.contents().unwrap();
 					for (let [elem, scrollLeft, scrollTop] of scrolledElems) {
 						elem.scrollLeft = scrollLeft;
 						elem.scrollTop = scrollTop;
+					}
+					if (activeElem.length) {
+						activeElem[0].focus();
 					}
 				}
 				/*
