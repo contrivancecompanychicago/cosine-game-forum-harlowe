@@ -1,5 +1,5 @@
 "use strict";
-define(['macros','utils/operationutils', 'datatypes/lambda', 'internaltypes/twineerror'], (Macros, {clone, objectName, isValidDatamapName}, Lambda, TwineError) => {
+define('macrolib/metadata', ['macros','utils/operationutils', 'datatypes/lambda', 'internaltypes/twineerror'], (Macros, {clone, objectName, isValidDatamapName}, Lambda, TwineError) => {
 	/*d:
 		Metadata data
 

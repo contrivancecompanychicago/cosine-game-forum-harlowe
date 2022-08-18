@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils', 'utils/operationutils', 'internaltypes/varref', 'internaltypes/twineerror'], ($, Utils, {objectName}, VarRef, TwineError) => {
+define('datatypes/varbind', ['jquery', 'utils', 'utils/operationutils', 'internaltypes/varref', 'internaltypes/twineerror'], ($, Utils, {objectName}, VarRef, TwineError) => {
 	/*
 		VarBinds provide a means for certain UI input macros like (textarea:) to bind changes to their contents
 		to a variable.

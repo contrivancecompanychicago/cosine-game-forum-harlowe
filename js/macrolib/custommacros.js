@@ -1,5 +1,5 @@
 "use strict";
-define(['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changercommand', 'datatypes/custommacro', 'datatypes/codehook', 'datatypes/typedvar', 'internaltypes/twineerror'],
+define('macrolib/custommacros', ['utils', 'macros', 'state', 'utils/operationutils', 'datatypes/changercommand', 'datatypes/custommacro', 'datatypes/codehook', 'datatypes/typedvar', 'internaltypes/twineerror'],
 (Utils, Macros, State, {objectName, toSource}, ChangerCommand, CustomMacro, CodeHook, TypedVar, TwineError) => {
 	const {add, addChanger, addCommand, TypeSignature: {rest, either, Any, Everything, zeroOrMore}} = Macros;
 	/*d:

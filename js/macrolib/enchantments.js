@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages', 'macros', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/changedescriptor', 'internaltypes/enchantment', 'internaltypes/twineerror'],
+define('macrolib/enchantments', ['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages', 'macros', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/changedescriptor', 'internaltypes/enchantment', 'internaltypes/twineerror'],
 ($, Utils, {is}, Engine, State, Passages, Macros, HookSet, CodeHook, ChangerCommand, Lambda, ChangeDescriptor, Enchantment, TwineError) => {
 
 	const {either,rest,optional} = Macros.TypeSignature;
@@ -873,7 +873,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 						ChangerCommand.summary(). In that case, the tempVariables will never be used,
 						so a bare object can just be provided.
 					*/
-					(desc.section && desc.section.stackTop) ? desc.section.stackTop.tempVariables : Object.create(null);
+					(desc.section?.stackTop) ? desc.section.stackTop.tempVariables : Object.create(null);
 
 				/*
 					This enchantData object is stored in the descriptor's Section's enchantments
@@ -910,7 +910,7 @@ define(['jquery', 'utils', 'utils/operationutils', 'engine', 'state', 'passages'
 								Note that this currently (October 2021) does not allow enchantment events to fire
 								even within a (dialog:) or other element which blocks control flow.
 							*/
-							if (desc.section.stackTop && desc.section.stackTop.blocked) {
+							if (desc.section.stackTop?.blocked) {
 								return;
 							}
 							if (enchantDesc.once) {

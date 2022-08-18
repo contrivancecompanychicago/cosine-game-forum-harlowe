@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils/naturalsort'], ($, NaturalSort) => {
+define('debugmode/panel', ['jquery', 'utils/naturalsort'], ($, NaturalSort) => {
 	/*
 		A simple debug panel + tab class, used to display Variables, Errors, and so forth, which can be live-updated
 		whenever the game state changes.

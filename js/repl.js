@@ -1,5 +1,5 @@
 "use strict";
-define(['utils', 'engine', 'markup', 'section'], function(Utils, Markup, Section) {
+define('repl',['utils', 'engine', 'markup', 'section'], function(Utils, Markup, Section) {
 	Utils.onStartup(() => setTimeout(() => {
 		/*
 			Here, it only matters if the story started in debug mode. Subsequent mode

@@ -1,5 +1,5 @@
 "use strict";
-define([
+define('section', [
 	'jquery',
 	'utils',
 	'twinescript/runner',
@@ -174,7 +174,7 @@ define([
 		Since the consumer is always $().append(), returning undefined is fine.
 	*/
 	const makeReplayButton = replay => {
-		if (replay && replay.length) {
+		if (replay?.length) {
 			return $("<tw-open-button replay label='🔍'>").data('evalReplay', replay);
 		}
 	};
@@ -398,7 +398,7 @@ define([
 					Unimplemented behaviour (2018-07-20): live changers can't be attached to commands, only
 					proper hooks.
 				*/
-				if (result.data && result.data.live) {
+				if (result.data?.live) {
 					expr.replaceWith(TwineError.create("unimplemented",
 						"I currently can't attach (live:) or (event:) macros to commands - only hooks."
 					).render(expr.attr('title')));
@@ -567,7 +567,7 @@ define([
 				whether the lambda was false. So, passing in 'true' will return [true] if
 				the lambda was true and [] (an empty array) if not.
 			*/
-			const eventFired = (event && event.filter(this, [true], tempVariables));
+			const eventFired = (event?.filter(this, [true], tempVariables));
 			if (TwineError.containsError(eventFired)) {
 				eventFired.render(this, expr.attr('title')).replaceAll(expr);
 				return;
@@ -794,7 +794,7 @@ define([
 						/*
 							This can't be used during storylet speculation, for obvious reasons.
 						*/
-						if (ret.stackTop && ret.stackTop.evaluateOnly) {
+						if (ret.stackTop?.evaluateOnly) {
 							return TwineError.create("operation", `'time' can't be used in ${ret.stackTop.evaluateOnly}.`);
 						}
 						return (Date.now() - ret.timestamp);
@@ -912,7 +912,7 @@ define([
 						/*
 							This can't be used during storylet speculation, for obvious reasons.
 						*/
-						if (ret.stackTop && ret.stackTop.evaluateOnly) {
+						if (ret.stackTop?.evaluateOnly) {
 							return TwineError.create("operation", `'exit' and 'exits' can't be used in ${ret.stackTop.evaluateOnly}.`);
 						}
 						return ret.dom.find('tw-enchantment, tw-link')
@@ -1005,7 +1005,7 @@ define([
 			try {
 				ret = run(this, args);
 			} catch(e) {
-				window.console && window.console.error(e);
+				window.console?.error(e);
 				this.evalReplay = null;
 				return TwineError.create('', `An internal error occurred while trying to run ${[].concat(args).map(e=>e.text).join('')}.`,
 					`The error was "${e.message}".\nIf this is the latest version of Harlowe, please consider reporting a bug (see the documentation).`);
@@ -1232,7 +1232,7 @@ define([
 				(The target should always be truthy, but, just in case...)
 			*/
 			if (!hasOwnProperty.call(tempVariables,'TwineScript_VariableStoreName')) {
-				const targetTag = target && target.tag();
+				const targetTag = target?.tag();
 				tempVariables.TwineScript_VariableStoreName = (
 					targetTag === 'tw-hook' ? (target.attr('name') ? ("?" + target.attr('name')) : "an unnamed hook") :
 					targetTag === 'tw-expression' ? ("a " + target.attr('type') + " expression") :
@@ -1481,7 +1481,7 @@ define([
 								expr.replaceWith(e.render(expr.text(), expr));
 							}
 							else {
-								window.console && window.console.error(e);
+								window.console?.error(e);
 								expr.replaceWith(
 									TwineError.create('',
 										`A Javascript error occurred while running this <script> element.`,
@@ -1601,7 +1601,7 @@ define([
 						If the callback caused the section to suddenly become blocked again, stop
 						processing the callbacks.
 					*/
-					if (this.stackTop && this.stackTop.blocked) {
+					if (this.stackTop?.blocked) {
 						return;
 					}
 				}

@@ -1,5 +1,5 @@
 "use strict";
-define([
+define('macrolib/datastructures', [
 	'utils',
 	'utils/naturalsort',
 	'macros',
@@ -1504,7 +1504,7 @@ define([
 				key = localStorage.key(i);
 				i += 1;
 				const prefix = storagePrefix("Saved Game");
-				if (key && key.startsWith(prefix)) {
+				if (key?.startsWith(prefix)) {
 					// Trim off the prefix
 					key = key.slice(prefix.length);
 					// Populate the saves map with the save slot name.

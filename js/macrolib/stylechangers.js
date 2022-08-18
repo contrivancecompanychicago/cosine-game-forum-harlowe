@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'datatypes/hookset', 'datatypes/gradient', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
+define('macrolib/stylechangers', ['jquery','macros', 'utils', 'utils/renderutils', 'datatypes/colour', 'datatypes/hookset', 'datatypes/gradient', 'datatypes/changercommand', 'datatypes/lambda', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
 ($, Macros, Utils, {geomParse, geomStringRegExp}, Colour, HookSet, Gradient, ChangerCommand, Lambda, ChangeDescriptor, TwineError) => {
 
 	/*

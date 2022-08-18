@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils', 'state', 'section', 'passages'],
+define('engine', ['jquery', 'utils', 'state', 'section', 'passages'],
 ($, Utils, State, Section, Passages) => {
 	/*
 		Utils.storyElement is a getter, so we need a reference to Utils as well
@@ -53,7 +53,7 @@ define(['jquery', 'utils', 'state', 'section', 'passages'],
 		else {
 			const name = setupPassage.get('name');
 			const tree = Passages.getTree(name);
-			if (tree && tree.children.length) {
+			if (tree.children.length) {
 				newToken = {
 					type: 'include',
 					tag: tagTypeOrPassageName,

@@ -1,5 +1,5 @@
 "use strict";
-define(['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'datatypes/hookset'],
+define('internaltypes/varref', ['state', 'internaltypes/twineerror', 'utils', 'utils/operationutils', 'datatypes/hookset'],
 (State, TwineError, {impossible, andList, nth}, {is, isObject, toSource, isSequential, objectName, typeName, clone, isValidDatamapName, subset, collectionType, unstorableValue, matches}, HookSet) => {
 	const {isArray} = Array;
 	/*

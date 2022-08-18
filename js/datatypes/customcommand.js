@@ -1,5 +1,5 @@
 "use strict";
-define(['internaltypes/changedescriptor', 'internaltypes/twineerror'], (ChangeDescriptor, TwineError) => {
+define('datatypes/customcommand', ['internaltypes/changedescriptor', 'internaltypes/twineerror'], (ChangeDescriptor, TwineError) => {
 	const {assign,create} = Object;
 	/*
 		If a custom macro returns a {toSource, changer, hook, vars} object, it should be considered a command macro.

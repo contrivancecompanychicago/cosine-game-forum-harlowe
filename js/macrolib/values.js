@@ -1,5 +1,5 @@
 "use strict";
-define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatypes/gradient', 'datatypes/datatype', 'datatypes/hookset', 'datatypes/codehook', 'internaltypes/twineerror'],
+define('macrolib/values', ['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 'datatypes/gradient', 'datatypes/datatype', 'datatypes/hookset', 'datatypes/codehook', 'internaltypes/twineerror'],
 (Macros, State, {realWhitespace, nth, anyRealLetter, plural}, {subset, objectName, clone, toSource}, Colour, Gradient, Datatype, HookSet, CodeHook, TwineError) => {
 	/*
 		Built-in value macros.
@@ -182,7 +182,7 @@ define(['macros', 'state', 'utils', 'utils/operationutils', 'datatypes/colour', 
 				Note that since custom macro commands cannot be serialised, they can't have a TwineScript_ToSource() method that would return this error
 				by itself. Also note that every built-in command has a TwineScript_ToSource() installed by Macros.
 			*/
-			if (val && val.TwineScript_TypeID === "command" && !val.TwineScript_ToSource) {
+			if (val?.TwineScript_TypeID === "command" && !val.TwineScript_ToSource) {
 				return TwineError.create("datatype", "I can't construct the source code of a command created by a custom macro.");
 			}
 			return toSource(val);

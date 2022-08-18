@@ -89,13 +89,13 @@
 				node.value = node.firstChild.getAttribute('value');
 				// For dropdowns that involve dropdown rows, hide the rows themselves.
 				const { nextElementSibling:next } = node;
-				if (next && next.className.includes('harlowe-3-dropdownRows')) {
+				if (next?.className.includes('harlowe-3-dropdownRows')) {
 					Array.from(next.children).forEach(el => {
 						el[(el.getAttribute('data-value') === node.value ? "remove" : "set") + "Attribute"]('hidden','');
 					});
 				}
 			});
-			panel.onreset && panel.onreset();
+			panel.onreset?.();
 		});
 		
 		const {height} = getComputedStyle(toolbarElem);
@@ -1987,7 +1987,7 @@
 			Look for the TwineJS toolbar element in either 2.4 or 2.3.
 		*/
 		const passageTagsElem = document[$]('.story-format-toolbar') || document[$]('.editor .passageTags');
-		if (passageTagsElem && passageTagsElem.nextElementSibling !== toolbarElem) {
+		if (passageTagsElem?.nextElementSibling !== toolbarElem) {
 			passageTagsElem.after(toolbarElem);
 		}
 		cm = cmObj;

@@ -1,5 +1,5 @@
 "use strict";
-define([
+define('twinescript/operations', [
 	'utils',
 	'utils/operationutils',
 	'datatypes/typedvar',

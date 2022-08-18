@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery'], ($) => {
+define('datatypes/colour', ['jquery'], ($) => {
 	/*d:
 		Colour data
 

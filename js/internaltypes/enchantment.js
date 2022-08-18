@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changercommand', 'utils/operationutils', 'internaltypes/twineerror', 'utils/renderutils'],
+define('internaltypes/enchantment', ['jquery', 'utils', 'internaltypes/changedescriptor', 'datatypes/changercommand', 'utils/operationutils', 'internaltypes/twineerror', 'utils/renderutils'],
 ($, Utils, ChangeDescriptor, ChangerCommand, {objectName,toSource}, TwineError, {collapse}) => {
 	/*
 		Enchantments are special styling that is applied to selected elements of a

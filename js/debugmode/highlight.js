@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery','utils','utils/typecolours','macros','lexer'], ($,{insensitiveName}, {versionClass}, Macros, {lex}) => {
+define('debugmode/highlight', ['jquery','utils','utils/typecolours','macros','lexer'], ($,{insensitiveName}, {versionClass}, Macros, {lex}) => {
 	/*
 		This module holds a very simple syntax highlighter for use exclusively in Debug Mode.
 	*/

@@ -1,5 +1,5 @@
 "use strict";
-define(['utils/operationutils'], ({toSource}) => {
+define('datatypes/gradient', ['utils/operationutils'], ({toSource}) => {
 	/*d:
 		Gradient data
 

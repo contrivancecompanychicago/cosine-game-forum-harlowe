@@ -8,7 +8,7 @@ I'd appreciate it if you could adhere to the following guidelines when reporting
  * Please do not report more than one bug per issue - make as many issues as you need.
  * Please be as detailed as possible in the issue title.
  * But, at the same time, avoid overly general anecdotes or descriptions of your work process leading to the bug (like "I'm trying to write an inventory system") - try to focus on what you expected the code to do, and what you got instead.
- * You *should* report all cases where a new version of Harlowe caused your formerly-working story to suddenly not work, as long as a possible reason was not mentioned anywhere in the release notes (the README).
+ * You *should* report all cases where a new version of Harlowe caused your formerly-working story to suddenly not work, as long as a possible reason was not mentioned anywhere in the [changelog](#section_changes).
  * Do include code samples, but please write them inside code blocks (using the Code `</>` button in the toolbar).
  * Don't change the "Assignee", "Milestone" or "Due Date".
  * If your issue is a bug, please set the "Label" to "Bug".

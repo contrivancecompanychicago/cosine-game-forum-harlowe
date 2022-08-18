@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery','utils','renderer','utils/operationutils','datatypes/customcommand', 'internaltypes/varref', 'internaltypes/varscope', 'internaltypes/twineerror', 'internaltypes/twinenotifier'],
+define('datatypes/custommacro', ['jquery','utils','renderer','utils/operationutils','datatypes/customcommand', 'internaltypes/varref', 'internaltypes/varscope', 'internaltypes/twineerror', 'internaltypes/twinenotifier'],
 ($, {andList}, Renderer, {objectName, typeName, matches, toSource}, CustomCommand, VarRef, VarScope, TwineError, TwineNotifier) => {
 	const {assign,create} = Object;
 	/*d:
@@ -107,7 +107,7 @@ define(['jquery','utils','renderer','utils/operationutils','datatypes/customcomm
 		if (args.length) {
 			i += 1;
 		}
-		if (params[i] && params[i].datatype.rest) {
+		if (params[i]?.datatype.rest) {
 			const ref = VarRef.create(tempVariables, varNames[i]);
 			if (TwineError.containsError(ref)) {
 				return ref;

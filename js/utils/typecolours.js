@@ -233,6 +233,6 @@
 		module.exports = { Colours, CSS, versionClass };
 	}
 	else if(typeof define === 'function' && define.amd) {
-		define([], () => ({ Colours, CSS, versionClass }));
+		define('utils/typecolours', [], () => ({ Colours, CSS, versionClass }));
 	}
 }.call(this));

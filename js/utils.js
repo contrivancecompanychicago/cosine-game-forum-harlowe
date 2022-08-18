@@ -1,6 +1,5 @@
 "use strict";
-define(['jquery', 'markup', 'utils/polyfills'],
-($) => {
+define('utils', ['jquery', 'markup', 'utils/polyfills'], ($) => {
 
 	const
 		{fromCharCode} = String,

@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Utils, {textNodeToChars, realWhitespace, findTextInNodes}, {toSource}) => {
+define('datatypes/hookset', ['jquery', 'utils', 'utils/renderutils', 'utils/operationutils'], ($, Utils, {textNodeToChars, realWhitespace, findTextInNodes}, {toSource}) => {
 	/*
 		A HookSet is an object representing a "hook selection". Hooks in
 		Twine passages can have identical titles, and both can therefore be

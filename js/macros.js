@@ -1,5 +1,5 @@
 "use strict";
-define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changercommand', 'datatypes/custommacro', 'datatypes/lambda', 'datatypes/codehook', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
+define('macros', ['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changercommand', 'datatypes/custommacro', 'datatypes/lambda', 'datatypes/codehook', 'internaltypes/changedescriptor', 'internaltypes/twineerror'],
 (NaturalSort, {insensitiveName, nth, andList}, {objectName, typeName, toSource}, ChangerCommand, CustomMacro, Lambda, CodeHook, ChangeDescriptor, TwineError) => {
 	/*
 		This contains a registry of macro definitions, and methods to add to that registry.
@@ -139,7 +139,7 @@ define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changer
 				continue;
 			}
 			let el = args[i];
-			if (el && el.spreader === true) {
+			if (el?.spreader === true) {
 				const {value} = el;
 				/*
 					TwineErrors, obviously, can't be spread.
@@ -300,7 +300,7 @@ define(['utils/naturalsort', 'utils', 'utils/operationutils', 'datatypes/changer
 					Unstorable data types are the only kinds which Any signatures will not
 					match. Produce a special error message in this case.
 				*/
-				if (arg && arg.TwineScript_Unstorable && typeTakesAny(type)) {
+				if (arg?.TwineScript_Unstorable && typeTakesAny(type)) {
 					return TwineError.create(
 						"datatype",
 						name + "'s " + nth(ind + 1) + " value, " + objectName(arg) + ", is not valid data for this macro.",

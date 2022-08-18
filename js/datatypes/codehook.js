@@ -1,5 +1,5 @@
 "use strict";
-define([], () => {
+define('datatypes/codehook', [], () => {
 	/*d:
 		CodeHook data
 

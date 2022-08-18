@@ -1,5 +1,5 @@
 "use strict";
-define([
+define('twinescript/runner', [
 	'macros',
 	'state',
 	'utils',
@@ -355,7 +355,7 @@ define([
 		/*
 			Before and after can be swapped in one special case: right-side elided comparisons.
 		*/
-		if (before && before.length && after && after.length && before[0].start > after[0].start) {
+		if (before?.length && after?.length && before[0].start > after[0].start) {
 			[before, after] = [after, before];
 		}
 		/*
@@ -365,11 +365,11 @@ define([
 		let resultSource;
 		if (!toCode) {
 			resultSource = `${
-					before && before.length && before[before.length-1].type === "whitespace" ? ' ' : ''
+					before?.length && before[before.length-1].type === "whitespace" ? ' ' : ''
 				}${error ? " 🐞 " :
 				val && !val.TwineScript_ToSource && val.TwineScript_Unstorable ? objectName(val) :
 				toSource(val)}${
-					after && after.length &&
+					after?.length &&
 						/*
 							Addition and subtraction tokens might actually be positive or negative tokens,
 							based on context that isn't visible here. Add trailing whitespace for the results of these anyway.
@@ -472,7 +472,7 @@ define([
 	*/
 	return function run(section, tokens, isVarRef = false, isTypedVar = false) {
 		const {evalReplay} = section;
-		const hasEvalReplay = (evalReplay && evalReplay.length);
+		const hasEvalReplay = (evalReplay?.length);
 		let evalReplayReason;        // Reason strings for eval replay frames.
 		let evalReplaySkip = false;  // Skip making an eval replay for this frame.
 		let evalReplayIt;            // If the It identifier changed, make a note of it.
@@ -598,7 +598,7 @@ define([
 					/*
 						Sadly, since VarRefs currently (March 2022) lack a .has() method, this bespoke method will have to do.
 					*/
-					ret && ret.object === State.variables && !hasOwnProperty.call(ret.object, ret.compiledPropertyChain[0])
+					ret?.object === State.variables && !hasOwnProperty.call(ret.object, ret.compiledPropertyChain[0])
 					? "This variable didn't exist; for story-wide $ variables, a default value of 0 is used if they don't exist."
 					: ""
 				);

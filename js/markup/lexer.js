@@ -307,7 +307,7 @@
 							If a token cannot follow text, the check is a bit tricky: the last text token hasn't been forged yet.
 							So, this line must be used:
 						*/
-						|| (rule.cannotFollowText && ((lastToken && lastToken.type === "text") || firstUnmatchedIndex < index))
+						|| (rule.cannotFollowText && ((lastToken?.type === "text") || firstUnmatchedIndex < index))
 						/*
 							PlainCompare rules are compared only as strings.
 						*/
@@ -362,7 +362,7 @@
 							parenthesis cannot cross the stringOpener to match the
 							macroFront.
 						*/
-						if (tokenData.cannotCross && tokenData.cannotCross.indexOf(type) >-1) {
+						if (tokenData.cannotCross?.indexOf(type) >-1) {
 							// This unconventional way to break the loop is used to simplify the
 							// "was the loop fruitless" check below.
 							ft = frontTokenStack.length-1;
@@ -457,13 +457,13 @@
 			parentToken.addChild({
 				type: "text",
 				text: src.slice(firstUnmatchedIndex, index),
-				innerMode: (frontTokenStack && frontTokenStack.length ? frontTokenStack[0] : parentToken).innerMode,
+				innerMode: (frontTokenStack?.length ? frontTokenStack[0] : parentToken).innerMode,
 			});
 		}
 		/*
 			We're done, except that we may still have unmatched frontTokens.
 		*/
-		while(frontTokenStack && frontTokenStack.length > 0) {
+		while(frontTokenStack?.length > 0) {
 			frontTokenStack.shift().demote();
 		}
 		return parentToken;
@@ -600,7 +600,7 @@
 		});
 	}
 	// Loaded as a story format in TwineJS 2.3.
-	else if (this && this.loaded) {
+	else if (this && this?.loaded) {
 		this.modules || (this.modules = {});
 		this.modules.Lexer = Lexer;
 	}

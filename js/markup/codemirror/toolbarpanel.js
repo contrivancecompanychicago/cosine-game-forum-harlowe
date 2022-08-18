@@ -523,7 +523,7 @@
 						const {left, right} = gradientBar.getBoundingClientRect();
 						const width = right - left;
 						const onMouseMove = ({pageX, touches}) => {
-							pageX = pageX || (touches && touches[0].pageX);
+							pageX = pageX || (touches?.[0].pageX);
 							if (pageX === undefined) {
 								return;
 							}
@@ -617,7 +617,7 @@
 				ret.append(scrollBox);
 				categorySelector[ON]('change', () => {
 					const el = scrollBox[$](`[name="${categorySelector.value}"]`);
-					el && el.scrollIntoView();
+					el?.scrollIntoView();
 				});
 				Object.values(Utils.ShortDefs.Macro)
 					.sort(({name:leftName, category:leftCategory, categoryOrder:leftCategoryOrder}, {name:rightName, category:rightCategory, categoryOrder:rightCategoryOrder}) => {
@@ -741,7 +741,7 @@
 					*/
 					rowValuesBuffer = [];
 					modelRegistry.reduce((m, fn) => fn(m) || m, m);
-					innerModel && innerModel(m, rowValuesBuffer);
+					innerModel?.(m, rowValuesBuffer);
 				};
 				row.renumber(ret[$](':scope > * > .harlowe-3-dropdownRowLabel'));
 			}
@@ -824,7 +824,7 @@
 					*/
 					rowValuesBuffer = [];
 					[...childModelMethods].reduce((m, fn) => fn(m) || m, m);
-					innerModel && innerModel(m, rowValuesBuffer);
+					innerModel?.(m, rowValuesBuffer);
 				};
 				plusButton[ON]('click', () => { makeRow(); update(); renumber(); });
 			}
@@ -886,7 +886,7 @@
 					const checked = panelElem[$](':scope > input:checked');
 					Array.from(panelElem[$$]('div,br ~ *')).forEach(e => e[(checked ? "remove" : "set") + "Attribute"]("hidden",''));
 					Array.from(panelElem[$$]('input,select')).slice(1).forEach(e => e[(checked ? "remove" : "set") + "Attribute"]("disabled",''));
-					u && u(m, el);
+					u?.(m, el);
 				};
 			}
 

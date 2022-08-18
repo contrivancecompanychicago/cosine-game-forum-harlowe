@@ -1,5 +1,5 @@
 'use strict';
-define(['state','utils/operationutils', 'internaltypes/varref', 'internaltypes/twineerror'], (State, OperationUtils, VarRef, TwineError) => {
+define('utils/scripttag', ['state','utils/operationutils', 'internaltypes/varref', 'internaltypes/twineerror'], (State, OperationUtils, VarRef, TwineError) => {
 	/*d:
 		HTML script tag markup
 

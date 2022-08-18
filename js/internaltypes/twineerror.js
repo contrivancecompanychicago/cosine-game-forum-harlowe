@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils'], ($, Utils) => {
+define('internaltypes/twineerror', ['jquery', 'utils'], ($, Utils) => {
 	const {impossible, escape} = Utils;
 	/*
 		TwineErrors are errors created by the TwineScript runtime. They are supplied with as much
@@ -27,7 +27,7 @@ define(['jquery', 'utils'], ($, Utils) => {
 		while(target && !target.next().length) {
 			target = target.parent();
 		}
-		target && target.next().toggle();
+		target?.next().toggle();
 	});
 	
 	/*

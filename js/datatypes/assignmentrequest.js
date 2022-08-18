@@ -1,5 +1,5 @@
 "use strict";
-define(['utils/operationutils','datatypes/typedvar','datatypes/datatype','internaltypes/varref','internaltypes/twineerror'], ({objectName, matches, toSource}, TypedVar, Datatype, VarRef, TwineError) => {
+define('datatypes/assignmentrequest', ['utils/operationutils','datatypes/typedvar','datatypes/datatype','internaltypes/varref','internaltypes/twineerror'], ({objectName, matches, toSource}, TypedVar, Datatype, VarRef, TwineError) => {
 	/*
 		AssignmentRequests represent an assignment statement. Different
 		macros may handle this request differently (for instance,

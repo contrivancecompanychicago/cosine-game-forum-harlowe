@@ -1,5 +1,5 @@
 "use strict";
-define([], () => {
+define('internaltypes/varscope', [], () => {
 	/*
 		VarScope.
 		This is a root prototype object which houses temporary variables, inside a Section's stack.

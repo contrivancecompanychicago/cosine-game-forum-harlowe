@@ -23,7 +23,6 @@
     "node": ">=6.0"
   },
   "dependencies": {
-    "almond": "0.3",
     "es6-shim": "^0.35.6",
     "jquery": "^3.6"
   },
@@ -39,7 +38,6 @@
     "lodash.unescape": "4",
     "marked": "0.3.3",
     "replacestream": "4",
-    "requirejs": "2",
     "sass": "^1.49.0",
     "uglify-js": "^3.14.5"
   },

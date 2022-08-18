@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils', 'renderer', 'datatypes/hookset', 'internaltypes/twineerror'], ($, {impossible, transitionIn}, {exec}, HookSet, TwineError) => {
+define('internaltypes/changedescriptor', ['jquery', 'utils', 'renderer', 'datatypes/hookset', 'internaltypes/twineerror'], ($, {impossible, transitionIn}, {exec}, HookSet, TwineError) => {
 	const {assign,keys,create,seal} = Object;
 	const {isArray} = Array;
 	/*
@@ -304,7 +304,7 @@ define(['jquery', 'utils', 'renderer', 'datatypes/hookset', 'internaltypes/twine
 			/*
 				Overriding all other aspects of this CD are the enablers, which create alternative elements in this CD's place. This overrides even (if:).
 			*/
-			if (enablers && enablers.length) {
+			if (enablers?.length) {
 				const {descriptor, changer} = enablers[0];
 				const createdElement = descriptor.render();
 				/*

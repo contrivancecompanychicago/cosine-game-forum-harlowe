@@ -1,27 +1,7 @@
-/*
-	This require.config call must be in here, so that local testing of Harlowe
-	can be conducted without having to recompile harlowe.min.js.
-*/
 "use strict";
-require.config({
-	paths: {
-		// External libraries
-		jquery:                       '../node_modules/jquery/dist/jquery',
-		almond:                       '../node_modules/almond/almond',
-		"es6-shim":                   '../node_modules/es6-shim/es6-shim',
-		
-		markup:                       './markup/markup',
-		lexer:                        './markup/lexer',
-		patterns:                     './markup/patterns',
-	},
-	deps: [
-		'es6-shim',
-		'utils/jqueryplugins',
-	],
-});
-require(['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', 'passages', 'utils', 'utils/renderutils', 'internaltypes/varscope', 'internaltypes/twineerror', 'macros',
+define('harlowe', ['jquery', 'debugmode/mode', 'renderer', 'state', 'section', 'engine', 'passages', 'utils', 'utils/renderutils', 'internaltypes/varscope', 'internaltypes/twineerror', 'macros',
 	'macrolib/values', 'macrolib/commands', 'macrolib/datastructures', 'macrolib/stylechangers', 'macrolib/enchantments', 'macrolib/metadata', 'macrolib/patterns',
-	'macrolib/links', 'macrolib/custommacros', 'repl'],
+	'macrolib/links', 'macrolib/custommacros', 'utils/jqueryplugins', 'repl'],
 		($, DebugMode, Renderer, State, Section, Engine, Passages, Utils, {dialog}, VarScope) => {
 	/*
 		Harlowe, the default story format for Twine 2.

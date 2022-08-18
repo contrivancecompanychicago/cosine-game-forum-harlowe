@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltypes/twineerror',
+define('macrolib/commands', ['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltypes/twineerror',
 	'internaltypes/twinenotifier', 'datatypes/assignmentrequest', 'datatypes/hookset', 'datatypes/codehook', 'datatypes/colour', 'datatypes/gradient', 'internaltypes/varref', 'datatypes/typedvar', 'datatypes/varbind', 'utils/operationutils', 'utils/renderutils'],
 ($, Macros, Utils, State, Passages, Engine, TwineError, TwineNotifier, AssignmentRequest, HookSet, CodeHook, Colour, Gradient, VarRef, TypedVar, VarBind, {printBuiltinValue, objectName, clone, toSource}, {dialog, geomParse, geomStringRegExp}) => {
 	
@@ -486,7 +486,8 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 			it, as text, but without rendering the resulting text as markup.
 
 			Example usage:
-			* `(v6m-print: (source: $textChanger))` prints out the source of the value stored in $textChanger.
+			* `(v6m-print: "<sarcasm>" + $quip + "</sarcasm>")` prints out the string `"<sarcasm>"`, the string contents of `$quip`, and the string `"</sarcasm>"`,
+			without interpreting that as HTML markup.
 			* `(set: $name to (v6m-print: (prompt: "Enter your name:", "")))` prompts the player for their name, then
 			stores a command that displays that name verbatim whenever it's printed.
 
@@ -554,7 +555,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 					Note that since custom macro commands cannot be serialised, they can't have a TwineScript_ToSource() method that would return this error
 					by itself. Also note that every built-in command has a TwineScript_ToSource() installed by Macros.
 				*/
-				if (val && val.TwineScript_TypeID === "command" && !val.TwineScript_ToSource) {
+				if (val?.TwineScript_TypeID === "command" && !val.TwineScript_ToSource) {
 					return TwineError.create("datatype", "I can't construct the source code of a command created by a custom macro.");
 				}
 			},
@@ -1489,7 +1490,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 					If there's a bind, and it's two-way, and one of the labels matches the bound
 					variable's value, change the index to match.
 				*/
-				if (bind && bind.bind === "two way") {
+				if (bind?.bind === "two way") {
 					/*
 						The two-way binding attribute (used by the handler to find bound elements)
 						is installed, and if the variable currently matches an available label,
@@ -2694,7 +2695,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 				requestAnimationFrame(() => {
 					hook.forEach(section, elem => {
 						if (percent !== false) {
-							elem[0].scrollTo && elem[0].scrollTo(0, (elem[0].scrollHeight - elem[0].clientHeight) * percent);
+							elem[0].scrollTo?.(0, (elem[0].scrollHeight - elem[0].clientHeight) * percent);
 						}
 						else for (let elem2 of percentOrHook.hooks(section).get()) {
 							/*
@@ -3266,7 +3267,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 								And, since .unblock() will place the TwineError where it should go (in the blockedValues
 								stack), this line is sufficient to pass through any resulting TypedVar errors.
 							*/
-							section.unblock((varBind && varBind.set(b)) || '');
+							section.unblock((varBind?.set(b)) || '');
 						},
 					})),
 				});
@@ -3694,7 +3695,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 					in addition to the one in Section for expressions, to ensure that this isn't being used in a pure
 					evaluation context, such as a link's text, or a (storylet:) macro.
 				*/
-				if (section.stackTop && section.stackTop.evaluateOnly) {
+				if (section.stackTop?.evaluateOnly) {
 					return TwineError.create("macrocall", ...dialogError(section.stackTop.evaluateOnly));
 				}
 				if (confirmButton === "") {
@@ -3760,7 +3761,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'internaltyp
 		*/
 		("confirm", "Boolean",
 			(section, message, cancelButton, confirmButton) => {
-				if (section.stackTop && section.stackTop.evaluateOnly) {
+				if (section.stackTop?.evaluateOnly) {
 					return TwineError.create("macrocall", ...dialogError(section.stackTop.evaluateOnly));
 				}
 				if (confirmButton === "") {

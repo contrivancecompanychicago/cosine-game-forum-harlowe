@@ -6,7 +6,7 @@
  * Expanded by Leon Arnott to take a string-obtaining helper function, 2019.
  */
 "use strict";
-define([], function() {
+define('utils/naturalsort', [], function() {
 	return function NaturalSort(locale, helper = String) {
 		return function naturalSort(a, b) {
 			var re = /(^-?[0-9]+(\.?[0-9]*)[df]?e?[0-9]?$|^0x[0-9a-f]+$|[0-9]+)/gi,

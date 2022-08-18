@@ -1,5 +1,5 @@
 "use strict";
-define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
+define('utils/operationutils', ['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 	(NaturalSort, {impossible, nth, permutations, plural}, TwineError, {validPropertyName}) => {
 	
 	/*
@@ -53,7 +53,7 @@ define(['utils/naturalsort','utils', 'internaltypes/twineerror', 'patterns'],
 		Currently (Jan 2022) only used by VarRef and TypedVar.
 	*/
 	function unstorableValue(value) {
-		return (value && value.TwineScript_Unstorable && value)
+		return (value?.TwineScript_Unstorable && value)
 			|| (isArray(value) && value.find(unstorableValue))
 			|| (value instanceof Map && [...value.values()].find(unstorableValue))
 			|| (value instanceof Set && [...value].find(unstorableValue));

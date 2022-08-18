@@ -1,5 +1,5 @@
 "use strict";
-define(['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatypes/datatype', 'datatypes/typedvar', 'internaltypes/twineerror', 'internaltypes/varscope'],
+define('macrolib/patterns', ['macros', 'utils', 'utils/operationutils', 'datatypes/lambda', 'datatypes/datatype', 'datatypes/typedvar', 'internaltypes/twineerror', 'internaltypes/varscope'],
 (Macros, {anyRealLetter, anyUppercase, anyLowercase, anyCasedLetter, realWhitespace, impossible}, {objectName, toSource}, Lambda, Datatype, TypedVar, TwineError, VarScope) => {
 
 	const {rest, either, optional, nonNegativeInteger} = Macros.TypeSignature;

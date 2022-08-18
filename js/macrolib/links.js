@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/changercommand', 'internaltypes/changedescriptor', 'datatypes/hookset', 'datatypes/lambda', 'internaltypes/twineerror'],
+define('macrolib/links', ['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/changercommand', 'internaltypes/changedescriptor', 'datatypes/hookset', 'datatypes/lambda', 'internaltypes/twineerror'],
 ($, Macros, Utils, State, Passages, Engine, ChangerCommand, ChangeDescriptor, HookSet, Lambda, TwineError) => {
 	/*
 		This module defines the behaviour of links in Harlowe - both
@@ -56,7 +56,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 				return;
 			}
 
-			if (section && section.stackTop && section.stackTop.blocked &&
+			if (section?.stackTop && section.stackTop.blocked &&
 					/*
 						However, links inside (dialog:)s and other blocking elements may still have their
 						events occur. This is currently (as of October 2021) distinct from (click:) enchantments, which
@@ -406,7 +406,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 				if (changer && !changer.canEnchant) {
 					return TwineError.create(
 						"datatype",
-						`The changer given to (${arr[0]}:) can't be or include a revision, enchantment, or interaction changer like (replace:), (click:), or (link:).`
+						`The changer given to (${arr[0]}:) can't be (or include) a revision, enchantment, or interaction changer like (replace:), (click:), or (link:).`
 					);
 				}
 				return ChangerCommand.create(arr[0], [text].concat(changer || []), null,
@@ -428,7 +428,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 						ChangerCommand.summary(). In that case, the tempVariables will never be used,
 						so a bare object can just be provided.
 					*/
-					(desc.section && desc.section.stackTop) ? desc.section.stackTop.tempVariables : Object.create(null);
+					(desc.section?.stackTop) ? desc.section.stackTop.tempVariables : Object.create(null);
 
 				/*
 					Create a ChangeDescriptor for the created link, which overrides the entire descriptor if it's placed in its "enablers" array.
@@ -1136,7 +1136,7 @@ define(['jquery', 'macros', 'utils', 'state', 'passages', 'engine', 'datatypes/c
 					ChangerCommand.summary(). In that case, the tempVariables will never be used,
 					so a bare object can just be provided.
 				*/
-				(desc.section && desc.section.stackTop) ? desc.section.stackTop.tempVariables : Object.create(null);
+				(desc.section?.stackTop) ? desc.section.stackTop.tempVariables : Object.create(null);
 			/*
 				As with (link:), it is necessary to crate a separate ChangeDescriptor for the created link.
 			*/

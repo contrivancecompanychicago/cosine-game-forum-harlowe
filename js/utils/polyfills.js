@@ -3,7 +3,7 @@
 	Currently only contains Array.prototype.includes()
 */
 "use strict";
-define([], function() {
+define('utils/polyfills', [], function() {
 	const A = Array.prototype;
 	if (typeof A.includes !== "function") {
 		A.includes = function includes(searchElement, fromIndex = 0) {

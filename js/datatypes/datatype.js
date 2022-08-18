@@ -1,5 +1,5 @@
 "use strict";
-define([
+define('datatypes/datatype', [
 	'utils',
 	'utils/operationutils',
 	'datatypes/changercommand',

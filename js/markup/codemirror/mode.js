@@ -488,7 +488,7 @@
 			/*
 				Install the toolbar, if it's been loaded. (This function will early-exit if the toolbar's already installed.)
 			*/
-			toolbar && toolbar(cm);
+			toolbar?.(cm);
 
 			/*
 				Refresh the story data.
@@ -536,7 +536,7 @@
 			});
 			on(doc, 'cursorActivity', function harlowe3CursorActivity() {
 				cursorMarking(doc);
-				tooltips && tooltips(doc, docData(doc));
+				tooltips?.(doc, docData(doc));
 			});
 			/*
 				Perform specific style alterations based on certain specific token types.
@@ -559,7 +559,7 @@
 			// This can't actually be in the Tooltips module because it must only be installed once.
 			on(cm, 'scroll', function harlowe3Scroll() {
 				const tooltip = document.querySelector('.harlowe-3-tooltip');
-				tooltip && tooltip.remove();
+				tooltip?.remove();
 			});
 			/*
 				These are signalled only by the Find/Replace Toolbar panel.
@@ -597,7 +597,7 @@
 				/*
 					Install the event handlers, if they haven't already been.
 				*/
-				init && init(doc);
+				init?.(doc);
 				/*
 					Fetch the tree for this doc.
 				*/

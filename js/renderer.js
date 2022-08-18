@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
+define('renderer', ['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 ($, {escape, insensitiveName, options}, Markup, TwineError) => {
 	/*
 		The Renderer takes the syntax tree from Markup and returns a HTML string.

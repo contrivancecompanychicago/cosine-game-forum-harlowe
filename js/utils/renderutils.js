@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils', 'renderer'], function($, Utils, Renderer) {
+define('utils/renderutils', ['jquery', 'utils', 'renderer'], function($, Utils, Renderer) {
 	/*
 		This is used to create dialogs for the (prompt:), (confirm:) and (alert:) macros, as well as
 		the warning dialog for (loadgame:). This may be expanded in the future to offer more author-facing
@@ -52,8 +52,8 @@ define(['jquery', 'utils', 'renderer'], function($, Utils, Renderer) {
 				should. So, we forcibly extract the <tw-transition-container>
 				and wrap the <tw-dialog> in it.
 			*/
-			const t8nContainer = cd && cd.transition && ret.find('tw-dialog > tw-transition-container');
-			if (t8nContainer && t8nContainer.length) {
+			const t8nContainer = cd?.transition && ret.find('tw-dialog > tw-transition-container');
+			if (t8nContainer?.length) {
 				t8nContainer.appendTo(ret).append(dialog.prepend(t8nContainer.contents().detach()));
 			}
 		}

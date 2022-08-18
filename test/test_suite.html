@@ -6,8 +6,6 @@
 .jasmine-disabled, .jasmine-stack-trace { display:none; } .jasmine-open { z-index:2; } .jasmine_html-reporter { margin-right:0px; }
 .jasmine-suite-detail { display: none; }
 </style>
-<script src="../node_modules/es6-shim/es6-shim.min.js"></script>
-<script src="../node_modules/requirejs/require.js"></script>
 <script>
 // Testing the format.js file, with its compiled CSS and minified ES5
 if(location.search.indexOf("?code=formatjs") > -1) {
@@ -28,9 +26,13 @@ else {
 		document.write("<script src='../build/harlowe-min.js'><\/script>");
 	}
 	// Testing the raw ES6 source
+	// Because each of these begins with "use strict", they all use strict mode automatically.
 	else {
-		require.config({baseUrl: "../js/"});
-		require(["markup/lexer","markup/patterns","markup/markup","harlowe"]);
+		document.write(
+			'<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"><\/script>'
+			+"<script>require.config({baseUrl: '../js/',paths: {jquery: '../node_modules/jquery/dist/jquery','es6-shim': '../node_modules/es6-shim/es6-shim',markup: './markup/markup',lexer: './markup/lexer',patterns: './markup/patterns',},deps: ['es6-shim'],});"
+			+'require(["harlowe"]);<\/script>'
+		);
 	}
 }
 </script>
@@ -387,6 +389,11 @@ beforeEach(function f(done) {
 		return;
 	}
 	setTimeout(f.bind(0, done), 1);
+});
+beforeAll(function (done) {
+	setTimeout(function f() {
+		window.Utils ? done() : setTimeout(f);
+	});
 });
 </script>
 <body>

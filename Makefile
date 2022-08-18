@@ -1,10 +1,5 @@
 PATH  := node_modules/.bin:$(PATH)
-SHELL := /bin/zsh
-
-requirejs_harlowe_flags = baseUrl=js mainConfigFile=js/harlowe.js name=harlowe include=almond \
-	insertRequire=harlowe wrap=true useStrict=true out=stdout logLevel=4 optimize=none
-
-requirejs_twinemarkup_flags = baseUrl=js/markup name=markup include=codemirror/utils,codemirror/toolbarpanel,codemirror/tooltips,codemirror/toolbar,codemirror/mode useStrict=true out=stdout logLevel=4 optimize=none
+SHELL := /bin/zsh -o extended_glob
 
 jshint_flags = --reporter scripts/jshintreporter.js
 
@@ -57,27 +52,32 @@ build/harlowe-css.css: scss/*.scss
 	| sass --stdin --style compressed \
 	> build/harlowe-css.css
 
+# - 3 separate sed calls with -e due to multiline commands colliding with Make's backslash \
+# - $$ escapes sed's $ inside Make
 build/harlowe-min.js: js/*.js js/*/*.js
-	@node_modules/.bin/r.js -o $(requirejs_harlowe_flags) \
+	@cat js/*.js js/*/*.js \
 	| babel --no-babelrc \
-	| uglifyjs $(uglify_flags)\
+	| uglifyjs $(uglify_flags) \
+	| sed -e '1{h;s/.*/cat scripts\/define.js node_modules\/es6-shim\/es6-shim.min.js node_modules\/jquery\/dist\/jquery.min.js/ep;g}' \
+	| sed -e '$$a ;require(\"harlowe\")}());' \
+	| sed -e '1i (function(){"use strict";' \
 	> build/harlowe-min.js
 
-# Crudely edit out the final define() call that's added for codemirror/mode.
-unwrap = /(?:,|\n)define\([^\;]+\;/g, ""
 # Inject the definitions of valid macros, containing only the name/sig/returntype/aka
 shortdefs = "\"SHORTDEFS\"", JSON.stringify(Object.entries(require("./scripts/metadata")).reduce((a, [k,v]) => Object.assign(a, v.shortDefs ? {[k]: v.shortDefs()} : {}), {}))
 # Inject the pre-built CodeMirror CSS
 codemirrorcss = "\"CODEMIRRORCSS\"", JSON.stringify(require("./scripts/codemirrorcss"))
 
+# The cat order is a hard-coded dependency chain.
 # This must have --keep-fnames because some function names are used to distinguish CodeMirror event handlers.
 build/twinemarkup-min.js: js/markup/*.js js/markup/*/*.js
-	@node_modules/.bin/r.js -o $(requirejs_twinemarkup_flags) \
-	| $(call node_replace, $(unwrap)) \
+	@cat js/markup/(^markup).js js/markup/markup.js js/markup/codemirror/utils.js js/markup/codemirror/tooltips.js js/markup/codemirror/toolbarpanel.js js/markup/codemirror/toolbar.js js/markup/codemirror/mode.js \
 	| $(call node_replace, $(shortdefs)) \
 	| $(call node_replace, $(codemirrorcss)) \
 	| babel --no-babelrc \
 	| uglifyjs $(uglify_flags) --keep-fnames \
+	| sed -e '$$a }).call(this);' \
+	| sed -e '1i (function(){' \
 	> build/twinemarkup-min.js
 
 dist/format.js: build/harlowe-min.js build/twinemarkup-min.js css

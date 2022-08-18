@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery'], ($) => {
+define('utils/jqueryplugins', ['jquery'], ($) => {
 	
 	$.prototype.extend({
 		/*
@@ -42,7 +42,7 @@ define(['jquery'], ($) => {
 				which are text nodes.
 			*/
 			return this.get().concat(this.contents().get(), this.find(selector).contents().get()).filter(function(e,i,a) {
-				return e && e.nodeType === Node.TEXT_NODE && a.indexOf(e) === i;
+				return e?.nodeType === Node.TEXT_NODE && a.indexOf(e) === i;
 			})
 			/*
 				We must sort the returned array using compareDocumentPosition.

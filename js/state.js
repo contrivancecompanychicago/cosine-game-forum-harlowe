@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery','utils', 'passages', 'datatypes/customcommand', 'utils/operationutils', 'markup'],
+define('state', ['jquery','utils', 'passages', 'datatypes/customcommand', 'utils/operationutils', 'markup'],
 ($, Utils, Passages, CustomCommand, {toSource,is}, {lex}) => {
 	/*
 		State
@@ -809,7 +809,7 @@ define(['jquery','utils', 'passages', 'datatypes/customcommand', 'utils/operatio
 				/*
 					If redirects were performed this turn, place the soon-to-be past passage name into the subarray holding those redirects.
 				*/
-				if (present.visits && present.visits.length && Array.isArray(CurrentVariables.pastVisits[CurrentVariables.pastVisits.length-1])) {
+				if (present.visits?.length && Array.isArray(CurrentVariables.pastVisits[CurrentVariables.pastVisits.length-1])) {
 					CurrentVariables.pastVisits[CurrentVariables.pastVisits.length-1].push(present.passage);
 				}
 				else {
@@ -848,7 +848,7 @@ define(['jquery','utils', 'passages', 'datatypes/customcommand', 'utils/operatio
 				/*
 					If previous redirects were performed this turn, place the soon-to-be past passage name into the subarray holding those redirects.
 				*/
-				if (present.visits && present.visits.length && Array.isArray(CurrentVariables.pastVisits[CurrentVariables.pastVisits.length-1])) {
+				if (present.visits?.length && Array.isArray(CurrentVariables.pastVisits[CurrentVariables.pastVisits.length-1])) {
 					CurrentVariables.pastVisits[CurrentVariables.pastVisits.length-1].push(present.passage);
 				}
 				else {

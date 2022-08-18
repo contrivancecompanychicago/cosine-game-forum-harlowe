@@ -1,5 +1,5 @@
 "use strict";
-define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'utils/renderutils', 'passages', 'section', 'debugmode/panel', 'debugmode/highlight',  'utils/typecolours'],
+define('debugmode/mode', ['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltypes/varref', 'internaltypes/twineerror', 'utils/operationutils', 'utils/renderutils', 'passages', 'section', 'debugmode/panel', 'debugmode/highlight',  'utils/typecolours'],
 ($, Utils, NaturalSort, State, Engine, VarRef, TwineError, {objectName, isObject, toSource, typeID}, {dialog}, Passages, Section, Panel, Highlight, {CSS:syntaxCSS}) => { let DebugMode = (initialError, code) => {
 	/*
 		Debug Mode
@@ -554,7 +554,7 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 			if (!name.startsWith('TwineScript')) {
 				count += 1;
 				recursiveUpdateVariables({name, path:[], value:globals[name], tempScope:'',
-					type: globals.TwineScript_TypeDefs && globals.TwineScript_TypeDefs[name]
+					type: globals.TwineScript_TypeDefs?.[name]
 				});
 			}
 		}
@@ -592,7 +592,7 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 				!obj.TwineScript_VariableStoreName.match(/#\d+$/)
 			) {
 			const tempScope = obj.TwineScript_VariableStoreName;
-			const type = obj.TwineScript_TypeDefs && obj.TwineScript_TypeDefs[name];
+			const type = obj.TwineScript_TypeDefs?.[name];
 			/*
 				If a local variable was altered rather than added, then simply update its value.
 			*/
@@ -653,13 +653,16 @@ define(['jquery', 'utils', 'utils/naturalsort', 'state', 'engine', 'internaltype
 	const Enchantments = Panel.create({
 		className: "enchantments", tabName: "Enchantment",
 		rowWrite(enchantment, row) {
-			const {scope, changer, name, localHook} = enchantment;
+			const {scope, changer, lambda, name, localHook} = enchantment;
 			let val;
 			if (changer) {
 				val = escape(objectName(changer));
 			}
+			else if (lambda) {
+				val = escape(toSource(lambda));
+			}
 			else {
-				val = "<em>enchanted via (" + name + ":)</em>";
+				val = "<em>enchanted with (" + name + ":)</em>";
 			}
 			/*
 				Enchantment rows never need to be freshened up because rowCheck() compares
