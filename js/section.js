@@ -1242,6 +1242,12 @@ define('section', [
 			}
 
 			/*
+				We need to check if the subsequent this.execute() call will block the stack - hence, here's a quick
+				confirmation whether it is currently blocked beforehand.
+			*/
+			const isBlockedBefore = this.stackTop?.blocked;
+
+			/*
 				If the descriptor features a loopVar, we must loop - that is, render and execute once for
 				each value in the loopVars, assigning the value to their temp. variable names in a new data stack per loop.
 
@@ -1302,9 +1308,9 @@ define('section', [
 				Finally, update the enchantments now that the DOM is modified.
 				We should only run updateEnchantments in the "top level" render call,
 				to save on unnecessary DOM mutation.
-				This can be determined by just checking that this Section's stack is empty.
+				This can be determined by just checking that this Section's stack is empty or blocked.
 			*/
-			if (this.stack.length === 0) {
+			if (this.stack.length === 0 || (!isBlockedBefore && this.stackTop?.blocked)) {
 				this.updateEnchantments();
 			}
 

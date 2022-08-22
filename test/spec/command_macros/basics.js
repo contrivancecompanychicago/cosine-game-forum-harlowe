@@ -379,6 +379,14 @@ describe("basic command macros", function() {
 				done();
 			},20);
 		});
+		it("does not block existing enchantments", function(done) {
+			var p = runPassage("(enchant:?A,(text-colour:#440044))(link:'bar')[|A>[foo](dialog:'bar')]");
+			p.find('tw-link').first().click();
+			setTimeout(function() {
+				expect(p.find("tw-hook[name='a']").css('color')).toMatch(/rgba?\(68,\s?0,\s?68[\),]/);
+				done();
+			},20);
+		});
 		it("blocks mouseover interaction when the dialog is present", function(done) {
 			var p = runPassage("foo(mouseover:'foo')[bar](dialog:'baz')");
 			expect(p.text()).toBe("foo");
