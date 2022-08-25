@@ -19,7 +19,7 @@ define('section', [
 ],
 ($, Utils, run, Operations, State, {printBuiltinValue,objectName,typeID,isObject}, {collapse}, runScriptTag, ChangerCommand, Colour, Lambda, CodeHook, ChangeDescriptor, VarScope, TwineError, TwineNotifier) => {
 
-	const {assign} = Object;
+	const {assign, create, keys} = Object;
 	let Section;
 
 	/*
@@ -630,7 +630,7 @@ define('section', [
 			/*
 				Install all of the non-circular properties.
 			*/
-			let ret = Object.assign(Object.create(this), {
+			let ret = assign(create(this), {
 				/*
 					The time this Section was rendered. Of course, it's
 					not been rendered yet, but it needs to be recorded this early because
@@ -1096,10 +1096,10 @@ define('section', [
 				evaluateOnly: evalName,
 				finalIter: true,
 				/*
-					A new tempVariables frame is created, solely to have a different TwineScript_VariableStoreName, so that
+					A new tempVariables frame is created, solely to have a different TwineScript_VariableStore name, so that
 					errors occurring during evaluation have the correct name for this context.
 				*/
-				tempVariables: Object.assign(Object.create(VarScope), { TwineScript_VariableStoreName: evalName, }),
+				tempVariables: assign(create(VarScope), { TwineScript_VariableStore: { type: 'temp', name:evalName, } }),
 				/*
 					This string is used by storylet metadata macros like (storylet: when visits is 0),
 					which, when run via speculation by (open-storylets:), need "visits" to mean visits of
@@ -1162,7 +1162,7 @@ define('section', [
 					is a bit displeasingly rough-n-ready, but it's convenient...
 				*/
 				if (!ChangerCommand.isPrototypeOf(changer)) {
-					Object.assign(desc, changer);
+					assign(desc, changer);
 				}
 				else {
 					const error = changer.run(desc);
@@ -1223,7 +1223,7 @@ define('section', [
 					The temp variable scope of the rendered DOM inherits from the current
 					stack, or, if absent, the base VarScope class.
 				*/
-				tempVariables = Object.create(this.stack.length ?  this.stackTop.tempVariables : VarScope);
+				tempVariables = create(this.stack.length ?  this.stackTop.tempVariables : VarScope);
 			}
 			/*
 				For debug mode, the temp variables store needs to also carry the name of its enclosing lexical scope.
@@ -1231,14 +1231,17 @@ define('section', [
 
 				(The target should always be truthy, but, just in case...)
 			*/
-			if (!hasOwnProperty.call(tempVariables,'TwineScript_VariableStoreName')) {
+			if (!hasOwnProperty.call(tempVariables,'TwineScript_VariableStore')) {
 				const targetTag = target?.tag();
-				tempVariables.TwineScript_VariableStoreName = (
-					targetTag === 'tw-hook' ? (target.attr('name') ? ("?" + target.attr('name')) : "an unnamed hook") :
-					targetTag === 'tw-expression' ? ("a " + target.attr('type') + " expression") :
-					targetTag === 'tw-passage' ? "this passage" :
-					"an unknown scope"
-				);
+				tempVariables.TwineScript_VariableStore = {
+					type: 'temp',
+					name: (
+						targetTag === 'tw-hook' ? (target.attr('name') ? ("?" + target.attr('name')) : "an unnamed hook") :
+						targetTag === 'tw-expression' ? ("a " + target.attr('type') + " expression") :
+						targetTag === 'tw-passage' ? "this passage" :
+						"an unknown scope"
+					)
+				};
 			}
 
 			/*
@@ -1259,11 +1262,11 @@ define('section', [
 				{ a: 2, b: 6 }.
 				{ a: 1, b: 5 },
 			*/
-			if (Object.keys(desc.loopVars).length) {
+			if (keys(desc.loopVars).length) {
 				// Copy the loopVars, to avoid permuting the descriptor.
-				const loopVars = Object.assign({}, desc.loopVars);
+				const loopVars = assign({}, desc.loopVars);
 				// Find the shortest loopVars array, and iterate that many times ()
-				let len = Math.min(...Object.keys(loopVars).map(name => loopVars[name].length));
+				let len = Math.min(...keys(loopVars).map(name => loopVars[name].length));
 
 				// A gentle debug notification to remind the writer how many loops the (for:) executed,
 				// which is especially helpful if it's 0.
@@ -1277,14 +1280,14 @@ define('section', [
 							can resume seamlessly by just continuing to read from the stack.
 						*/
 						createStackFrame(desc,
-							Object.keys(loopVars).reduce((a,name) => {
+							keys(loopVars).reduce((a,name) => {
 								/*
 									Successive execute() calls pop these stack frames in reverse order; hence, we must
 									put them on in reverse order, too, using i's descending count.
 								*/
 								a[name] = loopVars[name][i];
 								return a;
-							}, Object.create(tempVariables), i === len - 1)
+							}, create(tempVariables), i === len - 1)
 						);
 					}
 					/*

@@ -472,7 +472,7 @@ define('state', ['jquery','utils', 'passages', 'datatypes/customcommand', 'utils
 				This is used to distinguish to (set:) that this is a variable store,
 				and assigning to its properties does affect game state.
 			*/
-			TwineScript_VariableStore: "global",
+			TwineScript_VariableStore: { type: 'global', name: "this story's variables" },
 	
 			/*
 				All read/update/delete operations on this scope also update the delta for the current moment (present).

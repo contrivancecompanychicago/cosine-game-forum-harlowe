@@ -323,7 +323,7 @@ define('internaltypes/varref', ['state', 'internaltypes/twineerror', 'utils', 'u
 		if (obj instanceof Map) {
 			return obj.get(prop);
 		}
-		if ((prop === "some" || prop === "any" || prop === "all" || prop === "start" || prop === "end") && !obj.TwineScript_VariableStoreName) {
+		if ((prop === "some" || prop === "any" || prop === "all" || prop === "start" || prop === "end") && !obj.TwineScript_VariableStore) {
 			return createDeterminer(obj,prop);
 		}
 		/*
@@ -633,7 +633,7 @@ define('internaltypes/varref', ['state', 'internaltypes/twineerror', 'utils', 'u
 				If this is a temp variable access, display the following error message
 				about the visibility of temp variables.
 			*/
-			if (obj.TwineScript_VariableStore) {
+			if (obj.TwineScript_VariableStore?.type === 'temp') {
 				return TwineError.create("property",
 					// Don't use propertyDebugName(), because it puts the string name in quotes.
 					`There isn't a temp variable named _${originalProp} in this place.`,
@@ -788,12 +788,12 @@ define('internaltypes/varref', ['state', 'internaltypes/twineerror', 'utils', 'u
 				/*
 					Special case for temp variables: inner hooks can modify outer hooks' values.
 				*/
-				else if (object.TwineScript_VariableStore && object !== State.variables) {
+				else if (object.TwineScript_VariableStore?.type === 'temp' && object !== State.variables) {
 					let parent = object;
-					while(parent.TwineScript_VariableStore && !hasOwnProperty.call(parent, property)) {
+					while(parent.TwineScript_VariableStore?.type === 'temp' && !hasOwnProperty.call(parent, property)) {
 						parent = Object.getPrototypeOf(parent);
 					}
-					if (parent.TwineScript_VariableStore) {
+					if (parent.TwineScript_VariableStore?.type === 'temp') {
 						object = parent;
 					}
 				}
@@ -1094,7 +1094,7 @@ define('internaltypes/varref', ['state', 'internaltypes/twineerror', 'utils', 'u
 				Conversely, print "_" for temporary variables inside a VariableStore.
 			*/
 			return (this.object === State.variables ? "$" :
-					this.object.TwineScript_VariableStore ? "_" :
+					this.object.TwineScript_VariableStore?.type === 'temp' ? "_" :
 					(toSource(this.object) + "'s ")) +
 				/*
 					If the property chain contains a single, potentially computed value, then get the
@@ -1117,7 +1117,7 @@ define('internaltypes/varref', ['state', 'internaltypes/twineerror', 'utils', 'u
 						: this.propertyChain.reduce((a, e, i) => a + "'s " + propertyDebugName(e,i))
 					);
 			}
-			return `the ${this.object.TwineScript_VariableStoreName ? 'temp ' : ''}variable ${this.TwineScript_ToSource()}`;
+			return `the ${this.object.TwineScript_VariableStore?.type === 'temp' ? 'temp ' : ''}variable ${this.TwineScript_ToSource()}`;
 		},
 
 		/*

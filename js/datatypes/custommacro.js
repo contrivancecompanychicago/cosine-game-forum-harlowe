@@ -43,7 +43,7 @@ define('datatypes/custommacro', ['jquery','utils','renderer','utils/operationuti
 			custom macro. So, closures do not exist in Harlowe custom macros at this time.
 		*/
 		const tempVariables = assign(create(VarScope), {
-			TwineScript_VariableStoreName: macro.TwineScript_ObjectName + " call #" + macro.called,
+			TwineScript_VariableStore: { type: 'temp', name: macro.TwineScript_ObjectName + " call #" + macro.called },
 			TwineScript_TypeDefs: create(null),
 		});
 		/*

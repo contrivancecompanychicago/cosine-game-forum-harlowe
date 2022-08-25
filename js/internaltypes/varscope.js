@@ -14,8 +14,9 @@ define('internaltypes/varscope', [], () => {
 		/*
 			This is used to distinguish to (set:) that this is a variable store,
 			and assigning to its properties does affect game state.
+			This should be overridden by instances created in Section.js.
 		*/
-		TwineScript_VariableStore: true,
+		TwineScript_VariableStore: { type: 'temp', name: "an unknown scope" },
 
 		/*
 			Also like story state, this has a TypeDefs object holding types for its variables, and is used

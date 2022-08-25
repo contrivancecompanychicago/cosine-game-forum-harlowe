@@ -76,7 +76,6 @@ define('utils', ['jquery', 'markup', 'utils/polyfills'], ($) => {
 		startupCallbacks = [],
 		/*
 			A map of held-down keyboard keys, and a count of how many keys are held down concurrently.
-			For back-compatibility's sake, this uses jQuery "which" codes instead of "key" event codes.
 		*/
 		keysHeld = {},
 		keysHeldCount = 0,
@@ -151,8 +150,6 @@ define('utils', ['jquery', 'markup', 'utils/polyfills'], ($) => {
 				elapsedVisibleTime += delta || 0;
 				if (el.css('animation-play-state') === 'paused') {
 					el.css({visibility:'', 'animation-play-state':'running'});
-				}
-				else {
 				}
 			}
 			if (duration <= 0) {

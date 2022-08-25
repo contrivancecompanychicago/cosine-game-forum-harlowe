@@ -22,6 +22,9 @@ describe("temporary variables", function() {
 		expect("(set: _a to (a:2,1))|a>[(set: _a's 1st to _a's 1st + 2)(print:_a)] (print:_a)").markupToPrint("4,1 4,1");
 		expect("(set: _a to (a:(a:2),1))|a>[(set: _a's 1st's 1st to _a's 1st's 1st + 2)(print:_a)] (print:_a)").markupToPrint("4,1 4,1");
 	});
+	it("can be named 'start', 'end', '1st', 'last', 'some', 'all' or 'any'", function() {
+		expect("(set: _start to 1, _end to 1, _1st to 1, _last to 1, _some to 1, _all to 1, _any to 1)(print: _end)").markupToPrint("1");
+	});
 	it("can be used in (display:)", function() {
 		createPassage("(set: _a to 1)(print:_a)", "grault");
 		expect("(set: _a to 2)(display:'grault') (print:_a)").markupToPrint("1 1");

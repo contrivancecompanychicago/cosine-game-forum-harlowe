@@ -585,13 +585,14 @@ define('debugmode/mode', ['jquery', 'utils', 'utils/naturalsort', 'state', 'engi
 			Since temp variables' variable stores are tied to sections and can't be easily accessed
 			from here, add their variable rows on each set() rather than getting updateVariables() to do it.
 		*/
-		if (obj !== State.variables && obj.TwineScript_VariableStoreName &&
+		if (obj !== State.variables && obj.TwineScript_VariableStore?.type === 'temp' &&
 				/*
 					Custom macro variables are prohibited from appearing in the Variables panel.
+					TODO: Replace this with a more robust check.
 				*/
-				!obj.TwineScript_VariableStoreName.match(/#\d+$/)
+				!obj.TwineScript_VariableStore?.name.match(/#\d+$/)
 			) {
-			const tempScope = obj.TwineScript_VariableStoreName;
+			const tempScope = obj.TwineScript_VariableStore?.name;
 			const type = obj.TwineScript_TypeDefs?.[name];
 			/*
 				If a local variable was altered rather than added, then simply update its value.

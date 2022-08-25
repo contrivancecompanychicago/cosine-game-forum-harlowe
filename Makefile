@@ -58,7 +58,7 @@ build/harlowe-min.js: js/*.js js/*/*.js
 	@cat js/*.js js/*/*.js \
 	| babel --no-babelrc \
 	| uglifyjs $(uglify_flags) \
-	| sed -e '1{h;s/.*/cat scripts\/define.js node_modules\/es6-shim\/es6-shim.min.js node_modules\/jquery\/dist\/jquery.min.js/ep;g}' \
+	| sed -e '1{h;s/.*/cat scripts\/define.min.js node_modules\/es6-shim\/es6-shim.min.js node_modules\/jquery\/dist\/jquery.min.js/ep;g}' \
 	| sed -e '$$a ;require(\"harlowe\")}());' \
 	| sed -e '1i (function(){"use strict";' \
 	> build/harlowe-min.js

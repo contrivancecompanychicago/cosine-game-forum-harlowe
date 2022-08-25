@@ -6,6 +6,7 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 
 #### Bugfixes
 
+ * Fixed a bug which prevented you from naming a variable `$start`, `$end`, `$any`, `$some`, or `$all` (or naming a temp variable any of those words).
  * Fixed a long-standing bug where XML-style self-closing HTML tags (like `<div/>`) didn't self-close.
  * Fixed a crash caused by completely empty 'header', 'footer', 'startup', 'debug-header', 'debug-footer' and 'debug-startup' passages.
  * Fixed a bug where a `(replace:)` call targeting the hook containing it (including special hook names like `?passage`) would cause all subsequent macros and expressions to be ignored (similar to what would happen if a `(go-to:)` was used).

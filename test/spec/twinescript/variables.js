@@ -35,6 +35,9 @@ describe("variables", function() {
 		it("can name a variable using astral characters", function() {
 			expect("(set: $A𐌎B to 1)(print: $A𐌎B)").markupToPrint("1");
 		});
+		it("can name a variable 'start', 'end', '1st', 'last', 'some', 'all' or 'any'", function() {
+			expect("(set: $start to 1, $end to 1, $1st to 1, $last to 1, $some to 1, $all to 1, $any to 1)(print: $end)").markupToPrint("1");
+		});
 		it("runs on evaluation, but can't be assigned or used as a value", function() {
 			expect("(print: (set: $a to 1))").markupToError();
 			expect("(print: (a:(set: $b to 2)))").markupToError();
