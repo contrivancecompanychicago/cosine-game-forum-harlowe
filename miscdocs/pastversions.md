@@ -2,9 +2,10 @@ Appendix: Previous Harlowe versions and manuals
 
 If you need to add a previous version of Harlowe to your copy of Twine 2, then you may use these links to do so.
 
- * [Harlowe 3.3.1](./harlowe-3.3.1.js) (Jul 13, 2022 - current version)
- * [Harlowe 3.3.0](./harlowe-3.3.0.js) (Jul 05, 2022 - previous patch version)
- * [Harlowe 3.2.3](./harlowe-3.2.3.js) (Oct 22, 2021 - previous minor version)
+ * [Harlowe 3.3.2](./harlowe-3.3.2.js) (Aug 28, 2022)
+ * [Harlowe 3.3.1](./harlowe-3.3.1.js) (Jul 13, 2022)
+ * [Harlowe 3.3.0](./harlowe-3.3.0.js) (Jul 05, 2022)
+ * [Harlowe 3.2.3](./harlowe-3.2.3.js) (Oct 22, 2021)
  * [Harlowe 2.1.0](./harlowe-2.1.0.js) (Dec 07, 2017 - last version of 2.x)
  * [Harlowe 1.2.4](./harlowe-1.2.4.js) (Apr 26, 2017 - last version of 1.x)
 

@@ -57,7 +57,12 @@ define('section', [
 				The use of popAttr prevents the hook from executing normally
 				if it wasn't actually the eventual target of the changer function.
 			*/
-			const source = nextHook.popData('source');
+			/*
+				TODO: Remove this cachedData manipulation in 4.0 (see Section.execute)
+			*/
+			const source = nextHook.popData('source') || nextHook[0].cachedData?.source;
+			nextHook[0]?.cachedData && (nextHook[0].cachedData.source = undefined);
+
 			nextHook.data('originalSource', source);
 			/*
 				Rather than simply passing the changer to renderInto(),
@@ -128,8 +133,15 @@ define('section', [
 				Removing the 'source' attribute is necessary to prevent this from being rendered
 				by Section.
 			*/
-			if (nextHook.data('source')) {
-				nextHook.data('originalSource', nextHook.popData('source'));
+			/*
+				TODO: Remove this cachedData manipulation in 4.0 (see Section.execute)
+			*/
+			const source = nextHook.popData('source') || nextHook[0].cachedData?.source;
+			nextHook[0]?.cachedData && (nextHook[0].cachedData.source = undefined);
+
+			if (source) {
+				nextHook.cachedData && (nextHook.cachedData.source = undefined);
+				nextHook.data('originalSource', source);
 				nextHook.data('hidden',true);
 			}
 			expr.addClass("false");
@@ -182,14 +194,12 @@ define('section', [
 	/*
 		Run a newly rendered <tw-expression> element's code, obtain the resulting value,
 		and apply it to the next <tw-hook> element, if present.
-		
-		@param {jQuery} The <tw-expression> to run.
 	*/
-	function runExpression(expr) {
+	function runExpression(expr, code) {
 		/*
 			Execute the expression, and obtain its result value.
 		*/
-		let result = this.eval(expr.popData('code'));
+		let result = this.eval(code);
 		/*
 			Add the replay button if replay data is available.
 		*/
@@ -218,7 +228,6 @@ define('section', [
 		*/
 		let whitespace, nextElem, nextHook = $();
 		nextElem = expr;
-
 		while(ChangerCommand.isPrototypeOf(result)) {
 			/*
 				Check if the next non-whitespace element is a +, an attachable expression, or a hook.
@@ -237,7 +246,13 @@ define('section', [
 						It's an expression - we can join them.
 						Add the expressions, and remove the interstitial + and whitespace.
 					*/
-					const nextValue = this.eval(nextElem.popData('code'));
+					/*
+						TODO: Remove this cachedData manipulation in 4.0 (see Section.execute)
+					*/
+					const code = nextElem.popData('code') || nextElem[0]?.cachedData?.code;
+					nextElem[0]?.cachedData && (nextElem[0].cachedData.code = undefined);
+
+					const nextValue = this.eval(code);
 					/*
 						(But, don't join them if the nextValue contains its own error.)
 					*/
@@ -283,7 +298,13 @@ define('section', [
 				is dropped (by us executing its js early) as well.
 			*/
 			if (nextElem.is('tw-expression')) {
-				const nextValue = this.eval(nextElem.popData('code'));
+				/*
+					TODO: Remove this cachedData manipulation in 4.0 (see Section.execute)
+				*/
+				const code = nextElem.popData('code') || nextElem[0]?.cachedData?.code;
+				nextElem[0]?.cachedData && (nextElem[0].cachedData.code = undefined);
+
+				const nextValue = this.eval(code);
 				nextElem.append(makeReplayButton(this.evalReplay));
 				/*
 					Errors produced by expression evaluation should be propagated above changer attachment errors, I guess.
@@ -1350,15 +1371,22 @@ define('section', [
 			/*
 				Execute the expressions immediately.
 			*/
-			let elemData = new Map();
 			dom.findAndFilter('tw-hook,tw-expression,script[type="application/x-harlowe"]')
 					/*
-						For compatibility with 3.2, each expression's data is cached, in case they are removed from the DOM
+						For compatibility with 3.2, each expression's data is backed up as a DOM element expando property, in case they are removed from the DOM
 						before running. This should be removed in 4.0, so that the more intuitive behaviour (removing from the DOM
 						prevents expressions from running) is used instead.
 					*/
 					.each((_, expr) => {
-						elemData.set(expr, $(expr).data());
+						let d = $(expr).data();
+						/*
+							These should be the same 3 data values assigned to freshly-created elements in Renderer.
+						*/
+						expr.cachedData = {
+							blockers: d.blockers,
+							code: d.code,
+							source: d.source,
+						};
 					})
 					.each((_, expr) => {
 				/*
@@ -1370,6 +1398,12 @@ define('section', [
 				if (this.stackTop.blocked) {
 					return false;
 				}
+				/*
+					Retrieve the backed-up jQuery data().
+				*/
+				let {cachedData} = expr;
+				cachedData && (expr.cachedData = undefined);
+
 				expr = $(expr);
 				
 				switch(expr.tag()) {
@@ -1378,7 +1412,7 @@ define('section', [
 						/*
 							Since hooks can be re-ran with (rerun:), their original content AST needs to be stored.
 						*/
-						let src = expr.popData('source') || (elemData.get(expr) || {}).source;
+						let src = expr.popData('source') || cachedData?.source;
 						if (src) {
 							expr.data('originalSource', src);
 						}
@@ -1422,7 +1456,7 @@ define('section', [
 							Blocker expressions are identified by having 'blockers' data, which should persist across
 							however many executions it takes for the passage to become unblocked.
 						*/
-						const blockers = expr.data('blockers') || (elemData.get(expr) || {}).blockers;
+						const blockers = expr.data('blockers') || cachedData?.blockers;
 						if (blockers) {
 							if (evaluateOnly) {
 								expr.removeData('blockers').removeData('code').replaceWith(
@@ -1458,9 +1492,9 @@ define('section', [
 								expr.removeData('blockers');
 							}
 						}
-						const code = expr.data('code') || (elemData.get(expr) || {}).code;
+						const code = expr.popData('code') || cachedData?.code;
 						if (code) {
-							runExpression.call(this, expr);
+							runExpression.call(this, expr, code);
 						}
 						break;
 					}

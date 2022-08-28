@@ -2,17 +2,24 @@
 
 Documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
-### 3.3.2 changes (unreleased):
+### 3.3.3 changes (unreleased):
+
+#### Bugfixes
+
+ * Fixed an issue preventing Harlowe's editor extensions from appearing in Twine 2.5.0.
+ * Fixed a bug where a `(replace:)` call targeting the hook containing it (including special hook names like `?passage`) would cause all subsequent macros and expressions to be ignored (similar to what would happen if a `(go-to:)` was used).
+   * Note: since the aforementioned behaviour is arguably more intuitive than the 3.2 behaviour, it is possible that this fix will be intentionally reverted in 4.0. As of right now, it is considered a 3.2 compatibility bug.
+   * Note 2: this bug was previously erroneously reported as fixed in 3.3.2.
+
+### 3.3.2 changes (Aug 28, 2022):
 
 #### Bugfixes
 
  * Fixed a bug which prevented you from naming a variable `$start`, `$end`, `$any`, `$some`, or `$all` (or naming a temp variable any of those words).
  * Fixed a long-standing bug where XML-style self-closing HTML tags (like `<div/>`) didn't self-close.
  * Fixed a crash caused by completely empty 'header', 'footer', 'startup', 'debug-header', 'debug-footer' and 'debug-startup' passages.
- * Fixed a bug where a `(replace:)` call targeting the hook containing it (including special hook names like `?passage`) would cause all subsequent macros and expressions to be ignored (similar to what would happen if a `(go-to:)` was used).
-   * Note: since the aforementioned behaviour is arguably more intuitive than the 3.2 behaviour, it is possible that this fix will be intentionally reverted in 4.0. As of right now, it is considered a 3.2 compatibility bug.
  * Fixed a bug where, whenever a hook was shown or inserted into the passage at the same time as a dialog box (such as those created by `(dialog:)`) appeared, then existing enchantments wouldn't apply to that hook.
- * Debug Mode: Fixed enchantments created using `(enchant:)` with a `via` lambda being displayed as `(undefined:)` in the Enchantments panel.
+ * Debug Mode: Fixed a bug where enchantments created using `(enchant:)` with a `via` lambda being displayed as `(undefined:)` in the Enchantments panel.
 
 #### Alterations
 
