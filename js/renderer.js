@@ -464,7 +464,8 @@ define('renderer', ['jquery', 'utils', 'markup', 'internaltypes/twineerror'],
 			/*
 				Harlowe markup strings are lexed here.
 			*/
-			const html = render((typeof src === "string" ? Markup.lex(src).children : src), trees);
+			src = typeof src === "string" ? Markup.lex(src).children : src;
+			const html = render(src, trees);
 
 			/*
 				Parse the HTML into elements.

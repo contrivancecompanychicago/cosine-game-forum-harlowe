@@ -2,14 +2,19 @@
 
 Documentation is at http://twine2.neocities.org/. See below for compilation instructions.
 
-### 3.3.3 changes (unreleased):
+### 3.3.4 changes (unreleased):
 
 #### Bugfixes
 
- * Fixed an issue preventing Harlowe's editor extensions from appearing in Twine 2.5.0.
+ * Fixed a bug where `(scroll:)` didn't work correctly with `?page` if the `<tw-story>` element didn't have a fixed height (via CSS).
+
+### 3.3.3 changes (Aug 29,​ 2022):
+
+#### Bugfixes
+
+ * Fixed an issue preventing Harlowe's editor extensions from appearing in Twine 2.5.
  * Fixed a bug where a `(replace:)` call targeting the hook containing it (including special hook names like `?passage`) would cause all subsequent macros and expressions to be ignored (similar to what would happen if a `(go-to:)` was used).
    * Note: since the aforementioned behaviour is arguably more intuitive than the 3.2 behaviour, it is possible that this fix will be intentionally reverted in 4.0. As of right now, it is considered a 3.2 compatibility bug.
-   * Note 2: this bug was previously erroneously reported as fixed in 3.3.2.
 
 ### 3.3.2 changes (Aug 28, 2022):
 

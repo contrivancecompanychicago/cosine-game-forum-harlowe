@@ -806,6 +806,23 @@ describe("basic command macros", function() {
 				done();
 			},10);
 		});
-		// TODO: ?page checks
+		it("when given ?page and a percent, if <tw-story> cannot be scrolled, scrolls <body> instead", function(done) {
+			runPassage("(scroll:?page,0.5)(str-repeated:99,'<br>')");
+			setTimeout(function() {
+				expect(document.body.scrollTop).not.toBe(0);
+				done();
+			},10);
+		});
+		it("when given ?page and another hook, scrolls <body> to put the hook into view", function(done) {
+			runPassage("(str-repeated:99,'<br>')|a>[foo](str-repeated:99,'<br>')(scroll:?page,?a)");
+			setTimeout(function() {
+				expect(document.body.scrollTop).not.toBe(0);
+				expect(document.body.scrollTop).not.toBe(1);
+				done();
+			},10);
+		});
+		afterAll(function() {
+			document.body.scrollTop = 0;
+		});
 	});
 });

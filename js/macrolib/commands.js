@@ -75,7 +75,7 @@ define('macrolib/commands', ['jquery', 'macros', 'utils', 'state', 'passages', '
 			that someone else was using for something different). This can be essential in collaborative work
 			with other authors working on the same story independently, or when writing code to be used in multiple stories.
 
-			The following example demonstrates where temp variables are visible.
+			The following example demonstrates where temp variables are usable.
 			```
 			(set: _a to 1) <- This is usable everywhere in this passage.
 			[
@@ -2695,6 +2695,12 @@ define('macrolib/commands', ['jquery', 'macros', 'utils', 'state', 'passages', '
 				requestAnimationFrame(() => {
 					hook.forEach(section, elem => {
 						if (percent !== false) {
+							/*
+								Special case: if ?page is the target, and ?page has no scrolled-off height, then scroll <body> instead.
+							*/
+							if (elem[0] === Utils.storyElement[0] && elem[0].scrollHeight === elem[0].clientHeight) {
+								elem = [document.body];
+							}
 							elem[0].scrollTo?.(0, (elem[0].scrollHeight - elem[0].clientHeight) * percent);
 						}
 						else for (let elem2 of percentOrHook.hooks(section).get()) {
@@ -2709,7 +2715,11 @@ define('macrolib/commands', ['jquery', 'macros', 'utils', 'state', 'passages', '
 								*/
 								const scrolledElems = [];
 								let elem3 = elem[0];
-								while((elem3 = elem3.parentNode)) {
+								/*
+									But don't save the scroll position of <body>. If <html>'s scrolling was changed, then
+									the change was necessary to put the target hook onscreen in the first place.
+								*/
+								while((elem3 = elem3.parentNode) && elem3 !== document.body) {
 									scrolledElems.push([elem3, elem3.scrollLeft, elem3.scrollTop]);
 								}
 								elem2.scrollIntoView();
