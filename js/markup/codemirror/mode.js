@@ -135,6 +135,7 @@
 				hook: [],
 				hookName: [],
 			};
+			data.cursorMarks?.forEach(mark => mark.clear());
 			data.cursorMarks = [];
 			data.tree.children.forEach(function lexTreePostProcess(token) {
 				if (token.type === "variable" || token.type === "tempVariable"

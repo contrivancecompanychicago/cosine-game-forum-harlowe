@@ -7,6 +7,8 @@ Documentation is at http://twine2.neocities.org/. See below for compilation inst
 #### Bugfixes
 
  * Fixed a bug where `(scroll:)` didn't work correctly with `?page` if the `<tw-story>` element didn't have a fixed height (via CSS).
+ * Fixed a syntax highlighter bug where the underline for the cursor's nearest syntax token would, if it spanned multiple lines, sometimes incorrectly persisted after editing.
+ * Fixed a syntax highlighter bug where, when "Proofreading View" was enabled, text inside the verbatim syntax would be incorrectly dimmed.
 
 ### 3.3.3 changes (Aug 29,​ 2022):
 
